@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, Ref } from "react";
+import { Ref } from "react";
 
 interface UserBioTextAreaProps {
   ref?: Ref<HTMLTextAreaElement>;

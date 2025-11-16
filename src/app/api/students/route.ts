@@ -60,7 +60,6 @@ export async function POST(req: Request) {
     // create student
     const student = await prisma.student.create({
       data: {
-        id: userId,
         name: name,
         bio: bio?.trim(),
         code: code,
@@ -127,7 +126,7 @@ export async function POST(req: Request) {
     return NextResponse.json(student, { status: 201 });
   } catch (e) {
     if (e instanceof ZodError)
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },
