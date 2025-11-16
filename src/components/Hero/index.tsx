@@ -5,6 +5,7 @@ import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
 import PrimaryLinkButton from "@/components/PrimaryLinkButton";
+import useSession from "@/hooks/useSession";
 
 interface HeaderProps {
   logoSrc: StaticImageData;
@@ -17,6 +18,8 @@ const Hero: FunctionComponent<HeaderProps> = ({
   logoAlt,
   contentRef,
 }) => {
+  const { user } = useSession();
+
   return (
     <>
       <section
@@ -56,9 +59,11 @@ const Hero: FunctionComponent<HeaderProps> = ({
             }}
             className="flex w-full flex-col items-center justify-center gap-10 pb-10 md:px-5"
           >
-            <PrimaryLinkButton loading={false} href="/signup">
-              Quero registar-me no evento
-            </PrimaryLinkButton>
+            {!user && (
+              <PrimaryLinkButton loading={false} href="/signup">
+                Quero registar-me no evento
+              </PrimaryLinkButton>
+            )}
           </motion.div>
         </motion.div>
       </section>
