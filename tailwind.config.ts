@@ -1,5 +1,3 @@
-import twscrollbar from "tailwind-scrollbar";
-
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -8,61 +6,6 @@ const config: Config = {
     "./src/components/**/*.{ts,tsx}",
     "./src/app/**/*.{ts,tsx}",
   ],
-  theme: {
-    extend: {
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      },
-      backgroundImage: {
-        company: "var(--company-bg)",
-      },
-      colors: {
-        text: "var(--text)",
-        background: "var(--background)",
-        primary: "var(--primary)",
-        secondary: "var(--secondary)",
-        "secondary/40": "var(--secondary-40)",
-        accent: "var(--accent)",
-        "accent-alternative": "var(--accent-alternative)",
-        "company-secondary": "var(--company-secondary)",
-        "call-to-action": "var(--call-to-action)",
-        topbar: "var(--topbar)",
-      },
-      animation: {
-        fade: "fade ease-out 1s 1.5s forwards",
-        "fade-imm": "fade ease-out 200ms",
-        "bounce-delayed-1": "bounce 1s ease-in-out infinite 50ms",
-        "bounce-delayed-2": "bounce 1s ease-in-out infinite 100ms",
-      },
-      aspectRatio: {
-        "1080/1080": "1080 / 1080",
-      },
-      gridTemplateColumns: {
-        "responsiveness-180px-columns": "repeat(auto-fit, minmax(250px, 1fr))",
-      },
-      keyframes: {
-        fade: {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-      },
-      dropShadow: {
-        "3xl": "2px 2px 0.5px rgba(0, 0, 0, 0.33)",
-        "4xl": "2px 3px 4px rgba(0, 0, 0, 0.33)",
-        "fallstack-logo-shadow": "2px 3px 4px #f97316",
-        "fallstack-text-shadow": "1px 1px 0.5px #f97316",
-      },
-      translate: {
-        200: "200%",
-      },
-      height: {
-        144: "36rem",
-        168: "42rem",
-        192: "48rem",
-      },
-    },
-  },
-  plugins: [twscrollbar({ nocompatible: true })],
 };
 
 export default config;

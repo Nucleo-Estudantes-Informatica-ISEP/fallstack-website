@@ -1,23 +1,68 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin 'tailwind-scrollbar';
+
+@theme {
+  /* Fonts */
+  --font-sans: "Inter", sans-serif;
+  --font-title: "Coolvetica", sans-serif;
+
+  /* Colors (migrated from your old config) */
+  --color-text: #ffffff;
+  --color-background: #141414;
+  --color-primary: rgba(255, 255, 255, 0.7);
+  --color-secondary: #484848;
+  --color-secondary-40: rgba(168, 85, 247, 0.4);
+  --color-accent: #22d3ee;
+  --color-accent-alternative: #10b981;
+  --color-company-secondary: #94a3b8;
+  --color-call-to-action: #ef4444;
+  --color-topbar: #1f2937;
+
+  /* Background image alias */
+  --image-company: var(--company-bg);
+
+  /* Spacing / sizing / shadows / animations (you can move any numeric tokens here too) */
+  --shadow-3xl: 2px 2px 0.5px rgba(0, 0, 0, 0.33);
+  --shadow-4xl: 2px 3px 4px rgba(0, 0, 0, 0.33);
+  --shadow-fallstack-logo-shadow: 2px 3px 4px #f97316;
+  --shadow-fallstack-text-shadow: 1px 1px 0.5px #f97316;
+
+  --animation-fade: fade ease-out 1s 1.5s forwards;
+  --animation-fade-imm: fade ease-out 200ms;
+  --animation-bounce-delayed-1: bounce 1s ease-in-out infinite 50ms;
+  --animation-bounce-delayed-2: bounce 1s ease-in-out infinite 100ms;
+
+  --aspect-1080-1080: 1080 / 1080;
+  --cols-responsiveness-180px-columns: repeat(auto-fit, minmax(250px, 1fr));
+  --translate-200: 200%;
+  --h-144: 36rem;
+  --h-168: 42rem;
+  --h-192: 48rem;
+}
+
+/* Custom keyframes still go in plain CSS */
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@font-face {
+  font-family: "Coolvetica";
+  src: url("/assets/fonts/coolvetica.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
 
 @layer base {
   :root {
-    --text: #fff;
-    --background: #00171a;
-    --primary: #ed8326;
-    --secondary: #10282d;
-    --secondary-40: rgba(16, 40, 45, 0.4);
-    --accent: #00c3ff;
-    --accent-alternative: #00c2ff;
-    --company-bg: url(/assets/images/bg_company.webp);
-    --company-secondary: #552700;
-    --call-to-action: #606c38;
-    --topbar: #693514;
-    background-image: url(/assets/images/bg.webp);
-    background-size: cover;
-    background-position: center;
+    --text: #ffffff;
+    --background: #141414;
     color: var(--text);
     font-family: Inter, sans-serif;
     font-feature-settings:
@@ -33,29 +78,20 @@
     }
   }
 
-  body,
   h1,
   h2,
   h3,
   h4,
   h5,
-  h6,
+  h6 {
+    font-family: Coolvetica, sans-serif;
+  }
+
+  body,
   p,
   b,
   div {
     letter-spacing: -0.03em; /* -3% */
-  }
-
-  @media (max-width: 768px) {
-    :root {
-      background-size: contain;
-      background-repeat: repeat-y;
-    }
-
-    .dark {
-      background-size: contain;
-      background-repeat: repeat-y;
-    }
   }
 
   :root {

@@ -14,10 +14,10 @@ import InstallPopUp from "@/components/InstallPopUp";
 import Topbar from "@/components/TopBar";
 
 export const metadata: Metadata = {
-  applicationName: "Fallstack 2024",
-  title: "Fallstack 2024",
+  applicationName: "Fallstack 2025",
+  title: "Fallstack 2025",
   description:
-    "Website do evento Fallstack 2024. O evento decorrerá nos dias 26 e 27 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
+    "Website do evento Fallstack 2025. O evento decorrerá nos dias 25 e 26 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
   manifest: "/manifest.json",
 };
 
