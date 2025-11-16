@@ -14,16 +14,6 @@ import {
 import { BASE_URL } from "@/services/api";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
-<<<<<<< HEAD
-import AvatarCropper from "@/components/Profile/AvatarCropper";
-import ImportCvSection from "@/components/Profile/ImportCvSection";
-import Input from "@/components/Profile/Input";
-import InterestSelector from "@/components/Profile/InterestSelector";
-import UserBioTextArea from "@/components/Profile/UserBioTextArea";
-import UserImage from "@/components/Profile/UserImage";
-import { getCroppedImg } from "@/utils/canvas";
-
-=======
 
 
 import ImportCvSection from "../ImportCvSection";
@@ -56,6 +46,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   const cvRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  
   
 
   function handleUserBioChange(bio: string) {
@@ -123,15 +114,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     });
 
     if (res.status === 200) {
-<<<<<<< HEAD
-      if (profile.avatar)
-        await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
-          method: "POST",
-          body: JSON.stringify({ url: profile.avatar }),
-        });
-=======
 
->>>>>>> f747326 (feat:  Update personal data)
 
       setIsLoading(false);
       swal("Perfil atualizado com sucesso!");
@@ -144,32 +127,26 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     }
   };
 
-<<<<<<< HEAD
-  const handleConfirmAvatar = async () => {
-    setIsAvatarLoading(true);
-
-    if (!imageSrc || !croppedAreaPixels) return;
-
-    const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-    if (!image) return setIsAvatarLoading(false);
-
-    const uploaded = await uploadAvatarToSupabase(image);
-    if (!uploaded) {
-      toast.error("Não foi possível dar upload à imagem.");
-      return setIsAvatarLoading(false);
-    }
-
-    setIsAvatarLoading(false);
-    setIsModalVisible(false);
-
-    setUserImage(uploaded.url);
-    // store the URL so the save handler can persist it
-    setProfile({ ...profile, avatar: uploaded.url as unknown as string });
-  };
-=======
->>>>>>> f747326 (feat:  Update personal data)
 
   return (
+    <section className="w-full bg-black p-6 md:p-8 text-gray-300">
+      <h1 className="text-3xl font-bold text-white mb-8">Informações pessoais</h1>
+
+
+      <div className="flex flex-col gap-y-6">
+        {student ? (
+          <>
+            <Input name="Nome" defaultValue={student.name} disabled={true} />
+            <Input name="Ano" defaultValue={student.year} disabled={true} />
+            <Input
+              name="Email"
+              defaultValue={student.user.email}
+              disabled={true}
+            />
+          </>
+        ) : (
+          <Skeleton height={40} count={3} />
+        )}
     <section className="w-full bg-black p-6 md:p-8 text-gray-300">
       <h1 className="text-3xl font-bold text-white mb-8">Informações pessoais</h1>
 
@@ -219,6 +196,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         />
 
         <label className="text-lg text-gray-300">Interesses</label>
+        <label className="text-lg text-gray-300">Interesses</label>
 
         <InterestSelector
           userInterests={profile.interests}
@@ -229,10 +207,12 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           onClick={handleSave}
           loading={isLoading}
           className="mt-4 w-full bg-[#8C4B2D] hover:bg-[#7A3F24] text-white py-3 text-lg font-semibold"
+          className="mt-4 w-full bg-[#8C4B2D] hover:bg-[#7A3F24] text-white py-3 text-lg font-semibold"
         >
           Guardar
         </PrimaryButton>
       </div>
+
 
 
     </section>
