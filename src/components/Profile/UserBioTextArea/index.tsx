@@ -1,12 +1,11 @@
 "use client";
 
-import { Ref } from "react";
+import { forwardRef, Ref } from "react";
 
 interface UserBioTextAreaProps {
   ref?: Ref<HTMLTextAreaElement>;
   rows?: number;
   placeholder?: string;
-  defaultValue: string | null;
   disabled?: boolean;
   className?: string;
   value: string;
@@ -14,47 +13,48 @@ interface UserBioTextAreaProps {
   limit: number;
   warningLimit: number;
   name: string;
-  autofocus?: boolean;
+  autoFocus?: boolean;
 }
 
 const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
-  disabled,
   ref,
-  rows,
-  placeholder,
-  defaultValue,
+  disabled,
+  rows = 5,
+  placeholder = "Escreve algo sobre ti...",
   setValue,
   limit,
   warningLimit,
   value,
   className,
   name,
-  autofocus,
+  autoFocus,
 }) => {
   return (
     <div className="flex w-full flex-col">
       <label className="text-lg text-slate-700" htmlFor={name}>
         {name}
       </label>
+
       <textarea
-        name="Bio"
-        disabled={disabled}
-        id="Bio"
+        id={name}
+        name={name}
         ref={ref}
+        disabled={disabled}
         rows={rows}
-        autoFocus={autofocus}
-        onChange={(e) => setValue(e.target.value)}
+        autoFocus={autoFocus}
         placeholder={placeholder}
-        defaultValue={defaultValue ?? undefined}
         value={value}
+        onChange={(e) => setValue(e.target.value)}
         style={{
           resize: "vertical",
           minHeight: "100px",
           maxHeight: "200px",
         }}
         className={`rounded-md border border-gray-300 bg-slate-200 px-4
-         py-2 text-black placeholder:text-gray-400 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-600 ${className}`}
+          py-2 text-black placeholder:text-gray-400 focus:border-primary 
+          focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-600 ${className}`}
       />
+
       <p
         className={`text-right ${
           value.length > limit - 10
@@ -64,7 +64,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
               : "text-slate-700"
         }`}
       >
-        {value?.length} / {limit} caracteres
+        {value.length} / {limit} caracteres
       </p>
     </div>
   );
