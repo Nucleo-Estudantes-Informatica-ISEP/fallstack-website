@@ -4,7 +4,7 @@ import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
-import PrimaryLinkButton from "../PrimaryLinkButton";
+import PrimaryLinkButton from "@/components/PrimaryLinkButton";
 
 interface HeaderProps {
   logoSrc: StaticImageData;

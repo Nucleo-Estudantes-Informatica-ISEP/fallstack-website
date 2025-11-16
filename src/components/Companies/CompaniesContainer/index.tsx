@@ -3,8 +3,8 @@
 import { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
-import { CompaniesTier, getTierStyling } from "../../../utils/GetColorTier";
-import Company, { CompanyProps } from "../Company";
+import { CompaniesTier, getTierStyling } from "@/utils/GetColorTier";
+import Company, { CompanyProps } from "@/components/Companies/Company";
 
 interface CompaniesContainerProps {
   tier: CompaniesTier;

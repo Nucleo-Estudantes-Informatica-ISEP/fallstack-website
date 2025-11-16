@@ -1,7 +1,7 @@
-import { object, string, z } from "zod";
+import { z } from "zod";
 
-export const postCompanySchema = object({
-  name: string(),
+export const postCompanySchema = z.object({
+  name: z.string(),
   tier: z.enum(["DIAMOND", "GOLD", "SILVER", "BRONZE"]),
-  avatarUrl: string().url().optional(),
+  avatarUrl: z.url().optional(),
 });

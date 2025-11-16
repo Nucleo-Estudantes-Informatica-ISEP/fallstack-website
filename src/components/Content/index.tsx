@@ -1,11 +1,11 @@
-import { ScheduleDays } from "../../utils/ScheduleDays";
-import CompaniesSection from "../Companies/CompaniesSection";
-import FaqSection from "../Faq/FaqSection";
-import HeadingText from "../HeadingText";
-import InfoText from "../InfoText";
-import PassSection from "../PassSection";
-import Schedule from "../Schedule";
-import SponsorsSection from "../SponsorsSection";
+import { ScheduleDays } from "@/utils/ScheduleDays";
+import CompaniesSection from "@/components/Companies/CompaniesSection";
+import FaqSection from "@/components/Faq/FaqSection";
+import HeadingText from "@/components/HeadingText";
+import InfoText from "@/components/InfoText";
+import PassSection from "@/components/PassSection";
+import Schedule from "@/components/Schedule";
+import SponsorsSection from "@/components/SponsorsSection";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;

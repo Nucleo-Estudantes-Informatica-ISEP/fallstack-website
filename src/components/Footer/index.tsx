@@ -11,7 +11,7 @@ import {
   RiTwitterXFill,
 } from "react-icons/ri";
 
-import InstallButton from "../InstallButton";
+import InstallButton from "@/components/InstallButton";
 
 interface FooterProps {
   neiLogoSrc: StaticImageData;

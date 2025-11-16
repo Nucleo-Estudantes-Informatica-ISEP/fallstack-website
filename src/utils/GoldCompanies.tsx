@@ -6,7 +6,7 @@ import { Archive, Leaf, Trophy } from "@/styles/Icons";
 	devoteamLogo,
 	devscopeLogo,
 */ 
-import { CompanyProps } from "../components/Companies/Company";
+import { CompanyProps } from "@/components/Companies/Company";
 import {
   cgiLogo,
   deloitteLogo,
