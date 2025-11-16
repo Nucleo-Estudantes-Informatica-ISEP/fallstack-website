@@ -2,12 +2,15 @@
 
 import { motion } from "framer-motion";
 
+import { QuestionCircle } from "@/styles/Icons";
+
 import EventInfos from "../EventInfos/index";
-import HeadingText from "../HeadingText";
+import PrimaryLinkButton from "../PrimaryLinkButton";
 
 interface InfoTextProps {
   days: number[];
   month: string;
+  year: number;
   beginningTime: string;
   endTime: string;
 }
@@ -15,55 +18,41 @@ interface InfoTextProps {
 const InfoText: React.FC<InfoTextProps> = ({
   days,
   month,
+  year,
   beginningTime,
   endTime,
 }) => {
   return (
-    <>
-      <HeadingText className="text-3xl md:text-5xl" text="#FallStack2024" />
-      <div className="mb-24 flex flex-col text-xl lg:flex-row">
-        <EventInfos
-          days={days}
-          month={month}
-          beginningTime={beginningTime}
-          endTime={endTime}
-        />
+    <motion.section
+      initial={{
+        opacity: 0,
+        marginRight: -500,
+      }}
+      whileInView={{
+        marginRight: 0,
+        opacity: 1,
+      }}
+      viewport={{
+        once: true,
+      }}
+      className="flex flex-col items-center gap-6 text-center text-base sm:text-lg md:px-8 lg:flex-row lg:items-center lg:justify-between lg:text-left lg:text-xl"
+    >
+      <EventInfos
+        days={days}
+        month={month}
+        year={year}
+        beginningTime={beginningTime}
+        endTime={endTime}
+      />
 
-        <motion.section
-          initial={{
-            opacity: 0,
-            marginRight: -500,
-          }}
-          whileInView={{
-            marginRight: 0,
-            opacity: 1,
-          }}
-          viewport={{
-            once: true,
-          }}
-          className="flex flex-col space-y-2 text-center leading-7 md:text-left md:text-xl md:leading-8 lg:px-10"
-        >
-          <p className="font-light">
-            O <span className="font-bold text-orange-600">Fallstack</span>{" "}
-            aproxima, todos os anos, estudantes do curso de Engenharia
-            Informática do
-            <span className="font-bold">
-              {" "}
-              Instituto Superior de Engenharia do Porto{" "}
-            </span>
-            de empresas que atuam no setor informático.
-          </p>
-
-          <p className="mt-6 font-light">
-            Graças a este evento, os estudantes têm uma oportunidade única de
-            <span className="font-bold text-orange-600"> interagir</span> com
-            empresas diretamente ao longo de dois dias de evento repletos de
-            <span className="font-bold text-orange-600"> partilha</span> de
-            conhecimento e experiências.
-          </p>
-        </motion.section>
-      </div>
-    </>
+      <PrimaryLinkButton
+        loading={false}
+        href="/location"
+        className="w-full max-w-xs justify-center gap-2 !px-4 !py-3 text-base font-semibold sm:text-lg lg:mt-0 lg:max-w-none lg:self-center"
+      >
+        <QuestionCircle /> Como chegar?
+      </PrimaryLinkButton>
+    </motion.section>
   );
 };
 

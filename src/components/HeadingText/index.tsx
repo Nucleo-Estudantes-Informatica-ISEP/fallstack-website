@@ -9,8 +9,8 @@ const HeadingText: React.FC<HeadingTextProps> = ({ text, className }) => {
   return (
     <h1
       className={`${
-        className ? className : "text-5xl md:text-6xl"
-      } mb-12 text-center font-bold md:text-4xl lg:mt-12 lg:text-5xl`}
+        className ? className : ""
+      } my-12 text-center text-3xl md:text-4xl lg:text-6xl`}
     >
       {text}
     </h1>

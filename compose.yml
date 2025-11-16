@@ -3,7 +3,7 @@ services:
   mongo1:
     hostname: mongo1
     image: mongo
-    container_name: "fallstack2024-mongo"
+    container_name: "fallstack2025-mongo"
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example

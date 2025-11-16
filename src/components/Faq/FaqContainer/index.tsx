@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 
 import FaqQuestion, { FaqProps } from "../FaqQuestion";
 
@@ -6,14 +8,22 @@ interface FaqContainerProps {
   faqs: FaqProps[];
 }
 const FaqContainer: React.FC<FaqContainerProps> = ({ faqs }) => {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+
+  const handleToggle = (index: number) => {
+    setActiveIndex((prev) => (prev === index ? null : index));
+  };
+
   return (
-    <div className="mx-auto flex w-[90%] flex-col md:w-5/6">
-      {faqs.map(({ question, answer }, i) => (
+    <div className="mx-auto flex w-full flex-col gap-4">
+      {faqs.map((faq) => (
         <FaqQuestion
-          key={question}
-          index={i}
-          question={question}
-          answer={answer}
+          key={faq.question}
+          question={faq.question}
+          answer={faq.answer}
+          index={faq.index}
+          isOpen={activeIndex === faq.index}
+          onToggle={() => handleToggle(faq.index)}
         />
       ))}
     </div>

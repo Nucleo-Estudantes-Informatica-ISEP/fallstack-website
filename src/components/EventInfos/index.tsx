@@ -1,12 +1,13 @@
 import { FunctionComponent } from "react";
 
-import { Alarm, CalendarEvent, GeoAlt } from "@/styles/Icons";
+import { Calendar, Pin, Watch } from "@/styles/Icons";
 
 import InfoBit from "../InfoBit";
 
 interface EventInfosProps {
   days: number[];
   month: string;
+  year: number;
   beginningTime: string;
   endTime: string;
 }
@@ -14,20 +15,18 @@ interface EventInfosProps {
 const EventInfos: FunctionComponent<EventInfosProps> = ({
   days,
   month,
+  year,
   beginningTime,
   endTime,
 }) => {
   return (
-    <section className="mx-auto my-16 flex flex-col justify-around gap-8 text-lg font-bold lg:my-0 lg:justify-center lg:px-28 lg:text-xl">
+    <section className="flex flex-col items-center gap-2 text-base sm:text-lg lg:my-0 lg:items-start lg:px-16 lg:text-2xl">
       <InfoBit
-        icon={<CalendarEvent />}
-        info={`${days.join(" e ")} de ${month}`}
+        icon={<Calendar />}
+        info={`${days.join(" e ")} de ${month} ${year}`}
       />
-      <InfoBit icon={<Alarm />} info={`${beginningTime} - ${endTime}`} />
-      <InfoBit
-        icon={<GeoAlt />}
-        info={"Instituto Superior de Engenharia do Porto"}
-      />
+      <InfoBit icon={<Watch />} info={`${beginningTime}-${endTime}`} />
+      <InfoBit icon={<Pin className="size-[30px]" />} info={"ISEP"} />
     </section>
   );
 };

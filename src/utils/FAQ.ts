@@ -35,13 +35,13 @@ export const FAQ: FaqProps[] = [
     index: 5,
     question: "Há oportunidade para fazer perguntas?",
     answer:
-      "Sim! No primeiro dia do evento, dia 26 de novembro, as empresas têm tempos dedicados para realizarem uma apresentação na qual serão discutidos tópicos como quem são, os seus valores e missão e o que procuram. No fim de cada apresentação terás a oportunidade de participar no Q&A para teres todas as tuas dúvidas e curiosidades esclarecidas!",
+      "Sim! No primeiro dia do evento, dia 25 de novembro, as empresas têm tempos dedicados para realizarem uma apresentação na qual serão discutidos tópicos como quem são, os seus valores e missão e o que procuram. No fim de cada apresentação terás a oportunidade de participar no Q&A para teres todas as tuas dúvidas e curiosidades esclarecidas!",
   },
   {
     index: 6,
     question: "Existem workshops ou atividades práticas durante o evento?",
     answer:
-      "Não. O Fallstack foca-se em trazer o contacto direto entre as empresas e os estudantes a partir de apresentações (dia 26) e por interações diretas (dia 27). Fica atento às redes sociais do NEI-ISEP para outros momentos que organizamos ao longo do ano com esse intuito.",
+      "Não. O Fallstack foca-se em trazer o contacto direto entre as empresas e os estudantes a partir de apresentações (dia 25) e por interações diretas (dia 26). Fica atento às redes sociais do NEI-ISEP para outros momentos que organizamos ao longo do ano com esse intuito.",
   },
   {
     index: 7,

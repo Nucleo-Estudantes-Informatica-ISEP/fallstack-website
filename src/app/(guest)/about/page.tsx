@@ -23,10 +23,10 @@ const about: React.FC = () => {
         </h1>
         <p className="my-4 text-center text-lg">
           <Link
-            href="https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2024"
+            href="https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025"
             className="font-normal text-primary"
           >
-            https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2024
+            https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025
           </Link>
         </p>
       </div>

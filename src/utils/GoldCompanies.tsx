@@ -1,16 +1,22 @@
 import { Archive, Leaf, Trophy } from "@/styles/Icons";
 
+/*
+  cgiLogo,
+	deloitteLogo,
+	devoteamLogo,
+	devscopeLogo,
+*/ 
 import { CompanyProps } from "../components/Companies/Company";
 import {
-  aprLogo,
-  delloiteLogo,
-  DevscopeLogo,
-  niwLogo,
+  cgiLogo,
+  deloitteLogo,
+  devoteamLogo,
+  devscopeLogo,
 } from "./CompaniesImages";
 
 export const GoldCompanies: CompanyProps[] = [
   {
-    logoHref: aprLogo,
+    logoHref: cgiLogo,
     name: "apr",
     interests: ["Cloud Computing", "Infrastructure", "Security"],
     modalInformation: {
@@ -69,7 +75,7 @@ export const GoldCompanies: CompanyProps[] = [
     className: "w-3/4",
   },
   {
-    logoHref: delloiteLogo,
+    logoHref: deloitteLogo,
     name: "deloitte",
     interests: [
       "Outsystems",
@@ -169,8 +175,8 @@ export const GoldCompanies: CompanyProps[] = [
     },
   },
   {
-    logoHref: DevscopeLogo,
-    name: "devScope",
+    logoHref: devscopeLogo,
+    name: "Devscope",
     interests: ["AI", "Software Development", "Frontend"],
     modalInformation: {
       title: "DevScope",
@@ -213,8 +219,8 @@ export const GoldCompanies: CompanyProps[] = [
     },
   },
   {
-    logoHref: niwLogo,
-    name: "niw",
+    logoHref: devoteamLogo,
+    name: "Devoteam",
     interests: [
       "Infrastructure",
       "Devops",
@@ -222,7 +228,7 @@ export const GoldCompanies: CompanyProps[] = [
       "Analytics",
     ],
     modalInformation: {
-      title: "NiW",
+      title: "Devoteam",
       bodyText: (
         <p>
           NiW is a fresh chapter for a brand with a long, successful history,

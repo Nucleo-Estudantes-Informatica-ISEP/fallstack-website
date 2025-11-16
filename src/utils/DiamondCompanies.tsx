@@ -1,9 +1,75 @@
 import { Archive, Chart, Leaf, Trophy } from "@/styles/Icons";
 
 import { CompanyProps } from "../components/Companies/Company";
-import { armisLogo, convatecLogo, hitachiLogo } from "./CompaniesImages";
+import { aprLogo, armisLogo, cloudflareLogo, hitachiLogo } from "./CompaniesImages";
+
+
+
+ // parceiros diamond:
+ /*
+  APR - Technology Solutions
+  ARMIS
+  Cloudflare
+  Hitachi Solutions
+ */
+
 
 export const DiamondCompanies: CompanyProps[] = [
+  {
+    logoHref: aprLogo,
+    name: "APR - Technology Solutions",
+    modalInformation: {
+      title: "APR - Technology Solutions",
+      bodyText: (        
+        <p> 
+
+          Somos uma empresa tecnológica com mais de 30 anos de experiência, 
+          parceira da Microsoft, dedicada à inovação, desenvolvimento e implementação 
+          de soluções que impulsionam o crescimento dos nossos clientes. 
+          Com uma oferta diversificada e especializações em ERP Dynamics Business 
+          Central, Systems, CRM Solutions e Microsoft Power Platform, 
+          atuamos em múltiplos setores, liderando a transformação digital de organizações 
+          em todo o mundo.
+
+          A nossa presença reflete um compromisso global 
+          com a excelência tecnológica, apoiando empresas na otimização de 
+          processos, aumento da eficiência operacional e automação de 
+          tarefas, sempre com foco na segurança digital.
+          Mais do que implementar tecnologia, oferecemos consultoria 
+          estratégica, suporte contínuo e desenvolvimento aplicacional 
+          personalizado, ajustado às necessidades específicas de cada negócio. 
+          A nossa metodologia centrada no cliente permite-nos 
+          antecipar tendências, responder rapidamente às mudanças do 
+          mercado e preparar as empresas para o futuro digital.
+        </p>
+      ),
+      instagramLink: "https://www.instagram.com/aprtechnologysolutions/",
+      linkedinLink: "https://www.linkedin.com/company/apr-technology-solutions/",
+      facebookLink: "https://www.facebook.com/aprtechnologysolutions",
+      youtubeLink: "https://www.youtube.com/@aprtechnologysolutions",
+      website: "https://www.apr.pt",
+      videoTitle: "Vídeo promocional",
+      videoHref:
+        "https://www.youtube.com/embed/QkeMa02JqD4?si=xNaIvpGCvDycJz4A",
+      facts: [
+        {
+          iconSrc: Trophy,
+          description:
+            "Multinacional com a sua presença em 11 países diferentes",
+        },
+        {
+          iconSrc: Archive,
+          description: "+ 18 anos de história",
+        },
+        {
+          iconSrc: Leaf,
+          description: "Acolhimento de estagiários curriculares",
+        },
+      ],
+    },
+    className: "w-42",
+    interests: ["AI", "Mobile", "Software Development", "Backend"],
+  },
   {
     logoHref: armisLogo,
     name: "armis",
@@ -53,60 +119,56 @@ export const DiamondCompanies: CompanyProps[] = [
     },
     className: "w-42",
     interests: ["AI", "Mobile", "Software Development", "Backend"],
-  },
-  {
-    logoHref: convatecLogo,
-    name: "convatec",
-    interests: [],
+  },{
+    logoHref: cloudflareLogo,
+    name: "Cloudflare",
+    interests: ["Backend", "Cloud Computing", "Data Analysis"],
     modalInformation: {
-      title: "ConvaTec",
+      title: "Cloudflare",
       bodyText: (
         <>
           <p>
-            A ConvaTec é uma companhia global de tecnologias e produtos médicos,
-            com posições de liderança de mercado no tratamento de feridas,
-            cuidados em ostomia, continência e cuidado intensivo, além de atuar
-            com dispositivos de infusão.
+            Hitachi Solutions is a consulting company, Microsoft Solution
+            Partner and system integrator specialising in innovative solutions
+            for large organisations in the private and public sector. Hitachi
+            Solutions has opportunities for graduates who are based in Portugal
+            and have a keen interest in technology, plus a desire to pursue an
+            international career in consulting.
           </p>
           <br />
           <p>
-            Nossos produtos oferecem uma gama de benefícios clínicos e
-            econômicos, incluindo a prevenção de infecções, proteção de uma pele
-            em risco, melhora de resultados de pacientes e redução de custos
-            totais de tratamento. Nossas marcas incluem os modernos curativos
-            AQUACEL®, que formam um gel quando em contato com o exsudato da
-            ferida, criando um ambiente úmido para cicatrização da ferida.
-          </p>
-          <br />
-          <p>
-            A ConvaTec possui mais de 8.000 funcionários, com 11 unidades de
-            fabricação em oito países, operando em mais de 100 países.
+            Our office address is Avenida da Senhora da Hora 357, Matosinhos.
+            Our website is Hitachi Solutions | Business Transformation
+            Consultancy (hitachi-solutions.pt) and if you have any queries,
+            please send an email to ioliveira@hitachisolutions.com .
           </p>
         </>
       ),
-      videoTitle: "Vídeo promocional",
-      website: "https://www.convatec.pt",
-      instagramLink: "https://www.instagram.com/convatecostomiaportugal/?hl=pt",
+      instagramLink: "https://www.instagram.com/hitachisolutions.portugal/",
       linkedinLink:
-        "https://www.linkedin.com/company/convatec/?trk=public_profile_topcard-current-company&originalSubdomain=pt",
+        "https://www.linkedin.com/company/hitachi-solutions-portugal/",
+      website: "https://hitachi-solutions.pt/",
+      videoTitle: "Vídeo promocional",
       videoHref:
-        "https://www.youtube.com/embed/_KY96eNgrZ8?si=irw5378pUNvFgJaE",
+        "https://www.youtube.com/embed/I4RyT-u2aIw?si=aAfGMCR3zVnAaHJp",
       facts: [
         {
-          iconSrc: Trophy,
-          description: "Está listada na London Stock Exchange",
+          iconSrc: Archive,
+          description: "Empresa de consultoria global",
         },
         {
-          iconSrc: Archive,
-          description: "Fundada em 1978",
+          iconSrc: Leaf,
+          description: "Cultura diversificada e recompensadora",
         },
         {
           iconSrc: Chart,
-          description: "Produtos e serviços vendidos em mais de 100 países",
+          description:
+            "Especializados em aplicações empresariais amigáveis baseadas na Microsoft cloud",
         },
       ],
     },
   },
+
   {
     logoHref: hitachiLogo,
     name: "hitachi",

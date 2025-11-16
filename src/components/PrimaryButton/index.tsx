@@ -24,8 +24,7 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
       {...rest}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`rounded-lg border border-transparent bg-primary px-4 py-1 text-center
-        text-sm leading-5 text-white transition-opacity duration-200 focus:outline-none focus:ring active:bg-primary disabled:opacity-80 ${className}`}
+      className={`bg-primary rounded-lg border border-transparent px-4 py-1 text-center text-sm leading-5 transition-opacity duration-200 focus:ring focus:outline-none disabled:opacity-80 ${className}`}
     >
       {loading ? <Spinner /> : children}
     </button>

@@ -1,16 +1,30 @@
-import armisLogo from "../../public/assets/images/companies/diamond/armis_logo.webp";
-import convatecLogo from "../../public/assets/images/companies/diamond/convatec_logo.webp";
-import hitachiLogo from "../../public/assets/images/companies/diamond/hitachi_logo.webp";
-import aprLogo from "../../public/assets/images/companies/gold/apr_logo.webp";
-import delloiteLogo from "../../public/assets/images/companies/gold/delloite.webp";
-import DevscopeLogo from "../../public/assets/images/companies/gold/devscope_logo.webp";
-import niwLogo from "../../public/assets/images/companies/gold/niw_logo.webp";
-import AccentureLogo from "../../public/assets/images/companies/silver/accenture.png";
-import AkaLogo from "../../public/assets/images/companies/silver/akaPeople.webp";
+// Diamond 
+import aprLogo from "../../public/assets/images/companies/diamond/apr.webp";
+import armisLogo from "../../public/assets/images/companies/diamond/armis.webp";
+import cloudflareLogo from "../../public/assets/images/companies/diamond/cloudflare.webp";
+import hitachiLogo from "../../public/assets/images/companies/diamond/hitachi.webp";
+// Gold
+
+import cgiLogo from "../../public/assets/images/companies/gold/cgi.webp";
+import deloitteLogo from "../../public/assets/images/companies/gold/deloitte.webp";
+import devoteamLogo from "../../public/assets/images/companies/gold/devoteam.webp";
+import devscopeLogo from "../../public/assets/images/companies/gold/devscope.webp";
+
+// Silver
+import AccentureLogo from "../../public/assets/images/companies/silver/accenture.webp";
+import cegidLogo from "../../public/assets/images/companies/silver/cegid.webp";
 import glinttLogo from "../../public/assets/images/companies/silver/glintt.webp";
-import KonkLogo from "../../public/assets/images/companies/silver/konk.webp";
-import msgLifeIberiaLogo from "../../public/assets/images/companies/silver/msg.webp";
-import NatixisLogo from "../../public/assets/images/companies/silver/natixis.png";
+
+// ! - faltam ficheiros no dept de imagem relativos a msg life iberia 
+import msgLogo from "../../public/assets/images/companies/silver/msg.webp";
+//Dei import à logo antiga
+
+import itimLogo from "../../public/assets/images/companies/silver/itim.webp";
+
+// Bronze 
+import euronextLogo from "../../public/assets/images/companies/bronze/euronext.webp";
+import liderteamLogo from "../../public/assets/images/companies/bronze/liderteam.webp";
+
 
 // Sponsors
 import aeisepLogo from "../../public/assets/images/sponsors/aeisep.png";
@@ -21,23 +35,34 @@ import dominosLogo from "../../public/assets/images/sponsors/dominos.png";
 import bocaDoceLogo from "../../public/assets/images/sponsors/bocaDoce.png";
 
 export {
-	AccentureLogo,
-	aeisepLogo,
-	AkaLogo,
+	// Diamond
 	aprLogo,
 	armisLogo,
-	convatecLogo,
-	delloiteLogo,
-	DevscopeLogo,
-	divinalLogo,
-	glinttLogo,
+	cloudflareLogo,
 	hitachiLogo,
-	KonkLogo,
-	msgLifeIberiaLogo,
-	NatixisLogo,
-	niwLogo,
+
+	// Gold
+	cgiLogo,
+	deloitteLogo,
+	devoteamLogo,
+	devscopeLogo,
+
+	// Silver
+	AccentureLogo,
+	cegidLogo,
+	glinttLogo,
+	itimLogo,
+	msgLogo,
+
+	// Bronze
+	euronextLogo,
+	liderteamLogo,
+
+	// Sponsors
+	aeisepLogo,
+	divinalLogo,
+	melhorCroissantLogo,
 	deiLogo,
 	dominosLogo,
-	melhorCroissantLogo,
-	bocaDoceLogo
+	bocaDoceLogo,
 };
