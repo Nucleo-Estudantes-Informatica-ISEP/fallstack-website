@@ -6,11 +6,11 @@ export default function hrefByCompanyTier(
   websiteUrl: string | undefined
 ): string {
   switch (tier) {
-    case "Diamond":
+    case "diamond":
       return `/company/${name}`;
-    case "Gold":
+    case "gold":
       return `/company/${name}`;
-    case "Silver":
+    case "silver":
       return websiteUrl || "/";
     default:
       throw new Error("Tier not found");
