@@ -10,6 +10,8 @@ import {
 
 import InstallButton from "../InstallButton";
 import { FaLink } from "react-icons/fa6";
+import { MdOutlinePrivacyTip } from "react-icons/md";
+import { FaInfo } from "react-icons/fa";
 
 interface FooterProps {
   neiLogoSrc: StaticImageData;
@@ -80,10 +82,20 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-5">
-            <InstallButton />
+            <InstallButton 
+            className="scale-180 text-xl drop-shadow-xl hover:scale-190 transition-all duration-300" />
+
+            <Link
+              href="/privacy-policy"
+              title="Política de Privacidade"
+              className="text-xl drop-shadow-xl hover:scale-110 transition-all duration-300"
+            >
+              <MdOutlinePrivacyTip color="text" size={45} />
+            </Link>
           </div>
         </div>
       </div>
+
       <div className="flex w-full justify-center pb-6">
         <p className="select-none text-sm font-normal! text-secondary sm:text-base">
           Copyright &copy; {currentYear}. All rights reserved.
@@ -92,4 +104,5 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
     </footer>
   );
 };
+
 export default Footer;
