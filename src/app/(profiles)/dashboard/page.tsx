@@ -6,7 +6,7 @@ import getServerSession from "@/services/getServerSession";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
 
-const Dashboard: React.FC = async () => {
+const Dashboard = async () => {
   const session = await getServerSession();
   if (!session || !session.company) return Custom404();
 

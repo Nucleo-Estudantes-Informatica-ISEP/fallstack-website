@@ -18,7 +18,7 @@ interface ProfileProps {
   }>;
 }
 
-const StudentPage: React.FC<ProfileProps> = async (props) => {
+const StudentPage = async (props: ProfileProps) => {
   const params = await props.params;
   const session = await getServerSession();
 
