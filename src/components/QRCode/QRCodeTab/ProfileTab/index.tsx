@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
-import QRCode from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 import { UserWithProfile } from "@/types/UserWithProfile";
 import { BASE_URL } from "@/services/api";
@@ -52,7 +52,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
     <div className="mt-10 grid grid-cols-1 sm:mt-0 sm:grid-cols-1 md:mt-6 md:grid-cols-2 lg:mt-20">
       {/* left column */}
       <div className="flex items-center justify-center">
-        {qrcode && <QRCode size={150} value={qrcode} />}
+        {qrcode && <QRCodeSVG size={150} value={qrcode} />}
       </div>
       {/* right column */}
       <div className="flex items-center justify-center pb-0 pt-14 sm:py-0">
