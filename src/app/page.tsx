@@ -2,7 +2,7 @@
 
 import { FunctionComponent, useRef } from "react";
 import LogoWhite from "~/public/assets/images/logo_white.svg";
-import NeiLogoWhite from "~/public/assets/images/logo-simplified-white.png";
+import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-white.png";
 
 import Content from "@/components/Content";
 import Footer from "@/components/Footer";
@@ -24,7 +24,7 @@ const App: FunctionComponent = () => {
         />
         <Content contentRef={contentRef} />
         <HeadsUp />
-        <Footer neiLogoSrc={NeiLogoWhite} />
+        <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
       </GenericContainer>
     </HeroContainer>
   );
