@@ -1,5 +1,5 @@
 import { PrismaClient, Role, Tier } from "@prisma/client";
-import { createAdminClient } from "~/supabase/admin";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 import config from "@/config";
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "~/supabase/admin";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { v4 as uuidv4 } from "uuid";
 
 import config from "@/config";

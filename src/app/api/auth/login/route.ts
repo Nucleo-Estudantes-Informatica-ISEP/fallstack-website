@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "~/supabase/client";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { ZodError } from "zod";
 
 import { signInSchema } from "@/schemas/signInSchema";

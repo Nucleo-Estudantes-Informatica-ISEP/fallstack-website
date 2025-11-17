@@ -1,4 +1,4 @@
-import { createClient as createSupabaseServerClient } from "~/supabase/client";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 import prisma from "@/lib/prisma";
 

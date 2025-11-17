@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "~/supabase/client";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 import config from "@/config";
 
