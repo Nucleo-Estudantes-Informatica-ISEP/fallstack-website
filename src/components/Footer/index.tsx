@@ -12,9 +12,7 @@ import {
 } from "react-icons/ri";
 
 
-import { FaLink } from "react-icons/fa6";
 import { MdOutlinePrivacyTip } from "react-icons/md";
-import { FaInfo } from "react-icons/fa";
 import InstallButton from "@/components/InstallButton";
 
 interface FooterProps {
@@ -86,7 +84,7 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-5">
-            <InstallButton 
+            <InstallButton
             className="scale-180 text-xl drop-shadow-xl hover:scale-190 transition-all duration-300" />
 
             <Link
