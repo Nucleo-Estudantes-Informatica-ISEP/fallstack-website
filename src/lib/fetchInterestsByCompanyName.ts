@@ -13,9 +13,9 @@ export async function fetchInterestsByCompanyName(companyName: string) {
 
   const response = await prisma.interest.findMany({
     where: {
-      Users: {
+      users: {
         some: {
-          id: company.userId,
+          id: company.id,
         },
       },
     },

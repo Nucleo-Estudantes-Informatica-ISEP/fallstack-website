@@ -80,7 +80,7 @@ export async function POST(req: NextRequest, { params }: ActionParams) {
   const student = await prisma.student.findUnique({
     where: { id: session.student.id },
     include: {
-      ActionCompletion: {
+      actionCompletions: {
         where: {
           actionId: id,
         },
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest, { params }: ActionParams) {
       { status: 404 }
     );
 
-  if (student.ActionCompletion.length > 0)
+  if (student.actionCompletions.length > 0)
     return NextResponse.json(
       { error: "Já completaste esta ação" },
       { status: 400 }
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest, { params }: ActionParams) {
 
   await prisma.actionCompletion.create({
     data: {
-      studentCode: session.student.code,
+      studentId: session.student.id,
       actionId: id,
     },
   });

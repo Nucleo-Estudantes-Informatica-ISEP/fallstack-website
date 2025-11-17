@@ -49,8 +49,7 @@ export async function POST(req: Request) {
   let savedStudent = await prisma.savedStudent.findFirst({
     where: {
       studentId: student.id,
-      savedById: company.id,
-      isSaved: true,
+      companyId: company.id,
     },
   });
 
@@ -64,8 +63,7 @@ export async function POST(req: Request) {
   // save the student
   const savedStudentData = {
     studentId: student.id,
-    savedById: company.id,
-    isSaved: true,
+    companyId: company.id,
   };
 
   savedStudent = await prisma.savedStudent.create({

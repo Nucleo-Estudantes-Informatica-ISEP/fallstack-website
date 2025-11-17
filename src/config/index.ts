@@ -1,7 +1,7 @@
 const config = {
   cookies: {
     auth: {
-      name: "@Fallstack23:auth",
+      name: "@Fallstack25:auth",
       maxAge: 34560000, // 400 days (in seconds) - its the maximum value for the maxAge of a cookie
     },
   },
@@ -9,7 +9,7 @@ const config = {
   defaultAvatar: "/assets/images/default_user.png",
 
   localStorage: {
-    hideInstallPrompt: "@Fallstack23:hidePrompt",
+    hideInstallPrompt: "@Fallstack25:hidePrompt",
   },
 
   uploads: {

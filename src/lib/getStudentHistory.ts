@@ -19,13 +19,7 @@ const getStudentHistory = async (code: string) => {
       studentId: session.student.id,
     },
     include: {
-      savedBy: {
-        select: {
-          company: true,
-          student: true,
-          isAdmin: true,
-        },
-      },
+      savedBy: true,
     },
     orderBy: {
       createdAt: "desc",

@@ -3,14 +3,12 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 
-import Spinner from "../Spinner";
+import Spinner from "@/components/Spinner";
 
 import download from "downloadjs";
 
 interface SavedStudent {
-  id: string;
   studentId: string;
-  isSaved: boolean;
   createdAt: Date;
   student: {
     name: string;
@@ -18,6 +16,7 @@ interface SavedStudent {
       email: string;
     };
   };
+  id?: string;
 }
 
 interface ExcelButtonProps {
@@ -35,7 +34,7 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
     setIsLoading(true);
     const dataJSON = data.map((scan) => {
       return {
-        id: scan.id,
+        id: scan.id ?? `${scan.studentId}-${scan.createdAt.toISOString()}`,
         studentId: scan.studentId,
         studentName: scan.student.name,
         studentEmail: scan.student.user.email,

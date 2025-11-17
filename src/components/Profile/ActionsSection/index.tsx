@@ -1,3 +1,5 @@
+"use client";
+
 import { Action } from "@prisma/client";
 
 import { CheckSquare, Square } from "@/styles/Icons";

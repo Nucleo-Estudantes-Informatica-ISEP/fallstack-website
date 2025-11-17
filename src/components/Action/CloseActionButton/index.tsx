@@ -1,6 +1,6 @@
 "use client";
 
-import PrimaryButton from "../../PrimaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 interface CloseActionButtonProps {
   id: string;

@@ -6,12 +6,11 @@ import { motion } from "framer-motion";
 
 import { ProfileData } from "@/types/ProfileData";
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import ProfileSection from "@/components/Profile/ProfileSection";
+import SettingsSection from "@/components/Profile/SettingsSection";
+import StatsSection from "@/components/Profile/StatsSection";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
-
-import ProfileSection from "../ProfileSection";
-import SettingsSection from "../SettingsSection";
-import StatsSection from "../StatsSection";
 
 interface ProfileSectionContainerProps {
   student: Student & { user: User };

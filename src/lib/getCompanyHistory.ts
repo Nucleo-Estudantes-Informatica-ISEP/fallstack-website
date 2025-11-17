@@ -14,15 +14,10 @@ const getCompanyHistory = async () => {
 
   const result = await prisma.savedStudent.findMany({
     where: {
-      savedById: session.id,
+      companyId: session.company.id,
     },
     include: {
-      savedBy: {
-        select: {
-          company: true,
-          student: true,
-        },
-      },
+      savedBy: true,
       student: true,
     },
     orderBy: {

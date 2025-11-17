@@ -1,25 +1,36 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
-import { Session } from "@/types/Session";
-import config from "@/config";
 import prisma from "@/lib/prisma";
 
 const getServerSession = async () => {
-  const cookie = (await cookies()).get(config.cookies.auth.name);
-  const token = cookie?.value as string;
-  if (!token) return null;
-
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) return null;
-
   try {
-    const decoded = jwt.verify(token, jwtSecret) as Session;
-    const user = await prisma.user.findUserWithProfile(decoded.id);
-    if (!user) return null;
-    return user;
-  } catch (error) {
-    console.log("Error verifying token", error);
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) return null;
+
+    // Prefer finding by Supabase auth user id
+    const prismaUser = await prisma.user.findUserWithProfile(user.id);
+    if (prismaUser) return prismaUser;
+
+    // Fallback: try resolving by email if available
+    if (user.email) {
+      try {
+        const byEmail = await prisma.user.findUnique({
+          where: { email: user.email },
+          include: { company: true, student: true },
+        } as any);
+        if (byEmail) return byEmail as any;
+      } catch (_) {
+        // ignore if email not a unique field in schema
+      }
+    }
+
+    return null;
+  } catch (e) {
+    console.log("Supabase session error", e);
     return null;
   }
 };

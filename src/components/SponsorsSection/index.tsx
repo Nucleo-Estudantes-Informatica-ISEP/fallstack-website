@@ -1,11 +1,13 @@
+"use client";
+
 import { FunctionComponent } from "react";
 
-import { Sponsors } from "../../utils/Sponsors";
-import SponsorsContainer from "../SponsorsContainer";
+import { Sponsors } from "@/utils/Sponsors";
+import SponsorsContainer from "@/components/SponsorsContainer";
 
 const SponsorsSection: FunctionComponent = () => {
   return (
-     <section className="bg-background border-b-secondary flex flex-col items-center gap-y-10 border-b text-center">
+    <section className="flex flex-col items-center gap-y-10 border-b border-b-secondary bg-background text-center">
       <SponsorsContainer sponsors={Sponsors} />
     </section>
   );
