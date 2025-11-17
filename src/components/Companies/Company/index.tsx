@@ -1,10 +1,11 @@
+"use client";
+
 import React from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 
+import { ModalInformation } from "@/types/ModalProps";
 import { CompaniesTier } from "@/utils/GetColorTier";
-
-import { ModalInformation } from "../../../types/ModalProps";
 
 export interface CompanyProps {
   logoHref: StaticImageData;

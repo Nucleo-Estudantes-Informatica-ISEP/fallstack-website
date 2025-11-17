@@ -3,107 +3,98 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
-  email               String               @unique
-  password            String
-  createdAt           DateTime             @default(now())
-  updatedAt           DateTime             @updatedAt
-  role                Role                 @default(STUDENT)
-  isAdmin             Boolean              @default(false)
-  savedStudents       SavedStudent[]
-  passwordResetTokens PasswordResetToken[]
+  id       String   @id @default(uuid()) @db.Uuid
+  email    String   @unique
+  role     Role     @default(STUDENT)
+  isAdmin  Boolean  @default(false)
+  updatedAt DateTime @updatedAt
 
   student   Student?
   company   Company?
-  interests Interest[] @relation(fields: [interestId], references: [id])
-
-  interestId String[] @db.ObjectId
-}
-
-model Action {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
-  name        String  @unique
-  description String
-  points      Int
-  altText     String?
-  isLive      Boolean @default(false)
-  isVisible   Boolean @default(true)
-
-  ActionCompletion ActionCompletion[]
-}
-
-model ActionCompletion {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  completedAt DateTime @default(now())
-
-  action  Action  @relation(fields: [actionId], references: [id])
-  Student Student @relation(fields: [studentCode], references: [code])
-
-  actionId    String @db.ObjectId
-  studentCode String
-
-  @@unique([actionId, studentCode])
+  interests Interest[]
 }
 
 model Student {
-  id       String         @id @default(auto()) @map("_id") @db.ObjectId
-  user     User           @relation(fields: [userId], references: [id])
-  code     String         @unique
+  id       String   @id @db.Uuid
+  user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  code     String   @unique
   name     String
-  bio      String?        @db.String
+  bio      String?
   year     String
-  saves    SavedStudent[]
   cv       String?
   linkedin String?
   github   String?
-  avatar   String?        @map("image")
+  avatar   String?
+  updatedAt DateTime @updatedAt
 
-  userId String @unique @db.ObjectId
+  actionCompletions ActionCompletion[]
+  savedByCompanies  SavedStudent[]
 
-  ActionCompletion ActionCompletion[]
+  @@index([code])
 }
 
 model Company {
-  id     String  @id @default(auto()) @map("_id") @db.ObjectId
-  user   User    @relation(fields: [userId], references: [id])
-  name   String  @unique
-  tier   Tier
-  avatar String? @map("image")
+  id       String   @id @db.Uuid
+  user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
 
-  userId String @unique @db.ObjectId
+  name     String   @unique
+  tier     Tier
+  avatar   String?
+  updatedAt DateTime @updatedAt
+
+  savedStudents SavedStudent[]
+
+  @@index([name])
+}
+
+model Action {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  points      Int
+  altText     String?
+  isLive      Boolean  @default(false)
+  isVisible   Boolean  @default(true)
+  updatedAt   DateTime @updatedAt
+
+  actionCompletions ActionCompletion[]
+}
+
+model ActionCompletion {
+  id          String   @id @default(uuid())
+  completedAt DateTime @default(now())
+
+  action       Action   @relation(fields: [actionId], references: [id])
+  student      Student  @relation(fields: [studentId], references: [id])
+
+  actionId     String
+  studentId    String   @db.Uuid
+
+  @@unique([actionId, studentId])
 }
 
 model Interest {
-  id   String @id @default(auto()) @map("_id") @db.ObjectId
-  name String @unique
+  id     String  @id @default(uuid()) @db.Uuid
+  name   String  @unique
 
-  UserIds String[] @db.ObjectId
-  Users   User[]   @relation(fields: [UserIds], references: [id])
+  users  User[]
 }
 
 model SavedStudent {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  student   Student  @relation(fields: [studentId], references: [id])
-  savedBy   User     @relation(fields: [savedById], references: [id])
-  isSaved   Boolean  @default(false)
+  studentId String   @db.Uuid
+  companyId String   @db.Uuid
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  savedBy   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  studentId String @db.ObjectId
-  savedById String @db.ObjectId
-}
-
-model PasswordResetToken {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  token String @unique
-
-  user User @relation(fields: [userId], references: [id])
-
-  userId String @db.ObjectId
+  @@id([studentId, companyId])
 }
 
 enum Role {

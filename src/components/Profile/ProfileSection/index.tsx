@@ -4,9 +4,11 @@ import Skeleton from "react-loading-skeleton";
 import { ProfileData } from "@/types/ProfileData";
 
 import BioSection from "../BioSection";
-import InterestMatchingSection from "../InterestMatchingSection";
-import InterestsSection from "../InterestsSection";
-import OpenCvSection from "../OpenCvSection";
+import ActionsSection from "@/components/Profile/ActionsSection";
+import BioSection from "@/components/Profile/BioSection";
+import InterestMatchingSection from "@/components/Profile/InterestMatchingSection";
+import InterestsSection from "@/components/Profile/InterestsSection";
+import OpenCvSection from "@/components/Profile/OpenCvSection";
 
 interface ProfileSectionProps {
   student: Student & { user: User };

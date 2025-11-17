@@ -25,13 +25,12 @@ const prismaClientSingleton = () => {
               where: { id },
               include: {
                 company: true,
-                savedStudents: true,
                 interests: true,
                 student: true,
               },
             });
             if (!user) return null;
-            return exclude(user, ["password"]);
+            return user;
           } catch (error) {
             console.log(error);
           }

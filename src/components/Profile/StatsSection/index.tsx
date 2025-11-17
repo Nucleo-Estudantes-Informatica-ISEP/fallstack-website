@@ -1,6 +1,7 @@
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+"use client";
 
-import HistorySection from "../../HistorySection";
+import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import HistorySection from "@/components/HistorySection";
 
 interface StatsProps {
   stats: number[];

@@ -5,7 +5,7 @@ import getServerSession from "@/services/getServerSession";
 import AdminSavedSection from "@/components/AdminSavedSection";
 import Custom404 from "@/app/not-found";
 
-const giveaway: React.FC = async () => {
+const giveaway = async () => {
   const session = await getServerSession();
 
   if (!session || !session.isAdmin) {

@@ -1,36 +1,26 @@
-import { UploadResponse } from "@/types/UploadResponse";
 import { BASE_URL } from "@/services/api";
 
-export async function getSignedUrl(target: string, contentType: string) {
-  const res = await fetch(BASE_URL + "/upload", {
-    body: JSON.stringify({ target, contentType }),
+export async function uploadAvatar(image: Blob) {
+  const form = new FormData();
+  form.append("file", image);
+
+  const res = await fetch(`${BASE_URL}/storage/avatar`, {
     method: "POST",
+    body: form,
   });
 
-  return (await res.json()) as UploadResponse;
+  if (!res.ok) return null;
+  return (await res.json()) as { id: string; url: string };
 }
 
-export async function uploadToBucket(signed: UploadResponse, blob: Blob) {
-  try {
-    const res = await fetch(signed.url, {
-      body: blob,
-      method: "PUT",
-      headers: signed.headers,
-    });
-    return res;
-  } catch (error) {
-    console.log(error);
-    return { status: 500 };
-  }
-}
+export async function uploadCv(file: File) {
+  const form = new FormData();
+  form.append("file", file);
 
-export async function setTarget(code: string, signed: UploadResponse) {
-  const res = await fetch(`${BASE_URL}/students/${code}/${signed.target}`, {
-    body: JSON.stringify({ uploadId: signed.id }),
+  const res = await fetch(`${BASE_URL}/storage/cv`, {
     method: "POST",
+    body: form,
   });
-
-  const { url }: { url: string } = await res.json();
-
-  return url;
+  if (!res.ok) return null;
+  return (await res.json()) as { id: string };
 }

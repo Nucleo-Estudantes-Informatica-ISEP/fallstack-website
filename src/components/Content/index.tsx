@@ -1,11 +1,11 @@
-import { ScheduleDays } from "../../utils/ScheduleDays";
-import CompaniesSection from "../Companies/CompaniesSection";
-import FaqSection from "../Faq/FaqSection";
-import HeadingText from "../HeadingText";
-import InfoText from "../InfoText";
-import PassSection from "../PassSection";
-import Schedule from "../Schedule";
-import SponsorsSection from "../SponsorsSection";
+import { ScheduleDays } from "@/utils/ScheduleDays";
+import CompaniesSection from "@/components/Companies/CompaniesSection";
+import FaqSection from "@/components/Faq/FaqSection";
+import HeadingText from "@/components/HeadingText";
+import InfoText from "@/components/InfoText";
+import PassSection from "@/components/PassSection";
+import Schedule from "@/components/Schedule";
+import SponsorsSection from "@/components/SponsorsSection";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
@@ -16,7 +16,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
     <>
       <section
         ref={contentRef}
-        className="w-full bg-[url('/assets/images/bgDates.svg')] bg-cover bg-center bg-no-repeat pt-14 pb-12"
+        className="w-full bg-[url('/assets/images/bgDates.svg')] bg-cover bg-center bg-no-repeat pb-12 pt-14"
       >
         <InfoText
           days={[25, 26]}
@@ -28,7 +28,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
       </section>
       <section
         ref={contentRef}
-        className="bg-background flex flex-col items-center pb-20"
+        className="flex flex-col items-center bg-background pb-20"
       >
         <Schedule
           firstDayTitle="25 de Novembro"
@@ -39,17 +39,17 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
 
       <section className="flex w-full flex-col items-center bg-[url('/assets/images/bgInterview.svg')] bg-cover bg-center bg-no-repeat pb-12 text-center">
         <HeadingText className="!font-normal" text="Speed Interviews" />
-        <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
+        <p className="w-full max-w-2xl text-balance text-lg leading-relaxed sm:text-xl">
           Este ano podes experienciar a modalidade de speed interviews com
           algumas das empresas presentes.
         </p>
       </section>
 
-      <section className="bg-background w-full !px-0">
+      <section className="w-full bg-background !px-0">
         <PassSection />
       </section>
 
-      <section className="bg-background w-full !px-0">
+      <section className="w-full bg-background !px-0">
         <CompaniesSection />
       </section>
 

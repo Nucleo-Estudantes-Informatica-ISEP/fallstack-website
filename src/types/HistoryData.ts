@@ -1,19 +1,13 @@
 import { Prisma } from "@prisma/client";
 
 export interface HistoryData {
-  isSaved: boolean;
-  createdAt: string;
-  studentId: number;
-  savedById: number;
+  createdAt: string | Date;
+  studentId: string;
+  savedById?: string;
   student: Prisma.StudentGetPayload<{
     include: { user: { include: { interests: true } } };
   }>;
   savedBy: {
-    company?: {
-      name: string;
-    };
-    student?: {
-      name: string;
-    };
+    name: string;
   };
 }

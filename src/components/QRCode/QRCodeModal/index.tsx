@@ -3,13 +3,12 @@
 import React from "react";
 
 import { UserWithProfile } from "@/types/UserWithProfile";
+import { useDisableBodyScroll } from "@/hooks/disableBackgroundMoving";
 import useIsMobile from "@/hooks/useIsMobile";
-
-import { useDisableBodyScroll } from "../../../hooks/disableBackgroundMoving";
-import QRCodeTab from "../QRCodeTab";
-import CompanyTab from "../QRCodeTab/CompanyTab";
-import ProfileTab from "../QRCodeTab/ProfileTab";
-import ScanTab from "../QRCodeTab/ScanTab";
+import QRCodeTab from "@/components/QRCode/QRCodeTab";
+import CompanyTab from "@/components/QRCode/QRCodeTab/CompanyTab";
+import ProfileTab from "@/components/QRCode/QRCodeTab/ProfileTab";
+import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 
 import { BsX } from "react-icons/bs";
 
