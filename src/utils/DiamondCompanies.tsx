@@ -1,6 +1,6 @@
+import { CompanyProps } from "@/components/Companies/Company";
 import { Archive, Chart, Leaf, Trophy } from "@/styles/Icons";
 
-import { CompanyProps } from "../components/Companies/Company";
 import { aprLogo, armisLogo, cloudflareLogo, hitachiLogo } from "./CompaniesImages";
 
 

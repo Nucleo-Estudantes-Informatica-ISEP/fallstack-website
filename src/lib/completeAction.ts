@@ -9,9 +9,14 @@ export async function completeAction(studentCode: string, actionName: string) {
 
   if (!action) return null;
 
+  const student = await prisma.student.findUnique({
+    where: { code: studentCode },
+  });
+  if (!student) return null;
+
   const alreadyCompleted = await prisma.actionCompletion.findFirst({
     where: {
-      studentCode,
+      studentId: student.id,
       actionId: action.id,
     },
   });
@@ -20,7 +25,7 @@ export async function completeAction(studentCode: string, actionName: string) {
 
   const studentAction = await prisma.actionCompletion.create({
     data: {
-      studentCode,
+      studentId: student.id,
       actionId: action.id,
     },
   });

@@ -1,3 +1,5 @@
+"use client";
+
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 import Image from "next/image";
 

@@ -1,6 +1,9 @@
+"use client";
+
 import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
+import { FaLink } from "react-icons/fa6";
 import {
   RiFacebookCircleFill,
   RiInstagramLine,
@@ -8,8 +11,7 @@ import {
   RiTwitterXFill,
 } from "react-icons/ri";
 
-import InstallButton from "../InstallButton";
-import { FaLink } from "react-icons/fa6";
+import InstallButton from "@/components/InstallButton";
 
 interface FooterProps {
   neiLogoSrc: StaticImageData;
@@ -20,7 +22,7 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
   const NEI_WEBSITE_URL = "https://nei-isep.org";
 
   return (
-    <footer className="bg-background flex w-full flex-col items-center gap-10 px-6 pt-12 text-center">
+    <footer className="flex w-full flex-col items-center gap-10 bg-background px-6 pt-12 text-center">
       <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-around">
         <div className="max-h-[200px] max-w-[220px] transition-all duration-300 hover:scale-105 sm:max-w-[275px] lg:max-w-[320px]">
           <a href={NEI_WEBSITE_URL} target="_blank" rel="noreferrer">
@@ -85,7 +87,7 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
         </div>
       </div>
       <div className="flex w-full justify-center pb-6">
-        <p className="select-none text-sm font-normal! text-secondary sm:text-base">
+        <p className="font-normal! select-none text-sm text-secondary sm:text-base">
           Copyright &copy; {currentYear}. All rights reserved.
         </p>
       </div>

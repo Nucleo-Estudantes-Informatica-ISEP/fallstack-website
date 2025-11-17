@@ -5,11 +5,10 @@ import Link from "next/link";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
+import LogoutButton from "@/components/LogoutButton";
+import UserButton from "@/components/Profile/UserButton";
+import QRCodeButton from "@/components/QRCode/QRCodeButton";
 import { LogIn } from "@/styles/Icons";
-
-import LogoutButton from "../LogoutButton";
-import UserButton from "../Profile/UserButton";
-import QRCodeButton from "../QRCode/QRCodeButton";
 
 const TopBar: React.FC = () => {
   const { scrollYProgress } = useScroll();

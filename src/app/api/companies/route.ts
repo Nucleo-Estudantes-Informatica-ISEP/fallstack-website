@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { storage } from "@/lib/firebaseAdmin";
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
 import { postCompanySchema } from "@/schemas/postCompanySchema";
@@ -18,12 +17,12 @@ export async function POST(req: Request) {
 
     // valid body
     const userId = session.id;
-    const { name, tier, avatar } = body;
+    const { name, tier, avatarUrl } = body as any;
 
     // checks if company already exists
-    const existingCompany = await prisma.company.findFirst({
+    const existingCompany = await prisma.company.findUnique({
       where: {
-        userId: userId,
+        id: userId,
       },
     });
 
@@ -37,6 +36,7 @@ export async function POST(req: Request) {
     // create company
     const company = await prisma.company.create({
       data: {
+        id: userId,
         name: name,
         user: {
           connect: {
@@ -55,30 +55,8 @@ export async function POST(req: Request) {
       );
     }
 
-    let avatarUrl = null;
-    if (avatar) {
-      const uploaded = `uploaded/avatar/${avatar}`;
-
-      const [exists] = await storage.bucket().file(uploaded).exists();
-      if (!exists)
-        return NextResponse.json(
-          { error: "Invalid avatar upload id" },
-          { status: 400 }
-        );
-
-      // move avatar to distribution
-      const distribution = `distribution/avatar/${avatar}`;
-      await storage.bucket().file(uploaded).move(distribution);
-
-      // create a public accessible url
-      const [meta] = await storage.bucket().file(distribution).makePublic();
-
-      const { bucket, object } = meta;
-      avatarUrl = `https://storage.googleapis.com/${bucket}/${object}`;
-    }
-
     await prisma.company.update({
-      data: { avatar: avatarUrl },
+      data: { avatar: avatarUrl ?? null },
       where: { id: company.id },
     });
 

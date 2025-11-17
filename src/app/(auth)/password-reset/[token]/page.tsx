@@ -2,12 +2,10 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
-import { logIn } from "@/lib/auth";
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import Input from "@/components/Input";

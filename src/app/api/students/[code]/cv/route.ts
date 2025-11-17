@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { z } from "zod";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
-import { storage } from "@/lib/firebaseAdmin";
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
 
-const schema = z.object({
-  uploadId: z.string().uuid(),
-});
+const schema = z.union([
+  z.object({ uploadId: z.string().uuid() }), // Firebase flow
+  z.object({ id: z.string().uuid() }), // Supabase flow
+]);
 
 interface StudentParams {
   params: Promise<{
@@ -35,18 +36,18 @@ export async function GET(_: NextRequest, props: StudentParams) {
   if (!student.cv)
     return NextResponse.json({ error: "Student has no cv" }, { status: 404 });
 
-  const filename = `distribution/cv/${student.cv}`;
+  const admin = createAdminClient();
+  // Try Supabase first
+  const supaPath = `distribution/cv/${student.cv}.pdf`;
+  const supa = await admin.storage
+    .from("cvs")
+    .createSignedUrl(supaPath, 60 * 5);
+  if (!supa.error && supa.data) {
+    return NextResponse.json({ url: supa.data.signedUrl });
+  }
 
-  const [url] = await storage
-    .bucket()
-    .file(filename)
-    .getSignedUrl({
-      action: "read",
-      version: "v4",
-      expires: Date.now() + 5 * 60 * 1000, // 5 minutes
-    });
-
-  return NextResponse.json({ url });
+  // If not in Supabase, return 404 as legacy storage is removed
+  return NextResponse.json({ error: "CV not found" }, { status: 404 });
 }
 
 export async function POST(req: NextRequest, props: StudentParams) {
@@ -65,33 +66,24 @@ export async function POST(req: NextRequest, props: StudentParams) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
 
-  const { uploadId } = parsed.data;
-  const uploaded = `uploaded/cv/${uploadId}`;
+  if ("id" in parsed.data) {
+    // Supabase flow
+    const { id } = parsed.data;
+    const admin = createAdminClient();
+    const path = `distribution/cv/${id}.pdf`;
+    const check = await admin.storage.from("cvs").createSignedUrl(path, 60);
+    if (check.error)
+      return NextResponse.json({ error: "Invalid upload id" }, { status: 400 });
 
-  const [exists] = await storage.bucket().file(uploaded).exists();
-  if (!exists)
-    return NextResponse.json({ error: "Invalid upload id" }, { status: 400 });
-
-  // move to distribution
-  const distribution = `distribution/cv/${uploadId}`;
-  await storage.bucket().file(uploaded).move(distribution);
-
-  // remove old cv if existent
-  if (session.student.cv) {
-    const old = `distribution/cv/${session.student.cv}`;
-    await storage.bucket().file(old).delete({ ignoreNotFound: true });
+    await prisma.student.update({ where: { code }, data: { cv: id } });
+  } else {
+    return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
-
-  // the cv id will be saved, id is used to generate the url
-  await prisma.student.update({
-    where: { code },
-    data: { cv: uploadId },
-  });
 
   await completeAction(
     session.student.code,
     config.constants.actionNames.uploadCv
   );
 
-  return NextResponse.json({ uploadId });
+  return NextResponse.json({ ok: true });
 }

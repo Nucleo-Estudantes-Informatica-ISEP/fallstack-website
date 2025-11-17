@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
-import { hashPassword, setCookie, signJwt } from "@/services/authService";
 import { signUpSchema } from "@/schemas/signUpSchema";
 
 export async function POST(req: Request) {
@@ -13,43 +13,38 @@ export async function POST(req: Request) {
     // valid body
     const { email, password, role } = body;
 
-    // check if email is already being used
-    const emailExists = await prisma.user.findUnique({
-      where: {
-        email,
-      },
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
     });
 
-    if (emailExists) {
+    if (error || !data.user)
       return NextResponse.json(
-        { message: "That email is already being used" },
-        { status: 401 }
+        { message: error?.message || "Unable to sign up" },
+        { status: 400 }
       );
+
+    // If no session (e.g., email confirmation disabled is required), try to create a session
+    if (!data.session) {
+      await supabase.auth.signInWithPassword({ email, password });
     }
 
-    // Hash the password before saving it in the database
-    const hashedPassword = await hashPassword(password);
+    // Ensure Prisma user exists with Supabase auth id
+    const supabaseUser = data.user;
 
-    // create user
-    const user = await prisma.user.create({
-      data: {
-        email: email,
-        password: hashedPassword,
-        role: role !== undefined ? "COMPANY" : "STUDENT",
-      },
-    });
-
-    // check if user was created
-    if (!user) {
-      return NextResponse.json(
-        { message: "Something went wrong" },
-        { status: 500 }
-      );
+    // Try to create if not exists; if exists, leave it
+    try {
+      await prisma.user.create({
+        data: {
+          id: supabaseUser.id,
+          email: email,
+          role: role !== undefined ? "COMPANY" : "STUDENT",
+        } as any,
+      });
+    } catch (_) {
+      // user already exists, ignore
     }
-
-    const { id } = user;
-    const token = signJwt({ id });
-    await setCookie(token);
 
     return NextResponse.json(
       { message: "Signup successfully" },

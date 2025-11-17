@@ -1,7 +1,9 @@
-import Image from "next/image";
+"use client";
 
-import mapImage from "../../../public/assets/images/map.png";
-import HeadingText from "../HeadingText";
+import Image from "next/image";
+import mapImage from "~/public/assets/images/map.png";
+
+import HeadingText from "@/components/HeadingText";
 
 const Map: React.FC = () => {
   return (

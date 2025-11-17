@@ -22,7 +22,7 @@ export async function fetchInterestMatchingCompanies(
 
   const userInterests = await prisma.interest.findMany({
     where: {
-      Users: {
+      users: {
         some: {
           id: userId,
         },

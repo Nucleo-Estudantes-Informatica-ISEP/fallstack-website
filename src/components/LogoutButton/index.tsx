@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { BiLogOut } from "react-icons/bi";
+import swal from "sweetalert";
 
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { ZodError } from "zod";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
-import { storage } from "@/lib/firebaseAdmin";
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
@@ -30,7 +30,16 @@ export async function POST(req: Request) {
 
     // valid body
     const userId = session.id;
-    const { name, year, avatar, cv, bio, interests } = body;
+    const {
+      name,
+      year,
+      avatar,
+      cv,
+      bio,
+      interests,
+      avatarUrl: avatarUrlBody,
+      cvId,
+    } = body as any;
 
     // create code for student
     let code: string = "";
@@ -68,7 +77,7 @@ export async function POST(req: Request) {
       where: { id: userId },
       data: {
         interests: {
-          connect: interests.map((interest) => ({ name: interest })),
+          connect: interests.map((interest: string) => ({ name: interest })),
         },
       },
     });
@@ -83,54 +92,41 @@ export async function POST(req: Request) {
 
     await completeAction(code, config.constants.actionNames.createProfile);
 
-    let avatarUrl = null;
-    if (avatar) {
-      const uploaded = `uploaded/avatar/${avatar}`;
-
-      const [exists] = await storage.bucket().file(uploaded).exists();
-      if (!exists)
+    let avatarUrl = avatarUrlBody ?? null;
+    if (!avatarUrl && avatar) {
+      const admin = createAdminClient();
+      const supaCheck = await admin.storage
+        .from("avatars")
+        .createSignedUrl(`distribution/avatar/${avatar}`, 60);
+      if (!supaCheck.error) {
+        const { data: pub } = admin.storage
+          .from("avatars")
+          .getPublicUrl(`distribution/avatar/${avatar}`);
+        avatarUrl = pub.publicUrl;
+      } else {
         return NextResponse.json(
           { error: "Invalid avatar upload id" },
           { status: 400 }
         );
-
-      // move avatar to distribution
-      const distribution = `distribution/avatar/${avatar}`;
-      await storage.bucket().file(uploaded).move(distribution);
-
-      // create a public accessible url
-      const [meta] = await storage.bucket().file(distribution).makePublic();
-
-      const { bucket, object } = meta;
-      avatarUrl = `https://storage.googleapis.com/${bucket}/${object}`;
+      }
     }
 
-    if (cv) {
-      const uploaded = `uploaded/cv/${cv}`;
-
-      const [cvExists] = await storage.bucket().file(uploaded).exists();
-      if (!cvExists)
-        return NextResponse.json(
-          { error: "Invalid CV upload id" },
-          { status: 400 }
-        );
-
-      // move to distribution
-      const distribution = `distribution/cv/${cv}`;
-      await storage.bucket().file(uploaded).move(distribution);
-
+    let cvIdFinal: string | null = null;
+    if (cvId) {
+      // Supabase CV
+      cvIdFinal = cvId;
       await completeAction(code, config.constants.actionNames.uploadCv);
     }
 
     await prisma.student.update({
-      data: { avatar: avatarUrl, cv },
+      data: { avatar: avatarUrl, cv: cvIdFinal },
       where: { id: student.id },
     });
 
     return NextResponse.json(student, { status: 201 });
   } catch (e) {
     if (e instanceof ZodError)
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },

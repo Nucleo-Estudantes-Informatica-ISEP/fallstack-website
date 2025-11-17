@@ -1,8 +1,9 @@
+"use client";
+
 import { Company } from "@prisma/client";
 
+import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import DownloadButton from "@/components/DownloadButton";
-
-import CompanySavesSection from "../CompanyHistorySection";
 
 interface StatsProps {
   company: Company;
