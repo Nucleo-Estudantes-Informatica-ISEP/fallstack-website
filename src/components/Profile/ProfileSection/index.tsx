@@ -3,7 +3,6 @@ import Skeleton from "react-loading-skeleton";
 
 import { ProfileData } from "@/types/ProfileData";
 
-import BioSection from "../BioSection";
 import ActionsSection from "@/components/Profile/ActionsSection";
 import BioSection from "@/components/Profile/BioSection";
 import InterestMatchingSection from "@/components/Profile/InterestMatchingSection";
