@@ -10,7 +10,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
   return (
     <section className="my-4 flex flex-wrap space-y-5 px-12">
       <div className="flex w-full flex-col">
-        <h3 className="text-left text-xl font-bold text-gray-600">Ações</h3>
+        <h3 className="text-left text-xl font-bold text-gray-600">Desafios</h3>
         <div className="mt-2 flex  w-full flex-wrap items-center gap-x-6 gap-y-3">
           {actions.length === 0 ? (
             <p className="text-center text-lg text-gray-500">

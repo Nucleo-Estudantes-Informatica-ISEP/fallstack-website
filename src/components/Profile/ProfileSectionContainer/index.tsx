@@ -9,6 +9,7 @@ import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
 
+import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
 import SettingsSection from "../SettingsSection";
 import StatsSection from "../StatsSection";
@@ -32,9 +33,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   historyData,
   actions,
 }) => {
-  const [activeTab, setActiveTab] = useState<
-    "Sumário" | "Perfil" | "Definições"
-  >("Sumário");
+  const tabs = ["Sumário", "Perfil", "Desafios", "Definições"] as const;
+  const [activeTab, setActiveTab] = useState<(typeof tabs)[number]>("Sumário");
 
   const [profile, setProfile] = useState<ProfileData>({
     interests,
@@ -95,44 +95,23 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         </motion.div>
 
         <div className="relative mb-4 mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-y-4 text-center text-lg md:mb-0 md:flex-row lg:w-5/6">
-          <motion.div
-            className="absolute bottom-0 left-0 hidden w-44 border-b-4 border-primary md:block"
-            animate={{
-              x:
-                activeTab === "Sumário"
-                  ? 0
-                  : activeTab === "Perfil"
-                    ? "168%"
-                    : "336%",
-            }}
-            initial={"165%"}
-          ></motion.div>
-          <button
-            onClick={() => setActiveTab("Sumário")}
-            className={`w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
-              activeTab === "Sumário" ? "font-bold text-primary" : "font-normal"
-            }`}
-          >
-            Sumário
-          </button>
-          <button
-            onClick={() => setActiveTab("Perfil")}
-            className={`w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
-              activeTab === "Perfil" ? "font-bold text-primary" : "font-normal"
-            }`}
-          >
-            Perfil
-          </button>
-          <button
-            onClick={() => setActiveTab("Definições")}
-            className={`w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
-              activeTab === "Definições"
-                ? "font-bold text-primary"
-                : "font-normal"
-            }`}
-          >
-            Definições
-          </button>
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`relative w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
+                activeTab === tab ? "font-bold text-primary" : "font-normal"
+              }`}
+            >
+              {tab}
+              {activeTab === tab && (
+                <motion.span
+                  layoutId="tabIndicator"
+                  className="absolute -bottom-1 left-0 hidden h-1 w-full rounded-full bg-primary md:block"
+                />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -149,9 +128,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             student={student}
             interests={interests}
             profile={profile}
-            actions={actions}
           />
         )}
+        {activeTab === "Desafios" && <ActionsSection actions={actions} />}
         {activeTab === "Definições" && (
           <SettingsSection
             student={student}
