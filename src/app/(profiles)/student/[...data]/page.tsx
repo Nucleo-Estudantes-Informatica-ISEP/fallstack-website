@@ -11,6 +11,8 @@ import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyPr
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import Footer from "@/components/Footer";
+import NeiLogoSimplifiedWhite from "../../../../../public/assets/images/logo-simplified-white.png";
 
 interface ProfileProps {
   params: Promise<{
@@ -77,36 +79,39 @@ const StudentPage: React.FC<ProfileProps> = async (props) => {
     ).length;
 
   return (
-    <section
-      className={`${
-        session && session.role === "COMPANY" ? "bg-company" : "bg-inherit"
-      } flex size-full min-h-screen flex-col items-center`}
-    >
-      {session && session.company && session.role === "COMPANY" ? (
-        <CompanyViewProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-          company={session.company}
-          token={code}
-          isSavedStudent={isSavedStudent}
-        />
-      ) : !session || session.student?.code !== code ? (
-        <PublicProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-        />
-      ) : (
-        <ProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-          globalStats={globalStats}
-          todayStats={todayStats}
-          companiesLeft={companiesLeft}
-          historyData={history instanceof HttpError ? [] : history}
-          actions={actions}
-        />
-      )}
-    </section>
+    <>
+      <section
+        className={`${
+          session && session.role === "COMPANY" ? "bg-company" : "bg-inherit"
+        } flex size-full min-h-screen flex-col items-center`}
+      >
+        {session && session.company && session.role === "COMPANY" ? (
+          <CompanyViewProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+            company={session.company}
+            token={code}
+            isSavedStudent={isSavedStudent}
+          />
+        ) : !session || session.student?.code !== code ? (
+          <PublicProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+          />
+        ) : (
+          <ProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+            globalStats={globalStats}
+            todayStats={todayStats}
+            companiesLeft={companiesLeft}
+            historyData={history instanceof HttpError ? [] : history}
+            actions={actions}
+          />
+        )}
+      </section>
+      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
+    </>
   );
 };
 

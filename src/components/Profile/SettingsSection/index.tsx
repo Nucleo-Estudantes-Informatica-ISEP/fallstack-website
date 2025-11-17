@@ -26,7 +26,9 @@ interface SettingsSectionProps {
   student: Student & { user: User };
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
-  setActiveTab: Dispatch<SetStateAction<"Sumário" | "Perfil" | "Definições">>;
+  setActiveTab: Dispatch<
+    SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
+  >;
 }
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({
