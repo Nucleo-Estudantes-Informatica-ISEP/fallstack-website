@@ -6,8 +6,8 @@ import {
   FiChevronRight,
   FiFileText,
   FiLogOut,
-  FiUser,
 } from "react-icons/fi";
+import { BsQrCodeScan } from "react-icons/bs";
 import { IconType } from "react-icons";
 import swal from "sweetalert";
 import { useRouter } from "next/navigation";
@@ -27,9 +27,9 @@ interface CompanyProfileSectionContainerProps {
   interests: string[];
 }
 
-type TabValue = "Sumário" | "Perfis Salvos";
+type TabValue = "Sumário" | "Scan de Perfil";
 
-type MenuKey = "sumario" | "perfis_salvos" | "logout";
+type MenuKey = "sumario" | "scan_perfil" | "logout";
 
 interface SidebarItem {
   key: MenuKey;
@@ -40,7 +40,7 @@ interface SidebarItem {
 
 const menuMap: Record<TabValue, MenuKey> = {
   "Sumário": "sumario",
-  "Perfis Salvos": "perfis_salvos",
+  "Scan de Perfil": "scan_perfil",
 };
 
 const CompanyProfileSectionContainer: React.FC<
@@ -61,10 +61,10 @@ const CompanyProfileSectionContainer: React.FC<
   const sidebarItems: SidebarItem[] = [
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     {
-      key: "perfis_salvos",
-      label: "Perfis Salvos",
-      icon: FiUser,
-      tabValue: "Perfis Salvos",
+      key: "scan_perfil",
+      label: "Scan de Perfil",
+      icon: BsQrCodeScan,
+      tabValue: "Scan de Perfil",
     },
   ];
 
@@ -137,7 +137,7 @@ const CompanyProfileSectionContainer: React.FC<
             interests={interests}
           />
         );
-      case "Perfis Salvos":
+      case "Scan de Perfil":
         return (
           <CompanySavedProfilesSection company={company} />
         );
@@ -180,19 +180,6 @@ const CompanyProfileSectionContainer: React.FC<
         >
           {company.name}
         </h1>
-        <p
-          className="text-gray-100"
-          style={{
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 400,
-            fontSize: "20px",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-            marginBottom: "clamp(13px, 6.25vw, 63px)",
-          }}
-        >
-          {company.email}
-        </p>
       </div>
 
       <div
