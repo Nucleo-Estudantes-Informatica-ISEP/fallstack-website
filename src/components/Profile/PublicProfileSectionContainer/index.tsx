@@ -4,13 +4,12 @@ import { Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 
+import BioSection from "@/components/Profile/BioSection";
+import ContactSection from "@/components/Profile/ContactSection";
+import InterestsSection from "@/components/Profile/InterestsSection";
+import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
-
-import BioSection from "../BioSection";
-import ContactSection from "../ContactSection";
-import InterestsSection from "../InterestsSection";
-import OpenCvSection from "../OpenCvSection";
 
 interface PublicProfileSectionContainerProps {
   student: Student & { user: User };

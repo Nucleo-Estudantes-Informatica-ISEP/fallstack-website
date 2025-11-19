@@ -8,9 +8,8 @@ import swal from "sweetalert";
 
 import { HistoryData } from "@/types/HistoryData";
 import { BASE_URL } from "@/services/api";
+import OpenCvSectionCompany from "@/components/Companies/CompanyProfile/OpenCvSectionCompany";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
-
-import OpenCvSectionCompany from "../OpenCvSectionCompany";
 
 interface HistorySectionProps {
   company: Company;

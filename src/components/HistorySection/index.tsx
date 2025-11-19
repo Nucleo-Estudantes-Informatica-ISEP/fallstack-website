@@ -1,3 +1,5 @@
+"use client";
+
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -30,29 +32,19 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
         ) : (
           historyData.map((item) => (
             <div
-              key={`${item.studentId}-${item.isSaved}-${item.createdAt}`}
+              key={`${item.studentId}-${item.createdAt}`}
               className="flex flex-row items-center border-t-2 py-4 first:border-0"
             >
               <div className="flex w-1/3 justify-center px-1 text-center font-bold max-md:w-5/12">
                 <span className="w-full truncate">
-                  {isCompany
-                    ? item.student.name
-                    : item.savedBy.company
-                      ? item.savedBy.company.name
-                      : item.savedBy.isAdmin
-                        ? "NEI-ISEP"
-                        : item.savedBy.student?.name}
+                  {isCompany ? item.student.name : item.savedBy.name}
                 </span>
               </div>
               <div className="flex w-1/3 justify-center px-1 max-md:w-4/12">
                 {formatDateDDStrMonthHourMin(item.createdAt)}
               </div>
               <div className="flex w-1/3 justify-center px-1 font-bold max-md:w-3/12">
-                {item.isSaved ? (
-                  <span className="text-primary">SALVO</span>
-                ) : (
-                  <span className="text-black">SCAN</span>
-                )}
+                <span className="text-primary">SALVO</span>
               </div>
             </div>
           ))

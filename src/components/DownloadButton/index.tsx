@@ -3,9 +3,8 @@
 import { useState } from "react";
 
 import { BASE_URL } from "@/services/api";
+import Spinner from "@/components/Spinner";
 import { DownloadIcon } from "@/styles/Icons";
-
-import Spinner from "../Spinner";
 
 import download from "downloadjs";
 

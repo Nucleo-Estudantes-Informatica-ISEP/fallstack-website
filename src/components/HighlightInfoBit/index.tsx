@@ -3,7 +3,7 @@
 import { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
-import Highlight from "../Highlight";
+import Highlight from "@/components/Highlight";
 
 interface InfoBitProps {
   icon: React.ReactNode;

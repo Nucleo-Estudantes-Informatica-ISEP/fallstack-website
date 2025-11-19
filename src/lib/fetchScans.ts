@@ -1,30 +1,36 @@
 import prisma from "./prisma";
 
 export async function fetchScans() {
-  return await prisma.savedStudent.findMany({
+  const scans = await prisma.savedStudent.findMany({
     distinct: ["studentId"],
     select: {
-      id: true,
       studentId: true,
       createdAt: true,
-	  isSaved: true,
       student: {
-        select: {
-          name: true,
-          user: {
-            select: {
-              email: true,
-            },
-          },
+        include: {
+          user: true,
         },
+      },
+      savedBy: {
+        select: { id: true },
       },
     },
     where: {
       savedBy: {
-        email: {
-          equals: "info@nei-isep.org",
+        user: {
+          email: {
+            equals: "info@nei-isep.org",
+          },
         },
       },
     },
   });
+
+  // Provide a synthetic id for UI/exports
+  return scans.map((s) => ({
+    id: `${s.studentId}-${s.createdAt.toISOString()}`,
+    studentId: s.studentId,
+    createdAt: s.createdAt,
+    student: s.student,
+  }));
 }

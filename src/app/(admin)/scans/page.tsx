@@ -1,10 +1,9 @@
 import { fetchScans } from "@/lib/fetchScans";
 import getServerSession from "@/services/getServerSession";
 import ExcelButton from "@/components/ExcelButton";
-import PrimaryButton from "@/components/PrimaryButton";
 import Custom404 from "@/app/not-found";
 
-const scans: React.FC = async () => {
+const scans = async () => {
   const session = await getServerSession();
   if (!session || !session.isAdmin) {
     return Custom404();

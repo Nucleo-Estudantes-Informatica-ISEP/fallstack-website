@@ -6,11 +6,11 @@ import getServerSession from "@/services/getServerSession";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
 
-const Dashboard: React.FC = async () => {
+const Dashboard = async () => {
   const session = await getServerSession();
   if (!session || !session.company) return Custom404();
 
-  const globalStats = await getCompanyStats(session.id);
+  const globalStats = await getCompanyStats(session.company.id);
 
   const students = await getStudents();
   const totalStudents = students.length;
@@ -26,7 +26,9 @@ const Dashboard: React.FC = async () => {
         globalStats={globalStats}
         totalStudents={totalStudents}
         history={history instanceof HttpError ? [] : history}
-        interests={session.interests.map((interest) => interest.name)}
+        interests={session.interests.map(
+          (interest: { name: string }) => interest.name
+        )}
       />
     </section>
   );

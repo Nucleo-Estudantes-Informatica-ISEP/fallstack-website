@@ -3,10 +3,10 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import swal from "sweetalert";
 
 import { BASE_URL } from "@/services/api";
-
-import QRCodeScanner from "../../QRCodeScanner";
+import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 
 interface ScanTabProps {
   setHidden: React.Dispatch<React.SetStateAction<boolean>>;

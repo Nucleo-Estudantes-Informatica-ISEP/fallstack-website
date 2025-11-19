@@ -1,5 +1,5 @@
 {
-  "name": "fall-stack2023",
+  "name": "fall-stack2025",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -20,6 +20,8 @@
     "@mynaui/icons-react": "^0.3.9",
     "@next/eslint-plugin-next": "^15.5.6",
     "@rooks/use-window-size": "^4.11.2",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.58.0",
     "@tsparticles/react": "^3.0.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",

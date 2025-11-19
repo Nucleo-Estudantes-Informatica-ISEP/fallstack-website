@@ -7,12 +7,12 @@ async function wipeDatabase(): Promise<void> {
     const models = [
       "savedStudent",
       "actionCompletion",
-      "action",
+      "userInterest",
       "student",
       "company",
-      "user",
+      "action",
       "interest",
-      "passwordResetToken",
+      "user",
     ];
 
     for (const model of models) {

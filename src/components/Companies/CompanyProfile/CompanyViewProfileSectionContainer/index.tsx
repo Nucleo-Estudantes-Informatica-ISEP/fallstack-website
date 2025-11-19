@@ -2,6 +2,7 @@
 
 import { Company, Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
+import swal from "sweetalert";
 
 import { BASE_URL } from "@/services/api";
 import BioSection from "@/components/Profile/BioSection";
@@ -10,7 +11,6 @@ import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
-import swal from "sweetalert";
 
 interface CompanyViewProfileSectionContainerProps {
   student: Student & { user: User };
@@ -49,10 +49,9 @@ const CompanyViewProfileSectionContainer: React.FC<
       swal({
         title: "Error",
         text: "Erro ao salvar perfil!",
-        icon: "error"
+        icon: "error",
       });
     }
-    
   };
 
   return (

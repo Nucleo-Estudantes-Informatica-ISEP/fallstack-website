@@ -1,3 +1,5 @@
+"use client";
+
 import { Dispatch, FunctionComponent, SetStateAction, useRef } from "react";
 import Image from "next/image";
 
@@ -61,8 +63,7 @@ const BioStep: FunctionComponent<BioStepProps> = ({
         placeholder="Insere a tua bio"
         className="mb-4"
         value={data.bio ? data.bio : ""}
-        defaultValue={""}
-        autofocus={true}
+        autoFocus={true}
         setValue={handleUserBioChange}
         limit={LIMIT}
         warningLimit={LIMIT - 30}
