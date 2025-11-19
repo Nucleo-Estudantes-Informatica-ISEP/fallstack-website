@@ -7,7 +7,7 @@ import {
   FiFileText,
   FiLogOut,
 } from "react-icons/fi";
-import { BsQrCodeScan } from "react-icons/bs";
+import { BiScan } from "react-icons/bi";
 import { IconType } from "react-icons";
 import swal from "sweetalert";
 import { useRouter } from "next/navigation";
@@ -63,7 +63,7 @@ const CompanyProfileSectionContainer: React.FC<
     {
       key: "scan_perfil",
       label: "Scan de Perfil",
-      icon: BsQrCodeScan,
+      icon: BiScan,
       tabValue: "Scan de Perfil",
     },
   ];
