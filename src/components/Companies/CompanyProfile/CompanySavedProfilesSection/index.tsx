@@ -105,67 +105,120 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   };
 
   return (
-    <section className="flex w-full flex-col items-center justify-center rounded-t-3xl bg-white p-4 text-black md:rounded-md md:p-8">
-      <div className="relative w-full">
-        <h1 className="mx-auto mt-6 w-3/4 text-center text-2xl font-extrabold uppercase">
-          Scan de Perfil
+    <section className="flex w-full flex-col items-start justify-start px-4 pb-4 pt-2 text-white md:px-8 md:pb-8 md:pt-4">
+      <div className="w-full">
+        <h1
+          className="mb-6 text-white"
+          style={{
+            fontFamily: "Inter",
+            fontWeight: 600,
+            fontSize: "25px",
+            lineHeight: "100%",
+          }}
+        >
+          Scan
         </h1>
-        <DownloadButton className="absolute right-2 top-6 text-3xl" />
+        <p
+          className="mb-8 text-gray-300"
+          style={{
+            fontFamily: "Inter",
+            fontWeight: 400,
+            fontSize: "15px",
+            lineHeight: "100%",
+            textAlign: "justify",
+          }}
+        >
+          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a
+          garantir o registo das interações e a participação nos giveaways
+          promovidos pelo NEI.
+        </p>
       </div>
 
-      <div className="my-8 flex w-full flex-col items-center justify-center gap-8 lg:flex-row lg:items-start lg:justify-around">
-        <div className="flex flex-col items-center">
-          {processing ? (
-            <div
-              className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
-              role="status"
-            >
-              <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
-                A processar...
-              </span>
-            </div>
-          ) : (
-            <div className="overflow-hidden rounded-lg border-4 border-primary">
-              <QRCodeScanner handleScan={handleScan} />
-            </div>
-          )}
-          <p className="mt-4 text-center text-gray-600">
-            Aponta a câmara para o QR Code do estudante
-          </p>
-        </div>
-
-        <div className="flex flex-col items-center justify-center">
-          <div className="rounded-xl bg-gray-200 p-6">
-            <p className="mb-4 text-center font-semibold text-gray-700">
-              Ou insere o código manualmente
-            </p>
-            <div className="flex items-center justify-center">
-              <BsFillClipboardFill size={20} className="fill-black" />
-              <input
-                type="text"
-                placeholder="CÓDIGO"
-                className="z-10 ml-2 bg-slate-100 p-2 text-center text-xl font-bold uppercase text-black outline-none ring-primary focus:ring-2"
-                ref={inputRef}
-                onKeyUp={handleKeyUp}
-                maxLength={4}
-              />
-            </div>
-          </div>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            initial={{ scale: 1 }}
-            onClick={handleManualEntry}
-            className="mt-4 rounded-xl bg-primary px-6 py-2 text-lg font-bold text-white hover:opacity-90"
+      <div className="flex w-full flex-col items-center justify-center">
+        {processing ? (
+          <div
+            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            role="status"
           >
-            Ir para o perfil
-          </motion.button>
-        </div>
+            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
+              A processar...
+            </span>
+          </div>
+        ) : (
+          <div className="w-full max-w-2xl overflow-hidden bg-gray-300">
+            <QRCodeScanner handleScan={handleScan} />
+          </div>
+        )}
       </div>
 
-      <div className="w-full border-t border-gray-200 pt-8">
-        <h2 className="mb-6 text-center text-xl font-bold uppercase text-gray-800">
-          Perfis Salvos Recentemente
+      <div className="mt-8 flex w-full flex-col items-center justify-center">
+        <div className="relative flex w-full max-w-[568px] items-center">
+          <input
+            type="text"
+            placeholder="código"
+            className="h-[56px] w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 400,
+            }}
+            ref={inputRef}
+            onKeyUp={handleKeyUp}
+            maxLength={4}
+          />
+          <button
+            onClick={handleManualEntry}
+            className="absolute right-2 top-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 400,
+              lineHeight: "100%",
+            }}
+          >
+            Validar
+          </button>
+        </div>
+        <p
+          className="mt-2 text-gray-500"
+          style={{
+            fontFamily: "Inter",
+            fontWeight: 400,
+            fontSize: "11px",
+            lineHeight: "100%",
+            textAlign: "center",
+          }}
+        >
+          ou introduza o código associado ao QR Code do aluno para que o seu
+          perfil fique registado.
+        </p>
+      </div>
+
+      <div className="mt-12 w-full">
+        <h2
+          className="mb-6 text-white"
+          style={{
+            fontFamily: "Inter",
+            fontWeight: 600,
+            fontSize: "25px",
+            lineHeight: "100%",
+          }}
+        >
+          Histórico de scans
         </h2>
+        <div className="w-full border-b border-white pb-2">
+          <div
+            className="flex w-full justify-between px-4 text-white"
+            style={{
+              fontFamily: "Inter", // Assuming Font 1 is Inter
+              fontWeight: 700,
+              fontSize: "15.63px",
+              lineHeight: "24px",
+              letterSpacing: "-0.48px",
+            }}
+          >
+            <span className="flex-1 text-center">Nome</span>
+            <span className="flex-1 text-center">Data</span>
+          </div>
+        </div>
         <CompanySavesSection company={company} />
       </div>
     </section>
