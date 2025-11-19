@@ -1,13 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Company } from "@prisma/client";
-import { motion } from "framer-motion";
+import {
+  FiChevronRight,
+  FiFileText,
+  FiLogOut,
+  FiUser,
+} from "react-icons/fi";
+import { IconType } from "react-icons";
+import swal from "sweetalert";
+import { useRouter } from "next/navigation";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
+import { BASE_URL } from "@/services/api";
+import useSession from "@/hooks/useSession";
 
 interface CompanyProfileSectionContainerProps {
   company: Company;
@@ -17,72 +27,204 @@ interface CompanyProfileSectionContainerProps {
   interests: string[];
 }
 
+type TabValue = "Sumário" | "Perfis Salvos";
+
+type MenuKey = "sumario" | "perfis_salvos" | "logout";
+
+interface SidebarItem {
+  key: MenuKey;
+  label: string;
+  icon: IconType;
+  tabValue?: TabValue;
+}
+
+const menuMap: Record<TabValue, MenuKey> = {
+  "Sumário": "sumario",
+  "Perfis Salvos": "perfis_salvos",
+};
+
 const CompanyProfileSectionContainer: React.FC<
   CompanyProfileSectionContainerProps
 > = ({ company, globalStats, totalStudents, history, interests }) => {
-  const [activeTab, setActiveTab] = useState<"Sumário" | "Perfis Salvos">(
-    "Sumário"
+  const router = useRouter();
+  const session = useSession();
+
+  const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
+  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(
+    menuMap[activeTab]
   );
-  return (
-    <div className="size-full items-center justify-center bg-company-secondary md:mb-12">
-      <div
-        className={`mb-12 flex size-full flex-col items-center bg-company pt-4`}
+
+  useEffect(() => {
+    setSelectedMenu(menuMap[activeTab]);
+  }, [activeTab]);
+
+  const sidebarItems: SidebarItem[] = [
+    { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
+    {
+      key: "perfis_salvos",
+      label: "Perfis Salvos",
+      icon: FiUser,
+      tabValue: "Perfis Salvos",
+    },
+  ];
+
+  const secondaryItems: SidebarItem[] = [
+    { key: "logout", label: "Logout", icon: FiLogOut },
+  ];
+
+  const handleMenuClick = (item: SidebarItem) => {
+    setSelectedMenu(item.key);
+    if (item.tabValue) {
+      setActiveTab(item.tabValue);
+    }
+  };
+
+  const handleLogout = async () => {
+    swal("Queres mesmo mesmo sair?", {
+      buttons: ["Cancelar", "Sair"],
+      title: "Terminar sessão",
+      icon: "warning",
+      dangerMode: true,
+      timer: 5000,
+    }).then(async (value) => {
+      if (value) {
+        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
+        if (res.status === 200) {
+          session.clear();
+          swal("Logout", "Sessão terminada com sucesso", "success");
+          router.push("/");
+        }
+      }
+    });
+  };
+
+  const renderButton = (item: SidebarItem) => {
+    const isCurrent = selectedMenu === item.key;
+
+    return (
+      <button
+        key={item.key}
+        onClick={() =>
+          item.key === "logout" ? handleLogout() : handleMenuClick(item)
+        }
+        className="flex h-12 w-full items-center justify-between px-6 py-3 text-left text-white transition"
+        style={{
+          border: "1px solid #484848",
+          backgroundColor: "rgba(20,20,20,1)",
+          borderLeftWidth: isCurrent ? "4px" : "1px",
+          borderLeftColor: isCurrent ? "#ED8326" : "#484848",
+        }}
       >
-        <motion.div
-          animate={{}}
-          transition={{ duration: 0.5 }}
-          className="mt-4 flex flex-col items-center justify-center"
-        >
-          <CompanyImage company={company} />
-          <p className="my-2 items-center text-2xl">Bem-vinda {company.name}</p>
-        </motion.div>
-
-        <div className="relative mb-4 mt-8 flex w-full max-w-3xl flex-col items-center justify-between gap-y-4 text-center text-lg md:mb-0 md:flex-row lg:w-5/6">
-          <motion.div
-            className="absolute bottom-0 left-0 hidden w-44 border-b-4 border-primary md:block"
-            animate={{
-              x:
-                activeTab === "Sumário"
-                  ? 0
-                  : activeTab === "Perfis Salvos"
-                    ? "337%"
-                    : 0,
-            }}
-            initial={"165%"}
-          ></motion.div>
-          <button
-            onClick={() => setActiveTab("Sumário")}
-            className={`w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
-              activeTab === "Sumário" ? "font-bold text-primary" : "font-normal"
-            }`}
-          >
-            Sumário
-          </button>
-          <button
-            onClick={() => setActiveTab("Perfis Salvos")}
-            className={`w-44 rounded-md px-4 py-2 md:hover:bg-slate-200/30 ${
-              activeTab === "Perfis Salvos"
-                ? "font-bold text-primary"
-                : "font-normal"
-            }`}
-          >
-            Perfis Salvos
-          </button>
+        <div className="flex items-center gap-3">
+          <item.icon className="h-5 w-5" />
+          <span>{item.label}</span>
         </div>
-      </div>
+        <FiChevronRight className="h-4 w-4" />
+      </button>
+    );
+  };
 
-      <div className="mx-auto mb-12 w-full max-w-4xl md:w-5/6">
-        {activeTab === "Sumário" && (
+  const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Sumário":
+        return (
           <CompanyStatsSection
             stats={globalStats}
             students={totalStudents}
             history={history}
             interests={interests}
           />
-        )}
-        {activeTab === "Perfis Salvos" && (
+        );
+      case "Perfis Salvos":
+        return (
           <CompanySavedProfilesSection company={company} />
-        )}
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      className="flex min-h-screen w-screen flex-col"
+      style={{
+        backgroundImage: "url(/assets/images/bgHero.svg)",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+        marginLeft: "calc(50% - 50vw)",
+        marginRight: "calc(50% - 50vw)",
+      }}
+    >
+      <div
+        className="flex flex-col items-center pt-12 pb-8"
+        style={{
+          paddingLeft: horizontalPadding,
+          paddingRight: horizontalPadding,
+        }}
+      >
+        <div className="relative mb-6 flex items-center justify-center">
+          <CompanyImage company={company} />
+        </div>
+        <h1
+          className="mb-2 text-center text-white"
+          style={{
+            fontFamily: '"Coolvetica", sans-serif',
+            fontWeight: 400,
+            fontSize: "45px",
+            lineHeight: "100%",
+            letterSpacing: "0%",
+          }}
+        >
+          {company.name}
+        </h1>
+        <p
+          className="text-gray-100"
+          style={{
+            fontFamily: '"Inter", sans-serif',
+            fontWeight: 400,
+            fontSize: "20px",
+            lineHeight: "100%",
+            letterSpacing: "0%",
+            marginBottom: "clamp(13px, 6.25vw, 63px)",
+          }}
+        >
+          {company.email}
+        </p>
+      </div>
+
+      <div
+        className="flex flex-1 flex-col gap-6 pb-20 md:flex-row md:gap-2"
+        style={{
+          paddingLeft: horizontalPadding,
+          paddingRight: horizontalPadding,
+        }}
+      >
+        <div className="w-full flex-shrink-0 md:w-96">
+          <nav className="overflow-hidden bg-black shadow-xl">
+            <div className="divide-y divide-gray-800">
+              {sidebarItems.map((item) => renderButton(item))}
+            </div>
+          </nav>
+          <div style={{ height: "8px" }} />
+          <nav className="overflow-hidden bg-black shadow-xl">
+            <div className="divide-y divide-gray-800">
+              {secondaryItems.map((item) => renderButton(item))}
+            </div>
+          </nav>
+        </div>
+
+        <div
+          className="flex flex-1 flex-col bg-[rgba(20,20,20,1)] p-8 shadow-xl"
+          style={{
+            marginLeft: "clamp(0px, 0.26vw, 0px)",
+            border: "1px solid #484848",
+          }}
+        >
+          {renderContent()}
+        </div>
       </div>
     </div>
   );
