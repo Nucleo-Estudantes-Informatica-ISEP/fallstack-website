@@ -3,9 +3,8 @@
 import { useState } from "react";
 
 import { BASE_URL } from "@/services/api";
+import Spinner from "@/components/Spinner";
 import { DownloadIcon } from "@/styles/Icons";
-
-import Spinner from "../Spinner";
 
 import download from "downloadjs";
 
@@ -19,7 +18,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({ className }) => {
     setIsLoading(true);
     const res = await fetch(BASE_URL + "/export");
     const data = await res.blob();
-    download(data, "fallstack2023.csv", "text/csv");
+    download(data, "fallstack2025.csv", "text/csv");
     setIsLoading(false);
   };
 

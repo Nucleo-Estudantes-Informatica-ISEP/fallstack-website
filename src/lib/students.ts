@@ -14,20 +14,9 @@ export async function getStudentsForGiveaway(): Promise<StudentsForGiveaway[]> {
           AND: [{ role: "STUDENT" }, { isAdmin: false }],
         },
       },
-      select: {
-        id: true,
-        code: true,
-        name: true,
-        bio: true,
-        year: true,
-        cv: true,
-        linkedin: true,
-        user: {
-          select: {
-            email: true,
-          },
-        },
-        ActionCompletion: {
+      include: {
+        user: true,
+        actionCompletions: {
           select: {
             action: {
               select: {
@@ -39,22 +28,25 @@ export async function getStudentsForGiveaway(): Promise<StudentsForGiveaway[]> {
       },
     });
 
-    const studentsWithPoints = students.map((student) => ({
-      user: {
-        email: student.user.email,
-      },
-      id: student.id,
-      code: student.code,
-      name: student.name,
-      bio: student.bio,
-      year: student.year,
-      cv: student.cv,
-      linkedin: student.linkedin,
-      numberOfTotalPoints: student.ActionCompletion.reduce(
-        (sum, completion) => sum + completion.action.points,
-        0
-      ),
-    }));
+    const studentsWithPoints: StudentsForGiveaway[] = students.map(
+      (student) => ({
+        user: {
+          email: student.user.email,
+        },
+        id: student.id,
+        code: student.code,
+        name: student.name,
+        bio: student.bio,
+        year: student.year,
+        cv: student.cv,
+        linkedin: student.linkedin,
+        numberOfTotalPoints: student.actionCompletions.reduce(
+          (sum: number, completion: { action: { points: number } }) =>
+            sum + completion.action.points,
+          0
+        ),
+      })
+    );
 
     // Filter out losers
     return studentsWithPoints.filter(
@@ -82,7 +74,7 @@ export async function getStudents() {
       cv: true,
       linkedin: true,
       user: true,
-      avatar: true
+      avatar: true,
     },
   });
 }

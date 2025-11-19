@@ -18,20 +18,9 @@ export async function GET(_: NextRequest, props: StudentParams) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const result = await prisma.savedStudent.groupBy({
-    where: {
-      student: {
-        code: code,
-      },
-    },
-    by: "isSaved",
-    _count: {
-      _all: true,
-    },
+  const savedCount = await prisma.savedStudent.count({
+    where: { student: { code } },
   });
 
-  if (!result)
-    return NextResponse.json({ error: "Student not found" }, { status: 404 });
-
-  return NextResponse.json(result);
+  return NextResponse.json([savedCount, savedCount]);
 }

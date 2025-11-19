@@ -10,7 +10,7 @@ interface ActionParams {
   }>;
 }
 
-const Actions: React.FC<ActionParams> = async ({ params }) => {
+const Actions = async ({ params }: ActionParams) => {
   const session = await getServerSession();
 
   if (!session || !session.isAdmin) {

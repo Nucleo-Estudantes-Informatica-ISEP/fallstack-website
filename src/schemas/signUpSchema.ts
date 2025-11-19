@@ -1,7 +1,7 @@
-import { object, string, z } from "zod";
+import { z } from "zod";
 
-export const signUpSchema = object({
-  email: string().email(),
-  password: string().min(8),
+export const signUpSchema = z.object({
+  email: z.email(),
+  password: z.string().min(8),
   role: z.enum(["COMPANY"]).optional(),
 });

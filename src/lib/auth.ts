@@ -18,8 +18,8 @@ export async function signUp(data: StudentSignUpData) {
         bio: data.bio,
         year: data.year,
         interests: data.interests,
-        avatar: data.avatar || undefined,
-        cv: data.cv?.id,
+        avatarUrl: (data as any).avatarUrl || undefined,
+        cvId: data.cv?.id,
       }),
     });
 

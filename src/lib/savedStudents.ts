@@ -1,11 +1,11 @@
 import prisma from "./prisma";
 
-export async function isSaved(uid: string, code: string) {
-  const s = await prisma.savedStudent.findMany({
+export async function isSaved(companyId: string, code: string) {
+  const s = await prisma.savedStudent.findFirst({
     where: {
-      AND: [{ savedById: uid }, { student: { code } }, { isSaved: true }],
+      AND: [{ companyId }, { student: { code } }],
     },
   });
 
-  return !!s.length;
+  return !!s;
 }

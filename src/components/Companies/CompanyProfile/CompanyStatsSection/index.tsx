@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import swal from "sweetalert";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import { BASE_URL } from "@/services/api";

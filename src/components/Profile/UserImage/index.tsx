@@ -15,6 +15,7 @@ interface UserImageProps {
   editable?: boolean;
   setProfile?: Dispatch<SetStateAction<ProfileData>>;
   onChange?: (imgSrc: string) => void;
+  className?: string;
 }
 
 const UserImage: React.FC<UserImageProps> = ({
@@ -22,6 +23,7 @@ const UserImage: React.FC<UserImageProps> = ({
   hidden,
   editable,
   onChange,
+  className,
 }) => {
   const animation: AnimationProps = {
     variants: {
@@ -47,9 +49,14 @@ const UserImage: React.FC<UserImageProps> = ({
     if (onChange !== undefined) onChange(imageDataUrl);
   };
 
+  const baseContainer =
+    "relative flex flex-col items-center rounded-full";
+  const defaultSize = "my-2 size-24 md:size-52";
+  const containerClass = `${baseContainer} ${className ?? defaultSize}`;
+
   if (!imageSrc && !editable)
     return (
-      <div className="relative my-2 flex size-24 flex-col items-center rounded-full md:size-52">
+      <div className={containerClass}>
         <Image
           width={328}
           height={328}
@@ -62,7 +69,7 @@ const UserImage: React.FC<UserImageProps> = ({
 
   if (!editable)
     return (
-      <div className="relative my-2 flex size-24 flex-col items-center rounded-full md:size-52">
+      <div className={containerClass}>
         <Image
           width={328}
           height={328}
@@ -77,7 +84,7 @@ const UserImage: React.FC<UserImageProps> = ({
     <motion.div
       initial="initial"
       whileHover="hover"
-      className="relative my-2 flex size-24 flex-col items-center rounded-full hover:cursor-pointer md:size-52"
+      className={`${containerClass} hover:cursor-pointer`}
     >
       <Image
         width={328}

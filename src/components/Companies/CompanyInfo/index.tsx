@@ -1,9 +1,10 @@
+"use client";
+
 import React, { useId } from "react";
 
 import FactData from "@/types/FactData";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
-
-import FactSection from "../FactSection";
+import FactSection from "@/components/Companies/FactSection";
 
 interface CompanyInfoProps {
   bodyText: React.ReactNode;

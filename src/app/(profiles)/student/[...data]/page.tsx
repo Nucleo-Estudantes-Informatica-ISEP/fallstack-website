@@ -11,6 +11,8 @@ import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyPr
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import Footer from "@/components/Footer";
+import NeiLogoSimplifiedWhite from "../../../../../public/assets/images/logo-simplified-white.png";
 
 interface ProfileProps {
   params: Promise<{
@@ -18,7 +20,7 @@ interface ProfileProps {
   }>;
 }
 
-const StudentPage: React.FC<ProfileProps> = async (props) => {
+const StudentPage = async (props: ProfileProps) => {
   const params = await props.params;
   const session = await getServerSession();
 
@@ -51,14 +53,14 @@ const StudentPage: React.FC<ProfileProps> = async (props) => {
   )
     return Custom404();
 
-  const isSavedStudent = await isSaved(session.id, student.code);
+  const isSavedStudent = session.company
+    ? await isSaved(session.company.id, student.code)
+    : false;
 
   // companies may access if they saved the profile
   if (session.company && !isSavedStudent && !isPreview) return Custom404();
 
-  const sanitizedInterests = student.user.interests.map(
-    (interest) => interest.name
-  );
+  const sanitizedInterests = student.user.interests.map((i) => i.name);
 
   const globalStats = await getStats(student.code);
   const todayStats = await getTodayStats(student.id);
@@ -69,44 +71,43 @@ const StudentPage: React.FC<ProfileProps> = async (props) => {
   const actions = await fetchStudentActions(student.code);
 
   const totalCompanies = companies.length;
-  let companiesLeft = totalCompanies;
-
-  if (!(history instanceof HttpError))
-    companiesLeft -= history.filter(
-      (s) => s.savedBy.company !== null && !s.isSaved
-    ).length;
+  const companiesLeft =
+    totalCompanies - (history instanceof HttpError ? 0 : history.length);
 
   return (
-    <section
-      className={`${
-        session && session.role === "COMPANY" ? "bg-company" : "bg-inherit"
-      } flex size-full min-h-screen flex-col items-center`}
-    >
-      {session && session.company && session.role === "COMPANY" ? (
-        <CompanyViewProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-          company={session.company}
-          token={code}
-          isSavedStudent={isSavedStudent}
-        />
-      ) : !session || session.student?.code !== code ? (
-        <PublicProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-        />
-      ) : (
-        <ProfileSectionContainer
-          interests={sanitizedInterests}
-          student={student}
-          globalStats={globalStats}
-          todayStats={todayStats}
-          companiesLeft={companiesLeft}
-          historyData={history instanceof HttpError ? [] : history}
-          actions={actions}
-        />
-      )}
-    </section>
+    <>
+      <section
+        className={`${
+          session && session.role === "COMPANY" ? "bg-company" : "bg-inherit"
+        } flex size-full min-h-screen flex-col items-center`}
+      >
+        {session && session.company && session.role === "COMPANY" ? (
+          <CompanyViewProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+            company={session.company}
+            token={code}
+            isSavedStudent={isSavedStudent}
+          />
+        ) : !session || session.student?.code !== code ? (
+          <PublicProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+          />
+        ) : (
+          <ProfileSectionContainer
+            interests={sanitizedInterests}
+            student={student}
+            globalStats={globalStats}
+            todayStats={todayStats}
+            companiesLeft={companiesLeft}
+            historyData={history instanceof HttpError ? [] : history}
+            actions={actions}
+          />
+        )}
+      </section>
+      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
+    </>
   );
 };
 

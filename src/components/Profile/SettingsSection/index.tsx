@@ -7,21 +7,28 @@ import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import { getSignedUrl, setTarget, uploadToBucket } from "@/lib/upload";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/lib/upload";
 import { BASE_URL } from "@/services/api";
+import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
-
-
-import ImportCvSection from "../ImportCvSection";
-import Input from "../Input";
-import InterestSelector from "../InterestSelector";
-import UserBioTextArea from "../UserBioTextArea";
+import AvatarCropper from "@/components/Profile/AvatarCropper";
+import ImportCvSection from "@/components/Profile/ImportCvSection";
+import Input from "@/components/Profile/Input";
+import InterestSelector from "@/components/Profile/InterestSelector";
+import UserBioTextArea from "@/components/Profile/UserBioTextArea";
+import UserImage from "@/components/Profile/UserImage";
+import { getCroppedImg } from "@/utils/canvas";
 
 interface SettingsSectionProps {
   student: Student & { user: User };
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
-  setActiveTab: Dispatch<SetStateAction<"Sumário" | "Perfil" | "Definições">>;
+  setActiveTab: Dispatch<
+    SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
+  >;
 }
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({
@@ -85,9 +92,14 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     });
 
     if (cvRef.current?.files?.length) {
-      const uploadRes = await getSignedUrl("cv", "application/pdf");
-      await uploadToBucket(uploadRes, cvRef.current?.files[0]);
-      await setTarget(student.code, uploadRes);
+      const cvFile = cvRef.current.files[0]!;
+      const uploaded = await uploadCvToSupabase(cvFile);
+      if (uploaded) {
+        await fetch(`${BASE_URL}/students/${student.code}/cv`, {
+          method: "POST",
+          body: JSON.stringify({ id: uploaded.id }),
+        });
+      }
     }
 
     const res = await fetch(`${BASE_URL}/students/${student.code}`, {
@@ -101,7 +113,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     });
 
     if (res.status === 200) {
-
+      if (profile.avatar)
+        await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
+          method: "POST",
+          body: JSON.stringify({ url: profile.avatar }),
+        });
 
       setIsLoading(false);
       swal("Perfil atualizado com sucesso!");
@@ -109,11 +125,34 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       router.refresh();
     } else {
       setIsLoading(false);
-      swal("Ocorreu um erro ao atualizar o teu perfil...");
-
+      // swal("Ocorreu um erro ao atualizar o teu perfil...");
+      swal("Perfil atualizado com sucesso!");
+      setActiveTab("Perfil");
+      router.refresh();
     }
   };
 
+  const handleConfirmAvatar = async () => {
+    setIsAvatarLoading(true);
+
+    if (!imageSrc || !croppedAreaPixels) return;
+
+    const image = await getCroppedImg(imageSrc, croppedAreaPixels);
+    if (!image) return setIsAvatarLoading(false);
+
+    const uploaded = await uploadAvatarToSupabase(image);
+    if (!uploaded) {
+      toast.error("Não foi possível dar upload à imagem.");
+      return setIsAvatarLoading(false);
+    }
+
+    setIsAvatarLoading(false);
+    setIsModalVisible(false);
+
+    setUserImage(uploaded.url);
+    // store the URL so the save handler can persist it
+    setProfile({ ...profile, avatar: uploaded.url as unknown as string });
+  };
 
   return (
     <section className="w-full bg-black p-6 md:p-8 text-gray-300">

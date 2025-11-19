@@ -5,10 +5,9 @@ import { Company } from "@prisma/client";
 import { motion } from "framer-motion";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
-
-import CompanyImage from "../CompanyImage";
-import CompanySavedProfilesSection from "../CompanySavedProfilesSection";
-import CompanyStatsSection from "../CompanyStatsSection";
+import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
+import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
+import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
 
 interface CompanyProfileSectionContainerProps {
   company: Company;

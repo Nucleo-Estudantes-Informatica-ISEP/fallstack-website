@@ -1,25 +1,23 @@
-import { Action, Student, User } from "@prisma/client";
+import { Student, User } from "@prisma/client";
 import Skeleton from "react-loading-skeleton";
 
 import { ProfileData } from "@/types/ProfileData";
 
-import ActionsSection from "../ActionsSection";
-import BioSection from "../BioSection";
-import InterestMatchingSection from "../InterestMatchingSection";
-import InterestsSection from "../InterestsSection";
-import OpenCvSection from "../OpenCvSection";
+import ActionsSection from "@/components/Profile/ActionsSection";
+import BioSection from "@/components/Profile/BioSection";
+import InterestMatchingSection from "@/components/Profile/InterestMatchingSection";
+import InterestsSection from "@/components/Profile/InterestsSection";
+import OpenCvSection from "@/components/Profile/OpenCvSection";
 
 interface ProfileSectionProps {
   student: Student & { user: User };
   interests: string[];
   profile: ProfileData;
-  actions: (Action & { done: boolean })[];
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
   student,
   profile,
-  actions,
 }) => {
   return (
     <section className="flex w-full flex-col rounded-t-3xl bg-white py-4 md:rounded-md">
@@ -53,8 +51,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       ) : (
         <Skeleton height={40} />
       )}
-
-      <ActionsSection actions={actions} />
 
       <InterestMatchingSection userId={student.userId} />
     </section>

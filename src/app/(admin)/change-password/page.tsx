@@ -4,7 +4,7 @@ import getServerSession from "@/services/getServerSession";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import Custom404 from "@/app/not-found";
 
-const changePassword: React.FC = async () => {
+const changePassword = async () => {
   const session = await getServerSession();
 
   if (!session || !session.isAdmin) {

@@ -9,8 +9,7 @@ import swal from "sweetalert";
 import { jwtStudent } from "@/lib/jwtStudent";
 import useIsMobile from "@/hooks/useIsMobile";
 import { BASE_URL } from "@/services/api";
-
-import ScanTab from "../ScanTab";
+import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 

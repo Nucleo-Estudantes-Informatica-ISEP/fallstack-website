@@ -4,7 +4,7 @@ import { fetchActions } from "@/lib/fetchActions";
 import getServerSession from "@/services/getServerSession";
 import Custom404 from "@/app/not-found";
 
-const actions: React.FC = async () => {
+const actions = async () => {
   const session = await getServerSession();
   if (!session || !session.isAdmin) {
     return Custom404();

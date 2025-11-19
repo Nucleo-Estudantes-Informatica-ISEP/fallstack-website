@@ -1,3 +1,5 @@
+"use client";
+
 import { LabelHTMLAttributes, LegacyRef } from "react";
 
 interface InputLabelProps extends LabelHTMLAttributes<HTMLLabelElement> {

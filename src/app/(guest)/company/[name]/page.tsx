@@ -10,8 +10,8 @@ interface CompanySearchProps {
   }>;
 }
 
-const CompanyPage: React.FC<CompanySearchProps> = async (props0) => {
-  const params = await props0.params;
+const CompanyPage = async (props: CompanySearchProps) => {
+  const params = await props.params;
   const company = findCompanyByName(params.name);
 
   if (company === null || company.tier === "Silver") return Custom404();
