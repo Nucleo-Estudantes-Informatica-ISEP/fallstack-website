@@ -14,11 +14,9 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   setUserInterests,
   userInterests,
 }) => {
-  // Estado para guardar os interesses vindos da API
   const [interests, setInterests] = useState<Interest[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 1. LÓGICA: Ir buscar os interesses à API (Igual ao teu ficheiro funcional)
   useEffect(() => {
     async function fetchInterests() {
       try {
@@ -35,7 +33,6 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
     fetchInterests();
   }, []);
 
-  // Função para adicionar/remover interesse
   const toggleInterest = (interestName: string) => {
     if (userInterests.includes(interestName)) {
       setUserInterests(userInterests.filter((i) => i !== interestName));
@@ -49,22 +46,21 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   }
 
   return (
-    // 2. VISUAL: Grid de caixas com borda branca (Igual à imagem 'DevOps')
     <div className="flex flex-wrap gap-3">
       {interests.map((interest) => {
         const isSelected = userInterests.includes(interest.name);
 
         return (
           <button
-            key={interest.id} // Usamos o ID da base de dados como key
+            key={interest.id} 
             onClick={() => toggleInterest(interest.name)}
             className={`
               flex items-center justify-center 
               border px-4 py-2 text-sm font-medium transition-all duration-200
               ${
                 isSelected
-                  ? "border-white bg-white text-black" // Selecionado: Fundo Branco
-                  : "border-white bg-transparent text-white hover:bg-white/10" // Normal: Transparente + Borda Branca
+                  ? "border-white bg-white text-black" 
+                  : "border-white bg-transparent text-white hover:bg-white/10" 
               }
             `}
           >
