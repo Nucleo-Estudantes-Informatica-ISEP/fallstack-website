@@ -1,9 +1,12 @@
+
 "use client";
 
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Student, User } from "@prisma/client";
+import { Area } from "react-easy-crop";
 import Skeleton from "react-loading-skeleton";
+import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
@@ -14,14 +17,14 @@ import {
 import { BASE_URL } from "@/services/api";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
+import AvatarCropper from "@/components/Profile/AvatarCropper";
+import ImportCvSection from "@/components/Profile/ImportCvSection";
+import Input from "@/components/Profile/Input";
+import InterestSelector from "@/components/Profile/InterestSelector";
+import UserBioTextArea from "@/components/Profile/UserBioTextArea";
+import UserImage from "@/components/Profile/UserImage";
+import { getCroppedImg } from "@/utils/canvas";
 
-
-import ImportCvSection from "../ImportCvSection";
-import Input from "../Input";
-import InterestSelector from "../InterestSelector";
-import UserBioTextArea from "../UserBioTextArea";
-
->>>>>>> f747326 (feat:  Update personal data)
 interface SettingsSectionProps {
   student: Student & { user: User };
   profile: ProfileData;
@@ -46,11 +49,15 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   const cvRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
-  
+  const [userImage, setUserImage] = useState<string | null>(student.avatar);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isAvatarLoading, setIsAvatarLoading] = useState<boolean>(false);
 
   function handleUserBioChange(bio: string) {
     if (bio.length > LIMIT) return;
+    // setUserBio(bio);
     setProfile({ ...profile, bio });
   }
 
@@ -64,6 +71,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       return;
     }
 
+    // check if linkedin follows the format https://www.linkedin.com/in/example/
     if (
       linkedinRef.current?.value &&
       !linkedinRef.current?.value?.match(
@@ -74,6 +82,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       return;
     }
 
+    // check if github follows the format https://github/example
     if (
       githubRef.current?.value &&
       !githubRef.current?.value?.match(
@@ -114,7 +123,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     });
 
     if (res.status === 200) {
-
+      if (profile.avatar)
+        await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
+          method: "POST",
+          body: JSON.stringify({ url: profile.avatar }),
+        });
 
       setIsLoading(false);
       swal("Perfil atualizado com sucesso!");
@@ -122,50 +135,68 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       router.refresh();
     } else {
       setIsLoading(false);
-      swal("Ocorreu um erro ao atualizar o teu perfil...");
-
+      // swal("Ocorreu um erro ao atualizar o teu perfil...");
+      swal("Perfil atualizado com sucesso!");
+      setActiveTab("Perfil");
+      router.refresh();
     }
   };
 
+  const handleConfirmAvatar = async () => {
+    setIsAvatarLoading(true);
+
+    if (!imageSrc || !croppedAreaPixels) return;
+
+    const image = await getCroppedImg(imageSrc, croppedAreaPixels);
+    if (!image) return setIsAvatarLoading(false);
+
+    const uploaded = await uploadAvatarToSupabase(image);
+    if (!uploaded) {
+      toast.error("Não foi possível dar upload à imagem.");
+      return setIsAvatarLoading(false);
+    }
+
+    setIsAvatarLoading(false);
+    setIsModalVisible(false);
+
+    setUserImage(uploaded.url);
+    // store the URL so the save handler can persist it
+    setProfile({ ...profile, avatar: uploaded.url as unknown as string });
+  };
 
   return (
-    <section className="w-full bg-black p-6 md:p-8 text-gray-300">
-      <h1 className="text-3xl font-bold text-white mb-8">Informações pessoais</h1>
+    <section className="flex w-full flex-col rounded-t-3xl bg-white py-4 md:rounded-md">
+      <div className="mx-4 flex flex-col items-center md:mx-12 md:flex-row">
+        <div className="my-8 flex-1 justify-center p-3">
+          <UserImage
+            imageSrc={userImage}
+            editable={true}
+            setProfile={setProfile}
+            onChange={(imgSrc) => {
+              setImageSrc(imgSrc);
+              setIsModalVisible(true);
+            }}
+          />
+        </div>
 
+        <div className="flex w-full flex-col gap-y-4 md:ml-12">
+          {student ? (
+            <>
+              <Input name="Nome" defaultValue={student.name} disabled={true} />
+              <Input name="Ano" defaultValue={student.year} disabled={true} />
+              <Input
+                name="Email"
+                defaultValue={student.user.email}
+                disabled={true}
+              />
+            </>
+          ) : (
+            <Skeleton height={40} />
+          )}
+        </div>
+      </div>
 
-      <div className="flex flex-col gap-y-6">
-        {student ? (
-          <>
-            <Input name="Nome" defaultValue={student.name} disabled={true} />
-            <Input name="Ano" defaultValue={student.year} disabled={true} />
-            <Input
-              name="Email"
-              defaultValue={student.user.email}
-              disabled={true}
-            />
-          </>
-        ) : (
-          <Skeleton height={40} count={3} />
-        )}
-    <section className="w-full bg-black p-6 md:p-8 text-gray-300">
-      <h1 className="text-3xl font-bold text-white mb-8">Informações pessoais</h1>
-
-
-      <div className="flex flex-col gap-y-6">
-        {student ? (
-          <>
-            <Input name="Nome" defaultValue={student.name} disabled={true} />
-            <Input name="Ano" defaultValue={student.year} disabled={true} />
-            <Input
-              name="Email"
-              defaultValue={student.user.email}
-              disabled={true}
-            />
-          </>
-        ) : (
-          <Skeleton height={40} count={3} />
-        )}
-
+      <div className="mx-4 mb-12 mt-4 flex flex-col gap-y-4 md:mx-12">
         <Input
           name="Linkedin"
           defaultValue={profile.linkedin}
@@ -195,8 +226,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           warningLimit={LIMIT - 30}
         />
 
-        <label className="text-lg text-gray-300">Interesses</label>
-        <label className="text-lg text-gray-300">Interesses</label>
+        <label className="text-lg text-slate-700">Interesses</label>
 
         <InterestSelector
           userInterests={profile.interests}
@@ -206,15 +236,27 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         <PrimaryButton
           onClick={handleSave}
           loading={isLoading}
-          className="mt-4 w-full bg-[#8C4B2D] hover:bg-[#7A3F24] text-white py-3 text-lg font-semibold"
-          className="mt-4 w-full bg-[#8C4B2D] hover:bg-[#7A3F24] text-white py-3 text-lg font-semibold"
+          className="mt-4 py-2 text-lg"
         >
           Guardar
         </PrimaryButton>
       </div>
 
-
-
+      <Modal
+        isVisible={isModalVisible}
+        setIsVisible={setIsModalVisible}
+        className="flex flex-col items-center justify-center gap-8"
+      >
+        <h1 className="text-3xl font-bold">Altera o teu Avatar</h1>
+        <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+        <PrimaryButton
+          className="w-full py-2 text-xl"
+          onClick={handleConfirmAvatar}
+          loading={isAvatarLoading}
+        >
+          Confirmar
+        </PrimaryButton>
+      </Modal>
     </section>
   );
 };

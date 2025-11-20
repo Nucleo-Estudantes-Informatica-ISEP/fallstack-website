@@ -236,13 +236,10 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         </div>
 
         {/* INTERESSES */}
-        <div className="mt-2">
-          <label className="mb-2 block text-sm font-medium text-gray-100">Interesses</label>
-          <InterestSelector
-            userInterests={profile.interests}
-            setUserInterests={setUserInterests}
-          />
-        </div>
+        <InterestSelector
+          userInterests={profile.interests}
+          setUserInterests={setUserInterests}
+        />
 
         {/* BOTÃO GUARDAR */}
         <PrimaryButton
