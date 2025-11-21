@@ -65,54 +65,51 @@ const CvStep: FunctionComponent<CvStepProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={64}
-          height={64}
-          alt="Logo"
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+          Adiciona o teu CV
+        </p>
+
+        <p className="font-sans text-sm font-normal text-white mb-4">
+          Faz upload do teu currículo em formato PDF. (Opcional)
+        </p>
+
+        <FileInput
+          name="Insere um ficheiro"
+          placeholder="CV ficheiro"
+          accept="application/pdf"
+          onChange={onFileChange}
+          file={data.cv ? data.cv : null}
+          icon={<FaFilePdf />}
+          onClear={() => setData({ ...data, cv: null })}
+          className="z-10"
         />
-      </div>
 
-      <p className="mb-4 text-center text-slate-700 md:text-lg">
-        Tens o teu CV pronto?
-      </p>
+        {error && (
+          <motion.p
+            className="mt-1 text-center text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {error}
+          </motion.p>
+        )}
 
-      <FileInput
-        name="Insere um ficheiro. (Opcional)"
-        placeholder="CV ficheiro"
-        accept="application/pdf"
-        onChange={onFileChange}
-        file={data.cv ? data.cv : null}
-        icon={<FaFilePdf />}
-        onClear={() => setData({ ...data, cv: null })}
-        className="z-10"
-      />
-
-      {error && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
+        <PrimaryButton
+          loading={loading}
+          onClick={handleNext}
+          className="mb-5 mt-4 font-bold w-full h-14"
         >
-          {error}
-        </motion.p>
-      )}
-
-      <PrimaryButton
-        loading={loading}
-        onClick={handleNext}
-        className="mb-5 mt-4 font-bold"
-      >
-        CONTINUAR
-      </PrimaryButton>
-    </>
+          Seguinte
+        </PrimaryButton>
+      </div>
+    </div>
   );
 };
 export default CvStep;

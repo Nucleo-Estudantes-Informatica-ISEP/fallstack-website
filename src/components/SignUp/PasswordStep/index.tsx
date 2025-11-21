@@ -59,58 +59,60 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={128}
-          height={128}
-          alt="Logo"
-        />
-      </div>
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        <div className="mb-5 flex justify-center">
+          <Image
+            src={"/assets/images/logo_dark.png"}
+            width={128}
+            height={128}
+            alt="Logo"
+          />
+        </div>
 
-      <div className="flex flex-col justify-center gap-y-4">
-        <Input
-          type="password"
-          name="Escolhe uma password segura."
-          placeholder="Insere uma password"
-          center
-          inputRef={inputRefPassword}
-          onKeyUp={handleKeyUp}
-          defaultValue={data.password ? data.password : undefined}
-          autoFocus
-          className={`${error ? "border-2 border-red-600" : ""} z-10 `}
-        />
-        <Input
-          type="password"
-          name="Repete a password."
-          placeholder="Repete a password"
-          center
-          inputRef={inputRefPasswordRepeat}
-          onKeyUp={handleKeyUp}
-          defaultValue={data.password ? data.password : undefined}
-          className={`${error ? "border-2 border-red-600" : ""} z-10 `}
-        />
-      </div>
-      {error && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
-        >
-          {error}
-        </motion.p>
-      )}
+        <div className="flex flex-col justify-center gap-y-4">
+          <Input
+            type="password"
+            name="Escolhe uma password segura."
+            placeholder="Insere uma password"
+            center
+            inputRef={inputRefPassword}
+            onKeyUp={handleKeyUp}
+            defaultValue={data.password ? data.password : undefined}
+            autoFocus
+            className={`${error ? "border-2 border-red-600" : ""} z-10 `}
+          />
+          <Input
+            type="password"
+            name="Repete a password."
+            placeholder="Repete a password"
+            center
+            inputRef={inputRefPasswordRepeat}
+            onKeyUp={handleKeyUp}
+            defaultValue={data.password ? data.password : undefined}
+            className={`${error ? "border-2 border-red-600" : ""} z-10 `}
+          />
+        </div>
+        {error && (
+          <motion.p
+            className="mt-1 text-center text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {error}
+          </motion.p>
+        )}
 
-      <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold">
-        CONTINUAR
-      </PrimaryButton>
-    </>
+        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+          Seguinte
+        </PrimaryButton>
+      </div>
+    </div>
   );
 };
 export default PasswordStep;

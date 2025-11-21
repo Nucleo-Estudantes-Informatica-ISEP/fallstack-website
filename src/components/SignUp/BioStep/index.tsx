@@ -45,33 +45,30 @@ const BioStep: FunctionComponent<BioStepProps> = ({
     setData({ ...data, bio });
   }
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={128}
-          height={128}
-          alt="Logo"
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+          Criar uma conta
+        </p>
+
+        <UserBioTextArea
+          name="Conta-nos mais sobre ti. (Opcional)"
+          ref={inputRef}
+          placeholder=""
+          className="mb-4"
+          value={data.bio ? data.bio : ""}
+          defaultValue={""}
+          autofocus={true}
+          setValue={handleUserBioChange}
+          limit={LIMIT}
+          warningLimit={LIMIT - 30}
         />
+
+        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+          Seguinte
+        </PrimaryButton>
       </div>
-
-      <UserBioTextArea
-        name="Conta-nos mais sobre ti. (Opcional)"
-        ref={inputRef}
-        placeholder="Insere a tua bio"
-        className="mb-4"
-        value={data.bio ? data.bio : ""}
-        defaultValue={""}
-        autofocus={true}
-        setValue={handleUserBioChange}
-        limit={LIMIT}
-        warningLimit={LIMIT - 30}
-      />
-
-      <PrimaryButton onClick={handleNext} className="mb-5 font-bold">
-        CONTINUAR
-      </PrimaryButton>
-    </>
+    </div>
   );
 };
 export default BioStep;
