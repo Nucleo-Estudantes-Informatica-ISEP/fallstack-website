@@ -25,8 +25,11 @@ export async function POST(req: NextRequest) {
 
   let studentCode = token;
   if (token) {
-    const decoded = verifyJwt(token) as { code: string };
-    studentCode = decoded.code;
+    const decoded = verifyJwt(token) as { code: string } | null;
+    if (!decoded)
+      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+    else
+      studentCode = decoded.code;
   }
 
   // check if student exists
