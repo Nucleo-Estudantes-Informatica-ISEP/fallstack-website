@@ -1,30 +1,14 @@
 import prisma from "./prisma";
 
 export async function getStats(code: string): Promise<number[]> {
-  const result = await prisma.savedStudent.groupBy({
+  const savedCount = await prisma.savedStudent.count({
     where: {
-      student: {
-        code: code,
-      },
-    },
-    by: "isSaved",
-    _count: {
-      _all: true,
+      student: { code },
     },
   });
 
-  result.sort(
-    (a, b) => (a.isSaved === false ? -1 : 1) - (b.isSaved === false ? -1 : 1)
-  );
-
-  const counts = [0, 0];
-
-  result.forEach((item) => {
-    const index = item.isSaved === false ? 0 : 1;
-    counts[index] = item._count._all;
-  });
-
-  return counts;
+  // Maintain two-slot array shape [scans, saves]
+  return [savedCount, savedCount];
 }
 
 export async function getTodayStats(id: string): Promise<number> {
@@ -35,54 +19,25 @@ export async function getTodayStats(id: string): Promise<number> {
     today.getDate()
   );
 
-  const numberOfSavedStudents = await prisma.savedStudent.groupBy({
+  const savedToday = await prisma.savedStudent.count({
     where: {
       studentId: id,
       createdAt: {
         gte: startOfDay,
       },
     },
-    by: "isSaved",
-    _count: {
-      _all: true,
-    },
   });
 
-  numberOfSavedStudents.sort(
-    (a, b) => (a.isSaved === false ? -1 : 1) - (b.isSaved === false ? -1 : 1)
-  );
-
-  const counts = [0, 0];
-
-  numberOfSavedStudents.forEach((item) => {
-    const index = item.isSaved === false ? 0 : 1;
-    counts[index] = item._count._all;
-  });
-
-  return counts[1];
+  return savedToday;
 }
 
 export async function getCompanyStats(id: string): Promise<number[]> {
-  const result = await prisma.savedStudent.groupBy({
+  const savedCount = await prisma.savedStudent.count({
     where: {
-      savedById: id,
-    },
-    by: "isSaved",
-    _count: {
-      _all: true,
+      companyId: id,
     },
   });
 
-  result.sort(
-    (a, b) => (a.isSaved === false ? -1 : 1) - (b.isSaved === false ? -1 : 1)
-  );
-
-  const counts = [0, 0];
-
-  result.forEach((item) => {
-    const index = item.isSaved === false ? 0 : 1;
-    counts[index] = item._count._all;
-  });
-
-  return counts;
+  // Maintain two-slot array shape [scans, saves]
+  return [savedCount, savedCount];
 }

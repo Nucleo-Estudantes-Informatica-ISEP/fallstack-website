@@ -6,10 +6,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
 import { toast } from "react-toastify";
+import swal from "sweetalert";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { signUp } from "@/lib/auth";
-import { getSignedUrl, uploadToBucket } from "@/lib/upload";
+import { uploadAvatar as uploadAvatarToSupabase } from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
@@ -40,33 +41,20 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
 
       setLoading(true);
 
-      let avatar = null;
+      let avatarUrl: string | null = null;
       if (imageSrc && croppedAreaPixels) {
         const image = await getCroppedImg(imageSrc, croppedAreaPixels);
         if (!image) return setLoading(false);
 
-        const signed = await getSignedUrl("avatar", image.type);
-        if (!signed) {
-          toast.error("Ocorreu um erro.");
-          return setLoading(false);
-        }
-
-        if (image.size > signed.maxSize) {
-          const maxMb = Math.round(signed.maxSize / Math.pow(1024, 2));
-          toast.error(`A imagem excede o tamanho máximo de ${maxMb} MB.`);
-          return setLoading(false);
-        }
-
-        const upload = await uploadToBucket(signed, image);
-        if (upload.status !== 200) {
+        const uploaded = await uploadAvatarToSupabase(image);
+        if (!uploaded) {
           toast.error("Não foi possível dar upload à imagem.");
           return setLoading(false);
         }
-
-        avatar = signed.id;
+        avatarUrl = uploaded.url;
       }
 
-      const signup = await signUp({ ...data, avatar });
+      const signup = await signUp({ ...data, avatar: null, avatarUrl });
 
       if (signup instanceof Error) {
         toast.error(signup.message);

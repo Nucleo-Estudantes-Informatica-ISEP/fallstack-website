@@ -1,6 +1,6 @@
-import { object, string } from "zod";
+import { z } from "zod";
 
-export const signInSchema = object({
-  email: string(),
-  password: string(),
+export const signInSchema = z.object({
+  email: z.email(),
+  password: z.string(),
 });

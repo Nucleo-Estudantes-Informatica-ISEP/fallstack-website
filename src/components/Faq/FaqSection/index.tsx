@@ -1,9 +1,10 @@
+"use client";
+
 import { FunctionComponent } from "react";
 
+import FaqContainer from "@/components/Faq/FaqContainer";
 import HeadingText from "@/components/HeadingText";
 import { FAQ } from "@/utils/FAQ";
-
-import FaqContainer from "../FaqContainer";
 
 const FaqSection: FunctionComponent = () => {
   return (

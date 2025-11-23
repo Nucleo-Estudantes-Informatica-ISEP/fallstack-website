@@ -11,9 +11,14 @@ export async function fetchStudentActions(
     },
   });
 
+  const student = await prisma.student.findUnique({
+    where: { code: studentCode },
+  });
+  if (!student) return actions.map((a) => ({ ...a, done: false }));
+
   const concludedActions = await prisma.actionCompletion.findMany({
     where: {
-      studentCode,
+      studentId: student.id,
     },
   });
 

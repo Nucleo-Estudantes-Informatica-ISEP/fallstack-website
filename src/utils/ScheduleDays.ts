@@ -1,4 +1,4 @@
-import { ScheduleDay as ScheduleDaysProps } from "../components/Schedule";
+import { ScheduleDay as ScheduleDaysProps } from "@/components/Schedule";
 
 export const ScheduleDays: Array<ScheduleDaysProps[]> = [
   [

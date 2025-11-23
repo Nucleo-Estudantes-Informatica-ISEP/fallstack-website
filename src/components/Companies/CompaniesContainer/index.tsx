@@ -1,8 +1,10 @@
+"use client";
+
 import { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
-import { CompaniesTier, getTierStyling } from "../../../utils/GetColorTier";
-import Company, { CompanyProps } from "../Company";
+import { CompaniesTier, getTierStyling } from "@/utils/GetColorTier";
+import Company, { CompanyProps } from "@/components/Companies/Company";
 
 interface CompaniesContainerProps {
   tier: CompaniesTier;
@@ -14,26 +16,15 @@ const CompaniesContainer: FunctionComponent<CompaniesContainerProps> = ({
   companies,
 }) => {
   return (
-    <motion.div className="flex flex-col items-center justify-center py-12">
+    <motion.div className="border-b-1 flex w-full flex-col items-center justify-center border-secondary py-8 md:py-12 lg:py-16">
       <h2 className="z-0 mx-2 mb-8 text-center text-5xl lg:mb-4">
-        <span className={`${getTierStyling(tier)}`}>
-          <span className="text-secondary">Parceiros</span> {tier}
-        </span>
+        <span className="text-secondary">Parceiros</span>{" "}
+        <span className={`${getTierStyling(tier)}`}>{tier}</span>
       </h2>
-      <section className={`w-full rounded-3xl`}>
-        <div className="my-2 grid w-full grid-cols-1 place-items-center gap-8 md:flex md:flex-wrap md:items-center md:justify-center">
+      <section className={`w-full rounded-3xl px-4`}>
+        <div className="my-2 grid w-full grid-cols-2 place-items-center gap-4 sm:gap-6 md:flex md:flex-wrap md:items-center md:justify-center md:gap-12 lg:gap-16">
           {companies.map((company) => (
-            <Company
-              key={company.name}
-              {...company}
-              className={
-                companies.length % 2 !== 0 &&
-                companies.findIndex((c) => c.name === company.name) ===
-                  companies.length - 1
-                  ? "xl:col-span-2"
-                  : ""
-              }
-            />
+            <Company key={company.name} {...company} />
           ))}
         </div>
       </section>

@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@plugin 'tailwind-scrollbar';
+
 @theme {
   /* Fonts */
   --font-sans: "Inter", sans-serif;

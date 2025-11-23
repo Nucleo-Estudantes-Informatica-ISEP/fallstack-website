@@ -1,5 +1,3 @@
-import twscrollbar from "tailwind-scrollbar";
-
 import type { Config } from "tailwindcss";
 
 const config: Config = {
@@ -8,7 +6,6 @@ const config: Config = {
     "./src/components/**/*.{ts,tsx}",
     "./src/app/**/*.{ts,tsx}",
   ],
-  plugins: [twscrollbar({ nocompatible: true })],
 };
 
 export default config;

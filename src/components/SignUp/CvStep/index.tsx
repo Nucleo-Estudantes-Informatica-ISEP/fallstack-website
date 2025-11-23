@@ -1,10 +1,12 @@
+"use client";
+
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { FaFilePdf } from "react-icons/fa";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { getSignedUrl, uploadToBucket } from "@/lib/upload";
+import { uploadCv as uploadCvToSupabase } from "@/lib/upload";
 import FileInput from "@/components/FileInput";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -33,29 +35,17 @@ const CvStep: FunctionComponent<CvStepProps> = ({
       setLoading(true);
       const file = e.target.files[0];
 
-      const signed = await getSignedUrl("cv", file.type);
-      if (!signed) {
-        setError("Ocorreu um erro ao dar upload.");
-        return setLoading(false);
-      }
-
-      if (file.size > signed.maxSize) {
-        setLoading(false);
-        return setError("O ficheiro é demasiado grande.");
-      }
-
       if (error) setError(null);
 
-      const res = await uploadToBucket(signed, file);
-
-      if (res.status !== 200) {
+      const uploaded = await uploadCvToSupabase(file);
+      if (!uploaded) {
         setError("Ocorreu um erro ao dar upload.");
         return setLoading(false);
       }
 
       const cv = {
         name: file.name,
-        id: signed.id,
+        id: uploaded.id,
         preview: URL.createObjectURL(file),
       };
 

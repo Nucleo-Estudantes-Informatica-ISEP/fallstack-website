@@ -1,3 +1,5 @@
+"use client";
+
 import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
@@ -9,135 +11,96 @@ import {
   RiTwitterXFill,
 } from "react-icons/ri";
 
-// Interface das props do Footer
+
+import { MdOutlinePrivacyTip } from "react-icons/md";
+import InstallButton from "@/components/InstallButton";
+
 interface FooterProps {
-  lastEditionUrl: string; // URL da última edição (não usado neste código)
-  neiSimplifiedLogo: StaticImageData; // Logo simplificado do NEI
+  neiLogoSrc: StaticImageData;
 }
 
-const Footer: FunctionComponent<FooterProps> = ({
-  lastEditionUrl,
-  neiSimplifiedLogo,
-}) => {
-  const currentYear = new Date().getFullYear(); // Ano atual dinâmico
-  const NEI_WEBSITE_URL = "https://nei-isep.org"; // URL fixo do site NEI
+const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
+  const currentYear = new Date().getFullYear();
+  const NEI_WEBSITE_URL = "https://nei-isep.org";
 
   return (
-    // Footer ocupa toda a largura, fundo preto, texto branco, altura adaptável com clamp
-    <footer className="relative min-h-[clamp(294px,35vh,500px)] w-full bg-[#141414] text-white">
-      {/* Bloco central: logo + ícones */}
-      <div className="absolute inset-0 flex flex-col items-center justify-between px-[11vw] md:flex-row">
-        {/* Logo à esquerda adaptável */}
-        <a
-          href={NEI_WEBSITE_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="transition-all duration-300 hover:scale-105"
-        >
-          <Image
-            src={neiSimplifiedLogo}
-            alt="Logo curto do NEI"
-            className="h-auto drop-shadow-xl"
-            style={{
-              width: "clamp(280px, 21vw, 340px)", // largura proporcional, mantém ~320px
-            }}
-          />
-        </a>
+    <footer className="flex w-full flex-col items-center gap-10 bg-background px-6 pt-12 text-center">
+      <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-around">
+        <div className="max-h-[200px] max-w-[220px] transition-all duration-300 hover:scale-105 sm:max-w-[275px] lg:max-w-[320px]">
+          <a href={NEI_WEBSITE_URL} target="_blank" rel="noreferrer">
+            <Image
+              className="mx-auto block h-auto max-w-full drop-shadow-xl transition-all duration-300 hover:drop-shadow-2xl"
+              src={neiLogoSrc}
+              alt="Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)"
+            />
+          </a>
+        </div>
+        <div className="flex w-full flex-col items-center gap-6 md:flex-row md:justify-center lg:w-auto lg:items-center">
+          <div className="flex gap-5">
+            <Link
+              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
+              href="https://www.linkedin.com/company/nei-isep"
+              target="_blank"
+              rel="noreferrer"
+              title="LinkedIn"
+            >
+              <RiLinkedinBoxFill color="text" size={48} />
+            </Link>
+            <Link
+              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
+              href="https://www.facebook.com/nei.isep"
+              target="_blank"
+              rel="noreferrer"
+              title="Facebook"
+            >
+              <RiFacebookCircleFill color="text" size={45} />
+            </Link>
+            <Link
+              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
+              href="https://www.instagram.com/nei_isep"
+              target="_blank"
+              rel="noreferrer"
+              title="Instagram"
+            >
+              <RiInstagramLine color="accent" size={45} />
+            </Link>
+            <Link
+              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
+              href="https://twitter.com/nei_isep"
+              target="_blank"
+              rel="noreferrer"
+              title="Twitter"
+            >
+              <RiTwitterXFill color="text" size={45} />
+            </Link>
+            <Link
+              href="https://linktr.ee/nei_isep"
+              target="_blank"
+              rel="noreferrer"
+              className="h-max text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
+              title="Linktree do NEI"
+            >
+              <FaLink size={45} />
+            </Link>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-5">
+            <InstallButton
+            className="scale-180 text-xl drop-shadow-xl hover:scale-190 transition-all duration-300" />
 
-        {/* Ícones à direita adaptáveis */}
-        <div className="flex items-center gap-[1vw]">
-          <Link
-            href="https://www.linkedin.com/company/nei-isep"
-            target="_blank"
-            rel="noreferrer"
-            title="LinkedIn"
-            className="transition-all hover:scale-110"
-          >
-            <RiLinkedinBoxFill
-              style={{
-                width: "clamp(50px, 4vw, 58px)",
-                height: "clamp(50px, 4vw, 58px)",
-              }}
-            />
-          </Link>
-          <Link
-            href="https://www.facebook.com/nei.isep"
-            target="_blank"
-            rel="noreferrer"
-            title="Facebook"
-            className="transition-all hover:scale-110"
-          >
-            <RiFacebookCircleFill
-              style={{
-                width: "clamp(45px, 3.5vw, 50px)",
-                height: "clamp(45px, 3.5vw, 50px)",
-              }}
-            />
-          </Link>
-          <Link
-            href="https://www.instagram.com/nei_isep"
-            target="_blank"
-            rel="noreferrer"
-            title="Instagram"
-            className="transition-all hover:scale-110"
-          >
-            <RiInstagramLine
-              style={{
-                width: "clamp(45px, 3.5vw, 49px)",
-                height: "clamp(45px, 3.5vw, 49px)",
-              }}
-            />
-          </Link>
-          <Link
-            href="https://x.com/nei_isep"
-            target="_blank"
-            rel="noreferrer"
-            title="X"
-            className="transition-all hover:scale-110"
-          >
-            <RiTwitterXFill
-              style={{
-                width: "clamp(44px, 3.5vw, 48px)",
-                height: "clamp(44px, 3.5vw, 48px)",
-              }}
-            />
-          </Link>
-          <Link
-            href="https://linktr.ee/nei_isep"
-            target="_blank"
-            rel="noreferrer"
-            title="Linktree"
-            className="transition-all hover:scale-110"
-          >
-            <FaLink
-              style={{
-                width: "clamp(45px, 3.5vw, 49px)",
-                height: "clamp(45px, 3.5vw, 49px)",
-              }}
-            />
-          </Link>
+            <Link
+              href="/privacy-policy"
+              title="Política de Privacidade"
+              className="text-xl drop-shadow-xl hover:scale-110 transition-all duration-300"
+            >
+              <MdOutlinePrivacyTip color="text" size={45} />
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Texto inferior fixo ao fundo */}
-      <div className="absolute bottom-[5.5vh] w-full">
-        <p
-          className="text-center text-gray-500"
-          style={{
-            fontFamily: "Inter", // fonte Inter
-            fontWeight: 400, // peso regular
-            fontStyle: "normal", // estilo normal
-            fontSize: "clamp(16px, 1.05vw, 22px)", // tamanho adaptável ao monitor
-            lineHeight: "200%", // espaçamento vertical
-            letterSpacing: "-0.045em", // espaçamento entre letras (-4.5%)
-          }}
-        >
-          Copyright (c) {currentYear}. All rights reserved.
-        </p>
-      </div>
       <div className="flex w-full justify-center pb-6">
-        <p className="text-secondary text-sm !font-normal select-none sm:text-base">
-          Copyright &copy; {currentYear} NEI-ISEP. All rights reserved.
+        <p className="font-normal! select-none text-sm text-secondary sm:text-base">
+          Copyright &copy; {currentYear}. All rights reserved.
         </p>
       </div>
     </footer>

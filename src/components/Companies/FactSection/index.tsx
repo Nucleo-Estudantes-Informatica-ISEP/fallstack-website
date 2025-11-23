@@ -1,3 +1,5 @@
+"use client";
+
 import FactData from "@/types/FactData";
 
 interface FactSectionProps {

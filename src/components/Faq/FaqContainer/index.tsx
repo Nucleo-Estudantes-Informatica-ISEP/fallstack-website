@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import FaqQuestion, { FaqProps } from "../FaqQuestion";
+import FaqQuestion, { FaqProps } from "@/components/Faq/FaqQuestion";
 
 interface FaqContainerProps {
   faqs: FaqProps[];
