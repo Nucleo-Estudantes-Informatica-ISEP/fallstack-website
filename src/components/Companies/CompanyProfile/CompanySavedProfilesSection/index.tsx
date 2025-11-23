@@ -1,18 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Company } from "@prisma/client";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
-import { BsFillClipboardFill } from "react-icons/bs";
-import { motion } from "framer-motion";
 
-import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
-import DownloadButton from "@/components/DownloadButton";
-import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
-import { BASE_URL } from "@/services/api";
 import { jwtStudent } from "@/lib/jwtStudent";
+import { BASE_URL } from "@/services/api";
+import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
+import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 
 interface StatsProps {
   company: Company;
@@ -91,7 +88,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
 
       await fetch(BASE_URL + "/saved", {
         method: "POST",
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ token }),
       });
 
       router.push(`/student/${token}/preview`);
@@ -105,7 +102,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   };
 
   return (
-    <section className="flex w-full flex-col items-start justify-start px-4 pb-4 pt-2 text-white md:px-8 md:pb-8 md:pt-4">
+    <section className="flex w-full flex-col items-start justify-start px-4 pt-2 pb-4 text-white md:px-8 md:pt-4 md:pb-8">
       <div className="w-full">
         <h1
           className="mb-6 text-white"
@@ -128,19 +125,19 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
             textAlign: "justify",
           }}
         >
-          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a
-          garantir o registo das interações e a participação nos giveaways
-          promovidos pelo NEI.
+          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
+          forma a garantir o registo das interações e a participação nos
+          giveaways promovidos pelo NEI.
         </p>
       </div>
 
       <div className="flex w-full flex-col items-center justify-center">
         {processing ? (
           <div
-            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            className="text-primary mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
-            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
+            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
               A processar...
             </span>
           </div>
@@ -156,7 +153,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <input
             type="text"
             placeholder="código"
-            className="h-[56px] w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
+            className="focus:border-primary h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
@@ -167,7 +164,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           />
           <button
             onClick={handleManualEntry}
-            className="absolute right-2 top-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
+            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
