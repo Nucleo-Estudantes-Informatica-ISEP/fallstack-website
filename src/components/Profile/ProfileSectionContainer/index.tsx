@@ -174,8 +174,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         return (
           <ProfileSection
             student={student}
-            interests={interests}
             profile={profile}
+            setProfile={setProfile}
+            setActiveTab={setActiveTab}
           />
         );
       case "Desafios":

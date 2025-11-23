@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Interest } from "@prisma/client";
-import { Reorder } from "framer-motion";
-
 import { BASE_URL } from "@/services/api";
 
 interface InterestSelectorProps {
@@ -15,27 +13,42 @@ interface InterestSelectorProps {
 const InterestSelector: React.FC<InterestSelectorProps> = ({
   setUserInterests,
   userInterests,
-  scrollable = false,
 }) => {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchInterests() {
-      const res = await fetch(BASE_URL + "/interests");
-      const json = await res.json();
-      setInterests(json);
-      setLoading(false);
+      try {
+        const res = await fetch(BASE_URL + "/interests");
+        const json = await res.json();
+        setInterests(json);
+      } catch (error) {
+        console.error("Erro ao carregar interesses", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     fetchInterests();
   }, []);
 
-  const orderedInterests = interests.sort((a, b) => {
-    if (userInterests.includes(a.name)) return -1;
-    if (userInterests.includes(b.name)) return 1;
-    return 0;
-  });
+  const toggleInterest = (interestName: string) => {
+    if (userInterests.includes(interestName)) {
+      setUserInterests(userInterests.filter((i) => i !== interestName));
+    } else {
+      setUserInterests([...userInterests, interestName]);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-gray-400 text-sm animate-pulse">A carregar interesses...</div>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      {interests.map((interest) => {
+        const isSelected = userInterests.includes(interest.name);
 
   return !loading ? (
     <Reorder.Group
@@ -51,37 +64,30 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
     >
       {orderedInterests.map((interest) => (
         <Reorder.Item
-          onClick={() =>
-            !userInterests.includes(interest.name) &&
-            setUserInterests([...userInterests, interest.name])
+          onClick={() => {
+            if (userInterests.includes(interest.name)) {
+              setUserInterests(
+                userInterests.filter((i) => i !== interest.name)
+              );
+            } else {
+              setUserInterests([...userInterests, interest.name]);
           }
+          }}
           key={interest.name}
-          className={`relative cursor-pointer rounded-xl px-3 py-1 text-black ${
+          className={`relative cursor-pointer border h-10 bg-[#141414] px-3 py-1 ${
             userInterests.includes(interest.name)
-              ? "bg-orange-300/80"
-              : "bg-slate-200"
+              ? "border-white text-white"
+              : "border-white/35 text-white/35"
           }`}
           value={interest.name}
         >
           {interest.name}
-          {userInterests.includes(interest.name) && (
-            <button
-              onClick={() =>
-                setUserInterests(
-                  userInterests.filter((i) => i !== interest.name)
-                )
-              }
-              className="absolute -right-1 -top-1 z-20 flex size-4 items-center justify-center rounded-full bg-red-400/80 text-xs text-white"
-            >
-              X
-            </button>
-          )}
         </Reorder.Item>
       ))}
     </Reorder.Group>
   ) : (
     <div className="my-8 flex w-full items-center justify-center">
-      <p className="text-xl font-bold text-black">Loading...</p>
+      <p className="text-xl font-bold text-white">Loading...</p>
     </div>
   );
 };
