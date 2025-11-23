@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@plugin 'tailwind-scrollbar';
+@plugin "tailwind-scrollbar";
 
 @theme {
   /* Fonts */
@@ -11,7 +11,12 @@
   --color-text: #ffffff;
   --color-background: #141414;
   --color-primary: rgba(255, 255, 255, 0.7);
+  /* backward-compatible aliases for older variable names used across the codebase */
+  /* Restore legacy button primary color (orange) that was used before the reset */
+  --primary: #f97316; /* Tailwind orange-500, matches previous orange-ish look */
   --color-secondary: #484848;
+  /* legacy alias for older code that used --secondary */
+  --secondary: var(--color-secondary);
   --color-secondary-40: rgba(168, 85, 247, 0.4);
   --color-accent: #22d3ee;
   --color-accent-alternative: #10b981;
@@ -59,6 +64,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Inter";
+  src: url("/assets/fonts/inter.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     --text: #ffffff;
@@ -97,6 +110,37 @@
   :root {
     scroll-behavior: smooth;
   }
+}
+
+/* Styles specific to the auth pane */
+.auth-pane :where(button, a[role="button"]) {
+  background-color: var(--primary);
+  color: white;
+}
+
+.auth-pane :where(button, a[role="button"]):hover {
+  background-color: color-mix(in srgb, var(--primary) 85%, black);
+}
+
+/* Auth layout specifics */
+.auth-left {
+  position: relative;
+  height: 100vh;
+  width: calc(100vh * 0.703125); /* 720 / 1024 = 0.703125 */
+  flex-shrink: 0;
+}
+
+.auth-pane {
+  background-color: #141414;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-pane > div {
+  width: 100%;
+  max-width: 560px;
 }
 
 /* this is a css extension that only works in gecko engine based browsers (firefox) */

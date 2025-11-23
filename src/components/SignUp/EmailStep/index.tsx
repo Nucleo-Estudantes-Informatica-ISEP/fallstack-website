@@ -50,47 +50,49 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={128}
-          height={128}
-          alt="Logo"
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        {/* <div className="mb-5 flex justify-center">
+          <Image
+            src={"/assets/images/logo_dark.png"}
+            width={128}
+            height={128}
+            alt="Logo"
+          />
+        </div> */}
+
+        <Input
+          type="email"
+          name="Insere o teu email institucional."
+          placeholder="Insere o teu email"
+          center
+          inputRef={inputRef}
+          onKeyUp={handleKeyUp}
+          defaultValue={data.email ? data.email : undefined}
+          autoFocus
+          className={`${error ? "border-2 border-red-600" : ""} z-10`}
         />
+
+        {error && (
+          <motion.p
+            className="mt-1 text-center text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {error}
+          </motion.p>
+        )}
+
+        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+          Seguinte
+        </PrimaryButton>
       </div>
-
-      <Input
-        type="email"
-        name="Insere o teu email institucional."
-        placeholder="Insere o teu email"
-        center
-        inputRef={inputRef}
-        onKeyUp={handleKeyUp}
-        defaultValue={data.email ? data.email : undefined}
-        autoFocus
-        className={`${error ? "border-2 border-red-600" : ""} z-10`}
-      />
-
-      {error && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
-        >
-          {error}
-        </motion.p>
-      )}
-
-      <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold">
-        CONTINUAR
-      </PrimaryButton>
-    </>
+    </div>
   );
 };
 export default EmailStep;
