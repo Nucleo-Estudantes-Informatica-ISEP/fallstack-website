@@ -15,7 +15,12 @@ import { FaFilePdf } from "react-icons/fa";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { signUp } from "@/lib/auth";
-import { getSignedUrl, uploadToBucket } from "@/lib/upload";
+import {
+  uploadCv,
+  uploadAvatar,
+  uploadCv as uploadCvToSupabase,
+  uploadAvatar as uploadAvatarToSupabase,
+} from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import Input from "@/components/Input";
 import FileInput from "@/components/FileInput";
@@ -49,41 +54,49 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
   const linkedinRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
-  const onCvChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setCvLoading(true);
+      setLoading(true);
       const file = e.target.files[0];
-
-      const signed = await getSignedUrl("cv", file.type);
-      if (!signed) {
-        setError("Ocorreu um erro ao dar upload.");
-        return setCvLoading(false);
-      }
-
-      if (file.size > signed.maxSize) {
-        setCvLoading(false);
-        return setError("O ficheiro é demasiado grande.");
-      }
 
       if (error) setError(null);
 
-      const res = await uploadToBucket(signed, file);
-
-      if (res.status !== 200) {
+      const uploaded = await uploadCvToSupabase(file);
+      if (!uploaded) {
         setError("Ocorreu um erro ao dar upload.");
-        return setCvLoading(false);
+        return setLoading(false);
       }
 
       const cv = {
         name: file.name,
-        id: signed.id,
+        id: uploaded.id,
         preview: URL.createObjectURL(file),
       };
 
       setData({ ...data, cv });
-      setCvLoading(false);
+      setLoading(false);
     }
   };
+
+  const handleAvatarUpload = async () => {
+    setLoading(true);
+
+    let avatarUrl: string | null = null;
+    if (imageSrc && croppedAreaPixels) {
+      const image = await getCroppedImg(imageSrc, croppedAreaPixels);
+      if (!image) return setLoading(false);
+
+
+      const uploaded = await uploadAvatarToSupabase(image);
+      if (!uploaded) {
+        toast.error("Não foi possível dar upload à imagem.");
+        return setLoading(false);
+      }
+      avatarUrl = uploaded.url;
+    }
+    setLoading(false);
+    return avatarUrl;
+  }
 
   const handleSubmit = async () => {
     try {
@@ -92,33 +105,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
       }
 
       setLoading(true);
-
-      // Upload avatar if exists
-      let avatar = null;
-      if (imageSrc && croppedAreaPixels) {
-        const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-        if (!image) return setLoading(false);
-
-        const signed = await getSignedUrl("avatar", image.type);
-        if (!signed) {
-          toast.error("Ocorreu um erro.");
-          return setLoading(false);
-        }
-
-        if (image.size > signed.maxSize) {
-          const maxMb = Math.round(signed.maxSize / Math.pow(1024, 2));
-          toast.error(`A imagem excede o tamanho máximo de ${maxMb} MB.`);
-          return setLoading(false);
-        }
-
-        const upload = await uploadToBucket(signed, image);
-        if (upload.status !== 200) {
-          toast.error("Não foi possível dar upload à imagem.");
-          return setLoading(false);
-        }
-
-        avatar = signed.id;
-      }
+      let avatar = handleAvatarUpload() as unknown as string | null;
 
       // Add LinkedIn if provided
       const linkedin = linkedinRef.current?.value || null;
@@ -156,7 +143,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
             name="Insere o teu CV. (Opcional)"
             placeholder="CV ficheiro"
             accept="application/pdf"
-            onChange={onCvChange}
+            onChange={onFileChange}
             file={data.cv ? data.cv : null}
             icon={<FaFilePdf />}
             onClear={() => setData({ ...data, cv: null })}
