@@ -45,8 +45,20 @@ const LoginPage: React.FC = () => {
     const password = passwordRef.current?.value as string;
 
     if (await logIn(email, password)) {
-      session.fetchSession();
-      router.push("/");
+      await session.fetchSession();
+
+      // Redirect based on user role
+      if (session.user?.role === "COMPANY") {
+        router.push("/dashboard");
+      } else if (
+        session.user?.role === "STUDENT" &&
+        session.user?.student?.code
+      ) {
+        router.push(`/student/${session.user.student.code}`);
+      } else {
+        router.push("/");
+      }
+
       return router.refresh();
     }
 
@@ -60,9 +72,9 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full max-h-[90vh] overflow-hidden md:mt-4">
+    <div className="relative max-h-[90vh] w-full overflow-hidden md:mt-4">
       <section className="flex max-h-[85vh] flex-col overflow-y-auto">
-        <h1 className="mb-8 w-full text-center text-[24px] font-sans font-semibold text-white md:text-left md:text-[45px]">
+        <h1 className="mb-8 w-full text-center font-sans text-[24px] font-semibold text-white md:text-left md:text-[45px]">
           Iniciar Sessão
         </h1>
 
@@ -132,7 +144,7 @@ const LoginPage: React.FC = () => {
           <PrimaryButton
             loading={loading}
             onClick={handleClick}
-            className="w-full cursor-pointer !rounded-none !px-3 py-3 !text-[17px] font-semibold !tracking-normal sm:py-4 sm:!text-[19px] !bg-[#B1440A] hover:!bg-[#8d3508] !flex !items-center !justify-center"
+            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] sm:py-4 sm:!text-[19px]"
           >
             Login
           </PrimaryButton>
@@ -142,7 +154,7 @@ const LoginPage: React.FC = () => {
             Ainda não tens uma conta?
           </div>
           <PrimaryButton
-            className="w-full cursor-pointer !rounded-none !px-3 py-3 !text-[17px] font-semibold !tracking-normal sm:py-4 sm:!text-[19px] !bg-[#B1440A] hover:!bg-[#8d3508] !flex !items-center !justify-center"
+            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] sm:py-4 sm:!text-[19px]"
             onClick={() => router.push("/signup")}
           >
             Criar uma conta
