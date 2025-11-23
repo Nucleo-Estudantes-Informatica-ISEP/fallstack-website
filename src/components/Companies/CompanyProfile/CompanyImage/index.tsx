@@ -39,7 +39,8 @@ const CompanyImage: React.FC<UserImageProps> = ({ company }) => {
         width={400}
         height={400}
         src={
-          company.avatar?.trim() || "/assets/images/companies/diamond/armis_logo.png"
+          company.avatar?.trim() ||
+          "/assets/images/companies/diamond/armis_logo.png"
         }
         alt="profile image"
         className="size-3/4 drop-shadow-[0px_0px_20px_#c0c0c0]"

@@ -4,8 +4,8 @@ import { motion } from "framer-motion";
 
 import { QuestionCircle } from "@/styles/Icons";
 
-import EventInfos from "../EventInfos/index";
-import PrimaryLinkButton from "../PrimaryLinkButton";
+import EventInfos from "@/components/EventInfos";
+import PrimaryLinkButton from "@/components/PrimaryLinkButton";
 
 interface InfoTextProps {
   days: number[];

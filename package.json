@@ -14,16 +14,17 @@
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
-    "@fontsource/inter": "^5.2.8",
     "@heroui/react": "^2.8.5",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@mynaui/icons-react": "^0.3.9",
     "@next/eslint-plugin-next": "^15.5.6",
     "@rooks/use-window-size": "^4.11.2",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.58.0",
     "@tsparticles/react": "^3.0.0",
     "axios": "^1.12.2",
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "framer-motion": "^12.23.24",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.5.6",
@@ -34,7 +35,7 @@
     "react-icons": "^5.5.0",
     "react-loading-skeleton": "^3.5.0",
     "react-zxing": "^2.1.0",
-    "sharp": "^0.32.6",
+    "sharp": "^0.34.5",
     "swal": "^0.1.0",
     "sweetalert": "^2.1.2",
     "typewriter-effect": "^2.22.0",
@@ -49,7 +50,8 @@
       "@typescript-eslint/type-utils": "^8.8.1"
     },
     "onlyBuiltDependencies": [
-      "@prisma/client"
+      "bcrypt",
+      "sharp"
     ]
   },
   "devDependencies": {
@@ -70,7 +72,7 @@
     "autoprefixer": "^10.4.21",
     "downloadjs": "^1.4.7",
     "eslint": "^9.38.0",
-    "eslint-config-next": "15.5.6",
+    "eslint-config-next": "16.0.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import-helpers": "^2.0.1",
     "eslint-plugin-prettier": "^5.5.4",
@@ -87,7 +89,7 @@
     "react-easy-crop": "^5.5.3",
     "react-toastify": "^11.0.5",
     "tailwind-scrollbar": "^4.0.2",
-    "tailwindcss": "^4.1.14",
+    "tailwindcss": "^4.1.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "uuid": "^13.0.0",

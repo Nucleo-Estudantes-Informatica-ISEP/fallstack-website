@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@/utils/supabase/admin";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
-import { hashPassword } from "@/services/authService";
 import { changePasswordSchema } from "@/schemas/changePasswordSchema";
 
 export async function POST(req: Request) {
@@ -13,32 +13,20 @@ export async function POST(req: Request) {
     // valid body
     const { email, password, confirmPassword } = body;
 
-    // check if email is already being used
-    const emailExists = await prisma.user.findUnique({
-      where: {
-        email,
-      },
-    });
-
-    if (!emailExists) {
+    // find prisma user by email to get Supabase user id
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (!existing) {
       return NextResponse.json(
         { message: "That email is not registered" },
         { status: 401 }
       );
     }
-
-    // Hash the password before saving it in the database
-    const hashedPassword = await hashPassword(password);
-
-    // Update user password
-    const user = await prisma.user.update({
-      where: {
-        email,
-      },
-      data: {
-        password: hashedPassword,
-      },
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(existing.id, {
+      password,
     });
+    if (error)
+      return NextResponse.json({ message: error.message }, { status: 400 });
 
     return NextResponse.json(
       { message: "Password changed successfully" },

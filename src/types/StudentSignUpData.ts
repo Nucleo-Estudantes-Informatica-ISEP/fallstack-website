@@ -10,5 +10,7 @@ export interface StudentSignUpData {
     preview: string;
   } | null;
   avatar: string | null;
+  avatarUrl?: string | null;
   year: string | null;
+  linkedin: string | null;
 }

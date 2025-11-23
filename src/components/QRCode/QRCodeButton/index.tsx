@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 
 import { UserWithProfile } from "@/types/UserWithProfile";
-
-import QRCodeModal from "../QRCodeModal";
+import QRCodeModal from "@/components/QRCode/QRCodeModal";
 
 import { BsQrCodeScan } from "react-icons/bs";
 

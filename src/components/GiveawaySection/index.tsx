@@ -4,8 +4,7 @@ import { FunctionComponent, useState } from "react";
 import Swal from "sweetalert";
 
 import { StudentsForGiveaway } from "@/lib/students";
-
-import ConfettiEffect from "../ConfettiEffect";
+import ConfettiEffect from "@/components/ConfettiEffect";
 
 interface GiveawaySectionProps {
   students: StudentsForGiveaway[];

@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
+import config from "@/config";
+import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import { saveSchema } from "@/schemas/saveSchema";
-import { completeAction } from "@/lib/completeAction";
-import config from "@/config";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
@@ -38,9 +38,13 @@ export async function POST(req: NextRequest) {
   if (!student)
     return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
+  // require company context for scans/saves
+  if (!session.company)
+    return NextResponse.json({ error: "Company not found" }, { status: 404 });
+
   // check if student is already scanned
   const history = await prisma.savedStudent.findFirst({
-    where: { studentId: student.id, savedById: session.id },
+    where: { studentId: student.id, companyId: session.company.id },
   });
 
   if (history && !session.isAdmin)
@@ -53,8 +57,7 @@ export async function POST(req: NextRequest) {
   const entry = await prisma.savedStudent.create({
     data: {
       studentId: student.id,
-      savedById: session.id,
-      isSaved: false,
+      companyId: session.company.id,
     },
   });
 
@@ -63,10 +66,6 @@ export async function POST(req: NextRequest) {
       { error: "Error creating history" },
       { status: 500 }
     );
-
-  if (!session.company) {
-    return NextResponse.json({ error: "Company not found" }, { status: 404 });
-  }
 
   const company = await prisma.company.findUnique({
     where: { id: session.company.id },
@@ -79,43 +78,76 @@ export async function POST(req: NextRequest) {
   switch (company.name) {
     case "akapeople":
     case "AkaPeople":
-      await completeAction(student.code, config.constants.actionNames.akaPeopleBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.akaPeopleBooth
+      );
       break;
     case "natixis":
-      await completeAction(student.code, config.constants.actionNames.natixisBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.natixisBooth
+      );
       break;
     case "apr":
       await completeAction(student.code, config.constants.actionNames.aprBooth);
       break;
     case "hitachi solutions":
-      await completeAction(student.code, config.constants.actionNames.hitachiBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.hitachiBooth
+      );
       break;
     case "convatec":
-      await completeAction(student.code, config.constants.actionNames.convatecBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.convatecBooth
+      );
       break;
     case "niw":
       await completeAction(student.code, config.constants.actionNames.niwBooth);
       break;
     case "deloitte":
-      await completeAction(student.code, config.constants.actionNames.deloitteBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.deloitteBooth
+      );
       break;
     case "accenture":
-      await completeAction(student.code, config.constants.actionNames.accentureBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.accentureBooth
+      );
       break;
     case "armis":
-      await completeAction(student.code, config.constants.actionNames.armisBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.armisBooth
+      );
       break;
     case "devscope":
-      await completeAction(student.code, config.constants.actionNames.devscopeBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.devscopeBooth
+      );
       break;
     case "insur:it msg":
-      await completeAction(student.code, config.constants.actionNames.msgInsurItBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.msgInsurItBooth
+      );
       break;
     case "glintt":
-      await completeAction(student.code, config.constants.actionNames.glinttBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.glinttBooth
+      );
       break;
     case "konkconsulting":
-      await completeAction(student.code, config.constants.actionNames.konkConsultingBooth);
+      await completeAction(
+        student.code,
+        config.constants.actionNames.konkConsultingBooth
+      );
       break;
   }
 
@@ -124,7 +156,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession();
-  console.log({session});
+  console.log({ session });
 
   const body = await req.json();
 
@@ -142,14 +174,14 @@ export async function PATCH(req: NextRequest) {
   const { token } = parsed.data;
 
   let studentCode = token as string;
-  console.log({token});
+  console.log({ token });
   if (token) {
     const decoded = verifyJwt(token) as { code: string };
     console.log(decoded);
     studentCode = decoded.code;
   }
 
-  if (await isSaved(session.id, studentCode))
+  if (await isSaved(session.company.id, studentCode))
     return NextResponse.json({ error: "Already saved" }, { status: 409 });
 
   const student = await prisma.student.findUnique({
@@ -162,9 +194,8 @@ export async function PATCH(req: NextRequest) {
   try {
     const result = await prisma.savedStudent.create({
       data: {
-        savedById: session.id,
+        companyId: session.company.id,
         studentId: student.id,
-        isSaved: true,
       },
     });
 

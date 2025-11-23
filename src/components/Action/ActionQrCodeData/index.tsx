@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import useWindowSize from "@rooks/use-window-size";
-import QRCode from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 
 import config from "@/config";
 import { BASE_URL } from "@/services/api";
@@ -35,7 +35,7 @@ const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
   return (
     <div className="bg-white p-16">
       {qrCodeData && (
-        <QRCode
+        <QRCodeSVG
           size={innerWidth ? Math.min(innerWidth / 2, 520) : 320}
           value={qrCodeData}
         />

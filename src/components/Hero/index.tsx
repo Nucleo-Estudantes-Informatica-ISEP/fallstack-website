@@ -4,7 +4,8 @@ import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
-import PrimaryLinkButton from "../PrimaryLinkButton";
+import PrimaryLinkButton from "@/components/PrimaryLinkButton";
+import useSession from "@/hooks/useSession";
 
 interface HeaderProps {
   logoSrc: StaticImageData;
@@ -17,6 +18,8 @@ const Hero: FunctionComponent<HeaderProps> = ({
   logoAlt,
   contentRef,
 }) => {
+  const { user } = useSession();
+
   return (
     <>
       <section
@@ -56,12 +59,51 @@ const Hero: FunctionComponent<HeaderProps> = ({
             }}
             className="flex w-full flex-col items-center justify-center gap-10 pb-10 md:px-5"
           >
-            <PrimaryLinkButton loading={false} href="/signup">
-              Quero registar-me no evento
-            </PrimaryLinkButton>
+            {!user && (
+              <PrimaryLinkButton loading={false} href="/signup">
+                Quero registar-me no evento
+              </PrimaryLinkButton>
+            )}
+          </motion.div>
+        </motion.div>
+
+        {/* Scroll Indicator - Positioned at bottom of hero */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.5 }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        >
+          <motion.div
+            animate={{
+              y: [0, 10, 0],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="flex flex-col items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6 text-white opacity-70"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
+            </svg>
+            <span className="text-sm text-white opacity-70">Scroll</span>
           </motion.div>
         </motion.div>
       </section>
+
       <div className="bg-background flex w-full flex-col items-center justify-center gap-6 py-16 text-center">
         <motion.p
           initial={{
