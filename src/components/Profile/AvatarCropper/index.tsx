@@ -47,7 +47,7 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
   };
 
   return imageSrc ? (
-    <div className="relative h-72 w-full md:h-80">
+    <div className="relative h-64 w-full overflow-hidden">
       <Cropper
         image={imageSrc}
         crop={crop}
@@ -60,7 +60,7 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
         onZoomChange={setZoom}
         classes={{
           cropAreaClassName: "!border-primary",
-          containerClassName: "rounded-lg",
+          containerClassName: "",
         }}
         style={{
           mediaStyle: {
@@ -71,27 +71,27 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
       />
     </div>
   ) : (
-    <div className="flex w-full flex-row items-center justify-center text-slate-700">
+    <div className="flex w-full flex-row items-center justify-center">
       <input
         type="file"
         name="avatar"
         id="avatar"
         accept="image/*"
         hidden
-        className={`rounded-md border border-gray-400 bg-slate-200 px-4 py-1
-         text-black focus:border-primary focus:ring-0 disabled:text-gray-600`}
+        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
+         text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
         onChange={onFileChange}
       />
       <label
         className={
-          "flex flex-1 cursor-pointer flex-row items-center rounded-md border border-gray-400 bg-slate-200 px-4 py-1 md:text-lg"
+          "flex flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white/35 h-14"
         }
         htmlFor="avatar"
       >
         <span className="mr-2 min-w-min text-lg md:text-xl">
           <UploadIcon />
         </span>
-        <span className="w-52 truncate">Insere uma imagem.</span>
+        <span className="w-52 truncate">Selecionar imagem</span>
       </label>
     </div>
   );

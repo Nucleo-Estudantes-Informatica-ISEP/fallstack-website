@@ -8,7 +8,6 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import useSession from "@/hooks/useSession";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
-import QRCodeButton from "@/components/QRCode/QRCodeButton";
 import { LogIn } from "@/styles/Icons";
 
 const TopBar: React.FC = () => {
@@ -55,7 +54,6 @@ const TopBar: React.FC = () => {
             </Link>
           ) : (
             <>
-              <QRCodeButton user={session.user} />
               <UserButton user={session.user} />
               <LogoutButton />
             </>

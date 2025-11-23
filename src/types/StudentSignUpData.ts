@@ -12,4 +12,5 @@ export interface StudentSignUpData {
   avatar: string | null;
   avatarUrl?: string | null;
   year: string | null;
+  linkedin: string | null;
 }

@@ -6,25 +6,31 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row">
-      {/* Left image - anchored to left/top/bottom, keeps specified aspect ratio on desktop */}
-      {/* Hidden on small screens so mobile layout doesn't show the left logo */}
-      <div className="auth-left relative hidden md:block">
+    <div className="flex flex-col md:flex-row h-svh bg-[#141414] pt-16 md:pt-0">
+      {/* Mobile Hero - visible only on mobile */}
+      <div className="w-full md:hidden">
         <Image
-          src={"/assets/images/auth-logo.jpg"}
+          src={"/assets/images/hero_privacy_policy.png"}
+          width={1920}
+          height={400}
           alt="Auth Header"
-          fill
-          className="object-contain"
-          style={{ objectPosition: "left center" }}
-          priority
+          className="w-full h-auto"
         />
       </div>
 
-      {/* Right pane - fills remaining space and holds auth content */}
-      <div className="auth-pane relative z-10 flex w-full items-center justify-center px-6 md:px-12">
-        <div className="flex h-[50vh] w-full flex-col justify-between">
-          {children}
-        </div>
+      {/* Desktop Side Image - visible only on desktop */}
+      <div className="relative hidden md:block h-full w-full md:w-1/2">
+        <Image
+          src={"/assets/images/auth-component.png"}
+          fill
+          alt="Auth Header"
+          className="object-cover"
+        />
+      </div>
+
+      {/* Content Area */}
+      <div className="flex w-full md:w-1/2 h-full items-center justify-center px-6 py-8 md:px-12 md:py-16 overflow-y-auto">
+        {children}
       </div>
     </div>
   );

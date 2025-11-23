@@ -13,10 +13,10 @@ interface InterestSelectorProps {
 }
 
 const InterestSelector: React.FC<InterestSelectorProps> = ({
-  setUserInterests,
-  userInterests,
-  scrollable = false,
-}) => {
+                                                             setUserInterests,
+                                                             userInterests,
+                                                             scrollable = false,
+                                                           }) => {
   const [interests, setInterests] = useState<Interest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -51,37 +51,30 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
     >
       {orderedInterests.map((interest) => (
         <Reorder.Item
-          onClick={() =>
-            !userInterests.includes(interest.name) &&
-            setUserInterests([...userInterests, interest.name])
-          }
+          onClick={() => {
+            if (userInterests.includes(interest.name)) {
+              setUserInterests(
+                userInterests.filter((i) => i !== interest.name)
+              );
+            } else {
+              setUserInterests([...userInterests, interest.name]);
+            }
+          }}
           key={interest.name}
-          className={`relative cursor-pointer rounded-xl px-3 py-1 text-black ${
+          className={`relative cursor-pointer border h-10 bg-[#141414] px-3 py-1 ${
             userInterests.includes(interest.name)
-              ? "bg-orange-300/80"
-              : "bg-slate-200"
+              ? "border-white text-white"
+              : "border-white/35 text-white/35"
           }`}
           value={interest.name}
         >
           {interest.name}
-          {userInterests.includes(interest.name) && (
-            <button
-              onClick={() =>
-                setUserInterests(
-                  userInterests.filter((i) => i !== interest.name)
-                )
-              }
-              className="absolute -right-1 -top-1 z-20 flex size-4 items-center justify-center rounded-full bg-red-400/80 text-xs text-white"
-            >
-              X
-            </button>
-          )}
         </Reorder.Item>
       ))}
     </Reorder.Group>
   ) : (
     <div className="my-8 flex w-full items-center justify-center">
-      <p className="text-xl font-bold text-black">Loading...</p>
+      <p className="text-xl font-bold text-white">Loading...</p>
     </div>
   );
 };

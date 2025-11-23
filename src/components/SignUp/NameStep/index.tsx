@@ -44,53 +44,46 @@ const NameStep: FunctionComponent<NameStepProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={128}
-          height={128}
-          alt="Logo"
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+          Bem-vindo!
+        </p>
+
+        <Input
+          name="Precisamos de alguns dados para criar a tua conta. Qual é o teu nome?"
+          placeholder="Insere o teu nome"
+          center
+          inputRef={inputRef}
+          onKeyUp={handleKeyUp}
+          defaultValue={data.name ? data.name : undefined}
+          className={`${error ? "border-2 border-red-600" : ""} z-10`}
         />
+
+        {error && (
+          <motion.p
+            className="mt-1 text-center text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {error}
+          </motion.p>
+        )}
+
+        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+          Seguinte
+        </PrimaryButton>
+
+        <Link href="/login" className="text-center text-sm text-gray-600">
+          Já tenho uma conta
+        </Link>
       </div>
-
-      <p className="mb-2 text-center text-2xl font-bold text-primary">
-        Bem-vindo!
-      </p>
-
-      <Input
-        name="Precisamos de alguns dados para criar a tua conta. Qual é o teu nome?"
-        placeholder="Insere o teu nome"
-        center
-        inputRef={inputRef}
-        onKeyUp={handleKeyUp}
-        defaultValue={data.name ? data.name : undefined}
-        className={`${error ? "border-2 border-red-600" : ""} z-10`}
-      />
-
-      {error && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
-        >
-          {error}
-        </motion.p>
-      )}
-
-      <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold">
-        CONTINUAR
-      </PrimaryButton>
-
-      <Link href="/login" className="text-center text-sm text-gray-600">
-        Já tenho uma conta
-      </Link>
-    </>
+    </div>
   );
 };
 export default NameStep;
