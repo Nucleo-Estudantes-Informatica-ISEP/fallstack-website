@@ -5,11 +5,8 @@ import { Company } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
-import { BsFillClipboardFill } from "react-icons/bs";
-import { motion } from "framer-motion";
 
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
-import DownloadButton from "@/components/DownloadButton";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import { BASE_URL } from "@/services/api";
 import { jwtStudent } from "@/lib/jwtStudent";
