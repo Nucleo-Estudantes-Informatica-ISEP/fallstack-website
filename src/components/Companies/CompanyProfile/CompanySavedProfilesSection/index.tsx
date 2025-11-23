@@ -28,6 +28,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       const path = new URL(data).pathname;
       router.push(path);
     } else window.open(data, "_self");
+    setProcessing(false);
   }
 
   async function handleActionScan(data: string) {
