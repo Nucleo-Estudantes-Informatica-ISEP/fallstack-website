@@ -28,30 +28,27 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   };
 
   return (
-    <>
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={64}
-          height={64}
-          alt="Logo"
+    <div className="flex flex-col w-full items-center">
+      <div className="w-[90%] flex flex-col">
+        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+          Criar uma conta
+        </p>
+
+        <p className="font-sans text-base font-normal text-white mb-4">
+          Escolhe os teus interesses. (Opcional)
+        </p>
+
+        <InterestSelector
+          userInterests={interests}
+          setUserInterests={setInterests}
+          scrollable
         />
+
+        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+          Seguinte
+        </PrimaryButton>
       </div>
-
-      <p className="mb-1 text-center text-slate-700 md:text-lg">
-        Escolhe os teus interesses. (Opcional)
-      </p>
-
-      <InterestSelector
-        userInterests={interests}
-        setUserInterests={setInterests}
-        scrollable
-      />
-
-      <PrimaryButton onClick={handleNext} className="my-5 font-bold">
-        CONTINUAR
-      </PrimaryButton>
-    </>
+    </div>
   );
 };
 export default InterestsStep;
