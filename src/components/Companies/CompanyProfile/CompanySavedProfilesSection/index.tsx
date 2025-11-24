@@ -17,6 +17,7 @@ interface StatsProps {
 
 const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   const [processing, setProcessing] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -68,7 +69,11 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       if (!saveRes.ok) {
         const error = (await saveRes.json()).error;
         if (saveRes.status === 409) {
-          swal("Aviso", "Este estudante já foi guardado anteriormente.", "warning");
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
         } else {
           swal("Erro", error || "Erro ao guardar perfil", "error");
         }
@@ -106,7 +111,11 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       if (!res.ok) {
         const error = (await res.json()).error;
         if (res.status === 409) {
-          swal("Aviso", "Este estudante já foi guardado anteriormente.", "warning");
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
         } else {
           toast.error(error || "Failed to save profile");
         }
@@ -120,6 +129,34 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleManualEntry();
+  };
+
+  const handleDownloadAllCvs = async () => {
+    try {
+      setDownloading(true);
+      const res = await fetch("/api/companies/history/cv-zip");
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        swal("Erro", error || "Não foi possível exportar os CVs.", "error");
+        setDownloading(false);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cvs-guardados.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      setDownloading(false);
+    } catch (err) {
+      setDownloading(false);
+      swal("Erro", "Não foi possível exportar os CVs.", "error");
+    }
   };
 
   return (
@@ -211,17 +248,25 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       </div>
 
       <div className="mt-12 w-full">
-        <h2
-          className="mb-6 text-white"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 600,
-            fontSize: "25px",
-            lineHeight: "100%",
-          }}
-        >
-          Histórico de scans
-        </h2>
+        <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
+          <h2
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 600,
+              fontSize: "25px",
+              lineHeight: "100%",
+            }}
+          >
+            Histórico de scans
+          </h2>
+          <button
+            onClick={handleDownloadAllCvs}
+            disabled={downloading}
+            className="bg-primary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {downloading ? "A preparar..." : "Download CVs"}
+          </button>
+        </div>
         <div className="w-full border-b border-white pb-2">
           <div
             className="flex w-full justify-between px-4 text-white"
