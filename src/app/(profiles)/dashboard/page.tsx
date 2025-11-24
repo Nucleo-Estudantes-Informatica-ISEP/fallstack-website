@@ -18,26 +18,19 @@ const Dashboard = async () => {
 
   const history = await getCompanyHistory();
 
-  // Get all employees in the company and merge their interests
-  const companyEmployees = await prisma.employee.findMany({
+  // Interests are synced across all company employees, so a single source is enough
+  const referenceEmployee = await prisma.employee.findFirst({
     where: { companyId: session.employee.company.id },
     include: {
       user: {
-        include: {
-          interests: true,
-        },
+        include: { interests: true },
       },
     },
   });
 
-  // Merge interests from all employees (use Set to get unique interests)
-  const mergedInterests: string[] = Array.from(
-    new Set(
-      companyEmployees.flatMap((employee) =>
-        employee.user.interests.map((interest: { name: string }) => interest.name)
-      )
-    )
-  );
+  const companyInterests =
+    referenceEmployee?.user.interests.map((interest) => interest.name) ??
+    [];
 
   return (
     <section
@@ -49,7 +42,7 @@ const Dashboard = async () => {
         globalStats={globalStats}
         totalStudents={totalStudents}
         history={history instanceof HttpError ? [] : history}
-        interests={mergedInterests}
+        interests={companyInterests}
       />
     </section>
   );
