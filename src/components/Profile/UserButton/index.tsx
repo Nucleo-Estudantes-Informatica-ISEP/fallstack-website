@@ -11,7 +11,7 @@ interface UserButtonProps {
 
 const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   const profileUrl =
-    user.role === "COMPANY" && !!user.company
+    user.role === "EMPLOYEE" && !!user.employee?.company
       ? "/dashboard"
       : !!user.student
         ? "/student/" + user.student.code

@@ -27,8 +27,10 @@ export async function POST(req: NextRequest) {
     .from("avatars")
     .upload(path, new Uint8Array(ab), { contentType });
 
-  if (error)
+  if (error) {
+    console.error("Supabase storage error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   const {
     data: { publicUrl },

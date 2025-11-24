@@ -16,7 +16,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   student   Student?
-  company   Company?
+  employee  Employee?
   interests Interest[]
 }
 
@@ -35,23 +35,38 @@ model Student {
   updatedAt DateTime @updatedAt
 
   actionCompletions ActionCompletion[]
-  savedByCompanies  SavedStudent[]
+  savedByEmployees  SavedStudent[]
 
   @@index([code])
 }
 
 model Company {
-  id       String   @id @db.Uuid
-  user     User     @relation(fields: [id], references: [id], onDelete: Cascade)
+  id       String   @id @default(uuid()) @db.Uuid
 
   name     String   @unique
   tier     Tier
   avatar   String?
   updatedAt DateTime @updatedAt
 
-  savedStudents SavedStudent[]
+  employees Employee[]
 
   @@index([name])
+}
+
+model Employee {
+  id        String   @id @db.Uuid
+  user      User     @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  name      String
+  linkedin  String?
+  updatedAt DateTime @updatedAt
+
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId  String   @db.Uuid
+
+  savedStudents SavedStudent[]
+
+  @@index([companyId])
 }
 
 model Action {
@@ -89,17 +104,17 @@ model Interest {
 
 model SavedStudent {
   studentId String   @db.Uuid
-  companyId String   @db.Uuid
+  employeeId String   @db.Uuid
   student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  savedBy   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  savedBy   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
-  @@id([studentId, companyId])
+  @@id([studentId, employeeId])
 }
 
 enum Role {
   STUDENT
-  COMPANY
+  EMPLOYEE
 }
 
 enum Tier {

@@ -2,7 +2,11 @@ import { Prisma } from "@prisma/client";
 
 export type SavedStudentWithSavedBy = Prisma.SavedStudentGetPayload<{
   include: {
-    savedBy: true;
+    savedBy: {
+      include: {
+        company: true;
+      };
+    };
     student: true;
   };
 }>;

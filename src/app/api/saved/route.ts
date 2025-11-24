@@ -10,6 +10,7 @@ import getServerSession from "@/services/getServerSession";
 import { saveSchema } from "@/schemas/saveSchema";
 
 export async function POST(req: NextRequest) {
+  console.log("===== POST /api/saved called =====");
   const session = await getServerSession();
 
   if (!session)
@@ -42,25 +43,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
   // require company context for scans/saves
-  if (!session.company)
+  if (!session.employee || !session.employee.company)
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
 
-  // check if student is already scanned
-  const history = await prisma.savedStudent.findFirst({
-    where: { studentId: student.id, companyId: session.company.id },
-  });
-
-  if (history && !session.isAdmin)
+  // check if student is already saved by this company
+  const alreadySaved = await isSaved(session.employee.company.id, studentCode);
+  
+  if (alreadySaved && !session.isAdmin)
     return NextResponse.json(
-      { error: "Student already scanned" },
-      { status: 200 }
+      { error: "Student already saved by your company" },
+      { status: 409 }
     );
 
   // create history
   const entry = await prisma.savedStudent.create({
     data: {
       studentId: student.id,
-      companyId: session.company.id,
+      employeeId: session.employee.id,
     },
   });
 
@@ -71,7 +70,7 @@ export async function POST(req: NextRequest) {
     );
 
   const company = await prisma.company.findUnique({
-    where: { id: session.company.id },
+    where: { id: session.employee.company.id },
     select: { name: true },
   });
 
@@ -168,7 +167,7 @@ export async function PATCH(req: NextRequest) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (session.role !== "COMPANY" || !session.company)
+  if (session.role !== "EMPLOYEE" || !session.employee)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const parsed = saveSchema.safeParse(body);
@@ -179,12 +178,16 @@ export async function PATCH(req: NextRequest) {
   let studentCode = token as string;
   console.log({ token });
   if (token) {
-    const decoded = verifyJwt(token) as { code: string };
+    const decoded = verifyJwt(token) as unknown as { code: string };
     console.log(decoded);
     studentCode = decoded.code;
   }
 
-  if (await isSaved(session.company.id, studentCode))
+  console.log("Checking if already saved:", { companyId: session.employee.company.id, studentCode });
+  const alreadySaved = await isSaved(session.employee.company.id, studentCode);
+  console.log("Already saved result:", alreadySaved);
+  
+  if (alreadySaved)
     return NextResponse.json({ error: "Already saved" }, { status: 409 });
 
   const student = await prisma.student.findUnique({
@@ -197,7 +200,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const result = await prisma.savedStudent.create({
       data: {
-        companyId: session.company.id,
+        employeeId: session.employee.id,
         studentId: student.id,
       },
     });

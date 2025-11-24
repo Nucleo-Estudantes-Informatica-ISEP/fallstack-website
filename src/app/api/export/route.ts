@@ -11,11 +11,11 @@ export async function GET() {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  if (session.role !== "COMPANY")
+  if (session.role !== "EMPLOYEE")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const saves = await prisma.savedStudent.findMany({
-    where: { companyId: session.company.id },
+    where: { savedBy: { companyId: session.employee.company.id } },
     include: {
       student: {
         include: { user: true },
@@ -27,7 +27,7 @@ export async function GET() {
   const data: string[] = [];
   data.push("Nome,Email,Linkedin,Github,CV,Data guardado,");
   saves.forEach((s) => {
-    const token = signJwt({ id: session.company.id });
+    const token = signJwt({ id: session.employee.company.id });
     const cvUrl = `${BASE_URL}/export/${s.student.code}/cv?token=${token}`;
     const formatted = new Date(s.createdAt)
       .toLocaleString("pt-PT")

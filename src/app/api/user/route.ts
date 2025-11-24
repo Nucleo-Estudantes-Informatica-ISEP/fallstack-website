@@ -21,6 +21,31 @@ export async function PATCH(req: NextRequest) {
   if (!safeParse.success)
     return NextResponse.json({ message: safeParse.error });
 
+  // If employee, update interests for ALL employees in the company
+  if (session.employee) {
+    const employees = await prisma.employee.findMany({
+      where: { companyId: session.employee.companyId },
+      include: { user: true },
+    });
+
+    // Update interests for all employees in the company
+    await Promise.all(
+      employees.map((employee) =>
+        prisma.user.update({
+          where: { id: employee.user.id },
+          data: {
+            interests: {
+              set: body.interests.map((interest: string) => ({ name: interest })),
+            },
+          },
+        })
+      )
+    );
+
+    return NextResponse.json({ success: true });
+  }
+
+  // For students, update only their own interests
   const user = await prisma.user.update({
     where: { id: session.id },
     data: {
