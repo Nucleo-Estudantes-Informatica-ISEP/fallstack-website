@@ -1,3 +1,5 @@
+import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
+
 import { HttpError } from "@/types/HttpError";
 import { getCompanies } from "@/lib/companies";
 import { getStats, getTodayStats } from "@/lib/fetchStats";
@@ -8,11 +10,10 @@ import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
+import Footer from "@/components/Footer";
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
-import Footer from "@/components/Footer";
-import NeiLogoSimplifiedWhite from "../../../../../public/assets/images/logo-simplified-white.png";
 
 interface ProfileProps {
   params: Promise<{
@@ -96,13 +97,13 @@ const StudentPage = async (props: ProfileProps) => {
           />
         ) : (
           <ProfileSectionContainer
-            interests={sanitizedInterests}
-            student={student}
             globalStats={globalStats}
             todayStats={todayStats}
             companiesLeft={companiesLeft}
             historyData={history instanceof HttpError ? [] : history}
             actions={actions}
+            student={student}
+            interests={sanitizedInterests}
           />
         )}
       </section>
