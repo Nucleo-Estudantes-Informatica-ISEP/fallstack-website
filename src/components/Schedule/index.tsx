@@ -40,7 +40,7 @@ const Schedule: React.FC<Props> = ({
       <div className="flex w-full flex-col items-center justify-between gap-4 text-center md:flex-row md:text-left">
         <HeadingText className="text-secondary" text="Programa do evento" />
         <a
-          href="#"
+          href="https://calendar.google.com/calendar/u/2?cid=YTE5ZTE2MDcwY2I0ZWZiZDEyNWE4NjdiODQ3Njk4Mjc2NTlmM2Q3Y2Y2MmZjMjYyZWFlZDBlZGQ3OGJjMTgzN0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t"
           className="text-secondary mb-4 text-base underline md:mb-0 md:text-lg"
         >
           Adicionar ao meu calendário
