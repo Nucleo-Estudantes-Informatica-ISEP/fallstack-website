@@ -60,10 +60,21 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
         return;
       }
 
-      await fetch(BASE_URL + "/saved", {
+      const saveRes = await fetch(BASE_URL + "/saved", {
         method: "POST",
         body: JSON.stringify({ token: data }),
       });
+
+      if (!saveRes.ok) {
+        const error = (await saveRes.json()).error;
+        if (saveRes.status === 409) {
+          swal("Aviso", "Este estudante já foi guardado anteriormente.", "warning");
+        } else {
+          swal("Erro", error || "Erro ao guardar perfil", "error");
+        }
+        setProcessing(false);
+        return;
+      }
 
       router.push(`/student/${data}/preview`);
       setProcessing(false);
@@ -94,7 +105,11 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
 
       if (!res.ok) {
         const error = (await res.json()).error;
-        toast.error(error || "Failed to save profile");
+        if (res.status === 409) {
+          swal("Aviso", "Este estudante já foi guardado anteriormente.", "warning");
+        } else {
+          toast.error(error || "Failed to save profile");
+        }
         return;
       }
       router.push(`/student/${token}/preview`);

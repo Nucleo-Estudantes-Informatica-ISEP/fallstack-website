@@ -24,7 +24,11 @@ const prismaClientSingleton = () => {
             const user = await prisma.user.findUnique({
               where: { id },
               include: {
-                company: true,
+                employee: {
+                  include: {
+                    company: true,
+                  },
+                },
                 interests: true,
                 student: true,
               },

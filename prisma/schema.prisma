@@ -59,7 +59,6 @@ model Employee {
 
   name      String
   linkedin  String?
-  avatar    String?
   updatedAt DateTime @updatedAt
 
   company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)

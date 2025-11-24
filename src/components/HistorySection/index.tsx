@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -33,9 +35,18 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
               className="grid w-full grid-cols-4 border-t-2 py-4 text-center first:border-0"
             >
               <div className="col-span-2 px-1 font-bold">
-                <span className="w-full truncate">
-                  {isCompany ? item.student.name : item.savedBy.name}
-                </span>
+                {isCompany ? (
+                  <Link
+                    href={`/student/${item.student.code}/preview`}
+                    className="w-full truncate hover:underline"
+                  >
+                    {item.student.name}
+                  </Link>
+                ) : (
+                  <span className="w-full truncate">
+                    {item.savedBy.company.name}
+                  </span>
+                )}
               </div>
               <div className="justify-center px-1">
                 {formatDateDDStrMonthHourMin(item.createdAt)}

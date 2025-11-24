@@ -70,12 +70,12 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
         ) : (
           historyData.map((item) => (
             <div
-              key={item.studentId}
+              key={`${item.studentId}-${item.createdAt}`}
               className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
             >
               <div className="flex flex-1 items-center justify-center px-4 text-center">
                 <Link
-                  href={"/student/" + item.student.code}
+                  href={`/student/${item.student.code}/preview`}
                   className="font-bold text-white hover:underline"
                 >
                   {item.student.name}

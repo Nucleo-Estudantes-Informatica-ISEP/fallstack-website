@@ -138,6 +138,41 @@ async function seedStudent() {
   return newUser;
 }
 
+async function seedStudent2() {
+  const email = "student2@test.pt";
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    console.log("⚠️ Student 2 already seeded");
+    return existing;
+  }
+
+  const supabaseUser = await ensureSupabaseUser(
+    email,
+    process.env.ADMIN_PASSWORD as string
+  );
+
+  const newUser = await prisma.user.create({
+    data: {
+      id: supabaseUser.id,
+      email,
+      role: Role.STUDENT,
+    },
+  });
+
+  await prisma.student.create({
+    data: {
+      id: newUser.id,
+      name: "Student 2",
+      year: "2º Ano Licenciatura",
+      code: "A456",
+    },
+  });
+
+  console.log("✅ Student 2 seeded");
+
+  return newUser;
+}
+
 async function seedNei(userId: string) {
   const company = await prisma.company.upsert({
     where: { name: "NEI" },
@@ -214,6 +249,35 @@ async function seedCompanies() {
         },
       },
     });
+
+    if (c.name === "armis") {
+      const email2 = "armis2@test.pt";
+      const existing2 = await prisma.user.findUnique({ where: { email: email2 } });
+      const supaUser2 =
+        existing2 ??
+        (await ensureSupabaseUser(email2, process.env.ADMIN_PASSWORD as string));
+      const userId2 = existing2 ? existing2.id : supaUser2.id;
+
+      if (!existing2) {
+        await prisma.user.create({
+          data: { id: userId2, email: email2, role: Role.EMPLOYEE },
+        });
+      }
+
+      await prisma.employee.upsert({
+        where: { id: userId2 },
+        create: {
+          id: userId2,
+          name: "Armis Employee 2",
+          companyId: company.id,
+        },
+        update: {
+          name: "Armis Employee 2",
+          companyId: company.id,
+        },
+      });
+      console.log("✅ Armis Employee 2 seeded");
+    }
   }
 
   console.log("✅ Companies seeded");
@@ -277,6 +341,7 @@ async function main() {
   }
   await seedInterests();
   await seedStudent();
+  await seedStudent2();
   const user = await seedAdmin();
   await seedNei(user.id);
   await seedCompanies();
