@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Interest } from "@prisma/client";
+import { Reorder } from "framer-motion";
+
 import { BASE_URL } from "@/services/api";
 
 interface InterestSelectorProps {
@@ -20,15 +22,10 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
 
   useEffect(() => {
     async function fetchInterests() {
-      try {
-        const res = await fetch(BASE_URL + "/interests");
-        const json = await res.json();
-        setInterests(json);
-      } catch (error) {
-        console.error("Erro ao carregar interesses", error);
-      } finally {
-        setLoading(false);
-      }
+      const res = await fetch(BASE_URL + "/interests");
+      const json = await res.json();
+      setInterests(json);
+      setLoading(false);
     }
 
     fetchInterests();
@@ -44,7 +41,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
 
   if (loading) {
     return (
-      <div className="my-4 flex w-full items-center justify-center text-sm text-gray-400 animate-pulse">
+      <div className="my-4 flex w-full animate-pulse items-center justify-center text-sm text-gray-400">
         A carregar interesses...
       </div>
     );
@@ -61,7 +58,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   return (
     <div
       className={`flex w-full flex-wrap gap-3 ${
-        scrollable ? "max-h-52 overflow-y-auto pr-1 pt-1" : ""
+        scrollable ? "max-h-52 overflow-y-auto pt-1 pr-1" : ""
       }`}
     >
       {interests.map((interest) => {

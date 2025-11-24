@@ -25,6 +25,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       const path = new URL(data).pathname;
       router.push(path);
     } else window.open(data, "_self");
+    setProcessing(false);
   }
 
   async function handleActionScan(data: string) {
@@ -86,11 +87,16 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       if (!token)
         return swal("Erro", "O código introduzido é inválido.", "error");
 
-      await fetch(BASE_URL + "/saved", {
+      const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
         body: JSON.stringify({ token }),
       });
 
+      if (!res.ok) {
+        const error = (await res.json()).error;
+        toast.error(error || "Failed to save profile");
+        return;
+      }
       router.push(`/student/${token}/preview`);
     } else {
       toast.error("Ocorreu um erro.");

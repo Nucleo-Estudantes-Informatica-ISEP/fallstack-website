@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -46,8 +45,20 @@ const LoginPage: React.FC = () => {
     const password = passwordRef.current?.value as string;
 
     if (await logIn(email, password)) {
-      session.fetchSession();
-      router.push("/");
+      await session.fetchSession();
+
+      // Redirect based on user role
+      if (session.user?.role === "COMPANY") {
+        router.push("/dashboard");
+      } else if (
+        session.user?.role === "STUDENT" &&
+        session.user?.student?.code
+      ) {
+        router.push(`/student/${session.user.student.code}`);
+      } else {
+        router.push("/");
+      }
+
       return router.refresh();
     }
 
@@ -61,78 +72,96 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <section className="flex w-full flex-col md:mt-12">
-      <div className="mb-5 flex justify-center">
-        <Image
-          src={"/assets/images/logo_dark.png"}
-          width={128}
-          height={128}
-          alt="Logo"
-        />
-      </div>
-      <Input
-        name="Email"
-        placeholder="Insere o teu email"
-        inputRef={emailRef}
-        autoFocus={!!emailError}
-        onKeyUp={handleKeyUp}
-      />
+    <div className="relative max-h-[90vh] w-full overflow-hidden md:mt-4">
+      <section className="flex max-h-[85vh] flex-col overflow-y-auto">
+        <h1 className="mb-8 w-full text-center font-sans text-[24px] font-semibold text-white md:text-left md:text-[45px]">
+          Iniciar Sessão
+        </h1>
 
-      {emailError && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
-        >
-          {emailError}
-        </motion.p>
-      )}
+        <div className="w-full">
+          <Input
+            name="Email"
+            inputRef={emailRef}
+            autoFocus={!!emailError}
+            onKeyUp={handleKeyUp}
+            className="!rounded-none !border-[rgba(255,255,255,0.35)] bg-transparent px-3 py-2 text-white placeholder:text-gray-500 sm:py-3"
+          />
+        </div>
 
-      <span className="mt-4"></span>
+        {emailError && (
+          <motion.p
+            className="mt-1 text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {emailError}
+          </motion.p>
+        )}
 
-      <Input
-        name="Password"
-        placeholder="Insere a tua password"
-        type="password"
-        inputRef={passwordRef}
-        autoFocus={!!pwError}
-        onKeyUp={handleKeyUp}
-      />
+        <span className="mt-3"></span>
 
-      {pwError && (
-        <motion.p
-          className="mt-1 text-sm font-bold text-red-600"
-          animate={{
-            y: [-15, 0],
-          }}
-          transition={{
-            ease: "easeOut",
-            duration: 0.2,
-          }}
-        >
-          {pwError}
-        </motion.p>
-      )}
+        <div className="mt-4 w-full">
+          <Input
+            name="A tua palavra-passe"
+            type="password"
+            inputRef={passwordRef}
+            autoFocus={!!pwError}
+            onKeyUp={handleKeyUp}
+            className="!rounded-none !border-[rgba(255,255,255,0.35)] bg-transparent px-3 py-2 text-white placeholder:text-gray-500 sm:py-3"
+          />
+        </div>
 
-      <PrimaryButton
-        loading={loading}
-        onClick={handleClick}
-        className="mb-5 mt-4 font-bold"
-      >
-        LOGIN
-      </PrimaryButton>
+        {pwError && (
+          <motion.p
+            className="mt-1 text-sm font-bold text-red-600"
+            animate={{
+              y: [-15, 0],
+            }}
+            transition={{
+              ease: "easeOut",
+              duration: 0.2,
+            }}
+          >
+            {pwError}
+          </motion.p>
+        )}
 
-      <hr className="mb-4 border-secondary" />
+        <div className="mt-2 w-full">
+          <div className="mb-6 w-full text-right">
+            <Link
+              href="/password-reset"
+              className="text-sm text-gray-400 underline"
+            >
+              Esqueci-me da palavra-passe
+            </Link>
+          </div>
 
-      <Link href="/signup" className="text-sm text-black">
-        Ainda não tens uma conta?
-      </Link>
-    </section>
+          <PrimaryButton
+            loading={loading}
+            onClick={handleClick}
+            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] sm:py-4 sm:!text-[19px]"
+          >
+            Login
+          </PrimaryButton>
+        </div>
+        <div className="mt-6 w-full">
+          <div className="mb-3 text-center text-sm text-gray-400">
+            Ainda não tens uma conta?
+          </div>
+          <PrimaryButton
+            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] sm:py-4 sm:!text-[19px]"
+            onClick={() => router.push("/signup")}
+          >
+            Criar uma conta
+          </PrimaryButton>
+        </div>
+      </section>
+    </div>
   );
 };
 

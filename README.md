@@ -1,4 +1,3 @@
-````markdown
 # Fallstack 2025
 
 ## Hello there! 👋

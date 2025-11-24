@@ -1,3 +1,5 @@
+// deprecated
+
 "use client";
 
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";

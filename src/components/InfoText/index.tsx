@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 
-import { QuestionCircle } from "@/styles/Icons";
-
 import EventInfos from "@/components/EventInfos";
 import PrimaryLinkButton from "@/components/PrimaryLinkButton";
+import { QuestionCircle } from "@/styles/Icons";
 
 interface InfoTextProps {
   days: number[];
@@ -47,7 +46,9 @@ const InfoText: React.FC<InfoTextProps> = ({
 
       <PrimaryLinkButton
         loading={false}
-        href="/location"
+        href="/assets/images/fallstack-map.pdf"
+        target="_blank"
+        rel="noopener noreferrer"
         className="w-full max-w-xs justify-center gap-2 !px-4 !py-3 text-base font-semibold sm:text-lg lg:mt-0 lg:max-w-none lg:self-center"
       >
         <QuestionCircle /> Como chegar?

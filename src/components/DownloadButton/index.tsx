@@ -26,7 +26,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({ className }) => {
 
   return (
     <span
-      className={`cursor-pointer transition-colors hover:text-primary ${
+      className={`hover:text-primary cursor-pointer transition-colors ${
         isLoading && "text-primary"
       } ${className}`}
       onClick={handleDownload}
