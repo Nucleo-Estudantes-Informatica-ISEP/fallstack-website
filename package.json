@@ -18,7 +18,7 @@
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@mynaui/icons-react": "^0.3.9",
-    "@next/eslint-plugin-next": "^15.5.6",
+    "@next/eslint-plugin-next": "^16.0.3",
     "@rooks/use-window-size": "^4.11.2",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.58.0",
