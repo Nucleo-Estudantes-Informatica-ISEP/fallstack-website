@@ -23,7 +23,6 @@ export const GoldCompanies: CompanyProps[] = [
       title: "CGI",
       linkedinLink:
         "https://www.linkedin.com/company/cgi/",
-      instagramLink: "https://www.instagram.com/cgiinc/",
       facebookLink: "https://www.facebook.com/cgiinc/",
       website: "https://www.cgi.com/",
       facts: [
@@ -148,7 +147,7 @@ export const GoldCompanies: CompanyProps[] = [
         </>
       ),
       instagramLink: "https://www.instagram.com/deloitteportugal/",
-      linkedinLink: "https://www.linkedin.com/company/deloitte-portugal/",
+      linkedinLink: "https://www.linkedin.com/company/deloitte/posts/?feedView=all",
       website: "https://www2.deloitte.com/pt/pt.html",
       facts: [
         {
