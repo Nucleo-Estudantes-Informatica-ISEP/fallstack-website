@@ -6,8 +6,8 @@ import { Company } from "@prisma/client";
 import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
-import { HistoryData } from "@/types/HistoryData";
 import { BASE_URL } from "@/services/api";
+import { HistoryData } from "@/types/HistoryData";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
 interface HistorySectionProps {
@@ -64,24 +64,109 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
             </div>
           </div>
         ) : (
-          historyData.map((item) => (
-            <div
-              key={`${item.studentId}-${item.createdAt}`}
-              className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
-            >
-              <div className="flex flex-1 items-center justify-center px-4 text-center">
-                <Link
-                  href={`/student/${item.student.code}/preview`}
-                  className="font-bold text-white hover:underline"
-                >
-                  {item.student.name}
-                </Link>
+          historyData.map((item) => {
+            const [editing, setEditing] = useState(false);
+            const [comment, setComment] = useState(item.comment || "");
+            const [loading, setLoading] = useState(false);
+
+            const handleUpdate = async () => {
+              setLoading(true);
+              await fetch(`${BASE_URL}/saved`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId: item.studentId, comment }),
+              });
+              setEditing(false);
+              setLoading(false);
+            };
+
+            const handleRemove = async () => {
+              setLoading(true);
+              await fetch(`${BASE_URL}/saved`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  studentId: item.studentId,
+                  comment: null,
+                }),
+              });
+              setComment("");
+              setEditing(false);
+              setLoading(false);
+            };
+
+            return (
+              <div
+                key={`${item.studentId}-${item.createdAt}`}
+                className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
+              >
+                <div className="flex flex-1 items-center justify-center px-4 text-center">
+                  <Link
+                    href={`/student/${item.student.code}/preview`}
+                    className="font-bold text-white hover:underline"
+                  >
+                    {item.student.name}
+                  </Link>
+                </div>
+                <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
+                  {formatDateDDStrMonthHourMin(item.createdAt)}
+                </div>
+                <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                  {editing ? (
+                    <>
+                      <textarea
+                        className="rounded-md border border-gray-300 p-1 text-black"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={2}
+                        style={{ minWidth: 120, maxWidth: 220 }}
+                        disabled={loading}
+                      />
+                      <div className="mt-1 flex gap-2">
+                        <button
+                          onClick={handleUpdate}
+                          disabled={loading}
+                          className="rounded bg-green-600 px-2 text-xs text-white"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={handleRemove}
+                          disabled={loading}
+                          className="rounded bg-red-600 px-2 text-xs text-white"
+                        >
+                          Remover
+                        </button>
+                        <button
+                          onClick={() => setEditing(false)}
+                          disabled={loading}
+                          className="rounded bg-gray-600 px-2 text-xs text-white"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="block min-h-6 text-xs text-gray-200">
+                        {item.comment || (
+                          <span className="text-gray-400 italic">
+                            Sem comentário
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="mt-1 rounded bg-blue-600 px-2 text-xs text-white"
+                      >
+                        Editar
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
-                {formatDateDDStrMonthHourMin(item.createdAt)}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

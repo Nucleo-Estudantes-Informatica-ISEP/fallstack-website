@@ -11,6 +11,36 @@ import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import { saveSchema } from "@/schemas/saveSchema";
 
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const { studentId, comment } = body;
+  if (!studentId)
+    return NextResponse.json(
+      { error: "studentId is required" },
+      { status: 400 }
+    );
+
+  // employeeId do usuário logado
+  const employeeId = session.employee?.id;
+  if (!employeeId)
+    return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+
+  const updated = await prisma.savedStudent.updateMany({
+    where: {
+      studentId,
+      employeeId,
+    },
+    data: {
+      comment: comment ?? null,
+    },
+  });
+  return NextResponse.json(updated);
+}
+
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
 
@@ -23,7 +53,7 @@ export async function POST(req: NextRequest) {
   if (!safeParse.success)
     return NextResponse.json({ message: safeParse.error }, { status: 400 });
 
-  const { token } = safeParse.data;
+  const { token, comment } = safeParse.data;
 
   let studentCode = token;
   if (token) {
@@ -47,6 +77,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
 
   // check if student is already saved by this company
+  if (!studentCode) {
+    return NextResponse.json(
+      { error: "Invalid student code" },
+      { status: 400 }
+    );
+  }
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
 
   if (alreadySaved && !session.isAdmin)
@@ -58,8 +94,9 @@ export async function POST(req: NextRequest) {
   // create history
   const entry = await prisma.savedStudent.create({
     data: {
-      studentId: student.id,
-      employeeId: session.employee.id,
+      student: { connect: { id: student.id } },
+      savedBy: { connect: { id: session.employee.id } },
+      comment: comment ?? undefined,
     },
   });
 
@@ -178,6 +215,12 @@ export async function PATCH(req: NextRequest) {
     studentCode = decoded.code;
   }
 
+  if (!studentCode) {
+    return NextResponse.json(
+      { error: "Invalid student code" },
+      { status: 400 }
+    );
+  }
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
 
   if (alreadySaved)
@@ -188,16 +231,15 @@ export async function PATCH(req: NextRequest) {
   });
 
   if (!student)
-    return NextResponse.json({ error: "Invalid student" }, { status: 400 });
+    return NextResponse.json({ error: "Student not found" }, { status: 404 });
 
   try {
     const result = await prisma.savedStudent.create({
       data: {
-        employeeId: session.employee.id,
-        studentId: student.id,
+        student: { connect: { id: student.id } },
+        savedBy: { connect: { id: session.employee.id } },
       },
     });
-
     return NextResponse.json(result);
   } catch (error) {
     if (
