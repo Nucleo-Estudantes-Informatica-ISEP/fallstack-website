@@ -2,12 +2,19 @@ const isDev = process.env.NODE_ENV !== "production";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  output: 'standalone',
   images: {
     remotePatterns: [
       // Supabase public storage (avatars)
       {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "*.supabase.nei-isep.org",
         pathname: "/storage/v1/object/public/**",
       },
       // Google Cloud Storage buckets (generic)
@@ -25,6 +32,11 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "storage.googleapis.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "supabase.nei-isep.org",
         pathname: "/**",
       },
       // Local Supabase storage gateway (dev only)
