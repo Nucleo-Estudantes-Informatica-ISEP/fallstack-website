@@ -11,21 +11,22 @@ interface CompanyDetails {
 
 export default function findCompanyByName(name: string): CompanyDetails | null {
   name = name.replaceAll("%20", " ");
+  const nameLower = name.toLowerCase();
 
   for (const company of DiamondCompanies) {
-    if (company.name === name) {
+    if (company.name.toLowerCase() === nameLower) {
       return { props: company, tier: "Diamond" };
     }
   }
 
   for (const company of GoldCompanies) {
-    if (company.name === name) {
+    if (company.name.toLowerCase() === nameLower) {
       return { props: company, tier: "Gold" };
     }
   }
 
   for (const company of SilverCompanies) {
-    if (company.name === name) {
+    if (company.name.toLowerCase() === nameLower) {
       return { props: company, tier: "Silver" };
     }
   }
