@@ -17,7 +17,7 @@ export const SilverCompanies: CompanyProps[] = [
   {
     logoHref: glinttLogo,
     name: "glintt",
-    websiteUrl: "https://www.glintt.com/",
+    websiteUrl: "https://www.glinttglobal.com/",
   },
   {
     logoHref: AccentureLogo,

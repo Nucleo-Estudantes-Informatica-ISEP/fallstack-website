@@ -119,7 +119,8 @@ export const DiamondCompanies: CompanyProps[] = [
     },
     className: "w-42",
     interests: ["AI", "Mobile", "Software Development", "Backend"],
-  },{
+  },
+  {
     logoHref: cloudflareLogo,
     name: "Cloudflare",
     interests: ["Backend", "Cloud Computing", "Data Analysis"],
@@ -128,42 +129,38 @@ export const DiamondCompanies: CompanyProps[] = [
       bodyText: (
         <>
           <p>
-            Hitachi Solutions is a consulting company, Microsoft Solution
-            Partner and system integrator specialising in innovative solutions
-            for large organisations in the private and public sector. Hitachi
-            Solutions has opportunities for graduates who are based in Portugal
-            and have a keen interest in technology, plus a desire to pursue an
-            international career in consulting.
+            Cloudflare is on a mission to help build a better Internet. Today the company
+            runs one of the world's largest networks that powers millions of websites and
+            other Internet properties for customers ranging from individual bloggers to
+            SMBs to Fortune 500 companies. Cloudflare protects and accelerates any Internet
+            application online without adding hardware, installing software, or changing a
+            line of code.
           </p>
           <br />
           <p>
-            Our office address is Avenida da Senhora da Hora 357, Matosinhos.
-            Our website is Hitachi Solutions | Business Transformation
-            Consultancy (hitachi-solutions.pt) and if you have any queries,
-            please send an email to ioliveira@hitachisolutions.com .
+            Internet properties powered by Cloudflare all have web traffic routed through
+            its intelligent global network, which gets smarter with every request. As a
+            result, they see significant improvement in performance and a decrease in spam
+            and other attacks. Cloudflare was named to Entrepreneur Magazine's Top Company
+            Cultures list and ranked among the World's Most Innovative Companies by Fast
+            Company.
           </p>
         </>
       ),
-      instagramLink: "https://www.instagram.com/hitachisolutions.portugal/",
-      linkedinLink:
-        "https://www.linkedin.com/company/hitachi-solutions-portugal/",
-      website: "https://hitachi-solutions.pt/",
-      videoTitle: "Vídeo promocional",
-      videoHref:
-        "https://www.youtube.com/embed/I4RyT-u2aIw?si=aAfGMCR3zVnAaHJp",
+      linkedinLink: "https://www.linkedin.com/company/cloudflare/",
+      website: "https://www.cloudflare.com/",
       facts: [
         {
+          iconSrc: Trophy,
+          description: "One of the world's largest networks",
+        },
+        {
           iconSrc: Archive,
-          description: "Empresa de consultoria global",
+          description: "Powers millions of websites globally",
         },
         {
           iconSrc: Leaf,
-          description: "Cultura diversificada e recompensadora",
-        },
-        {
-          iconSrc: Chart,
-          description:
-            "Especializados em aplicações empresariais amigáveis baseadas na Microsoft cloud",
+          description: "Named to Top Company Cultures list",
         },
       ],
     },
