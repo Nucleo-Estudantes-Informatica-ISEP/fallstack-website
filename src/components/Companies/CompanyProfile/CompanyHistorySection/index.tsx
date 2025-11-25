@@ -7,7 +7,7 @@ import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
 import { HistoryData } from "@/types/HistoryData";
-import { BASE_URL } from "@/services/api";
+import { BASE_URL, BASE_URL } from "@/services/api";
 import OpenCvSectionCompany from "@/components/Companies/CompanyProfile/OpenCvSectionCompany";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -47,7 +47,7 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
   return (
     <div className="my-4 flex w-full flex-col items-center justify-center text-white">
       <div
-        className="firefox-scrollbar-margin max-h-80 w-full overflow-y-scroll pl-1 scrollbar scrollbar-track-transparent scrollbar-thumb-slate-500 scrollbar-thumb-rounded-lg scrollbar-w-1"
+        className="firefox-scrollbar-margin scrollbar scrollbar-track-transparent scrollbar-thumb-slate-500 scrollbar-thumb-rounded-lg scrollbar-w-1 max-h-80 w-full overflow-y-scroll pl-1"
         style={{ scrollbarGutter: "stable" }}
       >
         {!historyData ? (
@@ -59,33 +59,124 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
                 className="flex flex-row items-center border-t border-gray-700 py-4 first:border-0"
               >
                 <div className="flex w-full justify-center">
-                  <Skeleton containerClassName="flex-1" baseColor="#333" highlightColor="#444" />
+                  <Skeleton
+                    containerClassName="flex-1"
+                    baseColor="#333"
+                    highlightColor="#444"
+                  />
                 </div>
               </div>
             ))
         ) : !historyData.length ? (
           <div className="flex flex-row py-3">
-            <div className="flex w-full justify-center text-gray-400">Sem perfis salvos.</div>
+            <div className="flex w-full justify-center text-gray-400">
+              Sem perfis salvos.
+            </div>
           </div>
         ) : (
-          historyData.map((item) => (
-            <div
-              key={`${item.studentId}-${item.createdAt}`}
-              className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
-            >
-              <div className="flex flex-1 items-center justify-center px-4 text-center">
-                <Link
-                  href={`/student/${item.student.code}/preview`}
-                  className="font-bold text-white hover:underline"
-                >
-                  {item.student.name}
-                </Link>
+          historyData.map((item, idx) => {
+            const [editing, setEditing] = useState(false);
+            const [comment, setComment] = useState(item.comment || "");
+            const [loading, setLoading] = useState(false);
+
+            const handleUpdate = async () => {
+              setLoading(true);
+              await fetch(`${BASE_URL}/saved`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ studentId: item.studentId, comment }),
+              });
+              setEditing(false);
+              setLoading(false);
+            };
+
+            const handleRemove = async () => {
+              setLoading(true);
+              await fetch(`${BASE_URL}/saved`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  studentId: item.studentId,
+                  comment: null,
+                }),
+              });
+              setComment("");
+              setEditing(false);
+              setLoading(false);
+            };
+
+            return (
+              <div
+                key={`${item.studentId}-${item.createdAt}`}
+                className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
+              >
+                <div className="flex flex-1 items-center justify-center px-4 text-center">
+                  <Link
+                    href={`/student/${item.student.code}/preview`}
+                    className="font-bold text-white hover:underline"
+                  >
+                    {item.student.name}
+                  </Link>
+                </div>
+                <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
+                  {formatDateDDStrMonthHourMin(item.createdAt)}
+                </div>
+                <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+                  {editing ? (
+                    <>
+                      <textarea
+                        className="rounded-md border border-gray-300 p-1 text-black"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        rows={2}
+                        style={{ minWidth: 120, maxWidth: 220 }}
+                        disabled={loading}
+                      />
+                      <div className="mt-1 flex gap-2">
+                        <button
+                          onClick={handleUpdate}
+                          disabled={loading}
+                          className="rounded bg-green-600 px-2 text-xs text-white"
+                        >
+                          Salvar
+                        </button>
+                        <button
+                          onClick={handleRemove}
+                          disabled={loading}
+                          className="rounded bg-red-600 px-2 text-xs text-white"
+                        >
+                          Remover
+                        </button>
+                        <button
+                          onClick={() => setEditing(false)}
+                          disabled={loading}
+                          className="rounded bg-gray-600 px-2 text-xs text-white"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="block min-h-6 text-xs text-gray-200">
+                        {item.comment || (
+                          <span className="text-gray-400 italic">
+                            Sem comentário
+                          </span>
+                        )}
+                      </span>
+                      <button
+                        onClick={() => setEditing(true)}
+                        className="mt-1 rounded bg-blue-600 px-2 text-xs text-white"
+                      >
+                        Editar
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
-                {formatDateDDStrMonthHourMin(item.createdAt)}
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

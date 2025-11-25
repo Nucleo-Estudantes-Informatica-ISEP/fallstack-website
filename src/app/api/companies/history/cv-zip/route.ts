@@ -1,5 +1,5 @@
-import JSZip from "jszip";
 import { NextResponse } from "next/server";
+import JSZip from "jszip";
 
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
@@ -41,6 +41,7 @@ export async function GET() {
   const admin = createAdminClient();
   const zip = new JSZip();
 
+  // Adiciona os CVs ao zip
   for (const entry of studentsWithCv) {
     const cvId = entry.student.cv!;
     const supaPath = `distribution/cv/${cvId}.pdf`;
@@ -57,6 +58,18 @@ export async function GET() {
     const filename = `${entry.student.code}-${sanitizeFilename(entry.student.name)}.pdf`;
     zip.file(filename, buf);
   }
+
+  // Adiciona um CSV com os dados dos estudantes salvos (incluindo comentário)
+  const csvHeader = "Nome,Código,Comentário\n";
+  const csvRows = studentsWithCv.map((entry) => {
+    // Escapa aspas e vírgulas
+    const nome = `"${(entry.student.name || "").replace(/"/g, '""')}"`;
+    const codigo = `"${(entry.student.code || "").replace(/"/g, '""')}"`;
+    const comentario = `"${(entry.comment || "").replace(/"/g, '""')}"`;
+    return [nome, codigo, comentario].join(",");
+  });
+  const csvContent = csvHeader + csvRows.join("\n");
+  zip.file("dados.csv", csvContent);
 
   const hasFiles = Object.keys(zip.files).length > 0;
   if (!hasFiles)
