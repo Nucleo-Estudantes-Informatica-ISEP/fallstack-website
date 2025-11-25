@@ -22,15 +22,11 @@ const CompanyPage = async (props: CompanySearchProps) => {
   if (modalInformation === undefined) return Custom404();
 
   //  const interests = await fetchInterestsByCompanyName(company.props.name);
-  const interests = company.props.interests!;
+  // const interests = company.props.interests!;
 
   return (
-    <section className="flex size-full flex-col items-center">
-      <CompanyPageSection
-        company={company}
-        modalInformation={modalInformation}
-        interests={interests}
-      />
+    <section className="flex size-full flex-col items-center bg-black">
+      <CompanyPageSection companyName={params.name} />
     </section>
   );
 };

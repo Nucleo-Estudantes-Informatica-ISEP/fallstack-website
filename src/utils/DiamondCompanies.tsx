@@ -48,9 +48,6 @@ export const DiamondCompanies: CompanyProps[] = [
       facebookLink: "https://www.facebook.com/aprtechnologysolutions",
       youtubeLink: "https://www.youtube.com/@aprtechnologysolutions",
       website: "https://www.apr.pt",
-      videoTitle: "Vídeo promocional",
-      videoHref:
-        "https://www.youtube.com/embed/QkeMa02JqD4?si=xNaIvpGCvDycJz4A",
       facts: [
         {
           iconSrc: Trophy,
@@ -97,7 +94,7 @@ export const DiamondCompanies: CompanyProps[] = [
       linkedinLink: "https://www.linkedin.com/company/armis/",
       facebookLink: "https://www.facebook.com/grupoarmis/",
       youtubeLink: "https://www.youtube.com/@armisgroup",
-      website: "https://www.armis.pt",
+      website: "https://www.armisgroup.com/pt",
       videoTitle: "Vídeo promocional",
       videoHref:
         "https://www.youtube.com/embed/QkeMa02JqD4?si=xNaIvpGCvDycJz4A",
