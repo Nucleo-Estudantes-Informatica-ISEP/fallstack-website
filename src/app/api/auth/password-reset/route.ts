@@ -8,6 +8,7 @@ const requestResetSchema = z.object({
 
 const confirmResetSchema = z.object({
   password: z.string().min(8),
+  code: z.string().min(1),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,7 +30,14 @@ export async function POST(req: NextRequest) {
 
 
 
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email)
+      const redirectTo = new URL(
+        "/password-reset/confirm",
+        req.nextUrl.origin,
+      ).toString();
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      })
 
       if (error) {
         //@ts-ignore
@@ -51,12 +59,22 @@ export async function POST(req: NextRequest) {
     if (!parsed.success) {
       //@ts-ignore
       return NextResponse.json(
-        { error: "Invalid password" },
+        { error: "Invalid password or code" },
         { status: 400 }
       );
     }
 
-    const { password } = parsed.data;
+    const { password, code } = parsed.data;
+
+    // Exchange the recovery code for a session so updateUser succeeds
+    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+    if (exchangeError) {
+      //@ts-ignore
+      return NextResponse.json(
+        { error: exchangeError.message || "Auth session missing" },
+        { status: 400 }
+      );
+    }
 
     const { error } = await supabase.auth.updateUser({ password });
 

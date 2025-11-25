@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
@@ -12,6 +12,9 @@ import PrimaryButton from "@/components/PrimaryButton";
 const PasswordResetConfirmPage: React.FC = () => {
   const session = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const code = searchParams.get("code");
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState<boolean>(false);
   const [pwError, setPwError] = useState<string | null>(null);
@@ -53,13 +56,19 @@ const PasswordResetConfirmPage: React.FC = () => {
 
     setLoading(true);
 
+    if (!code) {
+      setLoading(false);
+      setCodeError("Link inválido ou expirado. Pede novo email de recuperação.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/auth/password-reset", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, code }),
       });
 
       if (!res.ok) {
@@ -91,6 +100,16 @@ const PasswordResetConfirmPage: React.FC = () => {
         <h1 className="mb-8 w-full text-center font-sans text-[24px] font-semibold text-white md:text-left md:text-[45px]">
           Reset Password
         </h1>
+
+        {codeError && (
+          <motion.p
+            className="mb-3 text-sm font-bold text-red-600"
+            animate={{ y: [-15, 0] }}
+            transition={{ ease: "easeOut", duration: 0.2 }}
+          >
+            {codeError}
+          </motion.p>
+        )}
 
         <div className="w-full">
           <Input
@@ -160,4 +179,3 @@ const PasswordResetConfirmPage: React.FC = () => {
 };
 
 export default PasswordResetConfirmPage;
-
