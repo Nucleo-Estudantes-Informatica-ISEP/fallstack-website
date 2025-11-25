@@ -35,6 +35,7 @@ The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the
 git clone https://github.com/<org>/fallstack2025.git
 cd fallstack2025
 ```
+
 ````
 
 ## 2. Install dependencies
@@ -166,7 +167,8 @@ docker compose --profile supabase down -v
 ## Sync schema
 
 ```bash
-pnpm prisma db push
+set -a; source .env; set +a
+pnpm prisma db push --force-reset
 ```
 
 or, using migrations:
@@ -250,3 +252,4 @@ docker compose --profile supabase down
 # Contributing
 
 In order to contribute to the project, you should look into the board provided in the team's ClickUp. All the information's related to branches naming and code styling is in there.
+````
