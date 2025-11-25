@@ -1,14 +1,5 @@
 import prisma from "./prisma";
 
 export async function getCompanies() {
-  return await prisma.company.findMany({
-    include: {
-      user: true,
-    },
-    where: {
-      user: {
-        isAdmin: false,
-      },
-    },
-  });
+  return await prisma.company.findMany();
 }

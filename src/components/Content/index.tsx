@@ -45,9 +45,9 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         </p>
       </section>
 
-      <section className="w-full bg-background !px-0">
+     {/* <section className="w-full bg-background !px-0">
         <PassSection />
-      </section>
+      </section>*/}
 
       <section className="w-full bg-background !px-0">
         <CompaniesSection />

@@ -6,12 +6,14 @@ import getServerSession from "@/services/getServerSession";
 export async function GET() {
   const session = await getServerSession();
 
-  if (!session || session.role !== "COMPANY" || !session.company)
+  if (!session || session.role !== "EMPLOYEE" || !session.employee?.company)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const result = await prisma.savedStudent.findMany({
     where: {
-      companyId: session.company.id,
+      savedBy: {
+        companyId: session.employee.company.id,
+      },
     },
     include: {
       student: {

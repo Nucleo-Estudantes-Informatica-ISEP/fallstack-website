@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -10,17 +12,14 @@ interface HistorySectionProps {
 
 const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
   return (
-    <div className="mb-8 mt-12 flex w-full flex-col items-center justify-center text-black">
-      <h1 className="mx-auto mb-4 text-center  text-2xl font-extrabold uppercase text-black">
-        Histórico de Scans
-      </h1>
-      <div className="flex w-full flex-row items-center justify-between border-b-2 border-black px-1 py-3 font-bold">
-        <div className="flex w-1/3 justify-center px-1 max-md:w-5/12">Nome</div>
-        <div className="flex w-1/3 justify-center px-1 max-md:w-4/12">Data</div>
-        <div className="flex w-1/3 justify-center px-1 max-md:w-3/12">Ação</div>
+    <div className="mt-12 mb-8 flex w-full flex-col items-center justify-center">
+      <div className="grid w-full grid-cols-4 border-b-2 px-1 py-3 text-center font-bold text-white/35">
+        <div className="col-span-2 px-1">Nome</div>
+        <div className="px-1">Data</div>
+        <div className="px-1">Ação</div>
       </div>
       <div
-        className="firefox-scrollbar-margin max-h-80 w-full overflow-y-auto pl-1 scrollbar scrollbar-track-transparent scrollbar-thumb-slate-500 scrollbar-thumb-rounded-lg scrollbar-w-1"
+        className="firefox-scrollbar-margin scrollbar scrollbar-track-transparent scrollbar-thumb-slate-500 scrollbar-thumb-rounded-lg scrollbar-w-1 max-h-80 w-full overflow-y-auto pl-1"
         style={{ scrollbarGutter: "stable" }}
       >
         {!historyData.length ? (
@@ -33,17 +32,26 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
           historyData.map((item) => (
             <div
               key={`${item.studentId}-${item.createdAt}`}
-              className="flex flex-row items-center border-t-2 py-4 first:border-0"
+              className="grid w-full grid-cols-4 border-t-2 py-4 text-center first:border-0"
             >
-              <div className="flex w-1/3 justify-center px-1 text-center font-bold max-md:w-5/12">
-                <span className="w-full truncate">
-                  {isCompany ? item.student.name : item.savedBy.name}
-                </span>
+              <div className="col-span-2 px-1 font-bold">
+                {isCompany ? (
+                  <Link
+                    href={`/student/${item.student.code}/preview`}
+                    className="w-full truncate hover:underline"
+                  >
+                    {item.student.name}
+                  </Link>
+                ) : (
+                  <span className="w-full truncate">
+                    {item.savedBy.company.name}
+                  </span>
+                )}
               </div>
-              <div className="flex w-1/3 justify-center px-1 max-md:w-4/12">
+              <div className="justify-center px-1">
                 {formatDateDDStrMonthHourMin(item.createdAt)}
               </div>
-              <div className="flex w-1/3 justify-center px-1 font-bold max-md:w-3/12">
+              <div className="justify-center px-1 font-bold">
                 <span className="text-primary">SALVO</span>
               </div>
             </div>

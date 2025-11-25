@@ -1,7 +1,7 @@
 import { PrismaClient, Role, Tier } from "@prisma/client";
-import { createAdminClient } from "@/utils/supabase/admin";
 
 import config from "@/config";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 const prisma = new PrismaClient();
 
@@ -39,6 +39,28 @@ const COMPANIES = [
   },
 ];
 
+async function ensureSupabaseUser(email: string, password: string) {
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+
+  if (data.user) return data.user;
+
+  if (
+    error?.message &&
+    error.message.toLowerCase().includes("already been registered")
+  ) {
+    const list = await admin.auth.admin.listUsers();
+    const existing = list.data.users.find((u) => u.email === email);
+    if (existing) return existing;
+  }
+
+  throw new Error(error?.message || "Failed to create Supabase user");
+}
+
 async function seedInterests() {
   const interests = await prisma.interest.findMany();
 
@@ -63,22 +85,16 @@ async function seedAdmin() {
     return existing;
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin.auth.admin.createUser({
+  const supabaseUser = await ensureSupabaseUser(
     email,
-    password: process.env.ADMIN_PASSWORD as string,
-    email_confirm: true,
-  });
-  if (error || !data.user)
-    throw new Error(
-      error?.message || "Failed to create admin user in Supabase"
-    );
+    process.env.ADMIN_PASSWORD as string
+  );
 
   const newUser = await prisma.user.create({
     data: {
-      id: data.user.id,
+      id: supabaseUser.id,
       email,
-      role: Role.COMPANY,
+      role: Role.EMPLOYEE,
       isAdmin: true,
     },
   });
@@ -95,20 +111,14 @@ async function seedStudent() {
     return existing;
   }
 
-  const admin = createAdminClient();
-  const { data, error } = await admin.auth.admin.createUser({
+  const supabaseUser = await ensureSupabaseUser(
     email,
-    password: process.env.ADMIN_PASSWORD as string,
-    email_confirm: true,
-  });
-  if (error || !data.user)
-    throw new Error(
-      error?.message || "Failed to create student user in Supabase"
-    );
+    process.env.ADMIN_PASSWORD as string
+  );
 
   const newUser = await prisma.user.create({
     data: {
-      id: data.user.id,
+      id: supabaseUser.id,
       email,
       role: Role.STUDENT,
     },
@@ -128,22 +138,58 @@ async function seedStudent() {
   return newUser;
 }
 
-async function seedNei(userId: string) {
-  const existingCompany = await prisma.company.findUnique({
-    where: {
-      id: userId,
-    },
-  });
-  if (existingCompany !== null) {
-    console.log("⚠️ NEI already seeded");
-    return existingCompany;
+async function seedStudent2() {
+  const email = "student2@test.pt";
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    console.log("⚠️ Student 2 already seeded");
+    return existing;
   }
 
-  const company = await prisma.company.create({
+  const supabaseUser = await ensureSupabaseUser(
+    email,
+    process.env.ADMIN_PASSWORD as string
+  );
+
+  const newUser = await prisma.user.create({
     data: {
+      id: supabaseUser.id,
+      email,
+      role: Role.STUDENT,
+    },
+  });
+
+  await prisma.student.create({
+    data: {
+      id: newUser.id,
+      name: "Student 2",
+      year: "2º Ano Licenciatura",
+      code: "A456",
+    },
+  });
+
+  console.log("✅ Student 2 seeded");
+
+  return newUser;
+}
+
+async function seedNei(userId: string) {
+  const company = await prisma.company.upsert({
+    where: { name: "NEI" },
+    create: { name: "NEI", tier: Tier.DIAMOND },
+    update: { tier: Tier.DIAMOND },
+  });
+
+  await prisma.employee.upsert({
+    where: { id: userId },
+    create: {
       id: userId,
       name: "NEI",
-      tier: Tier.DIAMOND,
+      companyId: company.id,
+    },
+    update: {
+      name: "NEI",
+      companyId: company.id,
     },
   });
 
@@ -161,35 +207,36 @@ async function seedCompanies() {
 
   const interests = await prisma.interest.findMany();
 
-  const admin = createAdminClient();
   for (const c of COMPANIES) {
     const email = `${c.name.toLowerCase()}@test.pt`;
     const existing = await prisma.user.findUnique({ where: { email } });
-    let userId: string;
-    if (existing) {
-      userId = existing.id;
-    } else {
-      const { data, error } = await admin.auth.admin.createUser({
-        email,
-        password: process.env.ADMIN_PASSWORD as string,
-        email_confirm: true,
+    const supaUser =
+      existing ??
+      (await ensureSupabaseUser(email, process.env.ADMIN_PASSWORD as string));
+    const userId = existing ? existing.id : supaUser.id;
+    if (!existing) {
+      await prisma.user.create({
+        data: { id: userId, email, role: Role.EMPLOYEE },
       });
-      if (error || !data.user)
-        throw new Error(error?.message || `Failed to create user ${email}`);
-      const created = await prisma.user.create({
-        data: { id: data.user.id, email, role: Role.COMPANY },
-      });
-      userId = created.id;
     }
 
-    await prisma.company.upsert({
+    const company = await prisma.company.upsert({
+      where: { name: c.name },
+      create: { name: c.name, tier: c.tier },
+      update: { name: c.name, tier: c.tier },
+    });
+
+    await prisma.employee.upsert({
       where: { id: userId },
       create: {
         id: userId,
         name: c.name,
-        tier: c.tier,
+        companyId: company.id,
       },
-      update: { name: c.name, tier: c.tier },
+      update: {
+        name: c.name,
+        companyId: company.id,
+      },
     });
 
     await prisma.user.update({
@@ -202,6 +249,35 @@ async function seedCompanies() {
         },
       },
     });
+
+    if (c.name === "armis") {
+      const email2 = "armis2@test.pt";
+      const existing2 = await prisma.user.findUnique({ where: { email: email2 } });
+      const supaUser2 =
+        existing2 ??
+        (await ensureSupabaseUser(email2, process.env.ADMIN_PASSWORD as string));
+      const userId2 = existing2 ? existing2.id : supaUser2.id;
+
+      if (!existing2) {
+        await prisma.user.create({
+          data: { id: userId2, email: email2, role: Role.EMPLOYEE },
+        });
+      }
+
+      await prisma.employee.upsert({
+        where: { id: userId2 },
+        create: {
+          id: userId2,
+          name: "Armis Employee 2",
+          companyId: company.id,
+        },
+        update: {
+          name: "Armis Employee 2",
+          companyId: company.id,
+        },
+      });
+      console.log("✅ Armis Employee 2 seeded");
+    }
   }
 
   console.log("✅ Companies seeded");
@@ -265,6 +341,7 @@ async function main() {
   }
   await seedInterests();
   await seedStudent();
+  await seedStudent2();
   const user = await seedAdmin();
   await seedNei(user.id);
   await seedCompanies();

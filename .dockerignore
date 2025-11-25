@@ -1,0 +1,38 @@
+# Exclude VCS
+.git
+.gitignore
+
+# Node modules from host (we install inside container)
+node_modules
+
+# Environment & secrets
+.env*
+temp.env
+
+# Docker artifacts
+Dockerfile*
+docker-compose*.yml
+
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# Logs
+*.log
+
+# Build output
+.next
+
+# Local data / dev only
+dev/
+
+# Supabase generated temp files
+supabase/.temp
+
+# Tests (if any) - keep if needed
+# __tests__/
+
+# Optional large markdown docs (uncomment to exclude)
+# *.md
+
+

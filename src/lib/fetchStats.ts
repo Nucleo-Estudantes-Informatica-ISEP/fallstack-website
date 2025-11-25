@@ -34,7 +34,9 @@ export async function getTodayStats(id: string): Promise<number> {
 export async function getCompanyStats(id: string): Promise<number[]> {
   const savedCount = await prisma.savedStudent.count({
     where: {
-      companyId: id,
+      savedBy: {
+        companyId: id,
+      },
     },
   });
 

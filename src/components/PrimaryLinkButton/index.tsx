@@ -10,6 +10,8 @@ interface PrimaryButtonProps
   loading?: boolean;
   disabled?: boolean;
   onClick?: () => void;
+  target?: string;
+  rel?: string;
 }
 
 const PrimaryButton: React.FC<PrimaryButtonProps> = ({
@@ -19,10 +21,12 @@ const PrimaryButton: React.FC<PrimaryButtonProps> = ({
   loading,
   disabled,
   onClick,
+  target,
+  rel,
   ...rest
 }) => {
   return (
-    <a href={href}>
+    <a href={href} target={target} rel={rel}>
       <button
         {...rest}
         onClick={onClick}

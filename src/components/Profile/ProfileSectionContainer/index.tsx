@@ -12,7 +12,6 @@ import {
   FiSettings,
   FiUser,
 } from "react-icons/fi";
-import { IconType } from "react-icons";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
@@ -26,6 +25,8 @@ import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
 import SettingsSection from "../SettingsSection";
 import StatsSection from "../StatsSection";
+
+import { IconType } from "react-icons";
 
 const tabs = ["Sumário", "Perfil", "Desafios", "Definições"] as const;
 type TabValue = (typeof tabs)[number];
@@ -60,9 +61,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const session = useSession();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
-  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(
-    menuMap[activeTab]
-  );
+  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
 
   useEffect(() => {
     setSelectedMenu(menuMap[activeTab]);
@@ -80,18 +79,17 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const sidebarItems: SidebarItem[] = [
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     { key: "passe", label: "Passe do FallStack", icon: FiGrid },
-    { key: "desafios", label: "Desafios", icon: FiMapPin, tabValue: "Desafios" },
+    {
+      key: "desafios",
+      label: "Desafios",
+      icon: FiMapPin,
+      tabValue: "Desafios",
+    },
     {
       key: "info",
       label: "Informações pessoais",
       icon: FiUser,
       tabValue: "Perfil",
-    },
-    {
-      key: "definicoes",
-      label: "Definições",
-      icon: FiSettings,
-      tabValue: "Definições",
     },
   ];
 

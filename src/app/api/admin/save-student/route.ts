@@ -45,11 +45,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
   }
 
+  // find an employee for the company to attribute the save to
+  const employee = await prisma.employee.findFirst({
+    where: {
+      companyId: company.id,
+    },
+  });
+
+  if (!employee) {
+    return NextResponse.json(
+      { error: "Company has no employees to attribute save to" },
+      { status: 400 }
+    );
+  }
+
   // see if the student is already saved in the company
   let savedStudent = await prisma.savedStudent.findFirst({
     where: {
       studentId: student.id,
-      companyId: company.id,
+      savedBy: {
+        companyId: company.id,
+      },
     },
   });
 
@@ -63,7 +79,7 @@ export async function POST(req: Request) {
   // save the student
   const savedStudentData = {
     studentId: student.id,
-    companyId: company.id,
+    employeeId: employee.id,
   };
 
   savedStudent = await prisma.savedStudent.create({

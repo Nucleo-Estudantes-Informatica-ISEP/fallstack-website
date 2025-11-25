@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useState, useRef } from "react";
-import { Company } from "@prisma/client";
+import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
+import { jwtStudent } from "@/lib/jwtStudent";
+import { BASE_URL } from "@/services/api";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
-import { BASE_URL } from "@/services/api";
-import { jwtStudent } from "@/lib/jwtStudent";
 
 interface StatsProps {
   company: Company;
@@ -17,6 +17,7 @@ interface StatsProps {
 
 const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   const [processing, setProcessing] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -60,10 +61,25 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
         return;
       }
 
-      await fetch(BASE_URL + "/saved", {
+      const saveRes = await fetch(BASE_URL + "/saved", {
         method: "POST",
         body: JSON.stringify({ token: data }),
       });
+
+      if (!saveRes.ok) {
+        const error = (await saveRes.json()).error;
+        if (saveRes.status === 409) {
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
+        } else {
+          swal("Erro", error || "Erro ao guardar perfil", "error");
+        }
+        setProcessing(false);
+        return;
+      }
 
       router.push(`/student/${data}/preview`);
       setProcessing(false);
@@ -89,12 +105,20 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
 
       const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ token }),
       });
 
       if (!res.ok) {
         const error = (await res.json()).error;
-        toast.error(error || "Failed to save profile");
+        if (res.status === 409) {
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
+        } else {
+          toast.error(error || "Failed to save profile");
+        }
         return;
       }
       router.push(`/student/${token}/preview`);
@@ -107,8 +131,36 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
     if (e.key === "Enter") handleManualEntry();
   };
 
+  const handleDownloadAllCvs = async () => {
+    try {
+      setDownloading(true);
+      const res = await fetch("/api/companies/history/cv-zip");
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        swal("Erro", error || "Não foi possível exportar os CVs.", "error");
+        setDownloading(false);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "cvs-guardados.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      setDownloading(false);
+    } catch (err) {
+      setDownloading(false);
+      swal("Erro", "Não foi possível exportar os CVs.", "error");
+    }
+  };
+
   return (
-    <section className="flex w-full flex-col items-start justify-start px-4 pb-4 pt-2 text-white md:px-8 md:pb-8 md:pt-4">
+    <section className="flex w-full flex-col items-start justify-start px-4 pt-2 pb-4 text-white md:px-8 md:pt-4 md:pb-8">
       <div className="w-full">
         <h1
           className="mb-6 text-white"
@@ -131,19 +183,19 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
             textAlign: "justify",
           }}
         >
-          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a
-          garantir o registo das interações e a participação nos giveaways
-          promovidos pelo NEI.
+          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
+          forma a garantir o registo das interações e a participação nos
+          giveaways promovidos pelo NEI.
         </p>
       </div>
 
       <div className="flex w-full flex-col items-center justify-center">
         {processing ? (
           <div
-            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            className="text-primary mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
-            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
+            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
               A processar...
             </span>
           </div>
@@ -159,7 +211,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <input
             type="text"
             placeholder="código"
-            className="h-[56px] w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
+            className="focus:border-primary h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
@@ -170,7 +222,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           />
           <button
             onClick={handleManualEntry}
-            className="absolute right-2 top-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
+            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
@@ -196,17 +248,25 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       </div>
 
       <div className="mt-12 w-full">
-        <h2
-          className="mb-6 text-white"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 600,
-            fontSize: "25px",
-            lineHeight: "100%",
-          }}
-        >
-          Histórico de scans
-        </h2>
+        <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
+          <h2
+            style={{
+              fontFamily: "Inter",
+              fontWeight: 600,
+              fontSize: "25px",
+              lineHeight: "100%",
+            }}
+          >
+            Histórico de scans
+          </h2>
+          <button
+            onClick={handleDownloadAllCvs}
+            disabled={downloading}
+            className="bg-primary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {downloading ? "A preparar..." : "Download CVs"}
+          </button>
+        </div>
         <div className="w-full border-b border-white pb-2">
           <div
             className="flex w-full justify-between px-4 text-white"

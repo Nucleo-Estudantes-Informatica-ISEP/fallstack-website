@@ -21,6 +21,7 @@ import useSession from "@/hooks/useSession";
 
 interface CompanyProfileSectionContainerProps {
   company: Company;
+  employeeName: string;
   globalStats: number[];
   totalStudents: number;
   history: SavedStudentWithSavedBy[];
@@ -45,7 +46,7 @@ const menuMap: Record<TabValue, MenuKey> = {
 
 const CompanyProfileSectionContainer: React.FC<
   CompanyProfileSectionContainerProps
-> = ({ company, globalStats, totalStudents, history, interests }) => {
+> = ({ company, employeeName, globalStats, totalStudents, history, interests }) => {
   const router = useRouter();
   const session = useSession();
 
@@ -178,7 +179,7 @@ const CompanyProfileSectionContainer: React.FC<
             letterSpacing: "0%",
           }}
         >
-          {company.name}
+          {company.name} - {employeeName}
         </h1>
       </div>
 

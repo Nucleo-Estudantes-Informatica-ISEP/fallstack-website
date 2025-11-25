@@ -9,12 +9,14 @@ const getCompanyHistory = async () => {
 
   if (!session) return new HttpError("Unauthorized", 401);
 
-  if (session.role !== "COMPANY" || !session.company)
+  if (session.role !== "EMPLOYEE" || !session.employee?.company)
     return new HttpError("Forbidden", 403);
 
   const result = await prisma.savedStudent.findMany({
     where: {
-      companyId: session.company.id,
+      savedBy: {
+        companyId: session.employee.company.id,
+      },
     },
     include: {
       savedBy: true,

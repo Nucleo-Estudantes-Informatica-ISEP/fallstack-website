@@ -4,19 +4,28 @@ import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Student, User } from "@prisma/client";
 import Skeleton from "react-loading-skeleton";
+import { Area } from "react-easy-crop";
+import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import { uploadCv as uploadCvToSupabase } from "@/lib/upload";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/lib/upload";
 import { BASE_URL } from "@/services/api";
+import { getCroppedImg } from "@/utils/canvas";
 
+import Modal from "@/components/Modal";
+import AvatarCropper from "@/components/Profile/AvatarCropper";
+import UserImage from "@/components/Profile/UserImage";
 import PrimaryButton from "@/components/PrimaryButton";
 import ImportCvSection from "@/components/Profile/ImportCvSection";
 import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 
-interface SettingsSectionProps {
+interface ProfileSectionProps {
   student: Student & { user: User };
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
@@ -25,7 +34,7 @@ interface SettingsSectionProps {
   >;
 }
 
-const SettingsSection: React.FC<SettingsSectionProps> = ({
+const ProfileSection: React.FC<ProfileSectionProps> = ({
   student,
   profile,
   setProfile,
@@ -39,6 +48,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   const cvRef = useRef<HTMLInputElement>(null);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [userImage, setUserImage] = useState<string | null>(student.avatar);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isAvatarLoading, setIsAvatarLoading] = useState<boolean>(false);
 
   function handleUserBioChange(bio: string) {
     if (bio.length > LIMIT) return;
@@ -48,6 +62,28 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   function setUserInterests(interests: string[]) {
     setProfile({ ...profile, interests });
   }
+
+  const handleConfirmAvatar = async () => {
+    setIsAvatarLoading(true);
+
+    if (!imageSrc || !croppedAreaPixels) return;
+
+    const image = await getCroppedImg(imageSrc, croppedAreaPixels);
+    if (!image) return setIsAvatarLoading(false);
+
+    const uploaded = await uploadAvatarToSupabase(image);
+    if (!uploaded) {
+      toast.error("Não foi possível dar upload à imagem.");
+      return setIsAvatarLoading(false);
+    }
+
+    setIsAvatarLoading(false);
+    setIsModalVisible(false);
+
+    setUserImage(uploaded.url);
+    // store the URL so the save handler can persist it
+    setProfile({ ...profile, avatar: uploaded.url as unknown as string });
+  };
 
   const handleSave = async () => {
     if (profile.bio && profile.bio?.length > LIMIT) {
@@ -107,6 +143,17 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     });
 
     if (res.status === 200) {
+      if (profile.avatar) {
+        const avatarRes = await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
+          method: "POST",
+          body: JSON.stringify({ url: profile.avatar }),
+        });
+        
+        if (!avatarRes.ok) {
+          console.error("Avatar save failed:", await avatarRes.text());
+        }
+      }
+
       setIsLoading(false);
       swal("Perfil atualizado com sucesso!");
       setActiveTab("Perfil");
@@ -129,6 +176,17 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       </h2>
 
       <div className="flex flex-col gap-y-5">
+        <div className="flex justify-center">
+          <UserImage
+            imageSrc={userImage}
+            editable={true}
+            setProfile={setProfile}
+            onChange={(imgSrc) => {
+              setImageSrc(imgSrc);
+              setIsModalVisible(true);
+            }}
+          />
+        </div>
         {student ? (
           <>
             {/* NOME */}
@@ -222,7 +280,6 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           <div className="border border-white bg-transparent p-2">
             <UserBioTextArea
               name=""
-              defaultValue={profile.bio}
               rows={5}
               placeholder="Escreve algo sobre ti..."
               setValue={handleUserBioChange}
@@ -250,8 +307,24 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           Guardar
         </PrimaryButton>
       </div>
+
+      <Modal
+        isVisible={isModalVisible}
+        setIsVisible={setIsModalVisible}
+        className="flex flex-col items-center justify-center gap-8"
+      >
+        <h1 className="text-3xl font-bold">Altera o teu Avatar</h1>
+        <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+        <PrimaryButton
+          className="w-full py-2 text-xl"
+          onClick={handleConfirmAvatar}
+          loading={isAvatarLoading}
+        >
+          Confirmar
+        </PrimaryButton>
+      </Modal>
     </section>
   );
 };
 
-export default SettingsSection;
+export default ProfileSection;

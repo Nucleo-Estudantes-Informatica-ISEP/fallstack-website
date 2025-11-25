@@ -20,7 +20,7 @@ const getServerSession = async () => {
       try {
         const byEmail = await prisma.user.findUnique({
           where: { email: user.email },
-          include: { company: true, student: true },
+          include: { employee: { include: { company: true } }, student: true },
         } as any);
         if (byEmail) return byEmail as any;
       } catch (_) {

@@ -48,7 +48,7 @@ const LoginPage: React.FC = () => {
       await session.fetchSession();
 
       // Redirect based on user role
-      if (session.user?.role === "COMPANY") {
+      if (session.user?.role === "EMPLOYEE") {
         router.push("/dashboard");
       } else if (
         session.user?.role === "STUDENT" &&

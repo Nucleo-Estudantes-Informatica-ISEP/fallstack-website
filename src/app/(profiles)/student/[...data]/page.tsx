@@ -1,3 +1,5 @@
+import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
+
 import { HttpError } from "@/types/HttpError";
 import { getCompanies } from "@/lib/companies";
 import { getStats, getTodayStats } from "@/lib/fetchStats";
@@ -8,11 +10,11 @@ import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
+import Footer from "@/components/Footer";
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
+import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
-import Footer from "@/components/Footer";
-import NeiLogoSimplifiedWhite from "../../../../../public/assets/images/logo-simplified-white.png";
 
 interface ProfileProps {
   params: Promise<{
@@ -34,11 +36,13 @@ const StudentPage = async (props: ProfileProps) => {
   const isPreview = preview === "preview";
 
   let student = null;
+  let decodedPreviewCode: string | null = null;
+
   if (isPreview) {
     const token = verifyJwt(code);
-    if (!token) return Custom404();
-    const { code: studentCode } = token as { code: string };
-    student = await fetchStudent(studentCode);
+    decodedPreviewCode = token ? (token as { code: string }).code : null;
+    const targetCode = decodedPreviewCode ?? code;
+    student = await fetchStudent(targetCode);
   } else {
     student = await fetchStudent(code);
   }
@@ -53,12 +57,12 @@ const StudentPage = async (props: ProfileProps) => {
   )
     return Custom404();
 
-  const isSavedStudent = session.company
-    ? await isSaved(session.company.id, student.code)
+  const isSavedStudent = session.employee
+    ? await isSaved(session.employee.company.id, student.code)
     : false;
 
   // companies may access if they saved the profile
-  if (session.company && !isSavedStudent && !isPreview) return Custom404();
+  if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
   const sanitizedInterests = student.user.interests.map((i) => i.name);
 
@@ -71,21 +75,43 @@ const StudentPage = async (props: ProfileProps) => {
   const actions = await fetchStudentActions(student.code);
 
   const totalCompanies = companies.length;
-  const companiesLeft =
-    totalCompanies - (history instanceof HttpError ? 0 : history.length);
+  const uniqueCompaniesSaved =
+    history instanceof HttpError
+      ? 0
+      : new Set(history.map((h) => h.savedBy.companyId)).size;
+
+  const companiesLeft = totalCompanies - uniqueCompaniesSaved;
+
+  if (isPreview && !decodedPreviewCode && session.employee && !isSavedStudent)
+    return Custom404();
+
+  if (isPreview) {
+    return (
+      <>
+        <PreviewProfileSectionContainer
+          student={student}
+          interests={sanitizedInterests}
+          token={code}
+          isCompanyView={!!session.employee}
+          isSavedStudent={isSavedStudent}
+        />
+        <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
+      </>
+    );
+  }
 
   return (
     <>
       <section
         className={`${
-          session && session.role === "COMPANY" ? "bg-company" : "bg-inherit"
+          session && session.role === "EMPLOYEE" ? "bg-company" : "bg-inherit"
         } flex size-full min-h-screen flex-col items-center`}
       >
-        {session && session.company && session.role === "COMPANY" ? (
+        {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
             interests={sanitizedInterests}
             student={student}
-            company={session.company}
+            company={session.employee.company}
             token={code}
             isSavedStudent={isSavedStudent}
           />
@@ -96,13 +122,13 @@ const StudentPage = async (props: ProfileProps) => {
           />
         ) : (
           <ProfileSectionContainer
-            interests={sanitizedInterests}
-            student={student}
             globalStats={globalStats}
             todayStats={todayStats}
             companiesLeft={companiesLeft}
             historyData={history instanceof HttpError ? [] : history}
             actions={actions}
+            student={student}
+            interests={sanitizedInterests}
           />
         )}
       </section>
