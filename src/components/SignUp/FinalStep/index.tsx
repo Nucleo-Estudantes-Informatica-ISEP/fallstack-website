@@ -150,7 +150,12 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
             className="z-10"
           />
 
-          
+          <div className="w-full flex flex-col">
+            <label className="text-sm font-normal text-white mb-1 text-left" htmlFor="avatar">
+              Insere uma imagem para foto de perfil. (Opcional)
+            </label>
+            <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+          </div>
 
           <Input
             type="url"
