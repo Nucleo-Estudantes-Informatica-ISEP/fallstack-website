@@ -105,12 +105,12 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
       }
 
       setLoading(true);
-      let avatar = handleAvatarUpload() as unknown as string | null;
+      const avatarUrl = await handleAvatarUpload();
 
       // Add LinkedIn if provided
       const linkedin = linkedinRef.current?.value || null;
 
-      const signup = await signUp({ ...data, avatar, linkedin });
+      const signup = await signUp({ ...data, avatarUrl, linkedin });
 
       if (signup instanceof Error) {
         toast.error(signup.message);
