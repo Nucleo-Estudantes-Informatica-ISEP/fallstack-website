@@ -8,6 +8,7 @@ import swal from "sweetalert";
 import { BASE_URL } from "@/services/api";
 import UserImage from "@/components/Profile/UserImage";
 import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
+import { useRouter } from "next/navigation";
 
 interface PreviewProfileSectionContainerProps {
   student: Student & { user: User };
@@ -26,7 +27,7 @@ const PreviewProfileSectionContainer: React.FC<
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
   );
-
+  const router = useRouter();
   const handleSaveProfile = async () => {
     if (!token) return;
 
@@ -232,6 +233,12 @@ const PreviewProfileSectionContainer: React.FC<
             </p>
           </section>
         )}
+        <button
+            onClick={() => router.push("/dashboard")}
+            className="border border-[#2a2a2a] bg-black/50 px-4 py-2 rounded-full text-white hover:bg-black/60 transition"
+        >
+          Voltar
+        </button>
       </div>
     </div>
   );
