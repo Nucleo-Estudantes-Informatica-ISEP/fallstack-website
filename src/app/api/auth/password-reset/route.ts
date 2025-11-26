@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/utils/supabase/server";
+import { createClient } from "@supabase/supabase-js";
+import { createClient as createServerClient } from "@/utils/supabase/server";
 import { z } from "zod";
 
 const requestResetSchema = z.object({
@@ -14,12 +15,17 @@ const confirmResetSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const supabase = await createClient();
+    // Use the anon key for sending the password reset email
+    // This ensures the flow behaves like a client-side request and avoids some security scanner issues
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+
     // Check if this is a password reset request (has email)
     if (body.email) {
       const parsed = requestResetSchema.safeParse(body);
       if (!parsed.success) {
-        //@ts-ignore
         return NextResponse.json(
           { error: "Invalid email" },
           { status: 400 }
@@ -27,8 +33,6 @@ export async function POST(req: NextRequest) {
       }
 
       const { email } = parsed.data;
-
-
 
       const redirectTo = new URL(
         "/password-reset/confirm",
