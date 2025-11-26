@@ -83,7 +83,7 @@ export default function EmployeeSignupPage() {
           <div className="w-full">
             <InputLabel>LinkedIn (opcional)</InputLabel>
             <Input
-              name="LinkedIn"
+              name="LinkedIn (Optional)"
               value={form.linkedin}
               onChange={onChange("linkedin")}
               placeholder="https://linkedin.com/in/..."
