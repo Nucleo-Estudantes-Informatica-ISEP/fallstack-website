@@ -46,3 +46,28 @@ export async function logIn(email: string, password: string) {
     return false;
   }
 }
+
+export async function signUpEmployee(body: {
+  email: string;
+  password: string;
+  name: string;
+  linkedin?: string;
+  companyCode: string;
+}) {
+  try {
+    const res = await fetch(BASE_URL + "/auth/signup/employee", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      return new Error(json?.message || json?.error || "Unable to sign up employee");
+    }
+
+    return true;
+  } catch (e: any) {
+    return new Error(e?.message || "Network error");
+  }
+}

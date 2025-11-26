@@ -160,6 +160,11 @@ const LoginPage: React.FC = () => {
             Criar uma conta
           </PrimaryButton>
         </div>
+        <div className="mt-4 w-full text-center">
+          <Link href="/signup/employee" className="text-sm text-gray-400 underline">
+            Registar colaborador
+          </Link>
+        </div>
       </section>
     </div>
   );
