@@ -18,9 +18,9 @@ import { ProfileData } from "@/types/ProfileData";
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
+import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
-import PassMenuContent from "@/components/PassSection/PassMenuContent";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -156,7 +156,10 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
 
   const renderContent = () => {
-    if (selectedMenu === "passe") return <PassMenuContent user={student.user} />;
+    if (selectedMenu === "passe")
+      return (
+        <PassMenuContent user={student.user} code={student.code ?? null} />
+      );
 
     switch (activeTab) {
       case "Sumário":
