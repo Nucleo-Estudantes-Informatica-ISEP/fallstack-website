@@ -1,185 +1,206 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Recuperar Password - FallStack 2025</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background-color: #141414;
-            color: #ffffff;
-        }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        background-color: #141414;
+        color: #ffffff;
+      }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #1a1a1a;
-        }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #1a1a1a;
+      }
 
-        .header {
-            background: linear-gradient(135deg, #B1440A 0%, #8d3508 100%);
-            padding: 40px 20px;
-            text-align: center;
+      .header {
+        background: linear-gradient(135deg, #b1440a 0%, #8d3508 100%);
+        padding: 40px 20px;
+        text-align: center;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+
+      .content {
+        padding: 40px 30px;
+        background-color: #1a1a1a;
+      }
+
+      .content h2 {
+        color: #ffffff;
+        font-size: 24px;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+
+      .content p {
+        color: #cccccc;
+        font-size: 16px;
+        line-height: 1.6;
+        margin: 0 0 20px 0;
+      }
+
+      .button-container {
+        text-align: center;
+        margin: 35px 0;
+      }
+
+      .button {
+        display: inline-block;
+        padding: 16px 48px;
+        background-color: #b1440a;
+        color: #ffffff !important;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 18px;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 4px 6px rgba(177, 68, 10, 0.3);
+      }
+
+      .button:hover {
+        background-color: #8d3508;
+      }
+
+      .info-box {
+        background-color: #2a2a2a;
+        border-left: 4px solid #b1440a;
+        padding: 16px 20px;
+        margin: 25px 0;
+        border-radius: 4px;
+      }
+
+      .info-box p {
+        margin: 0;
+        font-size: 14px;
+        color: #aaaaaa;
+      }
+
+      .footer {
+        background-color: #0a0a0a;
+        padding: 30px 30px;
+        text-align: center;
+        border-top: 1px solid #2a2a2a;
+      }
+
+      .footer p {
+        margin: 5px 0;
+        font-size: 13px;
+        color: #666666;
+      }
+
+      .footer a {
+        color: #b1440a;
+        text-decoration: none;
+      }
+
+      .footer a:hover {
+        text-decoration: underline;
+      }
+
+      .divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, #333333, transparent);
+        margin: 30px 0;
+      }
+
+      @media only screen and (max-width: 600px) {
+        .content {
+          padding: 30px 20px;
         }
 
         .header h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        .content {
-            padding: 40px 30px;
-            background-color: #1a1a1a;
-        }
-
-        .content h2 {
-            color: #ffffff;
-            font-size: 24px;
-            margin-top: 0;
-            margin-bottom: 20px;
-        }
-
-        .content p {
-            color: #cccccc;
-            font-size: 16px;
-            line-height: 1.6;
-            margin: 0 0 20px 0;
-        }
-
-        .button-container {
-            text-align: center;
-            margin: 35px 0;
+          font-size: 26px;
         }
 
         .button {
-            display: inline-block;
-            padding: 16px 48px;
-            background-color: #B1440A;
-            color: #ffffff !important;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 18px;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 4px 6px rgba(177, 68, 10, 0.3);
+          padding: 14px 36px;
+          font-size: 16px;
         }
-
-        .button:hover {
-            background-color: #8d3508;
-        }
-
-        .info-box {
-            background-color: #2a2a2a;
-            border-left: 4px solid #B1440A;
-            padding: 16px 20px;
-            margin: 25px 0;
-            border-radius: 4px;
-        }
-
-        .info-box p {
-            margin: 0;
-            font-size: 14px;
-            color: #aaaaaa;
-        }
-
-        .footer {
-            background-color: #0a0a0a;
-            padding: 30px 30px;
-            text-align: center;
-            border-top: 1px solid #2a2a2a;
-        }
-
-        .footer p {
-            margin: 5px 0;
-            font-size: 13px;
-            color: #666666;
-        }
-
-        .footer a {
-            color: #B1440A;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #333333, transparent);
-            margin: 30px 0;
-        }
-
-        @media only screen and (max-width: 600px) {
-            .content {
-                padding: 30px 20px;
-            }
-
-            .header h1 {
-                font-size: 26px;
-            }
-
-            .button {
-                padding: 14px 36px;
-                font-size: 16px;
-            }
-        }
+      }
     </style>
-</head>
-<body>
-<div class="container">
-    <div class="header">
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
         <h1>🔐 FallStack 2025</h1>
-    </div>
+      </div>
 
-    <div class="content">
+      <div class="content">
         <h2>Recuperar Password</h2>
 
         <p>Olá!</p>
 
-        <p>Recebemos um pedido para recuperar a password da tua conta FallStack 2025. Se fizeste este pedido, clica no
-            botão abaixo para criar uma nova password:</p>
+        <p>
+          Recebemos um pedido para recuperar a password da tua conta FallStack
+          2025. Se fizeste este pedido, clica no botão abaixo para criar uma
+          nova password:
+        </p>
 
         <div class="button-container">
-            <a class="button"
-               href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/password-reset/confirm"
+          <a
+            class="button"
+            href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/password-reset/confirm"
             >Reset Password</a
-            >
+          >
         </div>
 
         <div class="info-box">
-            <p><strong>⏱️ Este link é válido por 1 hora</strong></p>
+          <p><strong>⏱️ Este link é válido por 1 hora</strong></p>
         </div>
 
         <div class="divider"></div>
 
-        <p style="font-size: 14px; color: #888888;">Se não conseguires clicar no botão, copia e cola o seguinte link no
-            teu navegador:</p>
+        <p style="font-size: 14px; color: #888888">
+          Se não conseguires clicar no botão, copia e cola o seguinte link no
+          teu navegador:
+        </p>
 
-        <p style="word-break: break-all; background-color: #2a2a2a; padding: 12px; border-radius: 4px; font-size: 13px; color: #B1440A; font-family: monospace;">
-            {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/password-reset/confirm</p>
+        <p
+          style="
+            word-break: break-all;
+            background-color: #2a2a2a;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #b1440a;
+            font-family: monospace;
+          "
+        >
+          {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash
+          }}&type=recovery&next=/password-reset/confirm
+        </p>
 
         <div class="divider"></div>
 
-        <p style="font-size: 14px; color: #888888;"><strong>Não pediste para recuperar a password?</strong><br>Podes
-            ignorar este email. A tua password não será alterada.</p>
-    </div>
+        <p style="font-size: 14px; color: #888888">
+          <strong>Não pediste para recuperar a password?</strong><br />Podes
+          ignorar este email. A tua password não será alterada.
+        </p>
+      </div>
 
-    <div class="footer">
+      <div class="footer">
         <p><strong>FallStack 2025</strong></p>
         <p>NEI-ISEP</p>
-        <p style="margin-top: 15px;">
-            <a href="{{ .SiteURL }}">Visitar Website</a> |
-            <a href="mailto:support@nei-isep.org">Contactar Suporte</a>
+        <p style="margin-top: 15px">
+          <a href="{{ .SiteURL }}">Visitar Website</a> |
+          <a href="mailto:info@nei-isep.org">Contactar Suporte</a>
         </p>
+      </div>
     </div>
-</div>
-</body>
+  </body>
 </html>
-
