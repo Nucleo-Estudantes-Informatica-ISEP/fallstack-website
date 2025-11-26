@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, Suspense } from "react";
+import { useRef, useState, Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
@@ -22,6 +22,18 @@ const PasswordResetForm: React.FC = () => {
 
   const passwordRef = useRef<HTMLInputElement>(null);
   const repeatPasswordRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Parse hash for errors (e.g. #error=access_denied&error_code=otp_expired&error_description=...)
+    if (typeof window !== "undefined" && window.location.hash) {
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const errorDescription = params.get("error_description");
+      if (errorDescription) {
+        setCodeError(errorDescription);
+      }
+    }
+  }, []);
 
   const handleClick = async () => {
     setPwError(null);
