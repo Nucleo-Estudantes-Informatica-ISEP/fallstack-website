@@ -28,7 +28,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
 
   return (
     <div className="mt-12 size-full items-center justify-center bg-black md:my-14">
-      <div className="mb-12 mt-4 flex size-full flex-col items-center">
+      <div className="mt-4 mb-12 flex size-full flex-col items-center">
         <div className="flex flex-col items-center justify-center pt-8">
           {companyProps.logoHref ? (
             <div className="relative my-8 flex size-full flex-col items-center">
@@ -37,7 +37,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
                 height={320}
                 src={companyProps.logoHref}
                 alt="profile image"
-                className="aspect-auto w-full"
+                className="w-full max-w-64"
               />
             </div>
           ) : (
