@@ -61,7 +61,6 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
       {/* New styled card design */}
       <StyledPassCard
         name={user.student?.name}
-        subtitle={user.email}
         qrValue={qrToken}
         loading={loading}
         code={user.student?.code}

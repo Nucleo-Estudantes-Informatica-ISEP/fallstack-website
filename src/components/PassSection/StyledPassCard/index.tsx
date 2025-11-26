@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
 interface StyledPassCardProps {
   name: string;
-  subtitle?: string; // e.g. "Estudante da LEI" or email
   qrValue: string | null;
   hashtag?: string; // e.g. "#fallstack2025"
   loading?: boolean;
@@ -23,7 +22,6 @@ interface StyledPassCardProps {
  */
 const StyledPassCard: React.FC<StyledPassCardProps> = ({
   name,
-  subtitle,
   qrValue,
   hashtag = "#fallstack2025",
   loading = false,
@@ -53,10 +51,11 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       className="relative select-none"
       style={{
         width: 348,
-        height: 212,
+        height: 299,
         borderRadius: 16,
         boxSizing: "border-box",
-        background: "linear-gradient(110.36deg, #0D2800 0%, #2F8E00 58.65%, #005F56 100%)",
+        background:
+          "linear-gradient(110.36deg, #0D2800 0%, #2F8E00 58.65%, #005F56 100%)",
         overflow: "hidden",
         fontFamily: "Inter, sans-serif",
       }}
@@ -87,8 +86,8 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       <div
         className="absolute top-0 h-full"
         style={{
-          left: 197,
-          width: 151,
+          left: 110,
+          width: 238,
           background: "rgba(217,217,217,0.31)",
           backdropFilter: "blur(10px)",
         }}
@@ -110,25 +109,6 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
         >
           {name}
         </h3>
-        {subtitle && (
-          <p
-            className="mt-0"
-            style={{
-              marginTop: 3,
-              fontWeight: 300,
-              fontSize: 11,
-              lineHeight: "13px",
-              letterSpacing: "-0.04em",
-              color: "#FFFFFF",
-              width: 150,
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
         {code && (
           <p
             style={{
@@ -142,7 +122,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              fontFamily: 'Coolvetica, Inter, sans-serif',
+              fontFamily: "Coolvetica, Inter, sans-serif",
             }}
             title={code}
             aria-label="Código do participante"
@@ -154,10 +134,10 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       {/* QR Code area */}
       <div
         className="absolute flex items-center justify-center"
-        style={{ left: 207, top: 20, width: 130, height: 130 }}
+        style={{ left: 120, top: 20, width: 217, height: 217 }}
       >
         <div
-          className="flex items-center justify-center cursor-pointer"
+          className="flex cursor-pointer items-center justify-center"
           style={{
             position: "absolute",
             inset: 0,
@@ -167,14 +147,16 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
           }}
           role={enlargeOnClick ? "button" : undefined}
           tabIndex={enlargeOnClick ? 0 : -1}
-          aria-label={enlargeOnClick ? "Ver QR code em tamanho grande" : undefined}
+          aria-label={
+            enlargeOnClick ? "Ver QR code em tamanho grande" : undefined
+          }
           onClick={handleQrClick}
           onKeyDown={handleKeyDown}
         >
           {loading ? (
             <div className="inline-block h-[122px] w-[122px] animate-spin rounded-full border-4 border-solid border-[#2F8E00] border-r-transparent" />
           ) : qrValue ? (
-            <QRCodeSVG value={qrValue} size={122} />
+            <QRCodeSVG value={qrValue} size={209} />
           ) : (
             <div className="flex h-[122px] w-[122px] items-center justify-center text-[10px] text-gray-500">
               Sem QR
@@ -214,7 +196,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
         className="absolute flex items-end justify-end"
         style={{
           left: 207,
-          top: 171,
+          top: 258,
           width: 130,
           height: 21,
           fontWeight: 400,
@@ -244,8 +226,8 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
             >
               Fechar
             </button>
-            <div className="rounded-xl bg-white p-6 shadow-2xl">
-              <QRCodeSVG value={qrValue} size={400} />
+            <div className="w-screen max-w-screen rounded-xl bg-white p-6 shadow-2xl">
+              <QRCodeSVG className="size-full" value={qrValue} />
             </div>
           </div>
         </div>
