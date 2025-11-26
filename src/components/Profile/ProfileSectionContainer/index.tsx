@@ -20,6 +20,7 @@ import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import UserImage from "@/components/Profile/UserImage";
 import { Github, Linkedin } from "@/styles/Icons";
+import PassMenuContent from "@/components/PassSection/PassMenuContent";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -78,7 +79,10 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
 
   const sidebarItems: SidebarItem[] = [
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
-    { key: "passe", label: "Passe do FallStack", icon: FiGrid },
+    // show Passe only if current session user is the profile student
+    ...(session.user?.student?.code
+      ? [{ key: "passe", label: "Passe do FallStack", icon: FiGrid }]
+      : []),
     {
       key: "desafios",
       label: "Desafios",
@@ -152,12 +156,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
 
   const renderContent = () => {
-    if (selectedMenu === "passe")
-      return (
-        <div className="flex h-full items-center justify-center text-gray-300">
-          Conteúdo disponível em breve.
-        </div>
-      );
+    if (selectedMenu === "passe") return <PassMenuContent user={student.user} />;
 
     switch (activeTab) {
       case "Sumário":
