@@ -8,6 +8,7 @@ import swal from "sweetalert";
 import useSession from "@/hooks/useSession";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
+import { createClient } from "@/utils/supabase/client";
 
 const PasswordResetForm: React.FC = () => {
   const session = useSession();
@@ -68,37 +69,59 @@ const PasswordResetForm: React.FC = () => {
 
     setLoading(true);
 
-    if (!code) {
+    const token = searchParams.get("token");
+    const email = searchParams.get("email");
+
+    if (!code && (!token || !email)) {
       setLoading(false);
       setCodeError("Link inválido ou expirado. Pede novo email de recuperação.");
       return;
     }
 
     try {
-      const res = await fetch("/api/auth/password-reset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ password, code }),
-      });
+      if (token && email) {
+        // Safe Mode: Client-side verification
+        const supabase = createClient();
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          email,
+          token,
+          type: "recovery",
+        });
 
-      if (!res.ok) {
-        setLoading(false);
-        const json = await res.json();
-        return setPwError(json.error || "Algo correu mal");
+        if (verifyError) throw verifyError;
+
+        const { error: updateError } = await supabase.auth.updateUser({
+          password,
+        });
+
+        if (updateError) throw updateError;
+      } else {
+        // Legacy/PKCE Mode: Server-side exchange
+        const res = await fetch("/api/auth/password-reset", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ password, code }),
+        });
+
+        if (!res.ok) {
+          setLoading(false);
+          const json = await res.json();
+          return setPwError(json.error || "Algo correu mal");
+        }
       }
 
       swal(
-          "Sucesso",
-          "Password resetada com sucesso. Volta a iniciar sessão.",
-          "success"
+        "Sucesso",
+        "Password resetada com sucesso. Volta a iniciar sessão.",
+        "success"
       );
       router.push("/login");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
       setLoading(false);
-      setPwError("Erro de servidor");
+      setPwError(e.message || "Erro de servidor");
     }
   };
 
