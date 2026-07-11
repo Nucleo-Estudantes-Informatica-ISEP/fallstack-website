@@ -4,9 +4,18 @@ import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
 import { changePasswordSchema } from "@/schemas/changePasswordSchema";
+import getServerSession from "@/services/getServerSession";
 
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession();
+    if (!session || !session.isAdmin) {
+      return NextResponse.json(
+        {message: "No autorization for this operation"}, 
+        {status: 403}
+      );
+    }
+
     // validate the request body against the schema
     const requestBody = await req.json();
     const body = changePasswordSchema.parse(requestBody);
@@ -21,6 +30,13 @@ export async function POST(req: Request) {
         { status: 401 }
       );
     }
+    if (password !== confirmPassword) {
+      return NextResponse.json(
+        { message: "Passwords are not equal"},
+        { status: 400}
+      );
+    }
+    
     const admin = createAdminClient();
     const { error } = await admin.auth.admin.updateUserById(existing.id, {
       password,
