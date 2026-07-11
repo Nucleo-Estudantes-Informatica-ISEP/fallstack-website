@@ -32,8 +32,8 @@ The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/<org>/fallstack2025.git
-cd fallstack2025
+git clone https://github.com/<org>/fallstack-website.git
+cd fallstack-website
 ```
 
 ````
@@ -122,7 +122,7 @@ This container is NOT required for Fallstack 2025.
 You may run:
 
 ```bash
-docker rm -f supabase_vector_fallstack2025
+docker rm -f supabase_vector_fallstack-website
 ```
 
 If the name differs, check:
