@@ -196,7 +196,7 @@ pnpm seed
 ## Wipe the database (local only)
 
 ```bash
-NODE_ENV=development pnpm wipe --confirm
+NODE_ENV=development pnpm wipe -- --confirm
 ```
 
 ---
