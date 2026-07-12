@@ -3,11 +3,17 @@
 import { FunctionComponent, useState } from "react";
 import Swal from "sweetalert";
 
-import { StudentsForGiveaway } from "@/lib/students";
+import { pickGiveawayWinner } from "@/app/(admin)/giveaway/actions";
 import ConfettiEffect from "@/components/ConfettiEffect";
 
+interface GiveawayStudent {
+  id: string;
+  name: string;
+  points: number;
+}
+
 interface GiveawaySectionProps {
-  students: StudentsForGiveaway[];
+  students: GiveawayStudent[];
   numberOfRandomizedStudents: number;
   tableRows: number;
 }
@@ -23,50 +29,47 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
 
   const numRows = Math.ceil(students.length / tableRows);
 
-  const generateRandomStudentId = () => {
-    const weightedStudents: string[] = [];
-    students.forEach((student) => {
-      for (let i = 0; i < student.numberOfTotalPoints; i++) {
-        weightedStudents.push(student.id);
-      }
-    });
-
-    const randomIndex = Math.floor(Math.random() * weightedStudents.length);
-    return weightedStudents[randomIndex];
-  };
-
-  const handleGiveaway = (numberOfRandomStudents: number): void => {
+  const handleGiveaway = async (): Promise<void> => {
+    if (students.length === 0) return;
     setIsRandomizing(true);
-    const timeoutTimer = 100;
-    let finalId: string = "";
 
-    // Generate all IDs first
-    const randomIds: string[] = [];
-    for (let i = 0; i < numberOfRandomStudents; i++) {
-      randomIds.push(generateRandomStudentId());
+    // Winner is chosen on the server (weighted by points); the client only
+    // animates toward the result. Emails never reach the browser except the
+    // winner's, returned here.
+    const winner = await pickGiveawayWinner();
+    if (!winner) {
+      setIsRandomizing(false);
+      Swal({
+        title: "Sem vencedor",
+        text: "Não há inscritos elegíveis (ninguém tem pontos).",
+        icon: "info",
+      });
+      return;
     }
 
-    // Animate through the IDs
-    randomIds.forEach((id, index) => {
+    const timeoutTimer = 100;
+
+    // Visual-only shuffle that lands on the server-chosen winner.
+    const sequence: string[] = [];
+    for (let i = 0; i < numberOfRandomizedStudents - 1; i++) {
+      sequence.push(students[Math.floor(Math.random() * students.length)].id);
+    }
+    sequence.push(winner.id);
+
+    sequence.forEach((id, index) => {
       setTimeout(() => {
         setSelectedStudentId(id);
-        if (index === randomIds.length - 1) {
-          finalId = id;
-          const winner = students.find((student) => student.id === finalId);
-
-          // Show confetti
+        if (index === sequence.length - 1) {
           setIsConfettiVisible(true);
 
-          // Show winner alert
           setTimeout(() => {
             Swal({
               title: "Parabéns!",
-              text: `O vencedor(a) foi ${winner?.name} (${winner?.numberOfTotalPoints} pontos) 🎉\n${winner?.user.email}`,
+              text: `O vencedor(a) foi ${winner.name} (${winner.points} pontos) 🎉\n${winner.email}`,
               icon: "success",
             });
           }, 500);
 
-          // Cleanup
           setTimeout(() => {
             setIsConfettiVisible(false);
             setIsRandomizing(false);
@@ -85,23 +88,21 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
         {Array.from({ length: numRows }, (_, rowIndex) => {
           return students
             .slice(rowIndex * tableRows, (rowIndex + 1) * tableRows)
-            .map((student, colIndex) => (
+            .map((student) => (
               <div
-                key={colIndex}
+                key={student.id}
                 className={`flex flex-col items-center justify-center border px-4 py-2 text-center font-semibold text-primary ${
                   student.id === selectedStudentId && "bg-primary text-white"
                 }`}
               >
                 <div>{student.name}</div>
-                <div className="text-sm text-gray-500">
-                  {student.numberOfTotalPoints} pts
-                </div>
+                <div className="text-sm text-gray-500">{student.points} pts</div>
               </div>
             ));
         })}
       </div>
       <button
-        onClick={() => handleGiveaway(numberOfRandomizedStudents)}
+        onClick={handleGiveaway}
         disabled={isRandomizing}
         className="rounded-xl bg-[#D9D9D9] px-8 py-4 text-lg font-semibold text-black transition-colors duration-200 ease-in-out hover:bg-[#BFBFBF] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#D9D9D9]"
       >
