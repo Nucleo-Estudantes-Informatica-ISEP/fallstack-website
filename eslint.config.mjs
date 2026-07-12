@@ -21,6 +21,12 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
+    // generated at build/dev time, never committed (see .gitignore) — nothing
+    // for a fresh checkout to lint, but excluded so local `pnpm lint` after a
+    // build doesn't choke on minified/generated output
+    ignores: ["public/sw.js", "public/workbox-*.js", "next-env.d.ts"],
+  },
+  {
     extends: compat.extends(
       "next/core-web-vitals",
       "plugin:@typescript-eslint/recommended",
@@ -51,6 +57,14 @@ export default defineConfig([
       "tailwindcss/classnames-order": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
       "tailwindcss/no-custom-classname": "off",
+    },
+  },
+  {
+    // next.config.js is loaded by Next's own CJS runtime, not bundled — it
+    // must stay require()-based regardless of the app's ESM/TS rules
+    files: ["next.config.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);
