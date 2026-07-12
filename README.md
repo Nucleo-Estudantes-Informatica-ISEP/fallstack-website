@@ -58,6 +58,10 @@ cp .env.example .env
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (service role)
 
+### Observability
+
+Production logging and error monitoring use Pino and Sentry. See [OBSERVABILITY.md](./OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
+
 ### Storage setup (Supabase hosted)
 
 Create two storage buckets:

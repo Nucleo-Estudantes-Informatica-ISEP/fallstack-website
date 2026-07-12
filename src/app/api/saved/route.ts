@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
+import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
@@ -10,7 +11,6 @@ import getServerSession from "@/services/getServerSession";
 import { saveSchema } from "@/schemas/saveSchema";
 
 export async function POST(req: NextRequest) {
-  console.log("===== POST /api/saved called =====");
   const session = await getServerSession();
 
   if (!session)
@@ -29,8 +29,7 @@ export async function POST(req: NextRequest) {
     const decoded = verifyJwt(token) as { code: string } | null;
     if (!decoded)
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
-    else
-      studentCode = decoded.code;
+    else studentCode = decoded.code;
   }
 
   // check if student exists
@@ -48,7 +47,7 @@ export async function POST(req: NextRequest) {
 
   // check if student is already saved by this company
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
-  
+
   if (alreadySaved && !session.isAdmin)
     return NextResponse.json(
       { error: "Student already saved by your company" },
@@ -158,11 +157,8 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession();
-  console.log({ session });
 
   const body = await req.json();
-
-  console.log(body);
 
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -176,17 +172,13 @@ export async function PATCH(req: NextRequest) {
   const { token } = parsed.data;
 
   let studentCode = token as string;
-  console.log({ token });
   if (token) {
     const decoded = verifyJwt(token) as unknown as { code: string };
-    console.log(decoded);
     studentCode = decoded.code;
   }
 
-  console.log("Checking if already saved:", { companyId: session.employee.company.id, studentCode });
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
-  console.log("Already saved result:", alreadySaved);
-  
+
   if (alreadySaved)
     return NextResponse.json({ error: "Already saved" }, { status: 409 });
 
@@ -216,8 +208,13 @@ export async function PATCH(req: NextRequest) {
         { error: "Student already saved" },
         { status: 400 }
       );
-    } else {
-      return NextResponse.json({ error: "Error" }, { status: 500 });
     }
+
+    reportError(
+      error,
+      { operation: "save_student", route: "/api/saved", method: "PATCH" },
+      "Failed to save student"
+    );
+    return NextResponse.json({ error: "Error" }, { status: 500 });
   }
 }
