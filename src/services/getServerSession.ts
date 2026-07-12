@@ -1,6 +1,6 @@
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
-
+import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 const getServerSession = async () => {
   try {
@@ -30,7 +30,11 @@ const getServerSession = async () => {
 
     return null;
   } catch (e) {
-    console.log("Supabase session error", e);
+    reportError(
+      e,
+      { operation: "get_server_session" },
+      "Failed to resolve server session"
+    );
     return null;
   }
 };

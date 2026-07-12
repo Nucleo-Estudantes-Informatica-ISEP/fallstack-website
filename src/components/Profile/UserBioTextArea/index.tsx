@@ -44,6 +44,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
         autoFocus={autoFocus}
         placeholder={placeholder}
         value={value}
+        maxLength={limit}
         onChange={(e) => setValue(e.target.value)}
         style={{
           resize: "vertical",

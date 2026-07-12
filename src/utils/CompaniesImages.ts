@@ -1,12 +1,6 @@
 // Diamond
 
 // Sponsors
-import aeisepLogo from "~/public/assets/images/sponsors/aeisep.png";
-import bocaDoceLogo from "~/public/assets/images/sponsors/bocaDoce.png";
-import deiLogo from "~/public/assets/images/sponsors/dei.png";
-import divinalLogo from "~/public/assets/images/sponsors/divinal.png";
-import dominosLogo from "~/public/assets/images/sponsors/dominos.png";
-import melhorCroissantLogo from "~/public/assets/images/sponsors/melhorCroissant.png";
 
 // Bronze
 import euronextLogo from "~/public/assets/images/companies/bronze/euronext.webp";
@@ -30,6 +24,13 @@ import glinttLogo from "~/public/assets/images/companies/silver/glintt.webp";
 import itimLogo from "~/public/assets/images/companies/silver/itim.webp";
 // ! - faltam ficheiros no dept de imagem relativos a msg life iberia
 import msgLogo from "~/public/assets/images/companies/silver/msg.webp";
+import aeisepLogo from "~/public/assets/images/sponsors/aeisep.png";
+import bocaDoceLogo from "~/public/assets/images/sponsors/bocaDoce.png";
+import deiLogo from "~/public/assets/images/sponsors/dei.png";
+import divinalLogo from "~/public/assets/images/sponsors/divinal.png";
+import dominosLogo from "~/public/assets/images/sponsors/dominos.png";
+import melhorCroissantLogo from "~/public/assets/images/sponsors/melhorCroissant.png";
+import startIlusionLogo from "~/public/assets/images/sponsors/startIlusion.png";
 
 export {
   // Diamond
@@ -62,4 +63,5 @@ export {
   deiLogo,
   dominosLogo,
   bocaDoceLogo,
+  startIlusionLogo,
 };

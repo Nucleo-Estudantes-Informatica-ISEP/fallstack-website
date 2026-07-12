@@ -15,11 +15,11 @@ const config = {
   uploads: {
     avatar: {
       types: ["image/png", "image/jpeg"],
-      maxSize: 5 * 1024 * 1024, // 5mb
+      maxSize: 5 * 1024 * 1024, // 50mb
     },
     cv: {
       types: ["application/pdf"],
-      maxSize: 5 * 1024 * 1024, // 5mb
+      maxSize: 10 * 1024 * 1024, // 50mb
     },
   },
 

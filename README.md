@@ -32,9 +32,10 @@ The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the
 ## 1. Clone the repository
 
 ```bash
-git clone https://github.com/<org>/fallstack2025.git
-cd fallstack2025
+git clone https://github.com/<org>/fallstack-website.git
+cd fallstack-website
 ```
+
 ````
 
 ## 2. Install dependencies
@@ -54,9 +55,12 @@ cp .env.example .env
 ### Required values (hosted Supabase)
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_KEY` (service role)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (service role)
+
+### Observability
+
+Production logging and error monitoring use Pino and Sentry. See [OBSERVABILITY.md](./OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
 
 ### Storage setup (Supabase hosted)
 
@@ -121,7 +125,7 @@ This container is NOT required for Fallstack 2025.
 You may run:
 
 ```bash
-docker rm -f supabase_vector_fallstack2025
+docker rm -f supabase_vector_fallstack-website
 ```
 
 If the name differs, check:
@@ -166,7 +170,8 @@ docker compose --profile supabase down -v
 ## Sync schema
 
 ```bash
-pnpm prisma db push
+set -a; source .env; set +a
+pnpm prisma db push --force-reset
 ```
 
 or, using migrations:
@@ -194,7 +199,7 @@ pnpm seed
 ## Wipe the database (local only)
 
 ```bash
-pnpm wipe
+NODE_ENV=development pnpm wipe -- --confirm
 ```
 
 ---
@@ -250,3 +255,4 @@ docker compose --profile supabase down
 # Contributing
 
 In order to contribute to the project, you should look into the board provided in the team's ClickUp. All the information's related to branches naming and code styling is in there.
+````

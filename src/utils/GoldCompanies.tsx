@@ -17,57 +17,49 @@ import {
 export const GoldCompanies: CompanyProps[] = [
   {
     logoHref: cgiLogo,
-    name: "apr",
+    name: "CGI",
     interests: ["Cloud Computing", "Infrastructure", "Security"],
     modalInformation: {
-      title: "APR",
+      title: "CGI",
       linkedinLink:
-        "https://www.linkedin.com/company/apr-technology-solutions/",
-      instagramLink: "https://www.instagram.com/aprtechnologysolutions/",
-      facebookLink: "https://www.facebook.com/aprtechnologysolutions/",
-      website: "https://apr.pt",
+        "https://www.linkedin.com/company/cgi/",
+      facebookLink: "https://www.facebook.com/cgiinc/",
+      website: "https://www.cgi.com/",
       facts: [
         {
           iconSrc: Trophy,
           description:
-            "Uma das 25 melhores empresas para trabalhar e desenvolver carreira em Portugal",
+            "Uma das maiores empresas de consultoria de TI do mundo",
         },
         {
           iconSrc: Archive,
-          description: "Presença em várias zonas do país",
+          description: "Presença global em mais de 40 países",
         },
         {
           iconSrc: Trophy,
-          description: "Rápida adaptação a tecnologias AI",
+          description: "Mais de 90,000 profissionais em todo o mundo",
         },
         {
           iconSrc: Leaf,
-          description: "Grande presença no mercado nacional",
+          description: "Experiência em transformação digital e inovação",
         },
       ],
       bodyText: (
         <>
           <p>
-            Somos uma empresa tecnológica com mais de 30 anos de experiência,
-            parceira da Microsoft. Ao longo destas três décadas, temos liderado
-            a transformação digital de empresas em múltiplos setores, oferecendo
-            soluções inovadoras em ERP Dynamics Business Central, Systems, CRM
-            Solutions e Microsoft Power Platform. Com um portfólio robusto e
-            diversificado, potenciamos o sucesso dos nossos clientes,
-            adicionando valor com otimização de processos, aumentando a
-            eficiência das operações e automatizando tarefas, sem descurar a
-            segurança digital das organizações.
+            A CGI é uma das maiores empresas independentes de consultoria de tecnologia
+            da informação e serviços de negócios do mundo. Fundada em 1976, temos uma
+            presença global com profissionais em mais de 40 países, oferecendo soluções
+            completas de TI e serviços de consultoria de negócios que ajudam os clientes
+            a alcançar seus objetivos estratégicos.
           </p>
           <br />
           <p>
-            A nossa abordagem vai além da implementação de soluções
-            tecnológicas. Na APR, também oferecemos serviços personalizados de
-            suporte contínuo, consultoria estratégica e desenvolvimento
-            aplicacional que se ajustam às necessidades específicas de cada
-            negócio. Adotamos uma metodologia centrada em cada cliente, o que
-            nos permite responder rapidamente às mudanças do mercado e antecipar
-            as tendências emergentes, preparando as empresas para o futuro
-            digital.
+            Nossa abordagem combina proximidade com clientes, compromisso com resultados
+            e uma profunda experiência em setores-chave. Trabalhamos como parceiros
+            estratégicos, ajudando organizações a transformar digitalmente seus negócios,
+            otimizar operações e impulsionar a inovação através de tecnologias emergentes
+            como cloud, IA e cibersegurança.
           </p>
         </>
       ),
@@ -155,7 +147,7 @@ export const GoldCompanies: CompanyProps[] = [
         </>
       ),
       instagramLink: "https://www.instagram.com/deloitteportugal/",
-      linkedinLink: "https://www.linkedin.com/company/deloitte-portugal/",
+      linkedinLink: "https://www.linkedin.com/company/deloitte/posts/?feedView=all",
       website: "https://www2.deloitte.com/pt/pt.html",
       facts: [
         {

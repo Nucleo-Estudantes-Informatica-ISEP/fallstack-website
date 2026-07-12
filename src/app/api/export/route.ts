@@ -5,6 +5,12 @@ import { BASE_URL } from "@/services/api";
 import { signJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 
+function csvCell(value: unknown): string {
+  let s = value == null ? "" : String(value);
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; 
+  return `"${s.replace(/"/g, '""')}"`; 
+}
+
 export async function GET() {
   const session = await getServerSession();
 
@@ -26,17 +32,28 @@ export async function GET() {
 
   const data: string[] = [];
   data.push("Nome,Email,Linkedin,Github,CV,Data guardado,");
+
+  // NOTE: token intentionally non-expiring for now — CV access/retention model
+  // is an open decision (see fallstack-decisions.md, DEC-1). Revisit the TTL there.
+  const token = signJwt({ id: session.employee.company.id });
+
   saves.forEach((s) => {
-    const token = signJwt({ id: session.employee.company.id });
     const cvUrl = `${BASE_URL}/export/${s.student.code}/cv?token=${token}`;
     const formatted = new Date(s.createdAt)
       .toLocaleString("pt-PT")
       .replace(",", "");
 
-    return data.push(
-      `${s.student.name},${s.student.user.email},${s.student.linkedin || ""},${
-        s.student.github || ""
-      },${cvUrl},${formatted}`
+    data.push(
+      [
+        s.student.name,
+        s.student.user.email,
+        s.student.linkedin || "",
+        s.student.github || "",
+        cvUrl,
+        formatted,
+      ]
+        .map(csvCell)
+        .join(",")
     );
   });
 
@@ -44,7 +61,7 @@ export async function GET() {
 
   return new NextResponse(data.join("\n"), {
     headers: {
-      "content-disposition": `attachment; filename="fallstack2025.csv"`,
+      "content-disposition": `attachment; filename="fallstack.csv"`,
       "content-type": "text/csv; charset=utf-8",
     },
   });
