@@ -2,7 +2,7 @@
 
 import { ChangeEvent, Dispatch, SetStateAction } from "react";
 import Image from "next/image";
-import { AnimationProps, motion } from "framer-motion";
+import { motion } from "framer-motion";
 
 import { ProfileData } from "@/types/ProfileData";
 import config from "@/config";
@@ -25,7 +25,7 @@ const UserImage: React.FC<UserImageProps> = ({
   onChange,
   className,
 }) => {
-  const animation: AnimationProps = {
+  const animation = {
     variants: {
       initial: { opacity: 0 },
       hover: { opacity: 1 },
@@ -34,7 +34,7 @@ const UserImage: React.FC<UserImageProps> = ({
       duration: 0.2,
       ease: "easeOut",
     },
-  };
+  } as const;
 
   const handleChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
