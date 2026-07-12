@@ -59,8 +59,7 @@ const BioStep: FunctionComponent<BioStepProps> = ({
           placeholder=""
           className="mb-4"
           value={data.bio ? data.bio : ""}
-          defaultValue={""}
-          autofocus={true}
+          autoFocus
           setValue={handleUserBioChange}
           limit={LIMIT}
           warningLimit={LIMIT - 30}

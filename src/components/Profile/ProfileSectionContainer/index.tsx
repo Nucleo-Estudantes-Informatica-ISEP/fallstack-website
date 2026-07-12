@@ -81,7 +81,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     // show Passe only if current session user is the profile student
     ...(session.user?.student?.code
-      ? [{ key: "passe", label: "Passe do FallStack", icon: FiGrid }]
+      ? ([
+          { key: "passe", label: "Passe do FallStack", icon: FiGrid },
+        ] as SidebarItem[])
       : []),
     {
       key: "desafios",
