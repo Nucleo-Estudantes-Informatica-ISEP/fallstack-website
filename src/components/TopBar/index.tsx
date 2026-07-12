@@ -48,6 +48,7 @@ const TopBar: React.FC = () => {
           {!session.user ? (
             <Link
               href={isAuthPage ? "/" : "/login"}
+              aria-label="Iniciar sessão"
               className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
             >
               <LogIn />

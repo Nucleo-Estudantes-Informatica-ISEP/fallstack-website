@@ -1,5 +1,7 @@
 "use client";
 
+import slugifyId from "@/utils/slugifyId";
+
 interface TextAreaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   name: string;
@@ -21,20 +23,22 @@ const TextArea: React.FC<TextAreaProps> = ({
   inputRef,
   ...rest
 }) => {
+  const id = slugifyId(name);
+
   return (
     <div className="flex w-full flex-col">
       <label
         className={`text-slate-700 md:text-lg ${
           center ? "mb-4 text-center" : ""
         }`}
-        htmlFor={name}
+        htmlFor={id}
       >
         {name}
       </label>
       <textarea
         name={name}
         disabled={disabled}
-        id={name}
+        id={id}
         placeholder={placeholder}
         ref={inputRef}
         maxLength={maxLength}

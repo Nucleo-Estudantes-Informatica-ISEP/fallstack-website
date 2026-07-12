@@ -1,5 +1,7 @@
 "use client";
 
+import slugifyId from "@/utils/slugifyId";
+
 interface InputSelectProps
   extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
@@ -21,19 +23,21 @@ const InputSelect: React.FC<InputSelectProps> = ({
   options,
   ...rest
 }) => {
+  const id = slugifyId(name);
+
   return (
     <div className="flex w-full flex-col">
       <label
         className={`mb-1 text-sm font-normal text-white ${
           center ? "text-left" : ""
         }`}
-        htmlFor={name}
+        htmlFor={id}
       >
         {name}
       </label>
       <select
         name={name}
-        id={name}
+        id={id}
         disabled={disabled}
         defaultValue={placeholder}
         ref={inputRef}
