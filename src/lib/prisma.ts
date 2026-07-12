@@ -1,5 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
+import { reportError } from "./logger";
+
 // https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
 
 function exclude<T extends object, K extends keyof T>(
@@ -36,7 +38,11 @@ const prismaClientSingleton = () => {
             if (!user) return null;
             return user;
           } catch (error) {
-            console.log(error);
+            reportError(
+              error,
+              { operation: "find_user_with_profile" },
+              "Failed to fetch user profile"
+            );
           }
         },
       },
