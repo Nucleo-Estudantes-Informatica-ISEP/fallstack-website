@@ -15,7 +15,7 @@ const scans = async () => {
     <section className="flex min-h-screen w-full flex-col items-center justify-center px-8 py-24 md:px-24">
       <div className="overflow-x-auto rounded-lg bg-white shadow-md">
         <table className="min-w-full table-auto border-collapse">
-          <thead className="bg-gray-200 text-sm uppercase text-gray-700">
+          <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
             <tr>
               <th className="px-6 py-3 text-left">Id</th>
               <th className="px-6 py-3 text-left">Student Id</th>

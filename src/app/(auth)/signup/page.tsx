@@ -31,11 +31,11 @@ const SignUpPage: React.FC = () => {
   const handlePrev = () => setCurrentStep(currentStep - 1);
 
   return (
-    <div className="relative w-full max-h-[90vh] overflow-hidden md:mt-4">
+    <div className="relative max-h-[90vh] w-full overflow-hidden md:mt-4">
       {currentStep > 0 && (
         <button
           onClick={handlePrev}
-          className="absolute -left-2 -top-12 rounded-full text-3xl text-secondary"
+          className="absolute -top-12 -left-2 rounded-full text-3xl text-secondary"
         >
           <BackIcon />
         </button>

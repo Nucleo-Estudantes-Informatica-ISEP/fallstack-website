@@ -23,7 +23,7 @@ const getServerSession = async () => {
           include: { employee: { include: { company: true } }, student: true },
         });
         if (byEmail) return byEmail;
-      } catch (_) {
+      } catch {
         // ignore if email not a unique field in schema
       }
     }

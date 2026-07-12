@@ -4,6 +4,7 @@ import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 import { FaLink } from "react-icons/fa6";
+import { MdOutlinePrivacyTip } from "react-icons/md";
 import {
   RiFacebookCircleFill,
   RiInstagramLine,
@@ -11,8 +12,6 @@ import {
   RiTwitterXFill,
 } from "react-icons/ri";
 
-
-import { MdOutlinePrivacyTip } from "react-icons/md";
 import InstallButton from "@/components/InstallButton";
 
 interface FooterProps {
@@ -84,13 +83,12 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
             </Link>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-5">
-            <InstallButton
-            className="scale-180 text-xl drop-shadow-xl hover:scale-190 transition-all duration-300" />
+            <InstallButton className="scale-180 text-xl drop-shadow-xl transition-all duration-300 hover:scale-190" />
 
             <Link
               href="/privacy-policy"
               title="Política de Privacidade"
-              className="text-xl drop-shadow-xl hover:scale-110 transition-all duration-300"
+              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
             >
               <MdOutlinePrivacyTip color="text" size={45} />
             </Link>
@@ -99,7 +97,7 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
       </div>
 
       <div className="flex w-full justify-center pb-6">
-        <p className="font-normal! select-none text-sm text-secondary sm:text-base">
+        <p className="text-sm font-normal! text-secondary select-none sm:text-base">
           Copyright &copy; {currentYear}. All rights reserved.
         </p>
       </div>

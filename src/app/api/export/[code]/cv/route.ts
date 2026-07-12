@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 
 import { Session } from "@/types/Session";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 interface StudentParams {
   params: Promise<{

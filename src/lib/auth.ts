@@ -63,7 +63,9 @@ export async function signUpEmployee(body: {
 
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      return new Error(json?.message || json?.error || "Unable to sign up employee");
+      return new Error(
+        json?.message || json?.error || "Unable to sign up employee"
+      );
     }
 
     return true;

@@ -55,14 +55,14 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
     <div className="mt-14 flex flex-col items-center justify-center">
       {!isMobile ? (
         <>
-          <div className="flex flex-col items-center justify-center pb-0 pt-14 sm:py-0">
+          <div className="flex flex-col items-center justify-center pt-14 pb-0 sm:py-0">
             <div className="mt-14 rounded-xl bg-gray-200 p-2 sm:p-2 md:p-6">
               <div className="my-2 flex items-center justify-center">
                 <BsFillClipboardFill size={20} className="fill-black" />
                 <input
                   type="text"
                   name="Insere o código do estudante."
-                  className={`z-10 ml-2 bg-slate-100 p-2 text-center text-xl font-bold uppercase text-black`}
+                  className={`z-10 ml-2 bg-slate-100 p-2 text-center text-xl font-bold text-black uppercase`}
                   ref={inputRef}
                   onKeyUp={handleKeyUp}
                   maxLength={4}

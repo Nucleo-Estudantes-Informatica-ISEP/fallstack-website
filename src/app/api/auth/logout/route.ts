@@ -1,8 +1,8 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 import config from "@/config";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function POST() {
   try {
@@ -16,7 +16,7 @@ export async function POST() {
       { message: "Signout successfully" },
       { status: 200 }
     );
-  } catch (e) {
+  } catch {
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

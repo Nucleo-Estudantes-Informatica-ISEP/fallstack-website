@@ -7,8 +7,8 @@ import getServerSession from "@/services/getServerSession";
 
 function csvCell(value: unknown): string {
   let s = value == null ? "" : String(value);
-  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; 
-  return `"${s.replace(/"/g, '""')}"`; 
+  if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+  return `"${s.replace(/"/g, '""')}"`;
 }
 
 export async function GET() {

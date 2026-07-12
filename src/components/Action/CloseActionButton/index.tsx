@@ -24,7 +24,7 @@ const CloseActionButton: React.FC<CloseActionButtonProps> = ({
   return (
     <PrimaryButton
       onClick={handleToggleIsActionLive}
-      className={`absolute right-4  top-24 h-12 w-32 text-lg font-bold md:right-8 md:w-64 md:text-xl ${
+      className={`absolute top-24 right-4 h-12 w-32 text-lg font-bold md:right-8 md:w-64 md:text-xl ${
         action.isLive ? "bg-red-500" : "bg-green-500"
       }`}
     >

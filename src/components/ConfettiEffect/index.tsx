@@ -2,6 +2,7 @@
 
 import { FunctionComponent, useCallback, useEffect, useRef } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
+
 import type {
   TCanvasConfettiAnimationOptions,
   TCanvasConfettiInstance,

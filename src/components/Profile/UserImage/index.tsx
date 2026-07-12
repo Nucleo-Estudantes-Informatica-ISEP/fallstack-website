@@ -49,8 +49,7 @@ const UserImage: React.FC<UserImageProps> = ({
     if (onChange !== undefined) onChange(imageDataUrl);
   };
 
-  const baseContainer =
-    "relative flex flex-col items-center rounded-full";
+  const baseContainer = "relative flex flex-col items-center rounded-full";
   const defaultSize = "my-2 size-24 md:size-52";
   const containerClass = `${baseContainer} ${className ?? defaultSize}`;
 
@@ -93,23 +92,23 @@ const UserImage: React.FC<UserImageProps> = ({
         alt="profile image"
         className="size-full rounded-full object-cover"
       />
-      <div className="absolute left-0 top-0 flex size-full flex-col items-center justify-center rounded-full hover:bg-black/30">
+      <div className="absolute top-0 left-0 flex size-full flex-col items-center justify-center rounded-full hover:bg-black/30">
         <motion.div
           {...animation}
-          className="bg-primary/50 absolute left-0 top-0 size-full rounded-full"
+          className="absolute top-0 left-0 size-full rounded-full bg-primary/50"
         />
         <motion.input
           onChange={handleChange}
           accept="image/*"
           type="file"
-          className="absolute left-0 top-0 z-10 size-full rounded-full opacity-0"
+          className="absolute top-0 left-0 z-10 size-full rounded-full opacity-0"
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.2 }}
         ></motion.input>
         {!hidden && (
           <motion.div
             {...animation}
-            className="absolute left-0 top-0 flex size-full flex-col items-center justify-center rounded-full"
+            className="absolute top-0 left-0 flex size-full flex-col items-center justify-center rounded-full"
           >
             <p className="text-2xl text-white">+</p>
             <p className="text-sm text-white">Adicionar</p>

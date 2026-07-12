@@ -5,6 +5,7 @@ module.exports = {
   singleQuote: false,
   tabWidth: 2,
   trailingComma: "es5",
+  tailwindStylesheet: "./src/app/globals.css",
   importOrder: [
     "^(react/(.*)$)|^(react$)",
     "^(next/(.*)$)|^(next$)",

@@ -78,13 +78,12 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
         id="avatar"
         accept="image/*"
         hidden
-        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
-         text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
         onChange={onFileChange}
       />
       <label
         className={
-          "flex flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white/35 h-14"
+          "flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white/35"
         }
         htmlFor="avatar"
       >

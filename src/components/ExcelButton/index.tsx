@@ -63,7 +63,7 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
       {...rest}
       onClick={handleDownload}
       disabled={isLoading}
-      className={`bg-primary active:bg-primary rounded-lg border border-transparent px-4 py-1 text-center text-sm leading-5 text-white transition-opacity duration-200 focus:ring focus:outline-none disabled:opacity-80 ${className}`}
+      className={`rounded-lg border border-transparent bg-primary px-4 py-1 text-center text-sm leading-5 text-white transition-opacity duration-200 focus:ring focus:outline-none active:bg-primary disabled:opacity-80 ${className}`}
     >
       {isLoading ? <Spinner /> : "Export to Excel"}
     </button>

@@ -254,10 +254,15 @@ async function seedCompanies() {
 
     if (c.name === "armis") {
       const email2 = "armis2@test.pt";
-      const existing2 = await prisma.user.findUnique({ where: { email: email2 } });
+      const existing2 = await prisma.user.findUnique({
+        where: { email: email2 },
+      });
       const supaUser2 =
         existing2 ??
-        (await ensureSupabaseUser(email2, process.env.ADMIN_PASSWORD as string));
+        (await ensureSupabaseUser(
+          email2,
+          process.env.ADMIN_PASSWORD as string
+        ));
       const userId2 = existing2 ? existing2.id : supaUser2.id;
 
       if (!existing2) {

@@ -16,7 +16,7 @@ const actions = async () => {
     <section className="flex min-h-screen w-full flex-col items-center justify-center">
       <div className="overflow-x-scroll rounded-lg bg-white shadow-md">
         <table className="w-full table-auto border-collapse overflow-x-scroll">
-          <thead className="bg-gray-200 text-sm uppercase text-gray-700">
+          <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
             <tr>
               <th className="px-2 py-3 text-left md:px-6">Name</th>
               <th className="px-2 py-3 text-left md:px-6">Points</th>

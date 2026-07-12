@@ -22,9 +22,9 @@ const InputSelect: React.FC<InputSelectProps> = ({
   ...rest
 }) => {
   return (
-    <div className="w-full flex flex-col">
+    <div className="flex w-full flex-col">
       <label
-        className={`text-sm font-normal text-white mb-1 ${
+        className={`mb-1 text-sm font-normal text-white ${
           center ? "text-left" : ""
         }`}
         htmlFor={name}
@@ -37,8 +37,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
         disabled={disabled}
         defaultValue={placeholder}
         ref={inputRef}
-        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
-         text-white h-14 placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:text-gray-600 w-full ${className}`}
+        className={`h-14 w-full border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
         {...rest}
       >
         {options.map((option, index) => (

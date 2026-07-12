@@ -1,8 +1,8 @@
 import { HttpError } from "@/types/HttpError";
 import { getCompanyStats } from "@/lib/fetchStats";
 import getCompanyHistory from "@/lib/getCompanyHistory";
-import { getStudents } from "@/lib/students";
 import prisma from "@/lib/prisma";
+import { getStudents } from "@/lib/students";
 import getServerSession from "@/services/getServerSession";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
@@ -29,12 +29,11 @@ const Dashboard = async () => {
   });
 
   const companyInterests =
-    referenceEmployee?.user.interests.map((interest) => interest.name) ??
-    [];
+    referenceEmployee?.user.interests.map((interest) => interest.name) ?? [];
 
   return (
     <section
-      className={`flex size-full min-h-screen flex-col items-center bg-company`}
+      className={`bg-company flex size-full min-h-screen flex-col items-center`}
     >
       <CompanyProfileSectionContainer
         company={session.employee.company}

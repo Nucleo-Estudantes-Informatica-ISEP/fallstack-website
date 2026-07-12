@@ -72,7 +72,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
        the user won't even feel the delay delay */
 
       setProcessing(false);
-    } catch (error) {
+    } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
@@ -80,13 +80,13 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
 
   return (
     <div className="mt-6 grid grid-cols-1 sm:mt-0 sm:grid-cols-1 md:mt-0 lg:mt-12">
-      <div className="flex items-center justify-center ">
+      <div className="flex items-center justify-center">
         {processing ? (
           <div
             className="mt-24 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
-            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
+            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
               A processar...
             </span>
           </div>

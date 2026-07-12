@@ -11,7 +11,7 @@ const about: React.FC = () => {
         <p className="text-center text-lg">
           <Link
             href="https://nei.isep.ipp.pt/"
-            className="text-primary font-normal"
+            className="font-normal text-primary"
           >
             NEI-ISEP
           </Link>
@@ -24,7 +24,7 @@ const about: React.FC = () => {
         <p className="my-4 text-center text-lg">
           <Link
             href="https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025"
-            className="text-primary font-normal"
+            className="font-normal text-primary"
           >
             https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025
           </Link>
@@ -40,7 +40,7 @@ const about: React.FC = () => {
           Envia-nos um email para{" "}
           <Link
             href="mailto:support@nei-isep.org"
-            className="text-primary font-normal"
+            className="font-normal text-primary"
           >
             support@nei-isep.org
           </Link>

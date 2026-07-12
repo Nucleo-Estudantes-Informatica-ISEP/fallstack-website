@@ -28,7 +28,7 @@ const comparePassword = async (password: string, hashedPassword: string) => {
 const verifyJwt = (token: string, options?: jwt.VerifyOptions) => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET as string, options);
-  } catch (err) {
+  } catch {
     return null;
   }
 };

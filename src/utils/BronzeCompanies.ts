@@ -1,11 +1,9 @@
 import { CompanyProps } from "@/components/Companies/Company";
+
 /*euronextLogo,
 	liderteamLogo,*/
 
-import {
-  euronextLogo,
-  liderteamLogo
-} from "./CompaniesImages";
+import { euronextLogo, liderteamLogo } from "./CompaniesImages";
 
 export const BronzeCompanies: CompanyProps[] = [
   {
@@ -18,5 +16,5 @@ export const BronzeCompanies: CompanyProps[] = [
     name: "Liderteam",
     websiteUrl: "https://www.liderteam.pt/",
     className: "w-3/4",
-  }
+  },
 ];

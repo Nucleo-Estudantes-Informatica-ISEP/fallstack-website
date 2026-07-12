@@ -46,6 +46,12 @@ export default defineConfig([
       parser: tsParser,
     },
 
+    settings: {
+      tailwindcss: {
+        config: path.join(__dirname, "src/app/globals.css"),
+      },
+    },
+
     rules: {
       "prettier/prettier": "warn",
       "@typescript-eslint/no-explicit-any": "error",

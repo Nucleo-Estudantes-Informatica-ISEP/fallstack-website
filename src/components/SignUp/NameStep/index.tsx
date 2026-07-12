@@ -7,7 +7,6 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -44,9 +43,9 @@ const NameStep: FunctionComponent<NameStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
-        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
+        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
           Bem-vindo!
         </p>
 
@@ -75,7 +74,10 @@ const NameStep: FunctionComponent<NameStepProps> = ({
           </motion.p>
         )}
 
-        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+        <PrimaryButton
+          onClick={handleNext}
+          className="mt-4 mb-5 h-14 w-full font-bold"
+        >
           Seguinte
         </PrimaryButton>
 

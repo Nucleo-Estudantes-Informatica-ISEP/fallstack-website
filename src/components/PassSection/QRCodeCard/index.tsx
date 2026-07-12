@@ -2,7 +2,7 @@
 
 import React from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { FiRefreshCw, FiClipboard } from "react-icons/fi";
+import { FiClipboard, FiRefreshCw } from "react-icons/fi";
 
 interface QRCodeCardProps {
   name: string;
@@ -28,16 +28,22 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
   return (
     <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#121212] shadow-xl">
       <div className="bg-gradient-to-br from-[#ED8326] to-[#FFB347] px-6 py-6 text-white">
-        <h3 className="text-2xl font-bold leading-tight" style={{ fontFamily: 'Coolvetica, sans-serif' }}>
+        <h3
+          className="text-2xl leading-tight font-bold"
+          style={{ fontFamily: "Coolvetica, sans-serif" }}
+        >
           {name}
         </h3>
         {subtitle && (
-          <p className="mt-1 text-sm opacity-95" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <p
+            className="mt-1 text-sm opacity-95"
+            style={{ fontFamily: "Inter, sans-serif" }}
+          >
             {subtitle}
           </p>
         )}
       </div>
-      <div className="flex flex-col items-center px-6 pb-8 pt-6">
+      <div className="flex flex-col items-center px-6 pt-6 pb-8">
         <div className="rounded-xl bg-white p-4 shadow-lg">
           {loading ? (
             <div className="inline-block size-40 animate-spin rounded-full border-4 border-solid border-[#ED8326] border-r-transparent" />
@@ -77,4 +83,3 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
 };
 
 export default QRCodeCard;
-

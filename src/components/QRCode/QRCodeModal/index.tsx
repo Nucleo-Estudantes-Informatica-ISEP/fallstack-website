@@ -48,7 +48,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
 
   return !hidden ? (
     <div
-      className="fixed inset-6 end-4 start-4 z-40 animate-fade-imm overflow-y-hidden rounded-lg transition-opacity sm:inset-4 sm:end-6 sm:start-6 md:inset-14 md:end-12 md:start-8 lg:inset-16 lg:end-14 lg:start-10"
+      className="animate-fade-imm fixed inset-6 start-4 end-4 z-40 overflow-y-hidden rounded-lg transition-opacity sm:inset-4 sm:start-6 sm:end-6 md:inset-14 md:start-8 md:end-12 lg:inset-16 lg:start-10 lg:end-14"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
@@ -58,7 +58,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
           <div className="size-full bg-white text-left shadow-xl transition-all">
             {/* Close button */}
             <button
-              className="absolute right-4 top-4 z-10 cursor-pointer text-gray-500"
+              className="absolute top-4 right-4 z-10 cursor-pointer text-gray-500"
               style={{ pointerEvents: "auto" }}
               onClick={() => setHidden(true)}
             >
@@ -67,7 +67,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
             <div className="flex min-h-screen items-start justify-center">
               <div className="w-full">
                 <div className="relative h-screen p-10 text-center shadow-xl sm:p-0 md:p-0 lg:p-6">
-                  <h1 className="mb-6 mt-3 text-3xl font-bold text-black sm:mb-0 sm:mt-6 sm:text-3xl md:text-4xl lg:text-6xl">
+                  <h1 className="mt-3 mb-6 text-3xl font-bold text-black sm:mt-6 sm:mb-0 sm:text-3xl md:text-4xl lg:text-6xl">
                     {user.role === "STUDENT"
                       ? modalTitle[titleIndex]
                       : isMobile

@@ -1,12 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
-import FactData from "@/types/FactData";
-import { CompanyProps } from "@/components/Companies/Company";
 import CompanyInfo from "@/components/Companies/CompanyInfo";
 import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
 import findCompanyByName from "@/utils/CompanyByName";

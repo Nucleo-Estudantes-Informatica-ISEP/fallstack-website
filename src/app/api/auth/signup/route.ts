@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
 import { signUpSchema } from "@/schemas/signUpSchema";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
           role: "STUDENT",
         },
       });
-    } catch (_) {
+    } catch {
       // user already exists, ignore
     }
 

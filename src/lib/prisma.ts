@@ -4,17 +4,6 @@ import { reportError } from "./logger";
 
 // https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
 
-function exclude<T extends object, K extends keyof T>(
-  obj: T,
-  keys: K[]
-): Omit<T, K> {
-  return Object.fromEntries(
-    Object.entries(obj)
-      .filter(([key]) => !keys.includes(key as K))
-      .map(([key, value]) => [key, value])
-  ) as Omit<T, K>;
-}
-
 const prismaClientSingleton = () => {
   return new PrismaClient({
     log: process.env.NODE_ENV !== "production" ? ["info", "warn", "error"] : [],
