@@ -1,6 +1,13 @@
-version: "3.9"
-
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: fallstack-migrate
+    env_file:
+      - ./.env # adjust to .env.production if you want production settings
+
   web:
     build:
       context: .
@@ -11,6 +18,9 @@ services:
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
     container_name: fallstack-app
     restart: unless-stopped
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     env_file:
       - ./.env # adjust to .env.production if you want production settings
     ports:

@@ -59,7 +59,6 @@ RUN --mount=type=secret,id=sentry_auth_token,required=false \
     npm run build; \
   fi
 
-
 # Standalone stage to apply pending migrations against DATABASE_URL before
 # the app starts. Reuses `builder` (full node_modules incl. the Prisma CLI,
 # generated client, schema, and migrations) rather than the pruned runner
