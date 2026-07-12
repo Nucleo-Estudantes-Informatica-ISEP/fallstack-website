@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { httpErrorResponse } from "@/lib/http/server";
 import { verifyJwt } from "@/services/authService";
 import {
   completeActionById,
   getActionQrCode,
   toggleActionLive,
 } from "@/application/services/actionService";
-import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 
 interface ActionParams {
@@ -21,7 +21,7 @@ export async function POST(_: NextRequest, { params }: ActionParams) {
   const session = await getServerSession();
   if (!session?.student)
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  const decoded = verifyJwt((await params).id, { algorithm: "HS256" }) as {
+  const decoded = verifyJwt((await params).id, { algorithms: ["HS256"] }) as {
     id?: string;
     timestamp?: number;
   } | null;

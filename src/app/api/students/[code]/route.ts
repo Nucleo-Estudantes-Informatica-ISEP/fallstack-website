@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { errorResponse } from "@/services/apiResponse";
 import { httpErrorResponse } from "@/lib/http/server";
+import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/application/services/sessionService";
 import {
   getStudentProfile,

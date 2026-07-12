@@ -20,7 +20,7 @@ export async function signUp(data: StudentSignUpData) {
         bio: data.bio,
         year: data.year,
         interests: data.interests,
-        avatarUrl: (data as any).avatarUrl || undefined,
+        avatarUrl: data.avatarUrl || undefined,
         cvId: data.cv?.id,
       }),
     });

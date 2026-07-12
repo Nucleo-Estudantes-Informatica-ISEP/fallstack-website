@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { signUpEmployee } from "@/application/services/authApplicationService";
 import { httpErrorResponse } from "@/lib/http/server";
+import { signUpEmployee } from "@/application/services/authApplicationService";
 import { employeeSignUpSchema } from "@/schemas/employeeSignUpSchema";
 
 export async function POST(req: Request) {

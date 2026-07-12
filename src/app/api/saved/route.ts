@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { httpErrorResponse } from "@/lib/http/server";
 import { errorResponse } from "@/services/apiResponse";
 import { verifyJwt } from "@/services/authService";
-import { httpErrorResponse } from "@/lib/http/server";
 import { saveStudent } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { saveSchema } from "@/schemas/saveSchema";

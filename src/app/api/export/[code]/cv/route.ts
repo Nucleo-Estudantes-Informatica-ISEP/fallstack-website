@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getExportCvUrl } from "@/application/services/exportService";
-import { verifyJwt } from "@/services/authService";
-import { httpErrorResponse } from "@/lib/http/server";
 import { Session } from "@/types/Session";
+import { httpErrorResponse } from "@/lib/http/server";
+import { verifyJwt } from "@/services/authService";
+import { getExportCvUrl } from "@/application/services/exportService";
 
 interface StudentParams {
   params: Promise<{ code: string }>;

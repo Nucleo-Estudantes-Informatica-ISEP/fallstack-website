@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { changePassword } from "@/application/services/authApplicationService";
 import { httpErrorResponse } from "@/lib/http/server";
+import { changePassword } from "@/application/services/authApplicationService";
 import getServerSession from "@/application/services/sessionService";
 import { changePasswordSchema } from "@/schemas/changePasswordSchema";
 

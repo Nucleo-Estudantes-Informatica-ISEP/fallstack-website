@@ -22,9 +22,7 @@ import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { signUp } from "@/client/api/auth";
 import {
-  uploadAvatar,
   uploadAvatar as uploadAvatarToSupabase,
-  uploadCv,
   uploadCv as uploadCvToSupabase,
 } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
@@ -36,18 +34,12 @@ interface FinalStepProps {
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
 }
 
-const FinalStep: FunctionComponent<FinalStepProps> = ({
-  currentStep,
-  setCurrentStep,
-  data,
-  setData,
-}) => {
+const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const session = useSession();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cvLoading, setCvLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
@@ -84,12 +76,16 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) return setLoading(false);
+      if (!image) {
+        setLoading(false);
+        return null;
+      }
 
       const uploaded = await uploadAvatarToSupabase(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        return setLoading(false);
+        setLoading(false);
+        return null;
       }
       avatarUrl = uploaded.url;
     }
@@ -226,7 +222,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
         )}
 
         <PrimaryButton
-          loading={loading || cvLoading}
+          loading={loading}
           onClick={handleSubmit}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >

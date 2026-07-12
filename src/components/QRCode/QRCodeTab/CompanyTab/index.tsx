@@ -73,7 +73,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
               whileTap={{ scale: 0.9 }}
               initial={{ scale: 1 }}
               onClick={handleClick}
-              className="bg-primary mt-4 rounded-xl px-4 py-2 text-lg font-bold text-white hover:opacity-50"
+              className="mt-4 rounded-xl bg-primary px-4 py-2 text-lg font-bold text-white hover:opacity-50"
             >
               Ir para o perfil
             </motion.button>

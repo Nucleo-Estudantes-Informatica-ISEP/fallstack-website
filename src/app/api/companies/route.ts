@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
+import { httpErrorResponse } from "@/lib/http/server";
 import {
   getCompaniesWithUsers,
   registerCompany,
 } from "@/application/services/companyService";
-import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 import { postCompanySchema } from "@/schemas/postCompanySchema";
 
