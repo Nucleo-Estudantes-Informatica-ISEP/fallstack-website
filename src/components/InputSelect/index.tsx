@@ -21,23 +21,26 @@ const InputSelect: React.FC<InputSelectProps> = ({
   disabled,
   inputRef,
   options,
+  id,
   ...rest
 }) => {
-  const id = slugifyId(name);
+  const resolvedId = id || slugifyId(name) || undefined;
 
   return (
     <div className="flex w-full flex-col">
-      <label
-        className={`mb-1 text-sm font-normal text-white ${
-          center ? "text-left" : ""
-        }`}
-        htmlFor={id}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className={`mb-1 text-sm font-normal text-white ${
+            center ? "text-left" : ""
+          }`}
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <select
         name={name}
-        id={id}
+        id={resolvedId}
         disabled={disabled}
         defaultValue={placeholder}
         ref={inputRef}

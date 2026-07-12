@@ -21,24 +21,27 @@ const TextArea: React.FC<TextAreaProps> = ({
   disabled,
   maxLength,
   inputRef,
+  id,
   ...rest
 }) => {
-  const id = slugifyId(name);
+  const resolvedId = id || slugifyId(name) || undefined;
 
   return (
     <div className="flex w-full flex-col">
-      <label
-        className={`text-slate-700 md:text-lg ${
-          center ? "mb-4 text-center" : ""
-        }`}
-        htmlFor={id}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className={`text-slate-700 md:text-lg ${
+            center ? "mb-4 text-center" : ""
+          }`}
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <textarea
         name={name}
         disabled={disabled}
-        id={id}
+        id={resolvedId}
         placeholder={placeholder}
         ref={inputRef}
         maxLength={maxLength}

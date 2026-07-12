@@ -20,25 +20,28 @@ const Input: React.FC<InputProps> = ({
   disabled,
   inputRef,
   type = "text",
+  id,
   ...rest
 }) => {
-  const id = slugifyId(name);
+  const resolvedId = id || slugifyId(name) || undefined;
 
   return (
     <div className="flex w-full flex-col">
-      <label
-        className={`mb-1 text-sm font-normal text-white ${
-          center ? "text-left" : ""
-        }`}
-        htmlFor={id}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className={`mb-1 text-sm font-normal text-white ${
+            center ? "text-left" : ""
+          }`}
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <input
         type={type}
         name={name}
         disabled={disabled}
-        id={id}
+        id={resolvedId}
         placeholder={placeholder}
         ref={inputRef}
         className={`h-14 w-full border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white placeholder:text-white/50 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}

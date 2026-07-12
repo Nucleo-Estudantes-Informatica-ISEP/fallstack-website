@@ -32,18 +32,21 @@ const FileInput: React.FC<InputProps> = ({
   file,
   icon,
   onClear,
+  id,
   ...rest
 }) => {
-  const id = slugifyId(name);
+  const resolvedId = id || slugifyId(name) || undefined;
 
   return (
     <div className="flex w-full flex-col">
-      <label
-        className="mb-1 text-left text-sm font-normal text-white"
-        htmlFor={id}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className="mb-1 text-left text-sm font-normal text-white"
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <div
         className={`flex w-full flex-row items-center justify-center ${className}`}
       >
@@ -51,7 +54,7 @@ const FileInput: React.FC<InputProps> = ({
           type="file"
           name={name}
           disabled={disabled}
-          id={id}
+          id={resolvedId}
           placeholder={placeholder}
           accept={accept}
           hidden
@@ -60,7 +63,7 @@ const FileInput: React.FC<InputProps> = ({
         />
         <label
           className={`flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm ${file ? "text-white" : "text-white/35"}`}
-          htmlFor={id}
+          htmlFor={resolvedId}
         >
           <span className="mr-2 min-w-min text-lg md:text-xl">
             {file ? icon : <UploadIcon />}
