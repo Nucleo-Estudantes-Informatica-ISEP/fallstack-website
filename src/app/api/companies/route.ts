@@ -73,6 +73,12 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session.isAdmin)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
   const companies = await prisma.company.findMany({
     include: {
       user: true,
