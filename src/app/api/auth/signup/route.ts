@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { signUpUser } from "@/application/services/authApplicationService";
 import { httpErrorResponse } from "@/lib/http/server";
+import { signUpUser } from "@/application/services/authApplicationService";
 import { signUpSchema } from "@/schemas/signUpSchema";
 
 export async function POST(req: Request) {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     await signUpUser({
       email: body.email,
       password: body.password,
-      role: body.role !== undefined ? "EMPLOYEE" : "STUDENT",
+      role: "STUDENT",
     });
     return NextResponse.json(
       { message: "Signup successfully" },

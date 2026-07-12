@@ -2,6 +2,8 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
+import config from "@/config";
+
 import prisma from "./database";
 
 export const isStudentSaved = async (companyId: string, code: string) =>
@@ -83,7 +85,11 @@ export const findAdminScans = () =>
       student: { include: { user: true } },
       savedBy: { select: { id: true } },
     },
-    where: { savedBy: { user: { email: { equals: "info@nei-isep.org" } } } },
+    where: {
+      savedBy: {
+        user: { email: { equals: config.constants.neiContactEmail } },
+      },
+    },
   });
 
 export const isUniqueConstraintError = (error: unknown) =>

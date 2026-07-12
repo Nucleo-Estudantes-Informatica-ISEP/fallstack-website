@@ -8,7 +8,7 @@ import {
   createEmployee,
   findCompanyByCode,
 } from "../repositories/companyRepository";
-import { createUser, findUserByEmail } from "../repositories/userRepository";
+import { findUserByEmail, upsertUser } from "../repositories/userRepository";
 
 export async function signUpUser(input: {
   email: string;
@@ -27,15 +27,11 @@ export async function signUpUser(input: {
       email: input.email,
       password: input.password,
     });
-  try {
-    await createUser({
-      id: data.user.id,
-      email: input.email,
-      role: input.role,
-    });
-  } catch {
-    // Existing application user is valid for idempotent signup retries.
-  }
+  await upsertUser({
+    id: data.user.id,
+    email: input.email,
+    role: input.role,
+  });
   return data.user;
 }
 

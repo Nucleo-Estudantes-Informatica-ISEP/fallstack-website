@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test src/lib/logger.test.ts src/lib/sentryPrivacy.test.ts src/application/boundaries.test.ts src/application/serviceLogic.test.ts",
+    "test": "tsx --test src/lib/logger.test.ts src/lib/sentryPrivacy.test.ts src/application/boundaries.test.ts src/application/serviceLogic.test.ts src/utils/isepEmail.test.ts",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "seed": "prisma db seed",

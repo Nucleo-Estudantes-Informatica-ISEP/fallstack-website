@@ -1,7 +1,9 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import type { Stats } from "@/types/Stats";
 import config from "@/config";
+import { normalizeIsepEmail } from "@/utils/isepEmail";
 
 import { assertStudentCanBeSaved, findBoothAction } from "../domain/saveRules";
 import {
@@ -78,9 +80,7 @@ export async function saveStudentAsAdmin(
   emailOrNumber: string,
   companyId: string
 ) {
-  const email = emailOrNumber.trim().endsWith("@isep.ipp.pt")
-    ? emailOrNumber.trim()
-    : `${emailOrNumber.trim()}@isep.ipp.pt`;
+  const email = normalizeIsepEmail(emailOrNumber);
   const student = await findStudentByEmail(email);
   if (!student) throw new HttpError("Student not found", 404);
   const company = await findCompanyById(companyId);
@@ -98,9 +98,9 @@ export async function saveStudentAsAdmin(
 export const isSaved = (companyId: string, code: string) =>
   isStudentSaved(companyId, code);
 
-export async function getStudentStats(code: string) {
+export async function getStudentStats(code: string): Promise<Stats> {
   const count = await countStudentSaves(code);
-  return [count, count];
+  return { totalScans: count, totalSaves: count };
 }
 
 export const getTodayStudentStats = (studentId: string) => {
@@ -111,9 +111,9 @@ export const getTodayStudentStats = (studentId: string) => {
   );
 };
 
-export async function getCompanyStats(companyId: string) {
+export async function getCompanyStats(companyId: string): Promise<Stats> {
   const count = await countCompanySaves(companyId);
-  return [count, count];
+  return { totalScans: count, totalSaves: count };
 }
 
 export const getCompanyHistory = (companyId: string) =>

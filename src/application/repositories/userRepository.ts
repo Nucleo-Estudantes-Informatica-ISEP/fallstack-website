@@ -14,11 +14,16 @@ export const findUserWithEmployeeByEmail = (email: string) =>
 export const findUserByEmail = (email: string) =>
   prisma.user.findUnique({ where: { email } });
 
-export const createUser = (data: {
+export const upsertUser = (data: {
   id: string;
   email: string;
   role: "STUDENT" | "EMPLOYEE";
-}) => prisma.user.create({ data });
+}) =>
+  prisma.user.upsert({
+    where: { id: data.id },
+    update: {},
+    create: data,
+  });
 
 export const setUserInterests = (id: string, interests: string[]) =>
   prisma.user.update({
