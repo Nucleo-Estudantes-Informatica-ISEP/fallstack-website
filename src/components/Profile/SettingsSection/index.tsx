@@ -217,7 +217,6 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
         <UserBioTextArea
           name="Bio"
-          defaultValue={profile.bio}
           rows={5}
           placeholder="Escreve algo sobre ti..."
           setValue={handleUserBioChange}
