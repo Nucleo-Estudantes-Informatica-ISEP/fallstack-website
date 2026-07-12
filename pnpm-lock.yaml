@@ -190,8 +190,8 @@ importers:
         specifier: ^6.17.1
         version: 6.19.0(typescript@5.9.3)
       react-easy-crop:
-        specifier: ^5.5.3
-        version: 5.5.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: ^5.5.5
+        version: 5.5.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-toastify:
         specifier: ^11.0.5
         version: 11.0.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -4481,8 +4481,8 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
-  react-easy-crop@5.5.3:
-    resolution: {integrity: sha512-iKwFTnAsq+IVuyF6N0Q3zjRx9DG1NMySkwWxVfM/xAOeHYH1vhvM+V2kFiq5HOIQGWouITjfltCx54mbDpMpmA==}
+  react-easy-crop@5.5.5:
+    resolution: {integrity: sha512-aRiY8CnsHir4cmoPaXbZW0Hpmy0Wd+7mxZbALx/+rxvAIIy0hesK48hCBjorAt9Kl9dA8IskWnhOq3ky44coLA==}
     peerDependencies:
       react: '>=16.4.0'
       react-dom: '>=16.4.0'
@@ -10586,7 +10586,7 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-easy-crop@5.5.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-easy-crop@5.5.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       normalize-wheel: 1.0.1
       react: 18.3.1
