@@ -4,8 +4,8 @@ import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
-import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 import getServerSession from "@/services/getServerSession";
+import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 interface StudentParams {
