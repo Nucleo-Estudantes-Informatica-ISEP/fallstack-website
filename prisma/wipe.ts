@@ -7,8 +7,8 @@ async function wipeDatabase(): Promise<void> {
     const models = [
       "savedStudent",
       "actionCompletion",
-      "userInterest",
       "student",
+      "employee",
       "company",
       "action",
       "interest",
@@ -31,7 +31,14 @@ async function wipeDatabase(): Promise<void> {
 }
 
 if (process.env.NODE_ENV !== "development") {
-  console.error("This script should only be run in development!");
+  console.error("Refusing to wipe: NODE_ENV must be development.");
+  process.exit(1);
+}
+
+if (!process.argv.includes("--confirm")) {
+  console.error(
+    "Refusing to wipe: pass --confirm to delete all database records."
+  );
   process.exit(1);
 }
 
