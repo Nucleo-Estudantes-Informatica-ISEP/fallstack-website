@@ -62,7 +62,7 @@ export async function PATCH(req: NextRequest, props: StudentProps) {
 
   const safeParse = patchStudentSchema.safeParse(requestBody);
   if (!safeParse.success)
-    return NextResponse.json({ message: safeParse.error });
+    return NextResponse.json({ message: safeParse.error }, { status: 400 });
 
   const body = safeParse.data;
   const student = await prisma.student.update({

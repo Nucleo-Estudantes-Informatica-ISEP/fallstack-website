@@ -7,4 +7,7 @@ export const patchStudentSchema = z
     github: z.string(),
     interests: z.array(z.string()),
   })
-  .partial();
+  .partial()
+  .refine((body) => Object.keys(body).length > 0, {
+    message: "At least one field is required",
+  });
