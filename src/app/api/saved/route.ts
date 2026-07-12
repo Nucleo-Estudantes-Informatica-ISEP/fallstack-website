@@ -5,6 +5,7 @@ import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
+import { errorResponse } from "@/services/apiResponse";
 import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import { saveSchema } from "@/schemas/saveSchema";
@@ -171,7 +172,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const parsed = saveSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error });
+  if (!parsed.success) return errorResponse(parsed.error, 400);
 
   const { token } = parsed.data;
 

@@ -5,6 +5,7 @@ import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
+import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/services/getServerSession";
 
 const schema = z.object({
@@ -26,8 +27,7 @@ export async function GET(req: NextRequest, props: StudentProps) {
   const { code } = await props.params;
 
   const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return errorResponse("Unauthorized", 401);
 
   const student = await prisma.student.findUnique({
     where: { code },
@@ -61,17 +61,15 @@ export async function PATCH(req: NextRequest, props: StudentProps) {
   const session = await getServerSession();
   const { code } = params;
 
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) return errorResponse("Unauthorized", 401);
 
   if (!session.student || session.student.code !== code)
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return errorResponse("Forbidden", 403);
 
   const body = await req.json();
 
   const safeParse = schemaPartial.safeParse(body);
-  if (!safeParse.success)
-    return NextResponse.json({ message: safeParse.error });
+  if (!safeParse.success) return errorResponse(safeParse.error, 400);
 
   const student = await prisma.student.update({
     where: { code },
