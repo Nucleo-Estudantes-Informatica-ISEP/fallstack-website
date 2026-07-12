@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       interests,
       avatarUrl: avatarUrlBody,
       cvId,
-    } = body as any;
+    } = body;
 
     // create code for student
     let code: string = "";

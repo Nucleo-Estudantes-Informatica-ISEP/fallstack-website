@@ -21,8 +21,8 @@ const getServerSession = async () => {
         const byEmail = await prisma.user.findUnique({
           where: { email: user.email },
           include: { employee: { include: { company: true } }, student: true },
-        } as any);
-        if (byEmail) return byEmail as any;
+        });
+        if (byEmail) return byEmail;
       } catch (_) {
         // ignore if email not a unique field in schema
       }
