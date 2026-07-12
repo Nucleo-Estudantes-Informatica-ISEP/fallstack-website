@@ -1,5 +1,5 @@
-import { clientEnv } from "@/config/env.client";
 import { UserWithProfile } from "@/types/UserWithProfile";
+import { clientEnv } from "@/config/env.client";
 
 const getSession = async () => {
   const response = await fetch(

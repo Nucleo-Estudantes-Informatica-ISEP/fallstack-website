@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
-
 import { serverEnv } from "@/config/env.server";
+
+import { createClient } from "@supabase/supabase-js";
 
 // Service-role client for privileged server operations (never exposed to client)
 export function createAdminClient() {
