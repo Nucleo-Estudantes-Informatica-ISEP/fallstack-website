@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "typecheck": "tsc --noEmit",
     "seed": "prisma db seed",
     "wipe": "tsx prisma/wipe.ts",
     "generate": "prisma generate",
