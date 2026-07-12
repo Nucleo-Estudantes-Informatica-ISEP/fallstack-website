@@ -12,7 +12,7 @@ const Spinner: FunctionComponent<SpinnerProps> = ({ className }) => {
     <span role="status" className="inline-flex">
       <CgSpinner
         aria-hidden="true"
-        className={`flex flex-1 animate-spin justify-center text-xl ${className}`}
+        className={`flex flex-1 animate-spin justify-center text-xl ${className ?? ""}`}
       />
       <span className="sr-only">A carregar…</span>
     </span>

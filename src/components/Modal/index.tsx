@@ -51,7 +51,7 @@ const Modal: React.FC<ModalProps> = ({
         ref={dialogRef}
         className={
           "fixed top-1/2 left-1/2 z-60 w-full -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-8 text-black outline-none md:w-3/4 " +
-          className
+          (className ?? "")
         }
         {...rest}
       >
