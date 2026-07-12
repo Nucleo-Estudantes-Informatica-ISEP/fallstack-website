@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const requestBody = await req.json();
     const body = signUpSchema.parse(requestBody);
     // valid body
-    const { email, password, role } = body;
+    const { email, password } = body;
 
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.signUp({
@@ -39,8 +39,8 @@ export async function POST(req: Request) {
         data: {
           id: supabaseUser.id,
           email: email,
-          role: role !== undefined ? "COMPANY" : "STUDENT",
-        } as any,
+          role: "STUDENT",
+        },
       });
     } catch (_) {
       // user already exists, ignore
@@ -52,8 +52,7 @@ export async function POST(req: Request) {
     );
   } catch (e) {
     if (e instanceof ZodError)
-      //@ts-ignore
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },

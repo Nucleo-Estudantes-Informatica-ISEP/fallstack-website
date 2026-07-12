@@ -44,14 +44,12 @@ export async function POST(req: NextRequest) {
       })
 
       if (error) {
-        //@ts-ignore
         return NextResponse.json(
           { error: error.message },
           { status: 400 }
         );
       }
 
-      //@ts-ignore
       return NextResponse.json(
         { message: "Password reset email sent" },
         { status: 200 }
@@ -61,7 +59,6 @@ export async function POST(req: NextRequest) {
     // Otherwise, this is a password update (user is authenticated via reset link)
     const parsed = confirmResetSchema.safeParse(body);
     if (!parsed.success) {
-      //@ts-ignore
       return NextResponse.json(
         { error: "Invalid password or code" },
         { status: 400 }
@@ -73,7 +70,6 @@ export async function POST(req: NextRequest) {
     // Exchange the recovery code for a session so updateUser succeeds
     const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
     if (exchangeError) {
-      //@ts-ignore
       return NextResponse.json(
         { error: exchangeError.message || "Auth session missing" },
         { status: 400 }
@@ -83,21 +79,18 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      //@ts-ignore
       return NextResponse.json(
         { error: error.message },
         { status: 400 }
       );
     }
 
-    //@ts-ignore
     return NextResponse.json(
       { message: "Password updated successfully" },
       { status: 200 }
     );
   } catch (e) {
     console.error(e);
-    //@ts-ignore
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
