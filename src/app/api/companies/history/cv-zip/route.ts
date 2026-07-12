@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { createCompanyCvZip } from "@/application/services/exportService";
 import getServerSession from "@/application/services/sessionService";
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 
 export async function GET() {
   const session = await getServerSession();

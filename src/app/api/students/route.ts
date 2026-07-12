@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 import { createStudentProfile } from "@/application/services/studentService";
 import { postStudentSchema } from "@/schemas/postStudentSchema";

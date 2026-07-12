@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 import {
   getStudentCv,

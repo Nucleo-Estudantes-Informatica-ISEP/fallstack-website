@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import { saveStudentAsAdmin } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { saveStudentAdminSchema } from "@/schemas/saveStudentAdminSchema";

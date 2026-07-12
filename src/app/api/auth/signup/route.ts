@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { signUpUser } from "@/application/services/authApplicationService";
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import { signUpSchema } from "@/schemas/signUpSchema";
 
 export async function POST(req: Request) {

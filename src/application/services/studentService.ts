@@ -9,6 +9,8 @@ import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 import { createAdminClient } from "@/utils/supabase/admin";
 
+import { isAllowedToViewStudent } from "../domain/studentAccess";
+import type { StudentAccess } from "../domain/studentAccess";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   createStudent,
@@ -62,17 +64,11 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
   return student;
 }
 
-export async function getStudentProfile(
-  code: string,
-  access: { studentCode?: string; companyId?: string; isAdmin: boolean }
-) {
+export async function getStudentProfile(code: string, access: StudentAccess) {
   const student = await findStudentProfileByCode(code);
   if (!student) throw new HttpError("Not found", 404);
-  const allowed =
-    access.studentCode === code ||
-    access.isAdmin ||
-    (!!access.companyId && (await isStudentSaved(access.companyId, code)));
-  if (!allowed) throw new HttpError("Not found", 404);
+  if (!(await isAllowedToViewStudent(code, access, isStudentSaved)))
+    throw new HttpError("Not found", 404);
   return student;
 }
 
@@ -100,17 +96,14 @@ export async function setStudentCv(code: string, id: string) {
   await completeAction(code, config.constants.actionNames.uploadCv);
 }
 
-export async function getStudentCv(
-  code: string,
-  access: { studentCode?: string; companyId?: string; isAdmin: boolean }
-) {
+export async function getStudentCv(code: string, access: StudentAccess) {
   const student = await findStudentByCode(code);
-  const allowed =
-    student &&
-    (access.studentCode === code ||
-      access.isAdmin ||
-      (!!access.companyId && (await isStudentSaved(access.companyId, code))));
-  if (!allowed || !student.cv) throw new HttpError("CV not found", 404);
+  if (
+    !student ||
+    !(await isAllowedToViewStudent(code, access, isStudentSaved)) ||
+    !student.cv
+  )
+    throw new HttpError("CV not found", 404);
   const signed = await createAdminClient()
     .storage.from("cvs")
     .createSignedUrl(`distribution/cv/${student.cv}.pdf`, 60 * 5);

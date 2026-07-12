@@ -5,7 +5,7 @@ import {
   getCompaniesWithUsers,
   registerCompany,
 } from "@/application/services/companyService";
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 import { postCompanySchema } from "@/schemas/postCompanySchema";
 

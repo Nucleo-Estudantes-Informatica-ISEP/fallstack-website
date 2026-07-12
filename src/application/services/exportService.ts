@@ -2,9 +2,9 @@ import "server-only";
 
 import JSZip from "jszip";
 
+import { HttpError } from "@/types/HttpError";
 import { BASE_URL } from "@/services/api";
 import { signJwt } from "@/services/authService";
-import { HttpError } from "@/types/HttpError";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 import { findCompanyById } from "../repositories/companyRepository";
@@ -43,7 +43,8 @@ export async function createCompanyCsv(companyId: string) {
 }
 
 export async function getExportCvUrl(companyId: string, studentCode: string) {
-  if (!(await findCompanyById(companyId))) throw new HttpError("Forbidden", 403);
+  if (!(await findCompanyById(companyId)))
+    throw new HttpError("Forbidden", 403);
   const student = await findStudentByCode(studentCode);
   if (!student) throw new HttpError("Este perfil não existe.", 404);
   if (!(await isStudentSaved(companyId, studentCode)))

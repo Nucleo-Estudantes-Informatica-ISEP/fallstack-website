@@ -53,3 +53,15 @@ export const findCompanyInterests = async (companyId: string) => {
   });
   return employee?.user.interests.map(({ name }) => name) ?? [];
 };
+
+export async function findInterestMatchingCompanies() {
+  const companies = await prisma.company.findMany();
+  const users = await prisma.user.findMany({
+    where: { id: { in: companies.map(({ id }) => id) }, isAdmin: false },
+    include: { interests: true },
+  });
+  return companies.flatMap((company) => {
+    const user = users.find(({ id }) => id === company.id);
+    return user ? [{ ...company, user }] : [];
+  });
+}

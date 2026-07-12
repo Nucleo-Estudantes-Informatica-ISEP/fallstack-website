@@ -33,7 +33,7 @@ export async function signUpUser(input: {
       email: input.email,
       role: input.role,
     });
-  } catch (_) {
+  } catch {
     // Existing application user is valid for idempotent signup retries.
   }
   return data.user;

@@ -3,6 +3,7 @@ import "server-only";
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
 
+import { assertStudentCanBeSaved, findBoothAction } from "../domain/saveRules";
 import {
   findCompanyById,
   findCompanyEmployee,
@@ -18,7 +19,6 @@ import {
   findCompanyHistoryWithInterests,
   findCompanySavedStudentsWithCv,
   findCompanySavesForExport,
-  findSavedStudent,
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
@@ -54,17 +54,16 @@ export async function saveStudent(input: {
 }) {
   const student = await findStudentByCode(input.studentCode);
   if (!student) throw new HttpError("Student not found", 404);
-  if (
-    !input.allowDuplicate &&
-    (await isStudentSaved(input.companyId, student.code))
-  )
-    throw new HttpError("Student already saved by your company", 409);
+  assertStudentCanBeSaved(
+    await isStudentSaved(input.companyId, student.code),
+    input.allowDuplicate
+  );
   try {
     const saved = await createSavedStudent(student.id, input.employeeId);
     if (input.completeBoothAction) {
       const company = await findCompanyName(input.companyId);
       if (!company) throw new HttpError("Company not found", 404);
-      const action = boothActions[company.name.toLowerCase()];
+      const action = findBoothAction(company.name, boothActions);
       if (action) await completeAction(student.code, action);
     }
     return saved;
@@ -89,9 +88,11 @@ export async function saveStudentAsAdmin(
   const employee = await findCompanyEmployee(companyId);
   if (!employee)
     throw new HttpError("Company has no employees to attribute save to", 400);
-  if (await findSavedStudent(student.id, companyId))
-    throw new HttpError("Student already saved", 400);
-  return createSavedStudent(student.id, employee.id);
+  return saveStudent({
+    studentCode: student.code,
+    employeeId: employee.id,
+    companyId,
+  });
 }
 
 export const isSaved = (companyId: string, code: string) =>

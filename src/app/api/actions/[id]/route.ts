@@ -6,7 +6,7 @@ import {
   getActionQrCode,
   toggleActionLive,
 } from "@/application/services/actionService";
-import { httpErrorResponse } from "@/server/http/httpErrorResponse";
+import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
 
 interface ActionParams {

@@ -1,9 +1,10 @@
 import "server-only";
 
-import type { Company, Interest, Tier } from "@prisma/client";
+import type { Tier } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
 
+import { rankInterestMatchingCompanies } from "../domain/companyMatching";
 import {
   createCompany,
   findCompanies,
@@ -11,10 +12,10 @@ import {
   findCompanyById,
   findCompanyByName,
   findCompanyInterests,
+  findInterestMatchingCompanies,
   updateCompanyAvatar,
 } from "../repositories/companyRepository";
 import {
-  findInterestMatchingCompanies,
   findInterestsForCompany,
   findUserInterests,
 } from "../repositories/interestRepository";
@@ -47,20 +48,10 @@ export async function getInterestsByCompanyName(companyName: string) {
   return (await findInterestsForCompany(company.id)).map(({ name }) => name);
 }
 
-export async function getInterestMatchingCompanies(
-  userId: string
-): Promise<{ company: Company; matchingInterests: Interest[] }[]> {
+export async function getInterestMatchingCompanies(userId: string) {
   const [companies, userInterests] = await Promise.all([
     findInterestMatchingCompanies(),
     findUserInterests(userId),
   ]);
-  return (companies as any[])
-    .map((company) => ({
-      company,
-      matchingInterests: company.user.interests.filter((interest: Interest) =>
-        userInterests.some(({ id }) => id === interest.id)
-      ),
-    }))
-    .sort((a, b) => b.matchingInterests.length - a.matchingInterests.length)
-    .slice(0, 3);
+  return rankInterestMatchingCompanies(companies, userInterests);
 }
