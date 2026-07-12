@@ -84,13 +84,16 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) return setLoading(false);
-
+      if (!image) {
+        setLoading(false);
+        return null;
+      }
 
       const uploaded = await uploadAvatarToSupabase(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        return setLoading(false);
+        setLoading(false);
+        return null;
       }
       avatarUrl = uploaded.url;
     }
