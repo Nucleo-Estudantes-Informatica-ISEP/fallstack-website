@@ -39,11 +39,6 @@ export async function POST(req: Request) {
         data: {
           id: userId,
           name: name,
-          user: {
-            connect: {
-              id: userId,
-            },
-          },
           tier: tier,
         },
       });
