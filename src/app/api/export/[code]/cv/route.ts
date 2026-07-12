@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, props: StudentParams) {
   if (!token)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const decoded = verifyJwt(token) as Session | null;
+  const decoded = verifyJwt(token) as unknown as Session | null;
   if (!decoded)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

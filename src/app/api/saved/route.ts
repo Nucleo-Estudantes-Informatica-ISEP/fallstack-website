@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
   let studentCode = token;
   if (token) {
-    const decoded = verifyJwt(token) as { code: string } | null;
+    const decoded = verifyJwt(token) as unknown as { code: string } | null;
     if (!decoded)
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     else

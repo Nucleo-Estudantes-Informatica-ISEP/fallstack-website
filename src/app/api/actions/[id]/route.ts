@@ -45,8 +45,8 @@ export async function POST(req: NextRequest, { params }: ActionParams) {
 
   const { id: data } = await params;
   const decoded = verifyJwt(data, {
-    algorithm: "HS256",
-  }) as {
+    algorithms: ["HS256"],
+  }) as unknown as {
     id: string;
     timestamp: number;
   };
