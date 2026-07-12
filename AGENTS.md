@@ -45,10 +45,11 @@ pnpm build        # production build
 pnpm lint         # next lint
 pnpm generate     # prisma generate (also runs on postinstall)
 pnpm seed         # prisma db seed
-pnpm wipe -- --confirm   # wipe the DB — guarded, refuses to run in production
+pnpm test         # tsx --test src/lib/logger.test.ts src/lib/sentryPrivacy.test.ts
+pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 ```
 
-There is no `pnpm test` yet and no `typecheck` script — see [Gotchas](#gotchas). Migrations use `pnpm prisma migrate dev` / `migrate deploy` (see `README.md`'s Database Workflow section); `prisma db push` is no longer the source of truth.
+`pnpm test` exists but coverage is minimal (two files); there's still no `typecheck` script — see [Gotchas](#gotchas). No baseline migration has been committed yet (no `prisma/migrations/` directory). README's Database Workflow section documents both `pnpm prisma db push --force-reset` and `pnpm prisma migrate dev` as options; in practice `db push --force-reset` is what currently works for local schema sync — don't assume a migration history exists to `deploy`.
 
 ## Architecture
 
@@ -95,7 +96,7 @@ erDiagram
 Two independent mechanisms — don't conflate them:
 
 - **Session auth (login state):** Supabase Auth. `getServerSession()` (`src/services/getServerSession.ts`) reads the Supabase session cookie, looks up the corresponding Prisma `User`. Client-side equivalent is `src/services/getSession.ts`.
-- **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/services/authService.ts` (`signJwt`/`verifyJwt`, using `process.env.JWT_SECRET`). Used only for narrow, expiring tokens — QR action codes (`src/app/api/qrcode`, `src/app/api/actions/[id]`) and CV export links (`src/app/api/export`) — **not** for login sessions.
+- **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/services/authService.ts` (`signJwt`/`verifyJwt`, using `process.env.JWT_SECRET`). Used only for narrow, expiring tokens — QR action codes (`src/app/api/qrcode`, `src/app/api/actions/[id]`), CV export links (`src/app/api/export`), and temporary student-profile preview access (`jwtStudent()` in `src/lib/jwtStudent.ts` signs a token embedding the student `code`; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access without a session) — **not** for login sessions.
 - `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through Supabase.
 - Password changes are split across two routes: `src/app/api/auth/password-change/route.ts` (admin-only, session-gated — an admin resets another user's password via the Supabase admin client) and `src/app/api/auth/password-reset/route.ts` (self-service, the Supabase `resetPasswordForEmail`/`exchangeCodeForSession` flow). Don't add a third path — extend one of these two.
 
@@ -111,18 +112,19 @@ Two independent mechanisms — don't conflate them:
 
 ## Verification (definition of done)
 
-There is no CI, no test suite, and build-time type/lint errors are suppressed (see [Gotchas](#gotchas)) — so nothing will catch a broken change automatically. Before considering a task done:
+There is no CI, test coverage is minimal, and build-time type/lint errors are suppressed (see [Gotchas](#gotchas)) — so most broken changes will not be caught automatically. Before considering a task done:
 
 1. Run `pnpm lint` and fix anything it flags in touched files.
-2. Run `pnpm exec tsc --noEmit` manually (there's no script for it) — the build won't fail on type errors, but you should still not introduce new ones.
-3. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
-4. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
+2. Run `pnpm test` — keep it green, and extend it if you touch `src/lib/logger.ts` or `src/lib/sentryPrivacy.ts`.
+3. Run `pnpm exec tsc --noEmit` manually (there's no script for it) — the build won't fail on type errors, but you should still not introduce new ones.
+4. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
+5. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
 ## Gotchas
 
 - **`tsconfig.json` has `strict: false`** and `next.config.js` sets `typescript.ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true` — a broken build or type error will not fail CI or `next build` today. Don't rely on the compiler to catch what it's configured to ignore.
-- **No automated tests, no CI workflow, no `typecheck` script yet.** Verify changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
-- **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and is guarded against `NODE_ENV=production`, but there is no staging/prod distinction beyond that env var — double-check `DATABASE_URL` before running it anywhere but local.
+- **`pnpm test` exists but is minimal** (`src/lib/logger.test.ts`, `src/lib/sentryPrivacy.test.ts`), there's no CI workflow, and no `typecheck` script yet. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
+- **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
-- **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (HSTS, nosniff, frame-ancestors, referrer-policy) are set. Don't assume a `Content-Security-Policy` exists.
+- **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) are set. Don't assume a `Content-Security-Policy` or CSP `frame-ancestors` directive exists.
 - **QR action codes have an anti-replay check commented out** in `src/app/api/actions/[id]/route.ts` — the rotating-timestamp freshness check is disabled, so a captured QR code can currently be replayed. Don't assume replay protection is active.
