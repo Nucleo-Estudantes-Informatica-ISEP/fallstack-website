@@ -1,4 +1,4 @@
-import { fetchScans } from "@/lib/fetchScans";
+import { getScans } from "@/lib/scans";
 import getServerSession from "@/services/getServerSession";
 import ExcelButton from "@/components/ExcelButton";
 import Custom404 from "@/app/not-found";
@@ -9,7 +9,7 @@ const scans = async () => {
     return Custom404();
   }
 
-  const scans = await fetchScans();
+  const scans = await getScans();
 
   return (
     <section className="flex min-h-screen w-full flex-col items-center justify-center px-8 py-24 md:px-24">

@@ -73,6 +73,8 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
       router.refresh();
     } catch (e) {
       console.error(e);
+      toast.error("Ocorreu um erro ao criar a conta.");
+      setLoading(false);
     }
   };
 

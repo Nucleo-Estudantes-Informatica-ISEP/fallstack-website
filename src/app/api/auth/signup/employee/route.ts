@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
+
 import prisma from "@/lib/prisma";
 import { employeeSignUpSchema } from "@/schemas/employeeSignUpSchema";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
@@ -40,18 +41,15 @@ export async function POST(req: Request) {
 
     const supabaseUser = data.user;
 
-    // Create application user with EMPLOYEE role if not existing
-    try {
-      await prisma.user.create({
-        data: {
-          id: supabaseUser.id,
-          email,
-          role: "EMPLOYEE",
-        },
-      });
-    } catch (_) {
-      // ignore if user already exists
-    }
+    await prisma.user.upsert({
+      where: { id: supabaseUser.id },
+      update: {},
+      create: {
+        id: supabaseUser.id,
+        email,
+        role: "EMPLOYEE",
+      },
+    });
 
     // Create Employee profile linked to company
     await prisma.employee.create({

@@ -1,17 +1,26 @@
 import prisma from "./prisma";
 
-export async function getStats(code: string): Promise<number[]> {
+export interface Stats {
+  totalScans: number;
+  totalSaves: number;
+}
+
+const toStats = (savedCount: number): Stats => ({
+  totalScans: savedCount,
+  totalSaves: savedCount,
+});
+
+export async function getStudentStats(code: string): Promise<Stats> {
   const savedCount = await prisma.savedStudent.count({
     where: {
       student: { code },
     },
   });
 
-  // Maintain two-slot array shape [scans, saves]
-  return [savedCount, savedCount];
+  return toStats(savedCount);
 }
 
-export async function getTodayStats(id: string): Promise<number> {
+export async function getTodayStudentStats(id: string): Promise<number> {
   const today = new Date();
   const startOfDay = new Date(
     today.getFullYear(),
@@ -19,7 +28,7 @@ export async function getTodayStats(id: string): Promise<number> {
     today.getDate()
   );
 
-  const savedToday = await prisma.savedStudent.count({
+  return prisma.savedStudent.count({
     where: {
       studentId: id,
       createdAt: {
@@ -27,11 +36,9 @@ export async function getTodayStats(id: string): Promise<number> {
       },
     },
   });
-
-  return savedToday;
 }
 
-export async function getCompanyStats(id: string): Promise<number[]> {
+export async function getCompanyStats(id: string): Promise<Stats> {
   const savedCount = await prisma.savedStudent.count({
     where: {
       savedBy: {
@@ -40,6 +47,5 @@ export async function getCompanyStats(id: string): Promise<number[]> {
     },
   });
 
-  // Maintain two-slot array shape [scans, saves]
-  return [savedCount, savedCount];
+  return toStats(savedCount);
 }

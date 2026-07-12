@@ -13,6 +13,7 @@ import swal from "sweetalert";
 import { useRouter } from "next/navigation";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/lib/stats";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
@@ -22,7 +23,7 @@ import useSession from "@/hooks/useSession";
 interface CompanyProfileSectionContainerProps {
   company: Company;
   employeeName: string;
-  globalStats: number[];
+  globalStats: Stats;
   totalStudents: number;
   history: SavedStudentWithSavedBy[];
   interests: string[];

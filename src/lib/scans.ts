@@ -1,6 +1,8 @@
+import config from "@/config";
+
 import prisma from "./prisma";
 
-export async function fetchScans() {
+export async function getScans() {
   const scans = await prisma.savedStudent.findMany({
     distinct: ["studentId"],
     select: {
@@ -19,18 +21,17 @@ export async function fetchScans() {
       savedBy: {
         user: {
           email: {
-            equals: "info@nei-isep.org",
+            equals: config.constants.neiContactEmail,
           },
         },
       },
     },
   });
 
-  // Provide a synthetic id for UI/exports
-  return scans.map((s) => ({
-    id: `${s.studentId}-${s.createdAt.toISOString()}`,
-    studentId: s.studentId,
-    createdAt: s.createdAt,
-    student: s.student,
+  return scans.map((scan) => ({
+    id: `${scan.studentId}-${scan.createdAt.toISOString()}`,
+    studentId: scan.studentId,
+    createdAt: scan.createdAt,
+    student: scan.student,
   }));
 }

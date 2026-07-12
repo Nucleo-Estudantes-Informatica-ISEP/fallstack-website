@@ -3,13 +3,18 @@ import { BASE_URL } from "@/services/api";
 
 export async function signUp(data: StudentSignUpData) {
   try {
-    await fetch(BASE_URL + "/auth/signup", {
+    const signUpResponse = await fetch(BASE_URL + "/auth/signup", {
       method: "POST",
       body: JSON.stringify({
         email: data.email,
         password: data.password,
       }),
     });
+
+    if (!signUpResponse.ok) {
+      const json = await signUpResponse.json().catch(() => ({}));
+      return new Error(json.message || json.error || "Unable to sign up");
+    }
 
     const resStudent = await fetch(BASE_URL + "/students", {
       method: "POST",
@@ -27,9 +32,8 @@ export async function signUp(data: StudentSignUpData) {
 
     if (resStudent.status !== 201) return new Error(json.error);
     return true;
-  } catch (e) {
-    console.error(e);
-    return false;
+  } catch (error) {
+    return new Error(error instanceof Error ? error.message : "Network error");
   }
 }
 
@@ -63,11 +67,13 @@ export async function signUpEmployee(body: {
 
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      return new Error(json?.message || json?.error || "Unable to sign up employee");
+      return new Error(
+        json?.message || json?.error || "Unable to sign up employee"
+      );
     }
 
     return true;
-  } catch (e: any) {
-    return new Error(e?.message || "Network error");
+  } catch (error) {
+    return new Error(error instanceof Error ? error.message : "Network error");
   }
 }

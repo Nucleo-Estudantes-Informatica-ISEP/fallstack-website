@@ -2,20 +2,20 @@ import { Company, Interest } from "@prisma/client";
 
 import prisma from "./prisma";
 
-export async function fetchInterestMatchingCompanies(
+export async function getInterestMatchingCompanies(
   userId: string
 ): Promise<{ company: Company; matchingInterests: Interest[] }[]> {
   const companies = await prisma.company.findMany({
     include: {
-      user: {
+      employees: {
+        take: 1,
         include: {
-          interests: true,
+          user: {
+            include: {
+              interests: true,
+            },
+          },
         },
-      },
-    },
-    where: {
-      user: {
-        isAdmin: false,
       },
     },
   });
@@ -36,13 +36,13 @@ export async function fetchInterestMatchingCompanies(
 
   return companies
     .map((company) => {
-      const matchingInterests = company.user.interests.filter((interest) =>
-        userInterests.some((userInterest) => userInterest.id === interest.id)
-      );
+      const companyInterests = company.employees[0]?.user.interests ?? [];
 
       return {
         company,
-        matchingInterests,
+        matchingInterests: companyInterests.filter((interest) =>
+          userInterests.some((userInterest) => userInterest.id === interest.id)
+        ),
       };
     })
     .sort((a, b) => b.matchingInterests.length - a.matchingInterests.length)

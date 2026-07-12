@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
 import { saveStudentAdminSchema } from "@/schemas/saveStudentAdminSchema";
+import { normalizeIsepEmail } from "@/utils/isepEmail";
 
 export async function POST(req: Request) {
   const session = await getServerSession();
@@ -14,18 +15,14 @@ export async function POST(req: Request) {
   const requestBody = await req.json();
   const body = saveStudentAdminSchema.parse(requestBody);
   // valid body
-  let { studentEmailNumber, companyId } = body;
-
-  // complete the email if not already
-  if (!studentEmailNumber.trim().endsWith("@isep.ipp.pt")) {
-    studentEmailNumber = studentEmailNumber.trim() + "@isep.ipp.pt";
-  }
+  const { studentEmailNumber, companyId } = body;
+  const studentEmail = normalizeIsepEmail(studentEmailNumber);
 
   // find the student
   const student = await prisma.student.findFirst({
     where: {
       user: {
-        email: studentEmailNumber,
+        email: studentEmail,
       },
     },
   });

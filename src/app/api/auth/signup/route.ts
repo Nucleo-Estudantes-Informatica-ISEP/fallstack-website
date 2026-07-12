@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
 import { signUpSchema } from "@/schemas/signUpSchema";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const requestBody = await req.json();
     const body = signUpSchema.parse(requestBody);
     // valid body
-    const { email, password, role } = body;
+    const { email, password } = body;
 
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.signUp({
@@ -33,18 +33,15 @@ export async function POST(req: Request) {
     // Ensure Prisma user exists with Supabase auth id
     const supabaseUser = data.user;
 
-    // Try to create if not exists; if exists, leave it
-    try {
-      await prisma.user.create({
-        data: {
-          id: supabaseUser.id,
-          email: email,
-          role: role !== undefined ? "COMPANY" : "STUDENT",
-        } as any,
-      });
-    } catch (_) {
-      // user already exists, ignore
-    }
+    await prisma.user.upsert({
+      where: { id: supabaseUser.id },
+      update: {},
+      create: {
+        id: supabaseUser.id,
+        email,
+        role: "STUDENT",
+      },
+    });
 
     return NextResponse.json(
       { message: "Signup successfully" },

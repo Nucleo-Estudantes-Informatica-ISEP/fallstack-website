@@ -1,10 +1,11 @@
 "use client";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/lib/stats";
 import HistorySection from "@/components/HistorySection";
 
 interface StatsProps {
-  stats: number[];
+  stats: Stats;
   companiesLeft: number;
   historyData: SavedStudentWithSavedBy[];
 }
@@ -14,8 +15,7 @@ const StatsSection: React.FC<StatsProps> = ({
   companiesLeft,
   historyData,
 }) => {
-  const totalScans = stats[0];
-  const totalSaves = stats[1];
+  const { totalScans, totalSaves } = stats;
 
   return (
     <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">

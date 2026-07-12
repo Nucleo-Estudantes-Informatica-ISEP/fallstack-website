@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/lib/stats";
 import { BASE_URL } from "@/services/api";
 import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
 
 interface StatsProps {
-  stats: number[];
+  stats: Stats;
   students: number;
   history: SavedStudentWithSavedBy[];
   interests: string[];
@@ -23,8 +24,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   history,
   interests,
 }) => {
-  const totalScans = stats[0];
-  const totalSaves = stats[1];
+  const { totalScans, totalSaves } = stats;
   const studentsLeft = students - totalScans;
   const [companyInterests, setInterests] = useState<string[]>(interests);
   const [isLoading, setIsLoading] = useState(false);

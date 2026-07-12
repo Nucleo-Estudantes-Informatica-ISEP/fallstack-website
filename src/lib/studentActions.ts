@@ -2,7 +2,7 @@ import { Action } from "@prisma/client";
 
 import prisma from "./prisma";
 
-export async function fetchStudentActions(
+export async function getStudentActions(
   studentCode: string
 ): Promise<(Action & { done: boolean })[]> {
   const actions = await prisma.action.findMany({
@@ -14,7 +14,7 @@ export async function fetchStudentActions(
   const student = await prisma.student.findUnique({
     where: { code: studentCode },
   });
-  if (!student) return actions.map((a) => ({ ...a, done: false }));
+  if (!student) return actions.map((action) => ({ ...action, done: false }));
 
   const concludedActions = await prisma.actionCompletion.findMany({
     where: {

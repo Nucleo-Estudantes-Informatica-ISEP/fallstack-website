@@ -1,9 +1,9 @@
 import prisma from "./prisma";
 
-export async function fetchStudent(code: string) {
-  return await prisma.student.findUnique({
+export async function getStudent(code: string) {
+  return prisma.student.findUnique({
     where: {
-      code: code,
+      code,
     },
     include: {
       user: {

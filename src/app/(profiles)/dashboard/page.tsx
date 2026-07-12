@@ -1,5 +1,5 @@
 import { HttpError } from "@/types/HttpError";
-import { getCompanyStats } from "@/lib/fetchStats";
+import { getCompanyStats } from "@/lib/stats";
 import getCompanyHistory from "@/lib/getCompanyHistory";
 import { getStudents } from "@/lib/students";
 import prisma from "@/lib/prisma";
