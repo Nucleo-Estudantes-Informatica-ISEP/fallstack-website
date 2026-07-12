@@ -4,6 +4,7 @@ import { z } from "zod";
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
+import { isSaved } from "@/lib/savedStudents";
 import getServerSession from "@/services/getServerSession";
 
 const schema = z.object({
@@ -22,9 +23,14 @@ interface StudentProps {
 }
 
 export async function GET(req: NextRequest, props: StudentProps) {
-  const params = await props.params;
+  const { code } = await props.params;
+
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const student = await prisma.student.findUnique({
-    where: { code: params.code },
+    where: { code },
     include: {
       user: {
         include: {
@@ -33,6 +39,19 @@ export async function GET(req: NextRequest, props: StudentProps) {
       },
     },
   });
+
+  if (!student)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Only the owner, a company that saved this student, or an admin.
+  // Unauthorized -> 404 (don't reveal the student exists).
+  const isOwner = session.student?.code === code;
+  const isSavingCompany =
+    !!session.employee?.company &&
+    (await isSaved(session.employee.company.id, code));
+
+  if (!isOwner && !isSavingCompany && !session.isAdmin)
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   return NextResponse.json(student);
 }
