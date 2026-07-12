@@ -1,10 +1,10 @@
 "use client";
 
-
 import { useState } from "react";
 import { Company, Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
+
 import { BASE_URL } from "@/services/api";
 import BioSection from "@/components/Profile/BioSection";
 import ContactSection from "@/components/Profile/ContactSection";
@@ -21,8 +21,9 @@ interface CompanyViewProfileSectionContainerProps {
   isSavedStudent: boolean;
 }
 
-
-const CompanyViewProfileSectionContainer: React.FC<CompanyViewProfileSectionContainerProps> = ({ student, interests, company, token, isSavedStudent }) => {
+const CompanyViewProfileSectionContainer: React.FC<
+  CompanyViewProfileSectionContainerProps
+> = ({ student, interests, company, token, isSavedStudent }) => {
   const [comment, setComment] = useState("");
 
   const handleSaveProfile = async () => {

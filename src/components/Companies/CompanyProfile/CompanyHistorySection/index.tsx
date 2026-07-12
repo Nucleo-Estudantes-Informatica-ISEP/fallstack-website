@@ -6,8 +6,8 @@ import { Company } from "@prisma/client";
 import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
 import { HistoryData } from "@/types/HistoryData";
+import { BASE_URL } from "@/services/api";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
 interface HistorySectionProps {
