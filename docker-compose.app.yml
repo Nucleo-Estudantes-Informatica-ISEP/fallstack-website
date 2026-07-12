@@ -5,12 +5,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        SENTRY_ORG: ${SENTRY_ORG:-}
+        SENTRY_PROJECT: ${SENTRY_PROJECT:-}
     container_name: fallstack-app
     restart: unless-stopped
     env_file:
       - ./.env # adjust to .env.production if you want production settings
     ports:
-      - "4000:4000"  # Host:Container matches Dockerfile EXPOSE 4000
+      - "4000:4000" # Host:Container matches Dockerfile EXPOSE 4000
     # Uncomment if you want live code mounting during development (only works with dev build)
     # volumes:
     #   - ./:/app
@@ -18,6 +22,3 @@ services:
     environment:
       PORT: 4000
       HOSTNAME: 0.0.0.0
-
-
-

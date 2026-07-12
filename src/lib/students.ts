@@ -7,55 +7,48 @@ export interface StudentsForGiveaway extends StudentsWithEmail {
 }
 
 export async function getStudentsForGiveaway(): Promise<StudentsForGiveaway[]> {
-  try {
-    const students = await prisma.student.findMany({
-      where: {
-        user: {
-          AND: [{ role: "STUDENT" }, { isAdmin: false }],
-        },
+  const students = await prisma.student.findMany({
+    where: {
+      user: {
+        AND: [{ role: "STUDENT" }, { isAdmin: false }],
       },
-      include: {
-        user: true,
-        actionCompletions: {
-          select: {
-            action: {
-              select: {
-                points: true,
-              },
+    },
+    include: {
+      user: true,
+      actionCompletions: {
+        select: {
+          action: {
+            select: {
+              points: true,
             },
           },
         },
       },
-    });
+    },
+  });
 
-    const studentsWithPoints: StudentsForGiveaway[] = students.map(
-      (student) => ({
-        user: {
-          email: student.user.email,
-        },
-        id: student.id,
-        code: student.code,
-        name: student.name,
-        bio: student.bio,
-        year: student.year,
-        cv: student.cv,
-        linkedin: student.linkedin,
-        numberOfTotalPoints: student.actionCompletions.reduce(
-          (sum: number, completion: { action: { points: number } }) =>
-            sum + completion.action.points,
-          0
-        ),
-      })
-    );
+  const studentsWithPoints: StudentsForGiveaway[] = students.map((student) => ({
+    user: {
+      email: student.user.email,
+    },
+    id: student.id,
+    code: student.code,
+    name: student.name,
+    bio: student.bio,
+    year: student.year,
+    cv: student.cv,
+    linkedin: student.linkedin,
+    numberOfTotalPoints: student.actionCompletions.reduce(
+      (sum: number, completion: { action: { points: number } }) =>
+        sum + completion.action.points,
+      0
+    ),
+  }));
 
-    // Filter out losers
-    return studentsWithPoints.filter(
-      (student) => student.numberOfTotalPoints > 0
-    );
-  } catch (error) {
-    console.error("Error fetching students for giveaway:", error);
-    throw error;
-  }
+  // Filter out losers
+  return studentsWithPoints.filter(
+    (student) => student.numberOfTotalPoints > 0
+  );
 }
 
 export async function getStudents() {

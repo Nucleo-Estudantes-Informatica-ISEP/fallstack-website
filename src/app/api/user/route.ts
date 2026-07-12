@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import prisma from "@/lib/prisma";
+import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/services/getServerSession";
 
 const schema = z.object({
@@ -10,16 +11,12 @@ const schema = z.object({
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({
-      message: "Not authorized",
-    });
+  if (!session) return errorResponse("Unauthorized", 401);
 
   const body = await req.json();
 
   const safeParse = schema.safeParse(body);
-  if (!safeParse.success)
-    return NextResponse.json({ message: safeParse.error });
+  if (!safeParse.success) return errorResponse(safeParse.error, 400);
 
   // If employee, update interests for ALL employees in the company
   if (session.employee) {
@@ -35,7 +32,9 @@ export async function PATCH(req: NextRequest) {
           where: { id: employee.user.id },
           data: {
             interests: {
-              set: body.interests.map((interest: string) => ({ name: interest })),
+              set: body.interests.map((interest: string) => ({
+                name: interest,
+              })),
             },
           },
         })

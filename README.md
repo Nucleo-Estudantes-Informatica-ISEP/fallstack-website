@@ -55,9 +55,12 @@ cp .env.example .env
 ### Required values (hosted Supabase)
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_KEY` (service role)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (service role)
+
+### Observability
+
+Production logging and error monitoring use Pino and Sentry. See [OBSERVABILITY.md](./OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
 
 ### Storage setup (Supabase hosted)
 
@@ -196,7 +199,7 @@ pnpm seed
 ## Wipe the database (local only)
 
 ```bash
-pnpm wipe
+NODE_ENV=development pnpm wipe -- --confirm
 ```
 
 ---
