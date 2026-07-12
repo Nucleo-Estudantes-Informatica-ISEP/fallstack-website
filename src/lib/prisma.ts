@@ -43,6 +43,7 @@ const prismaClientSingleton = () => {
               { operation: "find_user_with_profile" },
               "Failed to fetch user profile"
             );
+            return null;
           }
         },
       },
