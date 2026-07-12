@@ -5,6 +5,7 @@ import { z } from "zod";
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
+import { isSaved } from "@/lib/savedStudents";
 import getServerSession from "@/services/getServerSession";
 
 const schema = z.union([
@@ -31,10 +32,20 @@ export async function GET(_: NextRequest, props: StudentParams) {
   const student = await prisma.student.findUnique({ where: { code } });
 
   if (!student)
-    return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    return NextResponse.json({ error: "CV not found" }, { status: 404 });
+
+  // Only the CV owner, a company that saved this student, or an admin.
+  // Unauthorized -> 404 (don't reveal the student/CV exists).
+  const isOwner = session.student?.code === code;
+  const isSavingCompany =
+    !!session.employee?.company &&
+    (await isSaved(session.employee.company.id, code));
+
+  if (!isOwner && !isSavingCompany && !session.isAdmin)
+    return NextResponse.json({ error: "CV not found" }, { status: 404 });
 
   if (!student.cv)
-    return NextResponse.json({ error: "Student has no cv" }, { status: 404 });
+    return NextResponse.json({ error: "CV not found" }, { status: 404 });
 
   const admin = createAdminClient();
   // Try Supabase first
