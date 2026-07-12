@@ -17,7 +17,7 @@ export async function POST(req: Request) {
 
     // valid body
     const userId = session.id;
-    const { name, tier, avatarUrl } = body as any;
+    const { name, tier, avatarUrl } = body;
 
     // checks if company already exists
     const existingCompany = await prisma.company.findUnique({
@@ -38,11 +38,6 @@ export async function POST(req: Request) {
       data: {
         id: userId,
         name: name,
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
         tier: tier,
       },
     });
@@ -63,7 +58,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ company: company }, { status: 201 });
   } catch (e) {
     if (e instanceof ZodError)
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },
@@ -81,7 +76,11 @@ export async function GET() {
 
   const companies = await prisma.company.findMany({
     include: {
-      user: true,
+      employees: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
 

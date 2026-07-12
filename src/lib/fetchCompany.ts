@@ -6,7 +6,11 @@ export async function getCompany(id: string) {
       id,
     },
     include: {
-      user: true,
+      employees: {
+        include: {
+          user: true,
+        },
+      },
     },
   });
 }
