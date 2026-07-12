@@ -17,6 +17,7 @@ const QRCodeButton: React.FC<QRCodeButtonProps> = ({ user }) => {
   return (
     <>
       <button
+        type="button"
         onClick={() => setIsHidden(false)}
         aria-label="Ver QR code"
         className="flex size-6 items-center justify-center fill-white p-0.5 text-2xl transition-colors hover:text-primary"
