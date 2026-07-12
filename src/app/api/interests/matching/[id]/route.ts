@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { fetchInterestMatchingCompanies } from "@/lib/fetchInterestMatchingCompanies";
-import getServerSession from "@/services/getServerSession";
+import { getInterestMatchingCompanies } from "@/application/services/companyService";
+import getServerSession from "@/application/services/sessionService";
 
 interface MatchingInterestParams {
   params: Promise<{
@@ -23,7 +23,7 @@ export async function GET(
   if (userId !== session.id && !session.isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const matches = await fetchInterestMatchingCompanies(userId);
+  const matches = await getInterestMatchingCompanies(userId);
 
   // Return only public company fields — drop the included user (email/isAdmin).
   const data = matches.map(({ company, matchingInterests }) => ({

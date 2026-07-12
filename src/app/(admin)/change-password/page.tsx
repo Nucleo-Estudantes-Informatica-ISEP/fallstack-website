@@ -1,8 +1,8 @@
 import React from "react";
 
-import getServerSession from "@/services/getServerSession";
 import ChangePasswordForm from "@/components/ChangePasswordForm";
 import Custom404 from "@/app/not-found";
+import getServerSession from "@/application/services/sessionService";
 
 const changePassword = async () => {
   const session = await getServerSession();

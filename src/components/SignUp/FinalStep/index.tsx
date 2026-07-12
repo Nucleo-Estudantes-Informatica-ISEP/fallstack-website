@@ -14,17 +14,19 @@ import { FaFilePdf } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { signUp } from "@/lib/auth";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import FileInput from "@/components/FileInput";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
+import { signUp } from "@/client/api/auth";
+import {
+  uploadAvatar,
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv,
+  uploadCv as uploadCvToSupabase,
+} from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -34,12 +36,18 @@ interface FinalStepProps {
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
 }
 
-const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
+const FinalStep: FunctionComponent<FinalStepProps> = ({
+  currentStep,
+  setCurrentStep,
+  data,
+  setData,
+}) => {
   const session = useSession();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
+  const [cvLoading, setCvLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
@@ -76,16 +84,12 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) {
-        setLoading(false);
-        return null;
-      }
+      if (!image) return setLoading(false);
 
       const uploaded = await uploadAvatarToSupabase(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        setLoading(false);
-        return null;
+        return setLoading(false);
       }
       avatarUrl = uploaded.url;
     }
@@ -222,7 +226,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         )}
 
         <PrimaryButton
-          loading={loading}
+          loading={loading || cvLoading}
           onClick={handleSubmit}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >

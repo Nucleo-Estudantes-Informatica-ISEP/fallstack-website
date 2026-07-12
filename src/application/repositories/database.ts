@@ -1,31 +1,25 @@
+import "server-only";
+
 import { PrismaClient } from "@prisma/client";
 
-import { reportError } from "./logger";
+import { reportError } from "@/lib/logger";
 
-// https://www.prisma.io/docs/guides/other/troubleshooting-orm/help-articles/nextjs-prisma-client-dev-practices
-
-const prismaClientSingleton = () => {
-  return new PrismaClient({
+const prismaClientSingleton = () =>
+  new PrismaClient({
     log: process.env.NODE_ENV !== "production" ? ["info", "warn", "error"] : [],
   }).$extends({
     model: {
       user: {
         async findUserWithProfile(id: string) {
           try {
-            const user = await prisma.user.findUnique({
+            return await prisma.user.findUnique({
               where: { id },
               include: {
-                employee: {
-                  include: {
-                    company: true,
-                  },
-                },
+                employee: { include: { company: true } },
                 interests: true,
                 student: true,
               },
             });
-            if (!user) return null;
-            return user;
           } catch (error) {
             reportError(
               error,
@@ -38,7 +32,6 @@ const prismaClientSingleton = () => {
       },
     },
   });
-};
 
 type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
 
@@ -48,6 +41,6 @@ const globalForPrisma = globalThis as unknown as {
 
 const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-export default prisma;
-
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+
+export default prisma;

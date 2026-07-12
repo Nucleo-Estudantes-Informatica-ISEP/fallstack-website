@@ -1,11 +1,12 @@
 "use server";
 
+import "server-only";
+
 import { signJwt } from "@/services/authService";
 
-import prisma from "./prisma";
+import { findStudentByCode } from "../repositories/studentRepository";
 
 export async function jwtStudent(code: string) {
-  const student = await prisma.student.findUnique({ where: { code } });
-  if (!student) return null;
+  if (!(await findStudentByCode(code))) return null;
   return signJwt({ code }, { expiresIn: 15 * 60 });
 }

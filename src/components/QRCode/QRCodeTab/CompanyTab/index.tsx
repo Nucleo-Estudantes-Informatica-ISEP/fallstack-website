@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { jwtStudent } from "@/lib/jwtStudent";
 import useIsMobile from "@/hooks/useIsMobile";
 import { BASE_URL } from "@/services/api";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
+import { jwtStudent } from "@/application/services/studentTokenService";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
@@ -73,7 +73,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
               whileTap={{ scale: 0.9 }}
               initial={{ scale: 1 }}
               onClick={handleClick}
-              className="mt-4 rounded-xl bg-primary px-4 py-2 text-lg font-bold text-white hover:opacity-50"
+              className="bg-primary mt-4 rounded-xl px-4 py-2 text-lg font-bold text-white hover:opacity-50"
             >
               Ir para o perfil
             </motion.button>
