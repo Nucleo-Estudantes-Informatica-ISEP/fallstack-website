@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
 FROM node:20-alpine AS base
 
@@ -24,9 +25,18 @@ RUN \
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/package.json /app/pnpm-lock.yaml ./
+
+ARG NEXT_PUBLIC_SENTRY_DSN=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
+ENV SENTRY_ORG=$SENTRY_ORG
+ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Selective copy (smaller context)
-COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js tailwind.config.ts tsconfig.json ./
+COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js sentry.edge.config.ts sentry.server.config.ts tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
 COPY prisma ./prisma
@@ -38,7 +48,10 @@ RUN npx prisma generate
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN \
+RUN --mount=type=secret,id=sentry_auth_token,required=false \
+  if [ -f /run/secrets/sentry_auth_token ]; then \
+    export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; \
+  fi; \
   if [ -f pnpm-lock.yaml ]; then \
     pnpm run build; \
   else \

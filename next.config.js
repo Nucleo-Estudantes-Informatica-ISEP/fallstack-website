@@ -1,4 +1,5 @@
 const isDev = process.env.NODE_ENV !== "production";
+const { withSentryConfig } = require("@sentry/nextjs");
 
 // Baseline security headers (securityheaders.com "easy wins").
 // Full Content-Security-Policy is deferred — it needs tuning against Next's
@@ -19,6 +20,7 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -77,4 +79,12 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
 });
 
-module.exports = withPWA(nextConfig);
+module.exports = withSentryConfig(withPWA(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  sourcemaps: {
+    deleteSourcemapsAfterUpload: true,
+  },
+});
