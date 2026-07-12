@@ -33,11 +33,6 @@ const nextConfig = {
         hostname: "storage.googleapis.com",
         pathname: "/**",
       },
-      {
-        protocol: "https",
-        hostname: "ytbmjktrcfwxescbqohx.supabase.co",
-        pathname: "/**",
-      },
       // Local Supabase storage gateway (dev only)
       ...(isDev
         ? [
