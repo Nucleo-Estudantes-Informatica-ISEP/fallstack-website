@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     // validate the request body against the schema
     const requestBody = await req.json();
-    const body = signUpSchema.parse(requestBody);
+    const body = signUpSchema.omit({ role: true }).parse(requestBody);
     // valid body
     const { email, password } = body;
 
