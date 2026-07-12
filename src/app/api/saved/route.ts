@@ -5,40 +5,41 @@ import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import {
+  savedStudentCommentData,
+  savedStudentCompanyWhere,
+} from "@/lib/savedStudentComments";
 import { isSaved } from "@/lib/savedStudents";
 import { errorResponse } from "@/services/apiResponse";
 import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
-import { saveSchema } from "@/schemas/saveSchema";
+import { savedCommentSchema, saveSchema } from "@/schemas/saveSchema";
 
 export async function PUT(req: NextRequest) {
   const session = await getServerSession();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = await req.json();
-  const { studentId, comment } = body;
-  if (!studentId)
-    return NextResponse.json(
-      { error: "studentId is required" },
-      { status: 400 }
-    );
+  if (session.role !== "EMPLOYEE" || !session.employee?.company)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // employeeId do usuário logado
-  const employeeId = session.employee?.id;
-  if (!employeeId)
-    return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+  const parsed = savedCommentSchema.safeParse(await req.json());
+  if (!parsed.success) return errorResponse(parsed.error, 400);
+
+  const { studentId, comment } = parsed.data;
 
   const updated = await prisma.savedStudent.updateMany({
-    where: {
-      studentId,
-      employeeId,
-    },
-    data: {
-      comment: comment ?? null,
-    },
+    where: savedStudentCompanyWhere(studentId, session.employee.company.id),
+    data: savedStudentCommentData(comment),
   });
-  return NextResponse.json(updated);
+
+  if (updated.count === 0)
+    return NextResponse.json(
+      { error: "Saved student not found" },
+      { status: 404 }
+    );
+
+  return NextResponse.json({ comment });
 }
 
 export async function POST(req: NextRequest) {
@@ -57,8 +58,8 @@ export async function POST(req: NextRequest) {
 
   let studentCode = token;
   if (token) {
-    const decoded = verifyJwt(token) as unknown as { code: string } | null;
-    if (!decoded)
+    const decoded = verifyJwt(token) as unknown as { code?: string } | null;
+    if (!decoded?.code)
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     else studentCode = decoded.code;
   }
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     data: {
       student: { connect: { id: student.id } },
       savedBy: { connect: { id: session.employee.id } },
-      comment: comment ?? undefined,
+      ...savedStudentCommentData(comment),
     },
   });
 
@@ -207,12 +208,12 @@ export async function PATCH(req: NextRequest) {
   const parsed = saveSchema.safeParse(body);
   if (!parsed.success) return errorResponse(parsed.error, 400);
 
-  const { token } = parsed.data;
+  const { token, comment } = parsed.data;
 
   let studentCode = token as string;
   if (token) {
-    const decoded = verifyJwt(token) as unknown as { code: string };
-    studentCode = decoded.code;
+    const decoded = verifyJwt(token) as unknown as { code?: string } | null;
+    studentCode = decoded?.code ?? "";
   }
 
   if (!studentCode) {
@@ -238,6 +239,7 @@ export async function PATCH(req: NextRequest) {
       data: {
         student: { connect: { id: student.id } },
         savedBy: { connect: { id: session.employee.id } },
+        ...savedStudentCommentData(comment),
       },
     });
     return NextResponse.json(result);

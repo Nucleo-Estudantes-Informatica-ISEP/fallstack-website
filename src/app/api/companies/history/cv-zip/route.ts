@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import JSZip from "jszip";
 
 import prisma from "@/lib/prisma";
+import { buildSavedStudentsCsv } from "@/lib/savedStudentComments";
 import getServerSession from "@/services/getServerSession";
 import { createAdminClient } from "@/utils/supabase/admin";
 
@@ -32,12 +33,6 @@ export async function GET() {
     (entry) => entry.student.cv !== null
   );
 
-  if (!studentsWithCv.length)
-    return NextResponse.json(
-      { error: "Nenhum CV disponível para exportar." },
-      { status: 404 }
-    );
-
   const admin = createAdminClient();
   const zip = new JSZip();
 
@@ -59,24 +54,8 @@ export async function GET() {
     zip.file(filename, buf);
   }
 
-  // Adiciona um CSV com os dados dos estudantes salvos (incluindo comentário)
-  const csvHeader = "Nome,Código,Comentário\n";
-  const csvRows = studentsWithCv.map((entry) => {
-    // Escapa aspas e vírgulas
-    const nome = `"${(entry.student.name || "").replace(/"/g, '""')}"`;
-    const codigo = `"${(entry.student.code || "").replace(/"/g, '""')}"`;
-    const comentario = `"${(entry.comment || "").replace(/"/g, '""')}"`;
-    return [nome, codigo, comentario].join(",");
-  });
-  const csvContent = csvHeader + csvRows.join("\n");
-  zip.file("dados.csv", csvContent);
-
-  const hasFiles = Object.keys(zip.files).length > 0;
-  if (!hasFiles)
-    return NextResponse.json(
-      { error: "Não foi possível gerar o ficheiro zip." },
-      { status: 500 }
-    );
+  // CSV always covers every saved student, including students without a CV.
+  zip.file("dados.csv", buildSavedStudentsCsv(savedStudents));
 
   const zipBuffer = await zip.generateAsync({ type: "uint8array" });
 
