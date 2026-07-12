@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { serverEnv } from "@/config/env.server";
 import { reportError } from "@/lib/logger";
 
 import { createClient } from "@supabase/supabase-js";
@@ -20,8 +21,8 @@ export async function POST(req: NextRequest) {
     // Use the anon key for sending the password reset email
     // This ensures the flow behaves like a client-side request and avoids some security scanner issues
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      serverEnv.NEXT_PUBLIC_SUPABASE_URL,
+      serverEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY
     );
 
     // Check if this is a password reset request (has email)
