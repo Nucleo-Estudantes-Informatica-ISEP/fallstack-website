@@ -54,7 +54,9 @@ async function ensureSupabaseUser(email: string, password: string) {
     error.message.toLowerCase().includes("already been registered")
   ) {
     const list = await admin.auth.admin.listUsers();
-    const existing = list.data.users.find((u) => u.email === email);
+    if (list.error) throw list.error;
+    const users: { id: string; email?: string }[] = list.data.users;
+    const existing = users.find((u) => u.email === email);
     if (existing) return existing;
   }
 
