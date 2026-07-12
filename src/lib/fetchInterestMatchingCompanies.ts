@@ -7,15 +7,23 @@ export async function fetchInterestMatchingCompanies(
 ): Promise<{ company: Company; matchingInterests: Interest[] }[]> {
   const companies = await prisma.company.findMany({
     include: {
-      user: {
+      employees: {
         include: {
-          interests: true,
+          user: {
+            include: {
+              interests: true,
+            },
+          },
         },
       },
     },
     where: {
-      user: {
-        isAdmin: false,
+      employees: {
+        some: {
+          user: {
+            isAdmin: false,
+          },
+        },
       },
     },
   });
@@ -36,7 +44,15 @@ export async function fetchInterestMatchingCompanies(
 
   return companies
     .map((company) => {
-      const matchingInterests = company.user.interests.filter((interest) =>
+      const companyInterests = company.employees.flatMap(
+        (employee) => employee.user.interests
+      );
+      const uniqueCompanyInterests = Array.from(
+        new Map(
+          companyInterests.map((interest) => [interest.id, interest])
+        ).values()
+      );
+      const matchingInterests = uniqueCompanyInterests.filter((interest) =>
         userInterests.some((userInterest) => userInterest.id === interest.id)
       );
 
