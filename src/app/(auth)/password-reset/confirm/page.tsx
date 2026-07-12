@@ -118,10 +118,10 @@ const PasswordResetForm: React.FC = () => {
         "success"
       );
       router.push("/login");
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
       setLoading(false);
-      setPwError(e.message || "Erro de servidor");
+      setPwError(e instanceof Error ? e.message : "Erro de servidor");
     }
   };
 

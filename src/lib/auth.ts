@@ -18,7 +18,7 @@ export async function signUp(data: StudentSignUpData) {
         bio: data.bio,
         year: data.year,
         interests: data.interests,
-        avatarUrl: (data as any).avatarUrl || undefined,
+        avatarUrl: data.avatarUrl || undefined,
         cvId: data.cv?.id,
       }),
     });
@@ -67,7 +67,7 @@ export async function signUpEmployee(body: {
     }
 
     return true;
-  } catch (e: any) {
-    return new Error(e?.message || "Network error");
+  } catch (e) {
+    return new Error(e instanceof Error ? e.message : "Network error");
   }
 }
