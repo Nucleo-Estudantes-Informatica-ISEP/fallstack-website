@@ -3,6 +3,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 import { v4 as uuidv4 } from "uuid";
 
 import config from "@/config";
+import { matchesDeclaredType } from "@/lib/fileSignature";
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();
@@ -18,14 +19,22 @@ export async function POST(req: NextRequest) {
   if (file.size > maxSize)
     return NextResponse.json({ error: "File too large" }, { status: 400 });
 
+  const ab = await file.arrayBuffer();
+  const bytes = new Uint8Array(ab);
+
+  if (!matchesDeclaredType(bytes, contentType))
+    return NextResponse.json(
+      { error: "File content does not match its type" },
+      { status: 400 }
+    );
+
   const id = uuidv4();
   const path = `distribution/avatar/${id}`;
 
   const admin = createAdminClient();
-  const ab = await file.arrayBuffer();
   const { error } = await admin.storage
     .from("avatars")
-    .upload(path, new Uint8Array(ab), { contentType });
+    .upload(path, bytes, { contentType });
 
   if (error) {
     console.error("Supabase storage error:", error);
