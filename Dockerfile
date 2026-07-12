@@ -36,6 +36,7 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Selective copy (smaller context)
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
 COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js sentry.edge.config.ts sentry.server.config.ts tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
