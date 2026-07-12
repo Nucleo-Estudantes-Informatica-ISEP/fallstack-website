@@ -29,7 +29,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
       </section>
       <section
         ref={contentRef}
-        className="bg-background flex flex-col items-center pb-20"
+        className="flex flex-col items-center bg-background pb-20"
       >
         <Schedule
           firstDayTitle={branding.event.scheduleDayTitles[0]}
@@ -50,7 +50,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         <PassSection />
       </section>*/}
 
-      <section className="bg-background w-full !px-0">
+      <section className="w-full bg-background !px-0">
         <CompaniesSection />
       </section>
 
