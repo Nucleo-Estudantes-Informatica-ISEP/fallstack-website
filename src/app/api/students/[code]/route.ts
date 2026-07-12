@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
+import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import { errorResponse } from "@/services/apiResponse";
@@ -63,37 +64,53 @@ export async function PATCH(req: NextRequest, props: StudentProps) {
   if (!safeParse.success) return errorResponse(safeParse.error, 400);
 
   const body = safeParse.data;
-  const student = await prisma.$transaction(async (tx) => {
-    const updatedStudent = await tx.student.update({
-      where: { code },
-      data: {
-        bio: body.bio?.trim(),
-        linkedin: body.linkedin,
-        github: body.github,
-      },
-    });
-
-    if (updatedStudent.linkedin) {
-      await completeAction(
-        updatedStudent.code,
-        config.constants.actionNames.updateLinkedin,
-        tx
-      );
-    }
-
-    if (body.interests) {
-      await tx.user.update({
-        where: { id: session.id },
+  try {
+    const student = await prisma.$transaction(async (tx) => {
+      const updatedStudent = await tx.student.update({
+        where: { code },
         data: {
-          interests: {
-            set: body.interests.map((interest) => ({ name: interest })),
-          },
+          bio: body.bio?.trim(),
+          linkedin: body.linkedin,
+          github: body.github,
         },
       });
-    }
 
-    return updatedStudent;
-  });
+      if (updatedStudent.linkedin) {
+        await completeAction(
+          updatedStudent.code,
+          config.constants.actionNames.updateLinkedin,
+          tx
+        );
+      }
 
-  return NextResponse.json(student);
+      if (body.interests) {
+        await tx.user.update({
+          where: { id: session.id },
+          data: {
+            interests: {
+              set: body.interests.map((interest) => ({ name: interest })),
+            },
+          },
+        });
+      }
+
+      return updatedStudent;
+    });
+
+    return NextResponse.json(student);
+  } catch (error) {
+    reportError(
+      error,
+      {
+        operation: "update_student",
+        route: "/api/students/[code]",
+        method: "PATCH",
+      },
+      "Failed to update student"
+    );
+    return NextResponse.json(
+      { error: "Error updating student" },
+      { status: 500 }
+    );
+  }
 }

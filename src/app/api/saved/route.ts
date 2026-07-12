@@ -109,16 +109,38 @@ export async function POST(req: NextRequest) {
       break;
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.savedStudent.create({
-      data: {
-        studentId: student.id,
-        employeeId,
-      },
-    });
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.savedStudent.create({
+        data: {
+          studentId: student.id,
+          employeeId,
+        },
+      });
 
-    if (actionName) await completeAction(student.code, actionName, tx);
-  });
+      if (actionName) await completeAction(student.code, actionName, tx);
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return NextResponse.json(
+        { error: "Student already saved" },
+        { status: 409 }
+      );
+    }
+
+    reportError(
+      error,
+      { operation: "save_student", route: "/api/saved", method: "POST" },
+      "Failed to save student"
+    );
+    return NextResponse.json(
+      { error: "Error saving student" },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({ message: "Student scanned" }, { status: 201 });
 }

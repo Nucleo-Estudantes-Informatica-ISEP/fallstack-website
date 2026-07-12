@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
+import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import getServerSession from "@/services/getServerSession";
@@ -94,14 +95,27 @@ export async function POST(req: NextRequest, props: StudentParams) {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  await prisma.$transaction(async (tx) => {
-    await tx.student.update({ where: { code }, data: { cv: cvId } });
-    await completeAction(
-      studentCode,
-      config.constants.actionNames.uploadCv,
-      tx
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.student.update({ where: { code }, data: { cv: cvId } });
+      await completeAction(
+        studentCode,
+        config.constants.actionNames.uploadCv,
+        tx
+      );
+    });
+  } catch (error) {
+    reportError(
+      error,
+      {
+        operation: "update_cv",
+        route: "/api/students/[code]/cv",
+        method: "POST",
+      },
+      "Failed to update student CV"
     );
-  });
+    return NextResponse.json({ error: "Error updating CV" }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -12,11 +12,12 @@ type CompleteActionClient = {
     }): Promise<{ id: string } | null>;
   };
   actionCompletion: {
-    findFirst(args: {
-      where: { studentId: string; actionId: string };
-    }): Promise<unknown>;
-    create(args: {
-      data: { studentId: string; actionId: string };
+    upsert(args: {
+      where: {
+        actionId_studentId: { studentId: string; actionId: string };
+      };
+      update: Record<string, never>;
+      create: { studentId: string; actionId: string };
     }): Promise<unknown>;
   };
 };
@@ -39,21 +40,17 @@ export async function completeAction(
   });
   if (!student) return null;
 
-  const alreadyCompleted = await db.actionCompletion.findFirst({
+  return db.actionCompletion.upsert({
     where: {
+      actionId_studentId: {
+        studentId: student.id,
+        actionId: action.id,
+      },
+    },
+    update: {},
+    create: {
       studentId: student.id,
       actionId: action.id,
     },
   });
-
-  if (alreadyCompleted) return null;
-
-  const studentAction = await db.actionCompletion.create({
-    data: {
-      studentId: student.id,
-      actionId: action.id,
-    },
-  });
-
-  return studentAction;
 }
