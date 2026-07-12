@@ -9,7 +9,6 @@ import {
   FiGrid,
   FiLogOut,
   FiMapPin,
-  FiSettings,
   FiUser,
 } from "react-icons/fi";
 import swal from "sweetalert";
@@ -20,7 +19,6 @@ import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
-import { Github, Linkedin } from "@/styles/Icons";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -29,8 +27,7 @@ import StatsSection from "../StatsSection";
 
 import { IconType } from "react-icons";
 
-const tabs = ["Sumário", "Perfil", "Desafios", "Definições"] as const;
-type TabValue = (typeof tabs)[number];
+type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 
 interface ProfileSectionContainerProps {
   student: Student & { user: User };
@@ -53,7 +50,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   student,
   interests,
   globalStats,
-  todayStats,
   companiesLeft,
   historyData,
   actions,
@@ -81,7 +77,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     // show Passe only if current session user is the profile student
     ...(session.user?.student?.code
-      ? [{ key: "passe", label: "Passe do FallStack", icon: FiGrid }]
+      ? ([
+          { key: "passe", label: "Passe do FallStack", icon: FiGrid },
+        ] as SidebarItem[])
       : []),
     {
       key: "desafios",

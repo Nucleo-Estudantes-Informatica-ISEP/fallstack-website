@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { z } from "zod";
 
 import config from "@/config";
@@ -7,6 +6,7 @@ import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import getServerSession from "@/services/getServerSession";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 const schema = z.union([
   z.object({ uploadId: z.string().uuid() }), // Firebase flow

@@ -33,7 +33,7 @@ const LogoutButton: React.FC = () => {
   return (
     <button
       onClick={handleClick}
-      className="flex size-full items-center justify-center  fill-white text-xl transition-colors hover:text-primary"
+      className="flex size-full items-center justify-center fill-white text-xl transition-colors hover:text-primary"
     >
       <BiLogOut />
     </button>

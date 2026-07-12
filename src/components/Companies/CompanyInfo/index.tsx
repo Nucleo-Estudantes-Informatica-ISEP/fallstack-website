@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId } from "react";
+import React from "react";
 
 import FactData from "@/types/FactData";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
@@ -27,7 +27,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
     <section className="mx-auto w-11/12 rounded-lg bg-white p-10 sm:w-3/4 lg:p-12">
       {bodyText && (
         <CompanyDescription>
-          <h1 className="mb-4 text-left text-lg font-bold uppercase text-black sm:text-lg md:text-xl lg:text-2xl">
+          <h1 className="mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             Sobre
           </h1>
           <div className="text-left font-light text-black md:text-lg lg:text-xl">
@@ -37,14 +37,11 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
       )}
       {facts && <FactSection facts={facts} />}
       {tier === "Diamond" && (
-        <div className="mt-10 flex flex-col  space-y-2 leading-8 lg:px-10  lg:text-lg">
-          <h1 className="mb-4 w-full text-left text-lg font-bold uppercase text-black sm:text-lg md:text-xl lg:text-2xl">
+        <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
+          <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             {videoTitle || "Vídeo"}
           </h1>
-          <div
-            className="flex w-full items-center justify-center"
-            key={useId()}
-          >
+          <div className="flex w-full items-center justify-center">
             <iframe
               className="my-2.5 aspect-video w-full max-w-full rounded-lg"
               src={videoHref}
@@ -56,7 +53,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
         </div>
       )}
       <div className="px-10">
-        <h1 className="mb-4 mt-8 text-left text-lg font-bold uppercase text-black sm:text-lg md:text-xl lg:text-2xl">
+        <h1 className="mt-8 mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
           Interesses
         </h1>
         {interests !== undefined && interests.length > 0 ? (

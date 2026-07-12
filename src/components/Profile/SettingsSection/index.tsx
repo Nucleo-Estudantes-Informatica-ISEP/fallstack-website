@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Dispatch, SetStateAction, useRef, useState } from "react";
@@ -196,7 +195,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         </div>
       </div>
 
-      <div className="mx-4 mb-12 mt-4 flex flex-col gap-y-4 md:mx-12">
+      <div className="mx-4 mt-4 mb-12 flex flex-col gap-y-4 md:mx-12">
         <Input
           name="Linkedin"
           defaultValue={profile.linkedin}
@@ -217,7 +216,6 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
         <UserBioTextArea
           name="Bio"
-          defaultValue={profile.bio}
           rows={5}
           placeholder="Escreve algo sobre ti..."
           setValue={handleUserBioChange}

@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
 import { signUpSchema } from "@/schemas/signUpSchema";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 export async function POST(req: Request) {
   try {
     // validate the request body against the schema
     const requestBody = await req.json();
-    const body = signUpSchema.parse(requestBody);
+    const body = signUpSchema.omit({ role: true }).parse(requestBody);
     // valid body
-    const { email, password, role } = body;
+    const { email, password } = body;
 
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase.auth.signUp({
@@ -39,10 +39,10 @@ export async function POST(req: Request) {
         data: {
           id: supabaseUser.id,
           email: email,
-          role: role !== undefined ? "COMPANY" : "STUDENT",
-        } as any,
+          role: "STUDENT",
+        },
       });
-    } catch (_) {
+    } catch {
       // user already exists, ignore
     }
 
@@ -52,8 +52,7 @@ export async function POST(req: Request) {
     );
   } catch (e) {
     if (e instanceof ZodError)
-      //@ts-ignore
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },

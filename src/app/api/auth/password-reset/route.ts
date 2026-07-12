@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { reportError } from "@/lib/logger";
-import { createClient as createServerClient } from "@/utils/supabase/server";
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -39,16 +38,14 @@ export async function POST(req: NextRequest) {
         req.nextUrl.origin
       ).toString();
 
-      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo,
       });
 
       if (error) {
-        //@ts-ignore
         return NextResponse.json({ error: error.message }, { status: 400 });
       }
 
-      //@ts-ignore
       return NextResponse.json(
         { message: "Password reset email sent" },
         { status: 200 }
@@ -58,7 +55,6 @@ export async function POST(req: NextRequest) {
     // Otherwise, this is a password update (user is authenticated via reset link)
     const parsed = confirmResetSchema.safeParse(body);
     if (!parsed.success) {
-      //@ts-ignore
       return NextResponse.json(
         { error: "Invalid password or code" },
         { status: 400 }
@@ -71,7 +67,6 @@ export async function POST(req: NextRequest) {
     const { error: exchangeError } =
       await supabase.auth.exchangeCodeForSession(code);
     if (exchangeError) {
-      //@ts-ignore
       return NextResponse.json(
         { error: exchangeError.message || "Auth session missing" },
         { status: 400 }
@@ -81,11 +76,9 @@ export async function POST(req: NextRequest) {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      //@ts-ignore
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    //@ts-ignore
     return NextResponse.json(
       { message: "Password updated successfully" },
       { status: 200 }
@@ -100,7 +93,6 @@ export async function POST(req: NextRequest) {
       },
       "Password reset failed"
     );
-    //@ts-ignore
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

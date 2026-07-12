@@ -55,7 +55,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
         {qrcode && <QRCodeSVG size={150} value={qrcode} />}
       </div>
       {/* right column */}
-      <div className="flex items-center justify-center pb-0 pt-14 sm:py-0">
+      <div className="flex items-center justify-center pt-14 pb-0 sm:py-0">
         <div className="relative flex flex-col items-center">
           <motion.div
             className="rounded-lg bg-gray-200 p-2 sm:p-2 md:p-2"

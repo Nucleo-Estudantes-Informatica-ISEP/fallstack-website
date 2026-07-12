@@ -1,5 +1,5 @@
-import JSZip from "jszip";
 import { NextResponse } from "next/server";
+import JSZip from "jszip";
 
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
@@ -65,9 +65,9 @@ export async function GET() {
       { status: 500 }
     );
 
-  const zipBuffer = await zip.generateAsync({ type: "nodebuffer" });
+  const zipBuffer = await zip.generateAsync({ type: "uint8array" });
 
-  return new NextResponse(zipBuffer, {
+  return new NextResponse(new Blob([zipBuffer as Uint8Array<ArrayBuffer>]), {
     status: 200,
     headers: {
       "Content-Type": "application/zip",

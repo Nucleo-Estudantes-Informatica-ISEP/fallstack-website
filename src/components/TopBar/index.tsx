@@ -26,7 +26,7 @@ const TopBar: React.FC = () => {
   return (
     <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
       <motion.div
-        className={`bg-background absolute top-0 left-0 flex h-16 w-screen items-center justify-between`}
+        className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
         style={{
           opacity,
         }}
@@ -48,7 +48,7 @@ const TopBar: React.FC = () => {
           {!session.user ? (
             <Link
               href={isAuthPage ? "/" : "/login"}
-              className="hover:text-primary z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors"
+              className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
             >
               <LogIn />
             </Link>

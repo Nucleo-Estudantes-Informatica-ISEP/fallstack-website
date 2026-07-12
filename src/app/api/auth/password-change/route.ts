@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { ZodError } from "zod";
 
 import prisma from "@/lib/prisma";
-import { changePasswordSchema } from "@/schemas/changePasswordSchema";
 import getServerSession from "@/services/getServerSession";
+import { changePasswordSchema } from "@/schemas/changePasswordSchema";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession();
     if (!session || !session.isAdmin) {
       return NextResponse.json(
-        {message: "No autorization for this operation"}, 
-        {status: 403}
+        { message: "No autorization for this operation" },
+        { status: 403 }
       );
     }
 
@@ -32,11 +32,11 @@ export async function POST(req: Request) {
     }
     if (password !== confirmPassword) {
       return NextResponse.json(
-        { message: "Passwords are not equal"},
-        { status: 400}
+        { message: "Passwords are not equal" },
+        { status: 400 }
       );
     }
-    
+
     const admin = createAdminClient();
     const { error } = await admin.auth.admin.updateUserById(existing.id, {
       password,
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
     );
   } catch (e) {
     if (e instanceof ZodError)
-      return NextResponse.json({ error: e.errors }, { status: 400 });
+      return NextResponse.json({ error: e.issues }, { status: 400 });
 
     return NextResponse.json(
       { error: "Something went wrong" },

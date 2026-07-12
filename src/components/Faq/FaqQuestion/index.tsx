@@ -28,7 +28,7 @@ const FaqQuestion: React.FC<FaqQuestionProps> = ({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: Math.min(index * 0.05, 0.4) }}
-      className={`border-secondary w-full border transition-colors duration-200`}
+      className={`w-full border border-secondary transition-colors duration-200`}
     >
       <button
         type="button"

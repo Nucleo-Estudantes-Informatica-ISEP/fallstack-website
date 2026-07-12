@@ -25,7 +25,7 @@ const TextArea: React.FC<TextAreaProps> = ({
     <div className="flex w-full flex-col">
       <label
         className={`text-slate-700 md:text-lg ${
-          center ? " mb-4 text-center" : ""
+          center ? "mb-4 text-center" : ""
         }`}
         htmlFor={name}
       >
@@ -38,8 +38,7 @@ const TextArea: React.FC<TextAreaProps> = ({
         placeholder={placeholder}
         ref={inputRef}
         maxLength={maxLength}
-        className={`rounded-md border border-gray-400 bg-slate-200 px-4 py-1
-         text-black focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
+        className={`rounded-md border border-gray-400 bg-slate-200 px-4 py-1 text-black focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
         {...rest}
       />
     </div>

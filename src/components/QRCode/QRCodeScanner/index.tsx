@@ -40,7 +40,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
         if (ref.current) {
           ref.current.srcObject = stream;
         }
-      } catch (error) {
+      } catch {
         // didn't place anything here because, on mobile, if the user already gave permissions in the past,
         // it will still throw an error, even tho the camera opens and works as exepected
       }
@@ -59,7 +59,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
   return (
     <div className="flex items-center">
       {loading && (
-        <div className="absolute left-0 top-0 flex size-full items-center justify-center bg-black/50">
+        <div className="absolute top-0 left-0 flex size-full items-center justify-center bg-black/50">
           <div className="flex flex-col items-center">
             <div className="size-12 animate-spin rounded-full border-y-2 border-r-2 border-blue-500"></div>
             <p className="mt-2 text-white">A ligar a tua câmara...</p>

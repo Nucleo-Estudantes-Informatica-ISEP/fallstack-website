@@ -33,8 +33,11 @@ const FileInput: React.FC<InputProps> = ({
   ...rest
 }) => {
   return (
-    <div className="w-full flex flex-col">
-      <label className="text-sm font-normal text-white mb-1 text-left" htmlFor={name}>
+    <div className="flex w-full flex-col">
+      <label
+        className="mb-1 text-left text-sm font-normal text-white"
+        htmlFor={name}
+      >
         {name}
       </label>
       <div
@@ -48,18 +51,19 @@ const FileInput: React.FC<InputProps> = ({
           placeholder={placeholder}
           accept={accept}
           hidden
-          className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
-         text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+          className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
           {...rest}
         />
         <label
-          className={`flex flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm h-14 ${file ? "text-white" : "text-white/35"}`}
+          className={`flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm ${file ? "text-white" : "text-white/35"}`}
           htmlFor={name}
         >
           <span className="mr-2 min-w-min text-lg md:text-xl">
             {file ? icon : <UploadIcon />}
           </span>
-          <span className="w-44 truncate">{file ? file.name : placeholder}</span>
+          <span className="w-44 truncate">
+            {file ? file.name : placeholder}
+          </span>
           {file && (
             <>
               <button

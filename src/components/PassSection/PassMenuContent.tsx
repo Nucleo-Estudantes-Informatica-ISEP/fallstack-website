@@ -24,7 +24,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
       if (!res.ok) throw new Error("Falha ao obter QR code");
       const { data } = await res.json();
       setQrToken(data as string);
-    } catch (e) {
+    } catch {
       setQrToken(null);
     } finally {
       setLoading(false);
@@ -40,10 +40,6 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
     navigator.clipboard.writeText(user.student.code).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
-  };
-
-  const handleRefresh = () => {
-    fetchToken();
   };
 
   return (

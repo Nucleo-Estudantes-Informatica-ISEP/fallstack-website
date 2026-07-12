@@ -12,7 +12,7 @@ const GenericContainer: FunctionComponent<GenericContainerProps> = ({
 }) => {
   return (
     <div
-      className={`*:border-y-secondary w-full *:border-y *:px-10 sm:*:px-42`}
+      className={`w-full *:border-y *:border-y-secondary *:px-10 sm:*:px-42`}
     >
       {children}
     </div>

@@ -18,7 +18,7 @@ export async function signUp(data: StudentSignUpData) {
         bio: data.bio,
         year: data.year,
         interests: data.interests,
-        avatarUrl: (data as any).avatarUrl || undefined,
+        avatarUrl: data.avatarUrl || undefined,
         cvId: data.cv?.id,
       }),
     });
@@ -63,11 +63,13 @@ export async function signUpEmployee(body: {
 
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      return new Error(json?.message || json?.error || "Unable to sign up employee");
+      return new Error(
+        json?.message || json?.error || "Unable to sign up employee"
+      );
     }
 
     return true;
-  } catch (e: any) {
-    return new Error(e?.message || "Network error");
+  } catch (e) {
+    return new Error(e instanceof Error ? e.message : "Network error");
   }
 }

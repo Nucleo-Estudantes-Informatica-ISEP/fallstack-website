@@ -1,11 +1,13 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+
 import { signUpEmployee } from "@/lib/auth";
-import PrimaryButton from "@/components/PrimaryButton";
 import Input from "@/components/Input";
 import InputLabel from "@/components/InputLabel";
-import { toast } from "react-toastify";
+import PrimaryButton from "@/components/PrimaryButton";
 
 export default function EmployeeSignupPage() {
   const router = useRouter();
@@ -19,7 +21,8 @@ export default function EmployeeSignupPage() {
   const [loading, setLoading] = useState(false);
 
   const codeValid = /^\d{8}$/.test(form.companyCode);
-  const canSubmit = codeValid && form.email && form.password && form.name && !loading;
+  const canSubmit =
+    codeValid && form.email && form.password && form.name && !loading;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,12 +40,13 @@ export default function EmployeeSignupPage() {
     router.push("/login");
   };
 
-  const onChange = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [key]: e.target.value });
-  };
+  const onChange =
+    (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setForm({ ...form, [key]: e.target.value });
+    };
 
   return (
-    <div className="relative w-full max-h-[90vh] overflow-hidden md:mt-4">
+    <div className="relative max-h-[90vh] w-full overflow-hidden md:mt-4">
       <section className="flex max-h-[85vh] flex-col overflow-y-auto">
         <h1 className="mb-8 w-full text-center font-sans text-[24px] font-semibold text-white md:text-left md:text-[45px]">
           Registo Colaborador
@@ -100,14 +104,16 @@ export default function EmployeeSignupPage() {
               required
             />
             {!codeValid && form.companyCode.length > 0 && (
-              <p className="mt-1 text-xs font-semibold text-red-500">Tem de ter exatamente 8 dígitos numéricos.</p>
+              <p className="mt-1 text-xs font-semibold text-red-500">
+                Tem de ter exatamente 8 dígitos numéricos.
+              </p>
             )}
           </div>
           <PrimaryButton
             loading={loading}
             type="submit"
             disabled={!canSubmit}
-            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] disabled:!bg-[#3d1806] disabled:cursor-not-allowed sm:py-4 sm:!text-[19px]"
+            className="!flex w-full cursor-pointer !items-center !justify-center !rounded-none !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] disabled:cursor-not-allowed disabled:!bg-[#3d1806] sm:py-4 sm:!text-[19px]"
           >
             Registar
           </PrimaryButton>

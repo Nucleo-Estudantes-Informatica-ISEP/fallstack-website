@@ -11,8 +11,8 @@ import { verifyJwt } from "@/services/authService";
 import getServerSession from "@/services/getServerSession";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
 import Footer from "@/components/Footer";
-import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
+import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
 

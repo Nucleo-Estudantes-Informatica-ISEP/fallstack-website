@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { ZodError } from "zod";
 
 import config from "@/config";
@@ -8,6 +7,7 @@ import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function POST(req: Request) {
   try {
@@ -34,12 +34,11 @@ export async function POST(req: Request) {
       name,
       year,
       avatar,
-      cv,
       bio,
       interests,
       avatarUrl: avatarUrlBody,
       cvId,
-    } = body as any;
+    } = body;
 
     // create code for student
     let code: string = "";
