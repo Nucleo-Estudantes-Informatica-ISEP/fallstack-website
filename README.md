@@ -55,9 +55,8 @@ cp .env.example .env
 ### Required values (hosted Supabase)
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_KEY` (service role)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (service role)
 
 ### Storage setup (Supabase hosted)
 
