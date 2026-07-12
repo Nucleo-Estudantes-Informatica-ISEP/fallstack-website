@@ -26,6 +26,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
 # Selective copy (smaller context)
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
 COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
@@ -44,6 +45,14 @@ RUN \
   else \
     npm run build; \
   fi
+
+
+# Standalone stage to apply pending migrations against DATABASE_URL before
+# the app starts. Reuses `builder` (full node_modules incl. the Prisma CLI,
+# generated client, schema, and migrations) rather than the pruned runner
+# image. See docker-compose.app.yml's `migrate` service.
+FROM builder AS migrator
+CMD ["npx", "prisma", "migrate", "deploy"]
 
 FROM base AS runner
 WORKDIR /app

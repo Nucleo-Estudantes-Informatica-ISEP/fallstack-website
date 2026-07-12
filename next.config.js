@@ -8,6 +8,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  output: "standalone",
   images: {
     remotePatterns: [
       // Supabase public storage (avatars)
