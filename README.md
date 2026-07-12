@@ -181,11 +181,15 @@ This runs `prisma migrate dev`, which diffs your schema against the migration hi
 
 ## Applying migrations elsewhere (deploy)
 
+`docker-compose.app.yml` runs this automatically: a `migrate` service builds the `migrator` Dockerfile target (the full toolchain image, before it's pruned down to the standalone runtime) and runs `prisma migrate deploy` once against `DATABASE_URL`; the `web` service only starts after `migrate` exits successfully (`depends_on: migrate: condition: service_completed_successfully`). `docker compose up` (or Coolify running the same compose file) always applies pending migrations before the app starts serving traffic — no manual step required.
+
+To run it by hand (e.g. outside Docker, against a remote DB):
+
 ```bash
 pnpm migrate:deploy
 ```
 
-This runs `prisma migrate deploy`, which applies any pending migrations without prompting or generating new ones — this is what CI/CD or the Coolify deploy step should run against staging/production before the new app version starts serving traffic.
+This runs `prisma migrate deploy` directly, which applies any pending migrations without prompting or generating new ones.
 
 ## One-time adoption note
 
