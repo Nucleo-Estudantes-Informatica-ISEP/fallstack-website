@@ -35,7 +35,7 @@ export default function RootLayout({
       <body>
         <a
           href="#main-content"
-          className="bg-primary sr-only z-50 p-3 text-black focus:not-sr-only focus:fixed focus:left-2 focus:top-2"
+          className="sr-only z-50 bg-primary p-3 text-black focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
         >
           Saltar para o conteúdo principal
         </a>
