@@ -3,12 +3,12 @@
 import { FunctionComponent } from "react";
 
 import SponsorsContainer from "@/components/SponsorsContainer";
-import { Sponsors } from "@/utils/Sponsors";
+import { edition } from "@/edition";
 
 const SponsorsSection: FunctionComponent = () => {
   return (
-    <section className="flex flex-col items-center gap-y-10 border-b border-b-secondary bg-background text-center">
-      <SponsorsContainer sponsors={Sponsors} />
+    <section className="border-b-secondary bg-background flex flex-col items-center gap-y-10 border-b text-center">
+      <SponsorsContainer sponsors={edition.sponsors} />
     </section>
   );
 };

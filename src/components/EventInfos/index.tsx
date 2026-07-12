@@ -3,6 +3,7 @@
 import { FunctionComponent } from "react";
 
 import InfoBit from "@/components/InfoBit";
+import { branding } from "@/edition/branding";
 import { Calendar, Pin, Watch } from "@/styles/Icons";
 
 interface EventInfosProps {
@@ -27,7 +28,10 @@ const EventInfos: FunctionComponent<EventInfosProps> = ({
         info={`${days.join(" e ")} de ${month} ${year}`}
       />
       <InfoBit icon={<Watch />} info={`${beginningTime}-${endTime}`} />
-      <InfoBit icon={<Pin className="size-[30px]" />} info={"ISEP"} />
+      <InfoBit
+        icon={<Pin className="size-[30px]" />}
+        info={branding.event.venue}
+      />
     </section>
   );
 };

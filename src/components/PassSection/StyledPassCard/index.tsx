@@ -3,10 +3,12 @@
 import React, { useCallback, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
+import { branding } from "@/edition/branding";
+
 interface StyledPassCardProps {
   name: string;
   qrValue: string | null;
-  hashtag?: string; // e.g. "#fallstack2025"
+  hashtag?: string;
   loading?: boolean;
   showRightName?: boolean; // new optional prop
   enlargeOnClick?: boolean; // enables click to enlarge QR
@@ -23,7 +25,7 @@ interface StyledPassCardProps {
 const StyledPassCard: React.FC<StyledPassCardProps> = ({
   name,
   qrValue,
-  hashtag = "#fallstack2025",
+  hashtag = branding.hashtag,
   loading = false,
   showRightName = true,
   enlargeOnClick = true,

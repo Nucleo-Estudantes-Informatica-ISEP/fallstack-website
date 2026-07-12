@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import getServerSession from "@/services/getServerSession";
+import { actionNames } from "@/edition/actions";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       );
     }
 
-    await completeAction(code, config.constants.actionNames.createProfile);
+    await completeAction(code, actionNames.createProfile);
 
     let avatarUrl = avatarUrlBody ?? null;
     if (!avatarUrl && avatar) {
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
     if (cvId) {
       // Supabase CV
       cvIdFinal = cvId;
-      await completeAction(code, config.constants.actionNames.uploadCv);
+      await completeAction(code, actionNames.uploadCv);
     }
 
     await prisma.student.update({

@@ -5,8 +5,8 @@ import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
 import CompanyInfo from "@/components/Companies/CompanyInfo";
+import { findCompanyByName } from "@/edition";
 import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
-import findCompanyByName from "@/utils/CompanyByName";
 
 interface CompanyPageSectionProps {
   companyName: string;

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/services/getServerSession";
+import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 
 interface StudentProps {
@@ -73,10 +73,7 @@ export async function PATCH(req: NextRequest, props: StudentProps) {
   });
 
   if (student.linkedin) {
-    await completeAction(
-      student.code,
-      config.constants.actionNames.updateLinkedin
-    );
+    await completeAction(student.code, actionNames.updateLinkedin);
   }
 
   if (body.interests) {

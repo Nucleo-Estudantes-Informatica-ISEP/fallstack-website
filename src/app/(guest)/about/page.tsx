@@ -1,6 +1,8 @@
 import React from "react";
 import Link from "next/link";
 
+import { branding } from "@/edition/branding";
+
 const about: React.FC = () => {
   return (
     <section className="flex h-screen w-screen flex-col items-center justify-center px-12">
@@ -23,10 +25,10 @@ const about: React.FC = () => {
         </h1>
         <p className="my-4 text-center text-lg">
           <Link
-            href="https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025"
+            href={branding.repositoryUrl}
             className="font-normal text-primary"
           >
-            https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025
+            {branding.repositoryUrl}
           </Link>
         </p>
       </div>

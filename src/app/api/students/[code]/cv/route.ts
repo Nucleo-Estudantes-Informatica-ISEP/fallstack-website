@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import config from "@/config";
+import { actionNames } from "@/edition/actions";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
@@ -91,10 +91,7 @@ export async function POST(req: NextRequest, props: StudentParams) {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  await completeAction(
-    session.student.code,
-    config.constants.actionNames.uploadCv
-  );
+  await completeAction(session.student.code, actionNames.uploadCv);
 
   return NextResponse.json({ ok: true });
 }
