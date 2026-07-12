@@ -1,7 +1,32 @@
 import prisma from "./prisma";
 
-export async function completeAction(studentCode: string, actionName: string) {
-  const action = await prisma.action.findUnique({
+type CompleteActionClient = {
+  action: {
+    findUnique(args: {
+      where: { name: string };
+    }): Promise<{ id: string } | null>;
+  };
+  student: {
+    findUnique(args: {
+      where: { code: string };
+    }): Promise<{ id: string } | null>;
+  };
+  actionCompletion: {
+    findFirst(args: {
+      where: { studentId: string; actionId: string };
+    }): Promise<unknown>;
+    create(args: {
+      data: { studentId: string; actionId: string };
+    }): Promise<unknown>;
+  };
+};
+
+export async function completeAction(
+  studentCode: string,
+  actionName: string,
+  db: CompleteActionClient = prisma
+) {
+  const action = await db.action.findUnique({
     where: {
       name: actionName,
     },
@@ -9,12 +34,12 @@ export async function completeAction(studentCode: string, actionName: string) {
 
   if (!action) return null;
 
-  const student = await prisma.student.findUnique({
+  const student = await db.student.findUnique({
     where: { code: studentCode },
   });
   if (!student) return null;
 
-  const alreadyCompleted = await prisma.actionCompletion.findFirst({
+  const alreadyCompleted = await db.actionCompletion.findFirst({
     where: {
       studentId: student.id,
       actionId: action.id,
@@ -23,7 +48,7 @@ export async function completeAction(studentCode: string, actionName: string) {
 
   if (alreadyCompleted) return null;
 
-  const studentAction = await prisma.actionCompletion.create({
+  const studentAction = await db.actionCompletion.create({
     data: {
       studentId: student.id,
       actionId: action.id,

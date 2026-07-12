@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Update interests for all employees in the company
-    await Promise.all(
+    await prisma.$transaction(
       employees.map((employee) =>
         prisma.user.update({
           where: { id: employee.user.id },

@@ -33,26 +33,25 @@ export async function POST(req: Request) {
       );
     }
 
-    // create company
-    const company = await prisma.company.create({
-      data: {
-        id: userId,
-        name: name,
-        tier: tier,
-      },
-    });
+    const company = await prisma.$transaction(async (tx) => {
+      // create company
+      const createdCompany = await tx.company.create({
+        data: {
+          id: userId,
+          name: name,
+          user: {
+            connect: {
+              id: userId,
+            },
+          },
+          tier: tier,
+        },
+      });
 
-    // check if company was created
-    if (!company) {
-      return NextResponse.json(
-        { message: "Something went wrong" },
-        { status: 500 }
-      );
-    }
-
-    await prisma.company.update({
-      data: { avatar: avatarUrl ?? null },
-      where: { id: company.id },
+      return tx.company.update({
+        data: { avatar: avatarUrl ?? null },
+        where: { id: createdCompany.id },
+      });
     });
 
     return NextResponse.json({ company: company }, { status: 201 });

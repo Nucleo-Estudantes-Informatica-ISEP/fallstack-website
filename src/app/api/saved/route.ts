@@ -46,6 +46,8 @@ export async function POST(req: NextRequest) {
   if (!session.employee || !session.employee.company)
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
 
+  const employeeId = session.employee.id;
+
   // check if student is already saved by this company
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
 
@@ -53,20 +55,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Student already saved by your company" },
       { status: 409 }
-    );
-
-  // create history
-  const entry = await prisma.savedStudent.create({
-    data: {
-      studentId: student.id,
-      employeeId: session.employee.id,
-    },
-  });
-
-  if (!entry)
-    return NextResponse.json(
-      { error: "Error creating history" },
-      { status: 500 }
     );
 
   const company = await prisma.company.findUnique({
@@ -77,81 +65,60 @@ export async function POST(req: NextRequest) {
   if (!company)
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
 
+  let actionName: string | null = null;
   switch (company.name) {
     case "akapeople":
     case "AkaPeople":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.akaPeopleBooth
-      );
+      actionName = config.constants.actionNames.akaPeopleBooth;
       break;
     case "natixis":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.natixisBooth
-      );
+      actionName = config.constants.actionNames.natixisBooth;
       break;
     case "apr":
-      await completeAction(student.code, config.constants.actionNames.aprBooth);
+      actionName = config.constants.actionNames.aprBooth;
       break;
     case "hitachi solutions":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.hitachiBooth
-      );
+      actionName = config.constants.actionNames.hitachiBooth;
       break;
     case "convatec":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.convatecBooth
-      );
+      actionName = config.constants.actionNames.convatecBooth;
       break;
     case "niw":
-      await completeAction(student.code, config.constants.actionNames.niwBooth);
+      actionName = config.constants.actionNames.niwBooth;
       break;
     case "deloitte":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.deloitteBooth
-      );
+      actionName = config.constants.actionNames.deloitteBooth;
       break;
     case "accenture":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.accentureBooth
-      );
+      actionName = config.constants.actionNames.accentureBooth;
       break;
     case "armis":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.armisBooth
-      );
+      actionName = config.constants.actionNames.armisBooth;
       break;
     case "devscope":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.devscopeBooth
-      );
+      actionName = config.constants.actionNames.devscopeBooth;
       break;
     case "insur:it msg":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.msgInsurItBooth
-      );
+      actionName = config.constants.actionNames.msgInsurItBooth;
       break;
     case "glintt":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.glinttBooth
-      );
+      actionName = config.constants.actionNames.glinttBooth;
       break;
     case "konkconsulting":
-      await completeAction(
-        student.code,
-        config.constants.actionNames.konkConsultingBooth
-      );
+      actionName = config.constants.actionNames.konkConsultingBooth;
       break;
   }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.savedStudent.create({
+      data: {
+        studentId: student.id,
+        employeeId,
+      },
+    });
+
+    if (actionName) await completeAction(student.code, actionName, tx);
+  });
 
   return NextResponse.json({ message: "Student scanned" }, { status: 201 });
 }

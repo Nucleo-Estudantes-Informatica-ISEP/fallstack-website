@@ -63,32 +63,37 @@ export async function PATCH(req: NextRequest, props: StudentProps) {
   if (!safeParse.success) return errorResponse(safeParse.error, 400);
 
   const body = safeParse.data;
-  const student = await prisma.student.update({
-    where: { code },
-    data: {
-      bio: body.bio?.trim(),
-      linkedin: body.linkedin,
-      github: body.github,
-    },
-  });
-
-  if (student.linkedin) {
-    await completeAction(
-      student.code,
-      config.constants.actionNames.updateLinkedin
-    );
-  }
-
-  if (body.interests) {
-    await prisma.user.update({
-      where: { id: session.id },
+  const student = await prisma.$transaction(async (tx) => {
+    const updatedStudent = await tx.student.update({
+      where: { code },
       data: {
-        interests: {
-          set: body.interests.map((interest) => ({ name: interest })),
-        },
+        bio: body.bio?.trim(),
+        linkedin: body.linkedin,
+        github: body.github,
       },
     });
-  }
+
+    if (updatedStudent.linkedin) {
+      await completeAction(
+        updatedStudent.code,
+        config.constants.actionNames.updateLinkedin,
+        tx
+      );
+    }
+
+    if (body.interests) {
+      await tx.user.update({
+        where: { id: session.id },
+        data: {
+          interests: {
+            set: body.interests.map((interest) => ({ name: interest })),
+          },
+        },
+      });
+    }
+
+    return updatedStudent;
+  });
 
   return NextResponse.json(student);
 }

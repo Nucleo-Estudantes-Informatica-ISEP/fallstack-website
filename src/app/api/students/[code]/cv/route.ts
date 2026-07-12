@@ -73,10 +73,13 @@ export async function POST(req: NextRequest, props: StudentParams) {
   if (session.role !== "STUDENT" || session.student?.code !== code)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const studentCode = session.student.code;
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
 
+  let cvId: string;
   if ("id" in parsed.data) {
     // Supabase flow
     const { id } = parsed.data;
@@ -86,15 +89,19 @@ export async function POST(req: NextRequest, props: StudentParams) {
     if (check.error)
       return NextResponse.json({ error: "Invalid upload id" }, { status: 400 });
 
-    await prisma.student.update({ where: { code }, data: { cv: id } });
+    cvId = id;
   } else {
     return NextResponse.json({ error: "Bad request" }, { status: 400 });
   }
 
-  await completeAction(
-    session.student.code,
-    config.constants.actionNames.uploadCv
-  );
+  await prisma.$transaction(async (tx) => {
+    await tx.student.update({ where: { code }, data: { cv: cvId } });
+    await completeAction(
+      studentCode,
+      config.constants.actionNames.uploadCv,
+      tx
+    );
+  });
 
   return NextResponse.json({ ok: true });
 }

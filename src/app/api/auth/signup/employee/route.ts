@@ -41,27 +41,26 @@ export async function POST(req: Request) {
 
     const supabaseUser = data.user;
 
-    // Create application user with EMPLOYEE role if not existing
-    try {
-      await prisma.user.create({
-        data: {
+    await prisma.$transaction(async (tx) => {
+      // Create application user with EMPLOYEE role if not existing
+      await tx.user.upsert({
+        where: { id: supabaseUser.id },
+        update: {},
+        create: {
           id: supabaseUser.id,
           email,
           role: "EMPLOYEE",
         },
       });
-    } catch {
-      // ignore if user already exists
-    }
-
-    // Create Employee profile linked to company
-    await prisma.employee.create({
-      data: {
-        id: supabaseUser.id,
-        name,
-        linkedin, // already undefined if blank
-        companyId: company.id,
-      },
+      // Create Employee profile linked to company
+      await tx.employee.create({
+        data: {
+          id: supabaseUser.id,
+          name,
+          linkedin, // already undefined if blank
+          companyId: company.id,
+        },
+      });
     });
 
     return NextResponse.json(

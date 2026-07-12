@@ -56,41 +56,6 @@ export async function POST(req: Request) {
       codeExists = student !== null;
     }
 
-    // create student
-    const student = await prisma.student.create({
-      data: {
-        name: name,
-        bio: bio?.trim(),
-        code: code,
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
-        year: year,
-      },
-    });
-
-    // update interests
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        interests: {
-          connect: interests.map((interest: string) => ({ name: interest })),
-        },
-      },
-    });
-
-    // check if student was created
-    if (!student) {
-      return NextResponse.json(
-        { message: "Something went wrong" },
-        { status: 500 }
-      );
-    }
-
-    await completeAction(code, config.constants.actionNames.createProfile);
-
     let avatarUrl = avatarUrlBody ?? null;
     if (!avatarUrl && avatar) {
       const admin = createAdminClient();
@@ -114,12 +79,42 @@ export async function POST(req: Request) {
     if (cvId) {
       // Supabase CV
       cvIdFinal = cvId;
-      await completeAction(code, config.constants.actionNames.uploadCv);
     }
 
-    await prisma.student.update({
-      data: { avatar: avatarUrl, cv: cvIdFinal },
-      where: { id: student.id },
+    const student = await prisma.$transaction(async (tx) => {
+      const createdStudent = await tx.student.create({
+        data: {
+          name,
+          bio: bio?.trim(),
+          code,
+          user: { connect: { id: userId } },
+          year,
+        },
+      });
+
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          interests: {
+            connect: interests.map((interest: string) => ({ name: interest })),
+          },
+        },
+      });
+
+      await completeAction(
+        code,
+        config.constants.actionNames.createProfile,
+        tx
+      );
+
+      if (cvIdFinal) {
+        await completeAction(code, config.constants.actionNames.uploadCv, tx);
+      }
+
+      return tx.student.update({
+        data: { avatar: avatarUrl, cv: cvIdFinal },
+        where: { id: createdStudent.id },
+      });
     });
 
     return NextResponse.json(student, { status: 201 });
