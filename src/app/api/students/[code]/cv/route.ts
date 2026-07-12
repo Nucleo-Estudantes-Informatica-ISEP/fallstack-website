@@ -1,17 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
+import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 import getServerSession from "@/services/getServerSession";
 import { createAdminClient } from "@/utils/supabase/admin";
-
-const schema = z.union([
-  z.object({ uploadId: z.string().uuid() }), // Firebase flow
-  z.object({ id: z.string().uuid() }), // Supabase flow
-]);
 
 interface StudentParams {
   params: Promise<{
@@ -74,7 +69,7 @@ export async function POST(req: NextRequest, props: StudentParams) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await req.json();
-  const parsed = schema.safeParse(body);
+  const parsed = cvUploadSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
 
   if ("id" in parsed.data) {
