@@ -19,6 +19,7 @@ import {
   findInterestsForCompany,
   findUserInterests,
 } from "../repositories/interestRepository";
+import { withTransaction } from "../repositories/transaction";
 
 export const getCompanies = () => findCompanies();
 export const getCompaniesWithUsers = () => findCompaniesWithUsers();
@@ -33,13 +34,14 @@ export async function registerCompany(input: {
 }) {
   if (await findCompanyById(input.userId))
     throw new HttpError("Company already exists", 401);
-  const company = await createCompany({
-    id: input.userId,
-    name: input.name,
-    tier: input.tier,
+  return withTransaction(async (tx) => {
+    const company = await createCompany(
+      { id: input.userId, name: input.name, tier: input.tier },
+      tx
+    );
+    await updateCompanyAvatar(company.id, input.avatarUrl ?? null, tx);
+    return company;
   });
-  await updateCompanyAvatar(company.id, input.avatarUrl ?? null);
-  return company;
 }
 
 export async function getInterestsByCompanyName(companyName: string) {

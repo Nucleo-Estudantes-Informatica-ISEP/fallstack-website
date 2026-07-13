@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Company, Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
@@ -23,12 +24,15 @@ interface CompanyViewProfileSectionContainerProps {
 const CompanyViewProfileSectionContainer: React.FC<
   CompanyViewProfileSectionContainerProps
 > = ({ student, interests, company, token, isSavedStudent }) => {
+  const [comment, setComment] = useState("");
+
   const handleSaveProfile = async () => {
     if (!company) return swal("Erro ao carregar perfil!");
 
     const res = await fetch(BASE_URL + "/saved", {
       method: "PATCH",
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, comment }),
+      headers: { "Content-Type": "application/json" },
     });
 
     if (res.status === 200) {
@@ -93,12 +97,22 @@ const CompanyViewProfileSectionContainer: React.FC<
               </a>
             )}
             {!isSavedStudent && (
-              <button
-                onClick={handleSaveProfile}
-                className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary/100 hover:shadow-xl"
-              >
-                + Salvar Perfil
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <textarea
+                  className="rounded-md border border-gray-300 p-2 text-black"
+                  placeholder="Adicionar comentário (opcional)"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={2}
+                  style={{ minWidth: 220, maxWidth: 320 }}
+                />
+                <button
+                  onClick={handleSaveProfile}
+                  className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary/100 hover:shadow-xl"
+                >
+                  + Salvar Perfil
+                </button>
+              </div>
             )}
           </div>
         </motion.div>

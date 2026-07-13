@@ -14,6 +14,109 @@ interface HistorySectionProps {
   company: Company;
 }
 
+const SavedStudentRow = ({ item }: { item: HistoryData }) => {
+  const [editing, setEditing] = useState(false);
+  const [savedComment, setSavedComment] = useState(item.comment ?? "");
+  const [comment, setComment] = useState(item.comment ?? "");
+  const [loading, setLoading] = useState(false);
+
+  const updateComment = async (nextComment: string | null) => {
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${BASE_URL}/saved`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          studentId: item.studentId,
+          comment: nextComment,
+        }),
+      });
+
+      if (!response.ok) throw new Error("Failed to update comment");
+
+      const value = nextComment ?? "";
+      setSavedComment(value);
+      setComment(value);
+      setEditing(false);
+    } catch {
+      swal("Erro", "Não foi possível atualizar o comentário.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0">
+      <div className="flex flex-1 items-center justify-center px-4 text-center">
+        <Link
+          href={`/student/${item.student.code}/preview`}
+          className="font-bold text-white hover:underline"
+        >
+          {item.student.name}
+        </Link>
+      </div>
+      <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
+        {formatDateDDStrMonthHourMin(item.createdAt)}
+      </div>
+      <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+        {editing ? (
+          <>
+            <textarea
+              className="rounded-md border border-gray-300 p-1 text-black"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              rows={2}
+              style={{ minWidth: 120, maxWidth: 220 }}
+              disabled={loading}
+            />
+            <div className="mt-1 flex gap-2">
+              <button
+                onClick={() => updateComment(comment)}
+                disabled={loading}
+                className="rounded bg-green-600 px-2 text-xs text-white"
+              >
+                Salvar
+              </button>
+              <button
+                onClick={() => updateComment(null)}
+                disabled={loading}
+                className="rounded bg-red-600 px-2 text-xs text-white"
+              >
+                Remover
+              </button>
+              <button
+                onClick={() => {
+                  setComment(savedComment);
+                  setEditing(false);
+                }}
+                disabled={loading}
+                className="rounded bg-gray-600 px-2 text-xs text-white"
+              >
+                Cancelar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <span className="block min-h-6 text-xs text-gray-200">
+              {savedComment || (
+                <span className="text-gray-400 italic">Sem comentário</span>
+              )}
+            </span>
+            <button
+              onClick={() => setEditing(true)}
+              className="mt-1 rounded bg-blue-600 px-2 text-xs text-white"
+            >
+              Editar
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const CompanySavesSection = ({ company }: HistorySectionProps) => {
   const [historyData, setHistoryData] = useState<HistoryData[] | null>(null);
 
@@ -65,22 +168,10 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
           </div>
         ) : (
           historyData.map((item) => (
-            <div
+            <SavedStudentRow
               key={`${item.studentId}-${item.createdAt}`}
-              className="flex flex-row items-center justify-between border-b border-gray-700 py-4 last:border-0"
-            >
-              <div className="flex flex-1 items-center justify-center px-4 text-center">
-                <Link
-                  href={`/student/${item.student.code}/preview`}
-                  className="font-bold text-white hover:underline"
-                >
-                  {item.student.name}
-                </Link>
-              </div>
-              <div className="flex flex-1 items-center justify-center px-4 text-center text-gray-300">
-                {formatDateDDStrMonthHourMin(item.createdAt)}
-              </div>
-            </div>
+              item={item}
+            />
           ))
         )}
       </div>

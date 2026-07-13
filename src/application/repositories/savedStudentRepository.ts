@@ -3,16 +3,37 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import config from "@/config";
+import {
+  savedStudentCommentData,
+  savedStudentCompanyWhere,
+} from "@/lib/savedStudentComments";
 
-import prisma from "./database";
+import prisma, { DbClient } from "./database";
 
 export const isStudentSaved = async (companyId: string, code: string) =>
   !!(await prisma.savedStudent.findFirst({
     where: { AND: [{ savedBy: { companyId } }, { student: { code } }] },
   }));
 
-export const createSavedStudent = (studentId: string, employeeId: string) =>
-  prisma.savedStudent.create({ data: { studentId, employeeId } });
+export const createSavedStudent = (
+  studentId: string,
+  employeeId: string,
+  db: DbClient = prisma,
+  comment?: string | null
+) =>
+  db.savedStudent.create({
+    data: { studentId, employeeId, ...savedStudentCommentData(comment) },
+  });
+
+export const updateSavedStudentComment = (
+  studentId: string,
+  companyId: string,
+  comment: string | null
+) =>
+  prisma.savedStudent.updateMany({
+    where: savedStudentCompanyWhere(studentId, companyId),
+    data: savedStudentCommentData(comment),
+  });
 
 export const findSavedStudent = (studentId: string, companyId: string) =>
   prisma.savedStudent.findFirst({

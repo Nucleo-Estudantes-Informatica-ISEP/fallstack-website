@@ -1,6 +1,6 @@
 import { PrismaClient, Role, Tier } from "@prisma/client";
 
-import config from "@/config";
+import { actions } from "@/edition/actions";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const prisma = new PrismaClient();
@@ -291,52 +291,13 @@ async function seedCompanies() {
 }
 
 async function seedActions() {
-  const actions = await prisma.action.findMany();
-  if (actions.length > 0) {
+  const existingActions = await prisma.action.findMany();
+  if (existingActions.length > 0) {
     console.log("⚠️ Actions already seeded");
     return;
   }
 
-  await prisma.action.createMany({
-    data: [
-      {
-        name: config.constants.actionNames.createProfile,
-        description: "Cria o teu perfil",
-        points: 1,
-      },
-      {
-        name: config.constants.actionNames.updateLinkedin,
-        description: "Associa o teu LinkedIn",
-        points: 2,
-      },
-      {
-        name: config.constants.actionNames.uploadCv,
-        description: "Faz o upload do teu CV",
-        points: 3,
-      },
-      {
-        name: "Palestra 1",
-        description: "Assiste à palestra 1",
-        points: 5,
-      },
-      {
-        name: "Palestra 2",
-        description: "Assiste à palestra 2",
-        points: 5,
-      },
-      {
-        name: "Palestra 3",
-        description: "Assiste à palestra 3",
-        points: 10,
-      },
-      {
-        name: "Entrevista com o Teixeira",
-        description: "Assiste à palestra 3",
-        altText: "0x31r4",
-        points: 10,
-      },
-    ],
-  });
+  await prisma.action.createMany({ data: actions.seed });
 
   console.log("✅ Actions seeded");
 }

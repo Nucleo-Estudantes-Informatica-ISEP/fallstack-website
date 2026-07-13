@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { HttpError } from "@/types/HttpError";
-import config from "@/config";
+import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
@@ -25,6 +25,7 @@ import {
   updateStudentMedia,
   updateStudentProfile,
 } from "../repositories/studentRepository";
+import { withTransaction } from "../repositories/transaction";
 import {
   connectUserInterests,
   setUserInterests,
@@ -39,16 +40,8 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
   do code = generateRandomCode();
   while (await findStudentByCode(code));
 
-  const student = await createStudent({
-    userId,
-    code,
-    name: body.name,
-    bio: body.bio,
-    year: body.year,
-  });
-  await connectUserInterests(userId, body.interests);
-  await completeAction(code, config.constants.actionNames.createProfile);
-
+  // External I/O (Supabase Storage) stays outside the transaction below —
+  // no network calls while holding a DB transaction open.
   let avatarUrl = body.avatarUrl ?? null;
   if (!avatarUrl && body.avatar) {
     const admin = createAdminClient();
@@ -57,11 +50,19 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
     if (check.error) throw new HttpError("Invalid avatar upload id", 400);
     avatarUrl = admin.storage.from("avatars").getPublicUrl(path).data.publicUrl;
   }
-
   const cv = body.cvId ?? null;
-  if (cv) await completeAction(code, config.constants.actionNames.uploadCv);
-  await updateStudentMedia(student.id, { avatar: avatarUrl, cv });
-  return student;
+
+  return withTransaction(async (tx) => {
+    const student = await createStudent(
+      { userId, code, name: body.name, bio: body.bio, year: body.year },
+      tx
+    );
+    await connectUserInterests(userId, body.interests, tx);
+    await completeAction(code, actionNames.createProfile, tx);
+    if (cv) await completeAction(code, actionNames.uploadCv, tx);
+    await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
+    return student;
+  });
 }
 
 export async function getStudentProfile(code: string, access: StudentAccess) {
@@ -77,11 +78,13 @@ export async function updateStudent(
   code: string,
   body: StudentPatch
 ) {
-  const student = await updateStudentProfile(code, body);
-  if (student.linkedin)
-    await completeAction(code, config.constants.actionNames.updateLinkedin);
-  if (body.interests) await setUserInterests(userId, body.interests);
-  return student;
+  return withTransaction(async (tx) => {
+    const student = await updateStudentProfile(code, body, tx);
+    if (student.linkedin)
+      await completeAction(code, actionNames.updateLinkedin, tx);
+    if (body.interests) await setUserInterests(userId, body.interests, tx);
+    return student;
+  });
 }
 
 export const setStudentAvatar = (code: string, url: string) =>
@@ -92,8 +95,10 @@ export async function setStudentCv(code: string, id: string) {
     .storage.from("cvs")
     .createSignedUrl(`distribution/cv/${id}.pdf`, 60);
   if (check.error) throw new HttpError("Invalid upload id", 400);
-  await updateStudentCv(code, id);
-  await completeAction(code, config.constants.actionNames.uploadCv);
+  await withTransaction(async (tx) => {
+    await updateStudentCv(code, id, tx);
+    await completeAction(code, actionNames.uploadCv, tx);
+  });
 }
 
 export async function getStudentCv(code: string, access: StudentAccess) {
