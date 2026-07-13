@@ -7,5 +7,3 @@ const ISEP_EMAIL_REGEX = new RegExp(
 
 export const isIsepEmail = (email: string): boolean =>
   ISEP_EMAIL_REGEX.test(email.trim());
-
-

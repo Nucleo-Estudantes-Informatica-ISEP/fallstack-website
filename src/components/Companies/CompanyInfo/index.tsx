@@ -5,7 +5,7 @@ import React from "react";
 import FactData from "@/types/FactData";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
-import { CompanyTier, COMPANY_TIER } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
 
 interface CompanyInfoProps {
   bodyText: React.ReactNode;

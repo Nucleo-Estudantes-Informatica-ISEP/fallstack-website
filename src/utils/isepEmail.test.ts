@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  ISEP_EMAIL_DOMAIN,
-  isIsepEmail,
-} from "./isepEmail";
+import { ISEP_EMAIL_DOMAIN, isIsepEmail } from "./isepEmail";
 
 test("validates supported ISEP student email formats", () => {
   assert.equal(ISEP_EMAIL_DOMAIN, "isep.ipp.pt");

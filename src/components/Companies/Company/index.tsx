@@ -5,7 +5,8 @@ import Image, { StaticImageData } from "next/image";
 import Link from "next/link";
 
 import { ModalInformation } from "@/types/ModalProps";
-import { CompanyTier, COMPANY_TIER } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
+import { hrefByCompanyTier } from "@/domain/Company/services/company-tier-access";
 
 export interface CompanyProps {
   logoHref: StaticImageData;
@@ -17,8 +18,6 @@ export interface CompanyProps {
   interests?: string[];
   divClassName?: string;
 }
-
-import { hrefByCompanyTier } from "@/domain/Company/services/company-tier-access";
 
 const Company: React.FC<CompanyProps> = ({
   logoHref,

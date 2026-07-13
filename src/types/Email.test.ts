@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+
 import { Email } from "./Email";
 
 test("Email.create - valid emails", () => {
@@ -7,7 +8,7 @@ test("Email.create - valid emails", () => {
     "test@example.com",
     "user.name+tag@domain.co.uk",
     "a@b.co",
-    "  spaces@around.com  "
+    "  spaces@around.com  ",
   ];
 
   for (const addr of valid) {
@@ -24,7 +25,7 @@ test("Email.create - invalid formats", () => {
     "Joe Smith <email@example.com>",
     "email.example.com",
     "email@example@example.com",
-    "email@example..com"
+    "email@example..com",
   ];
 
   for (const addr of invalid) {
@@ -35,11 +36,17 @@ test("Email.create - invalid formats", () => {
 test("Email.create - length constraints", () => {
   // Local part exceeds 64 chars
   const longLocal = "a".repeat(65) + "@example.com";
-  assert.throws(() => Email.create(longLocal), /Local part exceeds the maximum/);
+  assert.throws(
+    () => Email.create(longLocal),
+    /Local part exceeds the maximum/
+  );
 
   // Total length exceeds 254
   const longEmail = "a".repeat(245) + "@example.com";
-  assert.throws(() => Email.create(longEmail), /Email length exceeds the maximum/);
+  assert.throws(
+    () => Email.create(longEmail),
+    /Email length exceeds the maximum/
+  );
 });
 
 test("Email.createInDomain - domain matching", () => {

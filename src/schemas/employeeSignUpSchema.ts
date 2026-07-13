@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { EmailSchema } from "@/schemas/customEmailZod";
 
 export const employeeSignUpSchema = z.object({

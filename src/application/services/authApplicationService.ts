@@ -1,7 +1,7 @@
 import "server-only";
 
-import { HttpError } from "@/types/HttpError";
 import { Email } from "@/types/Email";
+import { HttpError } from "@/types/HttpError";
 import { createAdminClient } from "@/utils/supabase/admin";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 

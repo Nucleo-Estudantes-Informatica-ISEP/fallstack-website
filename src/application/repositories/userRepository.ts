@@ -1,6 +1,7 @@
 import "server-only";
 
 import { Email } from "@/types/Email";
+
 import prisma from "./database";
 
 export const findUserWithProfile = (id: string) =>

@@ -1,7 +1,6 @@
 import "server-only";
 
 import { Email } from "@/types/Email";
-
 import { reportError } from "@/lib/logger";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 

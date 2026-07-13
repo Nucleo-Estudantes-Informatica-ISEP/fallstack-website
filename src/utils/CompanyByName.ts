@@ -1,5 +1,5 @@
 import { CompanyProps } from "@/components/Companies/Company";
-import { CompanyTier, COMPANY_TIER } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
 
 import { DiamondCompanies } from "./DiamondCompanies";
 import { GoldCompanies } from "./GoldCompanies";

@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { parseCompanyTier } from "@/domain/Company/company-tier";
 
 export const postCompanySchema = z.object({
@@ -6,8 +7,9 @@ export const postCompanySchema = z.object({
   tier: z.string().transform((val, ctx) => {
     try {
       return parseCompanyTier(val);
-    } catch (e: any) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, message: e.message });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Invalid tier";
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message });
       return z.NEVER;
     }
   }),

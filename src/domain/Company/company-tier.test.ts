@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseCompanyTier, COMPANY_TIER } from "./company-tier";
+
+import { COMPANY_TIER, parseCompanyTier } from "./company-tier";
 import { hrefByCompanyTier } from "./services/company-tier-access";
 
 test("parseCompanyTier - valid parsing", () => {
@@ -16,10 +17,22 @@ test("parseCompanyTier - invalid parsing", () => {
 
 test("hrefByCompanyTier - routing rules", () => {
   // Diamond and Gold use internal pages
-  assert.equal(hrefByCompanyTier(COMPANY_TIER.DIAMOND, "Company A", undefined), "/company/Company%20A");
-  assert.equal(hrefByCompanyTier(COMPANY_TIER.GOLD, "Company B", "http://external.com"), "/company/Company%20B");
+  assert.equal(
+    hrefByCompanyTier(COMPANY_TIER.DIAMOND, "Company A", undefined),
+    "/company/Company%20A"
+  );
+  assert.equal(
+    hrefByCompanyTier(COMPANY_TIER.GOLD, "Company B", "http://external.com"),
+    "/company/Company%20B"
+  );
 
   // Silver and Bronze redirect to external websites (or root if none provided)
-  assert.equal(hrefByCompanyTier(COMPANY_TIER.SILVER, "Company C", "http://external.com"), "http://external.com");
-  assert.equal(hrefByCompanyTier(COMPANY_TIER.BRONZE, "Company D", undefined), "/");
+  assert.equal(
+    hrefByCompanyTier(COMPANY_TIER.SILVER, "Company C", "http://external.com"),
+    "http://external.com"
+  );
+  assert.equal(
+    hrefByCompanyTier(COMPANY_TIER.BRONZE, "Company D", undefined),
+    "/"
+  );
 });

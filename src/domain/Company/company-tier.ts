@@ -5,9 +5,13 @@ export const COMPANY_TIER = {
   BRONZE: "BRONZE",
 } as const;
 
-const TIER_VALUES = [COMPANY_TIER.DIAMOND, COMPANY_TIER.GOLD, COMPANY_TIER.SILVER, COMPANY_TIER.BRONZE] as const;
+const TIER_VALUES = [
+  COMPANY_TIER.DIAMOND,
+  COMPANY_TIER.GOLD,
+  COMPANY_TIER.SILVER,
+  COMPANY_TIER.BRONZE,
+] as const;
 export type CompanyTier = (typeof TIER_VALUES)[number];
-
 
 export function parseCompanyTier(value: string): CompanyTier {
   const normalized = value.trim().toUpperCase();

@@ -48,7 +48,6 @@ export const Email = {
     const normalizedDomain = normalize(domain);
     let normalizedAddress = normalize(address);
 
-
     // Append domain if only local part is provided
     if (!normalizedAddress.includes("@") || normalizedAddress.endsWith("@")) {
       const cleanAddress = normalizedAddress.replace(/@$/, "");
@@ -56,7 +55,9 @@ export const Email = {
     }
 
     // Extract and compare domains
-    const emailDomain = normalizedAddress.substring(normalizedAddress.lastIndexOf("@") + 1);
+    const emailDomain = normalizedAddress.substring(
+      normalizedAddress.lastIndexOf("@") + 1
+    );
     if (emailDomain !== normalizedDomain) {
       throw new Error(`Email must belong to '${normalizedDomain}'.`);
     }

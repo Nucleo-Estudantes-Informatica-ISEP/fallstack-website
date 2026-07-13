@@ -1,12 +1,10 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
-import { Email } from "@/types/Email";
-import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
-
 import config from "@/config";
-
+import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
 import { assertStudentCanBeSaved, findBoothAction } from "../domain/saveRules";
 import {
@@ -79,7 +77,6 @@ export async function saveStudent(input: {
   }
 }
 
-
 export async function saveStudentAsAdmin(
   emailOrNumber: string,
   companyId: string
@@ -87,7 +84,7 @@ export async function saveStudentAsAdmin(
   let email: Email;
   try {
     email = Email.createInDomain(emailOrNumber, ISEP_EMAIL_DOMAIN);
-  } catch (error: any) {
+  } catch {
     throw new HttpError("Invalid student email or number", 400);
   }
   const student = await findStudentByEmail(email);
