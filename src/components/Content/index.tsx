@@ -4,13 +4,15 @@ import HeadingText from "@/components/HeadingText";
 import InfoText from "@/components/InfoText";
 import Schedule from "@/components/Schedule";
 import SponsorsSection from "@/components/SponsorsSection";
-import { ScheduleDays } from "@/utils/ScheduleDays";
+import { edition } from "@/edition";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
 }
 
 const Content: React.FC<ContentProps> = ({ contentRef }) => {
+  const { branding, schedule } = edition;
+
   return (
     <>
       <section
@@ -18,11 +20,11 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         className="w-full bg-[url('/assets/images/bgDates.svg')] bg-cover bg-center bg-no-repeat pt-14 pb-12"
       >
         <InfoText
-          days={[25, 26]}
-          month="novembro"
-          year={2025}
-          beginningTime="8:30h"
-          endTime="17:30h"
+          days={branding.event.days}
+          month={branding.event.month}
+          year={branding.year}
+          beginningTime={branding.event.beginningTime}
+          endTime={branding.event.endTime}
         />
       </section>
       <section
@@ -30,9 +32,9 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         className="flex flex-col items-center bg-background pb-20"
       >
         <Schedule
-          firstDayTitle="25 de Novembro"
-          secondDayTitle="26 de Novembro"
-          scheduleEvents={ScheduleDays}
+          firstDayTitle={branding.event.scheduleDayTitles[0]}
+          secondDayTitle={branding.event.scheduleDayTitles[1]}
+          scheduleEvents={schedule}
         />
       </section>
 

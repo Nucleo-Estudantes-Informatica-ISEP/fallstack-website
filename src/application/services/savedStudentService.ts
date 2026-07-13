@@ -2,10 +2,10 @@ import "server-only";
 
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
-import config from "@/config";
+import { getBoothActionName } from "@/edition/actions";
 import { normalizeIsepEmail } from "@/utils/isepEmail";
 
-import { assertStudentCanBeSaved, findBoothAction } from "../domain/saveRules";
+import { assertStudentCanBeSaved } from "../domain/saveRules";
 import {
   findCompanyById,
   findCompanyEmployee,
@@ -32,22 +32,6 @@ import {
 import { withTransaction } from "../repositories/transaction";
 import { completeAction } from "./actionService";
 
-const boothActions: Record<string, string> = {
-  akapeople: config.constants.actionNames.akaPeopleBooth,
-  natixis: config.constants.actionNames.natixisBooth,
-  apr: config.constants.actionNames.aprBooth,
-  "hitachi solutions": config.constants.actionNames.hitachiBooth,
-  convatec: config.constants.actionNames.convatecBooth,
-  niw: config.constants.actionNames.niwBooth,
-  deloitte: config.constants.actionNames.deloitteBooth,
-  accenture: config.constants.actionNames.accentureBooth,
-  armis: config.constants.actionNames.armisBooth,
-  devscope: config.constants.actionNames.devscopeBooth,
-  "insur:it msg": config.constants.actionNames.msgInsurItBooth,
-  glintt: config.constants.actionNames.glinttBooth,
-  konkconsulting: config.constants.actionNames.konkConsultingBooth,
-};
-
 export async function saveStudent(input: {
   studentCode: string;
   employeeId: string;
@@ -67,7 +51,7 @@ export async function saveStudent(input: {
       if (input.completeBoothAction) {
         const company = await findCompanyName(input.companyId, tx);
         if (!company) throw new HttpError("Company not found", 404);
-        const action = findBoothAction(company.name, boothActions);
+        const action = getBoothActionName(company.name);
         if (action) await completeAction(student.code, action, tx);
       }
       return saved;
