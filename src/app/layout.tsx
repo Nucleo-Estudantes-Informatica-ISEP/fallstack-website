@@ -12,13 +12,10 @@ import { AuthContextProvider } from "@/contexts/AuthContext";
 import { InstallableContextProvider } from "@/contexts/InstallableContext";
 import InstallPopUp from "@/components/InstallPopUp";
 import Topbar from "@/components/TopBar";
+import { branding } from "@/edition/branding";
 
 export const metadata: Metadata = {
-  applicationName: "Fallstack 2025",
-  title: "Fallstack 2025",
-  description:
-    "Website do evento Fallstack 2025. O evento decorrerá nos dias 25 e 26 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
-  manifest: "/manifest.json",
+  ...branding.metadata,
 };
 
 export default function RootLayout({

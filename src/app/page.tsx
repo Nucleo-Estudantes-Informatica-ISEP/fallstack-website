@@ -10,6 +10,7 @@ import GenericContainer from "@/components/GenericContainer";
 import HeadsUp from "@/components/HeadsUp";
 import Hero from "@/components/Hero";
 import HeroContainer from "@/components/HeroContainer";
+import { branding } from "@/edition/branding";
 
 const App: FunctionComponent = () => {
   const contentRef = useRef<HTMLDivElement>(null);
@@ -19,7 +20,7 @@ const App: FunctionComponent = () => {
       <GenericContainer>
         <Hero
           logoSrc={LogoWhite}
-          logoAlt="Logo principal do evento Fall-Stack 2025"
+          logoAlt={branding.heroLogoAlt}
           contentRef={contentRef}
         />
         <Content contentRef={contentRef} />

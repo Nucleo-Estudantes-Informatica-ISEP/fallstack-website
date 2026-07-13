@@ -1,8 +1,8 @@
 import { BASE_URL } from "@/services/api";
-import getServerSession from "@/services/getServerSession";
 import ActionQrCodeData from "@/components/Action/ActionQrCodeData";
 import CloseActionButton from "@/components/Action/CloseActionButton";
 import Custom404 from "@/app/not-found";
+import getServerSession from "@/application/services/sessionService";
 
 interface ActionParams {
   params: Promise<{

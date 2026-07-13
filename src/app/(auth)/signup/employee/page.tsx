@@ -4,10 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-import { signUpEmployee } from "@/lib/auth";
 import Input from "@/components/Input";
 import InputLabel from "@/components/InputLabel";
 import PrimaryButton from "@/components/PrimaryButton";
+import { signUpEmployee } from "@/client/api/auth";
 
 export default function EmployeeSignupPage() {
   const router = useRouter();

@@ -1,20 +1,23 @@
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
-import { getCompanies } from "@/lib/companies";
-import { getStats, getTodayStats } from "@/lib/fetchStats";
-import { fetchStudent } from "@/lib/fetchStudent";
-import { fetchStudentActions } from "@/lib/fetchStudentActions";
-import getStudentHistory from "@/lib/getStudentHistory";
-import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
-import getServerSession from "@/services/getServerSession";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
 import Footer from "@/components/Footer";
 import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import { getStudentActions } from "@/application/services/actionService";
+import { getCompanies } from "@/application/services/companyService";
+import {
+  getStudentHistory,
+  getStudentStats,
+  getTodayStudentStats,
+  isSaved,
+} from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
+import { getStudent } from "@/application/services/studentService";
 
 interface ProfileProps {
   params: Promise<{
@@ -42,9 +45,9 @@ const StudentPage = async (props: ProfileProps) => {
     const token = verifyJwt(code);
     decodedPreviewCode = token ? (token as { code: string }).code : null;
     const targetCode = decodedPreviewCode ?? code;
-    student = await fetchStudent(targetCode);
+    student = await getStudent(targetCode);
   } else {
-    student = await fetchStudent(code);
+    student = await getStudent(code);
   }
 
   if (!student) return Custom404();
@@ -66,13 +69,15 @@ const StudentPage = async (props: ProfileProps) => {
 
   const sanitizedInterests = student.user.interests.map((i) => i.name);
 
-  const globalStats = await getStats(student.code);
-  const todayStats = await getTodayStats(student.id);
+  const globalStats = await getStudentStats(student.code);
+  const todayStats = await getTodayStudentStats(student.id);
 
   const companies = await getCompanies();
 
-  const history = await getStudentHistory(student.code);
-  const actions = await fetchStudentActions(student.code);
+  const history = session.student
+    ? await getStudentHistory(session.student.id)
+    : new HttpError("Forbidden", 403);
+  const actions = await getStudentActions(student.code);
 
   const totalCompanies = companies.length;
   const uniqueCompaniesSaved =

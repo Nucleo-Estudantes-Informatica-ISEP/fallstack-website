@@ -110,6 +110,7 @@ model SavedStudent {
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   savedBy    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
+  comment    String?
 
   @@id([studentId, employeeId])
 }
