@@ -28,7 +28,7 @@ For every requested task:
 | Layer | Tech |
 |---|---|
 | Framework | Next.js 15 (App Router), React 18 |
-| Language | TypeScript (`strict: false` today — see [Gotchas](#gotchas)) |
+| Language | TypeScript (`strict: true` — see [Gotchas](#gotchas) for what still slips through anyway) |
 | Styling | Tailwind CSS 4, HeroUI 2.8 |
 | Database | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`) |
 | Auth | Supabase Auth (session) — see [Auth model](#auth-model) |
@@ -42,14 +42,17 @@ For every requested task:
 ```bash
 pnpm dev          # Next.js dev server (localhost:3000)
 pnpm build        # production build
-pnpm lint         # next lint
+pnpm lint         # eslint .
+pnpm typecheck    # next typegen && tsc --noEmit
 pnpm generate     # prisma generate (also runs on postinstall)
+pnpm migrate      # prisma migrate dev — diffs schema, writes + applies a new migration
+pnpm migrate:deploy   # prisma migrate deploy — applies pending migrations, no prompts
 pnpm seed         # prisma db seed
 pnpm test         # tsx --test src/lib/logger.test.ts src/lib/sentryPrivacy.test.ts
 pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 ```
 
-`pnpm test` exists but coverage is minimal (two files); there's still no `typecheck` script — see [Gotchas](#gotchas). No baseline migration has been committed yet (no `prisma/migrations/` directory). README's Database Workflow section documents both `pnpm prisma db push --force-reset` and `pnpm prisma migrate dev` as options; in practice `db push --force-reset` is what currently works for local schema sync — don't assume a migration history exists to `deploy`.
+`pnpm test` exists but coverage is minimal (two files) — see [Gotchas](#gotchas). Schema changes go through **Prisma Migrate** (`prisma/migrations/`), not `db push` — a baseline migration (`20260712000000_init`) captures the pre-migration schema; run `pnpm migrate --name <description>` for local changes and commit the generated migration folder. `db push` is no longer the working path; see README's Database Workflow section for the one-time baseline-resolve step needed on any environment whose tables predate the migration history.
 
 ## Architecture
 
@@ -58,7 +61,7 @@ pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 ```
 app/            # Next.js App Router: route groups (auth)/(admin)/(guest)/(profiles) + api/**
 components/     # ~60 folders, flat mix of reusable primitives and one-off page sections
-config/         # single static config object (cookies, upload limits, action names)
+config/         # static config object (cookies, upload limits, action names) + env.server.ts/env.client.ts (Zod-validated env)
 contexts/       # React contexts
 hooks/          # React hooks
 lib/            # data-access functions — MIXED: some are server-only (Prisma), some are client fetch wrappers
@@ -96,7 +99,7 @@ erDiagram
 Two independent mechanisms — don't conflate them:
 
 - **Session auth (login state):** Supabase Auth. `getServerSession()` (`src/services/getServerSession.ts`) reads the Supabase session cookie, looks up the corresponding Prisma `User`. Client-side equivalent is `src/services/getSession.ts`.
-- **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/services/authService.ts` (`signJwt`/`verifyJwt`, using `process.env.JWT_SECRET`). Used only for narrow, expiring tokens — QR action codes (`src/app/api/qrcode`, `src/app/api/actions/[id]`), CV export links (`src/app/api/export`), and temporary student-profile preview access (`jwtStudent()` in `src/lib/jwtStudent.ts` signs a token embedding the student `code`; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access within an existing authenticated session, without requiring the profile to be saved) — **not** for login sessions.
+- **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/services/authService.ts` (`signJwt`/`verifyJwt`, using `serverEnv.JWT_SECRET` from `@/config/env.server` — not raw `process.env`). Used for QR action codes (`src/app/api/qrcode`, `src/app/api/actions/[id]`) and temporary student-profile preview access (`jwtStudent()` in `src/lib/jwtStudent.ts` signs a token embedding the student `code`, 15-minute expiry; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access within an existing authenticated session, without requiring the profile to be saved) — both genuinely short-lived. **CV export links** (`src/app/api/export`) use the same mechanism but are an exception: `signJwt` is called with no `expiresIn`, so the token is intentionally **non-expiring** for now, pending an open retention-policy decision (see the code comment in `export/route.ts`) — don't lump it in with the other two as "expiring." None of these are for login sessions.
 - `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through Supabase.
 - Password changes are split across two routes: `src/app/api/auth/password-change/route.ts` (admin-only, session-gated — an admin resets another user's password via the Supabase admin client) and `src/app/api/auth/password-reset/route.ts` (self-service, the Supabase `resetPasswordForEmail`/`exchangeCodeForSession` flow). Don't add a third path — extend one of these two.
 
@@ -106,24 +109,24 @@ Two independent mechanisms — don't conflate them:
 - **Route responses:** always pass an explicit status code to `NextResponse.json(body, { status })`. The default is 200, and some existing routes rely on that default even for validation/auth failures — don't copy that pattern in new code.
 - **`app/auth/confirm/route.ts`** lives outside the `(auth)`/`api` conventions on purpose — it's the Supabase email-confirmation callback URL, which Supabase itself constructs, so it can't move without reconfiguring Supabase. Leave it where it is.
 - **Edition-specific content** (sponsors, tiers, booth-to-action mapping, schedule, FAQ) is hardcoded across `src/utils/*Companies*`, `src/app/api/saved/route.ts`'s booth `switch`, and `src/config/index.ts`'s `actionNames` — these are per-event content, not generic utilities, even though some live in `utils/`.
-- **Env vars:** read through `process.env` directly, with no central validated config or startup check. `.env.example` is the source of truth for required keys; keep it in sync with actual `process.env.*` reads when you add or rename one.
+- **Env vars:** validated through Zod, not read from `process.env` directly. Server-only secrets/config go through `serverEnv` (`src/config/env.server.ts`, guarded by `server-only`, validated lazily on first property access); `NEXT_PUBLIC_*` vars go through `clientEnv` (`src/config/env.client.ts`, validated eagerly at import time, since Next.js inlines them into the browser bundle at build time). Import whichever matches where your code runs — don't add a new raw `process.env.*` read. `.env.example` is the source of truth for required keys; keep it in sync with both schemas when you add or rename one.
 - **Components:** `src/components/` is flat — every component, reusable or single-use, gets its own top-level `PascalCaseName/index.tsx` folder (e.g. `Input`, `Modal`, but also one-off sections like `GiveawaySection`, `AdminSavedSection`). There is no `components/ui/` split and no route-local `_components/` convention in use today — put new components at the top level of `components/` following that same pattern rather than inventing a nested structure.
 - **API error responses:** shapes are inconsistent across existing routes (`{ error }`, `{ message }`, raw Zod `e.errors`/`e.issues`/`.error`, English and Portuguese strings all appear). For **new** routes, standardize on `{ error: string }` for failures (the majority pattern) with an explicit status code every time — don't add another one-off shape, and don't rely on the 200 default (a few existing routes do this on validation/auth failure; that's a known bug, not a pattern to copy).
 
 ## Verification (definition of done)
 
-There is no CI, test coverage is minimal, and build-time type/lint errors are suppressed (see [Gotchas](#gotchas)) — so most broken changes will not be caught automatically. Before considering a task done:
+CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, but test coverage is still minimal and CI doesn't run `pnpm test`, and `next build` itself still ignores type/lint errors (see [Gotchas](#gotchas)) — so CI catches type/lint regressions, but most functional breakage still will not be caught automatically. Before considering a task done:
 
-1. Run `pnpm lint` and fix anything it flags in touched files.
-2. Run `pnpm test` — keep it green, and extend it if you touch `src/lib/logger.ts` or `src/lib/sentryPrivacy.ts`.
-3. Run `pnpm exec tsc --noEmit` manually (there's no script for it) — the build won't fail on type errors, but you should still not introduce new ones.
+1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
+2. Run `pnpm test` — keep it green, and extend it if you touch `src/lib/logger.ts` or `src/lib/sentryPrivacy.ts`. CI does not run this for you.
+3. Run `pnpm typecheck` — this also runs in CI, but don't rely on CI alone to catch it.
 4. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
 5. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
 ## Gotchas
 
-- **`tsconfig.json` has `strict: false`** and `next.config.js` sets `typescript.ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true` — a broken build or type error will not fail CI or `next build` today. Don't rely on the compiler to catch what it's configured to ignore.
-- **`pnpm test` exists but is minimal** (`src/lib/logger.test.ts`, `src/lib/sentryPrivacy.test.ts`), there's no CI workflow, and no `typecheck` script yet. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
+- **`tsconfig.json` now has `strict: true`**, but `next.config.js` still sets `typescript.ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true` — `next build` itself will not fail on a type or lint error. CI's separate `pnpm typecheck`/`pnpm lint` job (`.github/workflows/ci.yml`) is what actually gates PRs on these; don't treat a successful `next build` as a signal that types are clean.
+- **`pnpm test` exists but is minimal** (`src/lib/logger.test.ts`, `src/lib/sentryPrivacy.test.ts`), and CI doesn't run it. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
 - **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
 - **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) are set. Don't assume a `Content-Security-Policy` or CSP `frame-ancestors` directive exists.
