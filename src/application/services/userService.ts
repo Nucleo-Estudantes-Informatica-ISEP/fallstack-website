@@ -1,5 +1,6 @@
 import "server-only";
 
+import { withTransaction } from "../repositories/transaction";
 import {
   findEmployeeUserIds,
   setUserInterests,
@@ -12,6 +13,8 @@ export async function updateUserInterests(input: {
 }) {
   if (!input.companyId) return setUserInterests(input.userId, input.interests);
   const ids = await findEmployeeUserIds(input.companyId);
-  await Promise.all(ids.map((id) => setUserInterests(id, input.interests)));
+  await withTransaction(async (tx) =>
+    Promise.all(ids.map((id) => setUserInterests(id, input.interests, tx)))
+  );
   return { success: true };
 }

@@ -4,15 +4,18 @@ import { Prisma } from "@prisma/client";
 
 import config from "@/config";
 
-import prisma from "./database";
+import prisma, { DbClient } from "./database";
 
 export const isStudentSaved = async (companyId: string, code: string) =>
   !!(await prisma.savedStudent.findFirst({
     where: { AND: [{ savedBy: { companyId } }, { student: { code } }] },
   }));
 
-export const createSavedStudent = (studentId: string, employeeId: string) =>
-  prisma.savedStudent.create({ data: { studentId, employeeId } });
+export const createSavedStudent = (
+  studentId: string,
+  employeeId: string,
+  db: DbClient = prisma
+) => db.savedStudent.create({ data: { studentId, employeeId } });
 
 export const findSavedStudent = (studentId: string, companyId: string) =>
   prisma.savedStudent.findFirst({
