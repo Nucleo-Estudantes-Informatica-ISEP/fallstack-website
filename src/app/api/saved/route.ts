@@ -3,14 +3,38 @@ import { NextRequest, NextResponse } from "next/server";
 import { httpErrorResponse } from "@/lib/http/server";
 import { errorResponse } from "@/services/apiResponse";
 import { verifyJwt } from "@/services/authService";
-import { saveStudent } from "@/application/services/savedStudentService";
+import {
+  saveStudent,
+  updateSavedStudentComment,
+} from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
-import { saveSchema } from "@/schemas/saveSchema";
+import { savedCommentSchema, saveSchema } from "@/schemas/saveSchema";
 
 function studentCodeFromToken(token: string | undefined) {
   if (!token) return undefined;
   const decoded = verifyJwt(token) as unknown as { code: string } | null;
   return decoded?.code;
+}
+
+export async function PUT(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.role !== "EMPLOYEE" || !session.employee?.company)
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const parsed = savedCommentSchema.safeParse(await req.json());
+  if (!parsed.success) return errorResponse(parsed.error, 400);
+  try {
+    const { studentId, comment } = parsed.data;
+    await updateSavedStudentComment(
+      studentId,
+      session.employee.company.id,
+      comment
+    );
+    return NextResponse.json({ comment });
+  } catch (error) {
+    return httpErrorResponse(error);
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -30,6 +54,7 @@ export async function POST(req: NextRequest) {
       studentCode: code,
       employeeId: session.employee.id,
       companyId: session.employee.company.id,
+      comment: parsed.data.comment,
       allowDuplicate: session.isAdmin,
       completeBoothAction: true,
     });
@@ -56,6 +81,7 @@ export async function PATCH(req: NextRequest) {
         studentCode: code,
         employeeId: session.employee.id,
         companyId: session.employee.company.id,
+        comment: parsed.data.comment,
       })
     );
   } catch (error) {

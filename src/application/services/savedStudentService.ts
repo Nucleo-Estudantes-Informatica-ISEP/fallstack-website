@@ -24,6 +24,7 @@ import {
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
+  updateSavedStudentComment as updateSavedStudentCommentRecord,
 } from "../repositories/savedStudentRepository";
 import {
   findStudentByCode,
@@ -36,6 +37,7 @@ export async function saveStudent(input: {
   studentCode: string;
   employeeId: string;
   companyId: string;
+  comment?: string | null;
   allowDuplicate?: boolean;
   completeBoothAction?: boolean;
 }) {
@@ -47,7 +49,12 @@ export async function saveStudent(input: {
   );
   try {
     return await withTransaction(async (tx) => {
-      const saved = await createSavedStudent(student.id, input.employeeId, tx);
+      const saved = await createSavedStudent(
+        student.id,
+        input.employeeId,
+        tx,
+        input.comment
+      );
       if (input.completeBoothAction) {
         const company = await findCompanyName(input.companyId, tx);
         if (!company) throw new HttpError("Company not found", 404);
@@ -61,6 +68,19 @@ export async function saveStudent(input: {
       throw new HttpError("Student already saved", 400);
     throw error;
   }
+}
+
+export async function updateSavedStudentComment(
+  studentId: string,
+  companyId: string,
+  comment: string | null
+) {
+  const updated = await updateSavedStudentCommentRecord(
+    studentId,
+    companyId,
+    comment
+  );
+  if (!updated.count) throw new HttpError("Saved student not found", 404);
 }
 
 export async function saveStudentAsAdmin(

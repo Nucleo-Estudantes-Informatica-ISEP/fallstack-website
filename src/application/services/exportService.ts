@@ -3,6 +3,7 @@ import "server-only";
 import JSZip from "jszip";
 
 import { HttpError } from "@/types/HttpError";
+import { buildSavedStudentsCsv } from "@/lib/savedStudentComments";
 import { BASE_URL } from "@/services/api";
 import { signJwt } from "@/services/authService";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -63,8 +64,6 @@ const sanitizeFilename = (value: string) =>
 export async function createCompanyCvZip(companyId: string) {
   const savedStudents = await findCompanySavedStudentsWithCv(companyId);
   const studentsWithCv = savedStudents.filter(({ student }) => student.cv);
-  if (!studentsWithCv.length)
-    throw new HttpError("Nenhum CV disponível para exportar.", 404);
 
   const admin = createAdminClient();
   const zip = new JSZip();
@@ -80,7 +79,6 @@ export async function createCompanyCvZip(companyId: string) {
       Buffer.from(await response.arrayBuffer())
     );
   }
-  if (!Object.keys(zip.files).length)
-    throw new HttpError("Não foi possível gerar o ficheiro zip.", 500);
+  zip.file("dados.csv", buildSavedStudentsCsv(savedStudents));
   return zip.generateAsync({ type: "uint8array" });
 }
