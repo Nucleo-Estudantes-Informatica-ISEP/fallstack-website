@@ -2,7 +2,8 @@ import "server-only";
 
 import prisma from "./database";
 
-export const findInterests = () => prisma.interest.findMany();
+export const findInterests = () =>
+  prisma.interest.findMany({ select: { id: true, name: true } });
 
 export const findUserInterests = (userId: string) =>
   prisma.interest.findMany({

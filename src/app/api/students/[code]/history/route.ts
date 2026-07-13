@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { HttpError } from "@/types/HttpError";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { getStudentHistory } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 
@@ -27,5 +28,5 @@ export async function GET(_: NextRequest, props: StudentParams) {
   if (history instanceof HttpError)
     return NextResponse.json(history.message, { status: history.status });
 
-  return NextResponse.json(history);
+  return NextResponse.json(history.map(toSavedStudentDto));
 }

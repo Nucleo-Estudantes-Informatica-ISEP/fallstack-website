@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { httpErrorResponse } from "@/lib/http/server";
 import { errorResponse } from "@/services/apiResponse";
+import {
+  toStudentDto,
+  toStudentSummaryDto,
+} from "@/application/dto/studentDto";
 import getServerSession from "@/application/services/sessionService";
 import {
   getStudentProfile,
@@ -22,7 +26,7 @@ export async function GET(_: NextRequest, { params }: StudentProps) {
       companyId: session.employee?.company?.id,
       isAdmin: session.isAdmin,
     });
-    return NextResponse.json(student);
+    return NextResponse.json(toStudentDto(student));
   } catch (error) {
     return httpErrorResponse(error);
   }
@@ -36,5 +40,7 @@ export async function PATCH(req: NextRequest, { params }: StudentProps) {
     return errorResponse("Forbidden", 403);
   const parsed = patchStudentSchema.safeParse(await req.json());
   if (!parsed.success) return errorResponse(parsed.error, 400);
-  return NextResponse.json(await updateStudent(session.id, code, parsed.data));
+  return NextResponse.json(
+    toStudentSummaryDto(await updateStudent(session.id, code, parsed.data))
+  );
 }

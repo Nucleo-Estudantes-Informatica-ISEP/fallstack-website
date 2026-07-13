@@ -2,13 +2,13 @@
 
 import React, { useState } from "react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
 import QRCodeModal from "@/components/QRCode/QRCodeModal";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsQrCodeScan } from "react-icons/bs";
 
 interface QRCodeButtonProps {
-  user: UserWithProfile;
+  user: SessionDto;
 }
 
 const QRCodeButton: React.FC<QRCodeButtonProps> = ({ user }) => {

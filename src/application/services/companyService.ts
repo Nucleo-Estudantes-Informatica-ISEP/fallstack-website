@@ -8,7 +8,6 @@ import { rankInterestMatchingCompanies } from "../domain/companyMatching";
 import {
   createCompany,
   findCompanies,
-  findCompaniesWithUsers,
   findCompanyById,
   findCompanyByName,
   findCompanyInterests,
@@ -22,7 +21,6 @@ import {
 import { withTransaction } from "../repositories/transaction";
 
 export const getCompanies = () => findCompanies();
-export const getCompaniesWithUsers = () => findCompaniesWithUsers();
 export const getCompany = (id: string) => findCompanyById(id);
 export const getCompanyInterests = (id: string) => findCompanyInterests(id);
 

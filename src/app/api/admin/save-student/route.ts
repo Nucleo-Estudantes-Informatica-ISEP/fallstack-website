@@ -13,12 +13,11 @@ export async function POST(req: Request) {
   if (!parsed.success)
     return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
   try {
-    return NextResponse.json(
-      await saveStudentAsAdmin(
-        parsed.data.studentEmailNumber,
-        parsed.data.companyId
-      )
+    await saveStudentAsAdmin(
+      parsed.data.studentEmailNumber,
+      parsed.data.companyId
     );
+    return NextResponse.json({ message: "Student saved" });
   } catch (error) {
     return httpErrorResponse(error);
   }

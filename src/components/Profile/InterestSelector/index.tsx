@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Interest } from "@prisma/client";
 
 import { BASE_URL } from "@/services/api";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestSelectorProps {
   userInterests: string[];
@@ -16,7 +16,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   userInterests,
   scrollable = false,
 }) => {
-  const [interests, setInterests] = useState<Interest[]>([]);
+  const [interests, setInterests] = useState<InterestDto[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

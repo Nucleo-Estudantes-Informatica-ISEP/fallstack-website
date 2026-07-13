@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
 interface HistorySectionProps {
-  historyData: SavedStudentWithSavedBy[];
+  historyData: SavedStudentDto[];
   isCompany?: boolean;
 }
 
@@ -44,7 +44,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
                   </Link>
                 ) : (
                   <span className="w-full truncate">
-                    {item.savedBy.company.name}
+                    {item.savedBy.company?.name}
                   </span>
                 )}
               </div>

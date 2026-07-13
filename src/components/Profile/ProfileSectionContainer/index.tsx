@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Action, Student, User } from "@prisma/client";
 import {
   FiChevronRight,
   FiFileText,
@@ -14,12 +13,14 @@ import {
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import type { Stats } from "@/types/Stats";
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentActionDto } from "@/application/dto/actionDto";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { StudentDto } from "@/application/dto/studentDto";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -31,13 +32,13 @@ import { IconType } from "react-icons";
 type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 
 interface ProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
   globalStats: Stats;
   todayStats: number;
   companiesLeft: number;
-  historyData: SavedStudentWithSavedBy[];
-  actions: (Action & { done: boolean })[];
+  historyData: SavedStudentDto[];
+  actions: StudentActionDto[];
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
@@ -155,10 +156,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
 
   const renderContent = () => {
-    if (selectedMenu === "passe")
-      return (
-        <PassMenuContent user={student.user} code={student.code ?? null} />
-      );
+    if (selectedMenu === "passe") return <PassMenuContent student={student} />;
 
     switch (activeTab) {
       case "Sumário":

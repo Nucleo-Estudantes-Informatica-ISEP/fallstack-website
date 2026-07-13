@@ -14,7 +14,7 @@ test("CompaniesContainer passes tier down to Company cards", () => {
       companies={[{ name: "TestCorp", logoHref: dummyLogo }]}
     />
   );
-  
+
   // For Diamond tier, Company component will generate a Link to /company/TestCorp
   // because hrefByCompanyTier(DIAMOND) returns internal page route when no websiteUrl.
   // If tier was missing, it defaults to BRONZE -> defaults to "/"

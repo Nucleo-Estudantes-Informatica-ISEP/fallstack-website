@@ -2,15 +2,15 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Student, User } from "@prisma/client";
 import swal from "sweetalert";
 
 import { BASE_URL } from "@/services/api";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
 
 interface PreviewProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
   token?: string;
   isCompanyView?: boolean;

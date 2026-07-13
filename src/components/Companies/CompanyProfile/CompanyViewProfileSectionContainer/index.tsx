@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Company, Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
@@ -11,24 +10,22 @@ import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { Github, Linkedin } from "@/styles/Icons";
 
 interface CompanyViewProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
-  company: Company;
   token: string;
   isSavedStudent: boolean;
 }
 
 const CompanyViewProfileSectionContainer: React.FC<
   CompanyViewProfileSectionContainerProps
-> = ({ student, interests, company, token, isSavedStudent }) => {
+> = ({ student, interests, token, isSavedStudent }) => {
   const [comment, setComment] = useState("");
 
   const handleSaveProfile = async () => {
-    if (!company) return swal("Erro ao carregar perfil!");
-
     const res = await fetch(BASE_URL + "/saved", {
       method: "PATCH",
       body: JSON.stringify({ token, comment }),

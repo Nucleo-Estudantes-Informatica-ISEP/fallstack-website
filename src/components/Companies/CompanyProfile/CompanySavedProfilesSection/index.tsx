@@ -2,7 +2,6 @@
 
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
@@ -11,11 +10,7 @@ import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHi
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import { jwtStudent } from "@/application/services/studentTokenService";
 
-interface StatsProps {
-  company: Company;
-}
-
-const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
+const CompanySavedProfilesSection = () => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
@@ -282,7 +277,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
             <span className="flex-1 text-center">Data</span>
           </div>
         </div>
-        <CompanySavesSection company={company} />
+        <CompanySavesSection />
       </div>
     </section>
   );

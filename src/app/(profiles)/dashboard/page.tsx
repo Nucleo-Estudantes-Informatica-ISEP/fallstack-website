@@ -1,6 +1,8 @@
 import { HttpError } from "@/types/HttpError";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import { toCompanyDto } from "@/application/dto/companyDto";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { getCompanyInterests } from "@/application/services/companyService";
 import {
   getCompanyHistory,
@@ -28,11 +30,13 @@ const Dashboard = async () => {
       className={`bg-company flex size-full min-h-screen flex-col items-center`}
     >
       <CompanyProfileSectionContainer
-        company={session.employee.company}
+        company={toCompanyDto(session.employee.company)}
         employeeName={session.employee.name}
         globalStats={globalStats}
         totalStudents={totalStudents}
-        history={history instanceof HttpError ? [] : history}
+        history={
+          history instanceof HttpError ? [] : history.map(toSavedStudentDto)
+        }
         interests={companyInterests}
       />
     </section>

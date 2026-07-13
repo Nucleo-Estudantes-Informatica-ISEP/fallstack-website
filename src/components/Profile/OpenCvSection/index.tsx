@@ -1,18 +1,18 @@
 "use client";
 
 import React from "react";
-import { Student } from "@prisma/client";
 
 import { BASE_URL } from "@/services/api";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { OpenCv } from "@/styles/Icons";
 
 interface OpenCvProps {
-  student: Student;
+  student: Pick<StudentDto, "code">;
   text: string;
 }
 
 const OpenCvSection: React.FC<OpenCvProps> = ({ student, text }) => {
-  const handleCv = async (student: Student) => {
+  const handleCv = async (student: Pick<StudentDto, "code">) => {
     const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
     const { url } = await res.json();
     window.open(url, "_blank");
