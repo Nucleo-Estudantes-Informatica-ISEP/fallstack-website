@@ -1,20 +1,15 @@
 import { NextResponse } from "next/server";
-import { ZodError } from "zod";
 
+import { defineHandler } from "@/lib/http/server";
 import { signInSchema } from "@/schemas/signInSchema";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
-export async function POST(req: Request) {
-  try {
-    const requestBody = await req.json();
-    const body = signInSchema.parse(requestBody);
-    const { email, password } = body;
-
+export const POST = defineHandler({
+  auth: "public",
+  schema: signInSchema,
+  handler: async ({ body }) => {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword(body);
 
     if (error)
       return NextResponse.json(
@@ -26,13 +21,5 @@ export async function POST(req: Request) {
       { message: "Sign in successfully" },
       { status: 200 }
     );
-  } catch (e) {
-    if (e instanceof ZodError)
-      return NextResponse.json({ error: e.issues }, { status: 400 });
-
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
-  }
-}
+  },
+});
