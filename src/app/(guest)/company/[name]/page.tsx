@@ -10,11 +10,13 @@ interface CompanySearchProps {
   }>;
 }
 
+import { COMPANY_TIER } from "@/domain/Company/company-tier";
+
 const CompanyPage = async (props: CompanySearchProps) => {
   const params = await props.params;
   const company = findCompanyByName(params.name);
 
-  if (company === null || company.tier === "Silver") return Custom404();
+  if (company === null || company.tier === COMPANY_TIER.SILVER) return Custom404();
 
   const companyProps = company.props;
   const modalInformation = companyProps.modalInformation;
