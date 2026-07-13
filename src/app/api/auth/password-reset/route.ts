@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { reportError } from "@/lib/logger";
-
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 const requestResetSchema = z.object({
   email: z.string().email(),
@@ -12,10 +11,8 @@ const requestResetSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Shared SSR/browser clients both use PKCE and persist its verifier in cookies.
+    const supabase = await createSupabaseServerClient();
 
     const parsed = requestResetSchema.safeParse(body);
     if (!parsed.success) {

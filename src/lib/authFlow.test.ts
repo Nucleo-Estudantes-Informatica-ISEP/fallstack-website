@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
+import { createBrowserClient, createServerClient } from "@supabase/ssr";
 
 const root = process.cwd();
 const read = (file: string) => readFile(path.join(root, file), "utf8");
@@ -19,9 +20,22 @@ test("password recovery has one Supabase Auth flow", async () => {
   assert.doesNotMatch(schema, /PasswordResetToken/);
   assert.match(migration, /DROP TABLE IF EXISTS "PasswordResetToken"/);
   assert.match(requestRoute, /auth\.resetPasswordForEmail/);
+  assert.match(requestRoute, /utils\/supabase\/server/);
+  assert.doesNotMatch(requestRoute, /@supabase\/supabase-js/);
   assert.doesNotMatch(requestRoute, /exchangeCodeForSession|auth\.updateUser/);
   assert.match(confirmPage, /auth\.updateUser/);
   assert.doesNotMatch(confirmPage, /verifyOtp|exchangeCodeForSession/);
+
+  const options = { cookies: { getAll: () => [], setAll: () => {} } };
+  const server = createServerClient("http://localhost", "anon-key", options);
+  const browser = createBrowserClient("http://localhost", "anon-key", {
+    isSingleton: false,
+  });
+  const flowType = (client: typeof server) =>
+    (client.auth as unknown as { flowType: string }).flowType;
+  assert.equal(flowType(server), "pkce");
+  assert.equal(flowType(browser), flowType(server));
+
   for (const legacyPath of [
     "src/app/(admin)/change-password/page.tsx",
     "src/app/api/auth/password-change/route.ts",
