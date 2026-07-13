@@ -1,6 +1,6 @@
 "use client";
 
-import { FunctionComponent } from "react";
+import React, { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
 import Company, { CompanyProps } from "@/components/Companies/Company";
@@ -27,7 +27,7 @@ const CompaniesContainer: FunctionComponent<CompaniesContainerProps> = ({
       <section className={`w-full rounded-3xl px-4`}>
         <div className="my-2 grid w-full grid-cols-2 place-items-center gap-4 sm:gap-6 md:flex md:flex-wrap md:items-center md:justify-center md:gap-12 lg:gap-16">
           {companies.map((company) => (
-            <Company key={company.name} {...company} />
+            <Company key={company.name} {...company} tier={tier} />
           ))}
         </div>
       </section>
