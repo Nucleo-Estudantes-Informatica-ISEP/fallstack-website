@@ -193,10 +193,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           <>
             {/* NOME */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-100">Nome</label>
+              <label
+                className="text-xs font-medium text-gray-100"
+                htmlFor="profile-name"
+              >
+                Nome
+              </label>
               <div className="border border-white bg-transparent">
                 <Input
                   name=""
+                  id="profile-name"
                   defaultValue={student.name}
                   disabled={true}
                   className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
@@ -206,10 +212,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
             {/* ANO */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-100">Ano</label>
+              <label
+                className="text-xs font-medium text-gray-100"
+                htmlFor="profile-year"
+              >
+                Ano
+              </label>
               <div className="border border-white bg-transparent">
                 <Input
                   name=""
+                  id="profile-year"
                   defaultValue={student.year}
                   disabled={true}
                   className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
@@ -219,10 +231,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
             {/* EMAIL */}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-gray-100">Email</label>
+              <label
+                className="text-xs font-medium text-gray-100"
+                htmlFor="profile-email"
+              >
+                Email
+              </label>
               <div className="border border-white bg-transparent">
                 <Input
                   name=""
+                  id="profile-email"
                   defaultValue={student.user.email}
                   disabled={true}
                   className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
@@ -236,10 +254,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* LINKEDIN */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-100">LinkedIn</label>
+          <label
+            className="text-xs font-medium text-gray-100"
+            htmlFor="profile-linkedin"
+          >
+            LinkedIn
+          </label>
           <div className="border border-white bg-transparent">
             <Input
               name=""
+              id="profile-linkedin"
               defaultValue={profile.linkedin}
               placeholder="https://www.linkedin.com/in/nome"
               inputRef={linkedinRef}
@@ -250,10 +274,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* GITHUB */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-100">Github</label>
+          <label
+            className="text-xs font-medium text-gray-100"
+            htmlFor="profile-github"
+          >
+            Github
+          </label>
           <div className="border border-white bg-transparent">
             <Input
               name=""
+              id="profile-github"
               defaultValue={profile.github}
               placeholder="https://github.com/example"
               inputRef={githubRef}
