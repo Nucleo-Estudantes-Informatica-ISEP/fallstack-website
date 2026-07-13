@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 
 import { Session } from "@/types/Session";
 import config from "@/config";
+import { serverEnv } from "@/config/env.server";
 
 const validatePassword = async (password: string, hashedPassword: string) => {
   return await bcrypt.compare(password, hashedPassword);
@@ -13,7 +14,7 @@ const signJwt = (
   data: Session | object | string,
   options?: jwt.SignOptions
 ) => {
-  const token = jwt.sign(data, process.env.JWT_SECRET as string, options);
+  const token = jwt.sign(data, serverEnv.JWT_SECRET, options);
   return token;
 };
 
@@ -27,7 +28,7 @@ const comparePassword = async (password: string, hashedPassword: string) => {
 
 const verifyJwt = (token: string, options?: jwt.VerifyOptions) => {
   try {
-    return jwt.verify(token, process.env.JWT_SECRET as string, options);
+    return jwt.verify(token, serverEnv.JWT_SECRET, options);
   } catch {
     return null;
   }
@@ -41,7 +42,7 @@ const setCookie = async (token: string) => {
     path: "/",
     sameSite: "strict",
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: serverEnv.NODE_ENV === "production",
   });
 };
 
