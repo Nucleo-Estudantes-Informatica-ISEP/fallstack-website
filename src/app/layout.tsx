@@ -27,17 +27,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-svh">
+    <html lang="pt" className="h-svh">
       <head>
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
       </head>
       <body>
+        <a
+          href="#main-content"
+          className="sr-only z-50 bg-primary p-3 text-black focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        >
+          Saltar para o conteúdo principal
+        </a>
         <AuthContextProvider>
           <InstallableContextProvider>
             <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
               <Topbar />
-              <main>{children}</main>
+              <main id="main-content">{children}</main>
               <ToastContainer position="bottom-right" />
               <InstallPopUp />
             </SkeletonTheme>
