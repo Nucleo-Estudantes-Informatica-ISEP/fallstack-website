@@ -1,9 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+import { actionCompletionUpsertArgs } from "./domain/actionRules";
 import { rankInterestMatchingCompanies } from "./domain/companyMatching";
 import { assertStudentCanBeSaved, findBoothAction } from "./domain/saveRules";
 import { isAllowedToViewStudent } from "./domain/studentAccess";
+
+test("action completion upsert is keyed on the compound unique index", () => {
+  assert.deepEqual(actionCompletionUpsertArgs("student-id", "action-id"), {
+    where: {
+      actionId_studentId: { studentId: "student-id", actionId: "action-id" },
+    },
+    update: {},
+    create: { studentId: "student-id", actionId: "action-id" },
+  });
+});
 
 test("save rules reject duplicates unless explicitly allowed", () => {
   assert.throws(

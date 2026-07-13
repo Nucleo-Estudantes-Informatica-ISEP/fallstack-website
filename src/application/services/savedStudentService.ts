@@ -29,6 +29,7 @@ import {
   findStudentByCode,
   findStudentByEmail,
 } from "../repositories/studentRepository";
+import { withTransaction } from "../repositories/transaction";
 import { completeAction } from "./actionService";
 
 const boothActions: Record<string, string> = {
@@ -61,14 +62,16 @@ export async function saveStudent(input: {
     input.allowDuplicate
   );
   try {
-    const saved = await createSavedStudent(student.id, input.employeeId);
-    if (input.completeBoothAction) {
-      const company = await findCompanyName(input.companyId);
-      if (!company) throw new HttpError("Company not found", 404);
-      const action = findBoothAction(company.name, boothActions);
-      if (action) await completeAction(student.code, action);
-    }
-    return saved;
+    return await withTransaction(async (tx) => {
+      const saved = await createSavedStudent(student.id, input.employeeId, tx);
+      if (input.completeBoothAction) {
+        const company = await findCompanyName(input.companyId, tx);
+        if (!company) throw new HttpError("Company not found", 404);
+        const action = findBoothAction(company.name, boothActions);
+        if (action) await completeAction(student.code, action, tx);
+      }
+      return saved;
+    });
   } catch (error) {
     if (isUniqueConstraintError(error))
       throw new HttpError("Student already saved", 400);

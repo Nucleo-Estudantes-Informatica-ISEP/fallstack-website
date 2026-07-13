@@ -1,9 +1,9 @@
 import "server-only";
 
-import prisma from "./database";
+import prisma, { DbClient } from "./database";
 
-export const findStudentByCode = (code: string) =>
-  prisma.student.findUnique({ where: { code } });
+export const findStudentByCode = (code: string, db: DbClient = prisma) =>
+  db.student.findUnique({ where: { code } });
 
 export const findStudentProfileByCode = (code: string) =>
   prisma.student.findUnique({
@@ -23,14 +23,17 @@ export const findStudentAction = (studentId: string, actionId: string) =>
     include: { actionCompletions: { where: { actionId } } },
   });
 
-export const createStudent = (input: {
-  userId: string;
-  code: string;
-  name: string;
-  bio?: string;
-  year: string;
-}) =>
-  prisma.student.create({
+export const createStudent = (
+  input: {
+    userId: string;
+    code: string;
+    name: string;
+    bio?: string;
+    year: string;
+  },
+  db: DbClient = prisma
+) =>
+  db.student.create({
     data: {
       id: input.userId,
       code: input.code,
@@ -42,23 +45,28 @@ export const createStudent = (input: {
 
 export const updateStudentProfile = (
   code: string,
-  data: { bio?: string; linkedin?: string; github?: string }
+  data: { bio?: string; linkedin?: string; github?: string },
+  db: DbClient = prisma
 ) =>
-  prisma.student.update({
+  db.student.update({
     where: { code },
     data: { ...data, bio: data.bio?.trim() },
   });
 
 export const updateStudentMedia = (
   id: string,
-  data: { avatar?: string | null; cv?: string | null }
-) => prisma.student.update({ where: { id }, data });
+  data: { avatar?: string | null; cv?: string | null },
+  db: DbClient = prisma
+) => db.student.update({ where: { id }, data });
 
 export const updateStudentAvatar = (code: string, avatar: string) =>
   prisma.student.update({ where: { code }, data: { avatar } });
 
-export const updateStudentCv = (code: string, cv: string) =>
-  prisma.student.update({ where: { code }, data: { cv } });
+export const updateStudentCv = (
+  code: string,
+  cv: string,
+  db: DbClient = prisma
+) => db.student.update({ where: { code }, data: { cv } });
 
 export const findAllStudents = () =>
   prisma.student.findMany({

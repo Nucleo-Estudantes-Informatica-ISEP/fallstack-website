@@ -44,3 +44,15 @@ const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
 export default prisma;
+
+// The type Prisma infers for an interactive transaction's callback argument,
+// derived rather than hand-duplicated so it stays in sync with the `prisma`
+// singleton above (including its `.$extends()` methods, e.g.
+// `user.findUserWithProfile`).
+export type DbClient =
+  | typeof prisma
+  | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+
+export const withTransaction = <T>(
+  fn: (tx: Exclude<DbClient, typeof prisma>) => Promise<T>
+) => prisma.$transaction(fn);

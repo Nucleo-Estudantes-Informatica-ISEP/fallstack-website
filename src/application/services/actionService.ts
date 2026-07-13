@@ -8,16 +8,17 @@ import {
   createActionCompletion,
   findActionById,
   findActionByName,
-  findActionCompletion,
   findActionCompletions,
   findActions,
   findVisibleActions,
   toggleAction,
+  upsertActionCompletion,
 } from "../repositories/actionRepository";
 import {
   findStudentAction,
   findStudentByCode,
 } from "../repositories/studentRepository";
+import { DbClient, prisma } from "../repositories/transaction";
 
 export const getActions = () => findActions();
 
@@ -32,14 +33,17 @@ export async function getStudentActions(studentCode: string) {
   }));
 }
 
-export async function completeAction(studentCode: string, actionName: string) {
+export async function completeAction(
+  studentCode: string,
+  actionName: string,
+  db: DbClient = prisma
+) {
   const [action, student] = await Promise.all([
-    findActionByName(actionName),
-    findStudentByCode(studentCode),
+    findActionByName(actionName, db),
+    findStudentByCode(studentCode, db),
   ]);
   if (!action || !student) return null;
-  if (await findActionCompletion(student.id, action.id)) return null;
-  return createActionCompletion(student.id, action.id);
+  return upsertActionCompletion(student.id, action.id, db);
 }
 
 export async function getActionQrCode(id: string) {
