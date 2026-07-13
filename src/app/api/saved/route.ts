@@ -64,6 +64,13 @@ export async function POST(req: NextRequest) {
     else studentCode = decoded.code;
   }
 
+  if (!studentCode) {
+    return NextResponse.json(
+      { error: "Invalid student code" },
+      { status: 400 }
+    );
+  }
+
   // check if student exists
   const student = await prisma.student.findUnique({
     where: { code: studentCode },
@@ -78,12 +85,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Company not found" }, { status: 404 });
 
   // check if student is already saved by this company
-  if (!studentCode) {
-    return NextResponse.json(
-      { error: "Invalid student code" },
-      { status: 400 }
-    );
-  }
   const alreadySaved = await isSaved(session.employee.company.id, studentCode);
 
   if (alreadySaved && !session.isAdmin)
