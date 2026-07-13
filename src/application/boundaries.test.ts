@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 
 import { toCompanyDto } from "./dto/companyDto";
 import { toAdminScanDto, toSavedStudentDto } from "./dto/historyDto";
@@ -47,6 +47,7 @@ test("server and client modules declare their boundary", async () => {
   ];
   for (const folder of serverFolders) {
     for (const file of await filesIn(folder)) {
+      if (/\.test\.tsx?$/.test(file)) continue;
       assert.match(await readFile(file, "utf8"), /import "server-only";/, file);
     }
   }
