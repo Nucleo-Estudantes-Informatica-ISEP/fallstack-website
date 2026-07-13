@@ -1,12 +1,12 @@
-import { Archive, Leaf, Trophy } from "@/styles/Icons";
-
 /*
   cgiLogo,
 	deloitteLogo,
 	devoteamLogo,
 	devscopeLogo,
-*/ 
+*/
 import { CompanyProps } from "@/components/Companies/Company";
+import { Archive, Leaf, Trophy } from "@/styles/Icons";
+
 import {
   cgiLogo,
   deloitteLogo,
@@ -21,15 +21,13 @@ export const GoldCompanies: CompanyProps[] = [
     interests: ["Cloud Computing", "Infrastructure", "Security"],
     modalInformation: {
       title: "CGI",
-      linkedinLink:
-        "https://www.linkedin.com/company/cgi/",
+      linkedinLink: "https://www.linkedin.com/company/cgi/",
       facebookLink: "https://www.facebook.com/cgiinc/",
       website: "https://www.cgi.com/",
       facts: [
         {
           iconSrc: Trophy,
-          description:
-            "Uma das maiores empresas de consultoria de TI do mundo",
+          description: "Uma das maiores empresas de consultoria de TI do mundo",
         },
         {
           iconSrc: Archive,
@@ -47,19 +45,21 @@ export const GoldCompanies: CompanyProps[] = [
       bodyText: (
         <>
           <p>
-            A CGI é uma das maiores empresas independentes de consultoria de tecnologia
-            da informação e serviços de negócios do mundo. Fundada em 1976, temos uma
-            presença global com profissionais em mais de 40 países, oferecendo soluções
-            completas de TI e serviços de consultoria de negócios que ajudam os clientes
-            a alcançar seus objetivos estratégicos.
+            A CGI é uma das maiores empresas independentes de consultoria de
+            tecnologia da informação e serviços de negócios do mundo. Fundada em
+            1976, temos uma presença global com profissionais em mais de 40
+            países, oferecendo soluções completas de TI e serviços de
+            consultoria de negócios que ajudam os clientes a alcançar seus
+            objetivos estratégicos.
           </p>
           <br />
           <p>
-            Nossa abordagem combina proximidade com clientes, compromisso com resultados
-            e uma profunda experiência em setores-chave. Trabalhamos como parceiros
-            estratégicos, ajudando organizações a transformar digitalmente seus negócios,
-            otimizar operações e impulsionar a inovação através de tecnologias emergentes
-            como cloud, IA e cibersegurança.
+            Nossa abordagem combina proximidade com clientes, compromisso com
+            resultados e uma profunda experiência em setores-chave. Trabalhamos
+            como parceiros estratégicos, ajudando organizações a transformar
+            digitalmente seus negócios, otimizar operações e impulsionar a
+            inovação através de tecnologias emergentes como cloud, IA e
+            cibersegurança.
           </p>
         </>
       ),
@@ -147,7 +147,8 @@ export const GoldCompanies: CompanyProps[] = [
         </>
       ),
       instagramLink: "https://www.instagram.com/deloitteportugal/",
-      linkedinLink: "https://www.linkedin.com/company/deloitte/posts/?feedView=all",
+      linkedinLink:
+        "https://www.linkedin.com/company/deloitte/posts/?feedView=all",
       website: "https://www2.deloitte.com/pt/pt.html",
       facts: [
         {

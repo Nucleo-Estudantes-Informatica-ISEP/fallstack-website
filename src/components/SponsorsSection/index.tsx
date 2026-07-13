@@ -2,8 +2,8 @@
 
 import { FunctionComponent } from "react";
 
-import { Sponsors } from "@/utils/Sponsors";
 import SponsorsContainer from "@/components/SponsorsContainer";
+import { Sponsors } from "@/utils/Sponsors";
 
 const SponsorsSection: FunctionComponent = () => {
   return (

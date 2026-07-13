@@ -24,7 +24,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
       if (!res.ok) throw new Error("Falha ao obter QR code");
       const { data } = await res.json();
       setQrToken(data as string);
-    } catch (e) {
+    } catch {
       setQrToken(null);
     } finally {
       setLoading(false);
@@ -42,10 +42,6 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const handleRefresh = () => {
-    fetchToken();
-  };
-
   return (
     <div className="flex w-full flex-col items-center pt-4">
       <h2
@@ -60,7 +56,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ user, code }) => {
       </p>
       {/* New styled card design */}
       <StyledPassCard
-        name={user.student?.name}
+        name={user.student?.name ?? ""}
         qrValue={qrToken}
         loading={loading}
         code={user.student?.code}

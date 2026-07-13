@@ -3,12 +3,13 @@ import { EmailSchema } from "@/schemas/customEmailZod";
 
 export const employeeSignUpSchema = z.object({
   email: EmailSchema,
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  name: z.string().min(2, "Name is too short"),
+  password: z.string().min(8, "Password must be at least 8 characters").max(72),
+  name: z.string().min(2, "Name is too short").max(100),
   linkedin: z
     .string()
     .trim()
     .url("Invalid LinkedIn URL")
+    .max(2048)
     .optional()
     .or(z.literal(""))
     .transform((v) => (v === "" ? undefined : v)),

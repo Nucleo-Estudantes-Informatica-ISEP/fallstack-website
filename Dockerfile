@@ -30,12 +30,21 @@ COPY --from=deps /app/package.json /app/pnpm-lock.yaml ./
 ARG NEXT_PUBLIC_SENTRY_DSN=""
 ARG SENTRY_ORG=""
 ARG SENTRY_PROJECT=""
+# Public (non-secret) Supabase values: Next.js inlines these into the
+# browser bundle at build time, so the builder stage needs them directly —
+# unlike JWT_SECRET/SUPABASE_SERVICE_ROLE_KEY, which stay runtime-only via
+# env_file (see docker-compose.app.yml).
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV SENTRY_ORG=$SENTRY_ORG
 ENV SENTRY_PROJECT=$SENTRY_PROJECT
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Selective copy (smaller context)
+COPY package.json package-lock.json* pnpm-lock.yaml* ./
 COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js sentry.edge.config.ts sentry.server.config.ts tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
@@ -57,6 +66,13 @@ RUN --mount=type=secret,id=sentry_auth_token,required=false \
   else \
     npm run build; \
   fi
+
+# Standalone stage to apply pending migrations against DATABASE_URL before
+# the app starts. Reuses `builder` (full node_modules incl. the Prisma CLI,
+# generated client, schema, and migrations) rather than the pruned runner
+# image. See docker-compose.app.yml's `migrate` service.
+FROM builder AS migrator
+CMD ["npx", "prisma", "migrate", "deploy"]
 
 FROM base AS runner
 WORKDIR /app

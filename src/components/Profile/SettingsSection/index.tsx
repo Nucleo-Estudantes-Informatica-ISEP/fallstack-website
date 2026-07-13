@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Dispatch, SetStateAction, useRef, useState } from "react";
@@ -10,10 +9,6 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/lib/upload";
 import { BASE_URL } from "@/services/api";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -23,6 +18,10 @@ import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface SettingsSectionProps {
@@ -196,7 +195,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         </div>
       </div>
 
-      <div className="mx-4 mb-12 mt-4 flex flex-col gap-y-4 md:mx-12">
+      <div className="mx-4 mt-4 mb-12 flex flex-col gap-y-4 md:mx-12">
         <Input
           name="Linkedin"
           defaultValue={profile.linkedin}
@@ -217,7 +216,6 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
         <UserBioTextArea
           name="Bio"
-          defaultValue={profile.bio}
           rows={5}
           placeholder="Escreve algo sobre ti..."
           setValue={handleUserBioChange}
@@ -246,8 +244,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         isVisible={isModalVisible}
         setIsVisible={setIsModalVisible}
         className="flex flex-col items-center justify-center gap-8"
+        aria-labelledby="avatar-modal-title"
       >
-        <h1 className="text-3xl font-bold">Altera o teu Avatar</h1>
+        <h1 id="avatar-modal-title" className="text-3xl font-bold">
+          Altera o teu Avatar
+        </h1>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
         <PrimaryButton
           className="w-full py-2 text-xl"

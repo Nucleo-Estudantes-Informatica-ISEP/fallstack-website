@@ -1,18 +1,20 @@
 import { CompanyProps } from "@/components/Companies/Company";
 import { Archive, Chart, Leaf, Trophy } from "@/styles/Icons";
 
-import { aprLogo, armisLogo, cloudflareLogo, hitachiLogo } from "./CompaniesImages";
+import {
+  aprLogo,
+  armisLogo,
+  cloudflareLogo,
+  hitachiLogo,
+} from "./CompaniesImages";
 
-
-
- // parceiros diamond:
- /*
+// parceiros diamond:
+/*
   APR - Technology Solutions
   ARMIS
   Cloudflare
   Hitachi Solutions
  */
-
 
 export const DiamondCompanies: CompanyProps[] = [
   {
@@ -20,31 +22,28 @@ export const DiamondCompanies: CompanyProps[] = [
     name: "APR - Technology Solutions",
     modalInformation: {
       title: "APR - Technology Solutions",
-      bodyText: (        
-        <p> 
-
-          Somos uma empresa tecnológica com mais de 30 anos de experiência, 
-          parceira da Microsoft, dedicada à inovação, desenvolvimento e implementação 
-          de soluções que impulsionam o crescimento dos nossos clientes. 
-          Com uma oferta diversificada e especializações em ERP Dynamics Business 
-          Central, Systems, CRM Solutions e Microsoft Power Platform, 
-          atuamos em múltiplos setores, liderando a transformação digital de organizações 
-          em todo o mundo.
-
-          A nossa presença reflete um compromisso global 
-          com a excelência tecnológica, apoiando empresas na otimização de 
-          processos, aumento da eficiência operacional e automação de 
-          tarefas, sempre com foco na segurança digital.
-          Mais do que implementar tecnologia, oferecemos consultoria 
-          estratégica, suporte contínuo e desenvolvimento aplicacional 
-          personalizado, ajustado às necessidades específicas de cada negócio. 
-          A nossa metodologia centrada no cliente permite-nos 
-          antecipar tendências, responder rapidamente às mudanças do 
-          mercado e preparar as empresas para o futuro digital.
+      bodyText: (
+        <p>
+          Somos uma empresa tecnológica com mais de 30 anos de experiência,
+          parceira da Microsoft, dedicada à inovação, desenvolvimento e
+          implementação de soluções que impulsionam o crescimento dos nossos
+          clientes. Com uma oferta diversificada e especializações em ERP
+          Dynamics Business Central, Systems, CRM Solutions e Microsoft Power
+          Platform, atuamos em múltiplos setores, liderando a transformação
+          digital de organizações em todo o mundo. A nossa presença reflete um
+          compromisso global com a excelência tecnológica, apoiando empresas na
+          otimização de processos, aumento da eficiência operacional e automação
+          de tarefas, sempre com foco na segurança digital. Mais do que
+          implementar tecnologia, oferecemos consultoria estratégica, suporte
+          contínuo e desenvolvimento aplicacional personalizado, ajustado às
+          necessidades específicas de cada negócio. A nossa metodologia centrada
+          no cliente permite-nos antecipar tendências, responder rapidamente às
+          mudanças do mercado e preparar as empresas para o futuro digital.
         </p>
       ),
       instagramLink: "https://www.instagram.com/aprtechnologysolutions/",
-      linkedinLink: "https://www.linkedin.com/company/apr-technology-solutions/",
+      linkedinLink:
+        "https://www.linkedin.com/company/apr-technology-solutions/",
       facebookLink: "https://www.facebook.com/aprtechnologysolutions",
       youtubeLink: "https://www.youtube.com/@aprtechnologysolutions",
       website: "https://www.apr.pt",
@@ -126,20 +125,22 @@ export const DiamondCompanies: CompanyProps[] = [
       bodyText: (
         <>
           <p>
-            Cloudflare is on a mission to help build a better Internet. Today the company
-            runs one of the world's largest networks that powers millions of websites and
-            other Internet properties for customers ranging from individual bloggers to
-            SMBs to Fortune 500 companies. Cloudflare protects and accelerates any Internet
-            application online without adding hardware, installing software, or changing a
-            line of code.
+            Cloudflare is on a mission to help build a better Internet. Today
+            the company runs one of the world&apos;s largest networks that
+            powers millions of websites and other Internet properties for
+            customers ranging from individual bloggers to SMBs to Fortune 500
+            companies. Cloudflare protects and accelerates any Internet
+            application online without adding hardware, installing software, or
+            changing a line of code.
           </p>
           <br />
           <p>
-            Internet properties powered by Cloudflare all have web traffic routed through
-            its intelligent global network, which gets smarter with every request. As a
-            result, they see significant improvement in performance and a decrease in spam
-            and other attacks. Cloudflare was named to Entrepreneur Magazine's Top Company
-            Cultures list and ranked among the World's Most Innovative Companies by Fast
+            Internet properties powered by Cloudflare all have web traffic
+            routed through its intelligent global network, which gets smarter
+            with every request. As a result, they see significant improvement in
+            performance and a decrease in spam and other attacks. Cloudflare was
+            named to Entrepreneur Magazine&apos;s Top Company Cultures list and
+            ranked among the World&apos;s Most Innovative Companies by Fast
             Company.
           </p>
         </>

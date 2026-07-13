@@ -1,9 +1,9 @@
 import React from "react";
 
-import { getCompanies } from "@/lib/companies";
-import getServerSession from "@/services/getServerSession";
 import AdminSavedSection from "@/components/AdminSavedSection";
 import Custom404 from "@/app/not-found";
+import { getCompanies } from "@/application/services/companyService";
+import getServerSession from "@/application/services/sessionService";
 
 const giveaway = async () => {
   const session = await getServerSession();

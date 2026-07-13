@@ -1,12 +1,9 @@
 "use client";
 
-import { ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
-import FactData from "@/types/FactData";
-import { CompanyProps } from "@/components/Companies/Company";
 import CompanyInfo from "@/components/Companies/CompanyInfo";
 import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
 import findCompanyByName from "@/utils/CompanyByName";
@@ -20,10 +17,13 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
 }) => {
   const company = findCompanyByName(companyName);
 
-  if (!company || !company.props.modalInformation) return null;
+  if (!company) return null;
 
   const { props: companyProps, tier } = company;
   const { modalInformation } = companyProps;
+
+  if (!modalInformation) return null;
+
   const interests = companyProps.interests || [];
 
   return (

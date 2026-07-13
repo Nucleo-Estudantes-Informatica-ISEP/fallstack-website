@@ -3,14 +3,13 @@
 "use client";
 
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { FaFilePdf } from "react-icons/fa";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { uploadCv as uploadCvToSupabase } from "@/lib/upload";
 import FileInput from "@/components/FileInput";
 import PrimaryButton from "@/components/PrimaryButton";
+import { uploadCv as uploadCvToSupabase } from "@/client/api/upload";
 
 interface CvStepProps {
   currentStep: number;
@@ -57,13 +56,13 @@ const CvStep: FunctionComponent<CvStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
-        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
+        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
           Adiciona o teu CV
         </p>
 
-        <p className="font-sans text-sm font-normal text-white mb-4">
+        <p className="mb-4 font-sans text-sm font-normal text-white">
           Faz upload do teu currículo em formato PDF. (Opcional)
         </p>
 
@@ -96,7 +95,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
         <PrimaryButton
           loading={loading}
           onClick={handleNext}
-          className="mb-5 mt-4 font-bold w-full h-14"
+          className="mt-4 mb-5 h-14 w-full font-bold"
         >
           Seguinte
         </PrimaryButton>

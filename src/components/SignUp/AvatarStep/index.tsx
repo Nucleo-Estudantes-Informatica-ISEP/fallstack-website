@@ -11,12 +11,12 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { signUp } from "@/lib/auth";
-import { uploadAvatar as uploadAvatarToSupabase } from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
+import { signUp } from "@/client/api/auth";
+import { uploadAvatar as uploadAvatarToSupabase } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface AvatarStepProps {
@@ -73,12 +73,14 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
       router.refresh();
     } catch (e) {
       console.error(e);
+      toast.error("Ocorreu um erro ao criar a conta.");
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
         <div className="mb-5 flex justify-center">
           <Image
             src={"/assets/images/logo_dark.png"}
@@ -129,7 +131,7 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
         <PrimaryButton
           loading={loading}
           onClick={handleSubmit}
-          className="mb-5 mt-4 font-bold w-full h-14"
+          className="mt-4 mb-5 h-14 w-full font-bold"
         >
           CONCLUIR
         </PrimaryButton>

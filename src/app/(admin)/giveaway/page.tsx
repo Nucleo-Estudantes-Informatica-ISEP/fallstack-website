@@ -1,9 +1,9 @@
 import React from "react";
 
-import { getStudentsForGiveaway } from "@/lib/students";
-import getServerSession from "@/services/getServerSession";
 import GiveawaySection from "@/components/GiveawaySection";
 import Custom404 from "@/app/not-found";
+import getServerSession from "@/application/services/sessionService";
+import { getStudentsForGiveaway } from "@/application/services/studentService";
 
 const giveaway = async () => {
   const session = await getServerSession();

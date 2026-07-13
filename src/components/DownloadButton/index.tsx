@@ -25,15 +25,18 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({ className }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   return (
-    <span
-      className={`hover:text-primary cursor-pointer transition-colors ${
+    <button
+      type="button"
+      className={`cursor-pointer transition-colors hover:text-primary ${
         isLoading && "text-primary"
       } ${className}`}
       onClick={handleDownload}
+      disabled={isLoading}
       title="Exportar para CSV"
+      aria-label="Exportar para CSV"
     >
       {isLoading ? <Spinner /> : <DownloadIcon />}
-    </span>
+    </button>
   );
 };
 

@@ -42,7 +42,7 @@ const Activity: FunctionComponent<ActivityProps> = ({
         <p className="mt-5 text-2xl">{location}</p>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 items-center md:grid-cols-2 ">
+      <div className="mt-10 grid grid-cols-1 items-center md:grid-cols-2">
         <div className="mx-auto w-full text-center text-xl leading-7 md:text-justify md:leading-8 lg:text-2xl">
           {children}
         </div>

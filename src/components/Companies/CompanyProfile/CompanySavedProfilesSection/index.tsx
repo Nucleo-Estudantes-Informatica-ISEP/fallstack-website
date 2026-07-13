@@ -6,10 +6,10 @@ import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { jwtStudent } from "@/lib/jwtStudent";
 import { BASE_URL } from "@/services/api";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import { jwtStudent } from "@/application/services/studentTokenService";
 
 interface StatsProps {
   company: Company;
@@ -83,7 +83,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
 
       router.push(`/student/${data}/preview`);
       setProcessing(false);
-    } catch (error) {
+    } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
@@ -153,7 +153,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       setDownloading(false);
-    } catch (err) {
+    } catch {
       setDownloading(false);
       swal("Erro", "Não foi possível exportar os CVs.", "error");
     }
@@ -192,7 +192,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       <div className="flex w-full flex-col items-center justify-center">
         {processing ? (
           <div
-            className="text-primary mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
             <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
@@ -211,7 +211,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <input
             type="text"
             placeholder="código"
-            className="focus:border-primary h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none"
+            className="h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
@@ -262,7 +262,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <button
             onClick={handleDownloadAllCvs}
             disabled={downloading}
-            className="bg-primary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {downloading ? "A preparar..." : "Download CVs"}
           </button>

@@ -61,8 +61,8 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
         <div className="mb-5 flex justify-center">
           <Image
             src={"/assets/images/logo_dark.png"}
@@ -82,7 +82,7 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
             onKeyUp={handleKeyUp}
             defaultValue={data.password ? data.password : undefined}
             autoFocus
-            className={`${error ? "border-2 border-red-600" : ""} z-10 `}
+            className={`${error ? "border-2 border-red-600" : ""} z-10`}
           />
           <Input
             type="password"
@@ -92,7 +92,7 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
             inputRef={inputRefPasswordRepeat}
             onKeyUp={handleKeyUp}
             defaultValue={data.password ? data.password : undefined}
-            className={`${error ? "border-2 border-red-600" : ""} z-10 `}
+            className={`${error ? "border-2 border-red-600" : ""} z-10`}
           />
         </div>
         {error && (
@@ -110,7 +110,10 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
           </motion.p>
         )}
 
-        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+        <PrimaryButton
+          onClick={handleNext}
+          className="mt-4 mb-5 h-14 w-full font-bold"
+        >
           Seguinte
         </PrimaryButton>
       </div>

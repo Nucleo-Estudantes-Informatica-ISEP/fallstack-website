@@ -1,5 +1,25 @@
 const REDACTED = "[REDACTED]";
 
+type MutableSentryEvent = Record<string, unknown> & {
+  user?: unknown;
+  message?: unknown;
+  logentry?: { message?: unknown; params?: unknown };
+  request?: {
+    data?: unknown;
+    cookies?: unknown;
+    query_string?: unknown;
+    url?: unknown;
+    headers?: unknown;
+  };
+  contexts?: unknown;
+  extra?: unknown;
+  tags?: unknown;
+  breadcrumbs?: Array<Record<string, unknown> & { data?: unknown }>;
+  exception?: {
+    values?: Array<{ value?: unknown; type?: unknown }>;
+  };
+};
+
 const sensitiveKeys = new Set([
   "authorization",
   "cookie",
@@ -43,7 +63,7 @@ function sanitizeValue(value: unknown): unknown {
 }
 
 export function sanitizeSentryEvent<T>(event: T): T {
-  const sanitized = event as Record<string, any>;
+  const sanitized = event as MutableSentryEvent;
   delete sanitized.user;
 
   if (sanitized.message) sanitized.message = "Application event";
@@ -63,7 +83,7 @@ export function sanitizeSentryEvent<T>(event: T): T {
   sanitized.contexts = sanitizeValue(sanitized.contexts);
   sanitized.extra = sanitizeValue(sanitized.extra);
   sanitized.tags = sanitizeValue(sanitized.tags);
-  sanitized.breadcrumbs = sanitized.breadcrumbs?.map((breadcrumb: any) => ({
+  sanitized.breadcrumbs = sanitized.breadcrumbs?.map((breadcrumb) => ({
     ...breadcrumb,
     data: sanitizeValue(breadcrumb.data),
   }));
@@ -76,7 +96,7 @@ export function sanitizeSentryEvent<T>(event: T): T {
 }
 
 export function sanitizeSentryLog<T>(log: T): T {
-  const sanitized = log as Record<string, any>;
+  const sanitized = log as Record<string, unknown> & { attributes?: unknown };
   sanitized.attributes = sanitizeValue(sanitized.attributes);
   return log;
 }

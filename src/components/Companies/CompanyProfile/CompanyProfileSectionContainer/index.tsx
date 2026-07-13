@@ -1,28 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Company } from "@prisma/client";
-import {
-  FiChevronRight,
-  FiFileText,
-  FiLogOut,
-} from "react-icons/fi";
-import { BiScan } from "react-icons/bi";
-import { IconType } from "react-icons";
-import swal from "sweetalert";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Company } from "@prisma/client";
+import { BiScan } from "react-icons/bi";
+import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
+import swal from "sweetalert";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/types/Stats";
+import useSession from "@/hooks/useSession";
+import { BASE_URL } from "@/services/api";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
-import { BASE_URL } from "@/services/api";
-import useSession from "@/hooks/useSession";
+
+import { IconType } from "react-icons";
 
 interface CompanyProfileSectionContainerProps {
   company: Company;
   employeeName: string;
-  globalStats: number[];
+  globalStats: Stats;
   totalStudents: number;
   history: SavedStudentWithSavedBy[];
   interests: string[];
@@ -40,20 +38,25 @@ interface SidebarItem {
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
-  "Sumário": "sumario",
+  Sumário: "sumario",
   "Scan de Perfil": "scan_perfil",
 };
 
 const CompanyProfileSectionContainer: React.FC<
   CompanyProfileSectionContainerProps
-> = ({ company, employeeName, globalStats, totalStudents, history, interests }) => {
+> = ({
+  company,
+  employeeName,
+  globalStats,
+  totalStudents,
+  history,
+  interests,
+}) => {
   const router = useRouter();
   const session = useSession();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
-  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(
-    menuMap[activeTab]
-  );
+  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
 
   useEffect(() => {
     setSelectedMenu(menuMap[activeTab]);
@@ -139,9 +142,7 @@ const CompanyProfileSectionContainer: React.FC<
           />
         );
       case "Scan de Perfil":
-        return (
-          <CompanySavedProfilesSection company={company} />
-        );
+        return <CompanySavedProfilesSection company={company} />;
       default:
         return null;
     }

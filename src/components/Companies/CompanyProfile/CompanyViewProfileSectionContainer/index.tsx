@@ -56,9 +56,9 @@ const CompanyViewProfileSectionContainer: React.FC<
 
   return (
     <div
-      className={`mt-12 size-full items-center justify-center bg-company md:my-14`}
+      className={`bg-company mt-12 size-full items-center justify-center md:my-14`}
     >
-      <div className="mb-12 mt-4 flex size-full flex-col items-center bg-company">
+      <div className="bg-company mt-4 mb-12 flex size-full flex-col items-center">
         <motion.div
           transition={{ duration: 0.5 }}
           className="flex flex-col items-center justify-center pt-8"
@@ -95,7 +95,7 @@ const CompanyViewProfileSectionContainer: React.FC<
             {!isSavedStudent && (
               <button
                 onClick={handleSaveProfile}
-                className="hover:bg-primary/100 rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:shadow-xl"
+                className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary/100 hover:shadow-xl"
               >
                 + Salvar Perfil
               </button>

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { parseCompanyTier } from "@/domain/Company/company-tier";
 
 export const postCompanySchema = z.object({
-  name: z.string(),
+  name: z.string().min(1).max(100),
   tier: z.string().transform((val, ctx) => {
     try {
       return parseCompanyTier(val);
@@ -11,5 +11,5 @@ export const postCompanySchema = z.object({
       return z.NEVER;
     }
   }),
-  avatarUrl: z.url().optional(),
+  avatarUrl: z.url().max(2048).optional(),
 });

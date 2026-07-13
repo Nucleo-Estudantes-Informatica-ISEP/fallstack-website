@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
 import { v4 as uuidv4 } from "uuid";
 
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 export async function POST(req: NextRequest) {
   const form = await req.formData();

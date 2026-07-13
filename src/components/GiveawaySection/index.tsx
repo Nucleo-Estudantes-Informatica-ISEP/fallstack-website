@@ -3,8 +3,8 @@
 import { FunctionComponent, useState } from "react";
 import Swal from "sweetalert";
 
-import { pickGiveawayWinner } from "@/app/(admin)/giveaway/actions";
 import ConfettiEffect from "@/components/ConfettiEffect";
+import { pickGiveawayWinner } from "@/app/(admin)/giveaway/actions";
 
 interface GiveawayStudent {
   id: string;
@@ -96,7 +96,9 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
                 }`}
               >
                 <div>{student.name}</div>
-                <div className="text-sm text-gray-500">{student.points} pts</div>
+                <div className="text-sm text-gray-500">
+                  {student.points} pts
+                </div>
               </div>
             ));
         })}

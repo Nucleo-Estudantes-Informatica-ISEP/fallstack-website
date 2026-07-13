@@ -54,7 +54,9 @@ async function ensureSupabaseUser(email: string, password: string) {
     error.message.toLowerCase().includes("already been registered")
   ) {
     const list = await admin.auth.admin.listUsers();
-    const existing = list.data.users.find((u) => u.email === email);
+    if (list.error) throw list.error;
+    const users: { id: string; email?: string }[] = list.data.users;
+    const existing = users.find((u) => u.email === email);
     if (existing) return existing;
   }
 
@@ -252,10 +254,15 @@ async function seedCompanies() {
 
     if (c.name === "armis") {
       const email2 = "armis2@test.pt";
-      const existing2 = await prisma.user.findUnique({ where: { email: email2 } });
+      const existing2 = await prisma.user.findUnique({
+        where: { email: email2 },
+      });
       const supaUser2 =
         existing2 ??
-        (await ensureSupabaseUser(email2, process.env.ADMIN_PASSWORD as string));
+        (await ensureSupabaseUser(
+          email2,
+          process.env.ADMIN_PASSWORD as string
+        ));
       const userId2 = existing2 ? existing2.id : supaUser2.id;
 
       if (!existing2) {

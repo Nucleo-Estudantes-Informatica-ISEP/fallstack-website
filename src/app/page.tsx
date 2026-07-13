@@ -1,6 +1,6 @@
 "use client";
 
-import {FunctionComponent, useRef} from "react";
+import { FunctionComponent, useRef } from "react";
 import LogoWhite from "~/public/assets/images/logo_white.svg";
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-white.png";
 
@@ -12,22 +12,22 @@ import Hero from "@/components/Hero";
 import HeroContainer from "@/components/HeroContainer";
 
 const App: FunctionComponent = () => {
-    const contentRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
-    return (
-        <HeroContainer>
-            <GenericContainer>
-                <Hero
-                    logoSrc={LogoWhite}
-                    logoAlt="Logo principal do evento Fall-Stack 2025"
-                    contentRef={contentRef}
-                />
-                <Content contentRef={contentRef}/>
-                <HeadsUp/>
-                <Footer neiLogoSrc={NeiLogoSimplifiedWhite}/>
-            </GenericContainer>
-        </HeroContainer>
-    );
+  return (
+    <HeroContainer>
+      <GenericContainer>
+        <Hero
+          logoSrc={LogoWhite}
+          logoAlt="Logo principal do evento Fall-Stack 2025"
+          contentRef={contentRef}
+        />
+        <Content contentRef={contentRef} />
+        <HeadsUp />
+        <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
+      </GenericContainer>
+    </HeroContainer>
+  );
 };
 
 export default App;

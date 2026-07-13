@@ -3,6 +3,11 @@
 import { FunctionComponent, useCallback, useEffect, useRef } from "react";
 import ReactCanvasConfetti from "react-canvas-confetti";
 
+import type {
+  TCanvasConfettiAnimationOptions,
+  TCanvasConfettiInstance,
+} from "react-canvas-confetti/dist/types";
+
 interface ConfettiEffectProps {
   visible: boolean;
 }
@@ -10,29 +15,25 @@ interface ConfettiEffectProps {
 const ConfettiEffect: FunctionComponent<ConfettiEffectProps> = ({
   visible,
 }) => {
-  const refAnimationInstance = useRef(null);
+  const refAnimationInstance = useRef<TCanvasConfettiInstance | null>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getInstance = useCallback((instance: any) => {
-    refAnimationInstance.current = instance;
-  }, []);
+  const getInstance = useCallback(
+    ({ confetti }: { confetti: TCanvasConfettiInstance }) => {
+      refAnimationInstance.current = confetti;
+    },
+    []
+  );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const makeShot = useCallback((particleRatio: number, opts: any) => {
-    refAnimationInstance.current && refAnimationInstance.current
-      ? {
-          ...opts,
-          origin: { y: 0.7 },
-          particleCount: Math.floor(200 * particleRatio),
-        }
-      : {};
-  }, []);
-
-  useEffect(() => {
-    if (visible) {
-      fire();
-    }
-  }, [visible]);
+  const makeShot = useCallback(
+    (particleRatio: number, opts: TCanvasConfettiAnimationOptions) => {
+      refAnimationInstance.current?.({
+        ...opts,
+        origin: { y: 0.7 },
+        particleCount: Math.floor(200 * particleRatio),
+      });
+    },
+    []
+  );
 
   const fire = useCallback(() => {
     makeShot(0.25, {
@@ -63,9 +64,15 @@ const ConfettiEffect: FunctionComponent<ConfettiEffectProps> = ({
     });
   }, [makeShot]);
 
+  useEffect(() => {
+    if (visible) {
+      fire();
+    }
+  }, [visible, fire]);
+
   return (
     <ReactCanvasConfetti
-      refConfetti={getInstance}
+      onInit={getInstance}
       style={{
         position: "fixed",
         pointerEvents: "none",

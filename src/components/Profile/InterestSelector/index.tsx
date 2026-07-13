@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { Interest } from "@prisma/client";
-import { Reorder } from "framer-motion";
 
 import { BASE_URL } from "@/services/api";
 
