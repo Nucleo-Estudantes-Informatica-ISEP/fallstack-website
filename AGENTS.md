@@ -48,11 +48,12 @@ pnpm generate     # prisma generate (also runs on postinstall)
 pnpm migrate      # prisma migrate dev — diffs schema, writes + applies a new migration
 pnpm migrate:deploy   # prisma migrate deploy — applies pending migrations, no prompts
 pnpm seed         # prisma db seed
-pnpm test         # tsx --test src/application/boundaries.test.ts src/application/serviceLogic.test.ts src/edition/actions.test.ts src/lib/authFlow.test.ts src/lib/logger.test.ts src/lib/savedStudentComments.test.ts src/lib/sentryPrivacy.test.ts src/utils/isepEmail.test.ts
+pnpm test         # vitest run
+pnpm test:watch   # vitest
 pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 ```
 
-`pnpm test` covers the application-boundary/service layer, edition action rules, auth flow, saved-student comments, logger/Sentry privacy, and ISEP email normalization — see [Gotchas](#gotchas). Schema changes go through **Prisma Migrate** (`prisma/migrations/`), not `db push` — a baseline migration (`20260712000000_init`) captures the pre-migration schema; run `pnpm migrate --name <description>` for local changes and commit the generated migration folder. `db push` is no longer the working path; see README's Database Workflow section for the one-time baseline-resolve step needed on any environment whose tables predate the migration history.
+`pnpm test` auto-discovers `*.test.ts` and `*.test.tsx` files with Vitest. Current coverage includes application boundaries/services, domain value objects, edition action rules, auth flow, saved-student comments, logger/Sentry privacy, ISEP email normalization, and component smoke tests. Schema changes go through **Prisma Migrate** (`prisma/migrations/`), not `db push` — a baseline migration (`20260712000000_init`) captures the pre-migration schema; run `pnpm migrate --name <description>` for local changes and commit the generated migration folder. `db push` is no longer the working path; see README's Database Workflow section for the one-time baseline-resolve step needed on any environment whose tables predate the migration history.
 
 ## Architecture
 
@@ -118,17 +119,17 @@ Two independent mechanisms — don't conflate them:
 
 ## Verification (definition of done)
 
-CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. CI doesn't run `pnpm test`, so most functional breakage still will not be caught automatically. Before considering a task done:
+CI (`.github/workflows/ci.yml`) runs `pnpm test`, `pnpm typecheck`, and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. Before considering a task done:
 
 1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
-2. Run `pnpm test` — keep it green, and extend the relevant test file if you touch application boundaries/services, edition action rules, auth flow, saved-student comments, `src/lib/logger.ts`, `src/lib/sentryPrivacy.ts`, or ISEP email normalization. CI does not run this for you.
+2. Run `pnpm test` — keep it green, and extend the relevant test file when behavior changes. CI reruns the full auto-discovered suite.
 3. Run `pnpm typecheck` — this also runs in CI, but don't rely on CI alone to catch it.
 4. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
 5. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
 ## Gotchas
 
-- **`pnpm test` runs eight files** (`src/application/boundaries.test.ts`, `src/application/serviceLogic.test.ts`, `src/edition/actions.test.ts`, `src/lib/authFlow.test.ts`, `src/lib/logger.test.ts`, `src/lib/savedStudentComments.test.ts`, `src/lib/sentryPrivacy.test.ts`, `src/utils/isepEmail.test.ts`), but CI still doesn't run it. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
+- **`pnpm test` uses Vitest auto-discovery** for `*.test.ts` and `*.test.tsx`, and CI runs the suite on every PR. Add colocated tests without maintaining a central file list; still verify changed runtime flows manually where unit tests don't cover them.
 - **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
 - **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) are set. Don't assume a `Content-Security-Policy` or CSP `frame-ancestors` directive exists.
