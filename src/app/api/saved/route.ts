@@ -7,7 +7,8 @@ import { saveStudent } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { saveSchema } from "@/schemas/saveSchema";
 
-function studentCodeFromToken(token: string) {
+function studentCodeFromToken(token: string | undefined) {
+  if (!token) return undefined;
   const decoded = verifyJwt(token) as unknown as { code: string } | null;
   return decoded?.code;
 }

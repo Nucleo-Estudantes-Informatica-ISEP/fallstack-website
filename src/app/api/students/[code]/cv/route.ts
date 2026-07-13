@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import { httpErrorResponse } from "@/lib/http/server";
 import getServerSession from "@/application/services/sessionService";
@@ -7,8 +6,7 @@ import {
   getStudentCv,
   setStudentCv,
 } from "@/application/services/studentService";
-
-const schema = z.object({ id: z.string().uuid() });
+import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 
 interface StudentParams {
   params: Promise<{ code: string }>;
@@ -37,8 +35,10 @@ export async function POST(req: NextRequest, { params }: StudentParams) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (session.role !== "STUDENT" || session.student?.code !== code)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const parsed = schema.safeParse(await req.json());
+  const parsed = cvUploadSchema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
+  if (!("id" in parsed.data))
+    return NextResponse.json({ error: "Bad request" }, { status: 400 });
   try {
     await setStudentCv(code, parsed.data.id);
     return NextResponse.json({ ok: true });

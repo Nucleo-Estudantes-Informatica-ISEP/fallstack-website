@@ -7,7 +7,7 @@ export async function GET() {
   const session = await getServerSession();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.role !== "EMPLOYEE")
+  if (session.role !== "EMPLOYEE" || !session.employee?.company)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   return new NextResponse(await createCompanyCsv(session.employee.company.id), {
     headers: {
