@@ -12,17 +12,23 @@ import prisma, { DbClient } from "./database";
 
 export const isStudentSaved = async (companyId: string, code: string) =>
   !!(await prisma.savedStudent.findFirst({
-    where: { AND: [{ savedBy: { companyId } }, { student: { code } }] },
+    where: { companyId, student: { code } },
   }));
 
 export const createSavedStudent = (
   studentId: string,
   employeeId: string,
+  companyId: string,
   db: DbClient = prisma,
   comment?: string | null
 ) =>
   db.savedStudent.create({
-    data: { studentId, employeeId, ...savedStudentCommentData(comment) },
+    data: {
+      studentId,
+      employeeId,
+      companyId,
+      ...savedStudentCommentData(comment),
+    },
   });
 
 export const updateSavedStudentComment = (
@@ -37,7 +43,7 @@ export const updateSavedStudentComment = (
 
 export const findSavedStudent = (studentId: string, companyId: string) =>
   prisma.savedStudent.findFirst({
-    where: { studentId, savedBy: { companyId } },
+    where: { studentId, companyId },
   });
 
 export const countStudentSaves = (code: string) =>
@@ -49,18 +55,18 @@ export const countStudentSavesSince = (studentId: string, since: Date) =>
   });
 
 export const countCompanySaves = (companyId: string) =>
-  prisma.savedStudent.count({ where: { savedBy: { companyId } } });
+  prisma.savedStudent.count({ where: { companyId } });
 
 export const findCompanyHistory = (companyId: string) =>
   prisma.savedStudent.findMany({
-    where: { savedBy: { companyId } },
+    where: { companyId },
     include: { savedBy: { include: { company: true } }, student: true },
     orderBy: { createdAt: "desc" },
   });
 
 export const findCompanyHistoryWithInterests = (companyId: string) =>
   prisma.savedStudent.findMany({
-    where: { savedBy: { companyId } },
+    where: { companyId },
     include: {
       student: {
         select: {
@@ -77,7 +83,7 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
 
 export const findCompanySavedStudentsWithCv = (companyId: string) =>
   prisma.savedStudent.findMany({
-    where: { savedBy: { companyId } },
+    where: { companyId },
     include: {
       student: { select: { id: true, name: true, code: true, cv: true } },
     },
@@ -85,7 +91,7 @@ export const findCompanySavedStudentsWithCv = (companyId: string) =>
 
 export const findCompanySavesForExport = (companyId: string) =>
   prisma.savedStudent.findMany({
-    where: { savedBy: { companyId } },
+    where: { companyId },
     include: { student: { include: { user: true } } },
     orderBy: { createdAt: "asc" },
   });

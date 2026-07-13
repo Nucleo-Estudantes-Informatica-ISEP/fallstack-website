@@ -20,7 +20,7 @@ test("add, edit, and remove preserve intended comment values", () => {
 test("comment updates are scoped to the logged-in company", () => {
   assert.deepEqual(savedStudentCompanyWhere("student-id", "company-id"), {
     studentId: "student-id",
-    savedBy: { companyId: "company-id" },
+    companyId: "company-id",
   });
 });
 

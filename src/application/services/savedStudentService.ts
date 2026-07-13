@@ -53,6 +53,7 @@ export async function saveStudent(input: {
       const saved = await createSavedStudent(
         student.id,
         input.employeeId,
+        input.companyId,
         tx,
         input.comment
       );
