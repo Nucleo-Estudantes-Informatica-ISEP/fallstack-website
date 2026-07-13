@@ -9,7 +9,7 @@ interface ModalProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href]:not([hidden]), button:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), [tabindex]:not([tabindex="-1"]):not([hidden])';
 
 const Modal: React.FC<ModalProps> = ({
   isVisible,
