@@ -17,10 +17,13 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
 }) => {
   const company = findCompanyByName(companyName);
 
-  if (!company || !company.props.modalInformation) return null;
+  if (!company) return null;
 
   const { props: companyProps, tier } = company;
   const { modalInformation } = companyProps;
+
+  if (!modalInformation) return null;
+
   const interests = companyProps.interests || [];
 
   return (

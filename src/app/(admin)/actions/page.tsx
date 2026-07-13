@@ -1,8 +1,8 @@
 import Link from "next/link";
 
-import { fetchActions } from "@/lib/fetchActions";
-import getServerSession from "@/services/getServerSession";
 import Custom404 from "@/app/not-found";
+import { getActions } from "@/application/services/actionService";
+import getServerSession from "@/application/services/sessionService";
 
 const actions = async () => {
   const session = await getServerSession();
@@ -10,7 +10,7 @@ const actions = async () => {
     return Custom404();
   }
 
-  const actions = await fetchActions();
+  const actions = await getActions();
 
   return (
     <section className="flex min-h-screen w-full flex-col items-center justify-center">
