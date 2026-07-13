@@ -22,6 +22,7 @@ const boothActions: Record<string, string> = {
   natixis: actionNames.natixisBooth,
   apr: actionNames.aprBooth,
   "apr - technology solutions": actionNames.aprBooth,
+  hitachi: actionNames.hitachiBooth,
   "hitachi solutions": actionNames.hitachiBooth,
   convatec: actionNames.convatecBooth,
   niw: actionNames.niwBooth,
