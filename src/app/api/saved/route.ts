@@ -56,20 +56,14 @@ export async function POST(req: NextRequest) {
 
   const { token, comment } = safeParse.data;
 
-  let studentCode = token;
-  if (token) {
-    const decoded = verifyJwt(token) as unknown as { code?: string } | null;
-    if (!decoded?.code)
-      return NextResponse.json({ error: "Invalid token" }, { status: 400 });
-    else studentCode = decoded.code;
-  }
+  if (!token)
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
 
-  if (!studentCode) {
-    return NextResponse.json(
-      { error: "Invalid student code" },
-      { status: 400 }
-    );
-  }
+  const decoded = verifyJwt(token) as unknown as { code?: string } | null;
+  if (!decoded?.code)
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+
+  const studentCode = decoded.code;
 
   // check if student exists
   const student = await prisma.student.findUnique({
