@@ -51,8 +51,10 @@ test("server and client modules declare their boundary", async () => {
       assert.match(await readFile(file, "utf8"), /import "server-only";/, file);
     }
   }
-  for (const file of await filesIn(join(sourceRoot, "client")))
+  for (const file of await filesIn(join(sourceRoot, "client"))) {
+    if (/\.test\.tsx?$/.test(file)) continue;
     assert.match(await readFile(file, "utf8"), /import "client-only";/, file);
+  }
 });
 
 test("Client Components use response DTOs instead of Prisma entities", async () => {
