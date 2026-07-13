@@ -2,6 +2,7 @@
 
 interface InputProps {
   name: string;
+  id?: string;
   placeholder?: string;
   className?: string;
   disabled?: boolean;
@@ -11,22 +12,27 @@ interface InputProps {
 
 const Input: React.FC<InputProps> = ({
   name,
+  id,
   placeholder,
   className,
   disabled,
   defaultValue,
   inputRef,
 }) => {
+  const resolvedId = id || name || undefined;
+
   return (
     <div className="flex w-full flex-col">
-      <label className="text-lg text-slate-700" htmlFor={name}>
-        {name}
-      </label>
+      {name && (
+        <label className="text-lg text-slate-700" htmlFor={resolvedId}>
+          {name}
+        </label>
+      )}
       <input
         type="text"
         name={name}
         disabled={disabled}
-        id={name}
+        id={resolvedId}
         placeholder={placeholder}
         defaultValue={defaultValue ?? undefined}
         ref={inputRef}

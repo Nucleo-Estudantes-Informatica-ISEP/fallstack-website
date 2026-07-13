@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import config from "@/config";
 import { completeAction } from "@/lib/completeAction";
@@ -7,12 +6,8 @@ import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { isSaved } from "@/lib/savedStudents";
 import getServerSession from "@/services/getServerSession";
+import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 import { createAdminClient } from "@/utils/supabase/admin";
-
-const schema = z.union([
-  z.object({ uploadId: z.string().uuid() }), // Firebase flow
-  z.object({ id: z.string().uuid() }), // Supabase flow
-]);
 
 interface StudentParams {
   params: Promise<{
@@ -77,7 +72,7 @@ export async function POST(req: NextRequest, props: StudentParams) {
   const studentCode = session.student.code;
 
   const body = await req.json();
-  const parsed = schema.safeParse(body);
+  const parsed = cvUploadSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
 
   let cvId: string;
