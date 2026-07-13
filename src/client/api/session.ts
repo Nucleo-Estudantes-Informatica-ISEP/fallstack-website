@@ -1,7 +1,7 @@
 import "client-only";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
 import { clientEnv } from "@/config/env.client";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 export default async function getSession() {
   const response = await fetch(
@@ -9,6 +9,6 @@ export default async function getSession() {
     { cache: "no-store" }
   );
   return response.status === 200
-    ? ((await response.json()) as UserWithProfile)
+    ? ((await response.json()) as SessionDto)
     : null;
 }

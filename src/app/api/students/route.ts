@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { httpErrorResponse } from "@/lib/http/server";
+import { toStudentSummaryDto } from "@/application/dto/studentDto";
 import getServerSession from "@/application/services/sessionService";
 import { createStudentProfile } from "@/application/services/studentService";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
@@ -20,9 +21,10 @@ export async function POST(req: Request) {
       );
 
     const body = postStudentSchema.parse(await req.json());
-    return NextResponse.json(await createStudentProfile(session.id, body), {
-      status: 201,
-    });
+    return NextResponse.json(
+      toStudentSummaryDto(await createStudentProfile(session.id, body)),
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof ZodError)
       return NextResponse.json({ error: error.issues }, { status: 400 });

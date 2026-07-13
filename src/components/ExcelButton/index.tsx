@@ -4,24 +4,13 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 
 import Spinner from "@/components/Spinner";
+import type { AdminScanDto } from "@/application/dto/historyDto";
 
 import download from "downloadjs";
 
-interface SavedStudent {
-  studentId: string;
-  createdAt: Date;
-  student: {
-    name: string;
-    user: {
-      email: string;
-    };
-  };
-  id?: string;
-}
-
 interface ExcelButtonProps {
   className?: string;
-  data: SavedStudent[];
+  data: AdminScanDto[];
 }
 
 const ExcelButton: React.FC<ExcelButtonProps> = ({
@@ -34,11 +23,11 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
     setIsLoading(true);
     const dataJSON = data.map((scan) => {
       return {
-        id: scan.id ?? `${scan.studentId}-${scan.createdAt.toISOString()}`,
+        id: scan.id,
         studentId: scan.studentId,
         studentName: scan.student.name,
         studentEmail: scan.student.user.email,
-        createdAt: scan.createdAt.toLocaleString(),
+        createdAt: new Date(scan.createdAt).toLocaleString(),
       };
     });
     const worksheet = XLSX.utils.json_to_sheet(dataJSON);

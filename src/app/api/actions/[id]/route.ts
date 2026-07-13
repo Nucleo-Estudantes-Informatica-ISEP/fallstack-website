@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { httpErrorResponse } from "@/lib/http/server";
 import { verifyJwt } from "@/services/authService";
+import { toActionDto } from "@/application/dto/actionDto";
 import {
   completeActionById,
   getActionQrCode,
@@ -14,7 +15,11 @@ interface ActionParams {
 }
 
 export async function GET(_: NextRequest, { params }: ActionParams) {
-  return NextResponse.json(await getActionQrCode((await params).id));
+  const data = await getActionQrCode((await params).id);
+  return NextResponse.json({
+    ...data,
+    action: data.action ? toActionDto(data.action) : null,
+  });
 }
 
 export async function POST(_: NextRequest, { params }: ActionParams) {

@@ -76,14 +76,13 @@ export async function PATCH(req: NextRequest) {
   if (!code)
     return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   try {
-    return NextResponse.json(
-      await saveStudent({
-        studentCode: code,
-        employeeId: session.employee.id,
-        companyId: session.employee.company.id,
-        comment: parsed.data.comment,
-      })
-    );
+    await saveStudent({
+      studentCode: code,
+      employeeId: session.employee.id,
+      companyId: session.employee.company.id,
+      comment: parsed.data.comment,
+    });
+    return NextResponse.json({ message: "Student saved" });
   } catch (error) {
     return httpErrorResponse(error);
   }

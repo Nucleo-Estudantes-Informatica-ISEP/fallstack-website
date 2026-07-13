@@ -1,13 +1,13 @@
 "use client";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import type { Stats } from "@/types/Stats";
 import HistorySection from "@/components/HistorySection";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 
 interface StatsProps {
   stats: Stats;
   companiesLeft: number;
-  historyData: SavedStudentWithSavedBy[];
+  historyData: SavedStudentDto[];
 }
 
 const StatsSection: React.FC<StatsProps> = ({

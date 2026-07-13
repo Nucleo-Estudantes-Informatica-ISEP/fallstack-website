@@ -14,18 +14,10 @@ export const findCompanyByCode = (code: string) =>
 export const findCompanyByName = (name: string) =>
   prisma.company.findUnique({ where: { name } });
 
-export const findCompanies = () => prisma.company.findMany();
-
-export async function findCompaniesWithUsers() {
-  const companies = await prisma.company.findMany();
-  const users = await prisma.user.findMany({
-    where: { id: { in: companies.map(({ id }) => id) } },
+export const findCompanies = () =>
+  prisma.company.findMany({
+    select: { id: true, name: true, tier: true, avatar: true },
   });
-  return companies.map((company) => ({
-    ...company,
-    user: users.find(({ id }) => id === company.id) ?? null,
-  }));
-}
 
 export const createCompany = (
   data: {

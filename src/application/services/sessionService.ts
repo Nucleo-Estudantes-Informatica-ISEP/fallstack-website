@@ -4,8 +4,8 @@ import { reportError } from "@/lib/logger";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 import {
-  findUserWithEmployeeByEmail,
-  findUserWithProfile,
+  findUserSessionByEmail,
+  findUserSessionById,
 } from "../repositories/userRepository";
 
 export default async function getServerSession() {
@@ -16,9 +16,9 @@ export default async function getServerSession() {
       error,
     } = await supabase.auth.getUser();
     if (error || !user) return null;
-    const appUser = await findUserWithProfile(user.id);
+    const appUser = await findUserSessionById(user.id);
     if (appUser) return appUser;
-    return user.email ? await findUserWithEmployeeByEmail(user.email) : null;
+    return user.email ? await findUserSessionByEmail(user.email) : null;
   } catch (error) {
     reportError(
       error,

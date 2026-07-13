@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Company } from "@prisma/client";
 import Swal from "sweetalert";
 
 import { BASE_URL } from "@/services/api";
+import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface AdminSavedSectionProps {
-  companies: Company[];
+  companies: CompanyDto[];
 }
 
 const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {

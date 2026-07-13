@@ -1,10 +1,11 @@
 "use client";
 
-import { Action } from "@prisma/client";
 import { FiCheck } from "react-icons/fi";
 
+import type { StudentActionDto } from "@/application/dto/actionDto";
+
 interface ActionsSectionProps {
-  actions: (Action & { done: boolean })[];
+  actions: StudentActionDto[];
 }
 
 const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {

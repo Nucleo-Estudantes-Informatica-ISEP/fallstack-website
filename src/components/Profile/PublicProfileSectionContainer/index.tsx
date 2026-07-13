@@ -1,6 +1,5 @@
 "use client";
 
-import { Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 
@@ -9,10 +8,11 @@ import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { Github, Linkedin } from "@/styles/Icons";
 
 interface PublicProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
 }
 

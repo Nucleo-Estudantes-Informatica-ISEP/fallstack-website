@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Company, Interest } from "@prisma/client";
+
+import type { InterestMatchDto } from "@/application/dto/companyDto";
 
 interface InterestMatchingSectionProps {
   userId: string;
@@ -11,9 +12,7 @@ interface InterestMatchingSectionProps {
 const InterestMatchingSection: React.FC<InterestMatchingSectionProps> = ({
   userId,
 }) => {
-  const [companies, setCompanies] = useState<
-    { company: Company; matchingInterests: Interest[] }[]
-  >([]);
+  const [companies, setCompanies] = useState<InterestMatchDto[]>([]);
 
   useEffect(() => {
     async function getInterestMatchingCompanies(userId: string) {

@@ -4,13 +4,13 @@ import React, { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
 import { BASE_URL } from "@/services/api";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
 interface PerfilTabProps {
-  user: UserWithProfile;
+  user: SessionDto;
 }
 
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {

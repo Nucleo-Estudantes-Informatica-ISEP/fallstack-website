@@ -2,7 +2,6 @@
 
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Student, User } from "@prisma/client";
 import { Area } from "react-easy-crop";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
@@ -18,6 +17,7 @@ import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import {
   uploadAvatar as uploadAvatarToSupabase,
   uploadCv as uploadCvToSupabase,
@@ -25,7 +25,7 @@ import {
 import { getCroppedImg } from "@/utils/canvas";
 
 interface SettingsSectionProps {
-  student: Student & { user: User };
+  student: StudentDto;
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
   setActiveTab: Dispatch<

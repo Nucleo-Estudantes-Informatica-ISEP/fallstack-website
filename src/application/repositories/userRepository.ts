@@ -1,14 +1,33 @@
 import "server-only";
 
+import type { Prisma } from "@prisma/client";
+
 import prisma, { DbClient } from "./database";
 
-export const findUserWithProfile = (id: string) =>
-  prisma.user.findUserWithProfile(id);
+const sessionSelect = {
+  id: true,
+  role: true,
+  isAdmin: true,
+  student: { select: { id: true, code: true, name: true } },
+  employee: {
+    select: {
+      id: true,
+      name: true,
+      companyId: true,
+      company: {
+        select: { id: true, name: true, tier: true, avatar: true },
+      },
+    },
+  },
+} satisfies Prisma.UserSelect;
 
-export const findUserWithEmployeeByEmail = (email: string) =>
+export const findUserSessionById = (id: string) =>
+  prisma.user.findUnique({ where: { id }, select: sessionSelect });
+
+export const findUserSessionByEmail = (email: string) =>
   prisma.user.findUnique({
     where: { email },
-    include: { employee: { include: { company: true } }, student: true },
+    select: sessionSelect,
   });
 
 export const findUserByEmail = (email: string) =>

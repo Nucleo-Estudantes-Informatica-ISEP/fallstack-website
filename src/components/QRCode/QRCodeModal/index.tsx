@@ -2,20 +2,20 @@
 
 import React from "react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
 import { useDisableBodyScroll } from "@/hooks/disableBackgroundMoving";
 import useIsMobile from "@/hooks/useIsMobile";
 import QRCodeTab from "@/components/QRCode/QRCodeTab";
 import CompanyTab from "@/components/QRCode/QRCodeTab/CompanyTab";
 import ProfileTab from "@/components/QRCode/QRCodeTab/ProfileTab";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsX } from "react-icons/bs";
 
 interface QRCodeModalProps {
   hidden: boolean;
   setHidden: React.Dispatch<React.SetStateAction<boolean>>;
-  user: UserWithProfile;
+  user: SessionDto;
 }
 const QRCodeModal: React.FC<QRCodeModalProps> = ({
   hidden,

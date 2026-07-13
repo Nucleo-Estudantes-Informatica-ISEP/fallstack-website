@@ -4,17 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
 import type { Stats } from "@/types/Stats";
 import { BASE_URL } from "@/services/api";
 import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 
 interface StatsProps {
   stats: Stats;
   students: number;
-  history: SavedStudentWithSavedBy[];
+  history: SavedStudentDto[];
   interests: string[];
 }
 

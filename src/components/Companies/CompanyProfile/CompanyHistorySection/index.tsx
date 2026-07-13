@@ -2,19 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Company } from "@prisma/client";
 import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
-import { HistoryData } from "@/types/HistoryData";
 import { BASE_URL } from "@/services/api";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
-interface HistorySectionProps {
-  company: Company;
-}
-
-const SavedStudentRow = ({ item }: { item: HistoryData }) => {
+const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
   const [editing, setEditing] = useState(false);
   const [savedComment, setSavedComment] = useState(item.comment ?? "");
   const [comment, setComment] = useState(item.comment ?? "");
@@ -117,8 +112,10 @@ const SavedStudentRow = ({ item }: { item: HistoryData }) => {
   );
 };
 
-const CompanySavesSection = ({ company }: HistorySectionProps) => {
-  const [historyData, setHistoryData] = useState<HistoryData[] | null>(null);
+const CompanySavesSection = () => {
+  const [historyData, setHistoryData] = useState<SavedStudentDto[] | null>(
+    null
+  );
 
   useEffect(() => {
     const fetchHistoryData = async () => {
@@ -135,7 +132,7 @@ const CompanySavesSection = ({ company }: HistorySectionProps) => {
     };
 
     fetchHistoryData();
-  }, [company]);
+  }, []);
 
   return (
     <div className="my-4 flex w-full flex-col items-center justify-center text-white">

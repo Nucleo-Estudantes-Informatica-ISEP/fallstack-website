@@ -2,11 +2,11 @@
 
 import { createContext, useEffect, useState } from "react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
+import type { SessionDto } from "@/application/dto/sessionDto";
 import getSession from "@/client/api/session";
 
 export interface AuthContextData {
-  user: UserWithProfile | null;
+  user: SessionDto | null;
   clear: () => void;
   fetchSession: () => void;
 }
@@ -21,7 +21,7 @@ export function AuthContextProvider({
   children,
   ...props
 }: AuthContextProviderProps) {
-  const [user, setUser] = useState<UserWithProfile | null>(null);
+  const [user, setUser] = useState<SessionDto | null>(null);
 
   const fetchSession = async () => {
     const user = await getSession();

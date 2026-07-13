@@ -8,6 +8,9 @@ import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileS
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import { toStudentActionDto } from "@/application/dto/actionDto";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { toStudentDto } from "@/application/dto/studentDto";
 import { getStudentActions } from "@/application/services/actionService";
 import { getCompanies } from "@/application/services/companyService";
 import {
@@ -78,6 +81,7 @@ const StudentPage = async (props: ProfileProps) => {
     ? await getStudentHistory(session.student.id)
     : new HttpError("Forbidden", 403);
   const actions = await getStudentActions(student.code);
+  const studentDto = toStudentDto(student);
 
   const totalCompanies = companies.length;
   const uniqueCompaniesSaved =
@@ -94,7 +98,7 @@ const StudentPage = async (props: ProfileProps) => {
     return (
       <>
         <PreviewProfileSectionContainer
-          student={student}
+          student={studentDto}
           interests={sanitizedInterests}
           token={code}
           isCompanyView={!!session.employee}
@@ -115,24 +119,25 @@ const StudentPage = async (props: ProfileProps) => {
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
             interests={sanitizedInterests}
-            student={student}
-            company={session.employee.company}
+            student={studentDto}
             token={code}
             isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer
             interests={sanitizedInterests}
-            student={student}
+            student={studentDto}
           />
         ) : (
           <ProfileSectionContainer
             globalStats={globalStats}
             todayStats={todayStats}
             companiesLeft={companiesLeft}
-            historyData={history instanceof HttpError ? [] : history}
-            actions={actions}
-            student={student}
+            historyData={
+              history instanceof HttpError ? [] : history.map(toSavedStudentDto)
+            }
+            actions={actions.map(toStudentActionDto)}
+            student={studentDto}
             interests={sanitizedInterests}
           />
         )}

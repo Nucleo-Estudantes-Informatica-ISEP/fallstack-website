@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
 import { httpErrorResponse } from "@/lib/http/server";
+import { toCompanyDto } from "@/application/dto/companyDto";
 import {
-  getCompaniesWithUsers,
+  getCompanies,
   registerCompany,
 } from "@/application/services/companyService";
 import getServerSession from "@/application/services/sessionService";
@@ -16,7 +17,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const body = postCompanySchema.parse(await req.json());
     const company = await registerCompany({ userId: session.id, ...body });
-    return NextResponse.json({ company }, { status: 201 });
+    return NextResponse.json(
+      { company: toCompanyDto(company) },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof ZodError)
       return NextResponse.json({ error: error.issues }, { status: 400 });
@@ -30,5 +34,5 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!session.isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  return NextResponse.json(await getCompaniesWithUsers());
+  return NextResponse.json((await getCompanies()).map(toCompanyDto));
 }

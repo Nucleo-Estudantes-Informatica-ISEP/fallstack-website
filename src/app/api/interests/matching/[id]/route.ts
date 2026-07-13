@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { toInterestMatchDto } from "@/application/dto/companyDto";
 import { getInterestMatchingCompanies } from "@/application/services/companyService";
 import getServerSession from "@/application/services/sessionService";
 
@@ -25,16 +26,5 @@ export async function GET(
 
   const matches = await getInterestMatchingCompanies(userId);
 
-  // Return only public company fields — drop the included user (email/isAdmin).
-  const data = matches.map(({ company, matchingInterests }) => ({
-    company: {
-      id: company.id,
-      name: company.name,
-      tier: company.tier,
-      avatar: company.avatar,
-    },
-    matchingInterests,
-  }));
-
-  return NextResponse.json(data);
+  return NextResponse.json(matches.map(toInterestMatchDto));
 }
