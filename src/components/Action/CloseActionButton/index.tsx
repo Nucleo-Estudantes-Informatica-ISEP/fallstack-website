@@ -1,5 +1,6 @@
 "use client";
 
+import { httpClient } from "@/lib/http/client";
 import PrimaryButton from "@/components/PrimaryButton";
 
 interface CloseActionButtonProps {
@@ -14,9 +15,7 @@ const CloseActionButton: React.FC<CloseActionButtonProps> = ({
   action,
 }) => {
   const handleToggleIsActionLive = async () => {
-    await fetch(`/api/actions/${id}`, {
-      method: "PATCH",
-    });
+    await httpClient.patch(`/actions/${id}`);
 
     window.location.reload();
   };

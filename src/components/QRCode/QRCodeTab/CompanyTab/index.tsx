@@ -6,8 +6,8 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
+import { httpClient } from "@/lib/http/client";
 import useIsMobile from "@/hooks/useIsMobile";
-import { BASE_URL } from "@/services/api";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 import { jwtStudent } from "@/application/services/studentTokenService";
 
@@ -38,10 +38,11 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
       if (!token)
         return swal("Erro", "O código introduzido é inválido.", "error");
 
-      await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ code }),
-      });
+      try {
+        await httpClient.post("/saved", { code });
+      } catch {
+        // preserve existing behavior: navigate regardless of save outcome
+      }
 
       router.push(`/student/${token}/preview`);
 

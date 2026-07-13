@@ -7,8 +7,8 @@ import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 import swal from "sweetalert";
 
 import type { Stats } from "@/types/Stats";
+import { httpClient } from "@/lib/http/client";
 import useSession from "@/hooks/useSession";
-import { BASE_URL } from "@/services/api";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
@@ -92,11 +92,13 @@ const CompanyProfileSectionContainer: React.FC<
       timer: 5000,
     }).then(async (value) => {
       if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
+        try {
+          await httpClient.post("/auth/logout");
           session.clear();
           swal("Logout", "Sessão terminada com sucesso", "success");
           router.push("/");
+        } catch {
+          // preserve existing behavior: silently do nothing on failure
         }
       }
     });

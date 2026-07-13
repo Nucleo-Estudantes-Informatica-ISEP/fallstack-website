@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 
 interface ScanTabProps {
@@ -27,19 +27,20 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
   async function handleActionScan(data: string) {
     const actionId = data.replace(/^action-/, "");
 
-    const res = await fetch(BASE_URL + `/actions/${actionId}`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const error = (await res.json()).error;
-      swal("Erro", error, "error");
-      setHidden(true);
-      setProcessing(false);
-      return;
+    try {
+      await httpClient.post(`/actions/${actionId}`);
+      swal(
+        "Sucesso",
+        "Os teus pontos foram adicionados com sucesso!",
+        "success"
+      );
+    } catch (error) {
+      swal(
+        "Erro",
+        error instanceof Error ? error.message : "Erro inesperado",
+        "error"
+      );
     }
-
-    swal("Sucesso", "Os teus pontos foram adicionados com sucesso!", "success");
 
     setHidden(true);
     setProcessing(false);
@@ -59,10 +60,11 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token: data }),
-      });
+      try {
+        await httpClient.post("/saved", { token: data });
+      } catch {
+        // preserve existing behavior: navigate regardless of save outcome
+      }
 
       setHidden(true);
       router.push(`/student/${data}/preview`);

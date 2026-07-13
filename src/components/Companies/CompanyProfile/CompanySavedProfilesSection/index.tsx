@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import { jwtStudent } from "@/application/services/studentTokenService";
@@ -27,19 +27,22 @@ const CompanySavedProfilesSection = () => {
   async function handleActionScan(data: string) {
     const actionId = data.replace(/^action-/, "");
 
-    const res = await fetch(BASE_URL + `/actions/${actionId}`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const error = (await res.json()).error;
-      swal("Erro", error, "error");
+    try {
+      await httpClient.post(`/actions/${actionId}`);
+      swal(
+        "Sucesso",
+        "Os teus pontos foram adicionados com sucesso!",
+        "success"
+      );
+    } catch (error) {
+      swal(
+        "Erro",
+        error instanceof Error ? error.message : "Erro inesperado",
+        "error"
+      );
+    } finally {
       setProcessing(false);
-      return;
     }
-
-    swal("Sucesso", "Os teus pontos foram adicionados com sucesso!", "success");
-    setProcessing(false);
   }
 
   const handleScan = async (data: string) => {
@@ -56,27 +59,23 @@ const CompanySavedProfilesSection = () => {
         return;
       }
 
-      const saveRes = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token: data }),
-      });
-
-      if (!saveRes.ok) {
-        const error = (await saveRes.json()).error;
-        if (saveRes.status === 409) {
+      try {
+        await httpClient.post("/saved", { token: data });
+        router.push(`/student/${data}/preview`);
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
           swal(
             "Aviso",
             "Este estudante já foi guardado anteriormente.",
             "warning"
           );
+        } else if (error instanceof HttpClientError) {
+          swal("Erro", error.message || "Erro ao guardar perfil", "error");
         } else {
-          swal("Erro", error || "Erro ao guardar perfil", "error");
+          throw error;
         }
-        setProcessing(false);
-        return;
       }
 
-      router.push(`/student/${data}/preview`);
       setProcessing(false);
     } catch {
       setProcessing(false);
@@ -98,25 +97,22 @@ const CompanySavedProfilesSection = () => {
       if (!token)
         return swal("Erro", "O código introduzido é inválido.", "error");
 
-      const res = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      });
-
-      if (!res.ok) {
-        const error = (await res.json()).error;
-        if (res.status === 409) {
+      try {
+        await httpClient.post("/saved", { token });
+        router.push(`/student/${token}/preview`);
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
           swal(
             "Aviso",
             "Este estudante já foi guardado anteriormente.",
             "warning"
           );
         } else {
-          toast.error(error || "Failed to save profile");
+          toast.error(
+            error instanceof Error ? error.message : "Failed to save profile"
+          );
         }
-        return;
       }
-      router.push(`/student/${token}/preview`);
     } else {
       toast.error("Ocorreu um erro.");
     }
@@ -129,15 +125,7 @@ const CompanySavedProfilesSection = () => {
   const handleDownloadAllCvs = async () => {
     try {
       setDownloading(true);
-      const res = await fetch("/api/companies/history/cv-zip");
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        swal("Erro", error || "Não foi possível exportar os CVs.", "error");
-        setDownloading(false);
-        return;
-      }
-
+      const res = await httpClient.raw("/companies/history/cv-zip");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -148,9 +136,15 @@ const CompanySavedProfilesSection = () => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       setDownloading(false);
-    } catch {
+    } catch (error) {
       setDownloading(false);
-      swal("Erro", "Não foi possível exportar os CVs.", "error");
+      swal(
+        "Erro",
+        error instanceof Error
+          ? error.message
+          : "Não foi possível exportar os CVs.",
+        "error"
+      );
     }
   };
 

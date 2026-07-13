@@ -4,8 +4,8 @@ import { useRouter } from "next/navigation";
 import { BiLogOut } from "react-icons/bi";
 import swal from "sweetalert";
 
+import { httpClient } from "@/lib/http/client";
 import useSession from "@/hooks/useSession";
-import { BASE_URL } from "@/services/api";
 
 const LogoutButton: React.FC = () => {
   const session = useSession();
@@ -20,11 +20,13 @@ const LogoutButton: React.FC = () => {
       timer: 5000,
     }).then(async (value) => {
       if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
+        try {
+          await httpClient.post("/auth/logout");
           session.clear();
           swal("Logout", "Sessão terminada com sucesso", "success");
           router.push("/");
+        } catch {
+          // preserve existing behavior: silently do nothing on failure
         }
       }
     });

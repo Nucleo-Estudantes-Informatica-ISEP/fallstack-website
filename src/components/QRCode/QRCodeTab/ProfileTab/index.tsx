@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsFillClipboardFill } from "react-icons/bs";
@@ -39,9 +39,8 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   };
 
   const fetchQrcode = async () => {
-    const res = await fetch(BASE_URL + "/qrcode");
-    const { data } = await res.json();
-    setQrcode(data as string);
+    const { data } = await httpClient.get<{ data: string }>("/qrcode");
+    setQrcode(data);
   };
 
   useEffect(() => {

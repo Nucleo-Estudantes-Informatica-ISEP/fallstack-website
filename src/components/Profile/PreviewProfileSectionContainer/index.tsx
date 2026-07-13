@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
@@ -30,37 +30,35 @@ const PreviewProfileSectionContainer: React.FC<
   const handleSaveProfile = async () => {
     if (!token) return;
 
-    const res = await fetch(BASE_URL + "/saved", {
-      method: "PATCH",
-      body: JSON.stringify({ token }),
-    });
-
-    if (res.status === 200) {
-      swal({
+    try {
+      await httpClient.patch("/saved", { token });
+      await swal({
         title: "Success",
         text: "Perfil salvo com sucesso!",
         icon: "success",
-      }).then(() => {
-        window.location.reload();
       });
-    } else if (res.status === 400) {
-      swal({
-        title: "Warning",
-        text: "Perfil já salvo!",
-        icon: "warning",
-      });
-    } else {
-      swal({
-        title: "Error",
-        text: "Erro ao salvar perfil!",
-        icon: "error",
-      });
+      window.location.reload();
+    } catch (error) {
+      if (error instanceof HttpClientError && error.status === 400) {
+        swal({
+          title: "Warning",
+          text: "Perfil já salvo!",
+          icon: "warning",
+        });
+      } else {
+        swal({
+          title: "Error",
+          text: "Erro ao salvar perfil!",
+          icon: "error",
+        });
+      }
     }
   };
 
   const handleOpenCv = async () => {
-    const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
-    const { url } = await res.json();
+    const { url } = await httpClient.get<{ url: string }>(
+      `/students/${student.code}/cv`
+    );
     window.open(url, "_blank");
   };
 

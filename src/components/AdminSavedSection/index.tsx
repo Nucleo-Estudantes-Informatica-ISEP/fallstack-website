@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface AdminSavedSectionProps {
@@ -17,23 +17,18 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch(`${BASE_URL}/admin/save-student`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    try {
+      await httpClient.post("/admin/save-student", {
         studentEmailNumber,
         companyId: selectedCompany,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (response.ok) {
+      });
       Swal("Success", "Student saved successfully!", "success");
-    } else {
-      Swal("Error", result.error, "error");
+    } catch (error) {
+      Swal(
+        "Error",
+        error instanceof Error ? error.message : "Something went wrong",
+        "error"
+      );
     }
   };
 

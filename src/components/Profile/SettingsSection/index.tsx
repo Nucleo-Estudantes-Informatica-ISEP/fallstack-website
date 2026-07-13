@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
@@ -100,45 +100,37 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       github: githubRef.current?.value || null,
     });
 
-    if (cvRef.current?.files?.length) {
-      const cvFile = cvRef.current.files[0]!;
-      const uploaded = await uploadCvToSupabase(cvFile);
-      if (uploaded) {
-        await fetch(`${BASE_URL}/students/${student.code}/cv`, {
-          method: "POST",
-          body: JSON.stringify({ id: uploaded.id }),
-        });
+    try {
+      if (cvRef.current?.files?.length) {
+        const cvFile = cvRef.current.files[0]!;
+        const uploaded = await uploadCvToSupabase(cvFile);
+        if (uploaded) {
+          await httpClient.post(`/students/${student.code}/cv`, {
+            id: uploaded.id,
+          });
+        }
       }
-    }
 
-    const res = await fetch(`${BASE_URL}/students/${student.code}`, {
-      method: "PATCH",
-      body: JSON.stringify({
+      await httpClient.patch(`/students/${student.code}`, {
         bio: profile.bio ? profile.bio : undefined,
         github: githubRef.current?.value,
         linkedin: linkedinRef.current?.value,
         interests: profile.interests,
-      }),
-    });
+      });
 
-    if (res.status === 200) {
       if (profile.avatar)
-        await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
-          method: "POST",
-          body: JSON.stringify({ url: profile.avatar }),
+        await httpClient.post(`/students/${student.code}/avatar`, {
+          url: profile.avatar,
         });
-
-      setIsLoading(false);
-      swal("Perfil atualizado com sucesso!");
-      setActiveTab("Perfil");
-      router.refresh();
-    } else {
-      setIsLoading(false);
-      // swal("Ocorreu um erro ao atualizar o teu perfil...");
-      swal("Perfil atualizado com sucesso!");
-      setActiveTab("Perfil");
-      router.refresh();
+    } catch {
+      // matches existing behavior: the failure branch here already showed
+      // the same success message/navigation as the success branch below
     }
+
+    setIsLoading(false);
+    swal("Perfil atualizado com sucesso!");
+    setActiveTab("Perfil");
+    router.refresh();
   };
 
   const handleConfirmAvatar = async () => {

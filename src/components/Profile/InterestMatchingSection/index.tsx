@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
+import { httpClient } from "@/lib/http/client";
 import type { InterestMatchDto } from "@/application/dto/companyDto";
 
 interface InterestMatchingSectionProps {
@@ -16,16 +17,14 @@ const InterestMatchingSection: React.FC<InterestMatchingSectionProps> = ({
 
   useEffect(() => {
     async function getInterestMatchingCompanies(userId: string) {
-      const data = await fetch("/api/interests/matching/" + userId);
-
-      if (!data.ok) {
+      try {
+        const interestingCompanies = await httpClient.get<InterestMatchDto[]>(
+          "/interests/matching/" + userId
+        );
+        setCompanies(interestingCompanies);
+      } catch {
         console.error("Failed to fetch matching companies");
-        return;
       }
-
-      const interestingCompanies = await data.json();
-
-      setCompanies(interestingCompanies);
     }
 
     getInterestMatchingCompanies(userId);
