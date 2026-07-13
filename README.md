@@ -25,6 +25,13 @@ The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Supabase](https://supabase.com/)
 
+### Authentication
+
+All authentication, including password recovery and password updates, goes
+through Supabase Auth. Application tables must not store passwords or password
+reset tokens, and application routes must not provide separate password-change
+flows.
+
 ---
 
 # Getting Started
