@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import { reportError } from "@/lib/logger";
+import { requestResetSchema } from "@/schemas/passwordResetSchema";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
-
-const requestResetSchema = z.object({
-  email: z.string().email(),
-});
 
 export async function POST(req: NextRequest) {
   try {

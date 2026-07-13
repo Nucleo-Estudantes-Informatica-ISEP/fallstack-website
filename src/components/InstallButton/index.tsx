@@ -17,7 +17,11 @@ const InstallButton: React.FC<InstallButtonProps> = ({ className }) => {
 
   return (
     isInstallable && (
-      <button onClick={handleConfirm} className={className}>
+      <button
+        onClick={handleConfirm}
+        aria-label="Instalar aplicação"
+        className={className}
+      >
         {isMobile ? (
           <InstallPwaMobile className="text-xl" />
         ) : (
