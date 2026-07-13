@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Swal from "sweetalert";
 
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import type { CompanyDto } from "@/application/dto/companyDto";
 
@@ -13,28 +14,31 @@ interface AdminSavedSectionProps {
 const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
   const [studentEmailNumber, setStudentEmailNumber] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
+  const { mutate, isPending } = useMutation();
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch(`${BASE_URL}/admin/save-student`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        studentEmailNumber,
-        companyId: selectedCompany,
-      }),
-    });
+    mutate(async () => {
+      const response = await fetch(`${BASE_URL}/admin/save-student`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentEmailNumber,
+          companyId: selectedCompany,
+        }),
+      });
 
-    const result = await response.json();
+      const result = await response.json();
 
-    if (response.ok) {
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to save student");
+      }
+
       Swal("Success", "Student saved successfully!", "success");
-    } else {
-      Swal("Error", result.error, "error");
-    }
+    });
   };
 
   return (
@@ -78,9 +82,10 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
         </label>
         <button
           type="submit"
-          className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600"
+          disabled={isPending}
+          className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Save Student
+          {isPending ? "A guardar..." : "Save Student"}
         </button>
       </form>
     </div>

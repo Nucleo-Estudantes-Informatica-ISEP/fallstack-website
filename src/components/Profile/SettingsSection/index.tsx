@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -47,7 +48,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   const linkedinRef = useRef<HTMLInputElement>(null);
   const cvRef = useRef<HTMLInputElement>(null);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { mutate: mutateSave, isPending: isLoading } = useMutation(
+    "Erro ao atualizar perfil."
+  );
   const [userImage, setUserImage] = useState<string | null>(student.avatar);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -64,7 +67,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     setProfile({ ...profile, interests });
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (profile.bio && profile.bio?.length > LIMIT) {
       swal(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
       return;
@@ -92,53 +95,48 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       return;
     }
 
-    setIsLoading(true);
-
     setProfile({
       ...profile,
       linkedin: linkedinRef.current?.value || null,
       github: githubRef.current?.value || null,
     });
 
-    if (cvRef.current?.files?.length) {
-      const cvFile = cvRef.current.files[0]!;
-      const uploaded = await uploadCvToSupabase(cvFile);
-      if (uploaded) {
-        await fetch(`${BASE_URL}/students/${student.code}/cv`, {
-          method: "POST",
-          body: JSON.stringify({ id: uploaded.id }),
-        });
+    mutateSave(async () => {
+      if (cvRef.current?.files?.length) {
+        const cvFile = cvRef.current.files[0]!;
+        const uploaded = await uploadCvToSupabase(cvFile);
+        if (uploaded) {
+          await fetch(`${BASE_URL}/students/${student.code}/cv`, {
+            method: "POST",
+            body: JSON.stringify({ id: uploaded.id }),
+          });
+        }
       }
-    }
 
-    const res = await fetch(`${BASE_URL}/students/${student.code}`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        bio: profile.bio ? profile.bio : undefined,
-        github: githubRef.current?.value,
-        linkedin: linkedinRef.current?.value,
-        interests: profile.interests,
-      }),
-    });
+      const res = await fetch(`${BASE_URL}/students/${student.code}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          bio: profile.bio ? profile.bio : undefined,
+          github: githubRef.current?.value,
+          linkedin: linkedinRef.current?.value,
+          interests: profile.interests,
+        }),
+      });
 
-    if (res.status === 200) {
+      if (!res.ok) {
+        throw new Error("Erro ao atualizar perfil.");
+      }
+
       if (profile.avatar)
         await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
           method: "POST",
           body: JSON.stringify({ url: profile.avatar }),
         });
 
-      setIsLoading(false);
       swal("Perfil atualizado com sucesso!");
       setActiveTab("Perfil");
       router.refresh();
-    } else {
-      setIsLoading(false);
-      // swal("Ocorreu um erro ao atualizar o teu perfil...");
-      swal("Perfil atualizado com sucesso!");
-      setActiveTab("Perfil");
-      router.refresh();
-    }
+    });
   };
 
   const handleConfirmAvatar = async () => {
