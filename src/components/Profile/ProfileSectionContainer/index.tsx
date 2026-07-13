@@ -15,6 +15,7 @@ import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/types/Stats";
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
@@ -32,7 +33,7 @@ type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 interface ProfileSectionContainerProps {
   student: Student & { user: User };
   interests: string[];
-  globalStats: number[];
+  globalStats: Stats;
   todayStats: number;
   companiesLeft: number;
   historyData: SavedStudentWithSavedBy[];

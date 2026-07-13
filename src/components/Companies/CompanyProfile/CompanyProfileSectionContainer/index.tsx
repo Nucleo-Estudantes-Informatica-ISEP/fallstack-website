@@ -8,6 +8,7 @@ import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 import swal from "sweetalert";
 
 import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/types/Stats";
 import useSession from "@/hooks/useSession";
 import { BASE_URL } from "@/services/api";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
@@ -19,7 +20,7 @@ import { IconType } from "react-icons";
 interface CompanyProfileSectionContainerProps {
   company: Company;
   employeeName: string;
-  globalStats: number[];
+  globalStats: Stats;
   totalStudents: number;
   history: SavedStudentWithSavedBy[];
   interests: string[];

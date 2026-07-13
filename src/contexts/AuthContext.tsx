@@ -3,7 +3,7 @@
 import { createContext, useEffect, useState } from "react";
 
 import { UserWithProfile } from "@/types/UserWithProfile";
-import getSession from "@/services/getSession";
+import getSession from "@/client/api/session";
 
 export interface AuthContextData {
   user: UserWithProfile | null;

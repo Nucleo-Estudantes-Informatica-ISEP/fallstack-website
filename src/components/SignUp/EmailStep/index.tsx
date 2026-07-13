@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 interface EmailStepProps {
   currentStep: number;
@@ -33,11 +34,9 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
   const handleNext = () => {
     if (!inputRef.current?.value) return setError("Este campo é obrigatório.");
 
-    const emailRegex = new RegExp(/^([0-9]{7}|[a-zA-Z]{3})@isep.ipp.pt$/i);
-
     const email = inputRef.current.value;
 
-    if (!email.match(emailRegex))
+    if (!isIsepEmail(email))
       return setError("Insere um email institucional válido.");
 
     setData({ ...data, email: inputRef.current.value });
