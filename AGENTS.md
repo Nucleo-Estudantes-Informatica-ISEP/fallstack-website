@@ -28,7 +28,7 @@ For every requested task:
 | Layer | Tech |
 |---|---|
 | Framework | Next.js 15 (App Router), React 18 |
-| Language | TypeScript (`strict: true` — see [Gotchas](#gotchas) for what still slips through anyway) |
+| Language | TypeScript (`strict: true`) |
 | Styling | Tailwind CSS 4, HeroUI 2.8 |
 | Database | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`) |
 | Auth | Supabase Auth (session) — see [Auth model](#auth-model) |
@@ -118,7 +118,7 @@ Two independent mechanisms — don't conflate them:
 
 ## Verification (definition of done)
 
-CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, but CI doesn't run `pnpm test`, and `next build` itself still ignores type/lint errors (see [Gotchas](#gotchas)) — so CI catches type/lint regressions, but most functional breakage still will not be caught automatically. Before considering a task done:
+CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. CI doesn't run `pnpm test`, so most functional breakage still will not be caught automatically. Before considering a task done:
 
 1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
 2. Run `pnpm test` — keep it green, and extend the relevant test file if you touch application boundaries/services, edition action rules, auth flow, saved-student comments, `src/lib/logger.ts`, `src/lib/sentryPrivacy.ts`, or ISEP email normalization. CI does not run this for you.
@@ -128,7 +128,6 @@ CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every P
 
 ## Gotchas
 
-- **`tsconfig.json` now has `strict: true`**, but `next.config.js` still sets `typescript.ignoreBuildErrors: true` + `eslint.ignoreDuringBuilds: true` — `next build` itself will not fail on a type or lint error. CI's separate `pnpm typecheck`/`pnpm lint` job (`.github/workflows/ci.yml`) is what actually gates PRs on these; don't treat a successful `next build` as a signal that types are clean.
 - **`pnpm test` runs eight files** (`src/application/boundaries.test.ts`, `src/application/serviceLogic.test.ts`, `src/edition/actions.test.ts`, `src/lib/authFlow.test.ts`, `src/lib/logger.test.ts`, `src/lib/savedStudentComments.test.ts`, `src/lib/sentryPrivacy.test.ts`, `src/utils/isepEmail.test.ts`), but CI still doesn't run it. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
 - **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
