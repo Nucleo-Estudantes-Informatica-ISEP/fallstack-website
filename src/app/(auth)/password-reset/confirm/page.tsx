@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
@@ -11,28 +11,12 @@ import { createClient } from "@/utils/supabase/client";
 
 const PasswordResetForm: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const code = searchParams.get("code");
-  const [codeError, setCodeError] = useState<string | null>(null);
-
   const [loading, setLoading] = useState<boolean>(false);
   const [pwError, setPwError] = useState<string | null>(null);
   const [repeatPwError, setRepeatPwError] = useState<string | null>(null);
 
   const passwordRef = useRef<HTMLInputElement>(null);
   const repeatPasswordRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    // Parse hash for errors (e.g. #error=access_denied&error_code=otp_expired&error_description=...)
-    if (typeof window !== "undefined" && window.location.hash) {
-      const hash = window.location.hash.substring(1);
-      const params = new URLSearchParams(hash);
-      const errorDescription = params.get("error_description");
-      if (errorDescription) {
-        setCodeError(errorDescription);
-      }
-    }
-  }, []);
 
   const handleClick = async () => {
     setPwError(null);
@@ -67,50 +51,11 @@ const PasswordResetForm: React.FC = () => {
 
     setLoading(true);
 
-    const token = searchParams.get("token");
-    const email = searchParams.get("email");
-
-    if (!code && (!token || !email)) {
-      setLoading(false);
-      setCodeError(
-        "Link inválido ou expirado. Pede novo email de recuperação."
-      );
-      return;
-    }
-
     try {
-      if (token && email) {
-        // Safe Mode: Client-side verification
-        const supabase = createClient();
-        const { error: verifyError } = await supabase.auth.verifyOtp({
-          email,
-          token,
-          type: "recovery",
-        });
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password });
 
-        if (verifyError) throw verifyError;
-
-        const { error: updateError } = await supabase.auth.updateUser({
-          password,
-        });
-
-        if (updateError) throw updateError;
-      } else {
-        // Legacy/PKCE Mode: Server-side exchange
-        const res = await fetch("/api/auth/password-reset", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ password, code }),
-        });
-
-        if (!res.ok) {
-          setLoading(false);
-          const json = await res.json();
-          return setPwError(json.error || "Algo correu mal");
-        }
-      }
+      if (error) throw error;
 
       swal(
         "Sucesso",
@@ -136,16 +81,6 @@ const PasswordResetForm: React.FC = () => {
           Reset Password
         </h1>
 
-        {codeError && (
-          <motion.p
-            className="mb-3 text-sm font-bold text-red-600"
-            animate={{ y: [-15, 0] }}
-            transition={{ ease: "easeOut", duration: 0.2 }}
-          >
-            {codeError}
-          </motion.p>
-        )}
-
         <div className="w-full">
           <Input
             name="Password"
@@ -161,13 +96,8 @@ const PasswordResetForm: React.FC = () => {
         {pwError && (
           <motion.p
             className="mt-1 text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
+            animate={{ y: [-15, 0] }}
+            transition={{ ease: "easeOut", duration: 0.2 }}
           >
             {pwError}
           </motion.p>
@@ -187,13 +117,8 @@ const PasswordResetForm: React.FC = () => {
         {repeatPwError && (
           <motion.p
             className="mt-1 text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
+            animate={{ y: [-15, 0] }}
+            transition={{ ease: "easeOut", duration: 0.2 }}
           >
             {repeatPwError}
           </motion.p>
@@ -213,12 +138,6 @@ const PasswordResetForm: React.FC = () => {
   );
 };
 
-const PasswordResetConfirmPage: React.FC = () => {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <PasswordResetForm />
-    </Suspense>
-  );
-};
+const PasswordResetConfirmPage: React.FC = () => <PasswordResetForm />;
 
 export default PasswordResetConfirmPage;

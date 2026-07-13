@@ -1,8 +1,8 @@
 "use server";
 
 import { pickWeightedWinner } from "@/lib/giveaway";
-import { getStudentsForGiveaway } from "@/lib/students";
-import getServerSession from "@/services/getServerSession";
+import getServerSession from "@/application/services/sessionService";
+import { getStudentsForGiveaway } from "@/application/services/studentService";
 
 interface GiveawayWinner {
   id: string;

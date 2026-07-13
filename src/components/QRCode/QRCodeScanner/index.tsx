@@ -67,7 +67,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
         </div>
       )}
       <video
-        ref={ref}
+        ref={ref as React.RefObject<HTMLVideoElement>}
         className="rounded-lg"
         style={{ visibility: loading ? "hidden" : "visible" }}
       />

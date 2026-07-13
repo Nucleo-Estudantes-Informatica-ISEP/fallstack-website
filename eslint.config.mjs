@@ -63,6 +63,37 @@ export default defineConfig([
     },
   },
   {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/application/repositories/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@prisma/client",
+              importNames: ["PrismaClient"],
+              message:
+                "PrismaClient is restricted to application repositories.",
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                "@/application/repositories/database",
+                "**/application/repositories/database",
+                "../repositories/database",
+                "./database",
+              ],
+              message:
+                "Database client is restricted to application repositories.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ["*.js"],
     rules: {
       "@typescript-eslint/no-require-imports": "off",

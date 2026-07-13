@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { HttpError } from "@/types/HttpError";
-import getStudentHistory from "@/lib/getStudentHistory";
-import getServerSession from "@/services/getServerSession";
+import { getStudentHistory } from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
 
 interface StudentParams {
   params: Promise<{
@@ -19,7 +19,10 @@ export async function GET(_: NextRequest, props: StudentParams) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const history = await getStudentHistory(code);
+  if (!session.student || session.student.code !== code)
+    return NextResponse.json("Forbidden", { status: 403 });
+
+  const history = await getStudentHistory(session.student.id);
 
   if (history instanceof HttpError)
     return NextResponse.json(history.message, { status: history.status });

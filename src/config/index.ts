@@ -25,6 +25,7 @@ const config = {
 
   constants: {
     actionQrCodeRefreshRateMs: 15 * 1000, // 15 seconds
+    neiContactEmail: "info@nei-isep.org",
 
     actionNames: {
       createProfile: "Cria o teu Perfil",
