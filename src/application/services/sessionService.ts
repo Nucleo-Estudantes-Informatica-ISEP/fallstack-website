@@ -1,5 +1,7 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
+
 import { reportError } from "@/lib/logger";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
@@ -18,7 +20,9 @@ export default async function getServerSession() {
     if (error || !user) return null;
     const appUser = await findUserWithProfile(user.id);
     if (appUser) return appUser;
-    return user.email ? await findUserWithEmployeeByEmail(user.email) : null;
+    return user.email
+      ? await findUserWithEmployeeByEmail(user.email as Email)
+      : null;
   } catch (error) {
     reportError(
       error,

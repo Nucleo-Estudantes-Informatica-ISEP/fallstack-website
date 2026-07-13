@@ -8,7 +8,4 @@ const ISEP_EMAIL_REGEX = new RegExp(
 export const isIsepEmail = (email: string): boolean =>
   ISEP_EMAIL_REGEX.test(email.trim());
 
-export const normalizeIsepEmail = (emailOrLocalPart: string): string => {
-  const value = emailOrLocalPart.trim().toLowerCase();
-  return value.includes("@") ? value : `${value}@${ISEP_EMAIL_DOMAIN}`;
-};
+
