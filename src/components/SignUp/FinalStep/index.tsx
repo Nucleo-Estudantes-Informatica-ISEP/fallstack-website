@@ -14,17 +14,17 @@ import { FaFilePdf } from "react-icons/fa";
 import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { signUp } from "@/lib/auth";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import FileInput from "@/components/FileInput";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
+import { signUp } from "@/client/api/auth";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {

@@ -11,12 +11,12 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { signUp } from "@/lib/auth";
-import { uploadAvatar as uploadAvatarToSupabase } from "@/lib/upload";
 import useSession from "@/hooks/useSession";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
+import { signUp } from "@/client/api/auth";
+import { uploadAvatar as uploadAvatarToSupabase } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface AvatarStepProps {
@@ -73,6 +73,8 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
       router.refresh();
     } catch (e) {
       console.error(e);
+      toast.error("Ocorreu um erro ao criar a conta.");
+      setLoading(false);
     }
   };
 

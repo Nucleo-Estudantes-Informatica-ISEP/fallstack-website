@@ -11,6 +11,7 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/Input";
 import InputSelect from "@/components/InputSelect";
 import PrimaryButton from "@/components/PrimaryButton";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 interface AccountDetailsStepProps {
   currentStep: number;
@@ -43,10 +44,9 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
       return setError("Por favor, insere o teu email institucional.");
     }
 
-    const emailRegex = new RegExp(/^([0-9]{7}|[a-zA-Z]{3})@isep.ipp.pt$/i);
     const email = emailRef.current.value;
 
-    if (!email.match(emailRegex)) {
+    if (!isIsepEmail(email)) {
       return setError("Insere um email institucional válido.");
     }
 

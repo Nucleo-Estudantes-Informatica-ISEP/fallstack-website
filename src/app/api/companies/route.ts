@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
 
-import prisma from "@/lib/prisma";
-import getServerSession from "@/services/getServerSession";
+import { httpErrorResponse } from "@/lib/http/server";
+import {
+  getCompaniesWithUsers,
+  registerCompany,
+} from "@/application/services/companyService";
+import getServerSession from "@/application/services/sessionService";
 import { postCompanySchema } from "@/schemas/postCompanySchema";
 
 export async function POST(req: Request) {
@@ -10,60 +14,13 @@ export async function POST(req: Request) {
     const session = await getServerSession();
     if (!session)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    // validate the request body against the schema
-    const requestBody = await req.json();
-    const body = postCompanySchema.parse(requestBody);
-
-    // valid body
-    const userId = session.id;
-    const { name, tier, avatarUrl } = body;
-
-    // checks if company already exists
-    const existingCompany = await prisma.company.findUnique({
-      where: {
-        id: userId,
-      },
-    });
-
-    if (existingCompany) {
-      return NextResponse.json(
-        { message: "Company already exists" },
-        { status: 401 }
-      );
-    }
-
-    // create company
-    const company = await prisma.company.create({
-      data: {
-        id: userId,
-        name: name,
-        tier: tier,
-      },
-    });
-
-    // check if company was created
-    if (!company) {
-      return NextResponse.json(
-        { message: "Something went wrong" },
-        { status: 500 }
-      );
-    }
-
-    await prisma.company.update({
-      data: { avatar: avatarUrl ?? null },
-      where: { id: company.id },
-    });
-
-    return NextResponse.json({ company: company }, { status: 201 });
-  } catch (e) {
-    if (e instanceof ZodError)
-      return NextResponse.json({ error: e.issues }, { status: 400 });
-
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    const body = postCompanySchema.parse(await req.json());
+    const company = await registerCompany({ userId: session.id, ...body });
+    return NextResponse.json({ company }, { status: 201 });
+  } catch (error) {
+    if (error instanceof ZodError)
+      return NextResponse.json({ error: error.issues }, { status: 400 });
+    return httpErrorResponse(error);
   }
 }
 
@@ -73,16 +30,5 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   if (!session.isAdmin)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const companies = await prisma.company.findMany({
-    include: {
-      employees: {
-        include: {
-          user: true,
-        },
-      },
-    },
-  });
-
-  return NextResponse.json(companies);
+  return NextResponse.json(await getCompaniesWithUsers());
 }

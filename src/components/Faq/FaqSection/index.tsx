@@ -4,7 +4,7 @@ import { FunctionComponent } from "react";
 
 import FaqContainer from "@/components/Faq/FaqContainer";
 import HeadingText from "@/components/HeadingText";
-import { FAQ } from "@/utils/FAQ";
+import { edition } from "@/edition";
 
 const FaqSection: FunctionComponent = () => {
   return (
@@ -14,7 +14,7 @@ const FaqSection: FunctionComponent = () => {
           text="FAQs"
           className="!mb-0 !text-left text-4xl text-secondary md:!text-5xl"
         />
-        <FaqContainer faqs={FAQ} />
+        <FaqContainer faqs={edition.faq} />
       </div>
     </section>
   );

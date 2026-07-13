@@ -6,10 +6,10 @@ import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { jwtStudent } from "@/lib/jwtStudent";
 import { BASE_URL } from "@/services/api";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import { jwtStudent } from "@/application/services/studentTokenService";
 
 interface StatsProps {
   company: Company;

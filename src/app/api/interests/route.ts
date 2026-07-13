@@ -1,4 +1,4 @@
-import { getInterests } from "@/lib/interests";
+import { getInterests } from "@/application/services/interestService";
 
 export async function GET() {
   const interests = await getInterests();
