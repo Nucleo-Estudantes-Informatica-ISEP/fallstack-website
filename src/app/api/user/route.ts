@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 
 import prisma from "@/lib/prisma";
 import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/services/getServerSession";
-
-const schema = z.object({
-  interests: z.array(z.string()),
-});
+import { userInterestsSchema } from "@/schemas/userInterestsSchema";
 
 export async function PATCH(req: NextRequest) {
   const session = await getServerSession();
@@ -15,8 +11,10 @@ export async function PATCH(req: NextRequest) {
 
   const body = await req.json();
 
-  const safeParse = schema.safeParse(body);
+  const safeParse = userInterestsSchema.safeParse(body);
   if (!safeParse.success) return errorResponse(safeParse.error, 400);
+
+  const { interests } = safeParse.data;
 
   // If employee, update interests for ALL employees in the company
   if (session.employee) {
@@ -32,9 +30,7 @@ export async function PATCH(req: NextRequest) {
           where: { id: employee.user.id },
           data: {
             interests: {
-              set: body.interests.map((interest: string) => ({
-                name: interest,
-              })),
+              set: interests.map((interest) => ({ name: interest })),
             },
           },
         })
@@ -49,7 +45,7 @@ export async function PATCH(req: NextRequest) {
     where: { id: session.id },
     data: {
       interests: {
-        set: body.interests.map((interest: string) => ({ name: interest })),
+        set: interests.map((interest) => ({ name: interest })),
       },
     },
   });

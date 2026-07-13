@@ -1,5 +1,7 @@
 "use client";
 
+import slugifyId from "@/utils/slugifyId";
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   name: string;
   center?: boolean;
@@ -18,26 +20,31 @@ const Input: React.FC<InputProps> = ({
   disabled,
   inputRef,
   type = "text",
+  id,
   ...rest
 }) => {
+  const resolvedId = id || slugifyId(name) || undefined;
+
   return (
     <div className="flex w-full flex-col">
-      <label
-        className={`mb-1 text-sm font-normal text-white ${
-          center ? "text-left" : ""
-        }`}
-        htmlFor={name}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className={`mb-1 text-sm font-normal text-white ${
+            center ? "text-left" : ""
+          }`}
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <input
         type={type}
         name={name}
         disabled={disabled}
-        id={name}
+        id={resolvedId}
         placeholder={placeholder}
         ref={inputRef}
-        className={`h-14 w-full border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
+        className={`h-14 w-full border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white placeholder:text-white/50 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
         {...rest}
       />
     </div>
