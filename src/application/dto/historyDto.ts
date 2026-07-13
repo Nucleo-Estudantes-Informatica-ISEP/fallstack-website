@@ -49,11 +49,12 @@ export interface AdminScanDto {
 }
 
 export const toAdminScanDto = (scan: {
+  id: string;
   studentId: string;
   createdAt: Date | string;
   student: { name: string; user: { email: string } };
 }): AdminScanDto => ({
-  id: `${scan.studentId}-${new Date(scan.createdAt).toISOString()}`,
+  id: scan.id,
   studentId: scan.studentId,
   createdAt: new Date(scan.createdAt).toISOString(),
   student: {

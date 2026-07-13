@@ -4,6 +4,7 @@ import { join, relative } from "node:path";
 import test from "node:test";
 
 import { toCompanyDto } from "./dto/companyDto";
+import { toAdminScanDto, toSavedStudentDto } from "./dto/historyDto";
 import { toSessionDto } from "./dto/sessionDto";
 
 const sourceRoot = join(process.cwd(), "src");
@@ -97,4 +98,40 @@ test("public DTO mappers omit private database fields", () => {
     role: "STUDENT",
     student: { code: "ABC123", name: "Student" },
   });
+});
+
+test("history DTO mappers preserve ids and serialize dates", () => {
+  const createdAt = new Date("2026-07-13T12:00:00.000Z");
+  const student = { code: "ABC123", name: "Student" };
+
+  assert.equal(
+    toSavedStudentDto({
+      studentId: "student-id",
+      createdAt,
+      comment: null,
+      student,
+      savedBy: { name: "Employee" },
+    }).createdAt,
+    createdAt.toISOString()
+  );
+  assert.deepEqual(
+    toAdminScanDto({
+      id: "repository-id",
+      studentId: "student-id",
+      createdAt,
+      student: {
+        name: student.name,
+        user: { email: "student@example.com" },
+      },
+    }),
+    {
+      id: "repository-id",
+      studentId: "student-id",
+      createdAt: createdAt.toISOString(),
+      student: {
+        name: student.name,
+        user: { email: "student@example.com" },
+      },
+    }
+  );
 });
