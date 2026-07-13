@@ -244,8 +244,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         isVisible={isModalVisible}
         setIsVisible={setIsModalVisible}
         className="flex flex-col items-center justify-center gap-8"
+        aria-labelledby="avatar-modal-title"
       >
-        <h1 className="text-3xl font-bold">Altera o teu Avatar</h1>
+        <h1 id="avatar-modal-title" className="text-3xl font-bold">
+          Altera o teu Avatar
+        </h1>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
         <PrimaryButton
           className="w-full py-2 text-xl"
