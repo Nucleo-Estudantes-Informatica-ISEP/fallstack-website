@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
+import { reportError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { errorResponse } from "@/services/apiResponse";
 import getServerSession from "@/services/getServerSession";
@@ -26,20 +27,36 @@ export async function PATCH(req: NextRequest) {
     });
 
     // Update interests for all employees in the company
-    await prisma.$transaction(
-      employees.map((employee) =>
-        prisma.user.update({
-          where: { id: employee.user.id },
-          data: {
-            interests: {
-              set: body.interests.map((interest: string) => ({
-                name: interest,
-              })),
+    try {
+      await prisma.$transaction(
+        employees.map((employee) =>
+          prisma.user.update({
+            where: { id: employee.user.id },
+            data: {
+              interests: {
+                set: body.interests.map((interest: string) => ({
+                  name: interest,
+                })),
+              },
             },
-          },
-        })
-      )
-    );
+          })
+        )
+      );
+    } catch (error) {
+      reportError(
+        error,
+        {
+          operation: "update_company_interests",
+          route: "/api/user",
+          method: "PATCH",
+        },
+        "Failed to update company interests"
+      );
+      return NextResponse.json(
+        { error: "Error updating interests" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   }
