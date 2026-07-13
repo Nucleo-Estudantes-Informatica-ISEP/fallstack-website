@@ -3,7 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { HttpError } from "@/types/HttpError";
-import config from "@/config";
+import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
@@ -58,9 +58,8 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
       tx
     );
     await connectUserInterests(userId, body.interests, tx);
-    await completeAction(code, config.constants.actionNames.createProfile, tx);
-    if (cv)
-      await completeAction(code, config.constants.actionNames.uploadCv, tx);
+    await completeAction(code, actionNames.createProfile, tx);
+    if (cv) await completeAction(code, actionNames.uploadCv, tx);
     await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
     return student;
   });
@@ -82,11 +81,7 @@ export async function updateStudent(
   return withTransaction(async (tx) => {
     const student = await updateStudentProfile(code, body, tx);
     if (student.linkedin)
-      await completeAction(
-        code,
-        config.constants.actionNames.updateLinkedin,
-        tx
-      );
+      await completeAction(code, actionNames.updateLinkedin, tx);
     if (body.interests) await setUserInterests(userId, body.interests, tx);
     return student;
   });
@@ -102,7 +97,7 @@ export async function setStudentCv(code: string, id: string) {
   if (check.error) throw new HttpError("Invalid upload id", 400);
   await withTransaction(async (tx) => {
     await updateStudentCv(code, id, tx);
-    await completeAction(code, config.constants.actionNames.uploadCv, tx);
+    await completeAction(code, actionNames.uploadCv, tx);
   });
 }
 
