@@ -1,6 +1,8 @@
 import { z } from "zod";
 
+import { EmailSchema } from "@/schemas/customEmailZod";
+
 export const signInSchema = z.object({
-  email: z.email().max(255),
+  email: EmailSchema,
   password: z.string().max(72),
 });

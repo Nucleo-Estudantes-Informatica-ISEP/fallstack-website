@@ -1,23 +1,24 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
 import prisma, { DbClient } from "./database";
 
 export const findUserWithProfile = (id: string) =>
   prisma.user.findUserWithProfile(id);
 
-export const findUserWithEmployeeByEmail = (email: string) =>
+export const findUserWithEmployeeByEmail = (email: Email) =>
   prisma.user.findUnique({
     where: { email },
     include: { employee: { include: { company: true } }, student: true },
   });
 
-export const findUserByEmail = (email: string) =>
+export const findUserByEmail = (email: Email) =>
   prisma.user.findUnique({ where: { email } });
 
 export const upsertUser = (
   data: {
     id: string;
-    email: string;
+    email: Email;
     role: "STUDENT" | "EMPLOYEE";
   },
   db: DbClient = prisma

@@ -5,12 +5,13 @@ import React from "react";
 import FactData from "@/types/FactData";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
 
 interface CompanyInfoProps {
   bodyText: React.ReactNode;
   videoHref: string | undefined;
   videoTitle: string | undefined;
-  tier: string;
+  tier: CompanyTier;
   interests?: string[];
   facts?: FactData[];
 }
@@ -36,7 +37,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
         </CompanyDescription>
       )}
       {facts && <FactSection facts={facts} />}
-      {tier === "Diamond" && (
+      {tier === COMPANY_TIER.DIAMOND && (
         <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
           <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             {videoTitle || "Vídeo"}

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
 import prisma, { DbClient } from "./database";
 
 export const findStudentByCode = (code: string, db: DbClient = prisma) =>
@@ -14,7 +15,7 @@ export const findStudentProfileByCode = (code: string) =>
 export const findStudentWithUserByCode = (code: string) =>
   prisma.student.findUnique({ where: { code }, include: { user: true } });
 
-export const findStudentByEmail = (email: string) =>
+export const findStudentByEmail = (email: Email) =>
   prisma.student.findFirst({ where: { user: { email } } });
 
 export const findStudentAction = (studentId: string, actionId: string) =>

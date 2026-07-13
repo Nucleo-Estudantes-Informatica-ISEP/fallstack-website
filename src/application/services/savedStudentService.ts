@@ -1,9 +1,10 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
+import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 import { getBoothActionName } from "@/edition/actions";
-import { normalizeIsepEmail } from "@/utils/isepEmail";
 
 import { assertStudentCanBeSaved } from "../domain/saveRules";
 import {
@@ -87,7 +88,12 @@ export async function saveStudentAsAdmin(
   emailOrNumber: string,
   companyId: string
 ) {
-  const email = normalizeIsepEmail(emailOrNumber);
+  let email: Email;
+  try {
+    email = Email.createInDomain(emailOrNumber, ISEP_EMAIL_DOMAIN);
+  } catch {
+    throw new HttpError("Invalid student email or number", 400);
+  }
   const student = await findStudentByEmail(email);
   if (!student) throw new HttpError("Student not found", 404);
   const company = await findCompanyById(companyId);

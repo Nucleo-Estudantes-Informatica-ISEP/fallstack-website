@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { EmailSchema } from "@/schemas/customEmailZod";
+
 export const requestResetSchema = z.object({
-  email: z.string().email().max(255),
+  email: EmailSchema,
 });
