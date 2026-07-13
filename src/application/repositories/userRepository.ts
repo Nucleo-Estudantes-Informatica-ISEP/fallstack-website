@@ -2,6 +2,8 @@ import "server-only";
 
 import type { Prisma } from "@prisma/client";
 
+import { Email } from "@/types/Email";
+
 import prisma, { DbClient } from "./database";
 
 const sessionSelect = {
@@ -24,19 +26,19 @@ const sessionSelect = {
 export const findUserSessionById = (id: string) =>
   prisma.user.findUnique({ where: { id }, select: sessionSelect });
 
-export const findUserSessionByEmail = (email: string) =>
+export const findUserSessionByEmail = (email: Email) =>
   prisma.user.findUnique({
     where: { email },
     select: sessionSelect,
   });
 
-export const findUserByEmail = (email: string) =>
+export const findUserByEmail = (email: Email) =>
   prisma.user.findUnique({ where: { email } });
 
 export const upsertUser = (
   data: {
     id: string;
-    email: string;
+    email: Email;
     role: "STUDENT" | "EMPLOYEE";
   },
   db: DbClient = prisma

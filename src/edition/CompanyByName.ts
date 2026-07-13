@@ -1,4 +1,5 @@
 import { CompanyProps } from "@/components/Companies/Company";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
 
 import { DiamondCompanies } from "./DiamondCompanies";
 import { GoldCompanies } from "./GoldCompanies";
@@ -6,7 +7,7 @@ import { SilverCompanies } from "./SilverCompanies";
 
 interface CompanyDetails {
   props: CompanyProps;
-  tier: string;
+  tier: CompanyTier;
 }
 
 export default function findCompanyByName(name: string): CompanyDetails | null {
@@ -15,19 +16,19 @@ export default function findCompanyByName(name: string): CompanyDetails | null {
 
   for (const company of DiamondCompanies) {
     if (company.name.toLowerCase() === nameLower) {
-      return { props: company, tier: "Diamond" };
+      return { props: company, tier: COMPANY_TIER.DIAMOND };
     }
   }
 
   for (const company of GoldCompanies) {
     if (company.name.toLowerCase() === nameLower) {
-      return { props: company, tier: "Gold" };
+      return { props: company, tier: COMPANY_TIER.GOLD };
     }
   }
 
   for (const company of SilverCompanies) {
     if (company.name.toLowerCase() === nameLower) {
-      return { props: company, tier: "Silver" };
+      return { props: company, tier: COMPANY_TIER.SILVER };
     }
   }
 

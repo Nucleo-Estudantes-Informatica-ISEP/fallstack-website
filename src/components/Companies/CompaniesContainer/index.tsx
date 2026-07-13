@@ -1,13 +1,14 @@
 "use client";
 
-import { FunctionComponent } from "react";
+import React, { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
 import Company, { CompanyProps } from "@/components/Companies/Company";
-import { CompaniesTier, getTierStyling } from "@/utils/GetColorTier";
+import { CompanyTier } from "@/domain/Company/company-tier";
+import { getTierStyling, tierDisplayLabel } from "@/presentation/tier-styling";
 
 interface CompaniesContainerProps {
-  tier: CompaniesTier;
+  tier: CompanyTier;
   companies: CompanyProps[];
 }
 
@@ -19,12 +20,14 @@ const CompaniesContainer: FunctionComponent<CompaniesContainerProps> = ({
     <motion.div className="flex w-full flex-col items-center justify-center border-b-1 border-secondary py-8 md:py-12 lg:py-16">
       <h2 className="z-0 mx-2 mb-8 text-center text-5xl lg:mb-4">
         <span className="text-secondary">Parceiros</span>{" "}
-        <span className={`${getTierStyling(tier)}`}>{tier}</span>
+        <span className={`${getTierStyling(tier)}`}>
+          {tierDisplayLabel(tier)}
+        </span>
       </h2>
       <section className={`w-full rounded-3xl px-4`}>
         <div className="my-2 grid w-full grid-cols-2 place-items-center gap-4 sm:gap-6 md:flex md:flex-wrap md:items-center md:justify-center md:gap-12 lg:gap-16">
           {companies.map((company) => (
-            <Company key={company.name} {...company} />
+            <Company key={company.name} {...company} tier={tier} />
           ))}
         </div>
       </section>

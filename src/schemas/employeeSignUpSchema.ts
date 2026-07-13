@@ -1,7 +1,9 @@
 import { z } from "zod";
 
+import { EmailSchema } from "@/schemas/customEmailZod";
+
 export const employeeSignUpSchema = z.object({
-  email: z.string().email().max(255),
+  email: EmailSchema,
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
   name: z.string().min(2, "Name is too short").max(100),
   linkedin: z

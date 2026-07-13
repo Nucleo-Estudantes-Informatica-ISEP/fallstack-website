@@ -9,5 +9,6 @@
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
-  }
+  },
+  "WillLuke.nextjs.hasPrompted": true
 }

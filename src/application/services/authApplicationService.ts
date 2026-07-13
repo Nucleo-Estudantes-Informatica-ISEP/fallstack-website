@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -23,7 +24,7 @@ async function createSupabaseAuthUser(email: string, password: string) {
 }
 
 export async function signUpUser(input: {
-  email: string;
+  email: Email;
   password: string;
   role: "STUDENT" | "EMPLOYEE";
 }) {
@@ -33,7 +34,7 @@ export async function signUpUser(input: {
 }
 
 export async function signUpEmployee(input: {
-  email: string;
+  email: Email;
   password: string;
   name: string;
   linkedin?: string;
@@ -87,7 +88,7 @@ export async function signUpEmployee(input: {
 }
 
 export async function changePassword(input: {
-  email: string;
+  email: Email;
   password: string;
   confirmPassword: string;
 }) {
