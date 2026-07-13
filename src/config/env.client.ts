@@ -7,7 +7,13 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
   NEXT_PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000/api"),
-  NEXT_PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  // Empty string (the Dockerfile's `ARG NEXT_PUBLIC_SENTRY_DSN=""` default
+  // when no build arg is supplied) means "unset", same as undefined — not
+  // an invalid URL.
+  NEXT_PUBLIC_SENTRY_DSN: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional()
+  ),
 });
 
 function parseClientEnv() {
@@ -29,4 +35,9 @@ function parseClientEnv() {
   return result.data;
 }
 
+// These are all `NEXT_PUBLIC_*` vars: Next.js inlines them into the browser
+// bundle at build time, so unlike `serverEnv` they must stay eagerly
+// validated here — the Docker builder stage needs to actually receive them
+// as build args (see Dockerfile/docker-compose.app.yml), not have this
+// deferred to request time.
 export const clientEnv = parseClientEnv();

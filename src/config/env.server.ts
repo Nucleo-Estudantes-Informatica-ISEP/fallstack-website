@@ -18,7 +18,13 @@ const serverEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
 });
 
-function parseServerEnv() {
+type ServerEnv = z.infer<typeof serverEnvSchema>;
+
+let cachedServerEnv: ServerEnv | undefined;
+
+function parseServerEnv(): ServerEnv {
+  if (cachedServerEnv) return cachedServerEnv;
+
   const result = serverEnvSchema.safeParse(process.env);
 
   if (!result.success) {
@@ -29,7 +35,19 @@ function parseServerEnv() {
     );
   }
 
-  return result.data;
+  cachedServerEnv = result.data;
+  return cachedServerEnv;
 }
 
-export const serverEnv = parseServerEnv();
+// Validated lazily, on first property access, rather than at import time.
+// `next build`'s page-data collection imports every route module (and so
+// transitively this one) without ever reading a property off `serverEnv` —
+// the production Dockerfile's builder stage only has the Sentry build args,
+// not these secrets, so eager validation here broke `next build`. Real
+// requests always read a property before the response is sent, so this
+// still validates before the value is ever used.
+export const serverEnv: ServerEnv = new Proxy({} as ServerEnv, {
+  get(_target, prop: keyof ServerEnv) {
+    return parseServerEnv()[prop];
+  },
+});
