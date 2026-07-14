@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 
 import type { SessionDto } from "@/application/dto/sessionDto";
 import getSession from "@/client/api/session";
@@ -13,15 +13,17 @@ export interface AuthContextData {
 
 interface AuthContextProviderProps {
   children: React.ReactNode;
+  initialUser: SessionDto | null;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthContextProvider({
   children,
+  initialUser,
   ...props
 }: AuthContextProviderProps) {
-  const [user, setUser] = useState<SessionDto | null>(null);
+  const [user, setUser] = useState<SessionDto | null>(initialUser);
 
   const fetchSession = async () => {
     const user = await getSession();
@@ -29,10 +31,6 @@ export function AuthContextProvider({
   };
 
   const clear = () => setUser(null);
-
-  useEffect(() => {
-    fetchSession();
-  }, []);
 
   return (
     <AuthContext.Provider value={{ user, clear, fetchSession }} {...props}>

@@ -10,9 +10,11 @@ import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSec
 import Custom404 from "@/app/not-found";
 import { toStudentActionDto } from "@/application/dto/actionDto";
 import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
 import { toStudentDto } from "@/application/dto/studentDto";
 import { getStudentActions } from "@/application/services/actionService";
 import { getCompanies } from "@/application/services/companyService";
+import { getInterests } from "@/application/services/interestService";
 import {
   getStudentHistory,
   getStudentStats,
@@ -72,15 +74,17 @@ const StudentPage = async (props: ProfileProps) => {
 
   const sanitizedInterests = student.user.interests.map((i) => i.name);
 
-  const globalStats = await getStudentStats(student.code);
-  const todayStats = await getTodayStudentStats(student.id);
-
-  const companies = await getCompanies();
-
-  const history = session.student
-    ? await getStudentHistory(session.student.id)
-    : new HttpError("Forbidden", 403);
-  const actions = await getStudentActions(student.code);
+  const [globalStats, todayStats, companies, history, actions, interests] =
+    await Promise.all([
+      getStudentStats(student.code),
+      getTodayStudentStats(student.id),
+      getCompanies(),
+      session.student
+        ? getStudentHistory(session.student.id)
+        : Promise.resolve(new HttpError("Forbidden", 403)),
+      getStudentActions(student.code),
+      getInterests(),
+    ]);
   const studentDto = toStudentDto(student);
 
   const totalCompanies = companies.length;
@@ -139,6 +143,7 @@ const StudentPage = async (props: ProfileProps) => {
             actions={actions.map(toStudentActionDto)}
             student={studentDto}
             interests={sanitizedInterests}
+            availableInterests={interests.map(toInterestDto)}
           />
         )}
       </section>

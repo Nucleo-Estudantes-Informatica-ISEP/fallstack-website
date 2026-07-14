@@ -8,9 +8,16 @@ import swal from "sweetalert";
 import { BASE_URL } from "@/services/api";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { jwtStudent } from "@/application/services/studentTokenService";
 
-const CompanySavedProfilesSection = () => {
+interface CompanySavedProfilesSectionProps {
+  history: SavedStudentDto[];
+}
+
+const CompanySavedProfilesSection = ({
+  history,
+}: CompanySavedProfilesSectionProps) => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
@@ -277,7 +284,7 @@ const CompanySavedProfilesSection = () => {
             <span className="flex-1 text-center">Data</span>
           </div>
         </div>
-        <CompanySavesSection />
+        <CompanySavesSection historyData={history} />
       </div>
     </section>
   );

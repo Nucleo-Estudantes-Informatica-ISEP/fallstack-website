@@ -20,6 +20,7 @@ import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentActionDto } from "@/application/dto/actionDto";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 
 import ActionsSection from "../ActionsSection";
@@ -39,6 +40,7 @@ interface ProfileSectionContainerProps {
   companiesLeft: number;
   historyData: SavedStudentDto[];
   actions: StudentActionDto[];
+  availableInterests: InterestDto[];
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
@@ -55,6 +57,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   companiesLeft,
   historyData,
   actions,
+  availableInterests,
 }) => {
   const router = useRouter();
   const session = useSession();
@@ -174,6 +177,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             profile={profile}
             setProfile={setProfile}
             setActiveTab={setActiveTab}
+            availableInterests={availableInterests}
           />
         );
       case "Desafios":
@@ -197,6 +201,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             profile={profile}
             setProfile={setProfile}
             setActiveTab={setActiveTab}
+            availableInterests={availableInterests}
           />
         );
       default:
