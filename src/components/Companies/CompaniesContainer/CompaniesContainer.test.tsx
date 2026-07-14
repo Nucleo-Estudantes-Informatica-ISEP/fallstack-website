@@ -1,13 +1,19 @@
-import test from "node:test";
 import assert from "node:assert/strict";
 import React from "react";
-import { renderToString } from "react-dom/server";
-import CompaniesContainer from "./index";
-import { COMPANY_TIER } from "@/domain/Company/company-tier";
 import { StaticImageData } from "next/image";
+import { renderToString } from "react-dom/server";
+import { test } from "vitest";
+
+import { COMPANY_TIER } from "@/domain/Company/company-tier";
+
+import CompaniesContainer from "./index";
 
 test("CompaniesContainer passes tier down to Company cards", () => {
-  const dummyLogo: StaticImageData = { src: "/dummy.png", height: 100, width: 100 };
+  const dummyLogo: StaticImageData = {
+    src: "/dummy.png",
+    height: 100,
+    width: 100,
+  };
   const html = renderToString(
     <CompaniesContainer
       tier={COMPANY_TIER.DIAMOND}

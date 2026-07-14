@@ -11,7 +11,7 @@ export function savedStudentCommentData(comment?: string | null) {
 }
 
 export function savedStudentCompanyWhere(studentId: string, companyId: string) {
-  return { studentId, savedBy: { companyId } };
+  return { studentId, companyId };
 }
 
 function csvCell(value: string) {
