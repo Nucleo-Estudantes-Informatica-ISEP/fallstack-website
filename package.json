@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "tsx --test src/application/boundaries.test.ts src/application/serviceLogic.test.ts src/edition/actions.test.ts src/lib/authFlow.test.ts src/lib/logger.test.ts src/lib/savedStudentComments.test.ts src/lib/sentryPrivacy.test.ts src/utils/isepEmail.test.ts src/types/Email.test.ts src/domain/Company/company-tier.test.ts src/components/Companies/CompaniesContainer/CompaniesContainer.test.tsx",
+    "test": "tsx --test src/application/boundaries.test.ts src/application/serviceLogic.test.ts src/edition/actions.test.ts src/lib/authFlow.test.ts src/lib/logger.test.ts src/lib/savedStudentComments.test.ts src/lib/sentryPrivacy.test.ts src/utils/isepEmail.test.ts src/types/Email.test.ts src/domain/Company/company-tier.test.ts src/domain/Student/year.test.ts src/components/Companies/CompaniesContainer/CompaniesContainer.test.tsx",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "seed": "prisma db seed",
