@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -25,7 +25,7 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
         companyId: selectedCompany,
       });
 
-      Swal("Success", "Student saved successfully!", "success");
+      toast.success("Student saved successfully!");
     });
   };
 

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useRouter } from "next/navigation";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -36,19 +36,11 @@ const PreviewProfileSectionContainer: React.FC<
 
       try {
         await httpClient.patch("/saved", { token });
-        await swal({
-          title: "Success",
-          text: "Perfil salvo com sucesso!",
-          icon: "success",
-        });
-        window.location.reload();
+        toast.success("Perfil salvo com sucesso!");
+        setTimeout(() => window.location.reload(), 1500);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 400) {
-          swal({
-            title: "Warning",
-            text: "Perfil já salvo!",
-            icon: "warning",
-          });
+          toast.warning("Perfil já salvo!");
           return;
         }
         throw error;

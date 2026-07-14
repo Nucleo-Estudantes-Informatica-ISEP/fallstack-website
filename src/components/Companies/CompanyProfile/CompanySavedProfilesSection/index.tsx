@@ -3,7 +3,6 @@
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -32,17 +31,9 @@ const CompanySavedProfilesSection = () => {
 
     try {
       await httpClient.post(`/actions/${actionId}`);
-      swal(
-        "Sucesso",
-        "Os teus pontos foram adicionados com sucesso!",
-        "success"
-      );
+      toast.success("Os teus pontos foram adicionados com sucesso!");
     } catch (error) {
-      swal(
-        "Erro",
-        error instanceof Error ? error.message : "Erro inesperado",
-        "error"
-      );
+      toast.error(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
       setProcessing(false);
     }
@@ -67,13 +58,9 @@ const CompanySavedProfilesSection = () => {
         router.push(`/student/${data}/preview`);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
+          toast.warning("Este estudante já foi guardado anteriormente.");
         } else if (error instanceof HttpClientError) {
-          swal("Erro", error.message || "Erro ao guardar perfil", "error");
+          toast.error(error.message || "Erro ao guardar perfil");
         } else {
           throw error;
         }
@@ -97,7 +84,7 @@ const CompanySavedProfilesSection = () => {
       const token = await jwtStudent(code);
 
       if (!token) {
-        swal("Erro", "O código introduzido é inválido.", "error");
+        toast.error("O código introduzido é inválido.");
         return;
       }
 
@@ -106,11 +93,7 @@ const CompanySavedProfilesSection = () => {
         router.push(`/student/${token}/preview`);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
+          toast.warning("Este estudante já foi guardado anteriormente.");
         } else {
           toast.error(
             error instanceof Error ? error.message : "Failed to save profile"
@@ -139,12 +122,10 @@ const CompanySavedProfilesSection = () => {
       setDownloading(false);
     } catch (error) {
       setDownloading(false);
-      swal(
-        "Erro",
+      toast.error(
         error instanceof Error
           ? error.message
-          : "Não foi possível exportar os CVs.",
-        "error"
+          : "Não foi possível exportar os CVs."
       );
     }
   };

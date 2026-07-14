@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -57,11 +57,7 @@ const PasswordResetForm: React.FC = () => {
 
       if (error) throw error;
 
-      swal(
-        "Sucesso",
-        "Password resetada com sucesso. Volta a iniciar sessão.",
-        "success"
-      );
+      toast.success("Password resetada com sucesso. Volta a iniciar sessão.");
       router.push("/login");
     } catch (e) {
       console.error(e);

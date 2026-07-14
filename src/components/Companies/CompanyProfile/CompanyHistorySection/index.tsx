@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
@@ -29,7 +29,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
       setComment(value);
       setEditing(false);
     } catch {
-      swal("Erro", "Não foi possível atualizar o comentário.", "error");
+      toast.error("Não foi possível atualizar o comentário.");
     } finally {
       setLoading(false);
     }
@@ -118,7 +118,7 @@ const CompanySavesSection = () => {
           await httpClient.get<SavedStudentDto[]>("/companies/history");
         setHistoryData(data);
       } catch (error) {
-        swal("Erro ao buscar histórico de scans!");
+        toast.error("Erro ao buscar histórico de scans!");
         console.error("Error fetching history data:", error);
       }
     };

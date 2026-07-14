@@ -1,7 +1,7 @@
 "use client";
 
 import { FunctionComponent, useState } from "react";
-import Swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import ConfettiEffect from "@/components/ConfettiEffect";
 import { pickGiveawayWinner } from "@/app/(admin)/giveaway/actions";
@@ -39,11 +39,9 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
     const winner = await pickGiveawayWinner();
     if (!winner) {
       setIsRandomizing(false);
-      Swal({
-        title: "Sem vencedor",
-        text: "Não há inscritos elegíveis (ninguém tem pontos).",
-        icon: "info",
-      });
+      toast.info(
+        "Sem vencedor: não há inscritos elegíveis (ninguém tem pontos)."
+      );
       return;
     }
 
@@ -63,11 +61,9 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
           setIsConfettiVisible(true);
 
           setTimeout(() => {
-            Swal({
-              title: "Parabéns!",
-              text: `O vencedor(a) foi ${winner.name} (${winner.points} pontos) 🎉\n${winner.email}`,
-              icon: "success",
-            });
+            toast.success(
+              `Parabéns! O vencedor(a) foi ${winner.name} (${winner.points} pontos) 🎉 ${winner.email}`
+            );
           }, 500);
 
           setTimeout(() => {

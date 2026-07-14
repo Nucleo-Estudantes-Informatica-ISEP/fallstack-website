@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { Area } from "react-easy-crop";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
 import { httpClient } from "@/lib/http/client";
@@ -69,7 +68,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
   const handleSave = () => {
     if (profile.bio && profile.bio?.length > LIMIT) {
-      swal(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
+      toast.error(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
       return;
     }
 
@@ -80,7 +79,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         /^(https:\/\/www\.linkedin\.com\/in\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
       )
     ) {
-      swal("O teu Linkedin não segue o formato correto!");
+      toast.error("O teu Linkedin não segue o formato correto!");
       return;
     }
 
@@ -91,7 +90,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         /^(https:\/\/github\.com\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
       )
     ) {
-      swal("O teu Github não segue o formato correto!");
+      toast.error("O teu Github não segue o formato correto!");
       return;
     }
 
@@ -124,7 +123,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           url: profile.avatar,
         });
 
-      swal("Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
       setActiveTab("Perfil");
       router.refresh();
     });

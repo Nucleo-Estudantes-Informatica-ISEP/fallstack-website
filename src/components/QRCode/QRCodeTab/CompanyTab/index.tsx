@@ -4,7 +4,6 @@ import React, { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import useIsMobile from "@/hooks/useIsMobile";
@@ -40,7 +39,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
       const token = await jwtStudent(code);
 
       if (!token) {
-        swal("Erro", "O código introduzido é inválido.", "error");
+        toast.error("O código introduzido é inválido.");
         return;
       }
 
@@ -48,11 +47,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         await httpClient.post("/saved", { code });
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
+          toast.warning("Este estudante já foi guardado anteriormente.");
           return;
         }
         throw error;

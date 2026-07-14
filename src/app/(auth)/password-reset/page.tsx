@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -33,11 +33,7 @@ const RequestResetPage: React.FC = () => {
         return;
       }
 
-      swal(
-        "Pedido enviado",
-        "Se a conta existir, receberás um email com instruções.",
-        "success"
-      );
+      toast.success("Se a conta existir, receberás um email com instruções.");
       setLoading(false);
     } catch (e) {
       console.error(e);
