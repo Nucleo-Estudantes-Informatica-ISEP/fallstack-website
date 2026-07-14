@@ -46,6 +46,12 @@ model Company {
   name      String   @unique
   tier      Tier
   avatar    String?
+  website   String?
+  // Gates public-roster visibility: self-registered companies (via the
+  // signup flow) default to inactive until an admin vets and approves
+  // them for the public site, independent of their recruiting account.
+  active    Boolean  @default(false)
+  order     Int      @default(0)
   updatedAt DateTime @updatedAt
 
   code String? @unique
