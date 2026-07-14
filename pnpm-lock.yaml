@@ -95,9 +95,6 @@ importers:
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
-      swal:
-        specifier: ^0.1.0
-        version: 0.1.0
       sweetalert:
         specifier: ^2.1.2
         version: 2.1.2
@@ -5818,10 +5815,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  swal@0.1.0:
-    resolution: {integrity: sha512-uJP65BJyHjZ1dAsWSeiVG7JKDOcvaDOqLBCPHOZ0y2xlVwqZHqAungxtOwirM5hPoovBaJ05W7F+wF+azVjhbg==}
-    engines: {node: '>= 4.0.0', npm: '>= 3.0.0'}
-
   sweetalert@2.1.2:
     resolution: {integrity: sha512-iWx7X4anRBNDa/a+AdTmvAzQtkN1+s4j/JJRWlHpYE8Qimkohs8/XnFcWeYHH2lMA8LRCa5tj2d244If3S/hzA==}
 
@@ -10245,6 +10238,7 @@ snapshots:
       source-map: 0.6.1
     optionalDependencies:
       prettier: 2.8.8
+    optional: true
 
   '@webassemblyjs/ast@1.14.1':
     dependencies:
@@ -13072,10 +13066,6 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
-
-  swal@0.1.0:
-    dependencies:
-      vue: 2.7.16
 
   sweetalert@2.1.2:
     dependencies:
