@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { Tier } from "@prisma/client";
+
 import prisma, { DbClient } from "./database";
 
 export const findCompanyById = (id: string) =>
@@ -18,6 +20,61 @@ export const findCompanies = () =>
   prisma.company.findMany({
     select: { id: true, name: true, tier: true, avatar: true },
   });
+
+export const findActiveCompanies = () =>
+  prisma.company.findMany({
+    where: { active: true },
+    orderBy: { order: "asc" },
+    select: {
+      id: true,
+      name: true,
+      tier: true,
+      avatar: true,
+      website: true,
+      order: true,
+    },
+  });
+
+export const findCompanyDisplayByName = (name: string) =>
+  prisma.company.findFirst({
+    where: { name: { equals: name, mode: "insensitive" }, active: true },
+    select: { id: true, name: true, tier: true, avatar: true, website: true },
+  });
+
+export const findAllCompaniesForAdmin = () =>
+  prisma.company.findMany({
+    orderBy: [{ tier: "asc" }, { order: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      tier: true,
+      avatar: true,
+      website: true,
+      active: true,
+      order: true,
+    },
+  });
+
+export const createCompanyDisplay = (data: {
+  name: string;
+  tier: Tier;
+  avatar?: string | null;
+  website?: string | null;
+  active?: boolean;
+  order?: number;
+}) => prisma.company.create({ data });
+
+export const updateCompanyDisplay = (
+  id: string,
+  data: {
+    name?: string;
+    tier?: Tier;
+    avatar?: string | null;
+    website?: string | null;
+    active?: boolean;
+    order?: number;
+  }
+) => prisma.company.update({ where: { id }, data });
 
 export const createCompany = (
   data: {
