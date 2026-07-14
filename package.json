@@ -44,7 +44,6 @@
     "react-zxing": "^2.1.0",
     "server-only": "^0.0.1",
     "sharp": "^0.34.5",
-    "swal": "^0.1.0",
     "sweetalert": "^2.1.2",
     "typewriter-effect": "^2.22.0",
     "xlsx": "^0.18.5",
