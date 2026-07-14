@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Tier } from "@prisma/client";
+import { PrismaClient, Role, Tier, Year } from "@prisma/client";
 
 import { actions } from "@/edition/actions";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -130,7 +130,7 @@ async function seedStudent() {
     data: {
       id: newUser.id,
       name: "Student",
-      year: "3º Ano Licenciatura",
+      year: Year.LICENCIATURA_3,
       code: "A123",
     },
   });
@@ -165,7 +165,7 @@ async function seedStudent2() {
     data: {
       id: newUser.id,
       name: "Student 2",
-      year: "2º Ano Licenciatura",
+      year: Year.LICENCIATURA_2,
       code: "A456",
     },
   });
