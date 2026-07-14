@@ -173,7 +173,7 @@ const Schedule: React.FC<Props> = ({
           >
             {scheduleEvents[activeScheduleEventIndex].map((entry, index) => (
               <motion.tr
-                key={index}
+                key={entry.hour}
                 initial={{
                   opacity: 0,
                   x: activeScheduleEventIndex === 0 ? -50 : 50,

@@ -141,6 +141,8 @@ const CompanySavesSection = () => {
         style={{ scrollbarGutter: "stable" }}
       >
         {!historyData ? (
+          // fixed-count loading placeholders with no data yet, so there's no
+          // identity to key on besides position
           Array(3)
             .fill(1)
             .map((_, i) => (
