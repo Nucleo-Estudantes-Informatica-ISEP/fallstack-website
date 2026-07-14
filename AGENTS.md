@@ -116,6 +116,15 @@ Two independent mechanisms — don't conflate them:
 - **Components:** `src/components/` is flat — every component, reusable or single-use, gets its own top-level `PascalCaseName/index.tsx` folder (e.g. `Input`, `Modal`, but also one-off sections like `GiveawaySection`, `AdminSavedSection`). There is no `components/ui/` split and no route-local `_components/` convention in use today — put new components at the top level of `components/` following that same pattern rather than inventing a nested structure.
 - **API error responses:** shapes are inconsistent across existing routes (`{ error }`, `{ message }`, raw Zod `e.errors`/`e.issues`/`.error`, English and Portuguese strings all appear). For **new** routes, standardize on `{ error: string }` for failures (the majority pattern) with an explicit status code every time — don't add another one-off shape, and don't rely on the 200 default (a few existing routes do this on validation/auth failure; that's a known bug, not a pattern to copy).
 
+## Editions & releases
+
+Each yearly edition is tracked as a git tag + GitHub Release on this one persistent repo (no more forking a new repo per edition) plus a hand-written `CHANGELOG.md` entry — not generated from Conventional Commits, since this ships once a year for a small team.
+
+- **Tag name:** `<year>-edition` (e.g. `2025-edition`, `2026-edition`).
+- **Source archive:** GitHub auto-generates a "Source code (zip/tar.gz)" download for every tag/release — that's the frozen, downloadable artifact for a past edition. This is a dynamic Next.js + Postgres app, not a static site, so the archive is source only: running it still needs your own Postgres, a Supabase project, and the usual local setup in `README.md`. No Docker image is published per edition at this time — the source tag is the deliverable (see `CHANGELOG.md` for what changed each edition).
+- **Versioning resets per edition:** a freshly-cut edition's `CHANGELOG.md` entry/release starts at `1.0.0`; further within-edition maintenance (fixes, restructuring, hygiene) increments from there (`1.0.1`, `1.1.0`, ...) until the *next* edition's cutover restarts the count at `1.0.0`. Editions are distinguished by the `<year>-edition` tag, not by a version number that climbs forever across editions.
+- The 2026 edition's own `1.0.0` cutover happens once the current backlog of open architecture/security/correctness issues is merged to `main`.
+
 ## Verification (definition of done)
 
 CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. CI doesn't run `pnpm test`, so most functional breakage still will not be caught automatically. Before considering a task done:
