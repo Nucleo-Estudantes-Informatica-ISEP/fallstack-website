@@ -1,23 +1,12 @@
-/*
-  cgiLogo,
-	deloitteLogo,
-	devoteamLogo,
-	devscopeLogo,
-*/
-import { CompanyProps } from "@/components/Companies/Company";
 import { Archive, Leaf, Trophy } from "@/styles/Icons";
 
-import {
-  cgiLogo,
-  deloitteLogo,
-  devoteamLogo,
-  devscopeLogo,
-} from "./CompaniesImages";
+import { CompanyEditionContent } from "./CompanyEditionContent";
 
-export const GoldCompanies: CompanyProps[] = [
+export const GoldCompanies: CompanyEditionContent[] = [
   {
-    logoHref: cgiLogo,
     name: "CGI",
+    logoWidth: 1202,
+    logoHeight: 560,
     interests: ["Cloud Computing", "Infrastructure", "Security"],
     modalInformation: {
       title: "CGI",
@@ -67,8 +56,9 @@ export const GoldCompanies: CompanyProps[] = [
     className: "w-3/4",
   },
   {
-    logoHref: deloitteLogo,
     name: "deloitte",
+    logoWidth: 1614,
+    logoHeight: 656,
     interests: [
       "Outsystems",
       "Network Administration",
@@ -168,8 +158,9 @@ export const GoldCompanies: CompanyProps[] = [
     },
   },
   {
-    logoHref: devscopeLogo,
     name: "Devscope",
+    logoWidth: 1222,
+    logoHeight: 232,
     interests: ["AI", "Software Development", "Frontend"],
     modalInformation: {
       title: "DevScope",
@@ -212,8 +203,9 @@ export const GoldCompanies: CompanyProps[] = [
     },
   },
   {
-    logoHref: devoteamLogo,
     name: "Devoteam",
+    logoWidth: 798,
+    logoHeight: 332,
     interests: [
       "Infrastructure",
       "Devops",

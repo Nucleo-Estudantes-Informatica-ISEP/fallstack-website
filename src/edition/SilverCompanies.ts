@@ -1,46 +1,32 @@
-import { CompanyProps } from "@/components/Companies/Company";
+import { CompanyEditionContent } from "./CompanyEditionContent";
 
-/*AccentureLogo,
-	cegidLogo,
-	glinttLogo,
-	itimLogo,
-	msgLogo,*/
-
-import {
-  AccentureLogo,
-  cegidLogo,
-  glinttLogo,
-  itimLogo,
-  msgLogo as msgLifeIberiaLogo,
-} from "./CompaniesImages";
-
-export const SilverCompanies: CompanyProps[] = [
+export const SilverCompanies: CompanyEditionContent[] = [
   {
-    logoHref: glinttLogo,
     name: "glintt",
-    websiteUrl: "https://www.glinttglobal.com/",
+    logoWidth: 4001,
+    logoHeight: 2251,
   },
   {
-    logoHref: AccentureLogo,
     name: "accenture",
-    websiteUrl: "https://www.accenture.com/",
+    logoWidth: 1984,
+    logoHeight: 524,
     className: "w-3/4",
   },
   {
-    logoHref: cegidLogo,
     name: "Cegid",
-    websiteUrl: "https://www.cegid.com/ib/pt/",
+    logoWidth: 80,
+    logoHeight: 33,
   },
   {
-    logoHref: itimLogo,
     name: "Itim",
-    websiteUrl: "https://www.itim.com/",
+    logoWidth: 2682,
+    logoHeight: 1870,
     className: "w-2/4",
   },
   {
-    logoHref: msgLifeIberiaLogo,
     name: "msg insur:it",
-    websiteUrl: "https://msg-insurit.com/pt-pt/",
+    logoWidth: 4096,
+    logoHeight: 549,
     className: "w-3/4",
   },
 ];

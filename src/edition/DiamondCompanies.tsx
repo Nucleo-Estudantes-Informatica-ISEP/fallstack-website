@@ -1,12 +1,6 @@
-import { CompanyProps } from "@/components/Companies/Company";
 import { Archive, Chart, Leaf, Trophy } from "@/styles/Icons";
 
-import {
-  aprLogo,
-  armisLogo,
-  cloudflareLogo,
-  hitachiLogo,
-} from "./CompaniesImages";
+import { CompanyEditionContent } from "./CompanyEditionContent";
 
 // parceiros diamond:
 /*
@@ -16,10 +10,11 @@ import {
   Hitachi Solutions
  */
 
-export const DiamondCompanies: CompanyProps[] = [
+export const DiamondCompanies: CompanyEditionContent[] = [
   {
-    logoHref: aprLogo,
     name: "APR - Technology Solutions",
+    logoWidth: 4215,
+    logoHeight: 4215,
     modalInformation: {
       title: "APR - Technology Solutions",
       bodyText: (
@@ -67,8 +62,9 @@ export const DiamondCompanies: CompanyProps[] = [
     interests: ["AI", "Mobile", "Software Development", "Backend"],
   },
   {
-    logoHref: armisLogo,
     name: "armis",
+    logoWidth: 149,
+    logoHeight: 149,
     modalInformation: {
       title: "Armis",
       bodyText: (
@@ -117,8 +113,9 @@ export const DiamondCompanies: CompanyProps[] = [
     interests: ["AI", "Mobile", "Software Development", "Backend"],
   },
   {
-    logoHref: cloudflareLogo,
     name: "Cloudflare",
+    logoWidth: 250,
+    logoHeight: 85,
     interests: ["Backend", "Cloud Computing", "Data Analysis"],
     modalInformation: {
       title: "Cloudflare",
@@ -165,8 +162,9 @@ export const DiamondCompanies: CompanyProps[] = [
   },
 
   {
-    logoHref: hitachiLogo,
     name: "hitachi",
+    logoWidth: 1279,
+    logoHeight: 476,
     interests: ["Backend", "Cloud Computing", "Data Analysis"],
     className: "w-3/4",
     modalInformation: {
