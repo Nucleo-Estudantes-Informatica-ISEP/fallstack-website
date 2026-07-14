@@ -46,7 +46,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
 
       const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ token }),
       });
 
       if (!res.ok) {
