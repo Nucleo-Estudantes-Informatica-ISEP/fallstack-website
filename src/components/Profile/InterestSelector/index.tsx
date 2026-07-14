@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestSelectorProps {
@@ -21,8 +21,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
 
   useEffect(() => {
     async function fetchInterests() {
-      const res = await fetch(BASE_URL + "/interests");
-      const json = await res.json();
+      const json = await httpClient.get<InterestDto[]>("/interests");
       setInterests(json);
       setLoading(false);
     }

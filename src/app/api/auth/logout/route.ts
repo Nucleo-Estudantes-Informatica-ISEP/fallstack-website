@@ -2,10 +2,12 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 import config from "@/config";
+import { defineHandler } from "@/lib/http/server";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
-export async function POST() {
-  try {
+export const POST = defineHandler({
+  auth: "public",
+  handler: async () => {
     const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
 
@@ -16,10 +18,5 @@ export async function POST() {
       { message: "Signout successfully" },
       { status: 200 }
     );
-  } catch {
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
-  }
-}
+  },
+});

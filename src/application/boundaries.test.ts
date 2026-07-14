@@ -40,6 +40,7 @@ test("Prisma runtime access stays inside repositories", async () => {
 });
 
 test("server and client modules declare their boundary", async () => {
+  const clientOnlyFiles = [join(sourceRoot, "lib", "http", "client.ts")];
   const serverFolders = [
     join(sourceRoot, "application", "repositories"),
     join(sourceRoot, "application", "services"),
@@ -47,10 +48,14 @@ test("server and client modules declare their boundary", async () => {
   ];
   for (const folder of serverFolders) {
     for (const file of await filesIn(folder)) {
+      if (file.endsWith(".test.ts") || clientOnlyFiles.includes(file)) continue;
       assert.match(await readFile(file, "utf8"), /import "server-only";/, file);
     }
   }
-  for (const file of await filesIn(join(sourceRoot, "client")))
+  for (const file of [
+    ...(await filesIn(join(sourceRoot, "client"))),
+    ...clientOnlyFiles,
+  ])
     assert.match(await readFile(file, "utf8"), /import "client-only";/, file);
 });
 

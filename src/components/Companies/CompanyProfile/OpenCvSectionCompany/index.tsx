@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import { OpenCv } from "@/styles/Icons";
 
 interface OpenCvProps {
@@ -12,8 +12,9 @@ interface OpenCvProps {
 
 const OpenCvSectionCompany: React.FC<OpenCvProps> = ({ code, className }) => {
   const handleCv = async (code: string) => {
-    const res = await fetch(BASE_URL + `/students/${code}/cv`);
-    const { url } = await res.json();
+    const { url } = await httpClient.get<{ url: string }>(
+      `/students/${code}/cv`
+    );
     window.open(url, "_blank");
   };
   return (
