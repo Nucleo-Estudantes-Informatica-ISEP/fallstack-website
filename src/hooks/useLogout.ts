@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 
 import useSession from "./useSession";
 
@@ -23,8 +23,7 @@ export function useLogout() {
     if (!confirmed) return;
 
     try {
-      const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-      if (!res.ok) throw new Error("Não foi possível terminar a sessão.");
+      await httpClient.post("/auth/logout");
 
       session.clear();
       await swal("Logout", "Sessão terminada com sucesso", "success");

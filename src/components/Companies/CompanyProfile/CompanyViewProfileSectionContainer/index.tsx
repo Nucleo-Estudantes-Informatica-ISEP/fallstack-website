@@ -4,8 +4,8 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import { BASE_URL } from "@/services/api";
 import BioSection from "@/components/Profile/BioSection";
 import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
@@ -29,27 +29,24 @@ const CompanyViewProfileSectionContainer: React.FC<
 
   const handleSaveProfile = () =>
     mutate(async () => {
-      const res = await fetch(BASE_URL + "/saved", {
-        method: "PATCH",
-        body: JSON.stringify({ token, comment }),
-        headers: { "Content-Type": "application/json" },
-      });
-
-      if (res.status === 200) {
+      try {
+        await httpClient.patch("/saved", { token, comment });
         await swal({
           title: "Success",
           text: "Perfil salvo com sucesso!",
           icon: "success",
         });
         window.location.reload();
-      } else if (res.status === 400) {
-        swal({
-          title: "Warning",
-          text: "Perfil já salvo!",
-          icon: "warning",
-        });
-      } else {
-        throw new Error("Erro ao salvar perfil!");
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 400) {
+          swal({
+            title: "Warning",
+            text: "Perfil já salvo!",
+            icon: "warning",
+          });
+          return;
+        }
+        throw error;
       }
     });
 

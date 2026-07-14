@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Swal from "sweetalert";
 
+import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import { BASE_URL } from "@/services/api";
 import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface AdminSavedSectionProps {
@@ -20,22 +20,10 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
     event.preventDefault();
 
     mutate(async () => {
-      const response = await fetch(`${BASE_URL}/admin/save-student`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentEmailNumber,
-          companyId: selectedCompany,
-        }),
+      await httpClient.post("/admin/save-student", {
+        studentEmailNumber,
+        companyId: selectedCompany,
       });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to save student");
-      }
 
       Swal("Success", "Student saved successfully!", "success");
     });
