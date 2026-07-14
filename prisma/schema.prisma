@@ -56,7 +56,8 @@ model Company {
 
   code String? @unique
 
-  employees Employee[]
+  employees     Employee[]
+  savedStudents SavedStudent[]
 }
 
 model Employee {
@@ -112,12 +113,15 @@ model Interest {
 model SavedStudent {
   studentId  String   @db.Uuid
   employeeId String   @db.Uuid
+  companyId  String   @db.Uuid
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   savedBy    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   comment    String?
 
   @@id([studentId, employeeId])
+  @@unique([studentId, companyId])
 }
 
 enum Role {
