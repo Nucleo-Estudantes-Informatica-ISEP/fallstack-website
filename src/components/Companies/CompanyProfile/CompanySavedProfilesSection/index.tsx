@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
@@ -15,6 +16,8 @@ const CompanySavedProfilesSection = () => {
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
+    useMutation("Ocorreu um erro.");
 
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
@@ -84,19 +87,20 @@ const CompanySavedProfilesSection = () => {
     }
   };
 
-  const handleManualEntry = async () => {
-    if (!inputRef.current?.value) {
-      toast.error("Sem código inserido.");
-      return;
-    }
+  const handleManualEntry = () =>
+    mutateManualEntry(async () => {
+      if (!inputRef.current?.value) {
+        toast.error("Sem código inserido.");
+        return;
+      }
 
-    const code = inputRef.current?.value;
-
-    if (code) {
+      const code = inputRef.current?.value;
       const token = await jwtStudent(code);
 
-      if (!token)
-        return swal("Erro", "O código introduzido é inválido.", "error");
+      if (!token) {
+        swal("Erro", "O código introduzido é inválido.", "error");
+        return;
+      }
 
       const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
@@ -117,10 +121,7 @@ const CompanySavedProfilesSection = () => {
         return;
       }
       router.push(`/student/${token}/preview`);
-    } else {
-      toast.error("Ocorreu um erro.");
-    }
-  };
+    });
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleManualEntry();
@@ -214,17 +215,19 @@ const CompanySavedProfilesSection = () => {
             ref={inputRef}
             onKeyUp={handleKeyUp}
             maxLength={4}
+            disabled={isSubmittingManualEntry}
           />
           <button
             onClick={handleManualEntry}
-            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
+            disabled={isSubmittingManualEntry}
+            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
               lineHeight: "100%",
             }}
           >
-            Validar
+            {isSubmittingManualEntry ? "..." : "Validar"}
           </button>
         </div>
         <p

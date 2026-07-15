@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import useIsMobile from "@/hooks/useIsMobile";
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 import { jwtStudent } from "@/application/services/studentTokenService";
@@ -22,34 +23,49 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
   const router = useRouter();
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const { mutate, isPending } = useMutation("Ocorreu um erro.");
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleClick();
   };
 
-  const handleClick = async () => {
-    if (!inputRef.current?.value) toast.error("Sem código inserido.");
+  const handleClick = () =>
+    mutate(async () => {
+      if (!inputRef.current?.value) {
+        toast.error("Sem código inserido.");
+        return;
+      }
 
-    const code = inputRef.current?.value;
-
-    if (code) {
+      const code = inputRef.current?.value;
       const token = await jwtStudent(code);
 
-      if (!token)
-        return swal("Erro", "O código introduzido é inválido.", "error");
+      if (!token) {
+        swal("Erro", "O código introduzido é inválido.", "error");
+        return;
+      }
 
-      await fetch(BASE_URL + "/saved", {
+      const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ token }),
       });
 
-      router.push(`/student/${token}/preview`);
+      if (!res.ok) {
+        const { error } = await res.json();
+        if (res.status === 409) {
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
+        } else {
+          throw new Error(error || "Ocorreu um erro.");
+        }
+        return;
+      }
 
+      router.push(`/student/${token}/preview`);
       setHidden(true);
-    } else {
-      toast.error("Ocorreu um erro.");
-    }
-  };
+    });
 
   return (
     <div className="mt-14 flex flex-col items-center justify-center">
@@ -66,6 +82,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
                   ref={inputRef}
                   onKeyUp={handleKeyUp}
                   maxLength={4}
+                  disabled={isPending}
                 />
               </div>
             </div>
@@ -73,9 +90,10 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
               whileTap={{ scale: 0.9 }}
               initial={{ scale: 1 }}
               onClick={handleClick}
-              className="mt-4 rounded-xl bg-primary px-4 py-2 text-lg font-bold text-white hover:opacity-50"
+              disabled={isPending}
+              className="mt-4 rounded-xl bg-primary px-4 py-2 text-lg font-bold text-white hover:opacity-50 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Ir para o perfil
+              {isPending ? "A processar..." : "Ir para o perfil"}
             </motion.button>
           </div>
         </>

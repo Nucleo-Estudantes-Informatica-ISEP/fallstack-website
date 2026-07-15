@@ -1,14 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { BiScan } from "react-icons/bi";
 import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
-import swal from "sweetalert";
 
 import type { Stats } from "@/types/Stats";
-import useSession from "@/hooks/useSession";
-import { BASE_URL } from "@/services/api";
+import { useLogout } from "@/hooks/useLogout";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
@@ -52,8 +49,7 @@ const CompanyProfileSectionContainer: React.FC<
   history,
   interests,
 }) => {
-  const router = useRouter();
-  const session = useSession();
+  const handleLogout = useLogout();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
@@ -81,25 +77,6 @@ const CompanyProfileSectionContainer: React.FC<
     if (item.tabValue) {
       setActiveTab(item.tabValue);
     }
-  };
-
-  const handleLogout = async () => {
-    swal("Queres mesmo mesmo sair?", {
-      buttons: ["Cancelar", "Sair"],
-      title: "Terminar sessão",
-      icon: "warning",
-      dangerMode: true,
-      timer: 5000,
-    }).then(async (value) => {
-      if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
-          session.clear();
-          swal("Logout", "Sessão terminada com sucesso", "success");
-          router.push("/");
-        }
-      }
-    });
   };
 
   const renderButton = (item: SidebarItem) => {

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   FiChevronRight,
   FiFileText,
@@ -10,12 +9,11 @@ import {
   FiMapPin,
   FiUser,
 } from "react-icons/fi";
-import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
 import type { Stats } from "@/types/Stats";
+import { useLogout } from "@/hooks/useLogout";
 import useSession from "@/hooks/useSession";
-import { BASE_URL } from "@/services/api";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentActionDto } from "@/application/dto/actionDto";
@@ -56,8 +54,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   historyData,
   actions,
 }) => {
-  const router = useRouter();
   const session = useSession();
+  const handleLogout = useLogout();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
@@ -106,25 +104,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     if (item.tabValue) {
       setActiveTab(item.tabValue);
     }
-  };
-
-  const handleLogout = async () => {
-    swal("Queres mesmo mesmo sair?", {
-      buttons: ["Cancelar", "Sair"],
-      title: "Terminar sessão",
-      icon: "warning",
-      dangerMode: true,
-      timer: 5000,
-    }).then(async (value) => {
-      if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
-          session.clear();
-          swal("Logout", "Sessão terminada com sucesso", "success");
-          router.push("/");
-        }
-      }
-    });
   };
 
   const renderButton = (item: SidebarItem) => {

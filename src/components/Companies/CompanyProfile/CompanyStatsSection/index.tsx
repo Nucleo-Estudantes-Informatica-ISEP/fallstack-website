@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
 import type { Stats } from "@/types/Stats";
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
@@ -27,27 +28,27 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   const { totalScans, totalSaves } = stats;
   const studentsLeft = students - totalScans;
   const [companyInterests, setInterests] = useState<string[]>(interests);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate, isPending } = useMutation(
+    "Ocorreu um erro ao atualizar o teu perfil..."
+  );
 
-  async function handleSave() {
-    const res = await fetch(`${BASE_URL}/user`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        interests: companyInterests,
-      }),
-    });
+  const handleSave = () =>
+    mutate(async () => {
+      const res = await fetch(`${BASE_URL}/user`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          interests: companyInterests,
+        }),
+      });
 
-    if (res.status === 200) {
-      setIsLoading(false);
+      if (!res.ok) {
+        throw new Error("Ocorreu um erro ao atualizar o teu perfil...");
+      }
+
       swal("Perfil atualizado com sucesso!");
-    } else {
-      setIsLoading(false);
-      swal("Ocorreu um erro ao atualizar o teu perfil...");
-    }
-
-    router.refresh();
-  }
+      router.refresh();
+    });
 
   return (
     <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">
@@ -83,7 +84,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
       />
       <PrimaryButton
         onClick={handleSave}
-        loading={isLoading}
+        loading={isPending}
         className="mt-4 px-12 py-2 text-lg"
       >
         Guardar

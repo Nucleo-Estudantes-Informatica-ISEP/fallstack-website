@@ -59,10 +59,25 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      await fetch(BASE_URL + "/saved", {
+      const res = await fetch(BASE_URL + "/saved", {
         method: "POST",
         body: JSON.stringify({ token: data }),
       });
+
+      if (!res.ok) {
+        const { error } = await res.json();
+        if (res.status === 409) {
+          swal(
+            "Aviso",
+            "Este estudante já foi guardado anteriormente.",
+            "warning"
+          );
+        } else {
+          toast.error(error || "Erro ao guardar perfil");
+        }
+        setProcessing(false);
+        return;
+      }
 
       setHidden(true);
       router.push(`/student/${data}/preview`);

@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
+import { useMutation } from "@/hooks/useMutation";
 import { BASE_URL } from "@/services/api";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
@@ -27,36 +28,34 @@ const PreviewProfileSectionContainer: React.FC<
     [interests]
   );
   const router = useRouter();
-  const handleSaveProfile = async () => {
-    if (!token) return;
+  const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
 
-    const res = await fetch(BASE_URL + "/saved", {
-      method: "PATCH",
-      body: JSON.stringify({ token }),
-    });
+  const handleSaveProfile = () =>
+    mutate(async () => {
+      if (!token) return;
 
-    if (res.status === 200) {
-      swal({
-        title: "Success",
-        text: "Perfil salvo com sucesso!",
-        icon: "success",
-      }).then(() => {
+      const res = await fetch(BASE_URL + "/saved", {
+        method: "PATCH",
+        body: JSON.stringify({ token }),
+      });
+
+      if (res.status === 200) {
+        await swal({
+          title: "Success",
+          text: "Perfil salvo com sucesso!",
+          icon: "success",
+        });
         window.location.reload();
-      });
-    } else if (res.status === 400) {
-      swal({
-        title: "Warning",
-        text: "Perfil já salvo!",
-        icon: "warning",
-      });
-    } else {
-      swal({
-        title: "Error",
-        text: "Erro ao salvar perfil!",
-        icon: "error",
-      });
-    }
-  };
+      } else if (res.status === 400) {
+        swal({
+          title: "Warning",
+          text: "Perfil já salvo!",
+          icon: "warning",
+        });
+      } else {
+        throw new Error("Erro ao salvar perfil!");
+      }
+    });
 
   const handleOpenCv = async () => {
     const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
@@ -141,9 +140,10 @@ const PreviewProfileSectionContainer: React.FC<
           {isCompanyView && !isSavedStudent && (
             <button
               onClick={handleSaveProfile}
-              className="rounded-full border border-primary/60 bg-primary px-4 py-2 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+              disabled={isPending}
+              className="rounded-full border border-primary/60 bg-primary px-4 py-2 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
             >
-              + Salvar perfil
+              {isPending ? "A guardar..." : "+ Salvar perfil"}
             </button>
           )}
         </div>
