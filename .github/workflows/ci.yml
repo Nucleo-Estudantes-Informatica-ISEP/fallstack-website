@@ -5,7 +5,7 @@ on:
 
 jobs:
   quality:
-    name: Typecheck & Lint
+    name: Test, Typecheck & Lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,6 +21,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Test
+        run: pnpm test
 
       - name: Typecheck
         run: pnpm typecheck

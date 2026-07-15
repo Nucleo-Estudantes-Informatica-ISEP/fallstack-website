@@ -1,3 +1,6 @@
+import { studentYearLabel } from "@/domain/Student/year";
+import type { StudentYear } from "@/domain/Student/year";
+
 export interface StudentDto {
   id: string;
   code: string;
@@ -15,7 +18,19 @@ export interface StudentDto {
 
 export type StudentSummaryDto = Omit<StudentDto, "user">;
 
-type StudentEntity = StudentSummaryDto & {
+interface StudentSummaryEntity {
+  id: string;
+  code: string;
+  name: string;
+  bio: string | null;
+  year: StudentYear;
+  cv: string | null;
+  linkedin: string | null;
+  github: string | null;
+  avatar: string | null;
+}
+
+type StudentEntity = StudentSummaryEntity & {
   user: { email: string };
 };
 
@@ -25,13 +40,13 @@ export const toStudentDto = (student: StudentEntity): StudentDto => ({
 });
 
 export const toStudentSummaryDto = (
-  student: StudentSummaryDto
+  student: StudentSummaryEntity
 ): StudentSummaryDto => ({
   id: student.id,
   code: student.code,
   name: student.name,
   bio: student.bio,
-  year: student.year,
+  year: studentYearLabel(student.year),
   cv: student.cv,
   linkedin: student.linkedin,
   github: student.github,
