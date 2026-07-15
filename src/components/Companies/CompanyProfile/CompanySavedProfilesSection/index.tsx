@@ -83,6 +83,7 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
+      router.refresh();
       router.push(`/student/${data}/preview`);
       setProcessing(false);
     } catch {
@@ -123,6 +124,7 @@ const CompanySavedProfilesSection = ({
         }
         return;
       }
+      router.refresh();
       router.push(`/student/${token}/preview`);
     } else {
       toast.error("Ocorreu um erro.");
