@@ -11,23 +11,3 @@ export const toCompanyDto = (company: CompanyDto): CompanyDto => ({
   tier: company.tier,
   avatar: company.avatar,
 });
-
-export interface InterestMatchDto {
-  company: CompanyDto;
-  matchingInterests: InterestDto[];
-}
-
-interface InterestDto {
-  id: string;
-  name: string;
-}
-
-export const toInterestMatchDto = (
-  match: InterestMatchDto
-): InterestMatchDto => ({
-  company: toCompanyDto(match.company),
-  matchingInterests: match.matchingInterests.map(({ id, name }) => ({
-    id,
-    name,
-  })),
-});
