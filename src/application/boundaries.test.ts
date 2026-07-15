@@ -5,6 +5,7 @@ import { test } from "vitest";
 
 import { toCompanyDto } from "./dto/companyDto";
 import { toAdminScanDto, toSavedStudentDto } from "./dto/historyDto";
+import { toInterestDto } from "./dto/interestDto";
 import { toSessionDto } from "./dto/sessionDto";
 
 const sourceRoot = join(process.cwd(), "src");
@@ -100,6 +101,10 @@ test("public DTO mappers omit private database fields", () => {
   assert.deepEqual(toSessionDto(session), {
     role: "STUDENT",
     student: { code: "ABC123", name: "Student" },
+  });
+  assert.deepEqual(toInterestDto({ id: "interest-id", name: "TypeScript" }), {
+    id: "interest-id",
+    name: "TypeScript",
   });
 });
 

@@ -16,9 +16,11 @@ interface ActionParams {
 
 export async function GET(_: NextRequest, { params }: ActionParams) {
   const data = await getActionQrCode((await params).id);
+  if (!data)
+    return NextResponse.json({ error: "Action not found" }, { status: 404 });
   return NextResponse.json({
     ...data,
-    action: data.action ? toActionDto(data.action) : null,
+    action: toActionDto(data.action),
   });
 }
 

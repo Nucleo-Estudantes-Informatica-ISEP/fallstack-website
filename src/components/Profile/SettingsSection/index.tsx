@@ -18,6 +18,7 @@ import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
+import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import {
   uploadAvatar as uploadAvatarToSupabase,
@@ -32,6 +33,7 @@ interface SettingsSectionProps {
   setActiveTab: Dispatch<
     SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
   >;
+  availableInterests: InterestDto[];
 }
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({
@@ -39,6 +41,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   profile,
   setProfile,
   setActiveTab,
+  availableInterests,
 }) => {
   const LIMIT = 255;
 
@@ -225,6 +228,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         <label className="text-lg text-slate-700">Interesses</label>
 
         <InterestSelector
+          availableInterests={availableInterests}
           userInterests={profile.interests}
           setUserInterests={setUserInterests}
         />

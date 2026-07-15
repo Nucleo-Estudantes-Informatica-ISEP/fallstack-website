@@ -9,10 +9,14 @@ import { BASE_URL } from "@/services/api";
 
 interface ActionQrCodeDataProps {
   id: string;
+  initialQrCode: string;
 }
 
-const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
-  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({
+  id,
+  initialQrCode,
+}) => {
+  const [qrCodeData, setQrCodeData] = useState(initialQrCode);
   const { innerWidth } = useWindowSize();
 
   useEffect(() => {
@@ -21,8 +25,6 @@ const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
       const { qrCode } = await res.json();
       setQrCodeData(qrCode as string);
     };
-
-    fetchQrCodeData();
 
     const interval = setInterval(
       fetchQrCodeData,
