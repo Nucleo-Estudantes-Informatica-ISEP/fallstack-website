@@ -19,8 +19,9 @@ const Actions = async ({ params }: ActionParams) => {
   }
 
   const { id } = await params;
-  const { action, qrCode } = await getActionQrCode(id);
-  if (!action) return Custom404();
+  const actionQrCode = await getActionQrCode(id);
+  if (!actionQrCode) return Custom404();
+  const { action, qrCode } = actionQrCode;
   const actionDto = toActionDto(action);
 
   return (
