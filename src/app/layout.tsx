@@ -12,23 +12,17 @@ import { AuthContextProvider } from "@/contexts/AuthContext";
 import { InstallableContextProvider } from "@/contexts/InstallableContext";
 import InstallPopUp from "@/components/InstallPopUp";
 import Topbar from "@/components/TopBar";
-import { toSessionDto } from "@/application/dto/sessionDto";
-import getServerSession from "@/application/services/sessionService";
 import { branding } from "@/edition/branding";
 
 export const metadata: Metadata = {
   ...branding.metadata,
 };
 
-export const dynamic = "force-dynamic";
-
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession();
-
   return (
     <html lang="pt" className="h-svh">
       <head>
@@ -42,9 +36,7 @@ export default async function RootLayout({
         >
           Saltar para o conteúdo principal
         </a>
-        <AuthContextProvider
-          initialUser={session ? toSessionDto(session) : null}
-        >
+        <AuthContextProvider>
           <InstallableContextProvider>
             <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
               <Topbar />

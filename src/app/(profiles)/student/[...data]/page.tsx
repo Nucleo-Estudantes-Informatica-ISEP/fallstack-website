@@ -73,6 +73,7 @@ const StudentPage = async (props: ProfileProps) => {
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
   const sanitizedInterests = student.user.interests.map((i) => i.name);
+  const isOwnProfile = !isPreview && session.student?.code === student.code;
 
   const [globalStats, todayStats, companies, history, actions, interests] =
     await Promise.all([
@@ -83,7 +84,7 @@ const StudentPage = async (props: ProfileProps) => {
         ? getStudentHistory(session.student.id)
         : Promise.resolve(new HttpError("Forbidden", 403)),
       getStudentActions(student.code),
-      getInterests(),
+      isOwnProfile ? getInterests() : Promise.resolve([]),
     ]);
   const studentDto = toStudentDto(student);
 
