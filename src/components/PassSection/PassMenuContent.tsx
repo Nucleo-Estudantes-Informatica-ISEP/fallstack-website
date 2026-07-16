@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { Clipboard } from "@/styles/Icons";
@@ -19,10 +19,10 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const fetchToken = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(BASE_URL + "/qrcode", { cache: "no-store" });
-      if (!res.ok) throw new Error("Falha ao obter QR code");
-      const { data } = await res.json();
-      setQrToken(data as string);
+      const { data } = await httpClient.get<{ data: string }>("/qrcode", {
+        cache: "no-store",
+      });
+      setQrToken(data);
     } catch {
       setQrToken(null);
     } finally {

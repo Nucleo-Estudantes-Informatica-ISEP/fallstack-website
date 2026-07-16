@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -18,16 +18,10 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${BASE_URL}/saved`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentId: item.studentId,
-          comment: nextComment,
-        }),
+      await httpClient.put("/saved", {
+        studentId: item.studentId,
+        comment: nextComment,
       });
-
-      if (!response.ok) throw new Error("Failed to update comment");
 
       const value = nextComment ?? "";
       setSavedComment(value);

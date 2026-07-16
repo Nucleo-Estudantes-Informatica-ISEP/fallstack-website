@@ -9,6 +9,8 @@ interface StudentParams {
   params: Promise<{ code: string }>;
 }
 
+// Not a defineHandler route: auth here is a query-string JWT (the CV export
+// link), not the session cookie defineHandler's auth Strategy checks.
 export async function GET(req: NextRequest, { params }: StudentParams) {
   const token = new URL(req.url).searchParams.get("token");
   const decoded = token

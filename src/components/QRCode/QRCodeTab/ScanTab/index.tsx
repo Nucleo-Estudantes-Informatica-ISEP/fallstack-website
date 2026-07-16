@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 
 interface ScanTabProps {
@@ -27,19 +27,20 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
   async function handleActionScan(data: string) {
     const actionId = data.replace(/^action-/, "");
 
-    const res = await fetch(BASE_URL + `/actions/${actionId}`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const error = (await res.json()).error;
-      swal("Erro", error, "error");
-      setHidden(true);
-      setProcessing(false);
-      return;
+    try {
+      await httpClient.post(`/actions/${actionId}`);
+      swal(
+        "Sucesso",
+        "Os teus pontos foram adicionados com sucesso!",
+        "success"
+      );
+    } catch (error) {
+      swal(
+        "Erro",
+        error instanceof Error ? error.message : "Erro inesperado",
+        "error"
+      );
     }
-
-    swal("Sucesso", "Os teus pontos foram adicionados com sucesso!", "success");
 
     setHidden(true);
     setProcessing(false);
@@ -59,21 +60,19 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      const res = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token: data }),
-      });
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        if (res.status === 409) {
+      try {
+        await httpClient.post("/saved", { token: data });
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
           swal(
             "Aviso",
             "Este estudante já foi guardado anteriormente.",
             "warning"
           );
         } else {
-          toast.error(error || "Erro ao guardar perfil");
+          toast.error(
+            error instanceof Error ? error.message : "Erro ao guardar perfil"
+          );
         }
         setProcessing(false);
         return;

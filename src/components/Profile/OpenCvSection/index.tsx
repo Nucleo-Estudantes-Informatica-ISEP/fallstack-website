@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { OpenCv } from "@/styles/Icons";
 
@@ -13,8 +13,9 @@ interface OpenCvProps {
 
 const OpenCvSection: React.FC<OpenCvProps> = ({ student, text }) => {
   const handleCv = async (student: Pick<StudentDto, "code">) => {
-    const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
-    const { url } = await res.json();
+    const { url } = await httpClient.get<{ url: string }>(
+      `/students/${student.code}/cv`
+    );
     window.open(url, "_blank");
   };
   return (

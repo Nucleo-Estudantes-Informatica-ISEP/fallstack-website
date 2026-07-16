@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
+import { defineHandler } from "@/lib/http/server";
 import { getStudentStats } from "@/application/services/savedStudentService";
-import getServerSession from "@/application/services/sessionService";
 
 interface StudentParams {
-  params: Promise<{ code: string }>;
+  code: string;
 }
 
-export async function GET(_: NextRequest, { params }: StudentParams) {
-  if (!(await getServerSession()))
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(await getStudentStats((await params).code));
-}
+export const GET = defineHandler<StudentParams>({
+  auth: "session",
+  handler: async ({ params }) => {
+    return NextResponse.json(await getStudentStats(params.code));
+  },
+});

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import swal from "sweetalert";
 
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -18,30 +19,18 @@ const RequestResetPage: React.FC = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/password-reset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: emailRef.current?.value }),
+      await httpClient.post("/auth/password-reset", {
+        email: emailRef.current.value,
       });
-
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.error || "Algo correu mal");
-        setLoading(false);
-        return;
-      }
 
       swal(
         "Pedido enviado",
         "Se a conta existir, receberás um email com instruções.",
         "success"
       );
-      setLoading(false);
     } catch (e) {
-      console.error(e);
-      setError("Erro de servidor");
+      setError(e instanceof HttpClientError ? e.message : "Erro de servidor");
+    } finally {
       setLoading(false);
     }
   };

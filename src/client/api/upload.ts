@@ -1,25 +1,28 @@
 import "client-only";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 
 export async function uploadAvatar(image: Blob) {
   const form = new FormData();
   form.append("file", image);
-  const response = await fetch(`${BASE_URL}/storage/avatar`, {
-    method: "POST",
-    body: form,
-  });
-  return response.ok
-    ? ((await response.json()) as { id: string; url: string })
-    : null;
+  try {
+    return await httpClient.post<{ id: string; url: string }>(
+      "/storage/avatar",
+      form
+    );
+  } catch (error) {
+    if (error instanceof HttpClientError) return null;
+    throw error;
+  }
 }
 
 export async function uploadCv(file: File) {
   const form = new FormData();
   form.append("file", file);
-  const response = await fetch(`${BASE_URL}/storage/cv`, {
-    method: "POST",
-    body: form,
-  });
-  return response.ok ? ((await response.json()) as { id: string }) : null;
+  try {
+    return await httpClient.post<{ id: string }>("/storage/cv", form);
+  } catch (error) {
+    if (error instanceof HttpClientError) return null;
+    throw error;
+  }
 }

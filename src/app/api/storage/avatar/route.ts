@@ -6,6 +6,9 @@ import { matchesDeclaredType } from "@/lib/fileSignature";
 import { reportError } from "@/lib/logger";
 import { createAdminClient } from "@/utils/supabase/admin";
 
+// Not a defineHandler route: multipart/form-data body (defineHandler's
+// schema option parses JSON) and, pre-existing, no auth check at all -
+// tracked separately (#26), not something this refactor changes.
 export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file");

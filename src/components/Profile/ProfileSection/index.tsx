@@ -8,8 +8,8 @@ import { toast } from "react-toastify";
 import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
+import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import { BASE_URL } from "@/services/api";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
@@ -129,38 +129,30 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         const cvFile = cvRef.current.files[0]!;
         const uploaded = await uploadCvToSupabase(cvFile);
         if (uploaded) {
-          await fetch(`${BASE_URL}/students/${student.code}/cv`, {
-            method: "POST",
-            body: JSON.stringify({ id: uploaded.id }),
-          });
+          try {
+            await httpClient.post(`/students/${student.code}/cv`, {
+              id: uploaded.id,
+            });
+          } catch (error) {
+            console.error("CV save failed:", error);
+          }
         }
       }
 
-      const res = await fetch(`${BASE_URL}/students/${student.code}`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          bio: profile.bio ? profile.bio : undefined,
-          github: githubRef.current?.value,
-          linkedin: linkedinRef.current?.value,
-          interests: profile.interests,
-        }),
+      await httpClient.patch(`/students/${student.code}`, {
+        bio: profile.bio ? profile.bio : undefined,
+        github: githubRef.current?.value,
+        linkedin: linkedinRef.current?.value,
+        interests: profile.interests,
       });
 
-      if (!res.ok) {
-        throw new Error("Erro ao atualizar perfil.");
-      }
-
       if (profile.avatar) {
-        const avatarRes = await fetch(
-          `${BASE_URL}/students/${student.code}/avatar`,
-          {
-            method: "POST",
-            body: JSON.stringify({ url: profile.avatar }),
-          }
-        );
-
-        if (!avatarRes.ok) {
-          console.error("Avatar save failed:", await avatarRes.text());
+        try {
+          await httpClient.post(`/students/${student.code}/avatar`, {
+            url: profile.avatar,
+          });
+        } catch (error) {
+          console.error("Avatar save failed:", error);
         }
       }
 

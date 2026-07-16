@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import swal from "sweetalert";
 
 import type { Stats } from "@/types/Stats";
+import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import { BASE_URL } from "@/services/api";
 import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
@@ -38,17 +38,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
 
   const handleSave = () =>
     mutate(async () => {
-      const res = await fetch(`${BASE_URL}/user`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          interests: companyInterests,
-        }),
-      });
-
-      if (!res.ok) {
-        throw new Error("Ocorreu um erro ao atualizar o teu perfil...");
-      }
-
+      await httpClient.patch("/user", { interests: companyInterests });
       swal("Perfil atualizado com sucesso!");
       router.refresh();
     });

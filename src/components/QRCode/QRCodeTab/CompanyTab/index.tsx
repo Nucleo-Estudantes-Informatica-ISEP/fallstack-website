@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import swal from "sweetalert";
 
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import useIsMobile from "@/hooks/useIsMobile";
 import { useMutation } from "@/hooks/useMutation";
-import { BASE_URL } from "@/services/api";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 import { jwtStudent } from "@/application/services/studentTokenService";
 
@@ -44,23 +44,18 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         return;
       }
 
-      const res = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      });
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        if (res.status === 409) {
+      try {
+        await httpClient.post("/saved", { token });
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
           swal(
             "Aviso",
             "Este estudante já foi guardado anteriormente.",
             "warning"
           );
-        } else {
-          throw new Error(error || "Ocorreu um erro.");
+          return;
         }
-        return;
+        throw error;
       }
 
       router.push(`/student/${token}/preview`);

@@ -1,5 +1,6 @@
 "use client";
 
+import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
 import PrimaryButton from "@/components/PrimaryButton";
 
@@ -20,14 +21,7 @@ const CloseActionButton: React.FC<CloseActionButtonProps> = ({
 
   const handleToggleIsActionLive = () =>
     mutate(async () => {
-      const res = await fetch(`/api/actions/${id}`, {
-        method: "PATCH",
-      });
-
-      if (!res.ok) {
-        throw new Error("Não foi possível atualizar o estado da ação.");
-      }
-
+      await httpClient.patch(`/actions/${id}`);
       window.location.reload();
     });
 
