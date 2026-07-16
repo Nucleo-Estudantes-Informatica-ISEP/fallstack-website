@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { HttpError } from "@/types/HttpError";
+import { parseStudentYear, studentYearLabel } from "@/domain/Student/year";
 import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
@@ -54,7 +55,13 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
 
   return withTransaction(async (tx) => {
     const student = await createStudent(
-      { userId, code, name: body.name, bio: body.bio, year: body.year },
+      {
+        userId,
+        code,
+        name: body.name,
+        bio: body.bio,
+        year: parseStudentYear(body.year),
+      },
       tx
     );
     await connectUserInterests(userId, body.interests, tx);
@@ -130,7 +137,7 @@ export async function getStudentsForGiveaway() {
       code: student.code,
       name: student.name,
       bio: student.bio,
-      year: student.year,
+      year: studentYearLabel(student.year),
       cv: student.cv,
       linkedin: student.linkedin,
       numberOfTotalPoints: student.actionCompletions.reduce(

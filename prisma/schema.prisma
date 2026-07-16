@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   role      Role     @default(STUDENT)
   isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   student   Student?
@@ -27,17 +28,21 @@ model Student {
   code      String   @unique
   name      String
   bio       String?
-  year      String
+  year      Year
+  // avatar/cv are bare Supabase Storage file IDs with no DB-level integrity
+  // (no referential constraint, no cascade cleanup) - the root cause of the
+  // orphaned-file GC job tracked separately in #37. Consider an Upload
+  // tracking table if that gap needs closing; until then the GC job is the
+  // only thing keeping storage in sync with these columns.
   cv        String?
   linkedin  String?
   github    String?
   avatar    String?
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   actionCompletions ActionCompletion[]
   savedByEmployees  SavedStudent[]
-
-  @@index([code])
 }
 
 model Company {
@@ -46,13 +51,13 @@ model Company {
   name      String   @unique
   tier      Tier
   avatar    String?
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   code String? @unique
 
-  employees Employee[]
-
-  @@index([name])
+  employees     Employee[]
+  savedStudents SavedStudent[]
 }
 
 model Employee {
@@ -61,6 +66,7 @@ model Employee {
 
   name      String
   linkedin  String?
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -72,7 +78,7 @@ model Employee {
 }
 
 model Action {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   name        String   @unique
   description String
   points      Int
@@ -85,13 +91,13 @@ model Action {
 }
 
 model ActionCompletion {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   completedAt DateTime @default(now())
 
   action  Action  @relation(fields: [actionId], references: [id])
   student Student @relation(fields: [studentId], references: [id])
 
-  actionId  String
+  actionId  String @db.Uuid
   studentId String @db.Uuid
 
   @@unique([actionId, studentId])
@@ -107,12 +113,15 @@ model Interest {
 model SavedStudent {
   studentId  String   @db.Uuid
   employeeId String   @db.Uuid
+  companyId  String   @db.Uuid
   student    Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   savedBy    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
   createdAt  DateTime @default(now())
   comment    String?
 
   @@id([studentId, employeeId])
+  @@unique([studentId, companyId])
 }
 
 enum Role {
@@ -125,4 +134,17 @@ enum Tier {
   GOLD
   SILVER
   BRONZE
+}
+
+// Prisma-side identifiers are decoupled from the stored/display label via
+// @map so the DB keeps the existing Portuguese strings with no data
+// migration; application/dto/studentDto.ts and application/services/
+// studentService.ts convert to/from src/domain/Student/year.ts's labels at
+// the Prisma boundary - everything else keeps working with plain strings.
+enum Year {
+  LICENCIATURA_1 @map("1º Ano Licenciatura")
+  LICENCIATURA_2 @map("2º Ano Licenciatura")
+  LICENCIATURA_3 @map("3º Ano Licenciatura")
+  MESTRADO_1     @map("1º Ano Mestrado")
+  MESTRADO_2     @map("2º Ano Mestrado")
 }

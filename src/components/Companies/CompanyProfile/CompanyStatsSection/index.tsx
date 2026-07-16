@@ -11,12 +11,14 @@ import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface StatsProps {
   stats: Stats;
   students: number;
   history: SavedStudentDto[];
   interests: string[];
+  availableInterests: InterestDto[];
 }
 
 const CompanyStatsSection: React.FC<StatsProps> = ({
@@ -24,6 +26,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   students,
   history,
   interests,
+  availableInterests,
 }) => {
   const { totalScans, totalSaves } = stats;
   const studentsLeft = students - totalScans;
@@ -69,6 +72,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
         Interesses
       </h1>
       <InterestSelector
+        availableInterests={availableInterests}
         userInterests={companyInterests}
         setUserInterests={setInterests}
       />

@@ -17,9 +17,11 @@ export const GET = defineHandler<ActionParams>({
   auth: "public",
   handler: async ({ params }) => {
     const data = await getActionQrCode(params.id);
+    if (!data)
+      return NextResponse.json({ error: "Action not found" }, { status: 404 });
     return NextResponse.json({
       ...data,
-      action: data.action ? toActionDto(data.action) : null,
+      action: toActionDto(data.action),
     });
   },
 });

@@ -44,7 +44,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
       }
 
       try {
-        await httpClient.post("/saved", { code });
+        await httpClient.post("/saved", { token });
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
           toast.warning("Este estudante já foi guardado anteriormente.");

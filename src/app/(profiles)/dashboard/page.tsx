@@ -3,7 +3,9 @@ import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfil
 import Custom404 from "@/app/not-found";
 import { toCompanyDto } from "@/application/dto/companyDto";
 import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
 import { getCompanyInterests } from "@/application/services/companyService";
+import { getInterests } from "@/application/services/interestService";
 import {
   getCompanyHistory,
   getCompanyStats,
@@ -15,15 +17,14 @@ const Dashboard = async () => {
   const session = await getServerSession();
   if (!session || !session.employee?.company) return Custom404();
 
-  const globalStats = await getCompanyStats(session.employee.company.id);
-
-  const students = await getStudents();
-  const totalStudents = students.length;
-
-  const history = await getCompanyHistory(session.employee.company.id);
-  const companyInterests = await getCompanyInterests(
-    session.employee.company.id
-  );
+  const [globalStats, students, history, companyInterests, interests] =
+    await Promise.all([
+      getCompanyStats(session.employee.company.id),
+      getStudents(),
+      getCompanyHistory(session.employee.company.id),
+      getCompanyInterests(session.employee.company.id),
+      getInterests(),
+    ]);
 
   return (
     <section
@@ -33,11 +34,12 @@ const Dashboard = async () => {
         company={toCompanyDto(session.employee.company)}
         employeeName={session.employee.name}
         globalStats={globalStats}
-        totalStudents={totalStudents}
+        totalStudents={students.length}
         history={
           history instanceof HttpError ? [] : history.map(toSavedStudentDto)
         }
         interests={companyInterests}
+        availableInterests={interests.map(toInterestDto)}
       />
     </section>
   );

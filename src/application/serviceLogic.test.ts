@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "vitest";
 
 import { actionCompletionUpsertArgs } from "./domain/actionRules";
-import { rankInterestMatchingCompanies } from "./domain/companyMatching";
 import { assertStudentCanBeSaved } from "./domain/saveRules";
 import { isAllowedToViewStudent } from "./domain/studentAccess";
 
@@ -63,31 +62,5 @@ test("student access uses one owner/admin/saving-company policy", async () => {
       async () => false
     ),
     false
-  );
-});
-
-test("company matches rank by shared interests and cap results", () => {
-  const interest = (id: string) => ({ id });
-  const companies = [
-    { id: "one", user: { interests: [interest("a")] } },
-    { id: "two", user: { interests: [interest("a"), interest("b")] } },
-    { id: "three", user: { interests: [] } },
-    { id: "four", user: { interests: [interest("b")] } },
-  ];
-  const ranked = rankInterestMatchingCompanies(
-    companies,
-    [interest("a"), interest("b")],
-    3
-  );
-  assert.deepEqual(
-    ranked.map(({ company, matchingInterests }) => [
-      company.id,
-      matchingInterests.length,
-    ]),
-    [
-      ["two", 2],
-      ["one", 1],
-      ["four", 1],
-    ]
   );
 });

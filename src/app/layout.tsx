@@ -8,10 +8,8 @@ import React from "react";
 import { SkeletonTheme } from "react-loading-skeleton";
 import { ToastContainer } from "react-toastify";
 
-import { AuthContextProvider } from "@/contexts/AuthContext";
 import { InstallableContextProvider } from "@/contexts/InstallableContext";
 import InstallPopUp from "@/components/InstallPopUp";
-import Topbar from "@/components/TopBar";
 import { branding } from "@/edition/branding";
 
 export const metadata: Metadata = {
@@ -36,16 +34,13 @@ export default function RootLayout({
         >
           Saltar para o conteúdo principal
         </a>
-        <AuthContextProvider>
-          <InstallableContextProvider>
-            <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
-              <Topbar />
-              <main id="main-content">{children}</main>
-              <ToastContainer position="bottom-right" />
-              <InstallPopUp />
-            </SkeletonTheme>
-          </InstallableContextProvider>
-        </AuthContextProvider>
+        <InstallableContextProvider>
+          <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
+            {children}
+            <ToastContainer position="bottom-right" />
+            <InstallPopUp />
+          </SkeletonTheme>
+        </InstallableContextProvider>
       </body>
     </html>
   );

@@ -1,10 +1,11 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import test from "node:test";
+import { test } from "vitest";
 
 import { toCompanyDto } from "./dto/companyDto";
 import { toAdminScanDto, toSavedStudentDto } from "./dto/historyDto";
+import { toInterestDto } from "./dto/interestDto";
 import { toSessionDto } from "./dto/sessionDto";
 
 const sourceRoot = join(process.cwd(), "src");
@@ -48,15 +49,18 @@ test("server and client modules declare their boundary", async () => {
   ];
   for (const folder of serverFolders) {
     for (const file of await filesIn(folder)) {
-      if (file.endsWith(".test.ts") || clientOnlyFiles.includes(file)) continue;
+      if (/\.test\.tsx?$/.test(file) || clientOnlyFiles.includes(file))
+        continue;
       assert.match(await readFile(file, "utf8"), /import "server-only";/, file);
     }
   }
   for (const file of [
     ...(await filesIn(join(sourceRoot, "client"))),
     ...clientOnlyFiles,
-  ])
+  ]) {
+    if (/\.test\.tsx?$/.test(file)) continue;
     assert.match(await readFile(file, "utf8"), /import "client-only";/, file);
+  }
 });
 
 test("Client Components use response DTOs instead of Prisma entities", async () => {
@@ -102,6 +106,10 @@ test("public DTO mappers omit private database fields", () => {
   assert.deepEqual(toSessionDto(session), {
     role: "STUDENT",
     student: { code: "ABC123", name: "Student" },
+  });
+  assert.deepEqual(toInterestDto({ id: "interest-id", name: "TypeScript" }), {
+    id: "interest-id",
+    name: "TypeScript",
   });
 });
 
