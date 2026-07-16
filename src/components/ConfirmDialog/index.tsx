@@ -28,7 +28,10 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 }) => (
   <Modal
     isVisible={isVisible}
-    setIsVisible={setIsVisible}
+    setIsVisible={(value) => {
+      if (isConfirming) return;
+      setIsVisible(value);
+    }}
     className="flex flex-col items-center gap-6 text-center"
     aria-labelledby="confirm-dialog-title"
   >
