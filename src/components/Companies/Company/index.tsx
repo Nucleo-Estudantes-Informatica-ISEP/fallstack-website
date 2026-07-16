@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 
 import { ModalInformation } from "@/types/ModalProps";
@@ -9,7 +9,7 @@ import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
 import { hrefByCompanyTier } from "@/domain/Company/services/company-tier-access";
 
 export interface CompanyProps {
-  logoHref: StaticImageData;
+  logoHref: string;
   name: string;
   websiteUrl?: string;
   modalInformation?: ModalInformation;
@@ -17,17 +17,27 @@ export interface CompanyProps {
   className?: string;
   interests?: string[];
   divClassName?: string;
+  logoWidth?: number;
+  logoHeight?: number;
 }
 
 const Company: React.FC<CompanyProps> = ({
   logoHref,
   name,
   websiteUrl,
+  modalInformation,
   tier = COMPANY_TIER.BRONZE,
   className,
   divClassName,
+  logoWidth = 200,
+  logoHeight = 100,
 }) => {
-  const companyHref = hrefByCompanyTier(tier, name, websiteUrl);
+  const companyHref = hrefByCompanyTier(
+    tier,
+    name,
+    websiteUrl,
+    Boolean(modalInformation)
+  );
 
   return (
     <div
@@ -43,6 +53,8 @@ const Company: React.FC<CompanyProps> = ({
           className={`${className} object-cover`}
           src={logoHref}
           alt={name}
+          width={logoWidth}
+          height={logoHeight}
         />
       </Link>
     </div>

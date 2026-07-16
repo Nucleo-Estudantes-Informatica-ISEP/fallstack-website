@@ -8,7 +8,7 @@ import { ScheduleDays } from "./ScheduleDays";
 import { SilverCompanies } from "./SilverCompanies";
 import { Sponsors } from "./Sponsors";
 
-export { default as findCompanyByName } from "./CompanyByName";
+export { default as findEditionContentByName } from "./CompanyByName";
 
 export const edition = {
   branding,

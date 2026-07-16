@@ -5,37 +5,38 @@ import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
 import CompanyInfo from "@/components/Companies/CompanyInfo";
-import { findCompanyByName } from "@/edition";
+import { CompanyTier } from "@/domain/Company/company-tier";
+import { findEditionContentByName } from "@/edition";
 import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
 
 interface CompanyPageSectionProps {
   companyName: string;
+  logoHref: string | null;
+  tier: CompanyTier;
 }
 
 const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
   companyName,
+  logoHref,
+  tier,
 }) => {
-  const company = findCompanyByName(companyName);
-
-  if (!company) return null;
-
-  const { props: companyProps, tier } = company;
-  const { modalInformation } = companyProps;
+  const editionContent = findEditionContentByName(companyName);
+  const modalInformation = editionContent?.modalInformation;
 
   if (!modalInformation) return null;
 
-  const interests = companyProps.interests || [];
+  const interests = editionContent?.interests || [];
 
   return (
     <div className="mt-12 size-full items-center justify-center bg-black md:my-14">
       <div className="mt-4 mb-12 flex size-full flex-col items-center">
         <div className="flex flex-col items-center justify-center pt-8">
-          {companyProps.logoHref ? (
+          {logoHref ? (
             <div className="relative my-8 flex size-full flex-col items-center">
               <Image
                 width={320}
                 height={320}
-                src={companyProps.logoHref}
+                src={logoHref}
                 alt="profile image"
                 className="w-full max-w-64"
               />
@@ -45,7 +46,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
           )}
           <div className="flex flex-col gap-y-2 px-4 text-center">
             <p className="text-3xl font-bold text-white md:text-5xl">
-              <span>{companyProps.modalInformation?.title}</span>
+              <span>{modalInformation.title}</span>
             </p>
           </div>
           <p className="flex gap-x-4 pt-6">

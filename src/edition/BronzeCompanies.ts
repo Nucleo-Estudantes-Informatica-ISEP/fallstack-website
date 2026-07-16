@@ -1,20 +1,15 @@
-import { CompanyProps } from "@/components/Companies/Company";
+import { CompanyEditionContent } from "./CompanyEditionContent";
 
-/*euronextLogo,
-	liderteamLogo,*/
-
-import { euronextLogo, liderteamLogo } from "./CompaniesImages";
-
-export const BronzeCompanies: CompanyProps[] = [
+export const BronzeCompanies: CompanyEditionContent[] = [
   {
-    logoHref: euronextLogo,
     name: "Euronext",
-    websiteUrl: "https://www.euronext.com/",
+    logoWidth: 1935,
+    logoHeight: 600,
   },
   {
-    logoHref: liderteamLogo,
     name: "Liderteam",
-    websiteUrl: "https://www.liderteam.pt/",
+    logoWidth: 1920,
+    logoHeight: 1080,
     className: "w-3/4",
   },
 ];
