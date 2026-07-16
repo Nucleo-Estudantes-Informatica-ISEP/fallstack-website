@@ -9,9 +9,16 @@ import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { jwtStudent } from "@/application/services/studentTokenService";
 
-const CompanySavedProfilesSection = () => {
+interface CompanySavedProfilesSectionProps {
+  history: SavedStudentDto[];
+}
+
+const CompanySavedProfilesSection = ({
+  history,
+}: CompanySavedProfilesSectionProps) => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
@@ -64,6 +71,7 @@ const CompanySavedProfilesSection = () => {
 
       try {
         await httpClient.post("/saved", { token: data });
+        router.refresh();
         router.push(`/student/${data}/preview`);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
@@ -103,6 +111,7 @@ const CompanySavedProfilesSection = () => {
 
       try {
         await httpClient.post("/saved", { token });
+        router.refresh();
         router.push(`/student/${token}/preview`);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
@@ -274,7 +283,7 @@ const CompanySavedProfilesSection = () => {
             <span className="flex-1 text-center">Data</span>
           </div>
         </div>
-        <CompanySavesSection />
+        <CompanySavesSection historyData={history} />
       </div>
     </section>
   );

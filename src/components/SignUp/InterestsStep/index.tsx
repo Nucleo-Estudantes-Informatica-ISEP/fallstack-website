@@ -5,12 +5,14 @@ import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
+  availableInterests: InterestDto[];
 }
 
 const InterestsStep: FunctionComponent<InterestsStepProps> = ({
@@ -18,6 +20,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setCurrentStep,
   data,
   setData,
+  availableInterests,
 }) => {
   const [interests, setInterests] = useState<string[]>(data.interests || []);
 
@@ -38,6 +41,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
         </p>
 
         <InterestSelector
+          availableInterests={availableInterests}
           userInterests={interests}
           setUserInterests={setInterests}
           scrollable

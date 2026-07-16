@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import Skeleton from "react-loading-skeleton";
 import swal from "sweetalert";
 
 import { httpClient } from "@/lib/http/client";
@@ -106,52 +105,18 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
   );
 };
 
-const CompanySavesSection = () => {
-  const [historyData, setHistoryData] = useState<SavedStudentDto[] | null>(
-    null
-  );
-
-  useEffect(() => {
-    const fetchHistoryData = async () => {
-      try {
-        const data =
-          await httpClient.get<SavedStudentDto[]>("/companies/history");
-        setHistoryData(data);
-      } catch (error) {
-        swal("Erro ao buscar histórico de scans!");
-        console.error("Error fetching history data:", error);
-      }
-    };
-
-    fetchHistoryData();
-  }, []);
-
+const CompanySavesSection = ({
+  historyData,
+}: {
+  historyData: SavedStudentDto[];
+}) => {
   return (
     <div className="my-4 flex w-full flex-col items-center justify-center text-white">
       <div
         className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 scrollbar max-h-80 w-full overflow-y-scroll pl-1 scrollbar-thumb-slate-500 scrollbar-track-transparent"
         style={{ scrollbarGutter: "stable" }}
       >
-        {!historyData ? (
-          // fixed-count loading placeholders with no data yet, so there's no
-          // identity to key on besides position
-          Array(3)
-            .fill(1)
-            .map((_, i) => (
-              <div
-                key={i}
-                className="flex flex-row items-center border-t border-gray-700 py-4 first:border-0"
-              >
-                <div className="flex w-full justify-center">
-                  <Skeleton
-                    containerClassName="flex-1"
-                    baseColor="#333"
-                    highlightColor="#444"
-                  />
-                </div>
-              </div>
-            ))
-        ) : !historyData.length ? (
+        {!historyData.length ? (
           <div className="flex flex-row py-3">
             <div className="flex w-full justify-center text-gray-400">
               Sem perfis salvos.

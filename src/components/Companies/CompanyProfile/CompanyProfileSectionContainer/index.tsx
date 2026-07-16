@@ -11,6 +11,7 @@ import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/C
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
 import type { CompanyDto } from "@/application/dto/companyDto";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 import { IconType } from "react-icons";
 
@@ -21,6 +22,7 @@ interface CompanyProfileSectionContainerProps {
   totalStudents: number;
   history: SavedStudentDto[];
   interests: string[];
+  availableInterests: InterestDto[];
 }
 
 type TabValue = "Sumário" | "Scan de Perfil";
@@ -48,6 +50,7 @@ const CompanyProfileSectionContainer: React.FC<
   totalStudents,
   history,
   interests,
+  availableInterests,
 }) => {
   const handleLogout = useLogout();
 
@@ -116,10 +119,11 @@ const CompanyProfileSectionContainer: React.FC<
             students={totalStudents}
             history={history}
             interests={interests}
+            availableInterests={availableInterests}
           />
         );
       case "Scan de Perfil":
-        return <CompanySavedProfilesSection />;
+        return <CompanySavedProfilesSection history={history} />;
       default:
         return null;
     }

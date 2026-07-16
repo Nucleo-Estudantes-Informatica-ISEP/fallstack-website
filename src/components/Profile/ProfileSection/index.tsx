@@ -18,6 +18,7 @@ import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
+import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import {
   uploadAvatar as uploadAvatarToSupabase,
@@ -32,6 +33,7 @@ interface ProfileSectionProps {
   setActiveTab: Dispatch<
     SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
   >;
+  availableInterests: InterestDto[];
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -39,6 +41,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   profile,
   setProfile,
   setActiveTab,
+  availableInterests,
 }) => {
   const LIMIT = 255;
   const router = useRouter();
@@ -319,6 +322,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* INTERESSES */}
         <InterestSelector
+          availableInterests={availableInterests}
           userInterests={profile.interests}
           setUserInterests={setUserInterests}
         />

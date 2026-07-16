@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import { Email } from "@/types/Email";
 import { reportError } from "@/lib/logger";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
@@ -9,7 +11,7 @@ import {
   findUserSessionById,
 } from "../repositories/userRepository";
 
-export default async function getServerSession() {
+const getServerSession = cache(async () => {
   try {
     const supabase = await createSupabaseServerClient();
     const {
@@ -30,4 +32,6 @@ export default async function getServerSession() {
     );
     return null;
   }
-}
+});
+
+export default getServerSession;
