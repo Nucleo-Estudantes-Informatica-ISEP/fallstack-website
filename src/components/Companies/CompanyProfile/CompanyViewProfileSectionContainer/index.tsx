@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 
@@ -26,13 +26,23 @@ const CompanyViewProfileSectionContainer: React.FC<
 > = ({ student, interests, token, isSavedStudent }) => {
   const [comment, setComment] = useState("");
   const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+    };
+  }, []);
 
   const handleSaveProfile = () =>
     mutate(async () => {
       try {
         await httpClient.patch("/saved", { token, comment });
         toast.success("Perfil salvo com sucesso!");
-        setTimeout(() => window.location.reload(), 1500);
+        reloadTimeoutRef.current = setTimeout(
+          () => window.location.reload(),
+          1500
+        );
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 400) {
           toast.warning("Perfil já salvo!");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -29,6 +29,13 @@ const PreviewProfileSectionContainer: React.FC<
   );
   const router = useRouter();
   const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+    };
+  }, []);
 
   const handleSaveProfile = () =>
     mutate(async () => {
@@ -37,7 +44,10 @@ const PreviewProfileSectionContainer: React.FC<
       try {
         await httpClient.patch("/saved", { token });
         toast.success("Perfil salvo com sucesso!");
-        setTimeout(() => window.location.reload(), 1500);
+        reloadTimeoutRef.current = setTimeout(
+          () => window.location.reload(),
+          1500
+        );
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 400) {
           toast.warning("Perfil já salvo!");
