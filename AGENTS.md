@@ -48,11 +48,12 @@ pnpm generate     # prisma generate (also runs on postinstall)
 pnpm migrate      # prisma migrate dev — diffs schema, writes + applies a new migration
 pnpm migrate:deploy   # prisma migrate deploy — applies pending migrations, no prompts
 pnpm seed         # prisma db seed
-pnpm test         # tsx --test src/application/boundaries.test.ts src/application/serviceLogic.test.ts src/edition/actions.test.ts src/lib/authFlow.test.ts src/lib/logger.test.ts src/lib/savedStudentComments.test.ts src/lib/sentryPrivacy.test.ts src/utils/isepEmail.test.ts
+pnpm test         # vitest run
+pnpm test:watch   # vitest
 pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 ```
 
-`pnpm test` covers the application-boundary/service layer, edition action rules, auth flow, saved-student comments, logger/Sentry privacy, and ISEP email normalization — see [Gotchas](#gotchas). Schema changes go through **Prisma Migrate** (`prisma/migrations/`), not `db push` — a baseline migration (`20260712000000_init`) captures the pre-migration schema; run `pnpm migrate --name <description>` for local changes and commit the generated migration folder. `db push` is no longer the working path; see README's Database Workflow section for the one-time baseline-resolve step needed on any environment whose tables predate the migration history.
+`pnpm test` auto-discovers `*.test.ts` and `*.test.tsx` files with Vitest. Current coverage includes application boundaries/services, domain value objects, edition action rules, auth flow, saved-student comments, logger/Sentry privacy, ISEP email normalization, and component smoke tests. Schema changes go through **Prisma Migrate** (`prisma/migrations/`), not `db push` — a baseline migration (`20260712000000_init`) captures the pre-migration schema; run `pnpm migrate --name <description>` for local changes and commit the generated migration folder. `db push` is no longer the working path; see README's Database Workflow section for the one-time baseline-resolve step needed on any environment whose tables predate the migration history.
 
 ## Architecture
 
@@ -116,19 +117,28 @@ Two independent mechanisms — don't conflate them:
 - **Components:** `src/components/` is flat — every component, reusable or single-use, gets its own top-level `PascalCaseName/index.tsx` folder (e.g. `Input`, `Modal`, but also one-off sections like `GiveawaySection`, `AdminSavedSection`). There is no `components/ui/` split and no route-local `_components/` convention in use today — put new components at the top level of `components/` following that same pattern rather than inventing a nested structure.
 - **API error responses:** shapes are inconsistent across existing routes (`{ error }`, `{ message }`, raw Zod `e.errors`/`e.issues`/`.error`, English and Portuguese strings all appear). For **new** routes, standardize on `{ error: string }` for failures (the majority pattern) with an explicit status code every time — don't add another one-off shape, and don't rely on the 200 default (a few existing routes do this on validation/auth failure; that's a known bug, not a pattern to copy).
 
+## Editions & releases
+
+Each yearly edition is tracked as a git tag + GitHub Release on this one persistent repo (no more forking a new repo per edition) plus a hand-written `CHANGELOG.md` entry — not generated from Conventional Commits, since this ships once a year for a small team.
+
+- **Tag name:** `<year>-edition` (e.g. `2025-edition`, `2026-edition`).
+- **Source archive:** GitHub auto-generates a "Source code (zip/tar.gz)" download for every tag/release — that's the frozen, downloadable artifact for a past edition. This is a dynamic Next.js + Postgres app, not a static site, so the archive is source only: running it still needs your own Postgres, a Supabase project, and the usual local setup in `README.md`. No Docker image is published per edition at this time — the source tag is the deliverable (see `CHANGELOG.md` for what changed each edition).
+- **Versioning resets per edition:** a freshly-cut edition's `CHANGELOG.md` entry/release starts at `1.0.0`; further within-edition maintenance (fixes, restructuring, hygiene) increments from there (`1.0.1`, `1.1.0`, ...) until the *next* edition's cutover restarts the count at `1.0.0`. Editions are distinguished by the `<year>-edition` tag, not by a version number that climbs forever across editions.
+- The 2026 edition's own `1.0.0` cutover happens once the current backlog of open architecture/security/correctness issues is merged to `main`.
+
 ## Verification (definition of done)
 
-CI (`.github/workflows/ci.yml`) runs `pnpm typecheck` and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. CI doesn't run `pnpm test`, so most functional breakage still will not be caught automatically. Before considering a task done:
+CI (`.github/workflows/ci.yml`) runs `pnpm test`, `pnpm typecheck`, and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. Before considering a task done:
 
 1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
-2. Run `pnpm test` — keep it green, and extend the relevant test file if you touch application boundaries/services, edition action rules, auth flow, saved-student comments, `src/lib/logger.ts`, `src/lib/sentryPrivacy.ts`, or ISEP email normalization. CI does not run this for you.
+2. Run `pnpm test` — keep it green, and extend the relevant test file when behavior changes. CI reruns the full auto-discovered suite.
 3. Run `pnpm typecheck` — this also runs in CI, but don't rely on CI alone to catch it.
 4. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
 5. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
 ## Gotchas
 
-- **`pnpm test` runs eight files** (`src/application/boundaries.test.ts`, `src/application/serviceLogic.test.ts`, `src/edition/actions.test.ts`, `src/lib/authFlow.test.ts`, `src/lib/logger.test.ts`, `src/lib/savedStudentComments.test.ts`, `src/lib/sentryPrivacy.test.ts`, `src/utils/isepEmail.test.ts`), but CI still doesn't run it. Verify most changes manually (dev server, direct route calls) rather than assuming a gate will catch regressions.
+- **`pnpm test` uses Vitest auto-discovery** for `*.test.ts` and `*.test.tsx`, and CI runs the suite on every PR. Add colocated tests without maintaining a central file list; still verify changed runtime flows manually where unit tests don't cover them.
 - **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
 - **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) are set. Don't assume a `Content-Security-Policy` or CSP `frame-ancestors` directive exists.

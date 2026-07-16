@@ -9,10 +9,14 @@ import { httpClient } from "@/lib/http/client";
 
 interface ActionQrCodeDataProps {
   id: string;
+  initialQrCode: string;
 }
 
-const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
-  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({
+  id,
+  initialQrCode,
+}) => {
+  const [qrCodeData, setQrCodeData] = useState(initialQrCode);
   const { innerWidth } = useWindowSize();
 
   useEffect(() => {
@@ -22,8 +26,6 @@ const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
       );
       setQrCodeData(qrCode);
     };
-
-    fetchQrCodeData();
 
     const interval = setInterval(
       fetchQrCodeData,

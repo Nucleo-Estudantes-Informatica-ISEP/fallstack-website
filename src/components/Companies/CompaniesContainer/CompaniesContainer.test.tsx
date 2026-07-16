@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
-import test from "node:test";
 import React from "react";
 import { renderToString } from "react-dom/server";
+import { test } from "vitest";
 
 import { COMPANY_TIER } from "@/domain/Company/company-tier";
 

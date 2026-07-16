@@ -4,7 +4,6 @@ import type { Tier } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
 
-import { rankInterestMatchingCompanies } from "../domain/companyMatching";
 import {
   createCompany,
   createCompanyDisplay,
@@ -15,14 +14,10 @@ import {
   findCompanyByName,
   findCompanyDisplayByName,
   findCompanyInterests,
-  findInterestMatchingCompanies,
   updateCompanyAvatar,
   updateCompanyDisplay,
 } from "../repositories/companyRepository";
-import {
-  findInterestsForCompany,
-  findUserInterests,
-} from "../repositories/interestRepository";
+import { findInterestsForCompany } from "../repositories/interestRepository";
 import { withTransaction } from "../repositories/transaction";
 
 export const getCompanies = () => findCompanies();
@@ -83,12 +78,4 @@ export async function getInterestsByCompanyName(companyName: string) {
   const company = await findCompanyByName(companyName);
   if (!company) throw new Error("Company not found");
   return (await findInterestsForCompany(company.id)).map(({ name }) => name);
-}
-
-export async function getInterestMatchingCompanies(userId: string) {
-  const [companies, userInterests] = await Promise.all([
-    findInterestMatchingCompanies(),
-    findUserInterests(userId),
-  ]);
-  return rankInterestMatchingCompanies(companies, userInterests);
 }

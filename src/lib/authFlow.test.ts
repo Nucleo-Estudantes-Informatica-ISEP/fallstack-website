@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { access, readFile } from "node:fs/promises";
 import path from "node:path";
-import test from "node:test";
 import { createBrowserClient, createServerClient } from "@supabase/ssr";
+import { test } from "vitest";
 
 const root = process.cwd();
 const read = (file: string) => readFile(path.join(root, file), "utf8");

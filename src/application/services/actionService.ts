@@ -47,11 +47,13 @@ export async function completeAction(
 }
 
 export async function getActionQrCode(id: string) {
+  const action = await findActionById(id);
+  if (!action) return null;
   const timestamp =
     Math.round(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
     config.constants.actionQrCodeRefreshRateMs;
   return {
-    action: await findActionById(id),
+    action,
     qrCode:
       "action-" +
       signJwt(

@@ -46,23 +46,3 @@ export const toCompanyRosterDto = (
   website: company.website,
   order: company.order,
 });
-
-export interface InterestMatchDto {
-  company: CompanyDto;
-  matchingInterests: InterestDto[];
-}
-
-interface InterestDto {
-  id: string;
-  name: string;
-}
-
-export const toInterestMatchDto = (
-  match: InterestMatchDto
-): InterestMatchDto => ({
-  company: toCompanyDto(match.company),
-  matchingInterests: match.matchingInterests.map(({ id, name }) => ({
-    id,
-    name,
-  })),
-});
