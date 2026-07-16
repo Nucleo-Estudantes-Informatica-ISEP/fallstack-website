@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import Input from "@/components/Input";
@@ -23,11 +23,7 @@ const RequestResetPage: React.FC = () => {
         email: emailRef.current.value,
       });
 
-      swal(
-        "Pedido enviado",
-        "Se a conta existir, receberás um email com instruções.",
-        "success"
-      );
+      toast.success("Se a conta existir, receberás um email com instruções.");
     } catch (e) {
       setError(e instanceof HttpClientError ? e.message : "Erro de servidor");
     } finally {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
@@ -28,7 +28,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
       setComment(value);
       setEditing(false);
     } catch {
-      swal("Erro", "Não foi possível atualizar o comentário.", "error");
+      toast.error("Não foi possível atualizar o comentário.");
     } finally {
       setLoading(false);
     }

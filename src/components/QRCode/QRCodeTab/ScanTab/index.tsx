@@ -3,7 +3,6 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
@@ -29,17 +28,9 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
 
     try {
       await httpClient.post(`/actions/${actionId}`);
-      swal(
-        "Sucesso",
-        "Os teus pontos foram adicionados com sucesso!",
-        "success"
-      );
+      toast.success("Os teus pontos foram adicionados com sucesso!");
     } catch (error) {
-      swal(
-        "Erro",
-        error instanceof Error ? error.message : "Erro inesperado",
-        "error"
-      );
+      toast.error(error instanceof Error ? error.message : "Erro inesperado");
     }
 
     setHidden(true);
@@ -64,11 +55,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         await httpClient.post("/saved", { token: data });
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
+          toast.warning("Este estudante já foi guardado anteriormente.");
         } else {
           toast.error(
             error instanceof Error ? error.message : "Erro ao guardar perfil"

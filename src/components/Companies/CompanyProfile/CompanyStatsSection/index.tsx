@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import type { Stats } from "@/types/Stats";
 import { httpClient } from "@/lib/http/client";
@@ -39,7 +39,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   const handleSave = () =>
     mutate(async () => {
       await httpClient.patch("/user", { interests: companyInterests });
-      swal("Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
       router.refresh();
     });
 

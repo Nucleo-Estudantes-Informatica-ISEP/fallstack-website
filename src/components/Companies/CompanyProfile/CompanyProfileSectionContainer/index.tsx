@@ -52,7 +52,7 @@ const CompanyProfileSectionContainer: React.FC<
   interests,
   availableInterests,
 }) => {
-  const handleLogout = useLogout();
+  const { handleLogout, ConfirmDialog } = useLogout();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
@@ -196,6 +196,7 @@ const CompanyProfileSectionContainer: React.FC<
           {renderContent()}
         </div>
       </div>
+      {ConfirmDialog}
     </div>
   );
 };

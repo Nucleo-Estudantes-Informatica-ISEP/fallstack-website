@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -26,24 +26,26 @@ const CompanyViewProfileSectionContainer: React.FC<
 > = ({ student, interests, token, isSavedStudent }) => {
   const [comment, setComment] = useState("");
   const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+    };
+  }, []);
 
   const handleSaveProfile = () =>
     mutate(async () => {
       try {
         await httpClient.patch("/saved", { token, comment });
-        await swal({
-          title: "Success",
-          text: "Perfil salvo com sucesso!",
-          icon: "success",
-        });
-        window.location.reload();
+        toast.success("Perfil salvo com sucesso!");
+        reloadTimeoutRef.current = setTimeout(
+          () => window.location.reload(),
+          1500
+        );
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 400) {
-          swal({
-            title: "Warning",
-            text: "Perfil já salvo!",
-            icon: "warning",
-          });
+          toast.warning("Perfil já salvo!");
           return;
         }
         throw error;

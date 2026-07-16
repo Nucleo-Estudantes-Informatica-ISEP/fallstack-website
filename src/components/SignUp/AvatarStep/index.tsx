@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
@@ -64,7 +63,7 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
       }
 
       if (!signup) {
-        swal("Erro", "Ocorreu um erro ao criar a conta.", "error");
+        toast.error("Ocorreu um erro ao criar a conta.");
         return setLoading(false);
       }
 
