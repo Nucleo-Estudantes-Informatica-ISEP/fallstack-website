@@ -12,9 +12,12 @@ const TIER_USES_INTERNAL_PAGE: Record<CompanyTier, boolean> = {
 export function hrefByCompanyTier(
   tier: CompanyTier,
   name: string,
-  websiteUrl: string | undefined
+  websiteUrl: string | undefined,
+  hasContent: boolean
 ): string {
-  return TIER_USES_INTERNAL_PAGE[tier]
+  // The internal page 404s without edition content (see company/[name]/page.tsx),
+  // so a DIAMOND/GOLD company with none falls back to linking out like SILVER/BRONZE.
+  return TIER_USES_INTERNAL_PAGE[tier] && hasContent
     ? `/company/${encodeURIComponent(name)}`
     : websiteUrl || "/";
 }

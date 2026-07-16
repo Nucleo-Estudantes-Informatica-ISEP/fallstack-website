@@ -16,23 +16,49 @@ test("parseCompanyTier - invalid parsing", () => {
 });
 
 test("hrefByCompanyTier - routing rules", () => {
-  // Diamond and Gold use internal pages
+  // Diamond and Gold use internal pages when they have edition content
   assert.equal(
-    hrefByCompanyTier(COMPANY_TIER.DIAMOND, "Company A", undefined),
+    hrefByCompanyTier(COMPANY_TIER.DIAMOND, "Company A", undefined, true),
     "/company/Company%20A"
   );
   assert.equal(
-    hrefByCompanyTier(COMPANY_TIER.GOLD, "Company B", "http://external.com"),
+    hrefByCompanyTier(
+      COMPANY_TIER.GOLD,
+      "Company B",
+      "http://external.com",
+      true
+    ),
     "/company/Company%20B"
+  );
+
+  // ...but fall back to their website (or root) without edition content,
+  // since the internal page 404s with nothing to show
+  assert.equal(
+    hrefByCompanyTier(
+      COMPANY_TIER.DIAMOND,
+      "Company A",
+      "http://external.com",
+      false
+    ),
+    "http://external.com"
+  );
+  assert.equal(
+    hrefByCompanyTier(COMPANY_TIER.GOLD, "Company B", undefined, false),
+    "/"
   );
 
   // Silver and Bronze redirect to external websites (or root if none provided)
   assert.equal(
-    hrefByCompanyTier(COMPANY_TIER.SILVER, "Company C", "http://external.com"),
+    hrefByCompanyTier(
+      COMPANY_TIER.SILVER,
+      "Company C",
+      "http://external.com",
+      true
+    ),
     "http://external.com"
   );
   assert.equal(
-    hrefByCompanyTier(COMPANY_TIER.BRONZE, "Company D", undefined),
+    hrefByCompanyTier(COMPANY_TIER.BRONZE, "Company D", undefined, false),
     "/"
   );
 });

@@ -25,13 +25,19 @@ const Company: React.FC<CompanyProps> = ({
   logoHref,
   name,
   websiteUrl,
+  modalInformation,
   tier = COMPANY_TIER.BRONZE,
   className,
   divClassName,
   logoWidth = 200,
   logoHeight = 100,
 }) => {
-  const companyHref = hrefByCompanyTier(tier, name, websiteUrl);
+  const companyHref = hrefByCompanyTier(
+    tier,
+    name,
+    websiteUrl,
+    Boolean(modalInformation)
+  );
 
   return (
     <div
