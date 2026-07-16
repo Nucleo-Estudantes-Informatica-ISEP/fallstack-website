@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import Swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -33,7 +33,7 @@ const SponsorRow: React.FC<SponsorRowProps> = ({ sponsor, onSaved }) => {
         }
       );
       onSaved(updated);
-      Swal("Sucesso", "Patrocinador atualizado.", "success");
+      toast.success("Patrocinador atualizado.");
     });
 
   return (
@@ -105,7 +105,7 @@ const SponsorAdminSection: React.FC<SponsorAdminSectionProps> = ({
       setSponsors((prev) => [...prev, created]);
       if (nameRef.current) nameRef.current.value = "";
       if (logoRef.current) logoRef.current.value = "";
-      Swal("Sucesso", "Patrocinador criado.", "success");
+      toast.success("Patrocinador criado.");
     });
   };
 

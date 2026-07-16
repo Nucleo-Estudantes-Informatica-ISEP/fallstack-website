@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import Swal from "sweetalert";
+import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
@@ -37,7 +37,7 @@ const CompanyRow: React.FC<CompanyRowProps> = ({ company, onSaved }) => {
         }
       );
       onSaved(updated);
-      Swal("Sucesso", "Empresa atualizada.", "success");
+      toast.success("Empresa atualizada.");
     });
 
   return (
@@ -119,7 +119,7 @@ const CompanyAdminSection: React.FC<CompanyAdminSectionProps> = ({
       );
       setCompanies((prev) => [...prev, created]);
       if (nameRef.current) nameRef.current.value = "";
-      Swal("Sucesso", "Empresa criada.", "success");
+      toast.success("Empresa criada.");
     });
   };
 
