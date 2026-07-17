@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       target: migrator
     container_name: fallstack-migrate
+    restart: "no"
     env_file:
       - ./.env # adjust to .env.production if you want production settings
 
