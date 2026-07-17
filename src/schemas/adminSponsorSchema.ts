@@ -1,11 +1,12 @@
 import { z } from "zod";
 
 import { logoSchema } from "@/schemas/logoSchema";
+import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
 export const createAdminSponsorSchema = z.object({
   name: z.string().min(1).max(100),
   logo: logoSchema,
-  website: z.url().max(2048).nullable().optional(),
+  website: websiteUrlSchema.nullable().optional(),
   active: z.boolean().optional(),
   order: z.number().int().optional(),
 });
@@ -14,7 +15,7 @@ export const updateAdminSponsorSchema = z
   .object({
     name: z.string().min(1).max(100),
     logo: logoSchema,
-    website: z.url().max(2048).nullable(),
+    website: websiteUrlSchema.nullable(),
     active: z.boolean(),
     order: z.number().int(),
   })
