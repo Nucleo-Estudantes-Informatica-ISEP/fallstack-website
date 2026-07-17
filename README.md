@@ -78,6 +78,28 @@ Create two storage buckets:
 | avatars | public  |
 | cvs     | private |
 
+### Orphaned-file garbage collection
+
+Student media uploads are reconciled daily at 03:00 UTC. Objects are eligible
+only when they are under the app-managed avatar/CV prefixes, are unreferenced by
+`Student.avatar`/`Student.cv`, and are at least 48 hours old.
+
+1. In Supabase Vault, create `storage_gc_project_url` with the project URL and
+   `storage_gc_service_role_key` with the service-role key.
+2. Run [`supabase/storage-gc.sql`](./supabase/storage-gc.sql) manually in the
+   hosted Supabase SQL editor. Do not add the service-role key to the SQL file.
+3. Confirm the job exists with:
+
+   ```sql
+   select jobid, schedule, command, active
+   from cron.job
+   where jobname = 'storage-orphan-gc';
+   ```
+
+The job reads `storage.objects` but deletes through the Storage API; direct SQL
+deletion would remove only metadata and leave the billed blob behind. Failed API
+deletions remain in `storage.objects`, so the next daily run retries them.
+
 ---
 
 # Supabase CLI (Local Development)
