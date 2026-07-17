@@ -48,7 +48,7 @@ export function defineHandler<
 >(config: DefineHandlerConfig<Params, Schema>) {
   const auth = config.auth ?? "session";
 
-  return async (req: NextRequest, routeContext?: RouteContext<Params>) => {
+  return async (req: NextRequest, routeContext: RouteContext<Params>) => {
     try {
       const session = await getServerSession();
 
@@ -58,7 +58,7 @@ export function defineHandler<
       if (!passesAuthPolicy(auth, session))
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-      const params = routeContext ? await routeContext.params : ({} as Params);
+      const params = await routeContext.params;
 
       if (config.authorize && session) {
         const allowed = await config.authorize(session, params);
