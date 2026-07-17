@@ -24,7 +24,7 @@ const SponsorsSection: FunctionComponent = () => {
         sponsors={sponsors.map(({ name, logo, website }) => ({
           name,
           logoHref: logo,
-          website: website ?? "",
+          website: website ?? undefined,
         }))}
       />
     </section>
