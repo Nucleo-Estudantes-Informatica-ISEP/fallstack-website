@@ -1,33 +1,20 @@
 import { z } from "zod";
 
-import { parseCompanyTier } from "@/domain/Company/company-tier";
 import { logoSchema } from "@/schemas/logoSchema";
 import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
-const tierSchema = z.string().transform((val, ctx) => {
-  try {
-    return parseCompanyTier(val);
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Invalid tier";
-    ctx.addIssue({ code: z.ZodIssueCode.custom, message });
-    return z.NEVER;
-  }
-});
-
-export const createAdminCompanySchema = z.object({
+export const createAdminSponsorSchema = z.object({
   name: z.string().min(1).max(100),
-  tier: tierSchema,
-  avatar: logoSchema.nullable().optional(),
+  logo: logoSchema,
   website: websiteUrlSchema.nullable().optional(),
   active: z.boolean().optional(),
   order: z.number().int().optional(),
 });
 
-export const updateAdminCompanySchema = z
+export const updateAdminSponsorSchema = z
   .object({
     name: z.string().min(1).max(100),
-    tier: tierSchema,
-    avatar: logoSchema.nullable(),
+    logo: logoSchema,
     website: websiteUrlSchema.nullable(),
     active: z.boolean(),
     order: z.number().int(),

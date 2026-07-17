@@ -1,5 +1,6 @@
 const isDev = process.env.NODE_ENV !== "production";
 const { withSentryConfig } = require("@sentry/nextjs");
+const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
 
 // Baseline security headers (securityheaders.com "easy wins").
 // Full Content-Security-Policy is deferred — it needs tuning against Next's
@@ -22,42 +23,7 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
   images: {
-    remotePatterns: [
-      // Supabase public storage (avatars)
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-        pathname: "/storage/v1/object/public/**",
-      },
-      // Google Cloud Storage buckets (generic)
-      {
-        protocol: "https",
-        hostname: "*.storage.googleapis.com",
-        pathname: "/**",
-      },
-      // Firebase Storage endpoints
-      {
-        protocol: "https",
-        hostname: "firebasestorage.googleapis.com",
-        pathname: "/v0/b/**",
-      },
-      {
-        protocol: "https",
-        hostname: "storage.googleapis.com",
-        pathname: "/**",
-      },
-      // Local Supabase storage gateway (dev only)
-      ...(isDev
-        ? [
-            {
-              protocol: "http",
-              hostname: "127.0.0.1",
-              port: "54321",
-              pathname: "/storage/v1/object/public/**",
-            },
-          ]
-        : []),
-    ],
+    remotePatterns: getImageRemotePatterns(isDev),
   },
   async headers() {
     return [
