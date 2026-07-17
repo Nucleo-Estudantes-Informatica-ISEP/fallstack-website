@@ -5,9 +5,66 @@
 --
 -- storage.objects is metadata only. This job reads it for reconciliation, then
 -- deletes through the Storage API so both the object and its metadata disappear.
+-- This installer does not enable deletion. Its final query is a required dry run;
+-- inspect every returned row before running storage-gc-enable.sql.
 
 create extension if not exists pg_net with schema extensions;
 create extension if not exists pg_cron;
+
+create or replace function public.storage_gc_candidates()
+returns table (
+  bucket_id text,
+  name text,
+  created_at timestamptz
+)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select objects.bucket_id, objects.name, objects.created_at
+  from storage.objects as objects
+  where objects.created_at < now() - interval '48 hours'
+    and (
+      (
+        objects.bucket_id = 'avatars'
+        and objects.name ~ '^distribution/avatar/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+        and not exists (
+          select 1
+          from public."Student" as students
+          where students.avatar = replace(objects.name, 'distribution/avatar/', '')
+            or students.avatar = objects.name
+            or right(
+              split_part(students.avatar, '?', 1),
+              length('/avatars/' || objects.name)
+            ) = '/avatars/' || objects.name
+        )
+      )
+      or (
+        objects.bucket_id = 'cvs'
+        and objects.name ~ '^distribution/cv/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.pdf$'
+        and not exists (
+          select 1
+          from public."Student" as students
+          where students.cv = replace(
+              replace(objects.name, 'distribution/cv/', ''),
+              '.pdf',
+              ''
+            )
+            or students.cv = objects.name
+            or right(
+              split_part(students.cv, '?', 1),
+              length('/cvs/' || objects.name)
+            ) = '/cvs/' || objects.name
+        )
+      )
+    )
+  order by objects.created_at
+  -- note: cap each run; raise it or run more often if backlog exceeds one day.
+  limit 1000
+$$;
+
+revoke all on function public.storage_gc_candidates() from public;
 
 create or replace function public.queue_orphaned_storage_gc()
 returns integer
@@ -38,46 +95,7 @@ begin
   );
 
   for candidate in
-    select objects.bucket_id, objects.name
-    from storage.objects as objects
-    where objects.created_at < now() - interval '48 hours'
-      and (
-        (
-          objects.bucket_id = 'avatars'
-          and objects.name ~ '^distribution/avatar/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-          and not exists (
-            select 1
-            from public."Student" as students
-            where students.avatar = replace(objects.name, 'distribution/avatar/', '')
-              or students.avatar = objects.name
-              or right(
-                split_part(students.avatar, '?', 1),
-                length('/avatars/' || objects.name)
-              ) = '/avatars/' || objects.name
-          )
-        )
-        or (
-          objects.bucket_id = 'cvs'
-          and objects.name ~ '^distribution/cv/[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.pdf$'
-          and not exists (
-            select 1
-            from public."Student" as students
-            where students.cv = replace(
-                replace(objects.name, 'distribution/cv/', ''),
-                '.pdf',
-                ''
-              )
-              or students.cv = objects.name
-              or right(
-                split_part(students.cv, '?', 1),
-                length('/cvs/' || objects.name)
-              ) = '/cvs/' || objects.name
-          )
-        )
-      )
-    order by objects.created_at
-    -- ponytail: cap each run; raise it or run more often if backlog exceeds one day.
-    limit 1000
+    select * from public.storage_gc_candidates()
   loop
     perform net.http_delete(
       url := rtrim(project_url, '/') || '/storage/v1/object/' ||
@@ -94,8 +112,5 @@ $$;
 
 revoke all on function public.queue_orphaned_storage_gc() from public;
 
-select cron.schedule(
-  'storage-orphan-gc',
-  '0 3 * * *',
-  $job$select public.queue_orphaned_storage_gc();$job$
-);
+-- Required non-destructive dry run. Review every row before enabling the job.
+select * from public.storage_gc_candidates();
