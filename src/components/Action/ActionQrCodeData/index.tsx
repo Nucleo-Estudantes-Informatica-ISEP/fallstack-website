@@ -5,24 +5,27 @@ import useWindowSize from "@rooks/use-window-size";
 import { QRCodeSVG } from "qrcode.react";
 
 import config from "@/config";
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 
 interface ActionQrCodeDataProps {
   id: string;
+  initialQrCode: string;
 }
 
-const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({ id }) => {
-  const [qrCodeData, setQrCodeData] = useState<string | null>(null);
+const ActionQrCodeData: React.FC<ActionQrCodeDataProps> = ({
+  id,
+  initialQrCode,
+}) => {
+  const [qrCodeData, setQrCodeData] = useState(initialQrCode);
   const { innerWidth } = useWindowSize();
 
   useEffect(() => {
     const fetchQrCodeData = async () => {
-      const res = await fetch(BASE_URL + `/actions/${id}`);
-      const { qrCode } = await res.json();
-      setQrCodeData(qrCode as string);
+      const { qrCode } = await httpClient.get<{ qrCode: string }>(
+        `/actions/${id}`
+      );
+      setQrCodeData(qrCode);
     };
-
-    fetchQrCodeData();
 
     const interval = setInterval(
       fetchQrCodeData,

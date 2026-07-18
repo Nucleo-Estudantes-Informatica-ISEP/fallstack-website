@@ -1,64 +1,62 @@
 "use client";
 
-import { Company, Student, User } from "@prisma/client";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
 import BioSection from "@/components/Profile/BioSection";
 import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { Github, Linkedin } from "@/styles/Icons";
 
 interface CompanyViewProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
-  company: Company;
   token: string;
   isSavedStudent: boolean;
 }
 
 const CompanyViewProfileSectionContainer: React.FC<
   CompanyViewProfileSectionContainerProps
-> = ({ student, interests, company, token, isSavedStudent }) => {
-  const handleSaveProfile = async () => {
-    if (!company) return swal("Erro ao carregar perfil!");
+> = ({ student, interests, token, isSavedStudent }) => {
+  const [comment, setComment] = useState("");
+  const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const res = await fetch(BASE_URL + "/saved", {
-      method: "PATCH",
-      body: JSON.stringify({ token }),
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+    };
+  }, []);
+
+  const handleSaveProfile = () =>
+    mutate(async () => {
+      try {
+        await httpClient.patch("/saved", { token, comment });
+        toast.success("Perfil salvo com sucesso!");
+        reloadTimeoutRef.current = setTimeout(
+          () => window.location.reload(),
+          1500
+        );
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 400) {
+          toast.warning("Perfil já salvo!");
+          return;
+        }
+        throw error;
+      }
     });
-
-    if (res.status === 200) {
-      swal({
-        title: "Success",
-        text: "Perfil salvo com sucesso!",
-        icon: "success",
-      }).then(() => {
-        window.location.reload();
-      });
-    } else if (res.status === 400) {
-      swal({
-        title: "Warning",
-        text: "Perfil já salvo!",
-        icon: "warning",
-      });
-    } else {
-      swal({
-        title: "Error",
-        text: "Erro ao salvar perfil!",
-        icon: "error",
-      });
-    }
-  };
 
   return (
     <div
-      className={`mt-12 size-full items-center justify-center bg-company md:my-14`}
+      className={`bg-company mt-12 size-full items-center justify-center md:my-14`}
     >
-      <div className="mb-12 mt-4 flex size-full flex-col items-center bg-company">
+      <div className="bg-company mt-4 mb-12 flex size-full flex-col items-center">
         <motion.div
           transition={{ duration: 0.5 }}
           className="flex flex-col items-center justify-center pt-8"
@@ -93,12 +91,23 @@ const CompanyViewProfileSectionContainer: React.FC<
               </a>
             )}
             {!isSavedStudent && (
-              <button
-                onClick={handleSaveProfile}
-                className="hover:bg-primary/100 rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:shadow-xl"
-              >
-                + Salvar Perfil
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <textarea
+                  className="rounded-md border border-gray-300 p-2 text-black"
+                  placeholder="Adicionar comentário (opcional)"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  rows={2}
+                  style={{ minWidth: 220, maxWidth: 320 }}
+                />
+                <button
+                  onClick={handleSaveProfile}
+                  disabled={isPending}
+                  className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary/100 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isPending ? "A guardar..." : "+ Salvar Perfil"}
+                </button>
+              </div>
             )}
           </div>
         </motion.div>

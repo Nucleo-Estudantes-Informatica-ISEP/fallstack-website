@@ -4,13 +4,13 @@ import React, { useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
 interface PerfilTabProps {
-  user: UserWithProfile;
+  user: SessionDto;
 }
 
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
@@ -39,9 +39,8 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   };
 
   const fetchQrcode = async () => {
-    const res = await fetch(BASE_URL + "/qrcode");
-    const { data } = await res.json();
-    setQrcode(data as string);
+    const { data } = await httpClient.get<{ data: string }>("/qrcode");
+    setQrcode(data);
   };
 
   useEffect(() => {
@@ -55,7 +54,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
         {qrcode && <QRCodeSVG size={150} value={qrcode} />}
       </div>
       {/* right column */}
-      <div className="flex items-center justify-center pb-0 pt-14 sm:py-0">
+      <div className="flex items-center justify-center pt-14 pb-0 sm:py-0">
         <div className="relative flex flex-col items-center">
           <motion.div
             className="rounded-lg bg-gray-200 p-2 sm:p-2 md:p-2"

@@ -1,28 +1,23 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 import { HttpError } from "@/types/HttpError";
-import getStudentHistory from "@/lib/getStudentHistory";
-import getServerSession from "@/services/getServerSession";
+import { defineHandler } from "@/lib/http/server";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { getStudentHistory } from "@/application/services/savedStudentService";
 
 interface StudentParams {
-  params: Promise<{
-    code: string;
-  }>;
+  code: string;
 }
 
-export async function GET(_: NextRequest, props: StudentParams) {
-  const params = await props.params;
+export const GET = defineHandler<StudentParams>({
+  auth: "student",
+  authorize: (session, params) => session.student?.code === params.code,
+  handler: async ({ session }) => {
+    const history = await getStudentHistory(session!.student!.id);
 
-  const { code } = params;
+    if (history instanceof HttpError)
+      return NextResponse.json(history.message, { status: history.status });
 
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const history = await getStudentHistory(code);
-
-  if (history instanceof HttpError)
-    return NextResponse.json(history.message, { status: history.status });
-
-  return NextResponse.json(history);
-}
+    return NextResponse.json(history.map(toSavedStudentDto));
+  },
+});

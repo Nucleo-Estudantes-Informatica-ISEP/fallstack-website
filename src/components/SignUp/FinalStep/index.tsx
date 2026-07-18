@@ -10,23 +10,21 @@ import {
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
-import { toast } from "react-toastify";
 import { FaFilePdf } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import { signUp } from "@/lib/auth";
-import {
-  uploadCv,
-  uploadAvatar,
-  uploadCv as uploadCvToSupabase,
-  uploadAvatar as uploadAvatarToSupabase,
-} from "@/lib/upload";
 import useSession from "@/hooks/useSession";
-import Input from "@/components/Input";
 import FileInput from "@/components/FileInput";
+import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
+import { signUp } from "@/client/api/auth";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -36,18 +34,12 @@ interface FinalStepProps {
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
 }
 
-const FinalStep: FunctionComponent<FinalStepProps> = ({
-  currentStep,
-  setCurrentStep,
-  data,
-  setData,
-}) => {
+const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const session = useSession();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
-  const [cvLoading, setCvLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
@@ -84,19 +76,22 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) return setLoading(false);
-
+      if (!image) {
+        setLoading(false);
+        return null;
+      }
 
       const uploaded = await uploadAvatarToSupabase(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        return setLoading(false);
+        setLoading(false);
+        return null;
       }
       avatarUrl = uploaded.url;
     }
     setLoading(false);
     return avatarUrl;
-  }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -132,9 +127,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
-        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
+        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
           Criar uma conta
         </p>
 
@@ -150,11 +145,16 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
             className="z-10"
           />
 
-          <div className="w-full flex flex-col">
-            <label className="text-sm font-normal text-white mb-1 text-left" htmlFor="avatar">
+          <div className="flex w-full flex-col">
+            <label
+              className="mb-1 text-left text-sm font-normal text-white"
+              htmlFor="avatar"
+            >
               Insere uma imagem para foto de perfil. (Opcional)
             </label>
-            <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+            <AvatarCropper
+              {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
+            />
           </div>
 
           <Input
@@ -168,20 +168,23 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
           />
         </div>
 
-        <label htmlFor="privacy" className="z-10 mt-4 flex items-start text-white">
+        <label
+          htmlFor="privacy"
+          className="z-10 mt-4 flex items-start text-white"
+        >
           <input
             type="checkbox"
             id="privacy"
-            className="mr-3 mt-1 size-4 appearance-none border border-white bg-[#141414] cursor-pointer checked:bg-white checked:border-white"
+            className="mt-1 mr-3 size-4 cursor-pointer appearance-none border border-white bg-[#141414] checked:border-white checked:bg-white"
             style={{
-              backgroundImage: 'none',
+              backgroundImage: "none",
             }}
             ref={privacyRef}
             onChange={(e) => {
               if (e.target.checked) {
                 e.target.style.backgroundImage = `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e")`;
               } else {
-                e.target.style.backgroundImage = 'none';
+                e.target.style.backgroundImage = "none";
               }
             }}
           />
@@ -219,9 +222,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({
         )}
 
         <PrimaryButton
-          loading={loading || cvLoading}
+          loading={loading}
           onClick={handleSubmit}
-          className="mb-5 mt-4 font-bold w-full h-14"
+          className="mt-4 mb-5 h-14 w-full font-bold"
         >
           CONCLUIR
         </PrimaryButton>

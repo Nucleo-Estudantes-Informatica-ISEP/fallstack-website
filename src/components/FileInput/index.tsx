@@ -6,6 +6,8 @@ import {
   MdFileUpload as UploadIcon,
 } from "react-icons/md";
 
+import slugifyId from "@/utils/slugifyId";
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   name: string;
   accept: string;
@@ -30,13 +32,21 @@ const FileInput: React.FC<InputProps> = ({
   file,
   icon,
   onClear,
+  id,
   ...rest
 }) => {
+  const resolvedId = id || slugifyId(name) || undefined;
+
   return (
-    <div className="w-full flex flex-col">
-      <label className="text-sm font-normal text-white mb-1 text-left" htmlFor={name}>
-        {name}
-      </label>
+    <div className="flex w-full flex-col">
+      {name && (
+        <label
+          className="mb-1 text-left text-sm font-normal text-white"
+          htmlFor={resolvedId}
+        >
+          {name}
+        </label>
+      )}
       <div
         className={`flex w-full flex-row items-center justify-center ${className}`}
       >
@@ -44,32 +54,45 @@ const FileInput: React.FC<InputProps> = ({
           type="file"
           name={name}
           disabled={disabled}
-          id={name}
+          id={resolvedId}
           placeholder={placeholder}
           accept={accept}
           hidden
-          className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
-         text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+          className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
           {...rest}
         />
         <label
-          className={`flex flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm h-14 ${file ? "text-white" : "text-white/35"}`}
-          htmlFor={name}
+          className={`flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-[#141414] px-2 py-1 text-sm ${file ? "text-white" : "text-white/35"}`}
+          htmlFor={resolvedId}
         >
           <span className="mr-2 min-w-min text-lg md:text-xl">
             {file ? icon : <UploadIcon />}
           </span>
-          <span className="w-44 truncate">{file ? file.name : placeholder}</span>
+          <span className="w-44 truncate">
+            {file ? file.name : placeholder}
+          </span>
           {file && (
             <>
               <button
-                onClick={() => window.open(file.preview, "_blank")}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  window.open(file.preview, "_blank");
+                }}
+                aria-label={`Pré-visualizar ${file.name}`}
                 className="ml-auto rounded-md p-1 transition-colors hover:bg-white/10"
               >
                 <PreviewIcon />
               </button>
               <button
-                onClick={onClear}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClear();
+                }}
+                aria-label={`Remover ${file.name}`}
                 className="ml-2 rounded-md p-1 transition-colors hover:bg-red-500 hover:text-white"
               >
                 <TrashIcon />

@@ -1,13 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Interest } from "@prisma/client";
-import { Reorder } from "framer-motion";
-
-import { BASE_URL } from "@/services/api";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestSelectorProps {
   userInterests: string[];
+  availableInterests: InterestDto[];
   setUserInterests: (interests: string[]) => void;
   scrollable?: boolean;
 }
@@ -15,22 +12,9 @@ interface InterestSelectorProps {
 const InterestSelector: React.FC<InterestSelectorProps> = ({
   setUserInterests,
   userInterests,
+  availableInterests,
   scrollable = false,
 }) => {
-  const [interests, setInterests] = useState<Interest[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchInterests() {
-      const res = await fetch(BASE_URL + "/interests");
-      const json = await res.json();
-      setInterests(json);
-      setLoading(false);
-    }
-
-    fetchInterests();
-  }, []);
-
   const toggleInterest = (interestName: string) => {
     if (userInterests.includes(interestName)) {
       setUserInterests(userInterests.filter((i) => i !== interestName));
@@ -39,15 +23,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
     }
   };
 
-  if (loading) {
-    return (
-      <div className="my-4 flex w-full animate-pulse items-center justify-center text-sm text-gray-400">
-        A carregar interesses...
-      </div>
-    );
-  }
-
-  if (!interests.length) {
+  if (!availableInterests.length) {
     return (
       <div className="my-4 flex w-full items-center justify-center text-sm text-gray-400">
         Não foi possível carregar interesses.
@@ -61,7 +37,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
         scrollable ? "max-h-52 overflow-y-auto pt-1 pr-1" : ""
       }`}
     >
-      {interests.map((interest) => {
+      {availableInterests.map((interest) => {
         const isSelected = userInterests.includes(interest.name);
         return (
           <button

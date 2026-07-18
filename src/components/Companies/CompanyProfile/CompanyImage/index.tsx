@@ -2,13 +2,13 @@
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Image from "next/image";
-import { Company } from "@prisma/client";
 import { motion } from "framer-motion";
 
 import { ProfileData } from "@/types/ProfileData";
+import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface UserImageProps {
-  company: Company;
+  company: CompanyDto;
   hidden?: boolean;
   editable?: boolean;
   setProfile?: Dispatch<SetStateAction<ProfileData>>;
@@ -18,7 +18,7 @@ const CompanyImage: React.FC<UserImageProps> = ({ company }) => {
   const [image, setImage] = useState<string | null>(null);
 
   useEffect(() => {
-    const getImage = async (company: Company) => {
+    const getImage = async (company: CompanyDto) => {
       if (!company.avatar) return "/assets/images/companies/armis_logo.png";
 
       setImage(

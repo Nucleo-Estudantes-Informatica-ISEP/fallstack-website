@@ -4,17 +4,17 @@ import { FunctionComponent } from "react";
 
 import FaqContainer from "@/components/Faq/FaqContainer";
 import HeadingText from "@/components/HeadingText";
-import { FAQ } from "@/utils/FAQ";
+import { edition } from "@/edition";
 
 const FaqSection: FunctionComponent = () => {
   return (
-    <section className="bg-background w-full pb-16">
+    <section className="w-full bg-background pb-16">
       <div className="mx-auto flex w-full flex-col gap-10">
         <HeadingText
           text="FAQs"
-          className="text-secondary !mb-0 !text-left text-4xl md:!text-5xl"
+          className="!mb-0 !text-left text-4xl text-secondary md:!text-5xl"
         />
-        <FaqContainer faqs={FAQ} />
+        <FaqContainer faqs={edition.faq} />
       </div>
     </section>
   );

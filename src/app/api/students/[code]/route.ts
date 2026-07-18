@@ -1,83 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { NextResponse } from "next/server";
 
-import config from "@/config";
-import { completeAction } from "@/lib/completeAction";
-import prisma from "@/lib/prisma";
-import getServerSession from "@/services/getServerSession";
+import { defineHandler } from "@/lib/http/server";
+import {
+  toStudentDto,
+  toStudentSummaryDto,
+} from "@/application/dto/studentDto";
+import {
+  getStudentProfile,
+  updateStudent,
+} from "@/application/services/studentService";
+import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 
-const schema = z.object({
-  bio: z.string(),
-  linkedin: z.string(),
-  github: z.string(),
-  interests: z.array(z.string()),
+interface StudentParams {
+  code: string;
+}
+
+export const GET = defineHandler<StudentParams>({
+  auth: "session",
+  handler: async ({ session, params }) => {
+    const student = await getStudentProfile(params.code, {
+      studentCode: session!.student?.code,
+      companyId: session!.employee?.company?.id,
+      isAdmin: session!.isAdmin,
+    });
+    return NextResponse.json(toStudentDto(student));
+  },
 });
 
-const schemaPartial = schema.partial();
-
-interface StudentProps {
-  params: Promise<{
-    code: string;
-  }>;
-}
-
-export async function GET(req: NextRequest, props: StudentProps) {
-  const params = await props.params;
-  const student = await prisma.student.findUnique({
-    where: { code: params.code },
-    include: {
-      user: {
-        include: {
-          interests: true,
-        },
-      },
-    },
-  });
-
-  return NextResponse.json(student);
-}
-
-export async function PATCH(req: NextRequest, props: StudentProps) {
-  const params = await props.params;
-  const session = await getServerSession();
-  const { code } = params;
-
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  if (!session.student || session.student.code !== code)
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const body = await req.json();
-
-  const safeParse = schemaPartial.safeParse(body);
-  if (!safeParse.success)
-    return NextResponse.json({ message: safeParse.error });
-
-  const student = await prisma.student.update({
-    where: { code },
-    data: {
-      bio: body.bio?.trim(),
-      linkedin: body.linkedin,
-      github: body.github,
-    },
-  });
-
-  if (student.linkedin) {
-    await completeAction(
-      student.code,
-      config.constants.actionNames.updateLinkedin
+export const PATCH = defineHandler<StudentParams, typeof patchStudentSchema>({
+  auth: "session",
+  schema: patchStudentSchema,
+  authorize: (session, params) => session.student?.code === params.code,
+  handler: async ({ session, params, body }) => {
+    return NextResponse.json(
+      toStudentSummaryDto(await updateStudent(session!.id, params.code, body))
     );
-  }
-
-  await prisma.user.update({
-    where: { id: session.id },
-    data: {
-      interests: {
-        set: body.interests.map((interest: string) => ({ name: interest })),
-      },
-    },
-  });
-
-  return NextResponse.json(student);
-}
+  },
+});

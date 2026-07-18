@@ -51,8 +51,8 @@ const YearStep: FunctionComponent<YearStepProps> = ({
   ];
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
         <div className="mb-5 flex justify-center">
           <Image
             src={"/assets/images/logo_dark.png"}
@@ -89,7 +89,10 @@ const YearStep: FunctionComponent<YearStepProps> = ({
           </motion.p>
         )}
 
-        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+        <PrimaryButton
+          onClick={handleNext}
+          className="mt-4 mb-5 h-14 w-full font-bold"
+        >
           Seguinte
         </PrimaryButton>
       </div>

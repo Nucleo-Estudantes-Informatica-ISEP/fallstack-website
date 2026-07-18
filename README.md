@@ -25,6 +25,13 @@ The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Supabase](https://supabase.com/)
 
+### Authentication
+
+All authentication, including password recovery and password updates, goes
+through Supabase Auth. Application tables must not store passwords or password
+reset tokens, and application routes must not provide separate password-change
+flows.
+
 ---
 
 # Getting Started
@@ -55,9 +62,12 @@ cp .env.example .env
 ### Required values (hosted Supabase)
 
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_URL`
-- `SUPABASE_KEY` (service role)
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (service role)
+
+### Observability
+
+Production logging and error monitoring use Pino and Sentry. See [OBSERVABILITY.md](./OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
 
 ### Storage setup (Supabase hosted)
 
@@ -67,6 +77,55 @@ Create two storage buckets:
 | ------- | ------- |
 | avatars | public  |
 | cvs     | private |
+
+### Orphaned-file garbage collection
+
+Student media uploads are reconciled daily at 03:00 UTC. Objects are eligible
+only when they are under the app-managed avatar/CV prefixes, are unreferenced by
+`Student.avatar`/`Student.cv`, and are at least 48 hours old.
+
+1. In Supabase Vault, create `storage_gc_project_url` with the project URL and
+   `storage_gc_service_role_key` with the service-role key.
+2. Run [`supabase/storage-gc.sql`](./supabase/storage-gc.sql) manually in the
+   hosted Supabase SQL editor. Do not add the service-role key to the SQL file.
+   Its final query is non-destructive and returns the exact candidate set.
+3. Check every returned bucket/path against `Student.avatar`/`Student.cv`. The
+   installer intentionally does not schedule deletion.
+4. Only after confirming the dry run, run
+   [`supabase/storage-gc-enable.sql`](./supabase/storage-gc-enable.sql) manually.
+5. Confirm the job exists with:
+
+   ```sql
+   select jobid, schedule, command, active
+   from cron.job
+   where jobname = 'storage-orphan-gc';
+   ```
+
+The job reads `storage.objects` but deletes through the Storage API; direct SQL
+deletion would remove only metadata and leave the billed blob behind. Failed API
+deletions remain in `storage.objects`, so the next daily run retries them.
+
+Monitor runs and asynchronous deletion failures after 03:00 UTC:
+
+```sql
+select status, return_message, start_time, end_time
+from cron.job_run_details
+where jobid = (select jobid from cron.job where jobname = 'storage-orphan-gc')
+order by start_time desc
+limit 10;
+
+select id, status_code, timed_out, error_msg, created
+from net._http_response
+where timed_out or error_msg is not null or status_code not between 200 and 299
+order by created desc;
+
+select bucket_id, count(*)
+from public.storage_gc_candidates()
+group by bucket_id;
+```
+
+`pg_net` responses expire after six hours by default, so inspect them soon after
+the run. A candidate count that does not shrink indicates persistent failures.
 
 ---
 
@@ -164,18 +223,47 @@ docker compose --profile supabase down -v
 
 # Database Workflow (Prisma)
 
-## Sync schema
+Schema changes are tracked with **Prisma Migrate** (`prisma/migrations/`), not `db push`. Every schema change must go through a migration so it has a versioned, reviewable history and a rollback path.
+
+## Creating a new migration
+
+After editing `prisma/schema.prisma`, generate and apply the migration locally:
 
 ```bash
-set -a; source .env; set +a
-pnpm prisma db push --force-reset
+pnpm migrate --name <describe-the-change>
 ```
 
-or, using migrations:
+This runs `prisma migrate dev`, which diffs your schema against the migration history, writes a new `prisma/migrations/<timestamp>_<name>/migration.sql`, and applies it to your local database. If you omit `--name`, Prisma will prompt you for one interactively. Commit the generated migration folder along with your schema change.
+
+## Applying migrations elsewhere (deploy)
+
+`docker-compose.app.yml` runs this automatically: a `migrate` service builds the `migrator` Dockerfile target (the full toolchain image, before it's pruned down to the standalone runtime) and runs `prisma migrate deploy` once against `DATABASE_URL`; the `web` service only starts after `migrate` exits successfully (`depends_on: migrate: condition: service_completed_successfully`). `docker compose up` (or Coolify running the same compose file) always applies pending migrations before the app starts serving traffic — no manual step required.
+
+To run it by hand (e.g. outside Docker, against a remote DB):
 
 ```bash
-pnpm prisma migrate dev
+pnpm migrate:deploy
 ```
+
+This runs `prisma migrate deploy` directly, which applies any pending migrations without prompting or generating new ones.
+
+## One-time adoption note
+
+This project previously used `prisma db push`, so `prisma/migrations/` didn't exist until a baseline migration (`20260712000000_init`) capturing the current schema was added. For any environment where the tables **already exist** from a prior `db push` (e.g. an existing local or shared dev database), mark that baseline as already applied instead of running it for real:
+
+```bash
+pnpm exec prisma migrate resolve --applied 20260712000000_init
+```
+
+For a genuinely empty database, just run `pnpm migrate:deploy` (or `pnpm migrate` locally) as usual — it will create the tables from the baseline migration.
+
+## Resetting a local database
+
+```bash
+pnpm exec prisma migrate reset
+```
+
+Drops the local database, reapplies all migrations from scratch, and reseeds. Local development only — never run against a shared or production database.
 
 Generate Prisma Client:
 
@@ -196,7 +284,7 @@ pnpm seed
 ## Wipe the database (local only)
 
 ```bash
-pnpm wipe
+NODE_ENV=development pnpm wipe -- --confirm
 ```
 
 ---

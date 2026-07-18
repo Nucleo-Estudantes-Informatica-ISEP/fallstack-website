@@ -1,40 +1,32 @@
 "use client";
 
 import React, { useState } from "react";
-import { Company } from "@prisma/client";
-import Swal from "sweetalert";
+import { toast } from "react-toastify";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
+import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface AdminSavedSectionProps {
-  companies: Company[];
+  companies: CompanyDto[];
 }
 
 const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
   const [studentEmailNumber, setStudentEmailNumber] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
+  const { mutate, isPending } = useMutation();
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
-    const response = await fetch(`${BASE_URL}/admin/save-student`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    mutate(async () => {
+      await httpClient.post("/admin/save-student", {
         studentEmailNumber,
         companyId: selectedCompany,
-      }),
+      });
+
+      toast.success("Student saved successfully!");
     });
-
-    const result = await response.json();
-
-    if (response.ok) {
-      Swal("Success", "Student saved successfully!", "success");
-    } else {
-      Swal("Error", result.error, "error");
-    }
   };
 
   return (
@@ -78,9 +70,10 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
         </label>
         <button
           type="submit"
-          className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600"
+          disabled={isPending}
+          className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Save Student
+          {isPending ? "A guardar..." : "Save Student"}
         </button>
       </form>
     </div>

@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
 interface HistorySectionProps {
-  historyData: SavedStudentWithSavedBy[];
+  historyData: SavedStudentDto[];
   isCompany?: boolean;
 }
 
@@ -19,7 +19,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
         <div className="px-1">Ação</div>
       </div>
       <div
-        className="firefox-scrollbar-margin scrollbar scrollbar-track-transparent scrollbar-thumb-slate-500 scrollbar-thumb-rounded-lg scrollbar-w-1 max-h-80 w-full overflow-y-auto pl-1"
+        className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 scrollbar max-h-80 w-full overflow-y-auto pl-1 scrollbar-thumb-slate-500 scrollbar-track-transparent"
         style={{ scrollbarGutter: "stable" }}
       >
         {!historyData.length ? (
@@ -44,7 +44,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
                   </Link>
                 ) : (
                   <span className="w-full truncate">
-                    {item.savedBy.company.name}
+                    {item.savedBy.company?.name}
                   </span>
                 )}
               </div>

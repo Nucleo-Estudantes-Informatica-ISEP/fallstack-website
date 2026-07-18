@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
-import Image from "next/image";
-import { Student, User } from "@prisma/client";
-import swal from "sweetalert";
-
-import { BASE_URL } from "@/services/api";
-import UserImage from "@/components/Profile/UserImage";
-import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
+import { useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+
+import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
+import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
+import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
 
 interface PreviewProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
   token?: string;
   isCompanyView?: boolean;
@@ -28,40 +28,39 @@ const PreviewProfileSectionContainer: React.FC<
     [interests]
   );
   const router = useRouter();
-  const handleSaveProfile = async () => {
-    if (!token) return;
+  const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const res = await fetch(BASE_URL + "/saved", {
-      method: "PATCH",
-      body: JSON.stringify({ token }),
+  useEffect(() => {
+    return () => {
+      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
+    };
+  }, []);
+
+  const handleSaveProfile = () =>
+    mutate(async () => {
+      if (!token) return;
+
+      try {
+        await httpClient.patch("/saved", { token });
+        toast.success("Perfil salvo com sucesso!");
+        reloadTimeoutRef.current = setTimeout(
+          () => window.location.reload(),
+          1500
+        );
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 400) {
+          toast.warning("Perfil já salvo!");
+          return;
+        }
+        throw error;
+      }
     });
 
-    if (res.status === 200) {
-      swal({
-        title: "Success",
-        text: "Perfil salvo com sucesso!",
-        icon: "success",
-      }).then(() => {
-        window.location.reload();
-      });
-    } else if (res.status === 400) {
-      swal({
-        title: "Warning",
-        text: "Perfil já salvo!",
-        icon: "warning",
-      });
-    } else {
-      swal({
-        title: "Error",
-        text: "Erro ao salvar perfil!",
-        icon: "error",
-      });
-    }
-  };
-
   const handleOpenCv = async () => {
-    const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
-    const { url } = await res.json();
+    const { url } = await httpClient.get<{ url: string }>(
+      `/students/${student.code}/cv`
+    );
     window.open(url, "_blank");
   };
 
@@ -118,7 +117,7 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:border-primary rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
             >
               <div className="flex items-center gap-2">
                 <Github className="size-5" />
@@ -131,7 +130,7 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:border-primary rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
             >
               <div className="flex items-center gap-2">
                 <Linkedin className="size-5" />
@@ -142,9 +141,10 @@ const PreviewProfileSectionContainer: React.FC<
           {isCompanyView && !isSavedStudent && (
             <button
               onClick={handleSaveProfile}
-              className="border-primary/60 bg-primary rounded-full border px-4 py-2 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl"
+              disabled={isPending}
+              className="rounded-full border border-primary/60 bg-primary px-4 py-2 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
             >
-              + Salvar perfil
+              {isPending ? "A guardar..." : "+ Salvar perfil"}
             </button>
           )}
         </div>
@@ -174,7 +174,7 @@ const PreviewProfileSectionContainer: React.FC<
 
               <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="flex items-center gap-3 rounded-xl border border-[#2a2a2a] bg-black/60 px-4 py-3 text-sm text-gray-200">
-                  <Email className="text-primary size-5" />
+                  <Email className="size-5 text-primary" />
                   <div className="flex flex-col">
                     <span className="text-xs tracking-[0.08em] text-gray-500 uppercase">
                       Email
@@ -185,9 +185,9 @@ const PreviewProfileSectionContainer: React.FC<
                 {student.cv && (
                   <button
                     onClick={handleOpenCv}
-                    className="border-primary/60 bg-primary/10 hover:bg-primary/20 flex items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm font-semibold text-white transition hover:-translate-y-0.5"
+                    className="flex items-center gap-3 rounded-xl border border-primary/60 bg-primary/10 px-4 py-3 text-left text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-primary/20"
                   >
-                    <OpenCv className="text-primary size-5" />
+                    <OpenCv className="size-5 text-primary" />
                     <div className="flex flex-col">
                       <span className="text-xs tracking-[0.08em] text-gray-300 uppercase">
                         Curriculum
@@ -213,7 +213,7 @@ const PreviewProfileSectionContainer: React.FC<
                 orderedInterests.map((interest) => (
                   <span
                     key={interest}
-                    className="border-primary/50 bg-primary/15 rounded-full border px-3 py-1 text-sm font-medium text-white"
+                    className="rounded-full border border-primary/50 bg-primary/15 px-3 py-1 text-sm font-medium text-white"
                   >
                     {interest}
                   </span>
@@ -234,8 +234,8 @@ const PreviewProfileSectionContainer: React.FC<
           </section>
         )}
         <button
-            onClick={() => router.push("/dashboard")}
-            className="border border-[#2a2a2a] bg-black/50 px-4 py-2 rounded-full text-white hover:bg-black/60 transition"
+          onClick={() => router.push("/dashboard")}
+          className="rounded-full border border-[#2a2a2a] bg-black/50 px-4 py-2 text-white transition hover:bg-black/60"
         >
           Voltar
         </button>

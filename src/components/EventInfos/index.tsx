@@ -2,9 +2,9 @@
 
 import { FunctionComponent } from "react";
 
-import { Calendar, Pin, Watch } from "@/styles/Icons";
-
 import InfoBit from "@/components/InfoBit";
+import { branding } from "@/edition/branding";
+import { Calendar, Pin, Watch } from "@/styles/Icons";
 
 interface EventInfosProps {
   days: number[];
@@ -28,7 +28,10 @@ const EventInfos: FunctionComponent<EventInfosProps> = ({
         info={`${days.join(" e ")} de ${month} ${year}`}
       />
       <InfoBit icon={<Watch />} info={`${beginningTime}-${endTime}`} />
-      <InfoBit icon={<Pin className="size-[30px]" />} info={"ISEP"} />
+      <InfoBit
+        icon={<Pin className="size-[30px]" />}
+        info={branding.event.venue}
+      />
     </section>
   );
 };

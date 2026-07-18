@@ -1,89 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/utils/supabase/admin";
-import { z } from "zod";
+import { NextResponse } from "next/server";
 
-import config from "@/config";
-import { completeAction } from "@/lib/completeAction";
-import prisma from "@/lib/prisma";
-import getServerSession from "@/services/getServerSession";
-
-const schema = z.union([
-  z.object({ uploadId: z.string().uuid() }), // Firebase flow
-  z.object({ id: z.string().uuid() }), // Supabase flow
-]);
+import { defineHandler } from "@/lib/http/server";
+import {
+  getStudentCv,
+  setStudentCv,
+} from "@/application/services/studentService";
+import { cvUploadSchema } from "@/schemas/cvUploadSchema";
 
 interface StudentParams {
-  params: Promise<{
-    code: string;
-  }>;
+  code: string;
 }
 
-export async function GET(_: NextRequest, props: StudentParams) {
-  const params = await props.params;
+export const GET = defineHandler<StudentParams>({
+  auth: "session",
+  handler: async ({ session, params }) => {
+    const url = await getStudentCv(params.code, {
+      studentCode: session!.student?.code,
+      companyId: session!.employee?.company?.id,
+      isAdmin: session!.isAdmin,
+    });
+    return NextResponse.json({ url });
+  },
+});
 
-  const { code } = params;
-
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-
-  // fetch student as the logged user may be a company
-  const student = await prisma.student.findUnique({ where: { code } });
-
-  if (!student)
-    return NextResponse.json({ error: "Student not found" }, { status: 404 });
-
-  if (!student.cv)
-    return NextResponse.json({ error: "Student has no cv" }, { status: 404 });
-
-  const admin = createAdminClient();
-  // Try Supabase first
-  const supaPath = `distribution/cv/${student.cv}.pdf`;
-  const supa = await admin.storage
-    .from("cvs")
-    .createSignedUrl(supaPath, 60 * 5);
-  if (!supa.error && supa.data) {
-    return NextResponse.json({ url: supa.data.signedUrl });
-  }
-
-  // If not in Supabase, return 404 as legacy storage is removed
-  return NextResponse.json({ error: "CV not found" }, { status: 404 });
-}
-
-export async function POST(req: NextRequest, props: StudentParams) {
-  const params = await props.params;
-
-  const { code } = params;
-
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  if (session.role !== "STUDENT" || session.student?.code !== code)
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-
-  const body = await req.json();
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json(parsed.error, { status: 400 });
-
-  if ("id" in parsed.data) {
-    // Supabase flow
-    const { id } = parsed.data;
-    const admin = createAdminClient();
-    const path = `distribution/cv/${id}.pdf`;
-    const check = await admin.storage.from("cvs").createSignedUrl(path, 60);
-    if (check.error)
-      return NextResponse.json({ error: "Invalid upload id" }, { status: 400 });
-
-    await prisma.student.update({ where: { code }, data: { cv: id } });
-  } else {
-    return NextResponse.json({ error: "Bad request" }, { status: 400 });
-  }
-
-  await completeAction(
-    session.student.code,
-    config.constants.actionNames.uploadCv
-  );
-
-  return NextResponse.json({ ok: true });
-}
+export const POST = defineHandler<StudentParams, typeof cvUploadSchema>({
+  auth: "student",
+  schema: cvUploadSchema,
+  authorize: (session, params) => session.student?.code === params.code,
+  handler: async ({ params, body }) => {
+    if (!("id" in body))
+      return NextResponse.json({ error: "Bad request" }, { status: 400 });
+    await setStudentCv(params.code, body.id);
+    return NextResponse.json({ ok: true });
+  },
+});

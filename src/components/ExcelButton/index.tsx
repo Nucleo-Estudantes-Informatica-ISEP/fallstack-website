@@ -4,24 +4,13 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 
 import Spinner from "@/components/Spinner";
+import type { AdminScanDto } from "@/application/dto/historyDto";
 
 import download from "downloadjs";
 
-interface SavedStudent {
-  studentId: string;
-  createdAt: Date;
-  student: {
-    name: string;
-    user: {
-      email: string;
-    };
-  };
-  id?: string;
-}
-
 interface ExcelButtonProps {
   className?: string;
-  data: SavedStudent[];
+  data: AdminScanDto[];
 }
 
 const ExcelButton: React.FC<ExcelButtonProps> = ({
@@ -34,11 +23,11 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
     setIsLoading(true);
     const dataJSON = data.map((scan) => {
       return {
-        id: scan.id ?? `${scan.studentId}-${scan.createdAt.toISOString()}`,
+        id: scan.id,
         studentId: scan.studentId,
         studentName: scan.student.name,
         studentEmail: scan.student.user.email,
-        createdAt: scan.createdAt.toLocaleString(),
+        createdAt: new Date(scan.createdAt).toLocaleString(),
       };
     });
     const worksheet = XLSX.utils.json_to_sheet(dataJSON);
@@ -63,7 +52,7 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
       {...rest}
       onClick={handleDownload}
       disabled={isLoading}
-      className={`bg-primary active:bg-primary rounded-lg border border-transparent px-4 py-1 text-center text-sm leading-5 text-white transition-opacity duration-200 focus:ring focus:outline-none disabled:opacity-80 ${className}`}
+      className={`rounded-lg border border-transparent bg-primary px-4 py-1 text-center text-sm leading-5 text-white transition-opacity duration-200 focus:ring focus:outline-none active:bg-primary disabled:opacity-80 ${className}`}
     >
       {isLoading ? <Spinner /> : "Export to Excel"}
     </button>

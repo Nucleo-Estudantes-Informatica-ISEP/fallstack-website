@@ -1,10 +1,11 @@
 "use client";
 
-import { Action } from "@prisma/client";
 import { FiCheck } from "react-icons/fi";
 
+import type { StudentActionDto } from "@/application/dto/actionDto";
+
 interface ActionsSectionProps {
-  actions: (Action & { done: boolean })[];
+  actions: StudentActionDto[];
 }
 
 const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
@@ -26,7 +27,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
           style={{ border: "1px solid #ED8326" }}
         >
           <div className="flex-1">
-            <p className="mb-1 text-white font-semibold">
+            <p className="mb-1 font-semibold text-white">
               {action.altText && !action.done ? action.altText : action.name}
             </p>
             <p className="text-sm text-gray-300">

@@ -2,19 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import swal from "sweetalert";
+import { toast } from "react-toastify";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
-import { BASE_URL } from "@/services/api";
+import type { Stats } from "@/types/Stats";
+import { httpClient } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
 import HistorySection from "@/components/HistorySection";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface StatsProps {
-  stats: number[];
+  stats: Stats;
   students: number;
-  history: SavedStudentWithSavedBy[];
+  history: SavedStudentDto[];
   interests: string[];
+  availableInterests: InterestDto[];
 }
 
 const CompanyStatsSection: React.FC<StatsProps> = ({
@@ -22,32 +26,22 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   students,
   history,
   interests,
+  availableInterests,
 }) => {
-  const totalScans = stats[0];
-  const totalSaves = stats[1];
+  const { totalScans, totalSaves } = stats;
   const studentsLeft = students - totalScans;
   const [companyInterests, setInterests] = useState<string[]>(interests);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate, isPending } = useMutation(
+    "Ocorreu um erro ao atualizar o teu perfil..."
+  );
 
-  async function handleSave() {
-    const res = await fetch(`${BASE_URL}/user`, {
-      method: "PATCH",
-      body: JSON.stringify({
-        interests: companyInterests,
-      }),
+  const handleSave = () =>
+    mutate(async () => {
+      await httpClient.patch("/user", { interests: companyInterests });
+      toast.success("Perfil atualizado com sucesso!");
+      router.refresh();
     });
-
-    if (res.status === 200) {
-      setIsLoading(false);
-      swal("Perfil atualizado com sucesso!");
-    } else {
-      setIsLoading(false);
-      swal("Ocorreu um erro ao atualizar o teu perfil...");
-    }
-
-    router.refresh();
-  }
 
   return (
     <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">
@@ -78,12 +72,13 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
         Interesses
       </h1>
       <InterestSelector
+        availableInterests={availableInterests}
         userInterests={companyInterests}
         setUserInterests={setInterests}
       />
       <PrimaryButton
         onClick={handleSave}
-        loading={isLoading}
+        loading={isPending}
         className="mt-4 px-12 py-2 text-lg"
       >
         Guardar

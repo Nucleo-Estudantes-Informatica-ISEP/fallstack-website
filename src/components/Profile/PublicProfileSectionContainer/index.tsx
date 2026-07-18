@@ -1,6 +1,5 @@
 "use client";
 
-import { Student, User } from "@prisma/client";
 import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 
@@ -9,10 +8,11 @@ import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { Github, Linkedin } from "@/styles/Icons";
 
 interface PublicProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
 }
 
@@ -22,7 +22,7 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
 }) => {
   return (
     <div className="mt-12 size-full items-center justify-center md:my-14">
-      <div className="mb-12 mt-4 flex size-full flex-col items-center">
+      <div className="mt-4 mb-12 flex size-full flex-col items-center">
         <motion.div
           transition={{ duration: 0.5 }}
           className="flex flex-col items-center justify-center pt-8"

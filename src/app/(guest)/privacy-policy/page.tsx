@@ -1,33 +1,31 @@
-
-import Image from 'next/image';
-import Link from 'next/link';
+import Image from "next/image";
+import Link from "next/link";
 
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-black text-white">
-      
       <section
-        className="relative flex h-[300px] w-full items-center justify-center bg-cover bg-center" 
-        style={{ 
-          backgroundImage: "url('/icons/header-privacy-policy-background.png')" 
-        }} 
+        className="relative flex h-[300px] w-full items-center justify-center bg-cover bg-center"
+        style={{
+          backgroundImage: "url('/icons/header-privacy-policy-background.png')",
+        }}
       >
-        <div className="absolute inset-0 bg-black/30" /> 
-        
-        <div className="relative z-10"> 
+        <div className="absolute inset-0 bg-black/30" />
+
+        <div className="relative z-10">
           <Image
-            src="/favicon.ico" 
+            src="/favicon.ico"
             alt="Fall Stack Logo"
-            width={128} 
+            width={128}
             height={128}
-            priority 
+            priority
           />
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-6 pb-24 pt-12">
+      <section className="mx-auto max-w-4xl px-6 pt-12 pb-24">
         <Link
-          href="/" 
+          href="/"
           className="text-lg font-semibold text-white hover:text-gray-300"
         >
           ← Voltar
@@ -37,7 +35,6 @@ export default function PrivacyPolicyPage() {
           Política de privacidade
         </h1>
 
-
         <article className="mt-12">
           <h2 className="text-2xl font-semibold">
             Aplicação do Regulamento Geral sobre a Proteção de Dados
@@ -46,8 +43,8 @@ export default function PrivacyPolicyPage() {
           <p className="mt-4">
             O Núcleo de Estudantes de Informática do Instituto Superior de
             Engenharia do Porto (NEI- ISEP), em conformidade com o Regulamento
-            Geral sobre a Proteção de Dados (RGPD), apresenta a sua Política
-            de Privacidade para a aplicação Fallstack. Esta aplicação visa
+            Geral sobre a Proteção de Dados (RGPD), apresenta a sua Política de
+            Privacidade para a aplicação Fallstack. Esta aplicação visa
             facilitar a participação dos estudantes no evento organizado pelo
             NEI-ISEP, proporcionando a criação de contas e a partilha de
             informações relevantes para o ambiente profissional.
@@ -77,24 +74,24 @@ export default function PrivacyPolicyPage() {
             Recolha de Informações e Finalidade da Recolha
           </h2>
           <p className="mt-4">
-            Para utilizar a aplicação Fallstack, é necessário criar uma conta
-            de utilizador.
+            Para utilizar a aplicação Fallstack, é necessário criar uma conta de
+            utilizador.
           </p>
           <p className="mt-4">
             O Núcleo de Estudantes de Informática do Instituto Superior de
             Engenharia do Porto (NEI- ISEP), em conformidade com o Regulamento
-            Geral sobre a Proteção de Dados (RGPD), apresenta a sua Política
-            de Privacidade para a aplicação Fallstack. Esta aplicação visa
+            Geral sobre a Proteção de Dados (RGPD), apresenta a sua Política de
+            Privacidade para a aplicação Fallstack. Esta aplicação visa
             facilitar a participação dos estudantes no evento organizado pelo
             NEI-ISEP, proporcionando a criação de contas e a partilha de
-            informações relevantes para o ambiente profissional. As
-            informações solicitadas, como nome, email, palavra-passe,
-            interesses, imagem de perfil, Curriculum Vitae (CV), perfil do
-            LinkedIn e GitHub, são estritamente necessárias para autenticação,
-            identificação e aprimoramento da interação dos utilizadores com as
-            empresas participantes no evento. Esta prática está alinhada com
-            as disposições legais do Regulamento Geral sobre a Proteção de
-            Dados (RGPD).
+            informações relevantes para o ambiente profissional. As informações
+            solicitadas, como nome, email, palavra-passe, interesses, imagem de
+            perfil, Curriculum Vitae (CV), perfil do LinkedIn e GitHub, são
+            estritamente necessárias para autenticação, identificação e
+            aprimoramento da interação dos utilizadores com as empresas
+            participantes no evento. Esta prática está alinhada com as
+            disposições legais do Regulamento Geral sobre a Proteção de Dados
+            (RGPD).
           </p>
         </article>
 
@@ -141,8 +138,8 @@ export default function PrivacyPolicyPage() {
             Conservação das Informações
           </h2>
           <p className="mt-4">
-            Para eliminar uma conta, os utilizadores devem contactar o
-            NEI-ISEP (
+            Para eliminar uma conta, os utilizadores devem contactar o NEI-ISEP
+            (
             <a
               href="mailto:info@nei-isep.org"
               className="text-primary underline"
@@ -158,11 +155,11 @@ export default function PrivacyPolicyPage() {
         <article className="mt-12">
           <h2 className="text-2xl font-semibold">Partilha de Informações</h2>
           <p className="mt-4">
-            Ao criar uma conta na aplicação Fallstack, os utilizadores
-            concordam que os seus CVs e perfis de LinkedIn e GitHub, bem como
-            todas as suas informações de perfil, podem ser partilhadas com
-            empresas participantes no evento Fallstack. Esta partilha tem como
-            objetivo facilitar oportunidades de emprego e networking.
+            Ao criar uma conta na aplicação Fallstack, os utilizadores concordam
+            que os seus CVs e perfis de LinkedIn e GitHub, bem como todas as
+            suas informações de perfil, podem ser partilhadas com empresas
+            participantes no evento Fallstack. Esta partilha tem como objetivo
+            facilitar oportunidades de emprego e networking.
           </p>
         </article>
 
@@ -172,9 +169,9 @@ export default function PrivacyPolicyPage() {
           </h2>
           <p className="mt-4">
             A aplicação Fallstack foi desenvolvida seguindo os princípios de
-            privacidade por design, incorporando medidas de segurança
-            robustas, incluindo encriptação, para garantir a proteção adequada
-            dos dados pessoais dos utilizadores.
+            privacidade por design, incorporando medidas de segurança robustas,
+            incluindo encriptação, para garantir a proteção adequada dos dados
+            pessoais dos utilizadores.
           </p>
         </article>
 
@@ -195,17 +192,17 @@ export default function PrivacyPolicyPage() {
             Notificação de Alterações na Política de Privacidade
           </h2>
           <p className="mt-4">
-            Os utilizadores serão notificados em caso de alterações na
-            Política de Privacidade, e estas serão comunicadas de forma clara
-            na aplicação.
+            Os utilizadores serão notificados em caso de alterações na Política
+            de Privacidade, e estas serão comunicadas de forma clara na
+            aplicação.
           </p>
         </article>
 
         <article className="mt-12">
           <h2 className="text-2xl font-semibold">Obrigações do Utilizador</h2>
           <p className="mt-4">
-            Ao criar uma conta na aplicação Fallstack, o utilizador declara
-            ter lido e concordado com esta Política de Privacidade em sua
+            Ao criar uma conta na aplicação Fallstack, o utilizador declara ter
+            lido e concordado com esta Política de Privacidade em sua
             totalidade.
           </p>
         </article>
@@ -214,8 +211,8 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-semibold">Outros Termos</h2>
           <p className="mt-4">
             Os dados pessoais dos utilizadores poderão ser partilhados com
-            entidades públicas ou autoridades judiciais, se tal for
-            obrigatório por lei ou para prevenir ou punir a prática de crimes.
+            entidades públicas ou autoridades judiciais, se tal for obrigatório
+            por lei ou para prevenir ou punir a prática de crimes.
           </p>
         </article>
       </section>

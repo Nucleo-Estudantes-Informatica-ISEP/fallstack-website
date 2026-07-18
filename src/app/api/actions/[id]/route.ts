@@ -1,131 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import config from "@/config";
-import prisma from "@/lib/prisma";
-import { signJwt, verifyJwt } from "@/services/authService";
-import getServerSession from "@/services/getServerSession";
+import { defineHandler } from "@/lib/http/server";
+import { verifyJwt } from "@/services/authService";
+import { toActionDto } from "@/application/dto/actionDto";
+import {
+  completeActionById,
+  getActionQrCode,
+  toggleActionLive,
+} from "@/application/services/actionService";
 
 interface ActionParams {
-  params: Promise<{
-    id: string;
-  }>;
+  id: string;
 }
 
-export async function GET(req: NextRequest, props: ActionParams) {
-  const { id } = await props.params;
+export const GET = defineHandler<ActionParams>({
+  auth: "public",
+  handler: async ({ params }) => {
+    const data = await getActionQrCode(params.id);
+    if (!data)
+      return NextResponse.json({ error: "Action not found" }, { status: 404 });
+    return NextResponse.json({
+      ...data,
+      action: toActionDto(data.action),
+    });
+  },
+});
 
-  // round timestamp to the nearest actionQrCodeRefreshRate seconds
-  const timestamp =
-    Math.round(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
-    config.constants.actionQrCodeRefreshRateMs;
+export const POST = defineHandler<ActionParams>({
+  auth: "student",
+  handler: async ({ session, params }) => {
+    const decoded = verifyJwt(params.id, { algorithms: ["HS256"] }) as {
+      id?: string;
+      timestamp?: number;
+    } | null;
+    if (!decoded?.id || !decoded.timestamp)
+      return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
+    await completeActionById(session!.student!.id, decoded.id);
+    return NextResponse.json({ message: "Action completed" });
+  },
+});
 
-  const action = await prisma.action.findUnique({
-    where: { id },
-  });
-
-  const qrCode =
-    "action-" +
-    signJwt(
-      { id, timestamp },
-      {
-        algorithm: "HS256",
-        expiresIn: config.constants.actionQrCodeRefreshRateMs * 2,
-      }
-    );
-
-  return NextResponse.json({ action, qrCode });
-}
-
-export async function POST(req: NextRequest, { params }: ActionParams) {
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  if (!session.student)
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-
-  const { id: data } = await params;
-  const decoded = verifyJwt(data, {
-    algorithm: "HS256",
-  }) as {
-    id: string;
-    timestamp: number;
-  };
-
-  if (!decoded)
-    return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
-
-  const { id, timestamp } = decoded;
-
-  if (!id || !timestamp)
-    return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
-
-  const action = await prisma.action.findUnique({
-    where: { id },
-  });
-
-  if (!action)
-    return NextResponse.json({ error: "Ação não encontrada" }, { status: 404 });
-
-  if (!action.isLive)
-    return NextResponse.json(
-      { error: "A ação não está aberta" },
-      { status: 400 }
-    );
-
-  // check if timestamp is valid
-  // const now = Date.now();
-  // if (now - timestamp > config.constants.actionQrCodeRefreshRateMs)
-  //   return NextResponse.json({ error: "Invalid timestamp" }, { status: 400 });
-
-  const student = await prisma.student.findUnique({
-    where: { id: session.student.id },
-    include: {
-      actionCompletions: {
-        where: {
-          actionId: id,
-        },
-      },
-    },
-  });
-
-  if (!student)
-    return NextResponse.json(
-      { error: "Estudante não encontrado" },
-      { status: 404 }
-    );
-
-  if (student.actionCompletions.length > 0)
-    return NextResponse.json(
-      { error: "Já completaste esta ação" },
-      { status: 400 }
-    );
-
-  await prisma.actionCompletion.create({
-    data: {
-      studentId: session.student.id,
-      actionId: id,
-    },
-  });
-
-  return NextResponse.json({ message: "Action completed" });
-}
-
-export async function PATCH(request: NextRequest, props: ActionParams) {
-  const { id } = await props.params;
-
-  const action = await prisma.action.findUnique({
-    where: { id },
-  });
-
-  if (!action)
-    return NextResponse.json({ error: "Action not found" }, { status: 404 });
-
-  await prisma.action.update({
-    where: { id },
-    data: {
-      isLive: !action.isLive,
-    },
-  });
-
-  return NextResponse.json({ message: "Action updated" });
-}
+export const PATCH = defineHandler<ActionParams>({
+  auth: "admin",
+  handler: async ({ params }) => {
+    await toggleActionLive(params.id);
+    return NextResponse.json({ message: "Action updated" });
+  },
+});

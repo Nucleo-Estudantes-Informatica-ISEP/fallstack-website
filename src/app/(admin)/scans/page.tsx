@@ -1,7 +1,8 @@
-import { fetchScans } from "@/lib/fetchScans";
-import getServerSession from "@/services/getServerSession";
 import ExcelButton from "@/components/ExcelButton";
 import Custom404 from "@/app/not-found";
+import { toAdminScanDto } from "@/application/dto/historyDto";
+import { getAdminScans } from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
 
 const scans = async () => {
   const session = await getServerSession();
@@ -9,13 +10,14 @@ const scans = async () => {
     return Custom404();
   }
 
-  const scans = await fetchScans();
+  const scans = await getAdminScans();
+  const scanDtos = scans.map(toAdminScanDto);
 
   return (
     <section className="flex min-h-screen w-full flex-col items-center justify-center px-8 py-24 md:px-24">
       <div className="overflow-x-auto rounded-lg bg-white shadow-md">
         <table className="min-w-full table-auto border-collapse">
-          <thead className="bg-gray-200 text-sm uppercase text-gray-700">
+          <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
             <tr>
               <th className="px-6 py-3 text-left">Id</th>
               <th className="px-6 py-3 text-left">Student Id</th>
@@ -25,7 +27,7 @@ const scans = async () => {
             </tr>
           </thead>
           <tbody className="text-base text-gray-600">
-            {scans.map((scan) => (
+            {scanDtos.map((scan) => (
               <tr
                 key={scan.id}
                 className="border-b transition-colors hover:bg-gray-100"
@@ -34,13 +36,15 @@ const scans = async () => {
                 <td className="px-6 py-4">{scan.studentId}</td>
                 <td className="px-6 py-4">{scan.student.name}</td>
                 <td className="px-6 py-4">{scan.student.user.email}</td>
-                <td className="px-6 py-4">{scan.createdAt.toLocaleString()}</td>
+                <td className="px-6 py-4">
+                  {new Date(scan.createdAt).toLocaleString()}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <ExcelButton className="mt-4" data={scans} />
+      <ExcelButton className="mt-4" data={scanDtos} />
     </section>
   );
 };

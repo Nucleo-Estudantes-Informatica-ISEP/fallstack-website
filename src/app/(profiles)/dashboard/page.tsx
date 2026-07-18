@@ -1,48 +1,45 @@
 import { HttpError } from "@/types/HttpError";
-import { getCompanyStats } from "@/lib/fetchStats";
-import getCompanyHistory from "@/lib/getCompanyHistory";
-import { getStudents } from "@/lib/students";
-import prisma from "@/lib/prisma";
-import getServerSession from "@/services/getServerSession";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import { toCompanyDto } from "@/application/dto/companyDto";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
+import { getCompanyInterests } from "@/application/services/companyService";
+import { getInterests } from "@/application/services/interestService";
+import {
+  getCompanyHistory,
+  getCompanyStats,
+} from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
+import { getStudents } from "@/application/services/studentService";
 
 const Dashboard = async () => {
   const session = await getServerSession();
   if (!session || !session.employee?.company) return Custom404();
 
-  const globalStats = await getCompanyStats(session.employee.company.id);
-
-  const students = await getStudents();
-  const totalStudents = students.length;
-
-  const history = await getCompanyHistory();
-
-  // Interests are synced across all company employees, so a single source is enough
-  const referenceEmployee = await prisma.employee.findFirst({
-    where: { companyId: session.employee.company.id },
-    include: {
-      user: {
-        include: { interests: true },
-      },
-    },
-  });
-
-  const companyInterests =
-    referenceEmployee?.user.interests.map((interest) => interest.name) ??
-    [];
+  const [globalStats, students, history, companyInterests, interests] =
+    await Promise.all([
+      getCompanyStats(session.employee.company.id),
+      getStudents(),
+      getCompanyHistory(session.employee.company.id),
+      getCompanyInterests(session.employee.company.id),
+      getInterests(),
+    ]);
 
   return (
     <section
-      className={`flex size-full min-h-screen flex-col items-center bg-company`}
+      className={`bg-company flex size-full min-h-screen flex-col items-center`}
     >
       <CompanyProfileSectionContainer
-        company={session.employee.company}
+        company={toCompanyDto(session.employee.company)}
         employeeName={session.employee.name}
         globalStats={globalStats}
-        totalStudents={totalStudents}
-        history={history instanceof HttpError ? [] : history}
+        totalStudents={students.length}
+        history={
+          history instanceof HttpError ? [] : history.map(toSavedStudentDto)
+        }
         interests={companyInterests}
+        availableInterests={interests.map(toInterestDto)}
       />
     </section>
   );

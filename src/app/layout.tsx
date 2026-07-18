@@ -8,17 +8,12 @@ import React from "react";
 import { SkeletonTheme } from "react-loading-skeleton";
 import { ToastContainer } from "react-toastify";
 
-import { AuthContextProvider } from "@/contexts/AuthContext";
 import { InstallableContextProvider } from "@/contexts/InstallableContext";
 import InstallPopUp from "@/components/InstallPopUp";
-import Topbar from "@/components/TopBar";
+import { branding } from "@/edition/branding";
 
 export const metadata: Metadata = {
-  applicationName: "Fallstack 2025",
-  title: "Fallstack 2025",
-  description:
-    "Website do evento Fallstack 2025. O evento decorrerá nos dias 25 e 26 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
-  manifest: "/manifest.json",
+  ...branding.metadata,
 };
 
 export default function RootLayout({
@@ -27,22 +22,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-svh">
+    <html lang="pt" className="h-svh">
       <head>
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
       </head>
       <body>
-        <AuthContextProvider>
-          <InstallableContextProvider>
-            <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
-              <Topbar />
-              <main>{children}</main>
-              <ToastContainer position="bottom-right" />
-              <InstallPopUp />
-            </SkeletonTheme>
-          </InstallableContextProvider>
-        </AuthContextProvider>
+        <a
+          href="#main-content"
+          className="sr-only z-50 bg-primary p-3 text-black focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        >
+          Saltar para o conteúdo principal
+        </a>
+        <InstallableContextProvider>
+          <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
+            {children}
+            <ToastContainer position="bottom-right" />
+            <InstallPopUp />
+          </SkeletonTheme>
+        </InstallableContextProvider>
       </body>
     </html>
   );

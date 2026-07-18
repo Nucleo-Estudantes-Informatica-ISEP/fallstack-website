@@ -1,20 +1,14 @@
-
 "use client";
 
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Student, User } from "@prisma/client";
 import { Area } from "react-easy-crop";
 import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/lib/upload";
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
 import Modal from "@/components/Modal";
 import PrimaryButton from "@/components/PrimaryButton";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
@@ -23,15 +17,22 @@ import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
+import type { InterestDto } from "@/application/dto/interestDto";
+import type { StudentDto } from "@/application/dto/studentDto";
+import {
+  uploadAvatar as uploadAvatarToSupabase,
+  uploadCv as uploadCvToSupabase,
+} from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface SettingsSectionProps {
-  student: Student & { user: User };
+  student: StudentDto;
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
   setActiveTab: Dispatch<
     SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
   >;
+  availableInterests: InterestDto[];
 }
 
 const SettingsSection: React.FC<SettingsSectionProps> = ({
@@ -39,6 +40,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   profile,
   setProfile,
   setActiveTab,
+  availableInterests,
 }) => {
   const LIMIT = 255;
 
@@ -48,7 +50,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   const linkedinRef = useRef<HTMLInputElement>(null);
   const cvRef = useRef<HTMLInputElement>(null);
 
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { mutate: mutateSave, isPending: isLoading } = useMutation(
+    "Erro ao atualizar perfil."
+  );
   const [userImage, setUserImage] = useState<string | null>(student.avatar);
   const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -65,9 +69,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     setProfile({ ...profile, interests });
   }
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (profile.bio && profile.bio?.length > LIMIT) {
-      swal(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
+      toast.error(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
       return;
     }
 
@@ -78,7 +82,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         /^(https:\/\/www\.linkedin\.com\/in\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
       )
     ) {
-      swal("O teu Linkedin não segue o formato correto!");
+      toast.error("O teu Linkedin não segue o formato correto!");
       return;
     }
 
@@ -89,11 +93,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         /^(https:\/\/github\.com\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
       )
     ) {
-      swal("O teu Github não segue o formato correto!");
+      toast.error("O teu Github não segue o formato correto!");
       return;
     }
-
-    setIsLoading(true);
 
     setProfile({
       ...profile,
@@ -101,45 +103,33 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
       github: githubRef.current?.value || null,
     });
 
-    if (cvRef.current?.files?.length) {
-      const cvFile = cvRef.current.files[0]!;
-      const uploaded = await uploadCvToSupabase(cvFile);
-      if (uploaded) {
-        await fetch(`${BASE_URL}/students/${student.code}/cv`, {
-          method: "POST",
-          body: JSON.stringify({ id: uploaded.id }),
-        });
+    mutateSave(async () => {
+      if (cvRef.current?.files?.length) {
+        const cvFile = cvRef.current.files[0]!;
+        const uploaded = await uploadCvToSupabase(cvFile);
+        if (uploaded) {
+          await httpClient.post(`/students/${student.code}/cv`, {
+            id: uploaded.id,
+          });
+        }
       }
-    }
 
-    const res = await fetch(`${BASE_URL}/students/${student.code}`, {
-      method: "PATCH",
-      body: JSON.stringify({
+      await httpClient.patch(`/students/${student.code}`, {
         bio: profile.bio ? profile.bio : undefined,
         github: githubRef.current?.value,
         linkedin: linkedinRef.current?.value,
         interests: profile.interests,
-      }),
-    });
+      });
 
-    if (res.status === 200) {
       if (profile.avatar)
-        await fetch(`${BASE_URL}/students/${student.code}/avatar`, {
-          method: "POST",
-          body: JSON.stringify({ url: profile.avatar }),
+        await httpClient.post(`/students/${student.code}/avatar`, {
+          url: profile.avatar,
         });
 
-      setIsLoading(false);
-      swal("Perfil atualizado com sucesso!");
+      toast.success("Perfil atualizado com sucesso!");
       setActiveTab("Perfil");
       router.refresh();
-    } else {
-      setIsLoading(false);
-      // swal("Ocorreu um erro ao atualizar o teu perfil...");
-      swal("Perfil atualizado com sucesso!");
-      setActiveTab("Perfil");
-      router.refresh();
-    }
+    });
   };
 
   const handleConfirmAvatar = async () => {
@@ -196,7 +186,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         </div>
       </div>
 
-      <div className="mx-4 mb-12 mt-4 flex flex-col gap-y-4 md:mx-12">
+      <div className="mx-4 mt-4 mb-12 flex flex-col gap-y-4 md:mx-12">
         <Input
           name="Linkedin"
           defaultValue={profile.linkedin}
@@ -217,7 +207,6 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
         <UserBioTextArea
           name="Bio"
-          defaultValue={profile.bio}
           rows={5}
           placeholder="Escreve algo sobre ti..."
           setValue={handleUserBioChange}
@@ -229,6 +218,7 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         <label className="text-lg text-slate-700">Interesses</label>
 
         <InterestSelector
+          availableInterests={availableInterests}
           userInterests={profile.interests}
           setUserInterests={setUserInterests}
         />
@@ -246,8 +236,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
         isVisible={isModalVisible}
         setIsVisible={setIsModalVisible}
         className="flex flex-col items-center justify-center gap-8"
+        aria-labelledby="avatar-modal-title"
       >
-        <h1 className="text-3xl font-bold">Altera o teu Avatar</h1>
+        <h1 id="avatar-modal-title" className="text-3xl font-bold">
+          Altera o teu Avatar
+        </h1>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
         <PrimaryButton
           className="w-full py-2 text-xl"

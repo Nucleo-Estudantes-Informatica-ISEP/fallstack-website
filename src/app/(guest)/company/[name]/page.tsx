@@ -2,7 +2,9 @@ import React from "react";
 
 import CompanyPageSection from "@/components/Companies/CompanyPageSection";
 import Custom404 from "@/app/not-found";
-import findCompanyByName from "@/utils/CompanyByName";
+import { getCompanyDisplayByName } from "@/application/services/companyService";
+import { COMPANY_TIER } from "@/domain/Company/company-tier";
+import { findEditionContentByName } from "@/edition";
 
 interface CompanySearchProps {
   params: Promise<{
@@ -12,21 +14,20 @@ interface CompanySearchProps {
 
 const CompanyPage = async (props: CompanySearchProps) => {
   const params = await props.params;
-  const company = findCompanyByName(params.name);
+  const company = await getCompanyDisplayByName(params.name);
 
-  if (company === null || company.tier === "Silver") return Custom404();
+  if (!company || company.tier === COMPANY_TIER.SILVER) return Custom404();
 
-  const companyProps = company.props;
-  const modalInformation = companyProps.modalInformation;
-
-  if (modalInformation === undefined) return Custom404();
-
-  //  const interests = await fetchInterestsByCompanyName(company.props.name);
-  // const interests = company.props.interests!;
+  const editionContent = findEditionContentByName(params.name);
+  if (!editionContent?.modalInformation) return Custom404();
 
   return (
     <section className="flex size-full flex-col items-center bg-black">
-      <CompanyPageSection companyName={params.name} />
+      <CompanyPageSection
+        companyName={params.name}
+        logoHref={company.avatar}
+        tier={company.tier}
+      />
     </section>
   );
 };

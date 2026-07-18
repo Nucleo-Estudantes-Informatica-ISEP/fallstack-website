@@ -2,24 +2,28 @@
 
 import React, { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Company } from "@prisma/client";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
-import { jwtStudent } from "@/lib/jwtStudent";
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useMutation } from "@/hooks/useMutation";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+import { jwtStudent } from "@/application/services/studentTokenService";
 
-interface StatsProps {
-  company: Company;
+interface CompanySavedProfilesSectionProps {
+  history: SavedStudentDto[];
 }
 
-const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
+const CompanySavedProfilesSection = ({
+  history,
+}: CompanySavedProfilesSectionProps) => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
+    useMutation("Ocorreu um erro.");
 
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
@@ -32,19 +36,14 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   async function handleActionScan(data: string) {
     const actionId = data.replace(/^action-/, "");
 
-    const res = await fetch(BASE_URL + `/actions/${actionId}`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const error = (await res.json()).error;
-      swal("Erro", error, "error");
+    try {
+      await httpClient.post(`/actions/${actionId}`);
+      toast.success("Os teus pontos foram adicionados com sucesso!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro inesperado");
+    } finally {
       setProcessing(false);
-      return;
     }
-
-    swal("Sucesso", "Os teus pontos foram adicionados com sucesso!", "success");
-    setProcessing(false);
   }
 
   const handleScan = async (data: string) => {
@@ -61,71 +60,56 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
         return;
       }
 
-      const saveRes = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token: data }),
-      });
-
-      if (!saveRes.ok) {
-        const error = (await saveRes.json()).error;
-        if (saveRes.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
+      try {
+        await httpClient.post("/saved", { token: data });
+        router.refresh();
+        router.push(`/student/${data}/preview`);
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
+          toast.warning("Este estudante já foi guardado anteriormente.");
+        } else if (error instanceof HttpClientError) {
+          toast.error(error.message || "Erro ao guardar perfil");
         } else {
-          swal("Erro", error || "Erro ao guardar perfil", "error");
+          throw error;
         }
-        setProcessing(false);
-        return;
       }
 
-      router.push(`/student/${data}/preview`);
       setProcessing(false);
-    } catch (error) {
+    } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
   };
 
-  const handleManualEntry = async () => {
-    if (!inputRef.current?.value) {
-      toast.error("Sem código inserido.");
-      return;
-    }
-
-    const code = inputRef.current?.value;
-
-    if (code) {
-      const token = await jwtStudent(code);
-
-      if (!token)
-        return swal("Erro", "O código introduzido é inválido.", "error");
-
-      const res = await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token }),
-      });
-
-      if (!res.ok) {
-        const error = (await res.json()).error;
-        if (res.status === 409) {
-          swal(
-            "Aviso",
-            "Este estudante já foi guardado anteriormente.",
-            "warning"
-          );
-        } else {
-          toast.error(error || "Failed to save profile");
-        }
+  const handleManualEntry = () =>
+    mutateManualEntry(async () => {
+      if (!inputRef.current?.value) {
+        toast.error("Sem código inserido.");
         return;
       }
-      router.push(`/student/${token}/preview`);
-    } else {
-      toast.error("Ocorreu um erro.");
-    }
-  };
+
+      const code = inputRef.current?.value;
+      const token = await jwtStudent(code);
+
+      if (!token) {
+        toast.error("O código introduzido é inválido.");
+        return;
+      }
+
+      try {
+        await httpClient.post("/saved", { token });
+        router.refresh();
+        router.push(`/student/${token}/preview`);
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
+          toast.warning("Este estudante já foi guardado anteriormente.");
+        } else {
+          toast.error(
+            error instanceof Error ? error.message : "Failed to save profile"
+          );
+        }
+      }
+    });
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") handleManualEntry();
@@ -134,15 +118,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
   const handleDownloadAllCvs = async () => {
     try {
       setDownloading(true);
-      const res = await fetch("/api/companies/history/cv-zip");
-
-      if (!res.ok) {
-        const { error } = await res.json();
-        swal("Erro", error || "Não foi possível exportar os CVs.", "error");
-        setDownloading(false);
-        return;
-      }
-
+      const res = await httpClient.raw("/companies/history/cv-zip");
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -153,9 +129,13 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
       setDownloading(false);
-    } catch (err) {
+    } catch (error) {
       setDownloading(false);
-      swal("Erro", "Não foi possível exportar os CVs.", "error");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível exportar os CVs."
+      );
     }
   };
 
@@ -192,7 +172,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
       <div className="flex w-full flex-col items-center justify-center">
         {processing ? (
           <div
-            className="text-primary mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
             <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
@@ -211,7 +191,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <input
             type="text"
             placeholder="código"
-            className="focus:border-primary h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none"
+            className="h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
@@ -219,17 +199,19 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
             ref={inputRef}
             onKeyUp={handleKeyUp}
             maxLength={4}
+            disabled={isSubmittingManualEntry}
           />
           <button
             onClick={handleManualEntry}
-            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90"
+            disabled={isSubmittingManualEntry}
+            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,
               lineHeight: "100%",
             }}
           >
-            Validar
+            {isSubmittingManualEntry ? "..." : "Validar"}
           </button>
         </div>
         <p
@@ -262,7 +244,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
           <button
             onClick={handleDownloadAllCvs}
             disabled={downloading}
-            className="bg-primary inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {downloading ? "A preparar..." : "Download CVs"}
           </button>
@@ -282,7 +264,7 @@ const CompanySavedProfilesSection: React.FC<StatsProps> = ({ company }) => {
             <span className="flex-1 text-center">Data</span>
           </div>
         </div>
-        <CompanySavesSection company={company} />
+        <CompanySavesSection historyData={history} />
       </div>
     </section>
   );

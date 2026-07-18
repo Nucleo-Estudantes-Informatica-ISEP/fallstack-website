@@ -2,26 +2,28 @@
 
 import { createContext, useEffect, useState } from "react";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
-import getSession from "@/services/getSession";
+import type { SessionDto } from "@/application/dto/sessionDto";
+import getSession from "@/client/api/session";
 
 export interface AuthContextData {
-  user: UserWithProfile | null;
+  user: SessionDto | null;
   clear: () => void;
   fetchSession: () => void;
 }
 
 interface AuthContextProviderProps {
   children: React.ReactNode;
+  initialUser?: SessionDto | null;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export function AuthContextProvider({
   children,
+  initialUser,
   ...props
 }: AuthContextProviderProps) {
-  const [user, setUser] = useState<UserWithProfile | null>(null);
+  const [user, setUser] = useState<SessionDto | null>(initialUser ?? null);
 
   const fetchSession = async () => {
     const user = await getSession();
@@ -31,8 +33,8 @@ export function AuthContextProvider({
   const clear = () => setUser(null);
 
   useEffect(() => {
-    fetchSession();
-  }, []);
+    if (initialUser === undefined) fetchSession();
+  }, [initialUser]);
 
   return (
     <AuthContext.Provider value={{ user, clear, fetchSession }} {...props}>

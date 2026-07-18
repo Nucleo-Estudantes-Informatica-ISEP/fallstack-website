@@ -1,31 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Company } from "@prisma/client";
-import {
-  FiChevronRight,
-  FiFileText,
-  FiLogOut,
-} from "react-icons/fi";
+import { useEffect, useState } from "react";
 import { BiScan } from "react-icons/bi";
-import { IconType } from "react-icons";
-import swal from "sweetalert";
-import { useRouter } from "next/navigation";
+import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/types/Stats";
+import { useLogout } from "@/hooks/useLogout";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
-import { BASE_URL } from "@/services/api";
-import useSession from "@/hooks/useSession";
+import type { CompanyDto } from "@/application/dto/companyDto";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
+
+import { IconType } from "react-icons";
 
 interface CompanyProfileSectionContainerProps {
-  company: Company;
+  company: CompanyDto;
   employeeName: string;
-  globalStats: number[];
+  globalStats: Stats;
   totalStudents: number;
-  history: SavedStudentWithSavedBy[];
+  history: SavedStudentDto[];
   interests: string[];
+  availableInterests: InterestDto[];
 }
 
 type TabValue = "Sumário" | "Scan de Perfil";
@@ -40,20 +37,25 @@ interface SidebarItem {
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
-  "Sumário": "sumario",
+  Sumário: "sumario",
   "Scan de Perfil": "scan_perfil",
 };
 
 const CompanyProfileSectionContainer: React.FC<
   CompanyProfileSectionContainerProps
-> = ({ company, employeeName, globalStats, totalStudents, history, interests }) => {
-  const router = useRouter();
-  const session = useSession();
+> = ({
+  company,
+  employeeName,
+  globalStats,
+  totalStudents,
+  history,
+  interests,
+  availableInterests,
+}) => {
+  const { handleLogout, ConfirmDialog } = useLogout();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
-  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(
-    menuMap[activeTab]
-  );
+  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
 
   useEffect(() => {
     setSelectedMenu(menuMap[activeTab]);
@@ -78,25 +80,6 @@ const CompanyProfileSectionContainer: React.FC<
     if (item.tabValue) {
       setActiveTab(item.tabValue);
     }
-  };
-
-  const handleLogout = async () => {
-    swal("Queres mesmo mesmo sair?", {
-      buttons: ["Cancelar", "Sair"],
-      title: "Terminar sessão",
-      icon: "warning",
-      dangerMode: true,
-      timer: 5000,
-    }).then(async (value) => {
-      if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
-          session.clear();
-          swal("Logout", "Sessão terminada com sucesso", "success");
-          router.push("/");
-        }
-      }
-    });
   };
 
   const renderButton = (item: SidebarItem) => {
@@ -136,12 +119,11 @@ const CompanyProfileSectionContainer: React.FC<
             students={totalStudents}
             history={history}
             interests={interests}
+            availableInterests={availableInterests}
           />
         );
       case "Scan de Perfil":
-        return (
-          <CompanySavedProfilesSection company={company} />
-        );
+        return <CompanySavedProfilesSection history={history} />;
       default:
         return null;
     }
@@ -214,6 +196,7 @@ const CompanyProfileSectionContainer: React.FC<
           {renderContent()}
         </div>
       </div>
+      {ConfirmDialog}
     </div>
   );
 };

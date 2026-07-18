@@ -1,26 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Action, Student, User } from "@prisma/client";
 import {
   FiChevronRight,
   FiFileText,
   FiGrid,
   FiLogOut,
   FiMapPin,
-  FiSettings,
   FiUser,
 } from "react-icons/fi";
-import swal from "sweetalert";
 
 import { ProfileData } from "@/types/ProfileData";
-import { SavedStudentWithSavedBy } from "@/types/SavedStudentWithSavedBy";
+import type { Stats } from "@/types/Stats";
+import { useLogout } from "@/hooks/useLogout";
 import useSession from "@/hooks/useSession";
-import { BASE_URL } from "@/services/api";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import UserImage from "@/components/Profile/UserImage";
-import { Github, Linkedin } from "@/styles/Icons";
+import type { StudentActionDto } from "@/application/dto/actionDto";
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+import type { InterestDto } from "@/application/dto/interestDto";
+import type { StudentDto } from "@/application/dto/studentDto";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -29,17 +28,17 @@ import StatsSection from "../StatsSection";
 
 import { IconType } from "react-icons";
 
-const tabs = ["Sumário", "Perfil", "Desafios", "Definições"] as const;
-type TabValue = (typeof tabs)[number];
+type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 
 interface ProfileSectionContainerProps {
-  student: Student & { user: User };
+  student: StudentDto;
   interests: string[];
-  globalStats: number[];
+  globalStats: Stats;
   todayStats: number;
   companiesLeft: number;
-  historyData: SavedStudentWithSavedBy[];
-  actions: (Action & { done: boolean })[];
+  historyData: SavedStudentDto[];
+  actions: StudentActionDto[];
+  availableInterests: InterestDto[];
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
@@ -53,13 +52,13 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   student,
   interests,
   globalStats,
-  todayStats,
   companiesLeft,
   historyData,
   actions,
+  availableInterests,
 }) => {
-  const router = useRouter();
   const session = useSession();
+  const { handleLogout, ConfirmDialog } = useLogout();
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
@@ -81,7 +80,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     // show Passe only if current session user is the profile student
     ...(session.user?.student?.code
-      ? [{ key: "passe", label: "Passe do FallStack", icon: FiGrid }]
+      ? ([
+          { key: "passe", label: "Passe do FallStack", icon: FiGrid },
+        ] as SidebarItem[])
       : []),
     {
       key: "desafios",
@@ -106,25 +107,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     if (item.tabValue) {
       setActiveTab(item.tabValue);
     }
-  };
-
-  const handleLogout = async () => {
-    swal("Queres mesmo mesmo sair?", {
-      buttons: ["Cancelar", "Sair"],
-      title: "Terminar sessão",
-      icon: "warning",
-      dangerMode: true,
-      timer: 5000,
-    }).then(async (value) => {
-      if (value) {
-        const res = await fetch(BASE_URL + "/auth/logout", { method: "POST" });
-        if (res.status === 200) {
-          session.clear();
-          swal("Logout", "Sessão terminada com sucesso", "success");
-          router.push("/");
-        }
-      }
-    });
   };
 
   const renderButton = (item: SidebarItem) => {
@@ -156,10 +138,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
 
   const renderContent = () => {
-    if (selectedMenu === "passe")
-      return (
-        <PassMenuContent user={student.user} code={student.code ?? null} />
-      );
+    if (selectedMenu === "passe") return <PassMenuContent student={student} />;
 
     switch (activeTab) {
       case "Sumário":
@@ -177,6 +156,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             profile={profile}
             setProfile={setProfile}
             setActiveTab={setActiveTab}
+            availableInterests={availableInterests}
           />
         );
       case "Desafios":
@@ -200,6 +180,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             profile={profile}
             setProfile={setProfile}
             setActiveTab={setActiveTab}
+            availableInterests={availableInterests}
           />
         );
       default:
@@ -310,6 +291,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           {renderContent()}
         </div>
       </div>
+      {ConfirmDialog}
     </div>
   );
 };

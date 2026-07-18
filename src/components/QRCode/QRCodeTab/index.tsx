@@ -31,7 +31,7 @@ const QRCodeTab: React.FC<QRCodeTabProps> = ({
       <div className="flex justify-center">
         {tabTitles.map((title, index) => (
           <button
-            key={index}
+            key={title}
             className={`px-4 py-2 focus:outline-none ${
               selectedTab === index
                 ? "border-b-2 border-primary text-primary"

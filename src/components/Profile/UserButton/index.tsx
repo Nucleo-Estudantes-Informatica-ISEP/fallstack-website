@@ -3,15 +3,15 @@
 import Link from "next/link";
 import { LiaUser } from "react-icons/lia";
 
-import { UserWithProfile } from "@/types/UserWithProfile";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 interface UserButtonProps {
-  user: UserWithProfile;
+  user: SessionDto;
 }
 
 const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   const profileUrl =
-    user.role === "EMPLOYEE" && !!user.employee?.company
+    user.role === "EMPLOYEE"
       ? "/dashboard"
       : !!user.student
         ? "/student/" + user.student.code

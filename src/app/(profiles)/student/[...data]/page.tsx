@@ -1,20 +1,28 @@
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
-import { getCompanies } from "@/lib/companies";
-import { getStats, getTodayStats } from "@/lib/fetchStats";
-import { fetchStudent } from "@/lib/fetchStudent";
-import { fetchStudentActions } from "@/lib/fetchStudentActions";
-import getStudentHistory from "@/lib/getStudentHistory";
-import { isSaved } from "@/lib/savedStudents";
 import { verifyJwt } from "@/services/authService";
-import getServerSession from "@/services/getServerSession";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
 import Footer from "@/components/Footer";
-import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
+import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import PublicProfileSectionContainer from "@/components/Profile/PublicProfileSectionContainer";
 import Custom404 from "@/app/not-found";
+import { toStudentActionDto } from "@/application/dto/actionDto";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
+import { toStudentDto } from "@/application/dto/studentDto";
+import { getStudentActions } from "@/application/services/actionService";
+import { getCompanies } from "@/application/services/companyService";
+import { getInterests } from "@/application/services/interestService";
+import {
+  getStudentHistory,
+  getStudentStats,
+  getTodayStudentStats,
+  isSaved,
+} from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
+import { getStudent } from "@/application/services/studentService";
 
 interface ProfileProps {
   params: Promise<{
@@ -42,9 +50,9 @@ const StudentPage = async (props: ProfileProps) => {
     const token = verifyJwt(code);
     decodedPreviewCode = token ? (token as { code: string }).code : null;
     const targetCode = decodedPreviewCode ?? code;
-    student = await fetchStudent(targetCode);
+    student = await getStudent(targetCode);
   } else {
-    student = await fetchStudent(code);
+    student = await getStudent(code);
   }
 
   if (!student) return Custom404();
@@ -65,14 +73,20 @@ const StudentPage = async (props: ProfileProps) => {
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
   const sanitizedInterests = student.user.interests.map((i) => i.name);
+  const isOwnProfile = !isPreview && session.student?.code === student.code;
 
-  const globalStats = await getStats(student.code);
-  const todayStats = await getTodayStats(student.id);
-
-  const companies = await getCompanies();
-
-  const history = await getStudentHistory(student.code);
-  const actions = await fetchStudentActions(student.code);
+  const [globalStats, todayStats, companies, history, actions, interests] =
+    await Promise.all([
+      getStudentStats(student.code),
+      getTodayStudentStats(student.id),
+      getCompanies(),
+      session.student
+        ? getStudentHistory(session.student.id)
+        : Promise.resolve(new HttpError("Forbidden", 403)),
+      getStudentActions(student.code),
+      isOwnProfile ? getInterests() : Promise.resolve([]),
+    ]);
+  const studentDto = toStudentDto(student);
 
   const totalCompanies = companies.length;
   const uniqueCompaniesSaved =
@@ -89,7 +103,7 @@ const StudentPage = async (props: ProfileProps) => {
     return (
       <>
         <PreviewProfileSectionContainer
-          student={student}
+          student={studentDto}
           interests={sanitizedInterests}
           token={code}
           isCompanyView={!!session.employee}
@@ -110,25 +124,27 @@ const StudentPage = async (props: ProfileProps) => {
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
             interests={sanitizedInterests}
-            student={student}
-            company={session.employee.company}
+            student={studentDto}
             token={code}
             isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer
             interests={sanitizedInterests}
-            student={student}
+            student={studentDto}
           />
         ) : (
           <ProfileSectionContainer
             globalStats={globalStats}
             todayStats={todayStats}
             companiesLeft={companiesLeft}
-            historyData={history instanceof HttpError ? [] : history}
-            actions={actions}
-            student={student}
+            historyData={
+              history instanceof HttpError ? [] : history.map(toSavedStudentDto)
+            }
+            actions={actions.map(toStudentActionDto)}
+            student={studentDto}
             interests={sanitizedInterests}
+            availableInterests={interests.map(toInterestDto)}
           />
         )}
       </section>

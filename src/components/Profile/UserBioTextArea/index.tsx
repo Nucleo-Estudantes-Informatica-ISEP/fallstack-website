@@ -30,8 +30,11 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
   autoFocus,
 }) => {
   return (
-    <div className="w-full flex flex-col">
-      <label className="text-sm font-normal text-white mb-1 text-left" htmlFor={name}>
+    <div className="flex w-full flex-col">
+      <label
+        className="mb-1 text-left text-sm font-normal text-white"
+        htmlFor={name}
+      >
         {name}
       </label>
 
@@ -51,8 +54,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
           minHeight: "200px",
           maxHeight: "400px",
         }}
-        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm
-         text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-600 ${className}`}
+        className={`border border-white/35 bg-[#141414] px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-600 ${className}`}
       />
 
       <p

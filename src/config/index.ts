@@ -1,7 +1,9 @@
+import { branding } from "@/edition/branding";
+
 const config = {
   cookies: {
     auth: {
-      name: "@Fallstack25:auth",
+      name: branding.storage.authCookie,
       maxAge: 34560000, // 400 days (in seconds) - its the maximum value for the maxAge of a cookie
     },
   },
@@ -9,41 +11,23 @@ const config = {
   defaultAvatar: "/assets/images/default_user.png",
 
   localStorage: {
-    hideInstallPrompt: "@Fallstack25:hidePrompt",
+    hideInstallPrompt: branding.storage.hideInstallPrompt,
   },
 
   uploads: {
     avatar: {
       types: ["image/png", "image/jpeg"],
-      maxSize: 50 * 1024 * 1024, // 50mb
+      maxSize: 5 * 1024 * 1024, // 50mb
     },
     cv: {
       types: ["application/pdf"],
-      maxSize: 50 * 1024 * 1024, // 50mb
+      maxSize: 10 * 1024 * 1024, // 50mb
     },
   },
 
   constants: {
     actionQrCodeRefreshRateMs: 15 * 1000, // 15 seconds
-
-    actionNames: {
-      createProfile: "Cria o teu Perfil",
-      uploadCv: "Faz o Upload do teu CV",
-      updateLinkedin: "Associa o teu LinkedIn",
-      akaPeopleBooth: "Banca AkaPeople",
-      natixisBooth: "Banca Natixis",
-      aprBooth: "Banca APR",
-      hitachiBooth: "Banca Hitachi",
-      convatecBooth: "Banca Convatec",
-      niwBooth: "Banca NiW",
-      deloitteBooth: "Banca Deloitte",
-      accentureBooth: "Banca Accenture",
-      armisBooth: "Banca Armis",
-      devscopeBooth: "Banca Devscope",
-      msgInsurItBooth: "Banca msg insur:it",
-      glinttBooth: "Banca Glintt",
-      konkConsultingBooth: "Banca konk consulting",
-    },
+    neiContactEmail: "info@nei-isep.org",
   },
 };
 

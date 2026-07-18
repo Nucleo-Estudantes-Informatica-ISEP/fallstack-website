@@ -3,9 +3,8 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
-import swal from "sweetalert";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 
 interface ScanTabProps {
@@ -27,19 +26,12 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
   async function handleActionScan(data: string) {
     const actionId = data.replace(/^action-/, "");
 
-    const res = await fetch(BASE_URL + `/actions/${actionId}`, {
-      method: "POST",
-    });
-
-    if (!res.ok) {
-      const error = (await res.json()).error;
-      swal("Erro", error, "error");
-      setHidden(true);
-      setProcessing(false);
-      return;
+    try {
+      await httpClient.post(`/actions/${actionId}`);
+      toast.success("Os teus pontos foram adicionados com sucesso!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Erro inesperado");
     }
-
-    swal("Sucesso", "Os teus pontos foram adicionados com sucesso!", "success");
 
     setHidden(true);
     setProcessing(false);
@@ -59,10 +51,19 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      await fetch(BASE_URL + "/saved", {
-        method: "POST",
-        body: JSON.stringify({ token: data }),
-      });
+      try {
+        await httpClient.post("/saved", { token: data });
+      } catch (error) {
+        if (error instanceof HttpClientError && error.status === 409) {
+          toast.warning("Este estudante já foi guardado anteriormente.");
+        } else {
+          toast.error(
+            error instanceof Error ? error.message : "Erro ao guardar perfil"
+          );
+        }
+        setProcessing(false);
+        return;
+      }
 
       setHidden(true);
       router.push(`/student/${data}/preview`);
@@ -72,7 +73,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
        the user won't even feel the delay delay */
 
       setProcessing(false);
-    } catch (error) {
+    } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
@@ -80,13 +81,13 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
 
   return (
     <div className="mt-6 grid grid-cols-1 sm:mt-0 sm:grid-cols-1 md:mt-0 lg:mt-12">
-      <div className="flex items-center justify-center ">
+      <div className="flex items-center justify-center">
         {processing ? (
           <div
             className="mt-24 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
-            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! whitespace-nowrap! border-0! p-0! [clip:rect(0,0,0,0)]!">
+            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
               A processar...
             </span>
           </div>

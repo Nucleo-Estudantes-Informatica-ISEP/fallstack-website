@@ -21,6 +21,9 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
+    ignores: [".next/**", "next-env.d.ts"],
+  },
+  {
     extends: compat.extends(
       "next/core-web-vitals",
       "plugin:@typescript-eslint/recommended",
@@ -43,6 +46,12 @@ export default defineConfig([
       parser: tsParser,
     },
 
+    settings: {
+      tailwindcss: {
+        config: path.join(__dirname, "src/app/globals.css"),
+      },
+    },
+
     rules: {
       "prettier/prettier": "warn",
       "@typescript-eslint/no-explicit-any": "error",
@@ -51,6 +60,43 @@ export default defineConfig([
       "tailwindcss/classnames-order": "warn",
       "@typescript-eslint/no-unused-vars": "warn",
       "tailwindcss/no-custom-classname": "off",
+    },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/application/repositories/**"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@prisma/client",
+              importNames: ["PrismaClient"],
+              message:
+                "PrismaClient is restricted to application repositories.",
+            },
+          ],
+          patterns: [
+            {
+              group: [
+                "@/application/repositories/database",
+                "**/application/repositories/database",
+                "../repositories/database",
+                "./database",
+              ],
+              message:
+                "Database client is restricted to application repositories.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ]);

@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
 import Spinner from "@/components/Spinner";
+import { branding } from "@/edition/branding";
 import { DownloadIcon } from "@/styles/Icons";
 
 import download from "downloadjs";
@@ -16,24 +17,30 @@ const DownloadButton: React.FC<DownloadButtonProps> = ({ className }) => {
   const handleDownload = async () => {
     if (isLoading) return;
     setIsLoading(true);
-    const res = await fetch(BASE_URL + "/export");
-    const data = await res.blob();
-    download(data, "fallstack2025.csv", "text/csv");
-    setIsLoading(false);
+    try {
+      const res = await httpClient.raw("/export");
+      const data = await res.blob();
+      download(data, branding.exportFilename, "text/csv");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   return (
-    <span
-      className={`hover:text-primary cursor-pointer transition-colors ${
+    <button
+      type="button"
+      className={`cursor-pointer transition-colors hover:text-primary ${
         isLoading && "text-primary"
       } ${className}`}
       onClick={handleDownload}
+      disabled={isLoading}
       title="Exportar para CSV"
+      aria-label="Exportar para CSV"
     >
       {isLoading ? <Spinner /> : <DownloadIcon />}
-    </span>
+    </button>
   );
 };
 

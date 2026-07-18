@@ -41,7 +41,7 @@ const Schedule: React.FC<Props> = ({
         <HeadingText className="text-secondary" text="Programa do evento" />
         <a
           href="https://calendar.google.com/calendar/u/2?cid=YTE5ZTE2MDcwY2I0ZWZiZDEyNWE4NjdiODQ3Njk4Mjc2NTlmM2Q3Y2Y2MmZjMjYyZWFlZDBlZGQ3OGJjMTgzN0Bncm91cC5jYWxlbmRhci5nb29nbGUuY29t"
-          className="text-secondary mb-4 text-base underline md:mb-0 md:text-lg"
+          className="mb-4 text-base text-secondary underline md:mb-0 md:text-lg"
         >
           Adicionar ao meu calendário
         </a>
@@ -92,7 +92,7 @@ const Schedule: React.FC<Props> = ({
               duration: 0.2,
               bounce: 0.5,
             }}
-            className="bg-primary absolute top-0 left-0 -z-10 h-1/2 w-full hover:brightness-110 md:h-full md:w-1/2"
+            className="absolute top-0 left-0 -z-10 h-1/2 w-full bg-primary hover:brightness-110 md:h-full md:w-1/2"
           ></motion.div>
           <motion.div
             animate={{
@@ -134,7 +134,7 @@ const Schedule: React.FC<Props> = ({
                       : 0,
             }}
             transition={{ duration: 0.1, stiffness: 500 }}
-            className="bg-secondary absolute top-0 left-0 -z-20 h-1/2 w-full hover:brightness-110 md:h-full md:w-1/2"
+            className="absolute top-0 left-0 -z-20 h-1/2 w-full bg-secondary hover:brightness-110 md:h-full md:w-1/2"
           ></motion.div>
           <button
             className={`w-full px-4 py-2.5 hover:brightness-95 ${
@@ -173,7 +173,7 @@ const Schedule: React.FC<Props> = ({
           >
             {scheduleEvents[activeScheduleEventIndex].map((entry, index) => (
               <motion.tr
-                key={index}
+                key={entry.hour}
                 initial={{
                   opacity: 0,
                   x: activeScheduleEventIndex === 0 ? -50 : 50,
@@ -183,10 +183,10 @@ const Schedule: React.FC<Props> = ({
                 transition={{ duration: 0.1 * index }}
                 className={"w-full sm:flex sm:gap-4"}
               >
-                <td className="border-secondary w-1/4 border py-4 text-center align-middle text-base font-semibold sm:px-4 sm:text-lg">
+                <td className="w-1/4 border border-secondary py-4 text-center align-middle text-base font-semibold sm:px-4 sm:text-lg">
                   {entry.hour}
                 </td>
-                <td className="border-secondary w-3/4 border py-4 text-center align-middle text-sm font-normal sm:px-4 sm:text-left sm:text-base">
+                <td className="w-3/4 border border-secondary py-4 text-center align-middle text-sm font-normal sm:px-4 sm:text-left sm:text-base">
                   {entry.activity}
                 </td>
               </motion.tr>

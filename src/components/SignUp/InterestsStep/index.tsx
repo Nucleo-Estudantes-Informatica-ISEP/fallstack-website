@@ -1,17 +1,18 @@
 "use client";
 
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
-import Image from "next/image";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import PrimaryButton from "@/components/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
+import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
+  availableInterests: InterestDto[];
 }
 
 const InterestsStep: FunctionComponent<InterestsStepProps> = ({
@@ -19,6 +20,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setCurrentStep,
   data,
   setData,
+  availableInterests,
 }) => {
   const [interests, setInterests] = useState<string[]>(data.interests || []);
 
@@ -28,23 +30,27 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
-        <p className="font-sans text-[45px] font-semibold text-white mb-8">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
+        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
           Criar uma conta
         </p>
 
-        <p className="font-sans text-base font-normal text-white mb-4">
+        <p className="mb-4 font-sans text-base font-normal text-white">
           Escolhe os teus interesses. (Opcional)
         </p>
 
         <InterestSelector
+          availableInterests={availableInterests}
           userInterests={interests}
           setUserInterests={setInterests}
           scrollable
         />
 
-        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+        <PrimaryButton
+          onClick={handleNext}
+          className="mt-4 mb-5 h-14 w-full font-bold"
+        >
           Seguinte
         </PrimaryButton>
       </div>

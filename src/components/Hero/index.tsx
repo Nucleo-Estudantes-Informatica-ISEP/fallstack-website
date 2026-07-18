@@ -4,8 +4,8 @@ import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
-import PrimaryLinkButton from "@/components/PrimaryLinkButton";
 import useSession from "@/hooks/useSession";
+import PrimaryLinkButton from "@/components/PrimaryLinkButton";
 
 interface HeaderProps {
   logoSrc: StaticImageData;
@@ -104,7 +104,7 @@ const Hero: FunctionComponent<HeaderProps> = ({
         </motion.div>
       </section>
 
-      <div className="bg-background flex w-full flex-col items-center justify-center gap-6 py-16 text-center">
+      <div className="flex w-full flex-col items-center justify-center gap-6 bg-background py-16 text-center">
         <motion.p
           initial={{
             opacity: 0,

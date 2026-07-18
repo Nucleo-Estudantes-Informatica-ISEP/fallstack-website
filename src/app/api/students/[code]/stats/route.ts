@@ -1,26 +1,15 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
-import prisma from "@/lib/prisma";
-import getServerSession from "@/services/getServerSession";
+import { defineHandler } from "@/lib/http/server";
+import { getStudentStats } from "@/application/services/savedStudentService";
 
 interface StudentParams {
-  params: Promise<{
-    code: string;
-  }>;
+  code: string;
 }
 
-export async function GET(_: NextRequest, props: StudentParams) {
-  const params = await props.params;
-
-  const { code } = params;
-
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const savedCount = await prisma.savedStudent.count({
-    where: { student: { code } },
-  });
-
-  return NextResponse.json([savedCount, savedCount]);
-}
+export const GET = defineHandler<StudentParams>({
+  auth: "session",
+  handler: async ({ params }) => {
+    return NextResponse.json(await getStudentStats(params.code));
+  },
+});

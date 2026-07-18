@@ -1,20 +1,21 @@
 "use client";
 
 import React from "react";
-import { Student } from "@prisma/client";
 
-import { BASE_URL } from "@/services/api";
+import { httpClient } from "@/lib/http/client";
+import type { StudentDto } from "@/application/dto/studentDto";
 import { OpenCv } from "@/styles/Icons";
 
 interface OpenCvProps {
-  student: Student;
+  student: Pick<StudentDto, "code">;
   text: string;
 }
 
 const OpenCvSection: React.FC<OpenCvProps> = ({ student, text }) => {
-  const handleCv = async (student: Student) => {
-    const res = await fetch(BASE_URL + `/students/${student.code}/cv`);
-    const { url } = await res.json();
+  const handleCv = async (student: Pick<StudentDto, "code">) => {
+    const { url } = await httpClient.get<{ url: string }>(
+      `/students/${student.code}/cv`
+    );
     window.open(url, "_blank");
   };
   return (
@@ -26,12 +27,13 @@ const OpenCvSection: React.FC<OpenCvProps> = ({ student, text }) => {
       </div>
       <div className="flex items-center hover:cursor-pointer hover:text-primary">
         <OpenCv className="mb-1 size-5"></OpenCv>
-        <a
+        <button
+          type="button"
           onClick={() => handleCv(student)}
           className="cursor-pointer pl-2 underline"
         >
           {text}
-        </a>
+        </button>
       </div>
     </div>
   );

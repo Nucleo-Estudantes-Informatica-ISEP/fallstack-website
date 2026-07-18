@@ -7,12 +7,12 @@ import {
   useRef,
   useState,
 } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 interface EmailStepProps {
   currentStep: number;
@@ -34,11 +34,9 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
   const handleNext = () => {
     if (!inputRef.current?.value) return setError("Este campo é obrigatório.");
 
-    const emailRegex = new RegExp(/^([0-9]{7}|[a-zA-Z]{3})@isep.ipp.pt$/i);
-
     const email = inputRef.current.value;
 
-    if (!email.match(emailRegex))
+    if (!isIsepEmail(email))
       return setError("Insere um email institucional válido.");
 
     setData({ ...data, email: inputRef.current.value });
@@ -50,8 +48,8 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
   };
 
   return (
-    <div className="flex flex-col w-full items-center">
-      <div className="w-[90%] flex flex-col">
+    <div className="flex w-full flex-col items-center">
+      <div className="flex w-[90%] flex-col">
         {/* <div className="mb-5 flex justify-center">
           <Image
             src={"/assets/images/logo_dark.png"}
@@ -88,7 +86,10 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
           </motion.p>
         )}
 
-        <PrimaryButton onClick={handleNext} className="mb-5 mt-4 font-bold w-full h-14">
+        <PrimaryButton
+          onClick={handleNext}
+          className="mt-4 mb-5 h-14 w-full font-bold"
+        >
           Seguinte
         </PrimaryButton>
       </div>
