@@ -19,6 +19,7 @@ services:
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
     container_name: fallstack-app
     restart: unless-stopped
     depends_on:
