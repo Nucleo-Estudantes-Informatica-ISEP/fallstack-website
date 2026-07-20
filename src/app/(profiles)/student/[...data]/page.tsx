@@ -58,11 +58,7 @@ const StudentPage = async (props: ProfileProps) => {
   if (!student) return Custom404();
 
   // companies may access if it's their own profile
-  if (
-    session.student &&
-    !session.student.code.match(student.code) &&
-    !isPreview
-  )
+  if (session.student && session.student.code !== student.code && !isPreview)
     return Custom404();
 
   const isSavedStudent = session.employee
