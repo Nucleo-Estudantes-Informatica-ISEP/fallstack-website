@@ -5,14 +5,19 @@ import config from "@/config";
 import { signJwt } from "@/services/authService";
 
 import {
+  countActionsForAdmin,
+  createAction,
   createActionCompletion,
   findActionById,
   findActionByName,
   findActionCompletions,
   findActions,
+  findActionsForAdmin,
   findVisibleActions,
   toggleAction,
+  updateActionFields,
   upsertActionCompletion,
+  type AdminActionQuery,
 } from "../repositories/actionRepository";
 import {
   findStudentAction,
@@ -21,6 +26,41 @@ import {
 import { DbClient, prisma } from "../repositories/transaction";
 
 export const getActions = () => findActions();
+export const getAction = (id: string) => findActionById(id);
+
+export async function listActionsForAdmin(query: AdminActionQuery) {
+  const [items, totalCount] = await Promise.all([
+    findActionsForAdmin(query),
+    countActionsForAdmin(query.search),
+  ]);
+  return { items, totalCount };
+}
+
+export async function createActionForAdmin(input: {
+  name: string;
+  description: string;
+  points: number;
+  altText?: string | null;
+  isLive?: boolean;
+  isVisible?: boolean;
+}) {
+  return createAction(input);
+}
+
+export async function updateActionForAdmin(
+  id: string,
+  input: {
+    name?: string;
+    description?: string;
+    points?: number;
+    altText?: string | null;
+    isLive?: boolean;
+    isVisible?: boolean;
+  }
+) {
+  if (!(await findActionById(id))) throw new HttpError("Not found", 404);
+  return updateActionFields(id, input);
+}
 
 export async function getStudentActions(studentCode: string) {
   const actions = await findVisibleActions();
