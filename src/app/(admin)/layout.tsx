@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import getServerSession from "@/application/services/sessionService";
+import AdminSidebar from "@/components/AdminSidebar";
 import SessionAuthLayout from "@/components/SessionAuthLayout";
 import Topbar from "@/components/TopBar";
 
@@ -19,7 +20,12 @@ export default async function AdminLayout({
   return (
     <SessionAuthLayout>
       <Topbar />
-      <main id="main-content">{children}</main>
+      <div className="flex min-h-screen pt-16">
+        <AdminSidebar />
+        <main id="main-content" className="min-w-0 flex-1">
+          {children}
+        </main>
+      </div>
     </SessionAuthLayout>
   );
 }
