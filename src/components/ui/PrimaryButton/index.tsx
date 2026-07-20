@@ -1,6 +1,6 @@
 "use client";
 
-import Spinner from "@/components/Spinner";
+import Spinner from "@/components/ui/Spinner";
 
 interface PrimaryButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {

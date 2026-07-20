@@ -8,9 +8,9 @@ import {
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import Input from "@/components/Input";
-import InputSelect from "@/components/InputSelect";
-import PrimaryButton from "@/components/PrimaryButton";
+import Input from "@/components/ui/Input";
+import InputSelect from "@/components/ui/InputSelect";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import { isIsepEmail } from "@/utils/isepEmail";
 
 interface AccountDetailsStepProps {

@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
-import Input from "@/components/Input";
-import PrimaryButton from "@/components/PrimaryButton";
+import Input from "@/components/ui/Input";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import { logIn } from "@/client/api/auth";
 
 const LoginPage: React.FC = () => {

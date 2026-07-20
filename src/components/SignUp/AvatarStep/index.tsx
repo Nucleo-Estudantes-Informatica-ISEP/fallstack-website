@@ -11,8 +11,8 @@ import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
-import PrimaryButton from "@/components/PrimaryButton";
-import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { signUp } from "@/client/api/auth";
 import { uploadAvatar as uploadAvatarToSupabase } from "@/client/api/upload";
