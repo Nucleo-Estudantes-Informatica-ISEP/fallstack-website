@@ -60,7 +60,10 @@ export async function getActionQrCode(id: string) {
         { id, timestamp },
         {
           algorithm: "HS256",
-          expiresIn: config.constants.actionQrCodeRefreshRateMs * 2,
+          // jsonwebtoken's numeric `expiresIn` is seconds, not ms - dividing
+          // by 1000 here previously made this token valid for ~8.3 hours
+          // instead of the intended 30s anti-replay window.
+          expiresIn: (config.constants.actionQrCodeRefreshRateMs * 2) / 1000,
         }
       ),
   };

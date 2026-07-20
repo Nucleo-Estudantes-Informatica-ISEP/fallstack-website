@@ -32,3 +32,16 @@ test("does not sign a QR token for a missing action", async () => {
   await expect(getActionQrCode("missing")).resolves.toBeNull();
   expect(signJwt).not.toHaveBeenCalled();
 });
+
+test("signs the QR token with a real ~30s expiry, not 30000 seconds", async () => {
+  vi.mocked(findActionById).mockResolvedValue({
+    id: "action-1",
+  } as Awaited<ReturnType<typeof findActionById>>);
+
+  await getActionQrCode("action-1");
+
+  expect(signJwt).toHaveBeenCalledWith(
+    expect.objectContaining({ id: "action-1" }),
+    expect.objectContaining({ expiresIn: 30 })
+  );
+});
