@@ -3,9 +3,9 @@ import "server-only";
 import JSZip from "jszip";
 
 import { HttpError } from "@/types/HttpError";
+import { BASE_URL } from "@/config/api";
 import { buildSavedStudentsCsv } from "@/lib/savedStudentComments";
-import { BASE_URL } from "@/services/api";
-import { signJwt } from "@/services/authService";
+import { signJwt } from "@/application/services/authService";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 import { findCompanyById } from "../repositories/companyRepository";

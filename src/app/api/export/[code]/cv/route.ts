@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { Session } from "@/types/Session";
 import { httpErrorResponse } from "@/lib/http/server";
-import { verifyJwt } from "@/services/authService";
+import { verifyJwt } from "@/application/services/authService";
 import { getExportCvUrl } from "@/application/services/exportService";
 
 interface StudentParams {
