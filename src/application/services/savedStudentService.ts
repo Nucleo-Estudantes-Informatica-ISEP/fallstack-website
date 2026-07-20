@@ -8,6 +8,10 @@ import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
 import { assertStudentCanBeSaved } from "../domain/saveRules";
 import {
+  isAllowedToViewStudent,
+  type StudentAccess,
+} from "../domain/studentAccess";
+import {
   findCompanyById,
   findCompanyEmployee,
   findCompanyName,
@@ -112,7 +116,12 @@ export async function saveStudentAsAdmin(
 export const isSaved = (companyId: string, code: string) =>
   isStudentSaved(companyId, code);
 
-export async function getStudentStats(code: string): Promise<Stats> {
+export async function getStudentStats(
+  code: string,
+  access: StudentAccess
+): Promise<Stats> {
+  if (!(await isAllowedToViewStudent(code, access, isStudentSaved)))
+    throw new HttpError("Not found", 404);
   const count = await countStudentSaves(code);
   return { totalScans: count, totalSaves: count };
 }

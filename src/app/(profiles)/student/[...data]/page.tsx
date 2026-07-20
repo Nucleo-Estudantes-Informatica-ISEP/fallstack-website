@@ -77,7 +77,11 @@ const StudentPage = async (props: ProfileProps) => {
 
   const [globalStats, todayStats, companies, history, actions, interests] =
     await Promise.all([
-      getStudentStats(student.code),
+      getStudentStats(student.code, {
+        studentCode: session.student?.code,
+        companyId: session.employee?.company?.id,
+        isAdmin: session.isAdmin,
+      }),
       getTodayStudentStats(student.id),
       getCompanies(),
       session.student
