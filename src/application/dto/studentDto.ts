@@ -52,3 +52,16 @@ export const toStudentSummaryDto = (
   github: student.github,
   avatar: student.avatar,
 });
+
+export interface AdminStudentDto extends StudentDto {
+  yearKey: StudentYear;
+  active: boolean;
+}
+
+export const toAdminStudentDto = (
+  student: StudentEntity & { user: { email: string; active: boolean } }
+): AdminStudentDto => ({
+  ...toStudentDto(student),
+  yearKey: student.year,
+  active: student.user.active,
+});

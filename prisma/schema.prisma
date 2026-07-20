@@ -9,10 +9,13 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid()) @db.Uuid
-  email     String   @unique
-  role      Role     @default(STUDENT)
-  isAdmin   Boolean  @default(false)
+  id      String  @id @default(uuid()) @db.Uuid
+  email   String  @unique
+  role    Role    @default(STUDENT)
+  isAdmin Boolean @default(false)
+  // Gates a Student/Employee's ability to log in - deactivating the User
+  // deactivates both, since Student/Employee are 1:1 with User on this id.
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

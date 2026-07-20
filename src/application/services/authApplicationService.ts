@@ -23,6 +23,45 @@ async function createSupabaseAuthUser(email: string, password: string) {
   return data.user;
 }
 
+// Used when an admin creates a Student/Employee account on someone else's
+// behalf: sets the password directly and skips email confirmation, unlike
+// the self-service createSupabaseAuthUser() above (which signs the caller
+// themselves in). Students already have a self-service password-reset flow
+// for later changes; this is only for initial provisioning.
+export async function createSupabaseAuthUserAsAdmin(
+  email: string,
+  password: string
+) {
+  const admin = createAdminClient();
+  const { data, error } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (error || !data.user)
+    throw new HttpError(error?.message || "Unable to create account", 400);
+  return data.user;
+}
+
+export async function rollbackAuthUser(userId: string) {
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.deleteUser(userId);
+    if (error)
+      reportError(
+        error,
+        { operation: "rollback_admin_created_auth_user" },
+        "Failed to roll back admin-created auth user"
+      );
+  } catch (error) {
+    reportError(
+      error,
+      { operation: "rollback_admin_created_auth_user" },
+      "Failed to roll back admin-created auth user"
+    );
+  }
+}
+
 export async function signUpUser(input: {
   email: Email;
   password: string;

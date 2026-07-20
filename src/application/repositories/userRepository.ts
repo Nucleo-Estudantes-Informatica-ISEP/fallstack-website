@@ -69,6 +69,12 @@ export const connectUserInterests = (
     data: { interests: { connect: interests.map((name) => ({ name })) } },
   });
 
+export const updateUserActive = (id: string, active: boolean) =>
+  prisma.user.update({ where: { id }, data: { active } });
+
+// Cascades to Student/Employee via their onDelete: Cascade FK to User.
+export const deleteUser = (id: string) => prisma.user.delete({ where: { id } });
+
 export const findEmployeeUserIds = async (companyId: string) => {
   const employees = await prisma.employee.findMany({
     where: { companyId },
