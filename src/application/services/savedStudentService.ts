@@ -21,7 +21,6 @@ import {
   findCompanyHistory,
   findCompanyHistoryWithInterests,
   findCompanySavedStudentsWithCv,
-  findCompanySavesForExport,
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
@@ -136,8 +135,6 @@ export const getCompanyHistoryWithInterests = (companyId: string) =>
   findCompanyHistoryWithInterests(companyId);
 export const getCompanySavedStudentsWithCv = (companyId: string) =>
   findCompanySavedStudentsWithCv(companyId);
-export const getCompanySavesForExport = (companyId: string) =>
-  findCompanySavesForExport(companyId);
 export const getStudentHistory = (studentId: string) =>
   findStudentHistory(studentId);
 
