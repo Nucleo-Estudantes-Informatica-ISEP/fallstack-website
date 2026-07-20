@@ -1,9 +1,9 @@
 import { notFound } from "next/navigation";
 
-import getServerSession from "@/application/services/sessionService";
 import AdminSidebar from "@/components/AdminSidebar";
 import SessionAuthLayout from "@/components/SessionAuthLayout";
 import Topbar from "@/components/TopBar";
+import getServerSession from "@/application/services/sessionService";
 
 export const dynamic = "force-dynamic";
 
