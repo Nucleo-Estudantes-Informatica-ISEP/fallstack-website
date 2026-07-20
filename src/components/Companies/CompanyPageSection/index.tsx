@@ -5,7 +5,7 @@ import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
 import CompanyInfo from "@/components/Companies/CompanyInfo";
-import { CompanyTier } from "@/domain/Company/company-tier";
+import { CompanyTier } from "@/domain/company/company-tier";
 import { findEditionContentByName } from "@/edition";
 import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
 

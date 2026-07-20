@@ -4,7 +4,7 @@ import React, { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
 import Company, { CompanyProps } from "@/components/Companies/Company";
-import { CompanyTier } from "@/domain/Company/company-tier";
+import { CompanyTier } from "@/domain/company/company-tier";
 import { getTierStyling, tierDisplayLabel } from "@/presentation/tier-styling";
 
 interface CompaniesContainerProps {
