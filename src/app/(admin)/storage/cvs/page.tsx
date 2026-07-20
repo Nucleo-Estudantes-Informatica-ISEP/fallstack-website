@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import {
@@ -12,7 +11,7 @@ import { formatFileSize } from "@/utils/files";
 
 const PAGE_SIZE = 20;
 
-interface AvatarsAdminPageProps {
+interface CvsAdminPageProps {
   searchParams: AdminListSearchParams;
 }
 
@@ -25,19 +24,6 @@ interface StorageRow {
 }
 
 const columns: DataTableColumn<StorageRow>[] = [
-  {
-    key: "preview",
-    header: "Pré-visualização",
-    render: (file) => (
-      <Image
-        src={file.url}
-        alt=""
-        width={40}
-        height={40}
-        className="size-10 rounded-full object-cover"
-      />
-    ),
-  },
   { key: "name", header: "Nome", render: (file) => file.name },
   {
     key: "size",
@@ -60,10 +46,10 @@ const columns: DataTableColumn<StorageRow>[] = [
   },
 ];
 
-const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
+const CvsAdminPage = async ({ searchParams }: CvsAdminPageProps) => {
   const { page, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listStorageObjects(
-    "avatar",
+    "cv",
     page,
     PAGE_SIZE,
     q
@@ -76,13 +62,13 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
       <div className="flex gap-2">
         <Link
           href="/storage"
-          className="rounded-md bg-primary px-3 py-1 text-white"
+          className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
         >
           Avatares
         </Link>
         <Link
           href="/storage/cvs"
-          className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
+          className="rounded-md bg-primary px-3 py-1 text-white"
         >
           CVs
         </Link>
@@ -95,12 +81,12 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
         page={page}
         pageSize={PAGE_SIZE}
         totalCount={totalCount}
-        basePath="/storage"
+        basePath="/storage/cvs"
         searchValue={q}
         searchPlaceholder="Pesquisar por nome de ficheiro..."
         renderActions={(file) => (
           <AdminDeleteButton
-            deleteUrl={`/admin/storage/avatar/${encodeURIComponent(file.name)}`}
+            deleteUrl={`/admin/storage/cv/${encodeURIComponent(file.name)}`}
             itemLabel={file.name}
           />
         )}
@@ -109,4 +95,4 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
   );
 };
 
-export default AvatarsAdminPage;
+export default CvsAdminPage;
