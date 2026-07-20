@@ -20,7 +20,7 @@ import Input from "@/components/Input";
 import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
-import { signUp } from "@/client/api/auth";
+import { createAccount, createStudentProfile } from "@/client/api/auth";
 import {
   uploadAvatar as uploadAvatarToSupabase,
   uploadCv as uploadCvToSupabase,
@@ -46,27 +46,20 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const linkedinRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setLoading(true);
       const file = e.target.files[0];
 
       if (error) setError(null);
 
-      const uploaded = await uploadCvToSupabase(file);
-      if (!uploaded) {
-        setError("Ocorreu um erro ao dar upload.");
-        return setLoading(false);
-      }
-
-      const cv = {
-        name: file.name,
-        id: uploaded.id,
-        preview: URL.createObjectURL(file),
-      };
-
-      setData({ ...data, cv });
-      setLoading(false);
+      setData({
+        ...data,
+        cv: {
+          name: file.name,
+          file,
+          preview: URL.createObjectURL(file),
+        },
+      });
     }
   };
 
@@ -100,20 +93,53 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       }
 
       setLoading(true);
+
+      // Create the Supabase Auth account (and session) first - uploads below
+      // require an authenticated session.
+      const account = await createAccount({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (account instanceof Error) {
+        toast.error(account.message);
+        return setLoading(false);
+      }
+
+      if (!account) {
+        toast.error("Ocorreu um erro ao criar a conta.");
+        return setLoading(false);
+      }
+
       const avatarUrl = await handleAvatarUpload();
+
+      let cvId: string | undefined;
+      if (data.cv) {
+        const uploaded = await uploadCvToSupabase(data.cv.file);
+        if (!uploaded) {
+          toast.error("Não foi possível dar upload ao CV.");
+          return setLoading(false);
+        }
+        cvId = uploaded.id;
+      }
 
       // Add LinkedIn if provided
       const linkedin = linkedinRef.current?.value || null;
 
-      const signup = await signUp({ ...data, avatarUrl, linkedin });
+      const profile = await createStudentProfile({
+        ...data,
+        avatarUrl,
+        cvId,
+        linkedin,
+      });
 
-      if (signup instanceof Error) {
-        toast.error(signup.message);
+      if (profile instanceof Error) {
+        toast.error(profile.message);
         return setLoading(false);
       }
 
-      if (!signup) {
-        toast.error("Ocorreu um erro ao criar a conta.");
+      if (!profile) {
+        toast.error("Ocorreu um erro ao criar o perfil.");
         return setLoading(false);
       }
 
