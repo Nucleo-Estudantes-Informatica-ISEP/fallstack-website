@@ -14,6 +14,7 @@ import { isAllowedToViewStudent } from "../domain/studentAccess";
 import type { StudentAccess } from "../domain/studentAccess";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
+  countStudents,
   createStudent,
   findAllStudents,
   findStudentAvatar,
@@ -125,6 +126,7 @@ export async function getStudentCv(code: string, access: StudentAccess) {
 
 export const getStudent = (code: string) => findStudentProfileByCode(code);
 export const getStudents = () => findAllStudents();
+export const getStudentCount = () => countStudents();
 export const getAvatar = (id: string) => findStudentAvatar(id);
 export const getStudentInterests = (id: string) => findStudentInterests(id);
 

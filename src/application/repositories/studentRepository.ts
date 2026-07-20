@@ -71,6 +71,9 @@ export const updateStudentCv = (
   db: DbClient = prisma
 ) => db.student.update({ where: { code }, data: { cv } });
 
+export const countStudents = () =>
+  prisma.student.count({ where: { user: { AND: [{ role: "STUDENT" }] } } });
+
 export const findAllStudents = () =>
   prisma.student.findMany({
     where: { user: { AND: [{ role: "STUDENT" }] } },
