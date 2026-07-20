@@ -22,7 +22,7 @@
     "@heroui/react": "^2.8.5",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
-    "@mynaui/icons-react": "^0.3.9",
+    "@mynaui/icons-react": "^0.4.11",
     "@next/eslint-plugin-next": "^15.5.6",
     "@rooks/use-window-size": "^4.11.2",
     "@sentry/nextjs": "^10.65.0",
