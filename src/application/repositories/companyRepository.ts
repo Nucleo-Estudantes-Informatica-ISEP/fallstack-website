@@ -92,6 +92,23 @@ export const findAllCompaniesForAdmin = ({
     },
   });
 
+// All companies, unpaginated, for the tier board - it needs every
+// company visible at once to drag between tiers, not a page at a time.
+export const findAllCompaniesForTierBoard = () =>
+  prisma.company.findMany({
+    orderBy: [{ tier: "asc" }, { order: "asc" }],
+    select: { id: true, name: true, avatar: true, tier: true, order: true },
+  });
+
+export const bulkUpdateCompanyTierOrder = (
+  updates: { id: string; tier: Tier; order: number }[]
+) =>
+  prisma.$transaction(
+    updates.map(({ id, tier, order }) =>
+      prisma.company.update({ where: { id }, data: { tier, order } })
+    )
+  );
+
 export const createCompanyDisplay = (data: {
   name: string;
   tier: Tier;

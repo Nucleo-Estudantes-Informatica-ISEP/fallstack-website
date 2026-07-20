@@ -36,3 +36,13 @@ export const updateAdminCompanySchema = z
   .refine((body) => Object.keys(body).length > 0, {
     message: "At least one field is required",
   });
+
+export const updateCompanyTierBoardSchema = z.object({
+  updates: z.array(
+    z.object({
+      id: z.uuid(),
+      tier: tierSchema,
+      order: z.number().int(),
+    })
+  ),
+});

@@ -5,11 +5,13 @@ import type { Tier } from "@prisma/client";
 import { HttpError } from "@/types/HttpError";
 
 import {
+  bulkUpdateCompanyTierOrder,
   countCompaniesForAdmin,
   createCompany,
   createCompanyDisplay,
   findActiveCompanies,
   findAllCompaniesForAdmin,
+  findAllCompaniesForTierBoard,
   findCompanies,
   findCompanyById,
   findCompanyByName,
@@ -62,6 +64,15 @@ export async function updateCompanyForAdmin(
 ) {
   if (!(await findCompanyById(id))) throw new HttpError("Not found", 404);
   return updateCompanyDisplay(id, input);
+}
+
+export const getCompaniesForTierBoard = () => findAllCompaniesForTierBoard();
+
+export async function updateCompanyTierBoard(
+  updates: { id: string; tier: Tier; order: number }[]
+) {
+  if (updates.length === 0) return;
+  await bulkUpdateCompanyTierOrder(updates);
 }
 
 export async function registerCompany(input: {
