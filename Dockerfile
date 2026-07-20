@@ -5,6 +5,10 @@ FROM node:20-alpine AS base
 # Add required packages for Prisma, healthcheck, sharp, etc.
 RUN apk add --no-cache libc6-compat curl openssl && corepack enable
 
+# Create the non-root user here so every stage descending from `base`
+# (both builder -> migrator and runner) inherits it without duplication.
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+
 FROM base AS deps
 WORKDIR /app
 
@@ -74,14 +78,13 @@ RUN --mount=type=secret,id=sentry_auth_token,required=false \
 # generated client, schema, and migrations) rather than the pruned runner
 # image. See docker-compose.app.yml's `migrate` service.
 FROM builder AS migrator
+USER nextjs
 CMD ["npx", "prisma", "migrate", "deploy"]
 
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 # Copy built application
 COPY --from=builder /app/public ./public
