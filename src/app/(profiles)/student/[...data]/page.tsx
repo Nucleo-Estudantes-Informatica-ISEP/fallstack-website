@@ -75,14 +75,21 @@ const StudentPage = async (props: ProfileProps) => {
   const sanitizedInterests = student.user.interests.map((i) => i.name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
+  // Previews (a valid signed preview token, viewed before the company has
+  // saved the student) intentionally bypass the "must be saved" check above,
+  // but getStudentStats' ownership check would reject that same access -
+  // and PreviewProfileSectionContainer never reads either stats value below
+  // anyway, so skip both calls entirely for previews instead of failing.
   const [globalStats, todayStats, companies, history, actions, interests] =
     await Promise.all([
-      getStudentStats(student.code, {
-        studentCode: session.student?.code,
-        companyId: session.employee?.company?.id,
-        isAdmin: session.isAdmin,
-      }),
-      getTodayStudentStats(student.id),
+      isPreview
+        ? Promise.resolve({ totalScans: 0, totalSaves: 0 })
+        : getStudentStats(student.code, {
+            studentCode: session.student?.code,
+            companyId: session.employee?.company?.id,
+            isAdmin: session.isAdmin,
+          }),
+      isPreview ? Promise.resolve(0) : getTodayStudentStats(student.id),
       getCompanies(),
       session.student
         ? getStudentHistory(session.student.id)
