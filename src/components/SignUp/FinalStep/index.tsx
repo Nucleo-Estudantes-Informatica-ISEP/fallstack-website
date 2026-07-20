@@ -21,6 +21,7 @@ import PrimaryButton from "@/components/PrimaryButton";
 import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createAccount, createStudentProfile } from "@/client/api/auth";
+import getSession from "@/client/api/session";
 import {
   uploadAvatar as uploadAvatarToSupabase,
   uploadCv as uploadCvToSupabase,
@@ -94,21 +95,39 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       setLoading(true);
 
-      // Create the Supabase Auth account (and session) first - uploads below
-      // require an authenticated session.
-      const account = await createAccount({
-        email: data.email,
-        password: data.password,
-      });
+      // A session may already exist from an earlier attempt - e.g. the
+      // account got created but a later step (upload, profile creation)
+      // failed, or the user left and came back. Retrying createAccount in
+      // that case would fail with a duplicate-account error and
+      // permanently strand the user, so check first and resume from
+      // wherever they actually left off instead of always starting over.
+      const existingSession = await getSession();
 
-      if (account instanceof Error) {
-        toast.error(account.message);
-        return setLoading(false);
+      if (existingSession?.student) {
+        // The profile was already created in an earlier attempt.
+        session.fetchSession();
+        router.push("/");
+        router.refresh();
+        return;
       }
 
-      if (!account) {
-        toast.error("Ocorreu um erro ao criar a conta.");
-        return setLoading(false);
+      if (!existingSession) {
+        // Create the Supabase Auth account (and session) first - uploads
+        // below require an authenticated session.
+        const account = await createAccount({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (account instanceof Error) {
+          toast.error(account.message);
+          return setLoading(false);
+        }
+
+        if (!account) {
+          toast.error("Ocorreu um erro ao criar a conta.");
+          return setLoading(false);
+        }
       }
 
       const avatarUrl = await handleAvatarUpload();
