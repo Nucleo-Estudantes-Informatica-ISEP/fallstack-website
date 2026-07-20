@@ -6,9 +6,9 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { Email, Github, Linkedin, OpenCv } from "@/components/ui/Icons";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { Email, Github, Linkedin, OpenCv } from "@/styles/Icons";
 
 interface PreviewProfileSectionContainerProps {
   student: StudentDto;

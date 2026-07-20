@@ -4,7 +4,7 @@ import { LabelHTMLAttributes, useContext } from "react";
 
 import useIsMobile from "@/hooks/useIsMobile";
 import InstallableContext from "@/contexts/InstallableContext";
-import { InstallPwaDesktop, InstallPwaMobile } from "@/styles/Icons";
+import { InstallPwaDesktop, InstallPwaMobile } from "@/components/ui/Icons";
 
 interface InstallButtonProps extends LabelHTMLAttributes<HTMLLabelElement> {
   className?: string;

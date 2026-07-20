@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import { httpClient } from "@/lib/http/client";
+import { DownloadIcon } from "@/components/ui/Icons";
 import Spinner from "@/components/Spinner";
 import { branding } from "@/edition/branding";
-import { DownloadIcon } from "@/styles/Icons";
 
 import download from "downloadjs";
 

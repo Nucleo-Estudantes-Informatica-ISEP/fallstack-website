@@ -6,13 +6,13 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { Github, Linkedin } from "@/components/ui/Icons";
 import BioSection from "@/components/Profile/BioSection";
 import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { Github, Linkedin } from "@/styles/Icons";
 
 interface CompanyViewProfileSectionContainerProps {
   student: StudentDto;
