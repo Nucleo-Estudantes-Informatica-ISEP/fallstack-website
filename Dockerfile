@@ -30,7 +30,24 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/package.json /app/pnpm-lock.yaml ./
+COPY prisma ./prisma
 
+# Only needs node_modules + the schema/migrations, not the rest of the app
+# source - deliberately kept minimal so `migrator` (which branches off here)
+# never pays for the Next.js build in `app-builder` below.
+RUN npx prisma generate
+
+# Standalone stage to apply pending migrations against DATABASE_URL before
+# the app starts. Branches off `builder` *before* the Next.js build below,
+# so `migrate` only pays for `prisma generate`, not a full webpack compile -
+# Docker Compose builds `web`/`migrate` concurrently, and two full builds at
+# once was a real build-time memory-pressure incident. See
+# docker-compose.app.yml's `migrate` service.
+FROM builder AS migrator
+USER nextjs
+CMD ["npx", "prisma", "migrate", "deploy"]
+
+FROM builder AS app-builder
 ARG NEXT_PUBLIC_SENTRY_DSN=""
 ARG SENTRY_URL=""
 ARG SENTRY_ORG=""
@@ -51,17 +68,13 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-# Selective copy (smaller context)
+# Selective copy (smaller context) - prisma/ already present from `builder`
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
 COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js sentry.edge.config.ts sentry.server.config.ts tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
-COPY prisma ./prisma
 COPY supabase ./supabase
 COPY README.md ./README.md
-
-# Generate Prisma client (after copying all files)
-RUN npx prisma generate
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -75,24 +88,16 @@ RUN --mount=type=secret,id=sentry_auth_token,required=false \
     npm run build; \
   fi
 
-# Standalone stage to apply pending migrations against DATABASE_URL before
-# the app starts. Reuses `builder` (full node_modules incl. the Prisma CLI,
-# generated client, schema, and migrations) rather than the pruned runner
-# image. See docker-compose.app.yml's `migrate` service.
-FROM builder AS migrator
-USER nextjs
-CMD ["npx", "prisma", "migrate", "deploy"]
-
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Copy built application
-COPY --from=builder /app/public ./public
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder /app/prisma ./prisma
+COPY --from=app-builder /app/public ./public
+COPY --from=app-builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=app-builder /app/prisma ./prisma
 
 USER nextjs
 EXPOSE 4000
