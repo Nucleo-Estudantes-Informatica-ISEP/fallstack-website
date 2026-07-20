@@ -1,18 +1,10 @@
 import React from "react";
 
 import CompanyAdminSection from "@/components/CompanyAdminSection";
-import Custom404 from "@/app/not-found";
 import { toAdminCompanyDto } from "@/application/dto/companyDto";
 import { listCompaniesForAdmin } from "@/application/services/companyService";
-import getServerSession from "@/application/services/sessionService";
 
 const CompaniesAdminPage = async () => {
-  const session = await getServerSession();
-
-  if (!session || !session.isAdmin) {
-    return Custom404();
-  }
-
   const companies = await listCompaniesForAdmin();
 
   return (

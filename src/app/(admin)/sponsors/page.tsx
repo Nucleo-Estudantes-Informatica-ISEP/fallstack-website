@@ -1,18 +1,10 @@
 import React from "react";
 
 import SponsorAdminSection from "@/components/SponsorAdminSection";
-import Custom404 from "@/app/not-found";
 import { toAdminSponsorDto } from "@/application/dto/sponsorDto";
-import getServerSession from "@/application/services/sessionService";
 import { listSponsorsForAdmin } from "@/application/services/sponsorService";
 
 const SponsorsAdminPage = async () => {
-  const session = await getServerSession();
-
-  if (!session || !session.isAdmin) {
-    return Custom404();
-  }
-
   const sponsors = await listSponsorsForAdmin();
 
   return (

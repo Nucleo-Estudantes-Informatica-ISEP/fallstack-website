@@ -1,15 +1,8 @@
 import Link from "next/link";
 
-import Custom404 from "@/app/not-found";
 import { getActions } from "@/application/services/actionService";
-import getServerSession from "@/application/services/sessionService";
 
 const actions = async () => {
-  const session = await getServerSession();
-  if (!session || !session.isAdmin) {
-    return Custom404();
-  }
-
   const actions = await getActions();
 
   return (
