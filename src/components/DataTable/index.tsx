@@ -4,6 +4,12 @@ export interface DataTableColumn<T> {
   key: string;
   header: string;
   render: (row: T) => React.ReactNode;
+  sortable?: boolean;
+}
+
+export interface DataTableSort {
+  key: string;
+  order: "asc" | "desc";
 }
 
 interface DataTableProps<T> {
@@ -16,6 +22,22 @@ interface DataTableProps<T> {
   basePath: string;
   renderActions?: (row: T) => React.ReactNode;
   emptyLabel?: string;
+  /** Current sort state, read from the entity page's searchParams. */
+  sort?: DataTableSort;
+  /** Current search term, read from the entity page's searchParams. */
+  searchValue?: string;
+  searchPlaceholder?: string;
+}
+
+function buildQuery(
+  params: Record<string, string | number | undefined>
+): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  const qs = search.toString();
+  return qs ? `?${qs}` : "";
 }
 
 function DataTable<T>({
@@ -28,19 +50,77 @@ function DataTable<T>({
   basePath,
   renderActions,
   emptyLabel = "Sem resultados.",
+  sort,
+  searchValue,
+  searchPlaceholder = "Pesquisar...",
 }: DataTableProps<T>) {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const colSpan = columns.length + (renderActions ? 1 : 0);
 
+  const pageHref = (targetPage: number) =>
+    `${basePath}${buildQuery({
+      page: targetPage,
+      q: searchValue,
+      sort: sort?.key,
+      order: sort?.order,
+    })}`;
+
+  const sortHref = (columnKey: string) => {
+    const nextOrder: "asc" | "desc" =
+      sort?.key === columnKey && sort.order === "asc" ? "desc" : "asc";
+    return `${basePath}${buildQuery({
+      page: 1,
+      q: searchValue,
+      sort: columnKey,
+      order: nextOrder,
+    })}`;
+  };
+
   return (
     <div className="flex flex-col gap-4">
+      <form
+        action={basePath}
+        method="get"
+        className="flex flex-wrap items-center gap-2"
+      >
+        {sort && <input type="hidden" name="sort" value={sort.key} />}
+        {sort && <input type="hidden" name="order" value={sort.order} />}
+        <input
+          type="search"
+          name="q"
+          defaultValue={searchValue}
+          placeholder={searchPlaceholder}
+          className="w-full max-w-xs rounded-md border border-gray-300 p-2 text-black"
+        />
+        <button
+          type="submit"
+          className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
+        >
+          Pesquisar
+        </button>
+      </form>
+
       <div className="overflow-x-auto rounded-lg bg-white shadow-md">
         <table className="min-w-full table-auto border-collapse">
           <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className="px-6 py-3 text-left">
-                  {column.header}
+                  {column.sortable ? (
+                    <Link
+                      href={sortHref(column.key)}
+                      className="flex items-center gap-1 normal-case hover:underline"
+                    >
+                      {column.header}
+                      {sort?.key === column.key && (
+                        <span aria-hidden="true">
+                          {sort.order === "asc" ? "▲" : "▼"}
+                        </span>
+                      )}
+                    </Link>
+                  ) : (
+                    column.header
+                  )}
                 </th>
               ))}
               {renderActions && <th className="px-6 py-3 text-left">Ações</th>}
@@ -84,7 +164,7 @@ function DataTable<T>({
         </span>
         <div className="flex gap-2">
           <Link
-            href={`${basePath}?page=${Math.max(1, page - 1)}`}
+            href={pageHref(Math.max(1, page - 1))}
             aria-disabled={page <= 1}
             tabIndex={page <= 1 ? -1 : undefined}
             className={`rounded-md border border-gray-300 px-3 py-1 ${
@@ -94,7 +174,7 @@ function DataTable<T>({
             Anterior
           </Link>
           <Link
-            href={`${basePath}?page=${Math.min(totalPages, page + 1)}`}
+            href={pageHref(Math.min(totalPages, page + 1))}
             aria-disabled={page >= totalPages}
             tabIndex={page >= totalPages ? -1 : undefined}
             className={`rounded-md border border-gray-300 px-3 py-1 ${
