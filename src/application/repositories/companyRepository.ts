@@ -41,9 +41,46 @@ export const findCompanyDisplayByName = (name: string) =>
     select: { id: true, name: true, tier: true, avatar: true, website: true },
   });
 
-export const findAllCompaniesForAdmin = () =>
+const ADMIN_SORTABLE_FIELDS = ["name", "tier", "order", "active"] as const;
+export type AdminCompanySortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
+
+export interface AdminCompanyQuery {
+  page: number;
+  pageSize: number;
+  sort?: string;
+  order: "asc" | "desc";
+  search?: string;
+}
+
+function companyWhere(search?: string) {
+  return search
+    ? { name: { contains: search, mode: "insensitive" as const } }
+    : undefined;
+}
+
+function companyOrderBy(sort: string | undefined, order: "asc" | "desc") {
+  const field = ADMIN_SORTABLE_FIELDS.includes(sort as AdminCompanySortField)
+    ? (sort as AdminCompanySortField)
+    : undefined;
+  if (!field) return [{ tier: "asc" as const }, { order: "asc" as const }];
+  return { [field]: order };
+}
+
+export const countCompaniesForAdmin = (search?: string) =>
+  prisma.company.count({ where: companyWhere(search) });
+
+export const findAllCompaniesForAdmin = ({
+  page,
+  pageSize,
+  sort,
+  order,
+  search,
+}: AdminCompanyQuery) =>
   prisma.company.findMany({
-    orderBy: [{ tier: "asc" }, { order: "asc" }, { name: "asc" }],
+    where: companyWhere(search),
+    orderBy: companyOrderBy(sort, order),
+    skip: (page - 1) * pageSize,
+    take: pageSize,
     select: {
       id: true,
       name: true,
