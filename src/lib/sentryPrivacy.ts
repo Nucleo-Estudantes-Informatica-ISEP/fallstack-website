@@ -14,7 +14,9 @@ type MutableSentryEvent = Record<string, unknown> & {
   contexts?: unknown;
   extra?: unknown;
   tags?: unknown;
-  breadcrumbs?: Array<Record<string, unknown> & { data?: unknown }>;
+  breadcrumbs?: Array<
+    Record<string, unknown> & { data?: unknown; message?: unknown }
+  >;
   exception?: {
     values?: Array<{ value?: unknown; type?: unknown }>;
   };
@@ -85,6 +87,7 @@ export function sanitizeSentryEvent<T>(event: T): T {
   sanitized.tags = sanitizeValue(sanitized.tags);
   sanitized.breadcrumbs = sanitized.breadcrumbs?.map((breadcrumb) => ({
     ...breadcrumb,
+    message: breadcrumb.message ? "Application event" : breadcrumb.message,
     data: sanitizeValue(breadcrumb.data),
   }));
 
