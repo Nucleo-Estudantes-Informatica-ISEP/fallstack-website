@@ -63,7 +63,7 @@ pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 app/            # Next.js App Router: route groups (auth)/(admin)/(guest)/(profiles) + api/** — routes stay thin, delegating to application/
 application/    # service + repository layers: services/ (orchestration, "server-only"), repositories/ (Prisma access) — pure domain rules live in top-level domain/, not here
 client/         # client-safe fetch wrappers (e.g. client/api/session.ts) built on lib/http/client.ts's httpClient, "client-only"
-components/     # flat mix of ~50 reusable/one-off PascalCaseName/index.tsx folders, predating the components/ui/ + route-local _components/ split below — not yet reclassified, don't infer the convention from where an existing file sits
+components/     # components/ui/ holds shared, reusable primitives (Icons.tsx, Input, Modal, buttons, ...); everything else — reusable or single-use — stays flat at the top level, one PascalCaseName/index.tsx folder each
 config/         # static config object (cookies, upload limits), api.ts (client BASE_URL) + env.server.ts/env.client.ts (Zod-validated env) — edition content now lives in edition/, not here
 contexts/       # React contexts
 domain/         # pure business rules, no I/O, grouped by entity/concern: action/, auth/, company/, savedStudent/, student/
@@ -115,7 +115,7 @@ Two independent mechanisms — don't conflate them:
 - **`app/auth/confirm/route.ts`** lives outside the `(auth)`/`api` conventions on purpose — it's the Supabase email-confirmation callback URL, which Supabase itself constructs, so it can't move without reconfiguring Supabase. Leave it where it is.
 - **Edition-specific content** (sponsors, tier company lists, booth-to-action mapping, schedule, FAQ, branding) is centralized under `src/edition/` — `edition/actions.ts` holds `actionNames` and the `getBoothActionName()` lookup that `savedStudentService.saveStudent()` calls instead of an inline `switch`. When editing content for a new event, change `edition/`, not `config/` or `utils/`.
 - **Env vars:** validated through Zod, not read from `process.env` directly. Server-only secrets/config go through `serverEnv` (`src/config/env.server.ts`, guarded by `server-only`, validated lazily on first property access); `NEXT_PUBLIC_*` vars go through `clientEnv` (`src/config/env.client.ts`, validated eagerly at import time, since Next.js inlines them into the browser bundle at build time). Import whichever matches where your code runs — don't add a new raw `process.env.*` read. `.env.example` is the source of truth for required keys; keep it in sync with both schemas when you add or rename one.
-- **Components:** every component gets its own `PascalCaseName/index.tsx` folder. Shared primitives go in `components/ui/` (e.g. `Icons.tsx`); a page section used by exactly one route goes in a route-local `_components/` folder next to that route, and promotes to `components/ui/` the moment a 2nd consumer appears. The pre-existing flat `components/` folders (`Input`, `Modal`, but also one-off sections like `GiveawaySection`, `AdminSavedSection`) predate this split and haven't been reclassified yet — don't take an existing file's location as the convention to follow; new code follows the rule above.
+- **Components:** every component gets its own `PascalCaseName/index.tsx` folder. Shared, reusable primitives go in `components/ui/` (e.g. `Icons.tsx`, `Input`, `Modal`, `PrimaryButton`); everything else — reusable feature composites or single-use page sections alike (e.g. `Companies`, `Profile`, `GiveawaySection`, `AdminSavedSection`) — stays at the top level of `components/`, following the same pattern. There is no route-local `_components/` convention in use — keep new components in `components/` rather than colocating them under `app/`.
 - **Where new code goes:**
 
   | Kind of code | Goes in |
@@ -129,7 +129,7 @@ Two independent mechanisms — don't conflate them:
   | Per-edition content (sponsors, FAQ, schedule, branding) | `edition/` |
   | Generic helper (date, files, canvas) | `utils/` |
   | Shared UI primitive | `components/ui/` |
-  | Single-consumer page section | route-local `_components/` next to the route |
+  | Any other component, reusable or single-use | top level of `components/` |
   | Integration/smoke test | `tests/e2e/` (unit tests stay colocated) |
 - **API error responses:** shapes are inconsistent across existing routes (`{ error }`, `{ message }`, raw Zod `e.errors`/`e.issues`/`.error`, English and Portuguese strings all appear). For **new** routes, standardize on `{ error: string }` for failures (the majority pattern) with an explicit status code every time — don't add another one-off shape, and don't rely on the 200 default (a few existing routes do this on validation/auth failure; that's a known bug, not a pattern to copy).
 
