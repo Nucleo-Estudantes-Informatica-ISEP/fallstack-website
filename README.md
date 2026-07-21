@@ -1,4 +1,4 @@
-# Fallstack 2025
+# Fallstack
 
 ## Hello there! 👋
 
@@ -14,16 +14,13 @@ Fall Stack is a tech event that happens every year with the intention of present
 
 This is also a great place for networking and really getting to know the market.
 
-The event takes place in ISEP (Instituto Superior de Engenharia do Porto) in the **25th and 26th of November**.
+The event takes place at ISEP (Instituto Superior de Engenharia do Porto). Each year's edition is tracked as a `<year>-edition` git tag on this repo — see [`CHANGELOG.md`](./CHANGELOG.md) for the current edition's dates and what changed.
 
 ---
 
 ## Tech stack
 
-- [Next.js](https://nextjs.org/)
-- [Prisma](https://www.prisma.io/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Supabase](https://supabase.com/)
+Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, and Supabase (Auth + Storage). See [`AGENTS.md`](./AGENTS.md)'s Stack table for the full, authoritative list.
 
 ### Authentication
 
@@ -43,8 +40,6 @@ git clone https://github.com/<org>/fallstack-website.git
 cd fallstack-website
 ```
 
-````
-
 ## 2. Install dependencies
 
 ```bash
@@ -61,9 +56,18 @@ cp .env.example .env
 
 ### Required values (hosted Supabase)
 
+- `NEXT_PUBLIC_BASE_URL`
+- `DATABASE_URL`
+- `DIRECT_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (service role)
+- `JWT_SECRET`
+- `NODE_ENV`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+
+See `.env.example` for the full list, including optional docker compose overrides and Sentry/Pino observability variables (covered below).
 
 ### Observability
 
@@ -174,7 +178,7 @@ This launches:
 
 Supabase CLI sometimes starts a **vector** container that repeatedly fails on Windows.
 
-This container is NOT required for Fallstack 2025.
+This container is NOT required to run the app.
 
 ### Option A — Remove vector automatically after start
 
@@ -339,5 +343,4 @@ docker compose --profile supabase down
 
 # Contributing
 
-In order to contribute to the project, you should look into the board provided in the team's ClickUp. All the information's related to branches naming and code styling is in there.
-````
+See [`AGENTS.md`](./AGENTS.md)'s Contribution workflow section for branch naming (Conventional Branch), commit style (Conventional Commits), and the PR-into-`dev` process. Task tracking lives on the repository's [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).
