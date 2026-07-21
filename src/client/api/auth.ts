@@ -5,10 +5,16 @@ import { httpClient } from "@/lib/http/client";
 
 export async function signUp(data: StudentSignUpData) {
   try {
-    await httpClient.post("/auth/signup", {
-      email: data.email,
-      password: data.password,
-    });
+    // AuthNEI signups (see AccountDetailsStep's authNeiMode) already have a
+    // Supabase auth identity and Prisma User row, created by the OAuth
+    // callback — no password is collected in that path, so there's nothing
+    // to create here beyond the student profile below.
+    if (data.password) {
+      await httpClient.post("/auth/signup", {
+        email: data.email,
+        password: data.password,
+      });
+    }
     await httpClient.post("/students", {
       name: data.name,
       bio: data.bio,
