@@ -28,6 +28,10 @@ const config = {
   constants: {
     actionQrCodeRefreshRateMs: 15 * 1000, // 15 seconds
     neiContactEmail: "info@nei-isep.org",
+    // Supabase custom OIDC provider id for AuthNEI (NEI's self-hosted
+    // Zitadel instance), configured via the Supabase dashboard. Not a
+    // secret — safe to reference directly as a string constant.
+    authneiProvider: "custom:authnei",
   },
 };
 

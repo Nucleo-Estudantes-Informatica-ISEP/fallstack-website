@@ -11,7 +11,11 @@ import {
   findCompanyByCode,
 } from "../repositories/companyRepository";
 import { withTransaction } from "../repositories/transaction";
-import { findUserByEmail, upsertUser } from "../repositories/userRepository";
+import {
+  findUserByEmail,
+  findUserSessionById,
+  upsertUser,
+} from "../repositories/userRepository";
 
 async function createSupabaseAuthUser(email: string, password: string) {
   const supabase = await createSupabaseServerClient();
@@ -31,6 +35,33 @@ export async function signUpUser(input: {
   const user = await createSupabaseAuthUser(input.email, input.password);
   await upsertUser({ id: user.id, email: input.email, role: input.role });
   return user;
+}
+
+// Called from the AuthNEI OAuth callback once Supabase has already
+// exchanged the code for a session — Supabase manages the auth identity
+// itself, so unlike signUpUser() there is no password to set here.
+// Returns where the browser should land next.
+export async function completeOAuthSignIn(input: {
+  id: string;
+  email: Email;
+  fallback: string;
+}) {
+  const existing = await findUserSessionById(input.id);
+
+  if (existing) {
+    if (existing.role === "STUDENT" && existing.student)
+      return `/student/${existing.student.code}`;
+    if (existing.role === "EMPLOYEE") return "/dashboard";
+    // STUDENT role but no profile yet — still needs the signup wizard.
+    return input.fallback;
+  }
+
+  // First AuthNEI sign-in for this identity. AuthNEI only proves identity —
+  // it's wired up for students only for now, so provision the app-level
+  // user here and send them into the signup wizard to finish their profile
+  // (year, bio, interests).
+  await upsertUser({ id: input.id, email: input.email, role: "STUDENT" });
+  return input.fallback;
 }
 
 export async function signUpEmployee(input: {
