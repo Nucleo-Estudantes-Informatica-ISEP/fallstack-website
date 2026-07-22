@@ -88,6 +88,9 @@ const StudentPage = async (props: ProfileProps) => {
             studentCode: session.student?.code,
             companyId: session.employee?.company?.id,
             isAdmin: session.isAdmin,
+            // already computed above - avoids re-deriving the same isSaved
+            // lookup a second time inside the ownership check
+            isSaved: isSavedStudent,
           }),
       isPreview ? Promise.resolve(0) : getTodayStudentStats(student.id),
       getCompanies(),
