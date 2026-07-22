@@ -111,6 +111,16 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return;
       }
 
+      // A session belonging to a different account type (e.g. an
+      // employee/admin browsing this public page) - not a resumable
+      // partial student signup. StudentSignUp's mount-time guard should
+      // already have redirected this case away; this is a defense-in-depth
+      // check for anyone who reaches this point regardless.
+      if (existingSession && existingSession.role !== "STUDENT") {
+        toast.error("Já tens sessão iniciada como outro tipo de conta.");
+        return setLoading(false);
+      }
+
       if (!existingSession) {
         // Create the Supabase Auth account (and session) first - uploads
         // below require an authenticated session.
