@@ -21,7 +21,10 @@ COPY prisma ./prisma
 # BuildKit cache mount lets pnpm skip re-downloading unchanged packages —
 # `store-dir` is pinned explicitly so pnpm actually writes into the mounted
 # path instead of whatever its platform default would otherwise resolve to.
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+# `sharing=locked` serializes access to the mount so two overlapping builds
+# on the same host (e.g. Coolify deploying two branches at once) can't race
+# on writes to the store.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store,sharing=locked \
   if [ -f pnpm-lock.yaml ]; then \
     pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile; \
