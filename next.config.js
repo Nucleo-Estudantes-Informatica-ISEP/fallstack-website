@@ -40,6 +40,12 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 });
 
 module.exports = withSentryConfig(withPWA(nextConfig), {
+  // Unset, this defaults to sentry.io - override for a self-hosted
+  // Sentry-compatible backend (e.g. GlitchTip). The DSN alone doesn't
+  // control this: it only routes runtime error events, while source-map
+  // upload during `next build` is a separate step that needs its own
+  // upload target.
+  url: process.env.SENTRY_URL,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,

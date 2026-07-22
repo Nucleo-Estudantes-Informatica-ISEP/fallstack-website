@@ -1,6 +1,6 @@
 # Observability setup
 
-Fallstack uses Pino for structured server logs and Sentry for error monitoring and centralized log search. Monitoring is optional: the application still starts when Sentry variables are absent.
+Fallstack uses Pino for structured server logs and Sentry for error monitoring and centralized log search. Monitoring is optional: the application still starts when Sentry variables are absent. The Sentry SDK also works unmodified against a self-hosted Sentry-compatible backend (e.g. GlitchTip) — set `NEXT_PUBLIC_SENTRY_DSN` to that instance's DSN and `SENTRY_URL` to its base URL (see below); no SDK code changes are needed either way.
 
 ## Architecture
 
@@ -24,6 +24,8 @@ Tracing and Session Replay are disabled. The application does not intentionally 
 
 The DSN contains a public ingestion key and may be included in the browser bundle. It does not grant access to Sentry data. Organization tokens are secrets.
 
+For a self-hosted Sentry-compatible backend (e.g. GlitchTip) instead of sentry.io, create the equivalent organization/project in that instance's own UI and copy the same three values (DSN, org slug, project slug) from there. Menu paths and exact terminology may differ from Sentry's — check your instance's docs. Also set `SENTRY_URL` to the instance's base URL (e.g. `https://glitchtip.your-domain.example/`); without it, source-map upload still targets sentry.io regardless of which DSN the app uses at runtime (see below).
+
 ## 2. Create the source-map token
 
 Source maps make minified production stack traces readable. Upload occurs during `next build`, not while the application is running.
@@ -34,15 +36,16 @@ Source maps make minified production stack traces readable. Upload occurs during
 4. Save the integration and copy its organization token.
 5. Store it as `SENTRY_AUTH_TOKEN` in the CI secret store or pass it to Docker as a BuildKit secret.
 
-Never place this token in Git, `.env.example`, a Docker build argument, an image environment variable, or application runtime logs. Rotate it immediately if exposed.
+Never place this token in Git, `.env.example`, a Docker build argument, an image environment variable, or application runtime logs. Rotate it immediately if exposed. This applies the same way whether the token comes from sentry.io or a self-hosted instance.
 
 ## 3. Environment variables
 
 | Variable                 | Secret  | Phase           | Required         | Purpose                                                                                   |
 | ------------------------ | ------- | --------------- | ---------------- | ----------------------------------------------------------------------------------------- |
 | `NEXT_PUBLIC_SENTRY_DSN` | No      | Build + runtime | No               | Enables browser, server, and edge event delivery. Browser value is embedded during build. |
-| `SENTRY_ORG`             | No      | Build           | Source maps only | Sentry organization slug.                                                                 |
-| `SENTRY_PROJECT`         | No      | Build           | Source maps only | Sentry project slug.                                                                      |
+| `SENTRY_URL`             | No      | Build           | Self-hosted only | Base URL of a self-hosted Sentry-compatible backend (e.g. GlitchTip). Unset uploads source maps to sentry.io regardless of DSN. |
+| `SENTRY_ORG`             | No      | Build           | Source maps only | Sentry (or GlitchTip) organization slug.                                                  |
+| `SENTRY_PROJECT`         | No      | Build           | Source maps only | Sentry (or GlitchTip) project slug.                                                       |
 | `SENTRY_AUTH_TOKEN`      | **Yes** | Build only      | Source maps only | Authenticates release/source-map upload.                                                  |
 | `LOG_LEVEL`              | No      | Runtime         | No               | Pino threshold: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `silent`.          |
 
@@ -81,13 +84,14 @@ Set build variables in the CI secret/environment store, then run:
 
 ```bash
 NEXT_PUBLIC_SENTRY_DSN="$NEXT_PUBLIC_SENTRY_DSN" \
+SENTRY_URL="$SENTRY_URL" \
 SENTRY_ORG="$SENTRY_ORG" \
 SENTRY_PROJECT="$SENTRY_PROJECT" \
 SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
 pnpm build
 ```
 
-Only `SENTRY_AUTH_TOKEN` is secret. The Sentry build plugin uploads source maps and removes uploaded maps from the generated output.
+Only `SENTRY_AUTH_TOKEN` is secret. The Sentry build plugin uploads source maps and removes uploaded maps from the generated output. Leave `SENTRY_URL` unset when using sentry.io.
 
 ### Docker without source maps
 
@@ -108,12 +112,14 @@ Allocate at least 4 GB of memory to the Docker builder. The Next.js builder uses
 
 ```bash
 export NEXT_PUBLIC_SENTRY_DSN="https://public-key@o0.ingest.sentry.io/project-id"
+export SENTRY_URL="" # set to e.g. https://glitchtip.your-domain.example/ for a self-hosted backend
 export SENTRY_ORG="your-organization-slug"
 export SENTRY_PROJECT="your-project-slug"
 export SENTRY_AUTH_TOKEN="sntrys_your-token"
 
 docker build \
   --build-arg NEXT_PUBLIC_SENTRY_DSN="$NEXT_PUBLIC_SENTRY_DSN" \
+  --build-arg SENTRY_URL="$SENTRY_URL" \
   --build-arg SENTRY_ORG="$SENTRY_ORG" \
   --build-arg SENTRY_PROJECT="$SENTRY_PROJECT" \
   --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN \
@@ -261,6 +267,7 @@ pnpm test
 - Confirm `SENTRY_AUTH_TOKEN` has `org:ci` permission and access to the project.
 - Confirm the token is present during `pnpm build` or mounted as BuildKit secret.
 - Review build output; runtime configuration cannot retroactively upload source maps.
+- On a self-hosted backend, confirm `SENTRY_URL` is set. Without it, the upload silently targets sentry.io using the self-hosted org token, which will fail auth there even though `NEXT_PUBLIC_SENTRY_DSN` correctly points events at the self-hosted instance.
 
 ### Docker secret is unavailable
 
