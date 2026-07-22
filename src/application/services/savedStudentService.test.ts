@@ -43,8 +43,13 @@ test("a student cannot query an unrelated student's stats", async () => {
   vi.mocked(isStudentSaved).mockResolvedValue(false);
 
   await expect(
-    getStudentStats("student-2", { studentCode: "student-1", isAdmin: false })
+    getStudentStats("student-2", {
+      studentCode: "student-1",
+      companyId: "company-1",
+      isAdmin: false,
+    })
   ).rejects.toMatchObject({ message: "Not found", status: 404 });
+  expect(isStudentSaved).toHaveBeenCalledWith("company-1", "student-2");
 });
 
 test("an admin can query any student's stats", async () => {
