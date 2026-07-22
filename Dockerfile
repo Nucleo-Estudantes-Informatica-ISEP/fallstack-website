@@ -68,8 +68,8 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
-# Selective copy (smaller context) - prisma/ already present from `builder`
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+# Selective copy (smaller context) - package.json/lockfiles and prisma/
+# already present from `builder`
 COPY next.config.js eslint.config.mjs prettier.config.js postcss.config.js sentry.edge.config.ts sentry.server.config.ts tailwind.config.ts tsconfig.json ./
 COPY src ./src
 COPY public ./public
