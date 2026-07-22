@@ -45,7 +45,7 @@ module.exports = withSentryConfig(withPWA(nextConfig), {
   // control this: it only routes runtime error events, while source-map
   // upload during `next build` is a separate step that needs its own
   // upload target.
-  url: process.env.SENTRY_URL,
+  sentryUrl: process.env.SENTRY_URL,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
