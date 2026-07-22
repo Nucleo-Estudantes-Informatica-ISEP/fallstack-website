@@ -54,6 +54,9 @@ export {
   ChevronDown,
   Chevron,
   Clipboard,
+  // Currently unused - DownloadButton, its last consumer, was removed
+  // along with the legacy tokenized-link CV export. Kept in case it's
+  // wanted again for a future download affordance.
   DownloadIcon,
   Email,
   Facebook,
