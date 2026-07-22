@@ -147,9 +147,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         const uploaded = await uploadCvToSupabase(data.cv.file);
         if (!uploaded) {
           toast.error("Não foi possível dar upload ao CV.");
-          return setLoading(false);
+        } else {
+          cvId = uploaded.id;
         }
-        cvId = uploaded.id;
       }
 
       // Add LinkedIn if provided
