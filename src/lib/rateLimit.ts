@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 // Single-server, in-memory fixed-window limiter - no shared store, so this
 // only limits per app instance. Fine while the app runs on one server
 // (see #213); revisit with a shared store (e.g. Redis) if that changes.
@@ -69,4 +71,15 @@ export function getClientIp(req: { headers: Pick<Headers, "get"> }): string {
   if (realIp) return realIp.trim();
 
   return "unknown";
+}
+
+/** Standard 429 response for a rate-limited request. */
+export function tooManyRequestsResponse(retryAfterMs: number): NextResponse {
+  return NextResponse.json(
+    { error: "Too many requests" },
+    {
+      status: 429,
+      headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
+    }
+  );
 }

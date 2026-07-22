@@ -4,7 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { reportError } from "@/lib/logger";
-import { createRateLimiter, getClientIp } from "@/lib/rateLimit";
+import {
+  createRateLimiter,
+  getClientIp,
+  tooManyRequestsResponse,
+} from "@/lib/rateLimit";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const rateLimiter = createRateLimiter(config.uploads.avatar.rateLimit);
@@ -14,14 +18,7 @@ const rateLimiter = createRateLimiter(config.uploads.avatar.rateLimit);
 // tracked separately (#26), not something this refactor changes.
 export async function POST(req: NextRequest) {
   const { allowed, retryAfterMs } = rateLimiter.check(getClientIp(req));
-  if (!allowed)
-    return NextResponse.json(
-      { error: "Too many requests" },
-      {
-        status: 429,
-        headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
-      }
-    );
+  if (!allowed) return tooManyRequestsResponse(retryAfterMs);
 
   const form = await req.formData();
   const file = form.get("file");
