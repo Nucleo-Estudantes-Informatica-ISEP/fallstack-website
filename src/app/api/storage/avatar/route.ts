@@ -4,12 +4,16 @@ import { v4 as uuidv4 } from "uuid";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { reportError } from "@/lib/logger";
+import getServerSession from "@/application/services/sessionService";
 import { createAdminClient } from "@/utils/supabase/admin";
 
-// Not a defineHandler route: multipart/form-data body (defineHandler's
-// schema option parses JSON) and, pre-existing, no auth check at all -
-// tracked separately (#26), not something this refactor changes.
+// Not a defineHandler route: multipart/form-data body, and defineHandler's
+// schema option only parses JSON.
 export async function POST(req: NextRequest) {
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
   const form = await req.formData();
   const file = form.get("file");
   if (!file || !(file instanceof File))
