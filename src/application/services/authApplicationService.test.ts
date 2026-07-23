@@ -1,8 +1,10 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { Email } from "@/types/Email";
+import { createAdminClient } from "@/utils/supabase/admin";
 
 import {
+  deleteUser,
   findUserSessionByEmail,
   findUserSessionById,
   relinkUserId,
@@ -15,15 +17,28 @@ vi.mock("../repositories/userRepository", () => ({
   findUserSessionById: vi.fn(),
   findUserSessionByEmail: vi.fn(),
   relinkUserId: vi.fn(),
+  deleteUser: vi.fn(),
   upsertUser: vi.fn(),
+}));
+vi.mock("@/utils/supabase/admin", () => ({
+  createAdminClient: vi.fn(),
 }));
 
 const email = Email.create("student@isep.ipp.pt");
+const getUserById = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findUserSessionById).mockResolvedValue(null);
   vi.mocked(findUserSessionByEmail).mockResolvedValue(null);
+  vi.mocked(createAdminClient).mockReturnValue({
+    auth: { admin: { getUserById } },
+  } as never);
+  // Confirmed by default - individual tests override for the unconfirmed path.
+  getUserById.mockResolvedValue({
+    data: { user: { email_confirmed_at: "2026-01-01T00:00:00Z" } },
+    error: null,
+  });
 });
 
 test("routes an existing student with a profile to their student page", async () => {
@@ -95,10 +110,11 @@ test("provisions a brand-new identity when no account exists by id or email", as
     role: "STUDENT",
   });
   expect(relinkUserId).not.toHaveBeenCalled();
+  expect(deleteUser).not.toHaveBeenCalled();
   expect(destination).toBe("/signup");
 });
 
-test("re-keys an existing password-account student found by email to the new AuthNEI id", async () => {
+test("re-keys a confirmed existing password-account student found by email to the new AuthNEI id", async () => {
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "STUDENT",
@@ -114,15 +130,17 @@ test("re-keys an existing password-account student found by email to the new Aut
   });
 
   expect(findUserSessionByEmail).toHaveBeenCalledWith(email);
+  expect(getUserById).toHaveBeenCalledWith("old-password-id");
   expect(relinkUserId).toHaveBeenCalledWith(
     "old-password-id",
     "new-authnei-id"
   );
+  expect(deleteUser).not.toHaveBeenCalled();
   expect(upsertUser).not.toHaveBeenCalled();
   expect(destination).toBe("/student/S456");
 });
 
-test("re-keys an existing password-account employee found by email to the dashboard", async () => {
+test("re-keys a confirmed existing password-account employee found by email to the dashboard", async () => {
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "EMPLOYEE",
@@ -147,4 +165,56 @@ test("re-keys an existing password-account employee found by email to the dashbo
     "new-authnei-id"
   );
   expect(destination).toBe("/dashboard");
+});
+
+test("discards an unconfirmed dangling account found by email instead of relinking onto it", async () => {
+  vi.mocked(findUserSessionByEmail).mockResolvedValue({
+    id: "spoofed-id",
+    role: "STUDENT",
+    isAdmin: false,
+    student: { id: "spoofed-id", code: "S999", name: "Attacker-planted" },
+    employee: null,
+  } as never);
+  getUserById.mockResolvedValue({
+    data: { user: { email_confirmed_at: undefined } },
+    error: null,
+  });
+
+  const destination = await completeOAuthSignIn({
+    id: "new-authnei-id",
+    email,
+    fallback: "/signup",
+  });
+
+  expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
+  expect(relinkUserId).not.toHaveBeenCalled();
+  expect(upsertUser).toHaveBeenCalledWith({
+    id: "new-authnei-id",
+    email,
+    role: "STUDENT",
+  });
+  expect(destination).toBe("/signup");
+});
+
+test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {
+  vi.mocked(findUserSessionByEmail).mockResolvedValue({
+    id: "old-password-id",
+    role: "STUDENT",
+    isAdmin: false,
+    student: null,
+    employee: null,
+  } as never);
+  getUserById.mockResolvedValue({
+    data: { user: null },
+    error: new Error("network error"),
+  });
+
+  await completeOAuthSignIn({
+    id: "new-authnei-id",
+    email,
+    fallback: "/signup",
+  });
+
+  expect(deleteUser).toHaveBeenCalledWith("old-password-id");
+  expect(relinkUserId).not.toHaveBeenCalled();
 });

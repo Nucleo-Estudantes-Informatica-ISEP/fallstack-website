@@ -12,6 +12,7 @@ import {
 } from "../repositories/companyRepository";
 import { withTransaction } from "../repositories/transaction";
 import {
+  deleteUser,
   findUserByEmail,
   findUserSessionByEmail,
   findUserSessionById,
@@ -49,6 +50,27 @@ function destinationFor(user: SessionUser, fallback: string) {
   return fallback;
 }
 
+// /auth/signup is public and only checks email *format* (isIsepEmail), not
+// ownership - anyone can plant a User row under a real student's ISEP email
+// today, confirmed or not. Only a *confirmed* identity actually proves the
+// signer received and clicked a confirmation link sent to that mailbox, so
+// completeOAuthSignIn() below must not trust an email match blindly: an
+// unconfirmed row is treated as a dangling/spoofed placeholder, not a real
+// account to relink onto. This still depends on "Confirm email" being ON in
+// the Supabase project - see the AuthNEI PR's manual-steps checklist.
+async function isEmailConfirmed(id: string) {
+  const { data, error } = await createAdminClient().auth.admin.getUserById(id);
+  if (error || !data.user) {
+    reportError(
+      error,
+      { operation: "authnei_check_email_confirmed" },
+      "Failed to look up existing identity's confirmation status"
+    );
+    return false;
+  }
+  return Boolean(data.user.email_confirmed_at);
+}
+
 // Called from the AuthNEI OAuth callback once Supabase has already
 // exchanged the code for a session — Supabase manages the auth identity
 // itself, so unlike signUpUser() there is no password to set here.
@@ -70,14 +92,22 @@ export async function completeOAuthSignIn(input: {
   // creating a duplicate, which would violate the email unique constraint.
   const existingByEmail = await findUserSessionByEmail(input.email);
   if (existingByEmail) {
-    await relinkUserId(existingByEmail.id, input.id);
-    return destinationFor(existingByEmail, input.fallback);
+    if (await isEmailConfirmed(existingByEmail.id)) {
+      await relinkUserId(existingByEmail.id, input.id);
+      return destinationFor(existingByEmail, input.fallback);
+    }
+
+    // Unconfirmed - discard the dangling placeholder instead of relinking
+    // onto it, so AuthNEI (institutionally-verified) can claim the email
+    // fresh below rather than inheriting potentially attacker-planted data.
+    await deleteUser(existingByEmail.id);
   }
 
-  // First AuthNEI sign-in for this identity, no pre-existing account
-  // either. AuthNEI only proves identity — it's wired up for students only
-  // for now, so provision the app-level user here and send them into the
-  // signup wizard to finish their profile (year, bio, interests).
+  // First AuthNEI sign-in for this identity, no (trustworthy) pre-existing
+  // account either. AuthNEI only proves identity — it's wired up for
+  // students only for now, so provision the app-level user here and send
+  // them into the signup wizard to finish their profile (year, bio,
+  // interests).
   await upsertUser({ id: input.id, email: input.email, role: "STUDENT" });
   return input.fallback;
 }

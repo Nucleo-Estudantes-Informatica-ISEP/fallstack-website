@@ -60,6 +60,10 @@ export const relinkUserId = (
   db: DbClient = prisma
 ) => db.user.update({ where: { id: oldId }, data: { id: newId } });
 
+// Cascades to Student/Employee/interests via the same ON DELETE CASCADE FKs.
+export const deleteUser = (id: string, db: DbClient = prisma) =>
+  db.user.delete({ where: { id } });
+
 export const setUserInterests = (
   id: string,
   interests: string[],
