@@ -67,6 +67,12 @@ ARG SENTRY_PROJECT=""
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ARG NEXT_PUBLIC_BASE_URL=""
+# Links the admin backoffice's Logs nav item out to GlitchTip/Sentry -
+# NEXT_PUBLIC_*, so (like the others above) it must be supplied as a build
+# arg to actually land in the compiled bundle; declaring it only in
+# env.client.ts/.env doesn't reach a Docker build (see the
+# NEXT_PUBLIC_BASE_URL incident this same gap already caused once).
+ARG NEXT_PUBLIC_LOGS_DASHBOARD_URL=""
 ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 ENV SENTRY_URL=$SENTRY_URL
 ENV SENTRY_ORG=$SENTRY_ORG
@@ -74,6 +80,7 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_LOGS_DASHBOARD_URL=$NEXT_PUBLIC_LOGS_DASHBOARD_URL
 ENV NODE_OPTIONS="--max-old-space-size=2048"
 
 # Selective copy (smaller context) - package.json/lockfiles and prisma/
