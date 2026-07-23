@@ -7,19 +7,6 @@ export const findAllScheduleEvents = () =>
     orderBy: [{ day: "asc" }, { order: "asc" }],
   });
 
-// New events otherwise default to order: 0 (the Prisma column default),
-// jumping ahead of every existing row in that day until an admin manually
-// visits the reorder board to fix it - defaulting to the end of the day's
-// list here means a plain "add" never needs that follow-up trip.
-export const findMaxScheduleOrderForDay = async (day: number) => {
-  const last = await prisma.scheduleEvent.findFirst({
-    where: { day },
-    orderBy: { order: "desc" },
-    select: { order: true },
-  });
-  return last?.order ?? -1;
-};
-
 const ADMIN_SORTABLE_FIELDS = [
   "activity",
   "day",

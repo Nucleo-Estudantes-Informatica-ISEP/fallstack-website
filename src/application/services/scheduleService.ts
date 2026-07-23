@@ -9,7 +9,6 @@ import {
   createScheduleEvent,
   deleteScheduleEvent,
   findAllScheduleEvents,
-  findMaxScheduleOrderForDay,
   findScheduleEventById,
   findScheduleEventsForAdmin,
   updateScheduleEvent,
@@ -39,6 +38,48 @@ function assertScheduleDayIsValid(
     throw new HttpError("Schedule order is not chronologically valid", 400);
 }
 
+interface DayRow {
+  id: string;
+  startTime: string;
+  endTime: string;
+  order: number;
+}
+
+// Finds where a candidate belongs chronologically among its day's existing
+// rows (by startTime), rather than defaulting to "append last" - the admin
+// add/edit form never sends an explicit order, so this is what actually
+// determines a row's position whenever it isn't chronologically last. Only
+// shifts later rows up one order slot when there's no free gap to land in
+// (e.g. inserting between two adjacent orders); an edit that keeps a row in
+// its existing relative position touches no other row's order.
+function planChronologicalInsert(
+  dayRows: DayRow[],
+  candidateStartTime: string
+) {
+  const sorted = [...dayRows].sort((a, b) => a.order - b.order);
+  const insertIndex = sorted.findIndex(
+    (row) => candidateStartTime < row.startTime
+  );
+  const idx = insertIndex === -1 ? sorted.length : insertIndex;
+
+  const prevOrder = idx === 0 ? -1 : sorted[idx - 1].order;
+  const nextOrder = idx < sorted.length ? sorted[idx].order : undefined;
+  const order = prevOrder + 1;
+
+  if (nextOrder === undefined || order < nextOrder)
+    return { order, shifts: [], finalDayRows: sorted };
+
+  const shifted = sorted
+    .slice(idx)
+    .map((row) => ({ ...row, order: row.order + 1 }));
+
+  return {
+    order,
+    shifts: shifted.map(({ id, order }) => ({ id, order })),
+    finalDayRows: [...sorted.slice(0, idx), ...shifted],
+  };
+}
+
 export async function createScheduleEventForAdmin(input: {
   day: number;
   startTime: string;
@@ -46,14 +87,23 @@ export async function createScheduleEventForAdmin(input: {
   activity: string;
   order?: number;
 }) {
-  const order =
-    input.order ?? (await findMaxScheduleOrderForDay(input.day)) + 1;
-
   const dayRows = (await findAllScheduleEvents()).filter(
     (event) => event.day === input.day
   );
+
+  let order = input.order;
+  let shifts: { id: string; order: number }[] = [];
+  let validatedDayRows: DayRow[] = dayRows;
+
+  if (order === undefined) {
+    const plan = planChronologicalInsert(dayRows, input.startTime);
+    order = plan.order;
+    shifts = plan.shifts;
+    validatedDayRows = plan.finalDayRows;
+  }
+
   assertScheduleDayIsValid([
-    ...dayRows,
+    ...validatedDayRows,
     {
       id: "__new__",
       startTime: input.startTime,
@@ -61,6 +111,11 @@ export async function createScheduleEventForAdmin(input: {
       order,
     },
   ]);
+
+  if (shifts.length > 0)
+    await bulkUpdateScheduleOrder(
+      shifts.map((shift) => ({ ...shift, day: input.day }))
+    );
 
   return createScheduleEvent({ ...input, order });
 }
@@ -81,14 +136,31 @@ export async function updateScheduleEventForAdmin(
   const day = input.day ?? current.day;
   const startTime = input.startTime ?? current.startTime;
   const endTime = input.endTime ?? current.endTime;
-  const order = input.order ?? current.order;
 
   const dayRows = (await findAllScheduleEvents()).filter(
     (event) => event.day === day && event.id !== id
   );
-  assertScheduleDayIsValid([...dayRows, { id, startTime, endTime, order }]);
 
-  return updateScheduleEvent(id, input);
+  let order = input.order;
+  let shifts: { id: string; order: number }[] = [];
+  let validatedDayRows: DayRow[] = dayRows;
+
+  if (order === undefined) {
+    const plan = planChronologicalInsert(dayRows, startTime);
+    order = plan.order;
+    shifts = plan.shifts;
+    validatedDayRows = plan.finalDayRows;
+  }
+
+  assertScheduleDayIsValid([
+    ...validatedDayRows,
+    { id, startTime, endTime, order },
+  ]);
+
+  if (shifts.length > 0)
+    await bulkUpdateScheduleOrder(shifts.map((shift) => ({ ...shift, day })));
+
+  return updateScheduleEvent(id, { ...input, order });
 }
 
 export async function deleteScheduleEventForAdmin(id: string) {
