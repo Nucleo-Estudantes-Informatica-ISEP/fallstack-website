@@ -46,7 +46,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 
       const cv = {
         name: file.name,
-        id: uploaded.id,
+        file,
         preview: URL.createObjectURL(file),
       };
 
