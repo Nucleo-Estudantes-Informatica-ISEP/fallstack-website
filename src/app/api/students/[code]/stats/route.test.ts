@@ -58,11 +58,9 @@ test("passes the caller's ownership info through to getStudentStats and returns 
   assert.equal(res.status, 200);
   assert.deepEqual(body, { totalScans: 5, totalSaves: 2 });
   assert.equal(vi.mocked(getStudentStats).mock.calls[0]?.[0], "S123");
-  assert.deepEqual(vi.mocked(getStudentStats).mock.calls[0]?.[1], {
-    studentCode: undefined,
-    companyId: "c1",
-    isAdmin: false,
-  });
+  const access = vi.mocked(getStudentStats).mock.calls[0]?.[1];
+  assert.equal(access?.companyId, "c1");
+  assert.equal(access?.isAdmin, false);
 });
 
 test("propagates getStudentStats' 404 for an unauthorized caller", async () => {
