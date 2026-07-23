@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import prisma from "./database";
+import prisma, { DbClient } from "./database";
 
 export const findAllFaqEntries = () =>
   prisma.faqEntry.findMany({ orderBy: { order: "asc" } });
@@ -14,9 +14,13 @@ export const isUniqueConstraintError = (error: unknown) =>
 // New entries otherwise default to order: 0 (the Prisma column default),
 // jumping ahead of every existing entry until an admin manually visits the
 // reorder board to fix it - defaulting to the end of the list here means a
-// plain "add" never needs that follow-up trip.
-export const findMaxFaqOrder = async () => {
-  const last = await prisma.faqEntry.findFirst({
+// plain "add" never needs that follow-up trip. Takes an optional `db` so
+// the caller can run this inside the same transaction as the create that
+// uses its result (see createFaqEntryForAdmin) - read outside the
+// transaction, two concurrent admin creates could compute the same
+// "next order" value.
+export const findMaxFaqOrder = async (db: DbClient = prisma) => {
+  const last = await db.faqEntry.findFirst({
     orderBy: { order: "desc" },
     select: { order: true },
   });
@@ -68,11 +72,14 @@ export const findFaqEntriesForAdmin = ({
 export const findFaqEntryById = (id: string) =>
   prisma.faqEntry.findUnique({ where: { id } });
 
-export const createFaqEntry = (data: {
-  question: string;
-  answer: string;
-  order?: number;
-}) => prisma.faqEntry.create({ data });
+export const createFaqEntry = (
+  data: {
+    question: string;
+    answer: string;
+    order?: number;
+  },
+  db: DbClient = prisma
+) => db.faqEntry.create({ data });
 
 export const updateFaqEntry = (
   id: string,

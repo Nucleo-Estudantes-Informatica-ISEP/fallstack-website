@@ -15,6 +15,7 @@ import {
   updateFaqEntry,
   type AdminFaqQuery,
 } from "../repositories/faqRepository";
+import { withTransaction } from "../repositories/transaction";
 
 export const getFaqEntries = () => findAllFaqEntries();
 export const getFaqEntry = (id: string) => findFaqEntryById(id);
@@ -32,9 +33,11 @@ export async function createFaqEntryForAdmin(input: {
   answer: string;
   order?: number;
 }) {
-  const order = input.order ?? (await findMaxFaqOrder()) + 1;
   try {
-    return await createFaqEntry({ ...input, order });
+    return await withTransaction(async (tx) => {
+      const order = input.order ?? (await findMaxFaqOrder(tx)) + 1;
+      return createFaqEntry({ ...input, order }, tx);
+    });
   } catch (error) {
     if (isUniqueConstraintError(error))
       throw new HttpError("Já existe uma pergunta igual.", 409);

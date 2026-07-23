@@ -9,6 +9,7 @@ import {
   isUniqueConstraintError,
   updateFaqEntry,
 } from "../repositories/faqRepository";
+import { withTransaction } from "../repositories/transaction";
 import {
   createFaqEntryForAdmin,
   deleteFaqEntryForAdmin,
@@ -29,11 +30,19 @@ vi.mock("../repositories/faqRepository", () => ({
   bulkUpdateFaqOrder: vi.fn(),
   isUniqueConstraintError: vi.fn(),
 }));
+vi.mock("../repositories/transaction", () => ({
+  withTransaction: vi.fn(),
+}));
+
+const transaction = {} as never;
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findMaxFaqOrder).mockResolvedValue(-1);
   vi.mocked(isUniqueConstraintError).mockReturnValue(false);
+  vi.mocked(withTransaction).mockImplementation(async (callback) =>
+    callback(transaction)
+  );
 });
 
 test("a new entry with no explicit order lands at the end of the list", async () => {
@@ -42,11 +51,12 @@ test("a new entry with no explicit order lands at the end of the list", async ()
 
   await createFaqEntryForAdmin({ question: "Q?", answer: "A." });
 
-  expect(createFaqEntry).toHaveBeenCalledWith({
-    question: "Q?",
-    answer: "A.",
-    order: 5,
-  });
+  expect(withTransaction).toHaveBeenCalledOnce();
+  expect(findMaxFaqOrder).toHaveBeenCalledWith(transaction);
+  expect(createFaqEntry).toHaveBeenCalledWith(
+    { question: "Q?", answer: "A.", order: 5 },
+    transaction
+  );
 });
 
 test("an explicit order is respected over the computed default", async () => {
@@ -55,11 +65,11 @@ test("an explicit order is respected over the computed default", async () => {
 
   await createFaqEntryForAdmin({ question: "Q?", answer: "A.", order: 0 });
 
-  expect(createFaqEntry).toHaveBeenCalledWith({
-    question: "Q?",
-    answer: "A.",
-    order: 0,
-  });
+  expect(findMaxFaqOrder).not.toHaveBeenCalled();
+  expect(createFaqEntry).toHaveBeenCalledWith(
+    { question: "Q?", answer: "A.", order: 0 },
+    transaction
+  );
 });
 
 test("a duplicate question on create surfaces as a 409, not a raw Prisma error", async () => {
