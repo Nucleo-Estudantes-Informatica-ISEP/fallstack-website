@@ -4,12 +4,22 @@ import { v4 as uuidv4 } from "uuid";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { reportError } from "@/lib/logger";
+import {
+  createRateLimiter,
+  getClientIp,
+  tooManyRequestsResponse,
+} from "@/lib/rateLimit";
 import getServerSession from "@/application/services/sessionService";
 import { createAdminClient } from "@/utils/supabase/admin";
+
+const rateLimiter = createRateLimiter(config.uploads.avatar.rateLimit);
 
 // Not a defineHandler route: multipart/form-data body, and defineHandler's
 // schema option only parses JSON.
 export async function POST(req: NextRequest) {
+  const { allowed, retryAfterMs } = rateLimiter.check(getClientIp(req));
+  if (!allowed) return tooManyRequestsResponse(retryAfterMs);
+
   const session = await getServerSession();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
