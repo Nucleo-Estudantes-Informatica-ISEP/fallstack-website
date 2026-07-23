@@ -4,6 +4,10 @@ import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
 import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
+import {
+  isAllowedToViewStudent,
+  type StudentAccess,
+} from "@/domain/student/studentAccess";
 import { getBoothActionName } from "@/edition/actions";
 import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
@@ -21,7 +25,6 @@ import {
   findCompanyHistory,
   findCompanyHistoryWithInterests,
   findCompanySavedStudentsWithCv,
-  findCompanySavesForExport,
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
@@ -112,7 +115,12 @@ export async function saveStudentAsAdmin(
 export const isSaved = (companyId: string, code: string) =>
   isStudentSaved(companyId, code);
 
-export async function getStudentStats(code: string): Promise<Stats> {
+export async function getStudentStats(
+  code: string,
+  access: StudentAccess
+): Promise<Stats> {
+  if (!(await isAllowedToViewStudent(code, access, isStudentSaved)))
+    throw new HttpError("Not found", 404);
   const count = await countStudentSaves(code);
   return { totalScans: count, totalSaves: count };
 }
@@ -136,8 +144,6 @@ export const getCompanyHistoryWithInterests = (companyId: string) =>
   findCompanyHistoryWithInterests(companyId);
 export const getCompanySavedStudentsWithCv = (companyId: string) =>
   findCompanySavedStudentsWithCv(companyId);
-export const getCompanySavesForExport = (companyId: string) =>
-  findCompanySavesForExport(companyId);
 export const getStudentHistory = (studentId: string) =>
   findStudentHistory(studentId);
 

@@ -11,6 +11,7 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import AuthNeiButton from "@/components/AuthNeiButton";
 import { isIsepEmail } from "@/utils/isepEmail";
 
 interface AccountDetailsStepProps {
@@ -18,6 +19,13 @@ interface AccountDetailsStepProps {
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
+  // True when this step is being rendered after returning from a successful
+  // AuthNEI sign-in — email/password are skipped since Supabase already has
+  // an authenticated identity for this student, only the year is missing.
+  authNeiMode?: boolean;
+  // Stashes any wizard data collected so far before redirecting to AuthNEI,
+  // since the OAuth flow is a full page navigation that clears React state.
+  onAuthNeiRedirect?: () => void;
 }
 
 const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
@@ -25,6 +33,8 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   setCurrentStep,
   data,
   setData,
+  authNeiMode = false,
+  onAuthNeiRedirect,
 }) => {
   const [error, setError] = useState<string | null>(null);
 
@@ -37,6 +47,12 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     // Validate year
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
+    }
+
+    // AuthNEI already established the account — only the year was missing.
+    if (authNeiMode) {
+      setData({ ...data, year: yearRef.current.value });
+      return setCurrentStep(currentStep + 1);
     }
 
     // Validate email
@@ -104,6 +120,22 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           Criar uma conta
         </p>
 
+        {!authNeiMode && (
+          <>
+            <AuthNeiButton
+              next="/signup?authnei=1"
+              className="mb-4"
+              beforeRedirect={onAuthNeiRedirect}
+            />
+
+            <div className="mb-4 flex w-full items-center gap-3 text-sm text-gray-400">
+              <div className="h-px flex-1 bg-[rgba(255,255,255,0.2)]" />
+              ou continua com o teu email institucional
+              <div className="h-px flex-1 bg-[rgba(255,255,255,0.2)]" />
+            </div>
+          </>
+        )}
+
         <div className="flex flex-col gap-y-4 text-left">
           <InputSelect
             center
@@ -116,38 +148,42 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
             options={yearOptions}
           />
 
-          <Input
-            type="email"
-            name="Email Institucional"
-            placeholder=""
-            center
-            inputRef={emailRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.email ? data.email : undefined}
-            className={`${error && !emailRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-          />
+          {!authNeiMode && (
+            <>
+              <Input
+                type="email"
+                name="Email Institucional"
+                placeholder=""
+                center
+                inputRef={emailRef}
+                onKeyUp={handleKeyUp}
+                defaultValue={data.email ? data.email : undefined}
+                className={`${error && !emailRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
+              />
 
-          <Input
-            type="password"
-            name="Palavra-passe"
-            placeholder=""
-            center
-            inputRef={passwordRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.password ? data.password : undefined}
-            className={`${error && !passwordRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-          />
+              <Input
+                type="password"
+                name="Palavra-passe"
+                placeholder=""
+                center
+                inputRef={passwordRef}
+                onKeyUp={handleKeyUp}
+                defaultValue={data.password ? data.password : undefined}
+                className={`${error && !passwordRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
+              />
 
-          <Input
-            type="password"
-            name="Confirmar Palavra-passe"
-            placeholder=""
-            center
-            inputRef={passwordConfirmRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.password ? data.password : undefined}
-            className={`${error && !passwordConfirmRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-          />
+              <Input
+                type="password"
+                name="Confirmar Palavra-passe"
+                placeholder=""
+                center
+                inputRef={passwordConfirmRef}
+                onKeyUp={handleKeyUp}
+                defaultValue={data.password ? data.password : undefined}
+                className={`${error && !passwordConfirmRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
+              />
+            </>
+          )}
         </div>
 
         {error && (

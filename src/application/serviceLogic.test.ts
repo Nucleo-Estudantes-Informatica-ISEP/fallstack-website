@@ -64,3 +64,25 @@ test("student access uses one owner/admin/saving-company policy", async () => {
     false
   );
 });
+
+test("student access skips the isSaved lookup when the caller already knows the result", async () => {
+  const unexpectedLookup = async () => {
+    throw new Error("save lookup should be short-circuited");
+  };
+  assert.equal(
+    await isAllowedToViewStudent(
+      "student-1",
+      { companyId: "company-1", isAdmin: false, isSaved: true },
+      unexpectedLookup
+    ),
+    true
+  );
+  assert.equal(
+    await isAllowedToViewStudent(
+      "student-1",
+      { companyId: "company-1", isAdmin: false, isSaved: false },
+      unexpectedLookup
+    ),
+    false
+  );
+});

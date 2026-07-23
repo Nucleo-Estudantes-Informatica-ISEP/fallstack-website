@@ -6,7 +6,7 @@ export interface StudentSignUpData {
   interests: string[];
   cv: {
     name: string;
-    id: string;
+    file: File;
     preview: string;
   } | null;
   avatar: string | null;
