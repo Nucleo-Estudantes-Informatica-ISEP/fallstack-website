@@ -57,3 +57,15 @@ test("an admin can query any student's stats", async () => {
     getStudentStats("student-2", { isAdmin: true })
   ).resolves.toEqual({ totalScans: 3, totalSaves: 3 });
 });
+
+test("a company that saved the student can query their stats", async () => {
+  vi.mocked(isStudentSaved).mockResolvedValue(true);
+
+  await expect(
+    getStudentStats("student-2", {
+      companyId: "company-1",
+      isAdmin: false,
+    })
+  ).resolves.toEqual({ totalScans: 3, totalSaves: 3 });
+  expect(isStudentSaved).toHaveBeenCalledWith("company-1", "student-2");
+});

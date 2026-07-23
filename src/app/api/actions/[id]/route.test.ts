@@ -33,9 +33,8 @@ function request(method: string) {
 }
 
 test("GET returns 404 when the action doesn't exist", async () => {
-  const { getActionQrCode } = await import(
-    "@/application/services/actionService"
-  );
+  const { getActionQrCode } =
+    await import("@/application/services/actionService");
   vi.mocked(getActionQrCode).mockResolvedValue(null);
 
   const { GET } = await import("./route");
@@ -47,9 +46,8 @@ test("GET returns 404 when the action doesn't exist", async () => {
 });
 
 test("GET returns the action and its live QR token for a real action", async () => {
-  const { getActionQrCode } = await import(
-    "@/application/services/actionService"
-  );
+  const { getActionQrCode } =
+    await import("@/application/services/actionService");
   vi.mocked(getActionQrCode).mockResolvedValue({
     action: {
       id: "action-1",
@@ -75,8 +73,9 @@ test("GET returns the action and its live QR token for a real action", async () 
 });
 
 test("POST rejects an unauthenticated request with 401", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue(null);
 
   const { POST } = await import("./route");
@@ -88,8 +87,9 @@ test("POST rejects an unauthenticated request with 401", async () => {
 });
 
 test("POST rejects a malformed/tampered scanned token with 400, without completing the action", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
@@ -99,9 +99,8 @@ test("POST rejects a malformed/tampered scanned token with 400, without completi
   } as never);
 
   const { POST } = await import("./route");
-  const { completeActionById } = await import(
-    "@/application/services/actionService"
-  );
+  const { completeActionById } =
+    await import("@/application/services/actionService");
   const res = await POST(request("POST"), {
     params: Promise.resolve({ id: "not-a-real-jwt" }),
   });
@@ -111,8 +110,9 @@ test("POST rejects a malformed/tampered scanned token with 400, without completi
 });
 
 test("POST completes the action for a validly-scanned, unexpired token", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
@@ -128,9 +128,8 @@ test("POST completes the action for a validly-scanned, unexpired token", async (
   );
 
   const { POST } = await import("./route");
-  const { completeActionById } = await import(
-    "@/application/services/actionService"
-  );
+  const { completeActionById } =
+    await import("@/application/services/actionService");
   const res = await POST(request("POST"), {
     params: Promise.resolve({ id: token }),
   });
@@ -141,8 +140,9 @@ test("POST completes the action for a validly-scanned, unexpired token", async (
 });
 
 test("POST rejects a scanned token once it's past its 30s expiry (the #212 regression case)", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
@@ -162,9 +162,8 @@ test("POST rejects a scanned token once it's past its 30s expiry (the #212 regre
     vi.advanceTimersByTime(31_000);
 
     const { POST } = await import("./route");
-    const { completeActionById } = await import(
-      "@/application/services/actionService"
-    );
+    const { completeActionById } =
+      await import("@/application/services/actionService");
     const res = await POST(request("POST"), {
       params: Promise.resolve({ id: token }),
     });
@@ -177,8 +176,9 @@ test("POST rejects a scanned token once it's past its 30s expiry (the #212 regre
 });
 
 test("PATCH rejects a non-admin session with 403", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
@@ -196,8 +196,9 @@ test("PATCH rejects a non-admin session with 403", async () => {
 });
 
 test("PATCH toggles the action live status for an admin", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "EMPLOYEE",
@@ -207,9 +208,8 @@ test("PATCH toggles the action live status for an admin", async () => {
   } as never);
 
   const { PATCH } = await import("./route");
-  const { toggleActionLive } = await import(
-    "@/application/services/actionService"
-  );
+  const { toggleActionLive } =
+    await import("@/application/services/actionService");
   const res = await PATCH(request("PATCH"), {
     params: Promise.resolve({ id: "action-1" }),
   });

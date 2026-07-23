@@ -39,7 +39,10 @@ test("verifyJwt returns null for a token signed with a different secret", async 
   const jwt = await import("jsonwebtoken");
   const { verifyJwt } = await import("./authService");
 
-  const foreignToken = jwt.sign({ code: "S123" }, "a-completely-different-secret");
+  const foreignToken = jwt.sign(
+    { code: "S123" },
+    "a-completely-different-secret"
+  );
 
   expect(verifyJwt(foreignToken)).toBeNull();
 });

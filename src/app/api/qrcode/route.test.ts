@@ -24,8 +24,9 @@ function request() {
 }
 
 test("rejects an unauthenticated request with 401", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue(null);
 
   const { GET } = await import("./route");
@@ -35,8 +36,9 @@ test("rejects an unauthenticated request with 401", async () => {
 });
 
 test("rejects a non-student session (e.g. an employee) with 403", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "EMPLOYEE",
@@ -52,8 +54,9 @@ test("rejects a non-student session (e.g. an employee) with 403", async () => {
 });
 
 test("returns a token embedding the student's own code, verifiable with a ~30 minute expiry", async () => {
-  const getServerSession = (await import("@/application/services/sessionService"))
-    .default;
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
