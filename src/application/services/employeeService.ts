@@ -24,6 +24,7 @@ import {
 import {
   createSupabaseAuthUserAsAdmin,
   rollbackAuthUser,
+  setAuthUserBanned,
 } from "./authApplicationService";
 
 export const getEmployeeById = (id: string) => findEmployeeProfileById(id);
@@ -84,7 +85,10 @@ export async function updateEmployeeForAdmin(
 ) {
   const { password, active, ...profile } = input;
   const employee = await updateEmployeeFields(id, profile);
-  if (active !== undefined) await updateUserActive(id, active);
+  if (active !== undefined) {
+    await updateUserActive(id, active);
+    await setAuthUserBanned(id, !active);
+  }
   if (password) {
     const admin = createAdminClient();
     const { error } = await admin.auth.admin.updateUserById(id, { password });

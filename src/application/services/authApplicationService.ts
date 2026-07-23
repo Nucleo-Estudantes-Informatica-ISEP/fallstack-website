@@ -69,6 +69,35 @@ export async function rollbackAuthUser(userId: string) {
   }
 }
 
+// Defense-in-depth alongside User.active, which is what getServerSession()
+// actually enforces on every request - this additionally stops the person
+// from obtaining a *new* Supabase session at all once deactivated. Best-
+// effort: a failure here is reported but doesn't block the admin action,
+// since the DB-side active flag (the real enforcement point) already took
+// effect regardless.
+export async function setAuthUserBanned(userId: string, banned: boolean) {
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.updateUserById(userId, {
+      // Supabase has no "ban forever" option - a 100-year duration is its
+      // documented way to express an effectively permanent ban.
+      ban_duration: banned ? "876000h" : "none",
+    });
+    if (error)
+      reportError(
+        error,
+        { operation: "set_auth_user_banned" },
+        "Failed to update Supabase Auth ban status"
+      );
+  } catch (error) {
+    reportError(
+      error,
+      { operation: "set_auth_user_banned" },
+      "Failed to update Supabase Auth ban status"
+    );
+  }
+}
+
 export async function signUpUser(input: {
   email: Email;
   password: string;

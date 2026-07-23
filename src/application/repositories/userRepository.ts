@@ -10,6 +10,7 @@ const sessionSelect = {
   id: true,
   role: true,
   isAdmin: true,
+  active: true,
   student: { select: { id: true, code: true, name: true } },
   employee: {
     select: {

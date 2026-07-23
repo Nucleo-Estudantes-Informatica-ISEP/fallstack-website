@@ -49,6 +49,7 @@ import { completeAction } from "./actionService";
 import {
   createSupabaseAuthUserAsAdmin,
   rollbackAuthUser,
+  setAuthUserBanned,
 } from "./authApplicationService";
 
 type NewStudent = z.infer<typeof postStudentSchema>;
@@ -208,7 +209,10 @@ export async function updateStudentForAdmin(
   const { password, avatar, active, ...profile } = input;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
-  if (active !== undefined) await updateUserActive(id, active);
+  if (active !== undefined) {
+    await updateUserActive(id, active);
+    await setAuthUserBanned(id, !active);
+  }
   if (password) {
     const admin = createAdminClient();
     const { error } = await admin.auth.admin.updateUserById(id, { password });
