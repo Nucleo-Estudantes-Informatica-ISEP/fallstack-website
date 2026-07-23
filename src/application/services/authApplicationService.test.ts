@@ -10,7 +10,10 @@ import {
   relinkUserId,
   upsertUser,
 } from "../repositories/userRepository";
-import { completeOAuthSignIn } from "./authApplicationService";
+import {
+  completeOAuthSignIn,
+  setAuthUserBanned,
+} from "./authApplicationService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("../repositories/userRepository", () => ({
@@ -26,14 +29,16 @@ vi.mock("@/utils/supabase/admin", () => ({
 
 const email = Email.create("student@isep.ipp.pt");
 const getUserById = vi.fn();
+const updateUserById = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findUserSessionById).mockResolvedValue(null);
   vi.mocked(findUserSessionByEmail).mockResolvedValue(null);
   vi.mocked(createAdminClient).mockReturnValue({
-    auth: { admin: { getUserById } },
+    auth: { admin: { getUserById, updateUserById } },
   } as never);
+  updateUserById.mockResolvedValue({ data: {}, error: null });
   // Confirmed by default - individual tests override for the unconfirmed path.
   getUserById.mockResolvedValue({
     data: { user: { email_confirmed_at: "2026-01-01T00:00:00Z" } },
@@ -217,4 +222,29 @@ test("fails closed (treats as unconfirmed) when the admin lookup errors", async 
 
   expect(deleteUser).toHaveBeenCalledWith("old-password-id");
   expect(relinkUserId).not.toHaveBeenCalled();
+});
+
+test("setAuthUserBanned(true) sets a long ban_duration", async () => {
+  await setAuthUserBanned("user-1", true);
+
+  expect(updateUserById).toHaveBeenCalledWith("user-1", {
+    ban_duration: "876000h",
+  });
+});
+
+test("setAuthUserBanned(false) clears the ban", async () => {
+  await setAuthUserBanned("user-1", false);
+
+  expect(updateUserById).toHaveBeenCalledWith("user-1", {
+    ban_duration: "none",
+  });
+});
+
+test("setAuthUserBanned doesn't throw if the Supabase call errors", async () => {
+  updateUserById.mockResolvedValue({
+    data: null,
+    error: new Error("network error"),
+  });
+
+  await expect(setAuthUserBanned("user-1", true)).resolves.toBeUndefined();
 });

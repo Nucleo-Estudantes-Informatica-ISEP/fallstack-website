@@ -25,6 +25,13 @@ const clientEnvSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().url().optional()
   ),
+  // Links the admin backoffice's Logs nav item out to wherever GlitchTip/
+  // Sentry is hosted - no in-app log persistence, just a pointer. Absent
+  // means "unset", same as NEXT_PUBLIC_SENTRY_DSN above.
+  NEXT_PUBLIC_LOGS_DASHBOARD_URL: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().url().optional()
+  ),
 });
 
 function parseClientEnv() {
@@ -33,6 +40,7 @@ function parseClientEnv() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    NEXT_PUBLIC_LOGS_DASHBOARD_URL: process.env.NEXT_PUBLIC_LOGS_DASHBOARD_URL,
   });
 
   if (!result.success) {

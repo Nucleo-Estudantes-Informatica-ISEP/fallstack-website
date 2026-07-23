@@ -12,12 +12,14 @@ import { getBoothActionName } from "@/edition/actions";
 import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
 import {
+  findCompanies,
   findCompanyById,
   findCompanyEmployee,
   findCompanyName,
 } from "../repositories/companyRepository";
 import {
   countCompanySaves,
+  countSavedStudentsByCompany,
   countStudentSaves,
   countStudentSavesSince,
   createSavedStudent,
@@ -136,6 +138,21 @@ export const getTodayStudentStats = (studentId: string) => {
 export async function getCompanyStats(companyId: string): Promise<Stats> {
   const count = await countCompanySaves(companyId);
   return { totalScans: count, totalSaves: count };
+}
+
+export async function getSavedStudentCountsByCompany() {
+  const [counts, companies] = await Promise.all([
+    countSavedStudentsByCompany(),
+    findCompanies(),
+  ]);
+  const companyNameById = new Map(companies.map((c) => [c.id, c.name]));
+  return counts
+    .map((c) => ({
+      companyId: c.companyId,
+      companyName: companyNameById.get(c.companyId) ?? "Unknown",
+      count: c._count._all,
+    }))
+    .sort((a, b) => b.count - a.count);
 }
 
 export const getCompanyHistory = (companyId: string) =>

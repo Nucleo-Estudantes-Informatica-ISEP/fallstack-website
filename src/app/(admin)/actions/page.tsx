@@ -1,61 +1,100 @@
 import Link from "next/link";
 
-import Custom404 from "@/app/not-found";
-import { getActions } from "@/application/services/actionService";
-import getServerSession from "@/application/services/sessionService";
+import {
+  parseAdminListParams,
+  type AdminListSearchParams,
+} from "@/lib/adminListParams";
+import AdminToggleButton from "@/components/AdminToggleButton";
+import DataTable, { type DataTableColumn } from "@/components/DataTable";
+import { toActionDto } from "@/application/dto/actionDto";
+import { listActionsForAdmin } from "@/application/services/actionService";
 
-const actions = async () => {
-  const session = await getServerSession();
-  if (!session || !session.isAdmin) {
-    return Custom404();
-  }
+const PAGE_SIZE = 20;
 
-  const actions = await getActions();
+interface ActionsAdminPageProps {
+  searchParams: AdminListSearchParams;
+}
+
+type ActionRow = ReturnType<typeof toActionDto>;
+
+const columns: DataTableColumn<ActionRow>[] = [
+  { key: "name", header: "Nome", render: (a) => a.name, sortable: true },
+  { key: "points", header: "Pontos", render: (a) => a.points, sortable: true },
+  { key: "altText", header: "Texto alt.", render: (a) => a.altText || "-" },
+];
+
+const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
+  const { page, sort, order, q } = await parseAdminListParams(searchParams);
+  const { items, totalCount } = await listActionsForAdmin({
+    page,
+    pageSize: PAGE_SIZE,
+    sort,
+    order,
+    search: q,
+  });
+  const actions = items.map(toActionDto);
 
   return (
-    <section className="flex min-h-screen w-full flex-col items-center justify-center">
-      <div className="overflow-x-scroll rounded-lg bg-white shadow-md">
-        <table className="w-full table-auto border-collapse overflow-x-scroll">
-          <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
-            <tr>
-              <th className="px-2 py-3 text-left md:px-6">Name</th>
-              <th className="px-2 py-3 text-left md:px-6">Points</th>
-              <th className="px-2 py-3 text-left md:px-6">Alt Text</th>
-              <th className="px-2 py-3 text-left md:px-6">Live</th>
-              <th className="px-2 py-3 text-left md:px-6">Visible</th>
-              <th className="px-2 py-3 text-left md:px-6">Action</th>
-            </tr>
-          </thead>
-          <tbody className="text-base text-gray-600">
-            {actions.map((action) => (
-              <tr
-                key={action.id}
-                className="border-b transition-colors hover:bg-gray-100"
-              >
-                <td className="px-2 py-4 md:px-6">{action.name}</td>
-                <td className="px-2 py-4 md:px-6">{action.points}</td>
-                <td className="px-2 py-4 md:px-6">{action.altText || "N/A"}</td>
-                <td className="px-2 py-4 md:px-6">
-                  {action.isLive ? "Yes" : "No"}
-                </td>
-                <td className="px-2 py-4 md:px-6">
-                  {action.isVisible ? "Yes" : "No"}
-                </td>
-                <td className="px-2 py-4 md:px-6">
-                  <Link
-                    href={`/actions/${action.id}`}
-                    className="text-blue-500 hover:underline"
-                  >
-                    View
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <section className="flex flex-col gap-6 p-8">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-gray-800">Ações</h1>
+        <Link
+          href="/actions/new"
+          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+        >
+          Adicionar ação
+        </Link>
       </div>
+
+      <DataTable
+        columns={columns}
+        rows={actions}
+        rowKey={(action) => action.id}
+        page={page}
+        pageSize={PAGE_SIZE}
+        totalCount={totalCount}
+        basePath="/actions"
+        sort={sort ? { key: sort, order } : undefined}
+        searchValue={q}
+        searchPlaceholder="Pesquisar por nome..."
+        renderActions={(action) => (
+          <div className="flex items-center gap-4">
+            <Link
+              href={`/actions/${action.id}/edit`}
+              aria-label={`Editar ${action.name}`}
+              className="hover:text-primary"
+            >
+              ✏️
+            </Link>
+            <Link
+              href={`/actions/${action.id}`}
+              className="text-blue-500 hover:underline"
+            >
+              QR
+            </Link>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Live</span>
+              <AdminToggleButton
+                checked={action.isLive}
+                label={`Ativar/desativar ${action.name}`}
+                patchUrl={`/admin/actions/${action.id}`}
+                field="isLive"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">Visível</span>
+              <AdminToggleButton
+                checked={action.isVisible}
+                label={`Mostrar/ocultar ${action.name}`}
+                patchUrl={`/admin/actions/${action.id}`}
+                field="isVisible"
+              />
+            </div>
+          </div>
+        )}
+      />
     </section>
   );
 };
 
-export default actions;
+export default ActionsAdminPage;

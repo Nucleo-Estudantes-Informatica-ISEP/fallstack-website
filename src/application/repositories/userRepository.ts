@@ -10,6 +10,7 @@ const sessionSelect = {
   id: true,
   role: true,
   isAdmin: true,
+  active: true,
   student: { select: { id: true, code: true, name: true } },
   employee: {
     select: {
@@ -83,6 +84,9 @@ export const connectUserInterests = (
     where: { id },
     data: { interests: { connect: interests.map((name) => ({ name })) } },
   });
+
+export const updateUserActive = (id: string, active: boolean) =>
+  prisma.user.update({ where: { id }, data: { active } });
 
 export const findEmployeeUserIds = async (companyId: string) => {
   const employees = await prisma.employee.findMany({
