@@ -3,15 +3,15 @@ import "server-only";
 import { z } from "zod";
 
 import { HttpError } from "@/types/HttpError";
-import { parseStudentYear, studentYearLabel } from "@/domain/Student/year";
+import { isAllowedToViewStudent } from "@/domain/student/studentAccess";
+import type { StudentAccess } from "@/domain/student/studentAccess";
+import { parseStudentYear, studentYearLabel } from "@/domain/student/year";
 import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 import { createAdminClient } from "@/utils/supabase/admin";
 
-import { isAllowedToViewStudent } from "../domain/studentAccess";
-import type { StudentAccess } from "../domain/studentAccess";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   createStudent,

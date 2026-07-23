@@ -1,7 +1,6 @@
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
-import { verifyJwt } from "@/services/authService";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
 import Footer from "@/components/Footer";
 import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
@@ -13,6 +12,7 @@ import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { toStudentDto } from "@/application/dto/studentDto";
 import { getStudentActions } from "@/application/services/actionService";
+import { verifyJwt } from "@/application/services/authService";
 import { getCompanies } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
 import {

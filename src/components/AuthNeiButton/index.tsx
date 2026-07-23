@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 
 import config from "@/config";
-import PrimaryButton from "@/components/PrimaryButton";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import { createClient } from "@/utils/supabase/client";
 
 import type { Provider } from "@supabase/supabase-js";

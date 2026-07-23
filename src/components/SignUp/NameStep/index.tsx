@@ -11,8 +11,8 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import Input from "@/components/Input";
-import PrimaryButton from "@/components/PrimaryButton";
+import Input from "@/components/ui/Input";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface NameStepProps {
   currentStep: number;

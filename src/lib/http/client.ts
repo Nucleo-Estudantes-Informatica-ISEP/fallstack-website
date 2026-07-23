@@ -1,6 +1,6 @@
 import "client-only";
 
-import { BASE_URL } from "@/services/api";
+import { BASE_URL } from "@/config/api";
 
 export class HttpClientError extends Error {
   status: number;

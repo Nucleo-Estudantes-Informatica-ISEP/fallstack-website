@@ -2,9 +2,9 @@
 
 import { FunctionComponent } from "react";
 
+import { Calendar, Pin, Watch } from "@/components/ui/Icons";
 import InfoBit from "@/components/InfoBit";
 import { branding } from "@/edition/branding";
-import { Calendar, Pin, Watch } from "@/styles/Icons";
 
 interface EventInfosProps {
   days: number[];

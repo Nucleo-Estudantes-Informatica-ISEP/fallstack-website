@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 
-import { actionCompletionUpsertArgs } from "./domain/actionRules";
-import { assertStudentCanBeSaved } from "./domain/saveRules";
-import { isAllowedToViewStudent } from "./domain/studentAccess";
+import { actionCompletionUpsertArgs } from "@/domain/action/actionRules";
+import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
+import { isAllowedToViewStudent } from "@/domain/student/studentAccess";
 
 test("action completion upsert is keyed on the compound unique index", () => {
   assert.deepEqual(actionCompletionUpsertArgs("student-id", "action-id"), {

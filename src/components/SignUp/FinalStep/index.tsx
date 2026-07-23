@@ -15,10 +15,10 @@ import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
-import FileInput from "@/components/FileInput";
-import Input from "@/components/Input";
-import PrimaryButton from "@/components/PrimaryButton";
-import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
+import FileInput from "@/components/ui/FileInput";
+import Input from "@/components/ui/Input";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createAccount, createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";

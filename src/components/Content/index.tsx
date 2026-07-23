@@ -1,6 +1,6 @@
+import HeadingText from "@/components/ui/HeadingText";
 import CompaniesSection from "@/components/Companies/CompaniesSection";
 import FaqSection from "@/components/Faq/FaqSection";
-import HeadingText from "@/components/HeadingText";
 import InfoText from "@/components/InfoText";
 import Schedule from "@/components/Schedule";
 import SponsorsSection from "@/components/SponsorsSection";

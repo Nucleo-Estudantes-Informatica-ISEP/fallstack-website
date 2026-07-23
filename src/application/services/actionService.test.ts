@@ -1,6 +1,6 @@
 import { expect, test, vi } from "vitest";
 
-import { signJwt } from "@/services/authService";
+import { signJwt } from "@/application/services/authService";
 
 import { findActionById } from "../repositories/actionRepository";
 import { getActionQrCode } from "./actionService";
@@ -9,7 +9,7 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/config", () => ({
   default: { constants: { actionQrCodeRefreshRateMs: 15_000 } },
 }));
-vi.mock("@/services/authService", () => ({ signJwt: vi.fn() }));
+vi.mock("@/application/services/authService", () => ({ signJwt: vi.fn() }));
 vi.mock("../repositories/actionRepository", () => ({
   createActionCompletion: vi.fn(),
   findActionById: vi.fn(),

@@ -3,14 +3,14 @@ import "server-only";
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
-import { getBoothActionName } from "@/edition/actions";
-import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
-
-import { assertStudentCanBeSaved } from "../domain/saveRules";
+import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
 import {
   isAllowedToViewStudent,
   type StudentAccess,
-} from "../domain/studentAccess";
+} from "@/domain/student/studentAccess";
+import { getBoothActionName } from "@/edition/actions";
+import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
+
 import {
   findCompanyById,
   findCompanyEmployee,

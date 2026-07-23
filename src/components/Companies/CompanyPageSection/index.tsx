@@ -4,10 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 
+import {
+  Facebook,
+  Globe,
+  Instagram,
+  Linkedin,
+  Twitter,
+} from "@/components/ui/Icons";
 import CompanyInfo from "@/components/Companies/CompanyInfo";
-import { CompanyTier } from "@/domain/Company/company-tier";
+import { CompanyTier } from "@/domain/company/company-tier";
 import { findEditionContentByName } from "@/edition";
-import { Facebook, Globe, Instagram, Linkedin, Twitter } from "@/styles/Icons";
 
 interface CompanyPageSectionProps {
   companyName: string;

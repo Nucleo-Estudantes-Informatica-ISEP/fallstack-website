@@ -2,8 +2,8 @@
 
 import { FunctionComponent } from "react";
 
+import HeadingText from "@/components/ui/HeadingText";
 import FaqContainer from "@/components/Faq/FaqContainer";
-import HeadingText from "@/components/HeadingText";
 import { edition } from "@/edition";
 
 const FaqSection: FunctionComponent = () => {

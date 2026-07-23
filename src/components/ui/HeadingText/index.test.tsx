@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 
-import HeadingText from "@/components/HeadingText";
+import HeadingText from "@/components/ui/HeadingText";
 
 test("renders an accessible heading", () => {
   render(<HeadingText text="Fallstack" />);

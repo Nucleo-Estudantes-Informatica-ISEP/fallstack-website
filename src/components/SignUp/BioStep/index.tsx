@@ -3,7 +3,7 @@
 import { Dispatch, FunctionComponent, SetStateAction, useRef } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import PrimaryButton from "@/components/PrimaryButton";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 
 interface BioStepProps {

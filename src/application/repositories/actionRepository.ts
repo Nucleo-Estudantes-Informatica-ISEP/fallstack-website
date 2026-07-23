@@ -1,6 +1,7 @@
 import "server-only";
 
-import { actionCompletionUpsertArgs } from "../domain/actionRules";
+import { actionCompletionUpsertArgs } from "@/domain/action/actionRules";
+
 import prisma, { DbClient } from "./database";
 
 export const findActionById = (id: string) =>
