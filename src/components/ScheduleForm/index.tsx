@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-import { httpClient } from "@/lib/http/client";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
 
@@ -32,8 +32,12 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
       }
       router.push("/schedule");
       router.refresh();
-    } catch {
-      toast.error("Não foi possível guardar a atividade.");
+    } catch (error) {
+      toast.error(
+        error instanceof HttpClientError
+          ? error.message
+          : "Não foi possível guardar a atividade."
+      );
     }
   };
 
