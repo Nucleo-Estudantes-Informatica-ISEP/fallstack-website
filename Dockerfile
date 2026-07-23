@@ -16,9 +16,17 @@ WORKDIR /app
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
 COPY prisma ./prisma
 
-# Install dependencies based on the preferred package manager
-RUN \
+# Install dependencies based on the preferred package manager.
+# The pnpm store is content-addressable, so persisting it across builds via a
+# BuildKit cache mount lets pnpm skip re-downloading unchanged packages —
+# `store-dir` is pinned explicitly so pnpm actually writes into the mounted
+# path instead of whatever its platform default would otherwise resolve to.
+# `sharing=locked` serializes access to the mount so two overlapping builds
+# on the same host (e.g. Coolify deploying two branches at once) can't race
+# on writes to the store.
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store,sharing=locked \
   if [ -f pnpm-lock.yaml ]; then \
+    pnpm config set store-dir /pnpm/store && \
     pnpm install --frozen-lockfile; \
   elif [ -f package-lock.json ]; then \
     npm ci; \
