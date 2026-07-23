@@ -56,14 +56,20 @@ cp .env.example .env
 
 ### Required values (hosted Supabase)
 
-- `NEXT_PUBLIC_BASE_URL`
 - `DATABASE_URL`
 - `DIRECT_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY` (service role)
 - `JWT_SECRET`
-- `NODE_ENV`
+
+Defaulted (override only if you need something other than local dev defaults):
+
+- `NEXT_PUBLIC_BASE_URL` (defaults to `http://localhost:3000/api`)
+- `NODE_ENV` (defaults to `development`)
+
+Only needed to run `pnpm seed`:
+
 - `ADMIN_EMAIL`
 - `ADMIN_PASSWORD`
 

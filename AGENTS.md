@@ -13,7 +13,7 @@ For every requested task:
    - `bugfix/` or `fix/` — bug fixes
    - `hotfix/` — urgent production fixes
    - `release/` — release preparation
-   - `docs/` — documentation-only changes (README, `docs/`, AGENTS.md, code comments)
+   - `docs/` — documentation-only changes (README, `docs/`, AGENTS.md, code comments) — a project-specific addition, not part of the base Conventional Branch spec
    - `chore/` — other non-code tasks (config, deps, tooling)
 2. Commit using [Conventional Commits](https://www.conventionalcommits.org/) (`fix:`, `feat:`, `chore:`, `refactor:`, `docs:`, `test:`, `build:`, ...), with these rules:
    - No AI co-author trailer (no `Co-Authored-By` line) on any commit.
