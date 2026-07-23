@@ -13,7 +13,9 @@ import {
 import { withTransaction } from "../repositories/transaction";
 import {
   findUserByEmail,
+  findUserSessionByEmail,
   findUserSessionById,
+  relinkUserId,
   upsertUser,
 } from "../repositories/userRepository";
 
@@ -37,6 +39,16 @@ export async function signUpUser(input: {
   return user;
 }
 
+type SessionUser = NonNullable<Awaited<ReturnType<typeof findUserSessionById>>>;
+
+function destinationFor(user: SessionUser, fallback: string) {
+  if (user.role === "STUDENT" && user.student)
+    return `/student/${user.student.code}`;
+  if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
+  // STUDENT role but no profile yet — still needs the signup wizard.
+  return fallback;
+}
+
 // Called from the AuthNEI OAuth callback once Supabase has already
 // exchanged the code for a session — Supabase manages the auth identity
 // itself, so unlike signUpUser() there is no password to set here.
@@ -47,19 +59,25 @@ export async function completeOAuthSignIn(input: {
   fallback: string;
 }) {
   const existing = await findUserSessionById(input.id);
+  if (existing) return destinationFor(existing, input.fallback);
 
-  if (existing) {
-    if (existing.role === "STUDENT" && existing.student)
-      return `/student/${existing.student.code}`;
-    if (existing.role === "EMPLOYEE") return "/dashboard";
-    // STUDENT role but no profile yet — still needs the signup wizard.
-    return input.fallback;
+  // No User row for this Supabase auth id yet. If one already exists under
+  // this email - e.g. a student who signed up earlier with a password,
+  // confirmed their account, and is now trying AuthNEI for the first time -
+  // Supabase won't have auto-linked it (it only auto-links dangling
+  // *unconfirmed* identities), so AuthNEI issued a distinct auth id for the
+  // same person. Re-key the existing row onto the new id instead of
+  // creating a duplicate, which would violate the email unique constraint.
+  const existingByEmail = await findUserSessionByEmail(input.email);
+  if (existingByEmail) {
+    await relinkUserId(existingByEmail.id, input.id);
+    return destinationFor(existingByEmail, input.fallback);
   }
 
-  // First AuthNEI sign-in for this identity. AuthNEI only proves identity —
-  // it's wired up for students only for now, so provision the app-level
-  // user here and send them into the signup wizard to finish their profile
-  // (year, bio, interests).
+  // First AuthNEI sign-in for this identity, no pre-existing account
+  // either. AuthNEI only proves identity — it's wired up for students only
+  // for now, so provision the app-level user here and send them into the
+  // signup wizard to finish their profile (year, bio, interests).
   await upsertUser({ id: input.id, email: input.email, role: "STUDENT" });
   return input.fallback;
 }

@@ -49,6 +49,17 @@ export const upsertUser = (
     create: data,
   });
 
+// Re-keys an existing User row onto a new id (e.g. adopting a new Supabase
+// auth id for the same person via a different sign-in provider). Safe to do
+// as a plain id update: Student.id, Employee.id, and _InterestToUser's User
+// FK are all ON UPDATE CASCADE at the DB level, so their rows follow the
+// rename automatically.
+export const relinkUserId = (
+  oldId: string,
+  newId: string,
+  db: DbClient = prisma
+) => db.user.update({ where: { id: oldId }, data: { id: newId } });
+
 export const setUserInterests = (
   id: string,
   interests: string[],

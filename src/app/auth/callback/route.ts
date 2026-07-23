@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
       try {
         const destination = await completeOAuthSignIn({
           id: data.user.id,
-          email: data.user.email as Email,
+          email: Email.create(data.user.email),
           fallback: next,
         });
         return NextResponse.redirect(new URL(destination, request.url));
