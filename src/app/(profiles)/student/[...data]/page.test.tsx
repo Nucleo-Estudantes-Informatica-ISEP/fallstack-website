@@ -91,11 +91,13 @@ beforeEach(async () => {
 
 // Custom404() (src/app/not-found.tsx) is called directly as a plain
 // function and its returned <section> handed straight back - not wrapped
-// in <Custom404 />, and not a notFound() throw - so "was this request
-// blocked" is just "is the returned element a bare <section>", vs. the
-// <>...</> Fragment every real-profile branch returns.
+// in <Custom404 />, and not a notFound() throw - so this checks for the
+// data-testid on that <section> (a signal not-found.tsx's own return
+// shape is free to change around) rather than the element's tag name.
 function isBlocked(element: ReactElement) {
-  return element.type === "section";
+  return (
+    (element.props as { "data-testid"?: string })["data-testid"] === "not-found"
+  );
 }
 
 function renderFor(code: string) {
