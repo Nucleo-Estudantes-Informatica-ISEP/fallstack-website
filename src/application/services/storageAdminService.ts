@@ -1,5 +1,6 @@
 import "server-only";
 
+import { HttpError } from "@/types/HttpError";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 export interface StorageObjectDto {
@@ -62,10 +63,20 @@ export async function listStorageObjects(
   return { items, totalCount };
 }
 
+// Legitimate names are always what the avatar/cv upload routes generate -
+// a bare uuidv4(), optionally with a .pdf suffix - never a path separator.
+// `name` reaches here decodeURIComponent'd from the [name] route segment,
+// so reject anything that could escape the intended prefix (e.g. an
+// encoded ../) before it's interpolated into the object key below.
+const SAFE_OBJECT_NAME = /^[a-zA-Z0-9_.-]+$/;
+
 export async function deleteStorageObject(
   type: StorageBucketType,
   name: string
 ) {
+  if (!SAFE_OBJECT_NAME.test(name) || name.includes(".."))
+    throw new HttpError("Invalid file name", 400);
+
   const { bucket, prefix } = BUCKET_CONFIG[type];
   const admin = createAdminClient();
   const { error } = await admin.storage
