@@ -15,6 +15,7 @@ services:
       dockerfile: Dockerfile
       args:
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        SENTRY_URL: ${SENTRY_URL:-}
         SENTRY_ORG: ${SENTRY_ORG:-}
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}

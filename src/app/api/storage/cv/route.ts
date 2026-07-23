@@ -8,16 +8,20 @@ import {
   getClientIp,
   tooManyRequestsResponse,
 } from "@/lib/rateLimit";
+import getServerSession from "@/application/services/sessionService";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const rateLimiter = createRateLimiter(config.uploads.cv.rateLimit);
 
-// Not a defineHandler route: multipart/form-data body (defineHandler's
-// schema option parses JSON) and, pre-existing, no auth check at all -
-// tracked separately (#26), not something this refactor changes.
+// Not a defineHandler route: multipart/form-data body, and defineHandler's
+// schema option only parses JSON.
 export async function POST(req: NextRequest) {
   const { allowed, retryAfterMs } = rateLimiter.check(getClientIp(req));
   if (!allowed) return tooManyRequestsResponse(retryAfterMs);
+
+  const session = await getServerSession();
+  if (!session)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const form = await req.formData();
   const file = form.get("file");
