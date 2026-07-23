@@ -24,7 +24,7 @@ import {
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
-import type { CompanyTier } from "@/domain/Company/company-tier";
+import type { CompanyTier } from "@/domain/company/company-tier";
 
 import { CSS } from "@dnd-kit/utilities";
 

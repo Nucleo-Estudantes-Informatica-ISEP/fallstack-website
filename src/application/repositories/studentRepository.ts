@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
-import type { StudentYear } from "@/domain/Student/year";
+import type { StudentYear } from "@/domain/student/year";
 
 import prisma, { DbClient } from "./database";
 

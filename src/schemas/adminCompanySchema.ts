@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseCompanyTier } from "@/domain/Company/company-tier";
+import { parseCompanyTier } from "@/domain/company/company-tier";
 import { logoSchema } from "@/schemas/logoSchema";
 import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 

@@ -3,13 +3,13 @@
 import { motion } from "framer-motion";
 import Skeleton from "react-loading-skeleton";
 
+import { Github, Linkedin } from "@/components/ui/Icons";
 import BioSection from "@/components/Profile/BioSection";
 import ContactSection from "@/components/Profile/ContactSection";
 import InterestsSection from "@/components/Profile/InterestsSection";
 import OpenCvSection from "@/components/Profile/OpenCvSection";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { Github, Linkedin } from "@/styles/Icons";
 
 interface PublicProfileSectionContainerProps {
   student: StudentDto;

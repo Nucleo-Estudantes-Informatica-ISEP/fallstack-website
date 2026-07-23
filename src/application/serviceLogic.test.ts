@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 
-import { actionCompletionUpsertArgs } from "./domain/actionRules";
-import { assertStudentCanBeSaved } from "./domain/saveRules";
-import { isAllowedToViewStudent } from "./domain/studentAccess";
+import { actionCompletionUpsertArgs } from "@/domain/action/actionRules";
+import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
+import { isAllowedToViewStudent } from "@/domain/student/studentAccess";
 
 test("action completion upsert is keyed on the compound unique index", () => {
   assert.deepEqual(actionCompletionUpsertArgs("student-id", "action-id"), {
@@ -60,6 +60,28 @@ test("student access uses one owner/admin/saving-company policy", async () => {
       "student-1",
       { companyId: "company-2", isAdmin: false },
       async () => false
+    ),
+    false
+  );
+});
+
+test("student access skips the isSaved lookup when the caller already knows the result", async () => {
+  const unexpectedLookup = async () => {
+    throw new Error("save lookup should be short-circuited");
+  };
+  assert.equal(
+    await isAllowedToViewStudent(
+      "student-1",
+      { companyId: "company-1", isAdmin: false, isSaved: true },
+      unexpectedLookup
+    ),
+    true
+  );
+  assert.equal(
+    await isAllowedToViewStudent(
+      "student-1",
+      { companyId: "company-1", isAdmin: false, isSaved: false },
+      unexpectedLookup
     ),
     false
   );

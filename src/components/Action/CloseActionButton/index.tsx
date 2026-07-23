@@ -2,7 +2,7 @@
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import PrimaryButton from "@/components/PrimaryButton";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface CloseActionButtonProps {
   id: string;

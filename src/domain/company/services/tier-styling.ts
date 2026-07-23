@@ -1,4 +1,4 @@
-import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
 
 const TIER_STYLING: Record<CompanyTier, string> = {
   [COMPANY_TIER.DIAMOND]: `text-transparent bg-clip-text bg-gradient-to-r from-[#000999] from-13% to-[#3284FF] to-89%`,

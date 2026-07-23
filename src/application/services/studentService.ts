@@ -4,19 +4,19 @@ import { z } from "zod";
 
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
+import { isAllowedToViewStudent } from "@/domain/student/studentAccess";
+import type { StudentAccess } from "@/domain/student/studentAccess";
 import {
   parseStudentYear,
   studentYearLabel,
   type StudentYear,
-} from "@/domain/Student/year";
+} from "@/domain/student/year";
 import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 import { createAdminClient } from "@/utils/supabase/admin";
 
-import { isAllowedToViewStudent } from "../domain/studentAccess";
-import type { StudentAccess } from "../domain/studentAccess";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   countStudents,

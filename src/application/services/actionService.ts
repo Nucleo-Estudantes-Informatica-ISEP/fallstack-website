@@ -2,7 +2,7 @@ import "server-only";
 
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
-import { signJwt } from "@/services/authService";
+import { signJwt } from "@/application/services/authService";
 
 import {
   countActionsForAdmin,

@@ -92,13 +92,6 @@ export const findCompanySavedStudentsWithCv = (companyId: string) =>
     },
   });
 
-export const findCompanySavesForExport = (companyId: string) =>
-  prisma.savedStudent.findMany({
-    where: { companyId },
-    include: { student: { include: { user: true } } },
-    orderBy: { createdAt: "asc" },
-  });
-
 export const findStudentHistory = (studentId: string) =>
   prisma.savedStudent.findMany({
     where: { studentId },

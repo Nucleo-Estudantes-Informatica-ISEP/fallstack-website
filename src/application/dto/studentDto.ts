@@ -1,5 +1,5 @@
-import { studentYearLabel } from "@/domain/Student/year";
-import type { StudentYear } from "@/domain/Student/year";
+import { studentYearLabel } from "@/domain/student/year";
+import type { StudentYear } from "@/domain/student/year";
 
 export interface StudentDto {
   id: string;

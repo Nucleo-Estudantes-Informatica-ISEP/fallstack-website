@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 
-import { ImportCv } from "@/styles/Icons";
+import { ImportCv } from "@/components/ui/Icons";
 
 interface ImportCvSectionProps {
   text: string;

@@ -9,7 +9,7 @@ import AdminForm, {
   type AdminFormValue,
 } from "@/components/AdminForm";
 import type { AdminStudentDto } from "@/application/dto/studentDto";
-import { STUDENT_YEAR } from "@/domain/Student/year";
+import { STUDENT_YEAR } from "@/domain/student/year";
 
 interface StudentFormProps {
   student?: AdminStudentDto;

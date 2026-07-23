@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Email } from "@/styles/Icons";
+import { Email } from "@/components/ui/Icons";
 
 interface ContactSectionProps {
   email: string;

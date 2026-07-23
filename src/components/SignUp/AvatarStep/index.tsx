@@ -11,10 +11,10 @@ import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
-import PrimaryButton from "@/components/PrimaryButton";
-import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
-import { signUp } from "@/client/api/auth";
+import { createAccount } from "@/client/api/auth";
 import { uploadAvatar as uploadAvatarToSupabase } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
@@ -42,7 +42,6 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
 
       setLoading(true);
 
-      let avatarUrl: string | null = null;
       if (imageSrc && croppedAreaPixels) {
         const image = await getCroppedImg(imageSrc, croppedAreaPixels);
         if (!image) return setLoading(false);
@@ -52,10 +51,12 @@ const AvatarStep: FunctionComponent<AvatarStepProps> = ({ data }) => {
           toast.error("Não foi possível dar upload à imagem.");
           return setLoading(false);
         }
-        avatarUrl = uploaded.url;
       }
 
-      const signup = await signUp({ ...data, avatar: null, avatarUrl });
+      const signup = await createAccount({
+        email: data.email,
+        password: data.password,
+      });
 
       if (signup instanceof Error) {
         toast.error(signup.message);

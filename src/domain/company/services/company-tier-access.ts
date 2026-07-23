@@ -1,4 +1,4 @@
-import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
 
 // Business rule: which tiers get an internal company page vs. redirect
 // to their own external website. This is domain logic, not UI.
