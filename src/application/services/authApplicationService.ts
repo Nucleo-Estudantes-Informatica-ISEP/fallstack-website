@@ -11,7 +11,14 @@ import {
   findCompanyByCode,
 } from "../repositories/companyRepository";
 import { withTransaction } from "../repositories/transaction";
-import { findUserByEmail, upsertUser } from "../repositories/userRepository";
+import {
+  deleteUser,
+  findUserByEmail,
+  findUserSessionByEmail,
+  findUserSessionById,
+  relinkUserId,
+  upsertUser,
+} from "../repositories/userRepository";
 
 async function createSupabaseAuthUser(email: string, password: string) {
   const supabase = await createSupabaseServerClient();
@@ -31,6 +38,78 @@ export async function signUpUser(input: {
   const user = await createSupabaseAuthUser(input.email, input.password);
   await upsertUser({ id: user.id, email: input.email, role: input.role });
   return user;
+}
+
+type SessionUser = NonNullable<Awaited<ReturnType<typeof findUserSessionById>>>;
+
+function destinationFor(user: SessionUser, fallback: string) {
+  if (user.role === "STUDENT" && user.student)
+    return `/student/${user.student.code}`;
+  if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
+  // STUDENT role but no profile yet — still needs the signup wizard.
+  return fallback;
+}
+
+// /auth/signup is public and only checks email *format* (isIsepEmail), not
+// ownership - anyone can plant a User row under a real student's ISEP email
+// today, confirmed or not. Only a *confirmed* identity actually proves the
+// signer received and clicked a confirmation link sent to that mailbox, so
+// completeOAuthSignIn() below must not trust an email match blindly: an
+// unconfirmed row is treated as a dangling/spoofed placeholder, not a real
+// account to relink onto. This still depends on "Confirm email" being ON in
+// the Supabase project - see the AuthNEI PR's manual-steps checklist.
+async function isEmailConfirmed(id: string) {
+  const { data, error } = await createAdminClient().auth.admin.getUserById(id);
+  if (error || !data.user) {
+    reportError(
+      error,
+      { operation: "authnei_check_email_confirmed" },
+      "Failed to look up existing identity's confirmation status"
+    );
+    return false;
+  }
+  return Boolean(data.user.email_confirmed_at);
+}
+
+// Called from the AuthNEI OAuth callback once Supabase has already
+// exchanged the code for a session — Supabase manages the auth identity
+// itself, so unlike signUpUser() there is no password to set here.
+// Returns where the browser should land next.
+export async function completeOAuthSignIn(input: {
+  id: string;
+  email: Email;
+  fallback: string;
+}) {
+  const existing = await findUserSessionById(input.id);
+  if (existing) return destinationFor(existing, input.fallback);
+
+  // No User row for this Supabase auth id yet. If one already exists under
+  // this email - e.g. a student who signed up earlier with a password,
+  // confirmed their account, and is now trying AuthNEI for the first time -
+  // Supabase won't have auto-linked it (it only auto-links dangling
+  // *unconfirmed* identities), so AuthNEI issued a distinct auth id for the
+  // same person. Re-key the existing row onto the new id instead of
+  // creating a duplicate, which would violate the email unique constraint.
+  const existingByEmail = await findUserSessionByEmail(input.email);
+  if (existingByEmail) {
+    if (await isEmailConfirmed(existingByEmail.id)) {
+      await relinkUserId(existingByEmail.id, input.id);
+      return destinationFor(existingByEmail, input.fallback);
+    }
+
+    // Unconfirmed - discard the dangling placeholder instead of relinking
+    // onto it, so AuthNEI (institutionally-verified) can claim the email
+    // fresh below rather than inheriting potentially attacker-planted data.
+    await deleteUser(existingByEmail.id);
+  }
+
+  // First AuthNEI sign-in for this identity, no (trustworthy) pre-existing
+  // account either. AuthNEI only proves identity — it's wired up for
+  // students only for now, so provision the app-level user here and send
+  // them into the signup wizard to finish their profile (year, bio,
+  // interests).
+  await upsertUser({ id: input.id, email: input.email, role: "STUDENT" });
+  return input.fallback;
 }
 
 export async function signUpEmployee(input: {

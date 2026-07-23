@@ -18,9 +18,16 @@ interface StudentSignUpProps {
   interests: InterestDto[];
 }
 
+// Wizard data collected before an AuthNEI redirect is stashed here so it can
+// be restored once the browser comes back from the OAuth flow — that's a
+// full page navigation away from and back to this app, which clears React
+// state, unlike the rest of this wizard's in-memory step transitions.
+const AUTHNEI_DRAFT_STORAGE_KEY = "authnei-signup-draft";
+
 const StudentSignUp = ({ interests }: StudentSignUpProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<StudentSignUpData>({} as StudentSignUpData);
+  const [authNeiMode, setAuthNeiMode] = useState(false);
   const session = useSession();
   const router = useRouter();
 
@@ -34,10 +41,42 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
     }
   }, [session.user, router]);
 
+  // Detect a return from a successful AuthNEI sign-in (see
+  // src/app/auth/callback/route.ts) and resume the wizard at the account
+  // details step, skipping the email/password fields since Supabase already
+  // has an authenticated identity for this student.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("authnei") !== "1")
+      return;
+
+    const saved = window.sessionStorage.getItem(AUTHNEI_DRAFT_STORAGE_KEY);
+    window.sessionStorage.removeItem(AUTHNEI_DRAFT_STORAGE_KEY);
+
+    if (saved) {
+      try {
+        setData((prev) => ({ ...prev, ...JSON.parse(saved) }));
+      } catch {
+        // Ignore malformed/stale storage and continue with a blank draft.
+      }
+    }
+
+    setAuthNeiMode(true);
+    setCurrentStep(1);
+  }, []);
+
+  const stashDraftForAuthNei = () => {
+    window.sessionStorage.setItem(
+      AUTHNEI_DRAFT_STORAGE_KEY,
+      JSON.stringify({ name: data.name })
+    );
+  };
+
   const steps = [
     <NameStep key="name" {...{ currentStep, setCurrentStep, data, setData }} />,
     <AccountDetailsStep
       key="account"
+      authNeiMode={authNeiMode}
+      onAuthNeiRedirect={stashDraftForAuthNei}
       {...{ currentStep, setCurrentStep, data, setData }}
     />,
     <BioStep key="bio" {...{ currentStep, setCurrentStep, data, setData }} />,
