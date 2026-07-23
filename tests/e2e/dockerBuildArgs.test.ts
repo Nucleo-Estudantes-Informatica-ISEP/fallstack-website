@@ -18,8 +18,21 @@ function readClientEnvVarNames(): string[] {
     path.join(ROOT, "src/config/env.client.ts"),
     "utf-8"
   );
-  const matches = source.matchAll(/NEXT_PUBLIC_[A-Z0-9_]+/g);
-  return [...new Set([...matches].map((match) => match[0]))];
+  // Scoped to the schema object's key declarations, not the whole file -
+  // several of these vars are also referenced by name in prose comments
+  // elsewhere in the file (e.g. "same as NEXT_PUBLIC_SENTRY_DSN above"),
+  // which would otherwise inflate this list with names that aren't
+  // actually schema keys.
+  const schemaStart = source.indexOf("const clientEnvSchema = z.object({");
+  if (schemaStart === -1) {
+    throw new Error(
+      "Couldn't find `const clientEnvSchema = z.object({` - has it been renamed?"
+    );
+  }
+  const schemaEnd = source.indexOf("});", schemaStart);
+  const schemaBody = source.slice(schemaStart, schemaEnd);
+  const matches = schemaBody.matchAll(/^\s*(NEXT_PUBLIC_[A-Z0-9_]+):/gm);
+  return [...new Set([...matches].map((match) => match[1]))];
 }
 
 function extractDockerfileAppBuilderStage(): string {
@@ -34,27 +47,46 @@ function extractDockerfileAppBuilderStage(): string {
   return dockerfile.slice(start, nextStage === -1 ? undefined : nextStage);
 }
 
+function sliceIndentedBlock(lines: string[], fromIndex: number): string[] {
+  const blockIndent = lines[fromIndex].search(/\S/);
+  const blockLines: string[] = [];
+  for (const line of lines.slice(fromIndex + 1)) {
+    if (line.trim() === "") continue;
+    const indent = line.search(/\S/);
+    if (indent <= blockIndent) break;
+    blockLines.push(line);
+  }
+  return blockLines;
+}
+
 function extractComposeWebBuildArgs(): string {
   const compose = readFileSync(
     path.join(ROOT, "docker-compose.app.yml"),
     "utf-8"
   );
   const lines = compose.split("\n");
-  const argsLineIndex = lines.findIndex((line) => line.trim() === "args:");
-  if (argsLineIndex === -1) {
+
+  // Anchored to the `web:` service specifically, not just the first
+  // `args:` block anywhere in the file - a sibling service (e.g.
+  // `migrate:`) could grow its own `build.args:` block in the future
+  // without this test noticing it was looking at the wrong one.
+  const webLineIndex = lines.findIndex((line) => line.trim() === "web:");
+  if (webLineIndex === -1) {
     throw new Error(
-      "Couldn't find a top-level `args:` block in docker-compose.app.yml - has the web service's build config been restructured?"
+      "Couldn't find a top-level `web:` service in docker-compose.app.yml - has it been renamed?"
     );
   }
-  const argsIndent = lines[argsLineIndex].search(/\S/);
-  const blockLines: string[] = [];
-  for (const line of lines.slice(argsLineIndex + 1)) {
-    if (line.trim() === "") continue;
-    const indent = line.search(/\S/);
-    if (indent <= argsIndent) break;
-    blockLines.push(line);
+  const webBlockLines = sliceIndentedBlock(lines, webLineIndex);
+
+  const argsLineIndex = webBlockLines.findIndex(
+    (line) => line.trim() === "args:"
+  );
+  if (argsLineIndex === -1) {
+    throw new Error(
+      "Couldn't find `web.build.args:` in docker-compose.app.yml - has the web service's build config been restructured?"
+    );
   }
-  return blockLines.join("\n");
+  return sliceIndentedBlock(webBlockLines, argsLineIndex).join("\n");
 }
 
 test("every NEXT_PUBLIC_* var declared in env.client.ts is wired through the Dockerfile's app-builder ARG/ENV pair", () => {
