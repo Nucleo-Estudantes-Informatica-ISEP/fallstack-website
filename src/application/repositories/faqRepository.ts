@@ -1,9 +1,27 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
+
 import prisma from "./database";
 
 export const findAllFaqEntries = () =>
   prisma.faqEntry.findMany({ orderBy: { order: "asc" } });
+
+export const isUniqueConstraintError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
+
+// New entries otherwise default to order: 0 (the Prisma column default),
+// jumping ahead of every existing entry until an admin manually visits the
+// reorder board to fix it - defaulting to the end of the list here means a
+// plain "add" never needs that follow-up trip.
+export const findMaxFaqOrder = async () => {
+  const last = await prisma.faqEntry.findFirst({
+    orderBy: { order: "desc" },
+    select: { order: true },
+  });
+  return last?.order ?? -1;
+};
 
 const ADMIN_SORTABLE_FIELDS = ["question", "order"] as const;
 export type AdminFaqSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];

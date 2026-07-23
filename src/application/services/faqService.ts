@@ -10,6 +10,8 @@ import {
   findAllFaqEntries,
   findFaqEntriesForAdmin,
   findFaqEntryById,
+  findMaxFaqOrder,
+  isUniqueConstraintError,
   updateFaqEntry,
   type AdminFaqQuery,
 } from "../repositories/faqRepository";
@@ -30,7 +32,14 @@ export async function createFaqEntryForAdmin(input: {
   answer: string;
   order?: number;
 }) {
-  return createFaqEntry(input);
+  const order = input.order ?? (await findMaxFaqOrder()) + 1;
+  try {
+    return await createFaqEntry({ ...input, order });
+  } catch (error) {
+    if (isUniqueConstraintError(error))
+      throw new HttpError("Já existe uma pergunta igual.", 409);
+    throw error;
+  }
 }
 
 export async function updateFaqEntryForAdmin(
@@ -38,7 +47,13 @@ export async function updateFaqEntryForAdmin(
   input: { question?: string; answer?: string; order?: number }
 ) {
   if (!(await findFaqEntryById(id))) throw new HttpError("Not found", 404);
-  return updateFaqEntry(id, input);
+  try {
+    return await updateFaqEntry(id, input);
+  } catch (error) {
+    if (isUniqueConstraintError(error))
+      throw new HttpError("Já existe uma pergunta igual.", 409);
+    throw error;
+  }
 }
 
 export async function deleteFaqEntryForAdmin(id: string) {
@@ -48,5 +63,12 @@ export async function deleteFaqEntryForAdmin(id: string) {
 
 export async function updateFaqOrder(updates: { id: string; order: number }[]) {
   if (updates.length === 0) return;
+
+  const existing = await findAllFaqEntries();
+  const existingIds = new Set(existing.map((entry) => entry.id));
+  for (const update of updates) {
+    if (!existingIds.has(update.id)) throw new HttpError("Not found", 404);
+  }
+
   await bulkUpdateFaqOrder(updates);
 }
