@@ -5,6 +5,8 @@ import { reportError } from "@/lib/logger";
 import { completeOAuthSignIn } from "@/application/services/authApplicationService";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
+import { sanitizeNext } from "./sanitizeNext";
+
 // Supabase-constructed OAuth callback URL, used by the AuthNEI
 // ("custom:authnei") sign-in flow — exchanges the `code` query param for a
 // session via exchangeCodeForSession. This is a different flow from
@@ -40,11 +42,4 @@ export async function GET(request: NextRequest) {
 
   // Error handling — same fallback page as app/auth/confirm/route.ts
   return NextResponse.redirect(new URL("/auth/auth-code-error", request.url));
-}
-
-// `next` is attacker-controlled query input — only allow redirecting back
-// into this app, never to an external host.
-function sanitizeNext(next: string | null): string {
-  if (!next || !next.startsWith("/") || next.startsWith("//")) return "/";
-  return next;
 }
