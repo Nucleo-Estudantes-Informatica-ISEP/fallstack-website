@@ -24,6 +24,7 @@ import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import { findInvalidScheduleRowIds } from "@/domain/schedule/scheduleValidation";
+import { branding } from "@/edition/branding";
 
 import { CSS } from "@dnd-kit/utilities";
 
@@ -35,8 +36,8 @@ const DAYS = [1, 2] as const;
 type Day = (typeof DAYS)[number];
 
 const DAY_LABELS: Record<Day, string> = {
-  1: "Dia 1",
-  2: "Dia 2",
+  1: branding.event.scheduleDayTitles[0],
+  2: branding.event.scheduleDayTitles[1],
 };
 
 interface ScheduleRow {

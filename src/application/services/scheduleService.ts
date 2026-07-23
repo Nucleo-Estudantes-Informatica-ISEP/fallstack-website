@@ -9,6 +9,7 @@ import {
   createScheduleEvent,
   deleteScheduleEvent,
   findAllScheduleEvents,
+  findMaxScheduleOrderForDay,
   findScheduleEventById,
   findScheduleEventsForAdmin,
   updateScheduleEvent,
@@ -26,6 +27,18 @@ export async function listScheduleEventsForAdmin(query: AdminScheduleQuery) {
   return { items, totalCount };
 }
 
+// Re-validates the candidate row against the rest of its day's actual
+// sequence before every write, not just on the reorder board's bulk
+// endpoint - a plain create/edit is just as capable of producing an
+// overlapping or inverted (day, order) arrangement as a drag-and-drop move.
+function assertScheduleDayIsValid(
+  rows: { id: string; startTime: string; endTime: string; order: number }[]
+) {
+  const sorted = [...rows].sort((a, b) => a.order - b.order);
+  if (findInvalidScheduleRowIds(sorted).size > 0)
+    throw new HttpError("Schedule order is not chronologically valid", 400);
+}
+
 export async function createScheduleEventForAdmin(input: {
   day: number;
   startTime: string;
@@ -33,7 +46,23 @@ export async function createScheduleEventForAdmin(input: {
   activity: string;
   order?: number;
 }) {
-  return createScheduleEvent(input);
+  const order =
+    input.order ?? (await findMaxScheduleOrderForDay(input.day)) + 1;
+
+  const dayRows = (await findAllScheduleEvents()).filter(
+    (event) => event.day === input.day
+  );
+  assertScheduleDayIsValid([
+    ...dayRows,
+    {
+      id: "__new__",
+      startTime: input.startTime,
+      endTime: input.endTime,
+      order,
+    },
+  ]);
+
+  return createScheduleEvent({ ...input, order });
 }
 
 export async function updateScheduleEventForAdmin(
@@ -46,7 +75,19 @@ export async function updateScheduleEventForAdmin(
     order?: number;
   }
 ) {
-  if (!(await findScheduleEventById(id))) throw new HttpError("Not found", 404);
+  const current = await findScheduleEventById(id);
+  if (!current) throw new HttpError("Not found", 404);
+
+  const day = input.day ?? current.day;
+  const startTime = input.startTime ?? current.startTime;
+  const endTime = input.endTime ?? current.endTime;
+  const order = input.order ?? current.order;
+
+  const dayRows = (await findAllScheduleEvents()).filter(
+    (event) => event.day === day && event.id !== id
+  );
+  assertScheduleDayIsValid([...dayRows, { id, startTime, endTime, order }]);
+
   return updateScheduleEvent(id, input);
 }
 
@@ -85,12 +126,7 @@ export async function updateScheduleOrder(
     byDay.set(update.day, rows);
   }
 
-  for (const rows of byDay.values()) {
-    rows.sort((a, b) => a.order - b.order);
-    const invalid = findInvalidScheduleRowIds(rows);
-    if (invalid.size > 0)
-      throw new HttpError("Schedule order is not chronologically valid", 400);
-  }
+  for (const rows of byDay.values()) assertScheduleDayIsValid(rows);
 
   await bulkUpdateScheduleOrder(updates);
 }

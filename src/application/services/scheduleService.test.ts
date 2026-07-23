@@ -2,13 +2,25 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import {
   bulkUpdateScheduleOrder,
+  createScheduleEvent,
   findAllScheduleEvents,
+  findMaxScheduleOrderForDay,
+  findScheduleEventById,
+  updateScheduleEvent,
 } from "../repositories/scheduleRepository";
-import { updateScheduleOrder } from "./scheduleService";
+import {
+  createScheduleEventForAdmin,
+  updateScheduleEventForAdmin,
+  updateScheduleOrder,
+} from "./scheduleService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("../repositories/scheduleRepository", () => ({
   findAllScheduleEvents: vi.fn(),
+  findMaxScheduleOrderForDay: vi.fn(),
+  findScheduleEventById: vi.fn(),
+  createScheduleEvent: vi.fn(),
+  updateScheduleEvent: vi.fn(),
   bulkUpdateScheduleOrder: vi.fn(),
 }));
 
@@ -20,6 +32,7 @@ const existing = [
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findAllScheduleEvents).mockResolvedValue(existing as never);
+  vi.mocked(findMaxScheduleOrderForDay).mockResolvedValue(-1);
 });
 
 test("does nothing for an empty update list", async () => {
@@ -74,4 +87,69 @@ test("throws Not found if an update references an id that no longer exists", asy
   ).rejects.toThrow("Not found");
 
   expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
+});
+
+test("a new event with no explicit order lands at the end of its day", async () => {
+  vi.mocked(findMaxScheduleOrderForDay).mockResolvedValue(1);
+  vi.mocked(createScheduleEvent).mockResolvedValue({ id: "c" } as never);
+
+  await createScheduleEventForAdmin({
+    day: 1,
+    startTime: "11:00",
+    endTime: "12:00",
+    activity: "Talk",
+  });
+
+  expect(createScheduleEvent).toHaveBeenCalledWith({
+    day: 1,
+    startTime: "11:00",
+    endTime: "12:00",
+    activity: "Talk",
+    order: 2,
+  });
+});
+
+test("rejects creating an event that overlaps an existing row in the same day", async () => {
+  vi.mocked(findMaxScheduleOrderForDay).mockResolvedValue(1);
+
+  await expect(
+    createScheduleEventForAdmin({
+      day: 1,
+      startTime: "09:30",
+      endTime: "10:30",
+      activity: "Overlaps b",
+    })
+  ).rejects.toThrow("Schedule order is not chronologically valid");
+
+  expect(createScheduleEvent).not.toHaveBeenCalled();
+});
+
+test("updating a missing event throws Not found before validating", async () => {
+  vi.mocked(findScheduleEventById).mockResolvedValue(null);
+
+  await expect(
+    updateScheduleEventForAdmin("missing", { startTime: "09:00" })
+  ).rejects.toMatchObject({ message: "Not found", status: 404 });
+  expect(updateScheduleEvent).not.toHaveBeenCalled();
+});
+
+test("rejects an update that would make an event overlap its day neighbour", async () => {
+  vi.mocked(findScheduleEventById).mockResolvedValue(existing[0] as never);
+
+  await expect(
+    updateScheduleEventForAdmin("a", { endTime: "10:30" })
+  ).rejects.toThrow("Schedule order is not chronologically valid");
+
+  expect(updateScheduleEvent).not.toHaveBeenCalled();
+});
+
+test("commits a valid update", async () => {
+  vi.mocked(findScheduleEventById).mockResolvedValue(existing[0] as never);
+  vi.mocked(updateScheduleEvent).mockResolvedValue({ id: "a" } as never);
+
+  await updateScheduleEventForAdmin("a", { startTime: "08:30" });
+
+  expect(updateScheduleEvent).toHaveBeenCalledWith("a", {
+    startTime: "08:30",
+  });
 });
