@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-import { httpClient } from "@/lib/http/client";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { FaqDto } from "@/application/dto/faqDto";
 
@@ -30,8 +30,12 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
       }
       router.push("/faqs");
       router.refresh();
-    } catch {
-      toast.error("Não foi possível guardar a pergunta.");
+    } catch (error) {
+      toast.error(
+        error instanceof HttpClientError
+          ? error.message
+          : "Não foi possível guardar a pergunta."
+      );
     }
   };
 
