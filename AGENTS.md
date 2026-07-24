@@ -68,7 +68,7 @@ components/     # components/ui/ holds shared, reusable primitives (Icons.tsx, I
 config/         # static config object (cookies, upload limits), api.ts (client BASE_URL) + env.server.ts/env.client.ts (Zod-validated env) — edition content now lives in edition/, not here
 contexts/       # React contexts
 domain/         # pure business rules, no I/O, grouped by entity/concern: action/, auth/, company/, savedStudent/, student/
-edition/        # single source of truth for per-event content still hardcoded: tier company lists, ScheduleDays, branding, actions.ts (action names + booth-to-action mapping) — Sponsors and FAQ moved to the DB (Sponsor/FaqEntry models, admin CRUD), don't add them back here
+edition/        # single source of truth for per-event content still hardcoded: tier company lists, branding, actions.ts (action names + booth-to-action mapping) — Sponsors, FAQ, and the schedule/timetable moved to the DB (Sponsor/FaqEntry/ScheduleEvent models, admin CRUD + drag-and-drop reorder boards for FAQ/schedule), don't add any of them back here
 hooks/          # React hooks
 lib/            # remaining server + shared helpers not yet moved into application/ (logger, Sentry privacy, file signatures, saved-student comment formatting) + http/ (client.ts's HttpClient, server.ts's defineHandler)
 schemas/        # Zod input validation
@@ -114,7 +114,7 @@ Two independent mechanisms — don't conflate them:
 - **Validation:** new request validation goes in `src/schemas/` as a named Zod schema, imported by the route — don't add another inline `z.object(...)` in a route file.
 - **Route responses:** always pass an explicit status code to `NextResponse.json(body, { status })`. The default is 200, and some existing routes rely on that default even for validation/auth failures — don't copy that pattern in new code.
 - **`app/auth/confirm/route.ts`** lives outside the `(auth)`/`api` conventions on purpose — it's the Supabase email-confirmation callback URL, which Supabase itself constructs, so it can't move without reconfiguring Supabase. Leave it where it is.
-- **Edition-specific content** still hardcoded (tier company lists, booth-to-action mapping, schedule, branding) is centralized under `src/edition/` — `edition/actions.ts` holds `actionNames` and the `getBoothActionName()` lookup that `savedStudentService.saveStudent()` calls instead of an inline `switch`. When editing that content for a new event, change `edition/`, not `config/` or `utils/`. Sponsors and FAQ are DB-backed instead (`Sponsor`/`FaqEntry` models), editable through the admin backoffice — don't add a static `edition/` file for either.
+- **Edition-specific content** still hardcoded (tier company lists, booth-to-action mapping, branding) is centralized under `src/edition/` — `edition/actions.ts` holds `actionNames` and the `getBoothActionName()` lookup that `savedStudentService.saveStudent()` calls instead of an inline `switch`. When editing that content for a new event, change `edition/`, not `config/` or `utils/`. Sponsors, FAQ, and the schedule/timetable are DB-backed instead (`Sponsor`/`FaqEntry`/`ScheduleEvent` models), editable through the admin backoffice — don't add a static `edition/` file for any of them.
 - **Env vars:** validated through Zod, not read from `process.env` directly. Server-only secrets/config go through `serverEnv` (`src/config/env.server.ts`, guarded by `server-only`, validated lazily on first property access); `NEXT_PUBLIC_*` vars go through `clientEnv` (`src/config/env.client.ts`, validated eagerly at import time, since Next.js inlines them into the browser bundle at build time). Import whichever matches where your code runs — don't add a new raw `process.env.*` read. `.env.example` is the source of truth for required keys; keep it in sync with both schemas when you add or rename one.
 - **Components:** every component gets its own `PascalCaseName/index.tsx` folder. Shared, reusable primitives go in `components/ui/` (e.g. `Icons.tsx`, `Input`, `Modal`, `PrimaryButton`); everything else — reusable feature composites or single-use page sections alike (e.g. `Companies`, `Profile`, `GiveawaySection`, `AdminSavedSection`) — stays at the top level of `components/`, following the same pattern. There is no route-local `_components/` convention in use — keep new components in `components/` rather than colocating them under `app/`.
 - **Where new code goes:**
@@ -127,7 +127,7 @@ Two independent mechanisms — don't conflate them:
   | Browser fetch wrapper | `client/api/` (mark `"client-only"`, built on `lib/http/client.ts`'s `httpClient`) |
   | Zod validation schema | `schemas/` |
   | Static/env config | `config/` |
-  | Per-edition content still hardcoded (schedule, branding, tier company lists) | `edition/` |
+  | Per-edition content still hardcoded (tier company lists, branding) | `edition/` |
   | Generic helper (date, files, canvas) | `utils/` |
   | Shared UI primitive | `components/ui/` |
   | Any other component, reusable or single-use | top level of `components/` |

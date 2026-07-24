@@ -2,7 +2,7 @@ import HeadingText from "@/components/ui/HeadingText";
 import CompaniesSection from "@/components/Companies/CompaniesSection";
 import FaqSection from "@/components/Faq/FaqSection";
 import InfoText from "@/components/InfoText";
-import Schedule from "@/components/Schedule";
+import ScheduleSection from "@/components/ScheduleSection";
 import SponsorsSection from "@/components/SponsorsSection";
 import { edition } from "@/edition";
 
@@ -11,7 +11,7 @@ interface ContentProps {
 }
 
 const Content: React.FC<ContentProps> = ({ contentRef }) => {
-  const { branding, schedule } = edition;
+  const { branding } = edition;
 
   return (
     <>
@@ -31,10 +31,9 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         ref={contentRef}
         className="flex flex-col items-center bg-background pb-20"
       >
-        <Schedule
+        <ScheduleSection
           firstDayTitle={branding.event.scheduleDayTitles[0]}
           secondDayTitle={branding.event.scheduleDayTitles[1]}
-          scheduleEvents={schedule}
         />
       </section>
 

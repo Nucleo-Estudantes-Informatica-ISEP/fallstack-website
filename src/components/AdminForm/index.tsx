@@ -14,7 +14,7 @@ interface AdminFormFieldBase {
 }
 
 export interface AdminFormTextField extends AdminFormFieldBase {
-  kind: "text" | "email" | "number";
+  kind: "text" | "email" | "number" | "time";
   required?: boolean;
 }
 

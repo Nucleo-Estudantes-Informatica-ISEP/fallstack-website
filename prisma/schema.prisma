@@ -134,6 +134,26 @@ model Sponsor {
   updatedAt DateTime @updatedAt
 }
 
+// One row per timetable entry. `day` is a plain 1-indexed slot (1, 2, ...)
+// rather than an enum or a real date, matching how ScheduleDays.ts (the
+// static config this replaces) grouped entries - just an array of arrays,
+// no calendar date attached. startTime/endTime are "HH:MM" 24h strings
+// rather than a time type: this is a per-edition recurring schedule, not
+// tied to a real date, and plain zero-padded strings sort/compare
+// correctly for the admin board's chronological-overlap check
+// (domain/schedule/scheduleValidation.ts) without needing to parse them.
+model ScheduleEvent {
+  id String @id @default(uuid()) @db.Uuid
+
+  day       Int
+  order     Int      @default(0)
+  startTime String
+  endTime   String
+  activity  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model FaqEntry {
   id String @id @default(uuid()) @db.Uuid
 
