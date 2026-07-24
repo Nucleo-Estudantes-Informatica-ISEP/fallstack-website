@@ -54,10 +54,14 @@ test("commits a chronologically valid reordering", async () => {
     { id: "b", day: 1, order: 1 },
   ]);
 
-  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith([
-    { id: "a", day: 1, order: 0 },
-    { id: "b", day: 1, order: 1 },
-  ]);
+  expect(findAllScheduleEvents).toHaveBeenCalledWith(transaction);
+  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith(
+    [
+      { id: "a", day: 1, order: 0 },
+      { id: "b", day: 1, order: 1 },
+    ],
+    transaction
+  );
 });
 
 test("rejects a reordering that would put a later-starting row before an earlier one, without saving", async () => {
@@ -122,6 +126,7 @@ test("a new event with no explicit order lands at the end of its day when it sta
     activity: "Talk",
   });
 
+  expect(findAllScheduleEvents).toHaveBeenCalledWith(transaction);
   expect(createScheduleEvent).toHaveBeenCalledWith(
     {
       day: 1,
@@ -203,6 +208,8 @@ test("commits a valid update that keeps the row in its existing relative positio
 
   await updateScheduleEventForAdmin("a", { startTime: "08:30" });
 
+  expect(findScheduleEventById).toHaveBeenCalledWith("a", transaction);
+  expect(findAllScheduleEvents).toHaveBeenCalledWith(transaction);
   expect(updateScheduleEvent).toHaveBeenCalledWith(
     "a",
     {

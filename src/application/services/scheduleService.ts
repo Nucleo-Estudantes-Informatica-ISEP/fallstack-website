@@ -81,6 +81,17 @@ function planChronologicalInsert(
   };
 }
 
+// The plan (order value, which rows shift, whether the result is even
+// valid) is only as fresh as the read it's computed from - reading the
+// day's rows before opening the transaction, then writing after, leaves a
+// window where a concurrent request could change that day between the two,
+// making the committed plan stale. Reading inside the same transaction as
+// the write closes that window down to the transaction's own duration
+// instead of a full read-then-decide-then-write round trip. This still
+// isn't a full guarantee under true concurrent writers (Postgres's default
+// read-committed isolation doesn't lock rows on a plain read) - see the
+// Obsidian TOCTOU todo for the fuller fix (row locking / serializable
+// isolation with retry, or a DB constraint on (day, order)).
 export async function createScheduleEventForAdmin(input: {
   day: number;
   startTime: string;
@@ -88,32 +99,32 @@ export async function createScheduleEventForAdmin(input: {
   activity: string;
   order?: number;
 }) {
-  const dayRows = (await findAllScheduleEvents()).filter(
-    (event) => event.day === input.day
-  );
-
-  let order = input.order;
-  let shifts: { id: string; order: number }[] = [];
-  let validatedDayRows: DayRow[] = dayRows;
-
-  if (order === undefined) {
-    const plan = planChronologicalInsert(dayRows, input.startTime);
-    order = plan.order;
-    shifts = plan.shifts;
-    validatedDayRows = plan.finalDayRows;
-  }
-
-  assertScheduleDayIsValid([
-    ...validatedDayRows,
-    {
-      id: "__new__",
-      startTime: input.startTime,
-      endTime: input.endTime,
-      order,
-    },
-  ]);
-
   return withTransaction(async (tx) => {
+    const dayRows = (await findAllScheduleEvents(tx)).filter(
+      (event) => event.day === input.day
+    );
+
+    let order = input.order;
+    let shifts: { id: string; order: number }[] = [];
+    let validatedDayRows: DayRow[] = dayRows;
+
+    if (order === undefined) {
+      const plan = planChronologicalInsert(dayRows, input.startTime);
+      order = plan.order;
+      shifts = plan.shifts;
+      validatedDayRows = plan.finalDayRows;
+    }
+
+    assertScheduleDayIsValid([
+      ...validatedDayRows,
+      {
+        id: "__new__",
+        startTime: input.startTime,
+        endTime: input.endTime,
+        order,
+      },
+    ]);
+
     if (shifts.length > 0)
       await bulkUpdateScheduleOrder(
         shifts.map((shift) => ({ ...shift, day: input.day })),
@@ -134,34 +145,34 @@ export async function updateScheduleEventForAdmin(
     order?: number;
   }
 ) {
-  const current = await findScheduleEventById(id);
-  if (!current) throw new HttpError("Not found", 404);
-
-  const day = input.day ?? current.day;
-  const startTime = input.startTime ?? current.startTime;
-  const endTime = input.endTime ?? current.endTime;
-
-  const dayRows = (await findAllScheduleEvents()).filter(
-    (event) => event.day === day && event.id !== id
-  );
-
-  let order = input.order;
-  let shifts: { id: string; order: number }[] = [];
-  let validatedDayRows: DayRow[] = dayRows;
-
-  if (order === undefined) {
-    const plan = planChronologicalInsert(dayRows, startTime);
-    order = plan.order;
-    shifts = plan.shifts;
-    validatedDayRows = plan.finalDayRows;
-  }
-
-  assertScheduleDayIsValid([
-    ...validatedDayRows,
-    { id, startTime, endTime, order },
-  ]);
-
   return withTransaction(async (tx) => {
+    const current = await findScheduleEventById(id, tx);
+    if (!current) throw new HttpError("Not found", 404);
+
+    const day = input.day ?? current.day;
+    const startTime = input.startTime ?? current.startTime;
+    const endTime = input.endTime ?? current.endTime;
+
+    const dayRows = (await findAllScheduleEvents(tx)).filter(
+      (event) => event.day === day && event.id !== id
+    );
+
+    let order = input.order;
+    let shifts: { id: string; order: number }[] = [];
+    let validatedDayRows: DayRow[] = dayRows;
+
+    if (order === undefined) {
+      const plan = planChronologicalInsert(dayRows, startTime);
+      order = plan.order;
+      shifts = plan.shifts;
+      validatedDayRows = plan.finalDayRows;
+    }
+
+    assertScheduleDayIsValid([
+      ...validatedDayRows,
+      { id, startTime, endTime, order },
+    ]);
+
     if (shifts.length > 0)
       await bulkUpdateScheduleOrder(
         shifts.map((shift) => ({ ...shift, day })),
@@ -187,37 +198,40 @@ export async function updateScheduleOrder(
 ) {
   if (updates.length === 0) return;
 
-  const existing = await findAllScheduleEvents();
-  const byId = new Map(existing.map((event) => [event.id, event]));
+  return withTransaction(async (tx) => {
+    const existing = await findAllScheduleEvents(tx);
+    const byId = new Map(existing.map((event) => [event.id, event]));
 
-  const updateById = new Map(updates.map((update) => [update.id, update]));
-  for (const update of updates) {
-    if (!byId.has(update.id)) throw new HttpError("Not found", 404);
-  }
+    const updateById = new Map(updates.map((update) => [update.id, update]));
+    for (const update of updates) {
+      if (!byId.has(update.id)) throw new HttpError("Not found", 404);
+    }
 
-  // Builds each affected day from every row currently in the DB - not just
-  // the ones present in `updates` - so a caller submitting a partial day
-  // can't hide a collision with a row it didn't include. The board always
-  // sends the full board state today, but nothing else enforces that.
-  const byDay = new Map<
-    number,
-    { id: string; startTime: string; endTime: string; order: number }[]
-  >();
-  for (const event of existing) {
-    const update = updateById.get(event.id);
-    const day = update?.day ?? event.day;
-    const order = update?.order ?? event.order;
-    const rows = byDay.get(day) ?? [];
-    rows.push({
-      id: event.id,
-      startTime: event.startTime,
-      endTime: event.endTime,
-      order,
-    });
-    byDay.set(day, rows);
-  }
+    // Builds each affected day from every row currently in the DB - not
+    // just the ones present in `updates` - so a caller submitting a
+    // partial day can't hide a collision with a row it didn't include.
+    // The board always sends the full board state today, but nothing else
+    // enforces that.
+    const byDay = new Map<
+      number,
+      { id: string; startTime: string; endTime: string; order: number }[]
+    >();
+    for (const event of existing) {
+      const update = updateById.get(event.id);
+      const day = update?.day ?? event.day;
+      const order = update?.order ?? event.order;
+      const rows = byDay.get(day) ?? [];
+      rows.push({
+        id: event.id,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        order,
+      });
+      byDay.set(day, rows);
+    }
 
-  for (const rows of byDay.values()) assertScheduleDayIsValid(rows);
+    for (const rows of byDay.values()) assertScheduleDayIsValid(rows);
 
-  await bulkUpdateScheduleOrder(updates);
+    await bulkUpdateScheduleOrder(updates, tx);
+  });
 }

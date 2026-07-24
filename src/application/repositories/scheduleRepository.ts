@@ -2,8 +2,8 @@ import "server-only";
 
 import prisma, { DbClient } from "./database";
 
-export const findAllScheduleEvents = () =>
-  prisma.scheduleEvent.findMany({
+export const findAllScheduleEvents = (db: DbClient = prisma) =>
+  db.scheduleEvent.findMany({
     orderBy: [{ day: "asc" }, { order: "asc" }],
   });
 
@@ -54,8 +54,8 @@ export const findScheduleEventsForAdmin = ({
     take: pageSize,
   });
 
-export const findScheduleEventById = (id: string) =>
-  prisma.scheduleEvent.findUnique({ where: { id } });
+export const findScheduleEventById = (id: string, db: DbClient = prisma) =>
+  db.scheduleEvent.findUnique({ where: { id } });
 
 export const createScheduleEvent = (
   data: {
