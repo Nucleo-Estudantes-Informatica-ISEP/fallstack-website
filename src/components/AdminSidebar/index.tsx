@@ -36,6 +36,7 @@ const sections: AdminNavSection[] = [
       { label: "Sponsors", href: "/sponsors" },
       { label: "Companies", href: "/companies" },
       { label: "Schedule", href: "/schedule" },
+      { label: "FAQs", href: "/faqs" },
     ],
   },
   {

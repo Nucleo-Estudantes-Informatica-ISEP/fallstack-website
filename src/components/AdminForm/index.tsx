@@ -18,6 +18,12 @@ export interface AdminFormTextField extends AdminFormFieldBase {
   required?: boolean;
 }
 
+export interface AdminFormTextareaField extends AdminFormFieldBase {
+  kind: "textarea";
+  required?: boolean;
+  rows?: number;
+}
+
 export interface AdminFormCheckboxField extends AdminFormFieldBase {
   kind: "checkbox";
 }
@@ -35,6 +41,7 @@ export interface AdminFormMultiSelectField extends AdminFormFieldBase {
 
 export type AdminFormField =
   | AdminFormTextField
+  | AdminFormTextareaField
   | AdminFormCheckboxField
   | AdminFormSelectField
   | AdminFormMultiSelectField;
@@ -135,6 +142,21 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
           ))}
         </div>
       </fieldset>
+    );
+  }
+
+  if (field.kind === "textarea") {
+    return (
+      <label className="flex flex-col gap-1 text-sm text-gray-700">
+        {field.label}
+        <textarea
+          name={field.name}
+          defaultValue={defaultValue !== undefined ? String(defaultValue) : ""}
+          required={field.required}
+          rows={field.rows ?? 4}
+          className={inputClassName}
+        />
+      </label>
     );
   }
 

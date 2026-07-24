@@ -81,6 +81,32 @@ test("collects checked options from a multiSelect field as an array", () => {
   expect(onSubmit).toHaveBeenCalledWith({ interests: ["ai"] });
 });
 
+test("submits a textarea field's value like a regular text field", () => {
+  const onSubmit = vi.fn();
+  render(
+    <AdminForm
+      sections={[
+        {
+          kind: "fields",
+          title: "Detalhes",
+          fields: [{ name: "answer", label: "Resposta", kind: "textarea" }],
+        },
+      ]}
+      defaultValues={{ answer: "Existing answer" }}
+      onSubmit={onSubmit}
+    />
+  );
+
+  expect(screen.getByLabelText("Resposta")).toHaveValue("Existing answer");
+
+  fireEvent.change(screen.getByLabelText("Resposta"), {
+    target: { value: "Multi-line\nanswer" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Criar" }));
+
+  expect(onSubmit).toHaveBeenCalledWith({ answer: "Multi-line\nanswer" });
+});
+
 test("only includes the password section's value when both fields are filled and matching", () => {
   const onSubmit = vi.fn();
   render(
