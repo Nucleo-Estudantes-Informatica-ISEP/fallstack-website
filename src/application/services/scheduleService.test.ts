@@ -87,6 +87,23 @@ test("rejects moving a row into a day where it would overlap its new neighbour",
   expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
 });
 
+test("rejects a partial reorder that would collide with an untouched row in the same day", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    { id: "a", day: 1, order: 0, startTime: "09:00", endTime: "09:30" },
+    { id: "b", day: 1, order: 1, startTime: "09:30", endTime: "10:00" },
+    { id: "c", day: 1, order: 2, startTime: "10:00", endTime: "10:30" },
+  ] as never);
+
+  // Only moves c - a and b are untouched and not included in the update
+  // list, but c's new order (0) collides with a's existing order, which
+  // must still be caught even though a was never submitted.
+  await expect(
+    updateScheduleOrder([{ id: "c", day: 1, order: 0 }])
+  ).rejects.toThrow("Schedule order is not chronologically valid");
+
+  expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
+});
+
 test("throws Not found if an update references an id that no longer exists", async () => {
   await expect(
     updateScheduleOrder([{ id: "missing", day: 1, order: 0 }])

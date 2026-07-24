@@ -190,21 +190,31 @@ export async function updateScheduleOrder(
   const existing = await findAllScheduleEvents();
   const byId = new Map(existing.map((event) => [event.id, event]));
 
+  const updateById = new Map(updates.map((update) => [update.id, update]));
+  for (const update of updates) {
+    if (!byId.has(update.id)) throw new HttpError("Not found", 404);
+  }
+
+  // Builds each affected day from every row currently in the DB - not just
+  // the ones present in `updates` - so a caller submitting a partial day
+  // can't hide a collision with a row it didn't include. The board always
+  // sends the full board state today, but nothing else enforces that.
   const byDay = new Map<
     number,
     { id: string; startTime: string; endTime: string; order: number }[]
   >();
-  for (const update of updates) {
-    const current = byId.get(update.id);
-    if (!current) throw new HttpError("Not found", 404);
-    const rows = byDay.get(update.day) ?? [];
+  for (const event of existing) {
+    const update = updateById.get(event.id);
+    const day = update?.day ?? event.day;
+    const order = update?.order ?? event.order;
+    const rows = byDay.get(day) ?? [];
     rows.push({
-      id: update.id,
-      startTime: current.startTime,
-      endTime: current.endTime,
-      order: update.order,
+      id: event.id,
+      startTime: event.startTime,
+      endTime: event.endTime,
+      order,
     });
-    byDay.set(update.day, rows);
+    byDay.set(day, rows);
   }
 
   for (const rows of byDay.values()) assertScheduleDayIsValid(rows);
