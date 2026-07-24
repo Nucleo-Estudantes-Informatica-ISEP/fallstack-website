@@ -7,6 +7,12 @@ import prisma, { DbClient } from "./database";
 export const findAllFaqEntries = () =>
   prisma.faqEntry.findMany({ orderBy: { order: "asc" } });
 
+export const findFaqEntriesByIds = (ids: string[]) =>
+  prisma.faqEntry.findMany({
+    where: { id: { in: ids } },
+    select: { id: true },
+  });
+
 export const isUniqueConstraintError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === "P2002";

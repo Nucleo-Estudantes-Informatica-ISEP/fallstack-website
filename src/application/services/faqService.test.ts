@@ -3,7 +3,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 import {
   bulkUpdateFaqOrder,
   createFaqEntry,
-  findAllFaqEntries,
+  findFaqEntriesByIds,
   findFaqEntryById,
   findMaxFaqOrder,
   isUniqueConstraintError,
@@ -20,6 +20,7 @@ import {
 vi.mock("server-only", () => ({}));
 vi.mock("../repositories/faqRepository", () => ({
   findAllFaqEntries: vi.fn(),
+  findFaqEntriesByIds: vi.fn(),
   findFaqEntriesForAdmin: vi.fn(),
   countFaqEntriesForAdmin: vi.fn(),
   findFaqEntryById: vi.fn(),
@@ -112,12 +113,12 @@ test("deleting a missing entry throws Not found", async () => {
 test("does nothing for an empty order update", async () => {
   await updateFaqOrder([]);
 
-  expect(findAllFaqEntries).not.toHaveBeenCalled();
+  expect(findFaqEntriesByIds).not.toHaveBeenCalled();
   expect(bulkUpdateFaqOrder).not.toHaveBeenCalled();
 });
 
 test("commits a reorder once every referenced id is confirmed to exist", async () => {
-  vi.mocked(findAllFaqEntries).mockResolvedValue([
+  vi.mocked(findFaqEntriesByIds).mockResolvedValue([
     { id: "a" },
     { id: "b" },
   ] as never);
@@ -127,6 +128,7 @@ test("commits a reorder once every referenced id is confirmed to exist", async (
     { id: "b", order: 0 },
   ]);
 
+  expect(findFaqEntriesByIds).toHaveBeenCalledWith(["a", "b"]);
   expect(bulkUpdateFaqOrder).toHaveBeenCalledWith([
     { id: "a", order: 1 },
     { id: "b", order: 0 },
@@ -134,7 +136,7 @@ test("commits a reorder once every referenced id is confirmed to exist", async (
 });
 
 test("rejects a reorder referencing an id that no longer exists, without saving", async () => {
-  vi.mocked(findAllFaqEntries).mockResolvedValue([{ id: "a" }] as never);
+  vi.mocked(findFaqEntriesByIds).mockResolvedValue([{ id: "a" }] as never);
 
   await expect(
     updateFaqOrder([{ id: "deleted-elsewhere", order: 0 }])

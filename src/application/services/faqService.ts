@@ -8,6 +8,7 @@ import {
   createFaqEntry,
   deleteFaqEntry,
   findAllFaqEntries,
+  findFaqEntriesByIds,
   findFaqEntriesForAdmin,
   findFaqEntryById,
   findMaxFaqOrder,
@@ -67,7 +68,9 @@ export async function deleteFaqEntryForAdmin(id: string) {
 export async function updateFaqOrder(updates: { id: string; order: number }[]) {
   if (updates.length === 0) return;
 
-  const existing = await findAllFaqEntries();
+  const existing = await findFaqEntriesByIds(
+    updates.map((update) => update.id)
+  );
   const existingIds = new Set(existing.map((entry) => entry.id));
   for (const update of updates) {
     if (!existingIds.has(update.id)) throw new HttpError("Not found", 404);
