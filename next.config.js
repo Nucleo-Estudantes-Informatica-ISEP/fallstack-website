@@ -53,4 +53,12 @@ module.exports = withSentryConfig(withPWA(nextConfig), {
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
   },
+  // The plugin's default on a release/upload failure is to throw and fail
+  // the whole build — too strict for source maps, which are an
+  // observability nicety, not something that should block a deploy
+  // (especially against a self-hosted backend like GlitchTip, whose API
+  // doesn't fully mirror Sentry's release-management endpoints).
+  errorHandler: (err) => {
+    console.warn("Sentry release/source-map upload failed:", err);
+  },
 });
