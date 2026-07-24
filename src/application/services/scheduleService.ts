@@ -14,6 +14,7 @@ import {
   updateScheduleEvent,
   type AdminScheduleQuery,
 } from "../repositories/scheduleRepository";
+import { withTransaction } from "../repositories/transaction";
 
 export const getScheduleEvents = () => findAllScheduleEvents();
 export const getScheduleEvent = (id: string) => findScheduleEventById(id);
@@ -112,12 +113,15 @@ export async function createScheduleEventForAdmin(input: {
     },
   ]);
 
-  if (shifts.length > 0)
-    await bulkUpdateScheduleOrder(
-      shifts.map((shift) => ({ ...shift, day: input.day }))
-    );
+  return withTransaction(async (tx) => {
+    if (shifts.length > 0)
+      await bulkUpdateScheduleOrder(
+        shifts.map((shift) => ({ ...shift, day: input.day })),
+        tx
+      );
 
-  return createScheduleEvent({ ...input, order });
+    return createScheduleEvent({ ...input, order }, tx);
+  });
 }
 
 export async function updateScheduleEventForAdmin(
@@ -157,10 +161,15 @@ export async function updateScheduleEventForAdmin(
     { id, startTime, endTime, order },
   ]);
 
-  if (shifts.length > 0)
-    await bulkUpdateScheduleOrder(shifts.map((shift) => ({ ...shift, day })));
+  return withTransaction(async (tx) => {
+    if (shifts.length > 0)
+      await bulkUpdateScheduleOrder(
+        shifts.map((shift) => ({ ...shift, day })),
+        tx
+      );
 
-  return updateScheduleEvent(id, { ...input, order });
+    return updateScheduleEvent(id, { ...input, order }, tx);
+  });
 }
 
 export async function deleteScheduleEventForAdmin(id: string) {

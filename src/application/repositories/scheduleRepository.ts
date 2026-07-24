@@ -1,6 +1,6 @@
 import "server-only";
 
-import prisma from "./database";
+import prisma, { DbClient } from "./database";
 
 export const findAllScheduleEvents = () =>
   prisma.scheduleEvent.findMany({
@@ -57,13 +57,16 @@ export const findScheduleEventsForAdmin = ({
 export const findScheduleEventById = (id: string) =>
   prisma.scheduleEvent.findUnique({ where: { id } });
 
-export const createScheduleEvent = (data: {
-  day: number;
-  startTime: string;
-  endTime: string;
-  activity: string;
-  order?: number;
-}) => prisma.scheduleEvent.create({ data });
+export const createScheduleEvent = (
+  data: {
+    day: number;
+    startTime: string;
+    endTime: string;
+    activity: string;
+    order?: number;
+  },
+  db: DbClient = prisma
+) => db.scheduleEvent.create({ data });
 
 export const updateScheduleEvent = (
   id: string,
@@ -73,17 +76,35 @@ export const updateScheduleEvent = (
     endTime?: string;
     activity?: string;
     order?: number;
-  }
-) => prisma.scheduleEvent.update({ where: { id }, data });
+  },
+  db: DbClient = prisma
+) => db.scheduleEvent.update({ where: { id }, data });
 
 export const deleteScheduleEvent = (id: string) =>
   prisma.scheduleEvent.delete({ where: { id } });
 
-export const bulkUpdateScheduleOrder = (
-  updates: { id: string; day: number; order: number }[]
-) =>
-  prisma.$transaction(
-    updates.map(({ id, day, order }) =>
-      prisma.scheduleEvent.update({ where: { id }, data: { day, order } })
-    )
-  );
+// Takes an optional `db` so a caller can run this inside the same
+// transaction as the create/update that depends on its result (see
+// createScheduleEventForAdmin/updateScheduleEventForAdmin) - otherwise the
+// order shift and the row write land as two separate, non-atomic
+// operations. When called standalone (the default `prisma` client, e.g.
+// from updateScheduleOrder) it still wraps the whole batch in its own
+// transaction; a passed-in transaction client doesn't expose `$transaction`
+// itself, so updates run sequentially against it instead.
+export const bulkUpdateScheduleOrder = async (
+  updates: { id: string; day: number; order: number }[],
+  db: DbClient = prisma
+) => {
+  if (db === prisma) {
+    await prisma.$transaction(
+      updates.map(({ id, day, order }) =>
+        prisma.scheduleEvent.update({ where: { id }, data: { day, order } })
+      )
+    );
+    return;
+  }
+
+  for (const { id, day, order } of updates) {
+    await db.scheduleEvent.update({ where: { id }, data: { day, order } });
+  }
+};

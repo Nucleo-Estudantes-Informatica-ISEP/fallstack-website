@@ -7,6 +7,7 @@ import {
   findScheduleEventById,
   updateScheduleEvent,
 } from "../repositories/scheduleRepository";
+import { withTransaction } from "../repositories/transaction";
 import {
   createScheduleEventForAdmin,
   updateScheduleEventForAdmin,
@@ -21,15 +22,23 @@ vi.mock("../repositories/scheduleRepository", () => ({
   updateScheduleEvent: vi.fn(),
   bulkUpdateScheduleOrder: vi.fn(),
 }));
+vi.mock("../repositories/transaction", () => ({
+  withTransaction: vi.fn(),
+}));
 
 const existing = [
   { id: "a", day: 1, order: 0, startTime: "09:00", endTime: "10:00" },
   { id: "b", day: 1, order: 1, startTime: "10:00", endTime: "11:00" },
 ];
 
+const transaction = {} as never;
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findAllScheduleEvents).mockResolvedValue(existing as never);
+  vi.mocked(withTransaction).mockImplementation(async (callback) =>
+    callback(transaction)
+  );
 });
 
 test("does nothing for an empty update list", async () => {
@@ -96,13 +105,16 @@ test("a new event with no explicit order lands at the end of its day when it sta
     activity: "Talk",
   });
 
-  expect(createScheduleEvent).toHaveBeenCalledWith({
-    day: 1,
-    startTime: "11:00",
-    endTime: "12:00",
-    activity: "Talk",
-    order: 2,
-  });
+  expect(createScheduleEvent).toHaveBeenCalledWith(
+    {
+      day: 1,
+      startTime: "11:00",
+      endTime: "12:00",
+      activity: "Talk",
+      order: 2,
+    },
+    transaction
+  );
   expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
 });
 
@@ -116,17 +128,23 @@ test("a new event with no explicit order that starts earlier than every existing
     activity: "Early talk",
   });
 
-  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith([
-    { id: "a", day: 1, order: 1 },
-    { id: "b", day: 1, order: 2 },
-  ]);
-  expect(createScheduleEvent).toHaveBeenCalledWith({
-    day: 1,
-    startTime: "08:00",
-    endTime: "08:30",
-    activity: "Early talk",
-    order: 0,
-  });
+  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith(
+    [
+      { id: "a", day: 1, order: 1 },
+      { id: "b", day: 1, order: 2 },
+    ],
+    transaction
+  );
+  expect(createScheduleEvent).toHaveBeenCalledWith(
+    {
+      day: 1,
+      startTime: "08:00",
+      endTime: "08:30",
+      activity: "Early talk",
+      order: 0,
+    },
+    transaction
+  );
 });
 
 test("rejects creating an event that overlaps an existing row in the same day", async () => {
@@ -168,10 +186,14 @@ test("commits a valid update that keeps the row in its existing relative positio
 
   await updateScheduleEventForAdmin("a", { startTime: "08:30" });
 
-  expect(updateScheduleEvent).toHaveBeenCalledWith("a", {
-    startTime: "08:30",
-    order: 0,
-  });
+  expect(updateScheduleEvent).toHaveBeenCalledWith(
+    "a",
+    {
+      startTime: "08:30",
+      order: 0,
+    },
+    transaction
+  );
   expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
 });
 
@@ -195,12 +217,17 @@ test("an update with no explicit order that moves a row between two others witho
     endTime: "10:45",
   });
 
-  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith([
-    { id: "c", day: 1, order: 3 },
-  ]);
-  expect(updateScheduleEvent).toHaveBeenCalledWith("a", {
-    startTime: "10:35",
-    endTime: "10:45",
-    order: 2,
-  });
+  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith(
+    [{ id: "c", day: 1, order: 3 }],
+    transaction
+  );
+  expect(updateScheduleEvent).toHaveBeenCalledWith(
+    "a",
+    {
+      startTime: "10:35",
+      endTime: "10:45",
+      order: 2,
+    },
+    transaction
+  );
 });
