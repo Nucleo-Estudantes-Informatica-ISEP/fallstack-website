@@ -8,11 +8,10 @@ export async function createAccount(data: {
   password: string | null;
 }) {
   try {
-    await httpClient.post("/auth/signup", {
-      email: data.email,
-      password: data.password,
-    });
-    return true;
+    return await httpClient.post<{ requiresEmailConfirmation: boolean }>(
+      "/auth/signup",
+      { email: data.email, password: data.password }
+    );
   } catch (error) {
     return error instanceof Error ? error : new Error("Network error");
   }
