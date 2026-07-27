@@ -138,6 +138,18 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           toast.error("Ocorreu um erro ao criar a conta.");
           return setLoading(false);
         }
+
+        // "Confirm email" is on and this account hasn't been confirmed yet,
+        // so Supabase didn't hand back a session - none of the steps below
+        // (uploads, profile creation) can run without one. Stop here instead
+        // of continuing on to confusing "Unauthorized" failures.
+        if (account.requiresEmailConfirmation) {
+          toast.info(
+            "Criámos a tua conta! Verifica o teu email institucional, confirma a conta e depois inicia sessão para continuares o registo."
+          );
+          router.push("/login");
+          return setLoading(false);
+        }
       }
 
       const avatarUrl = await handleAvatarUpload();
