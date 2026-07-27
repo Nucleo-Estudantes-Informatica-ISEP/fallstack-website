@@ -37,10 +37,10 @@ const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
     redirectTo.searchParams.set("next", next);
 
     const { error } = await supabase.auth.signInWithOAuth({
-      // GoTrue has no arbitrarily-named external provider mechanism, so
-      // AuthNEI (NEI's self-hosted Zitadel instance) is registered under
-      // the built-in "keycloak" provider id, which is generic OIDC
-      // discovery under the hood — not literally Keycloak.
+      // "custom:authnei" is GoTrue's DB-backed custom OIDC provider id for
+      // AuthNEI (NEI's self-hosted Zitadel instance) — registered via
+      // GoTrue's admin API, not a fixed built-in name, hence the cast
+      // (it isn't part of the SDK's Provider union).
       provider: config.constants.authneiProvider as Provider,
       options: { redirectTo: redirectTo.toString() },
     });

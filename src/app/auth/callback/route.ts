@@ -8,9 +8,9 @@ import { createClient as createSupabaseServerClient } from "@/utils/supabase/ser
 import { sanitizeNext } from "./sanitizeNext";
 
 // Supabase-constructed OAuth callback URL, used by the AuthNEI (registered
-// under GoTrue's built-in "keycloak" provider id - see config/index.ts's
-// authneiProvider) sign-in flow — exchanges the `code` query param for a
-// session via exchangeCodeForSession. This is a different flow from
+// as a GoTrue custom OIDC provider - see config/index.ts's authneiProvider)
+// sign-in flow — exchanges the `code` query param for a session via
+// exchangeCodeForSession. This is a different flow from
 // app/auth/confirm/route.ts (which only handles OTP email-link
 // confirmation), but lives alongside it outside the (auth)/api conventions
 // for the same reason: Supabase itself constructs this URL.
