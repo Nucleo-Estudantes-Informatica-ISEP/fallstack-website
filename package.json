@@ -43,7 +43,7 @@
     "react-loading-skeleton": "^3.5.0",
     "react-zxing": "^2.1.0",
     "server-only": "^0.0.1",
-    "sharp": "^0.34.5",
+    "sharp": "^0.35.3",
     "typewriter-effect": "^2.22.0",
     "xlsx": "^0.18.5",
     "zod": "^4.1.12"
