@@ -39,7 +39,7 @@
     "react": "^18.3.1",
     "react-canvas-confetti": "^2.0.7",
     "react-dom": "^18.3.1",
-    "react-icons": "^5.5.0",
+    "react-icons": "^5.7.0",
     "react-loading-skeleton": "^3.5.0",
     "react-zxing": "^2.1.0",
     "server-only": "^0.0.1",
