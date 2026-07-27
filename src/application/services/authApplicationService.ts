@@ -20,14 +20,38 @@ import {
   upsertUser,
 } from "../repositories/userRepository";
 
+// Self-hosted GoTrue occasionally returns an error body with none of the
+// msg/message/error/error_description fields supabase-js looks for (e.g. an
+// infra-level failure upstream of GoTrue itself); its client then falls back
+// to JSON.stringify()-ing the (often empty) body, producing an opaque "{}"
+// that isn't useful to show a user. Fall back to a fixed message instead of
+// letting that leak through to the UI.
+function usableAuthErrorMessage(message: string | undefined, fallback: string) {
+  const trimmed = message?.trim();
+  if (!trimmed || trimmed.startsWith("{")) return fallback;
+  return trimmed;
+}
+
 async function createSupabaseAuthUser(email: string, password: string) {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error || !data.user)
-    throw new HttpError(error?.message || "Unable to sign up", 400);
-  if (!data.session)
-    await supabase.auth.signInWithPassword({ email, password });
-  return data.user;
+    throw new HttpError(
+      usableAuthErrorMessage(error?.message, "Unable to sign up"),
+      400
+    );
+  // No session means "Confirm email" is on and this identity hasn't
+  // confirmed yet - signInWithPassword() is expected to fail in that case,
+  // so its result only tells us whether a session actually got established.
+  let hasSession = Boolean(data.session);
+  if (!hasSession) {
+    const { data: signInData } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    hasSession = Boolean(signInData.session);
+  }
+  return { user: data.user, requiresEmailConfirmation: !hasSession };
 }
 
 // Used when an admin creates a Student/Employee account on someone else's
@@ -46,7 +70,10 @@ export async function createSupabaseAuthUserAsAdmin(
     email_confirm: true,
   });
   if (error || !data.user)
-    throw new HttpError(error?.message || "Unable to create account", 400);
+    throw new HttpError(
+      usableAuthErrorMessage(error?.message, "Unable to create account"),
+      400
+    );
   return data.user;
 }
 
@@ -103,9 +130,12 @@ export async function signUpUser(input: {
   password: string;
   role: "STUDENT" | "EMPLOYEE";
 }) {
-  const user = await createSupabaseAuthUser(input.email, input.password);
+  const { user, requiresEmailConfirmation } = await createSupabaseAuthUser(
+    input.email,
+    input.password
+  );
   await upsertUser({ id: user.id, email: input.email, role: input.role });
-  return user;
+  return { user, requiresEmailConfirmation };
 }
 
 type SessionUser = NonNullable<Awaited<ReturnType<typeof findUserSessionById>>>;
@@ -189,7 +219,7 @@ export async function signUpEmployee(input: {
 }) {
   const company = await findCompanyByCode(input.companyCode);
   if (!company) throw new HttpError("Invalid company code", 404);
-  const user = await createSupabaseAuthUser(input.email, input.password);
+  const { user } = await createSupabaseAuthUser(input.email, input.password);
   try {
     await withTransaction(async (tx) => {
       await upsertUser(
