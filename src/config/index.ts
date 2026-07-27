@@ -30,10 +30,14 @@ const config = {
   constants: {
     actionQrCodeRefreshRateMs: 15 * 1000, // 15 seconds
     neiContactEmail: "info@nei-isep.org",
-    // Supabase custom OIDC provider id for AuthNEI (NEI's self-hosted
-    // Zitadel instance), configured via the Supabase dashboard. Not a
-    // secret — safe to reference directly as a string constant.
-    authneiProvider: "custom:authnei",
+    // GoTrue's built-in "keycloak" external provider id, repurposed for
+    // AuthNEI (NEI's self-hosted Zitadel instance) - that provider is just
+    // generic OIDC-discovery under the hood (GOTRUE_EXTERNAL_KEYCLOAK_URL
+    // pointing at Zitadel's issuer), not literally Keycloak. GoTrue has no
+    // mechanism for an arbitrarily-named external provider, so it's this
+    // fixed id rather than something AuthNEI-specific. Not a secret - safe
+    // to reference directly as a string constant.
+    authneiProvider: "keycloak",
   },
 };
 
