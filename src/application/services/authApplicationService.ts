@@ -40,18 +40,9 @@ async function createSupabaseAuthUser(email: string, password: string) {
       usableAuthErrorMessage(error?.message, "Unable to sign up"),
       400
     );
-  // No session means "Confirm email" is on and this identity hasn't
-  // confirmed yet - signInWithPassword() is expected to fail in that case,
-  // so its result only tells us whether a session actually got established.
-  let hasSession = Boolean(data.session);
-  if (!hasSession) {
-    const { data: signInData } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    hasSession = Boolean(signInData.session);
-  }
-  return { user: data.user, requiresEmailConfirmation: !hasSession };
+  if (!data.session)
+    await supabase.auth.signInWithPassword({ email, password });
+  return data.user;
 }
 
 // Used when an admin creates a Student/Employee account on someone else's
@@ -125,19 +116,6 @@ export async function setAuthUserBanned(userId: string, banned: boolean) {
   }
 }
 
-export async function signUpUser(input: {
-  email: Email;
-  password: string;
-  role: "STUDENT" | "EMPLOYEE";
-}) {
-  const { user, requiresEmailConfirmation } = await createSupabaseAuthUser(
-    input.email,
-    input.password
-  );
-  await upsertUser({ id: user.id, email: input.email, role: input.role });
-  return { user, requiresEmailConfirmation };
-}
-
 type SessionUser = NonNullable<Awaited<ReturnType<typeof findUserSessionById>>>;
 
 function destinationFor(user: SessionUser, fallback: string) {
@@ -148,10 +126,13 @@ function destinationFor(user: SessionUser, fallback: string) {
   return fallback;
 }
 
-// /auth/signup is public and only checks email *format* (isIsepEmail), not
-// ownership - anyone can plant a User row under a real student's ISEP email
-// today, confirmed or not. Only a *confirmed* identity actually proves the
-// signer received and clicked a confirmation link sent to that mailbox, so
+// Students no longer have a self-service email/password signup route in
+// this app (account creation is AuthNEI-only - see AccountDetailsStep), but
+// Supabase's own auth.signUp() REST endpoint is still directly reachable
+// with the public anon key regardless of what this app's UI offers, so
+// anyone can still plant an unconfirmed User row under a real student's
+// ISEP email. Only a *confirmed* identity actually proves the signer
+// received and clicked a confirmation link sent to that mailbox, so
 // completeOAuthSignIn() below must not trust an email match blindly: an
 // unconfirmed row is treated as a dangling/spoofed placeholder, not a real
 // account to relink onto. This still depends on "Confirm email" being ON in
@@ -171,7 +152,7 @@ async function isEmailConfirmed(id: string) {
 
 // Called from the AuthNEI OAuth callback once Supabase has already
 // exchanged the code for a session — Supabase manages the auth identity
-// itself, so unlike signUpUser() there is no password to set here.
+// itself, so unlike signUpEmployee() there is no password to set here.
 // Returns where the browser should land next.
 export async function completeOAuthSignIn(input: {
   id: string;
@@ -219,7 +200,7 @@ export async function signUpEmployee(input: {
 }) {
   const company = await findCompanyByCode(input.companyCode);
   if (!company) throw new HttpError("Invalid company code", 404);
-  const { user } = await createSupabaseAuthUser(input.email, input.password);
+  const user = await createSupabaseAuthUser(input.email, input.password);
   try {
     await withTransaction(async (tx) => {
       await upsertUser(
