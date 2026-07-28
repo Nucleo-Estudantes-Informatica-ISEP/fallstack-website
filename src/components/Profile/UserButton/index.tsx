@@ -7,9 +7,13 @@ import type { SessionDto } from "@/application/dto/sessionDto";
 
 interface UserButtonProps {
   user: SessionDto;
+  // TopBar renders white icons by default (its background is dark
+  // everywhere except the admin backoffice, which is a light page from the
+  // top - a white icon there is invisible, not just low-contrast).
+  light?: boolean;
 }
 
-const UserButton: React.FC<UserButtonProps> = ({ user }) => {
+const UserButton: React.FC<UserButtonProps> = ({ user, light = false }) => {
   // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
   // established the account but the signup wizard was abandoned or
   // interrupted before the profile step. Route back into the wizard to
@@ -28,7 +32,7 @@ const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   return (
     <Link
       href={profileUrl}
-      className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
+      className={`z-20 flex size-full items-center justify-center text-2xl transition-colors hover:text-primary ${light ? "fill-gray-700" : "fill-white"}`}
     >
       <LiaUser />
     </Link>

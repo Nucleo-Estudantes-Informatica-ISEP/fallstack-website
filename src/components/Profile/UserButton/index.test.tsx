@@ -44,3 +44,17 @@ test("links a super admin to the backoffice too", () => {
   render(<UserButton user={user} />);
   expect(linkHref()).toBe("/overview");
 });
+
+test("defaults to a white icon, for TopBar's usual dark background", () => {
+  const user: SessionDto = { role: "EMPLOYEE", adminRole: null, student: null };
+  render(<UserButton user={user} />);
+  expect(screen.getByRole("link").className).toContain("fill-white");
+});
+
+test("uses a dark icon in light mode, for the admin backoffice's light background", () => {
+  const user: SessionDto = { role: null, adminRole: "ADMIN", student: null };
+  render(<UserButton user={user} light />);
+  const className = screen.getByRole("link").className;
+  expect(className).toContain("fill-gray-700");
+  expect(className).not.toContain("fill-white");
+});
