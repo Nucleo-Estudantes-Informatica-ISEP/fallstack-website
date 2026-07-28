@@ -15,7 +15,11 @@ interface AdminNavSection {
   items: AdminNavItem[];
 }
 
-const sections: AdminNavSection[] = [
+interface AdminSidebarProps {
+  isSuperAdmin: boolean;
+}
+
+const baseSections: AdminNavSection[] = [
   {
     label: "Users",
     items: [
@@ -49,9 +53,18 @@ const sections: AdminNavSection[] = [
   },
 ];
 
-const AdminSidebar: React.FC = () => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
   const pathname = usePathname();
   const logsUrl = clientEnv.NEXT_PUBLIC_LOGS_DASHBOARD_URL;
+
+  const sections: AdminNavSection[] = baseSections.map((section) =>
+    section.label === "Users" && isSuperAdmin
+      ? {
+          ...section,
+          items: [...section.items, { label: "Admins", href: "/admins" }],
+        }
+      : section
+  );
 
   return (
     <nav
