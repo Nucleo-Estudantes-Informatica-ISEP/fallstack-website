@@ -60,6 +60,27 @@ export const countCompanySaves = (companyId: string) =>
 export const countSavedStudentsByCompany = () =>
   prisma.savedStudent.groupBy({ by: ["companyId"], _count: { _all: true } });
 
+export const countAllSavedStudents = () => prisma.savedStudent.count();
+
+export const findRecentSavedStudents = (limit: number) =>
+  prisma.savedStudent.findMany({
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: {
+      createdAt: true,
+      student: { select: { name: true } },
+      company: { select: { name: true } },
+    },
+  });
+
+// See findActionCompletionTimestampsSince's comment - same small-scale
+// rationale for bucketing in the service layer instead of DB-side.
+export const findSavedStudentTimestampsSince = (since: Date) =>
+  prisma.savedStudent.findMany({
+    where: { createdAt: { gte: since } },
+    select: { createdAt: true },
+  });
+
 export const findCompanyHistory = (companyId: string) =>
   prisma.savedStudent.findMany({
     where: { companyId },

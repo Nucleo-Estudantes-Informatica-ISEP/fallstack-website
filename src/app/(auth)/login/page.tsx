@@ -56,7 +56,7 @@ const LoginPage: React.FC = () => {
       // it finished - so send them back into the wizard to complete it
       // instead of the homepage.
       if (session.user?.adminRole) {
-        router.push("/students");
+        router.push("/overview");
       } else if (session.user?.role === "EMPLOYEE") {
         router.push("/dashboard");
       } else if (session.user?.role === "STUDENT") {

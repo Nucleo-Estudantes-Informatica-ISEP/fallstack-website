@@ -32,7 +32,7 @@ test("links a STUDENT with no profile yet back into signup", () => {
 test("links an admin to the backoffice instead of signup, even though role is null", () => {
   const user: SessionDto = { role: null, adminRole: "ADMIN", student: null };
   render(<UserButton user={user} />);
-  expect(linkHref()).toBe("/students");
+  expect(linkHref()).toBe("/overview");
 });
 
 test("links a super admin to the backoffice too", () => {
@@ -42,5 +42,5 @@ test("links a super admin to the backoffice too", () => {
     student: null,
   };
   render(<UserButton user={user} />);
-  expect(linkHref()).toBe("/students");
+  expect(linkHref()).toBe("/overview");
 });

@@ -93,7 +93,7 @@ test("sends an admin to the backoffice instead of the homepage, even though role
   render(<LoginPage />);
   submitLogin();
 
-  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/students"));
+  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/overview"));
 });
 
 test("sends a super admin to the backoffice too", async () => {
@@ -106,7 +106,7 @@ test("sends a super admin to the backoffice too", async () => {
   render(<LoginPage />);
   submitLogin();
 
-  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/students"));
+  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/overview"));
 });
 
 test("falls back to the homepage for a session with no role and no admin tier", async () => {

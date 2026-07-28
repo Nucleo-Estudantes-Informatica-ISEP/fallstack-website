@@ -72,6 +72,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
       className="sticky top-16 hidden h-[calc(100vh-4rem)] w-56 shrink-0 overflow-y-auto border-r border-gray-200 bg-white p-4 md:block"
     >
       <ul className="flex flex-col gap-6">
+        <li>
+          <Link
+            href="/overview"
+            aria-current={
+              pathname?.startsWith("/overview") ? "page" : undefined
+            }
+            className={`block rounded-md px-2 py-1.5 text-sm font-semibold transition-colors ${
+              pathname?.startsWith("/overview")
+                ? "bg-primary/10 text-primary"
+                : "text-gray-800 hover:bg-gray-100"
+            }`}
+          >
+            Dashboard
+          </Link>
+        </li>
         {sections.map((section) => (
           <li key={section.label}>
             <h2 className="mb-2 px-2 text-xs font-semibold tracking-wider text-gray-400 uppercase">

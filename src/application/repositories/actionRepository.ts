@@ -97,3 +97,26 @@ export const upsertActionCompletion = (
 
 export const toggleAction = (id: string, isLive: boolean) =>
   prisma.action.update({ where: { id }, data: { isLive } });
+
+export const countActionCompletions = () => prisma.actionCompletion.count();
+
+export const findRecentActionCompletions = (limit: number) =>
+  prisma.actionCompletion.findMany({
+    orderBy: { completedAt: "desc" },
+    take: limit,
+    select: {
+      completedAt: true,
+      student: { select: { name: true } },
+      action: { select: { name: true } },
+    },
+  });
+
+// Bucketing by day happens in the service layer - this just returns the raw
+// timestamps for the window, which is small enough (a single-event fair, not
+// a high-volume product) that fetching rows and grouping in JS is simpler
+// and more portable than a DB-side date_trunc.
+export const findActionCompletionTimestampsSince = (since: Date) =>
+  prisma.actionCompletion.findMany({
+    where: { completedAt: { gte: since } },
+    select: { completedAt: true },
+  });

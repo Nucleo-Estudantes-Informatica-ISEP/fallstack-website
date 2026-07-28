@@ -18,7 +18,7 @@ const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   // isn't a STUDENT/EMPLOYEE at all) - checked first so it doesn't fall
   // into that same "unfinished student signup" branch.
   const profileUrl = user.adminRole
-    ? "/students"
+    ? "/overview"
     : user.role === "EMPLOYEE"
       ? "/dashboard"
       : user.student
