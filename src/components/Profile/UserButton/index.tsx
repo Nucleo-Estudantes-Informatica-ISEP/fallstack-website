@@ -10,12 +10,16 @@ interface UserButtonProps {
 }
 
 const UserButton: React.FC<UserButtonProps> = ({ user }) => {
+  // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
+  // established the account but the signup wizard was abandoned or
+  // interrupted before the profile step. Route back into the wizard to
+  // finish it instead of a dead link.
   const profileUrl =
     user.role === "EMPLOYEE"
       ? "/dashboard"
-      : !!user.student
+      : user.student
         ? "/student/" + user.student.code
-        : "";
+        : "/signup";
 
   return (
     <Link
