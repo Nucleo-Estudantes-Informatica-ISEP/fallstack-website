@@ -50,6 +50,26 @@ test("a single valid row is fine on its own", () => {
   assert.equal(invalid.size, 0);
 });
 
+test("flags a row with a blank startTime, even as the first row of the day", () => {
+  // A blank first row's startTime sorts before everything else, so it
+  // never trips the "starts before the previous row ends" check (there is
+  // no previous row) - must be caught on its own, not just via ordering.
+  const invalid = findInvalidScheduleRowIds([
+    { id: "a", startTime: "", endTime: "10:00" },
+    { id: "b", startTime: "10:00", endTime: "11:00" },
+  ]);
+
+  assert.deepEqual([...invalid], ["a"]);
+});
+
+test("flags a row with a blank endTime", () => {
+  const invalid = findInvalidScheduleRowIds([
+    { id: "a", startTime: "09:00", endTime: "" },
+  ]);
+
+  assert.deepEqual([...invalid], ["a"]);
+});
+
 test("back-to-back rows (end equals next start) are valid, not an overlap", () => {
   const invalid = findInvalidScheduleRowIds([
     { id: "a", startTime: "09:00", endTime: "10:00" },
