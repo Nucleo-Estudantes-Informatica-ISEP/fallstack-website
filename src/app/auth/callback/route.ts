@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { Email } from "@/types/Email";
+import { clientEnv } from "@/config/env.client";
 import { reportError } from "@/lib/logger";
 import { completeOAuthSignIn } from "@/application/services/authApplicationService";
 import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
 import { sanitizeNext } from "./sanitizeNext";
+
+const publicAppOrigin = new URL(clientEnv.NEXT_PUBLIC_BASE_URL).origin;
+
+function publicAppUrl(path: string) {
+  return new URL(path, publicAppOrigin);
+}
 
 // Supabase-constructed OAuth callback URL, used by the AuthNEI (registered
 // as a GoTrue custom OIDC provider - see config/index.ts's authneiProvider)
@@ -30,7 +37,7 @@ export async function GET(request: NextRequest) {
           email: Email.create(data.user.email),
           fallback: next,
         });
-        return NextResponse.redirect(new URL(destination, request.url));
+        return NextResponse.redirect(publicAppUrl(destination));
       } catch (err) {
         reportError(
           err,
@@ -42,5 +49,5 @@ export async function GET(request: NextRequest) {
   }
 
   // Error handling — same fallback page as app/auth/confirm/route.ts
-  return NextResponse.redirect(new URL("/auth/auth-code-error", request.url));
+  return NextResponse.redirect(publicAppUrl("/auth/auth-code-error"));
 }

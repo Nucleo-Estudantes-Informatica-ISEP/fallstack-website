@@ -51,17 +51,25 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
 
     const saved = window.sessionStorage.getItem(AUTHNEI_DRAFT_STORAGE_KEY);
     window.sessionStorage.removeItem(AUTHNEI_DRAFT_STORAGE_KEY);
+    let hasSavedName = false;
 
     if (saved) {
       try {
-        setData((prev) => ({ ...prev, ...JSON.parse(saved) }));
+        const draft = JSON.parse(saved) as { name?: unknown };
+        const savedName = draft.name;
+        if (typeof savedName === "string" && savedName.trim().length > 0) {
+          hasSavedName = true;
+          setData((prev) => ({ ...prev, name: savedName }));
+        }
       } catch {
         // Ignore malformed/stale storage and continue with a blank draft.
       }
     }
 
     setAuthNeiMode(true);
-    setCurrentStep(1);
+    // Login-started AuthNEI flows have no wizard draft, so still collect the
+    // required name. Signup-started flows already stashed it before redirect.
+    setCurrentStep(hasSavedName ? 1 : 0);
   }, []);
 
   const stashDraftForAuthNei = () => {
