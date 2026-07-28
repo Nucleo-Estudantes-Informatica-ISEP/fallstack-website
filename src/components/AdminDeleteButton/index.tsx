@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { FiTrash2 } from "react-icons/fi";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
@@ -45,9 +46,9 @@ const AdminDeleteButton: React.FC<AdminDeleteButtonProps> = ({
         disabled={disabled}
         aria-label={`Eliminar ${itemLabel}`}
         title={disabled ? disabledReason : undefined}
-        className="text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex items-center text-red-500 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-30"
       >
-        🗑
+        <FiTrash2 size={16} />
       </button>
       <ConfirmDialog
         isVisible={isVisible}
