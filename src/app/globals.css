@@ -10,10 +10,13 @@
   /* Colors (migrated from your old config) */
   --color-text: #ffffff;
   --color-background: #141414;
-  --color-primary: rgba(255, 255, 255, 0.7);
-  /* backward-compatible aliases for older variable names used across the codebase */
-  /* Restore legacy button primary color (orange) that was used before the reset */
-  --primary: #f97316; /* Tailwind orange-500, matches previous orange-ish look */
+  --color-primary: #f97316; /* Tailwind orange-500, the site's brand orange */
+  /* backward-compatible alias for older code (e.g. .auth-pane below) that
+     uses var(--primary) directly instead of a bg-primary/text-primary
+     utility - only --color-* keys become Tailwind utilities in v4, so this
+     must stay a plain alias of --color-primary, not a second independent
+     value, or the two silently drift apart again. */
+  --primary: var(--color-primary);
   --color-secondary: #484848;
   /* legacy alias for older code that used --secondary */
   --secondary: var(--color-secondary);
