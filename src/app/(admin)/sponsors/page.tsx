@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { FiEdit2 } from "react-icons/fi";
 
@@ -6,6 +5,7 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import LogoThumbnail from "@/components/ui/LogoThumbnail";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminSponsorDto } from "@/application/dto/sponsorDto";
@@ -23,15 +23,7 @@ const columns: DataTableColumn<SponsorRow>[] = [
   {
     key: "logo",
     header: "Logótipo",
-    render: (sponsor) => (
-      <Image
-        src={sponsor.logo}
-        alt=""
-        width={40}
-        height={40}
-        className="size-10 rounded-full object-cover"
-      />
-    ),
+    render: (sponsor) => <LogoThumbnail src={sponsor.logo} size={40} />,
   },
   { key: "name", header: "Nome", render: (s) => s.name, sortable: true },
   { key: "website", header: "Website", render: (s) => s.website ?? "-" },

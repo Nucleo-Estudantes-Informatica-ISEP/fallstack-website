@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   closestCenter,
@@ -24,6 +23,7 @@ import {
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import LogoThumbnail from "@/components/ui/LogoThumbnail";
 import type { CompanyTier } from "@/domain/company/company-tier";
 
 import { CSS } from "@dnd-kit/utilities";
@@ -81,13 +81,7 @@ const CompanyRowCard: React.FC<{ company: CompanyRow; dragging?: boolean }> = ({
     }`}
   >
     {company.avatar ? (
-      <Image
-        src={company.avatar}
-        alt=""
-        width={32}
-        height={32}
-        className="size-8 shrink-0 rounded-full object-cover"
-      />
+      <LogoThumbnail src={company.avatar} size={32} />
     ) : (
       <div className="size-8 shrink-0 rounded-full bg-gray-200" />
     )}
