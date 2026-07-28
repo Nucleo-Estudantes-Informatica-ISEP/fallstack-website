@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { EmailSchema } from "@/schemas/customEmailZod";
+
 const adminRoleSchema = z.enum(["ADMIN", "SUPER_ADMIN"]);
 
 export const createAdminAccountSchema = z.object({
-  email: z.email(),
+  email: EmailSchema,
   password: z.string().min(8),
   name: z.string().min(1).max(100),
   adminRole: adminRoleSchema,

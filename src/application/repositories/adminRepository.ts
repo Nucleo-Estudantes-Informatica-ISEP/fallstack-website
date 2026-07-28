@@ -40,6 +40,9 @@ function adminWhere(search?: string): Prisma.UserWhereInput {
 export const countAdminsForAdmin = (search?: string) =>
   prisma.user.count({ where: adminWhere(search) });
 
+export const countActiveSuperAdmins = () =>
+  prisma.user.count({ where: { adminRole: "SUPER_ADMIN", active: true } });
+
 export const findAdminsForAdmin = ({
   page,
   pageSize,

@@ -85,8 +85,6 @@ const AdminsPage = async ({ searchParams }: AdminsPageProps) => {
             <AdminDeleteButton
               deleteUrl={`/admin/admins/${admin.id}`}
               itemLabel={admin.name}
-              disabled={admin.id === session.id}
-              disabledReason="Não podes eliminar a tua própria conta"
             />
           </div>
         )}

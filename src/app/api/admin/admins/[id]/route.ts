@@ -18,16 +18,16 @@ export const PATCH = defineHandler<
 >({
   auth: "superadmin",
   schema: updateAdminAccountSchema,
-  handler: async ({ session, params, body }) => {
-    const admin = await updateAdminAccount(params.id, session!.id, body);
+  handler: async ({ params, body }) => {
+    const admin = await updateAdminAccount(params.id, body);
     return NextResponse.json(toAdminAccountDto(admin));
   },
 });
 
 export const DELETE = defineHandler<AdminAccountParams>({
   auth: "superadmin",
-  handler: async ({ session, params }) => {
-    await deleteAdminAccount(params.id, session!.id);
+  handler: async ({ params }) => {
+    await deleteAdminAccount(params.id);
     return new NextResponse(null, { status: 204 });
   },
 });

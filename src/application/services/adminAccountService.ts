@@ -7,6 +7,7 @@ import { HttpError } from "@/types/HttpError";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 import {
+  countActiveSuperAdmins,
   countAdminsForAdmin,
   createAdminUser,
   findAdminAccountById,
@@ -32,7 +33,7 @@ export async function listAdminsForAdmin(query: AdminAccountQuery) {
 }
 
 export async function createAdminAccount(input: {
-  email: string;
+  email: Email;
   password: string;
   name: string;
   adminRole: AdminRole;
@@ -45,7 +46,7 @@ export async function createAdminAccount(input: {
   try {
     return await createAdminUser({
       id: authUser.id,
-      email: Email.create(input.email),
+      email: input.email,
       name: input.name,
       adminRole: input.adminRole,
     });
@@ -55,21 +56,28 @@ export async function createAdminAccount(input: {
   }
 }
 
-// Prevents a super admin from locking every admin out (including
-// themselves) by deactivating or deleting their own account through this
-// same panel - a demotion is still allowed, since that's recoverable by any
-// other super admin (or the DB directly), unlike losing all admin access.
-function assertNotActingOnSelf(id: string, actingAdminId: string) {
-  if (id === actingAdminId)
+// Guards demote/deactivate/delete against leaving zero *active* Super
+// Admins, however that would happen - not just self-action. The migration
+// that introduced admin tiers promotes nobody to SUPER_ADMIN automatically
+// and seedAdmin() only ever creates one, so a lone super admin demoting
+// themselves (no guard existed for this case at all) or deactivating/
+// deleting themselves would make /admins permanently unreachable (gated by
+// both the page-level check and the "superadmin" auth policy) with no UI
+// path back - only a direct DB write could recover it. An inactive super
+// admin doesn't count as available either, since they can't log in to help.
+async function assertNotLastActiveSuperAdmin(
+  target: { adminRole: AdminRole | null; active: boolean } | null
+) {
+  if (!target || target.adminRole !== "SUPER_ADMIN" || !target.active) return;
+  if ((await countActiveSuperAdmins()) <= 1)
     throw new HttpError(
-      "You can't deactivate or delete your own admin account",
+      "Can't remove the last active Super Admin - promote another admin first",
       400
     );
 }
 
 export async function updateAdminAccount(
   id: string,
-  actingAdminId: string,
   input: {
     name?: string;
     adminRole?: AdminRole;
@@ -78,7 +86,8 @@ export async function updateAdminAccount(
   }
 ) {
   const { password, active, ...fields } = input;
-  if (active === false) assertNotActingOnSelf(id, actingAdminId);
+  if (fields.adminRole === "ADMIN" || active === false)
+    await assertNotLastActiveSuperAdmin(await findAdminAccountById(id));
 
   const admin = await updateAdminUserFields(id, fields);
 
@@ -96,7 +105,7 @@ export async function updateAdminAccount(
   return admin;
 }
 
-export async function deleteAdminAccount(id: string, actingAdminId: string) {
-  assertNotActingOnSelf(id, actingAdminId);
+export async function deleteAdminAccount(id: string) {
+  await assertNotLastActiveSuperAdmin(await findAdminAccountById(id));
   await deleteUser(id);
 }
