@@ -3,20 +3,6 @@ import "client-only";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { httpClient } from "@/lib/http/client";
 
-export async function createAccount(data: {
-  email: string | null;
-  password: string | null;
-}) {
-  try {
-    return await httpClient.post<{ requiresEmailConfirmation: boolean }>(
-      "/auth/signup",
-      { email: data.email, password: data.password }
-    );
-  } catch (error) {
-    return error instanceof Error ? error : new Error("Network error");
-  }
-}
-
 export async function createStudentProfile(
   data: StudentSignUpData & { avatarUrl?: string | null; cvId?: string }
 ) {

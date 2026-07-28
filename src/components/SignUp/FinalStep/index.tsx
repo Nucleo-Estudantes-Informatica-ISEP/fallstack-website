@@ -20,7 +20,7 @@ import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
-import { createAccount, createStudentProfile } from "@/client/api/auth";
+import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
 import {
   uploadAvatar as uploadAvatarToSupabase,
@@ -95,15 +95,20 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       setLoading(true);
 
-      // A session may already exist from an earlier attempt - e.g. the
-      // account got created but a later step (upload, profile creation)
-      // failed, or the user left and came back. Retrying createAccount in
-      // that case would fail with a duplicate-account error and
-      // permanently strand the user, so check first and resume from
-      // wherever they actually left off instead of always starting over.
+      // The account and session are established earlier in the wizard via
+      // AuthNEI (account creation happens exclusively through it - see
+      // AccountDetailsStep) - if there's no session by this point, it
+      // expired or was never established, so restart instead of hitting an
+      // Unauthorized failure on profile creation below.
       const existingSession = await getSession();
 
-      if (existingSession?.student) {
+      if (!existingSession) {
+        toast.error("A tua sessão expirou. Por favor, tenta novamente.");
+        router.push("/signup");
+        return setLoading(false);
+      }
+
+      if (existingSession.student) {
         // The profile was already created in an earlier attempt.
         session.fetchSession();
         router.push("/");
@@ -116,40 +121,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       // partial student signup. StudentSignUp's mount-time guard should
       // already have redirected this case away; this is a defense-in-depth
       // check for anyone who reaches this point regardless.
-      if (existingSession && existingSession.role !== "STUDENT") {
+      if (existingSession.role !== "STUDENT") {
         toast.error("Já tens sessão iniciada como outro tipo de conta.");
         return setLoading(false);
-      }
-
-      if (!existingSession) {
-        // Create the Supabase Auth account (and session) first - uploads
-        // below require an authenticated session.
-        const account = await createAccount({
-          email: data.email,
-          password: data.password,
-        });
-
-        if (account instanceof Error) {
-          toast.error(account.message);
-          return setLoading(false);
-        }
-
-        if (!account) {
-          toast.error("Ocorreu um erro ao criar a conta.");
-          return setLoading(false);
-        }
-
-        // "Confirm email" is on and this account hasn't been confirmed yet,
-        // so Supabase didn't hand back a session - none of the steps below
-        // (uploads, profile creation) can run without one. Stop here instead
-        // of continuing on to confusing "Unauthorized" failures.
-        if (account.requiresEmailConfirmation) {
-          toast.info(
-            "Criámos a tua conta! Verifica o teu email institucional, confirma a conta e depois inicia sessão para continuares o registo."
-          );
-          router.push("/login");
-          return setLoading(false);
-        }
       }
 
       const avatarUrl = await handleAvatarUpload();
