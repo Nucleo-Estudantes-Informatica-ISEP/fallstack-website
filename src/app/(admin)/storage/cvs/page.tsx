@@ -38,7 +38,7 @@ const columns: DataTableColumn<StorageRow>[] = [
         href={file.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-blue-500 hover:underline"
+        className="text-primary hover:underline"
       >
         Abrir
       </a>

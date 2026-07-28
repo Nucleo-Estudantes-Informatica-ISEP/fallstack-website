@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FiEdit2 } from "react-icons/fi";
 
 import {
   parseAdminListParams,
@@ -58,7 +59,7 @@ const ScheduleAdminPage = async ({ searchParams }: ScheduleAdminPageProps) => {
           </Link>
           <Link
             href="/schedule/new"
-            className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+            className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
           >
             Adicionar atividade
           </Link>
@@ -83,7 +84,7 @@ const ScheduleAdminPage = async ({ searchParams }: ScheduleAdminPageProps) => {
               aria-label={`Editar ${event.activity}`}
               className="hover:text-primary"
             >
-              ✏️
+              <FiEdit2 size={16} />
             </Link>
             <AdminDeleteButton
               deleteUrl={`/admin/schedule/${event.id}`}

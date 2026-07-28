@@ -11,14 +11,17 @@ import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 
 interface TopBarProps {
-  // The admin backoffice is the only place TopBar sits on a light page
-  // background from the top instead of a dark hero - its white logo/icons
-  // and scroll-fading dark background were invisible there, not just low-
-  // contrast. Everywhere else keeps the existing dark styling unchanged.
-  light?: boolean;
+  // The scroll-linked fade (transparent at the top, solidifying as you
+  // scroll) only makes sense over a hero image at the top of the page.
+  // The admin backoffice has no hero - it's a plain page from the very
+  // first pixel - so a fading-from-transparent bar there is invisible at
+  // the top instead of just low-contrast. `solid` skips the fade for an
+  // always-opaque background; the logo/icons stay the same dark-background
+  // white as everywhere else, since the background itself stays dark.
+  solid?: boolean;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ light = false }) => {
+const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
@@ -33,8 +36,8 @@ const TopBar: React.FC<TopBarProps> = ({ light = false }) => {
 
   return (
     <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
-      {light ? (
-        <div className="absolute top-0 left-0 flex h-16 w-screen items-center justify-between border-b border-gray-200 bg-white" />
+      {solid ? (
+        <div className="absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background" />
       ) : (
         <motion.div
           className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
@@ -47,11 +50,7 @@ const TopBar: React.FC<TopBarProps> = ({ light = false }) => {
         {!isAuthPage ? (
           <Link href="/" className="ml-6">
             <Image
-              src={
-                light
-                  ? "/assets/images/logo_dark.png"
-                  : "/assets/images/logo_white.svg"
-              }
+              src={"/assets/images/logo_white.svg"}
               alt="Fallstack"
               width={32}
               height={32}
@@ -65,14 +64,14 @@ const TopBar: React.FC<TopBarProps> = ({ light = false }) => {
             <Link
               href={isAuthPage ? "/" : "/login"}
               aria-label={isAuthPage ? "Página inicial" : "Iniciar sessão"}
-              className={`z-20 flex size-full items-center justify-center text-2xl transition-colors hover:text-primary ${light ? "fill-gray-700" : "fill-white"}`}
+              className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
             >
               <LogIn />
             </Link>
           ) : (
             <>
-              <UserButton user={session.user} light={light} />
-              <LogoutButton light={light} />
+              <UserButton user={session.user} />
+              <LogoutButton />
             </>
           )}
         </div>

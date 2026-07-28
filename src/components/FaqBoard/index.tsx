@@ -86,7 +86,7 @@ const FaqBoard: React.FC<FaqBoardProps> = ({ faqs }) => {
         type="button"
         onClick={handleSave}
         disabled={isSaving}
-        className="w-fit self-end rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-fit self-end rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSaving ? "A guardar..." : "Guardar"}
       </button>

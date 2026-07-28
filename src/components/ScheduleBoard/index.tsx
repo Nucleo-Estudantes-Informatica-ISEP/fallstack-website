@@ -244,7 +244,7 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
           type="button"
           onClick={handleSave}
           disabled={isSaving || invalidIds.size > 0}
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "A guardar..." : "Guardar"}
         </button>
