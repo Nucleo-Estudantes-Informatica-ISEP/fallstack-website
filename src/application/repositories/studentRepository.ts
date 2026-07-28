@@ -82,6 +82,23 @@ export const updateStudentCv = (
 export const countStudents = () =>
   prisma.student.count({ where: { user: { AND: [{ role: "STUDENT" }] } } });
 
+export const findRecentStudents = (limit: number) =>
+  prisma.student.findMany({
+    where: { user: { role: "STUDENT" } },
+    orderBy: { createdAt: "desc" },
+    take: limit,
+    select: { name: true, createdAt: true },
+  });
+
+// See actionRepository's findActionCompletionTimestampsSince comment - same
+// small-scale rationale for bucketing in the service layer instead of
+// DB-side.
+export const findStudentSignupTimestampsSince = (since: Date) =>
+  prisma.student.findMany({
+    where: { user: { role: "STUDENT" }, createdAt: { gte: since } },
+    select: { createdAt: true },
+  });
+
 export const findAllStudents = () =>
   prisma.student.findMany({
     where: { user: { AND: [{ role: "STUDENT" }] } },
@@ -100,7 +117,7 @@ export const findAllStudents = () =>
 
 export const findStudentsForGiveaway = () =>
   prisma.student.findMany({
-    where: { user: { AND: [{ role: "STUDENT" }, { isAdmin: false }] } },
+    where: { user: { AND: [{ role: "STUDENT" }, { adminRole: null }] } },
     include: {
       user: true,
       actionCompletions: { select: { action: { select: { points: true } } } },

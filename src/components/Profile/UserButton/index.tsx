@@ -13,9 +13,13 @@ const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
   // established the account but the signup wizard was abandoned or
   // interrupted before the profile step. Route back into the wizard to
-  // finish it instead of a dead link.
-  const profileUrl =
-    user.role === "EMPLOYEE"
+  // finish it instead of a dead link. An admin account has role: null and
+  // no student profile either, but for an entirely different reason (it
+  // isn't a STUDENT/EMPLOYEE at all) - checked first so it doesn't fall
+  // into that same "unfinished student signup" branch.
+  const profileUrl = user.adminRole
+    ? "/overview"
+    : user.role === "EMPLOYEE"
       ? "/dashboard"
       : user.student
         ? "/student/" + user.student.code

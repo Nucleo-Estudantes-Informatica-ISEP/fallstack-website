@@ -28,7 +28,7 @@ beforeEach(() => {
 const adminSession = {
   id: "u1",
   role: "EMPLOYEE",
-  isAdmin: true,
+  adminRole: "ADMIN",
   student: null,
   employee: null,
 };
@@ -36,7 +36,7 @@ const adminSession = {
 const nonAdminSession = {
   id: "u2",
   role: "STUDENT",
-  isAdmin: false,
+  adminRole: null,
   student: { id: "s1", code: "S123", name: "Ana" },
   employee: null,
 };

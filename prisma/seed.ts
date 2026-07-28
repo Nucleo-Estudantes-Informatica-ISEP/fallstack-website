@@ -1,4 +1,4 @@
-import { PrismaClient, Role, Tier, Year } from "@prisma/client";
+import { AdminRole, PrismaClient, Role, Tier, Year } from "@prisma/client";
 
 import { actions } from "@/edition/actions";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -96,8 +96,9 @@ async function seedAdmin() {
     data: {
       id: supabaseUser.id,
       email,
-      role: Role.EMPLOYEE,
-      isAdmin: true,
+      role: null,
+      name: "Admin",
+      adminRole: AdminRole.SUPER_ADMIN,
     },
   });
 

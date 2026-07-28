@@ -9,15 +9,24 @@ datasource db {
 }
 
 model User {
-  id      String  @id @default(uuid()) @db.Uuid
-  email   String  @unique
-  role    Role    @default(STUDENT)
-  isAdmin Boolean @default(false)
+  id        String     @id @default(uuid()) @db.Uuid
+  // Null for an admin-only account (no Student/Employee profile - see
+  // adminRole below). Non-null for every self-service/admin-provisioned
+  // Student or Employee account.
+  role      Role?
+  email     String     @unique
+  // Null means not an admin. Orthogonal to role: an admin account has no
+  // Student/Employee profile and role is null, it isn't a STUDENT/EMPLOYEE
+  // that also happens to be an admin.
+  adminRole AdminRole?
+  // Display name for an admin-only account - Student/Employee have their
+  // own `name` on their respective profile table instead.
+  name      String?
   // Gates a Student/Employee's ability to log in - deactivating the User
   // deactivates both, since Student/Employee are 1:1 with User on this id.
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  active    Boolean    @default(true)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   student   Student?
   employee  Employee?
@@ -181,6 +190,14 @@ model SavedStudent {
 enum Role {
   STUDENT
   EMPLOYEE
+}
+
+enum AdminRole {
+  // Manages Students/Employees and the rest of today's admin backoffice.
+  ADMIN
+  // Everything ADMIN can do, plus creating/editing/deactivating other admin
+  // accounts.
+  SUPER_ADMIN
 }
 
 enum Tier {

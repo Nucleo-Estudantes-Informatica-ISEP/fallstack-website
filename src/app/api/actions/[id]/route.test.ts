@@ -93,7 +93,7 @@ test("POST rejects a malformed/tampered scanned token with 400, without completi
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -116,7 +116,7 @@ test("POST completes the action for a validly-scanned, unexpired token", async (
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -146,7 +146,7 @@ test("POST rejects a scanned token once it's past its 30s expiry (the #212 regre
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -182,7 +182,7 @@ test("PATCH rejects a non-admin session with 403", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -202,7 +202,7 @@ test("PATCH toggles the action live status for an admin", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "EMPLOYEE",
-    isAdmin: true,
+    adminRole: "ADMIN",
     student: null,
     employee: null,
   } as never);

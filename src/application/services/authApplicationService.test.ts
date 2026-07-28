@@ -50,7 +50,7 @@ test("routes an existing student with a profile to their student page", async ()
   vi.mocked(findUserSessionById).mockResolvedValue({
     id: "auth-id-1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "auth-id-1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -70,7 +70,7 @@ test("routes an existing employee to the dashboard", async () => {
   vi.mocked(findUserSessionById).mockResolvedValue({
     id: "auth-id-1",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { id: "auth-id-1", name: "Rui", companyId: "c1", company: {} },
   } as never);
@@ -88,7 +88,7 @@ test("falls back to the wizard for a STUDENT role with no profile yet", async ()
   vi.mocked(findUserSessionById).mockResolvedValue({
     id: "auth-id-1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: null,
   } as never);
@@ -123,7 +123,7 @@ test("re-keys a confirmed existing password-account student found by email to th
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "old-password-id", code: "S456", name: "Bea" },
     employee: null,
   } as never);
@@ -149,7 +149,7 @@ test("re-keys a confirmed existing password-account employee found by email to t
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: {
       id: "old-password-id",
@@ -176,7 +176,7 @@ test("discards an unconfirmed dangling account found by email instead of relinki
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "spoofed-id",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "spoofed-id", code: "S999", name: "Attacker-planted" },
     employee: null,
   } as never);
@@ -205,7 +205,7 @@ test("fails closed (treats as unconfirmed) when the admin lookup errors", async 
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: null,
   } as never);

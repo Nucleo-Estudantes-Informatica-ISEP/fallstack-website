@@ -5,7 +5,7 @@ import { AuthPolicySession, passesAuthPolicy } from "./authPolicy";
 
 const studentSession: AuthPolicySession = {
   role: "STUDENT",
-  isAdmin: false,
+  adminRole: null,
   student: { id: "student-1", code: "AB12" },
   employee: null,
 };
@@ -35,7 +35,7 @@ test("student policy requires STUDENT role with a student profile", () => {
 test("employee policy requires EMPLOYEE role with an employee's company", () => {
   const employeeSession: AuthPolicySession = {
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { company: { id: "company-1" } },
   };
@@ -53,16 +53,44 @@ test("employee policy requires EMPLOYEE role with an employee's company", () => 
   );
 });
 
-test("admin policy requires session.isAdmin", () => {
+test("admin policy accepts either admin tier", () => {
   assert.equal(
-    passesAuthPolicy("admin", { ...studentSession, isAdmin: true }),
+    passesAuthPolicy("admin", { ...studentSession, adminRole: "ADMIN" }),
+    true
+  );
+  assert.equal(
+    passesAuthPolicy("admin", {
+      ...studentSession,
+      adminRole: "SUPER_ADMIN",
+    }),
     true
   );
   assert.equal(passesAuthPolicy("admin", studentSession), false);
 });
 
+test("superadmin policy requires SUPER_ADMIN specifically", () => {
+  assert.equal(
+    passesAuthPolicy("superadmin", {
+      ...studentSession,
+      adminRole: "SUPER_ADMIN",
+    }),
+    true
+  );
+  assert.equal(
+    passesAuthPolicy("superadmin", { ...studentSession, adminRole: "ADMIN" }),
+    false
+  );
+  assert.equal(passesAuthPolicy("superadmin", studentSession), false);
+});
+
 test("every non-public policy rejects a missing session", () => {
-  for (const policy of ["session", "student", "employee", "admin"] as const) {
+  for (const policy of [
+    "session",
+    "student",
+    "employee",
+    "admin",
+    "superadmin",
+  ] as const) {
     assert.equal(passesAuthPolicy(policy, null), false);
   }
 });
