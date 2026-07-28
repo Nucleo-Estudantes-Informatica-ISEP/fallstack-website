@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { verifyJwt } from "@/services/authService";
+import { verifyJwt } from "@/application/services/authService";
 import {
   saveStudent,
   updateSavedStudentComment,
@@ -40,7 +40,7 @@ export const POST = defineHandler({
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,
-      allowDuplicate: session!.isAdmin,
+      allowDuplicate: session!.adminRole !== null,
       completeBoothAction: true,
     });
     return NextResponse.json({ message: "Student scanned" }, { status: 201 });

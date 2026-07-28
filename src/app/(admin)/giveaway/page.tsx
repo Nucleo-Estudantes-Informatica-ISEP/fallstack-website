@@ -1,17 +1,9 @@
 import React from "react";
 
 import GiveawaySection from "@/components/GiveawaySection";
-import Custom404 from "@/app/not-found";
-import getServerSession from "@/application/services/sessionService";
 import { getStudentsForGiveaway } from "@/application/services/studentService";
 
 const giveaway = async () => {
-  const session = await getServerSession();
-
-  if (!session || !session.isAdmin) {
-    return Custom404();
-  }
-
   const students = await getStudentsForGiveaway();
 
   // Only ship what the grid needs to the client — no emails.

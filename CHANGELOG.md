@@ -4,6 +4,50 @@ All notable per-edition changes to this project are documented here, in the [Kee
 
 This project ships once a year — one edition per Fallstack event — so entries are written by hand at each edition's cutover rather than generated from commit history. See `AGENTS.md`'s "Editions & releases" section for the tagging/versioning convention.
 
+## [1.1.0] - 2026-07-28 - 2026 edition maintenance
+
+Within-edition update building on the `1.0.0` baseline (165 commits since that tag), headlined by a full admin backoffice.
+
+### Added
+
+- A full admin backoffice: CRUD management UIs for Students, Employees, Companies, Sponsors, Actions, Interests, and Storage, plus an admin statistics page, all built on new shared `DataTable` (sortable, searchable) and `AdminForm` (sectioned, with image/password sections) components, reachable through a new admin sidebar navigation.
+- Drag-and-drop admin boards: a Company tier board, an FAQ reorder board, and a two-lane Schedule board, with start/end times editable directly in the schedule board's rows, validated live against the rest of the day.
+- SuperAdmin/Admin role tiers, replacing the flat `User.isAdmin` boolean — Super Admins additionally get a new Admins section to create, edit, and activate/deactivate other admin accounts; a migration backfills existing admins to the Admin tier without auto-promoting anyone to Super Admin.
+- An admin overview dashboard (`/overview`): stat tiles, a weekly activity chart, and a merged recent-activity feed, now the landing page after an admin logs in instead of the Students list.
+- FAQ and Schedule content moved from the hardcoded `edition/` config into the database (`FaqEntry`, `ScheduleEvent` models), now editable from the admin backoffice instead of requiring a code change per edition.
+- AuthNEI (Zitadel) OAuth sign-in for students — a fast-path option on signup and login alongside the existing Supabase email/password flow.
+- Support for self-hosted Sentry-compatible error-tracking backends (e.g. GlitchTip), configurable via a custom Sentry URL instead of assuming Sentry SaaS.
+- In-memory rate limiting on the upload endpoints (avatar/CV), keyed off the proxy-appended client IP.
+
+### Changed
+
+- Project structure rework: `services/` drained into `application/services/` and `config/`, `application/domain/` merged to a top-level `domain/`, and `styles/`/`presentation/` folded into `components/ui/` and `domain/` — see `AGENTS.md` for the updated layout.
+- Admin authorization centralized in the `(admin)` layout instead of being re-checked per page.
+- Applied the site's actual brand palette (dark background, orange primary) across the admin backoffice in place of generic Tailwind blue/white, and replaced its emoji icons (🗑, ✏️, 📷, ⭐) with `react-icons`.
+- Docker build: BuildKit cache mount for the pnpm store, migrate stage now runs as non-root and no longer runs a full Next.js build, and `NEXT_PUBLIC_LOGS_DASHBOARD_URL` is wired through the build.
+- Removed the legacy tokenized-link CV export in favor of the current export flow.
+
+### Fixed
+
+- **Security:** student codes are now generated with a CSPRNG instead of a predictable generator.
+- **Security:** enforced ownership checks on the student stats route and used strict equality for the student-profile owner check (both previously allowed cross-account access under certain conditions).
+- **Security:** `User.active` is now enforced through the full session/auth chain, and admin storage delete rejects path-traversal object names.
+- **Security:** the action-QR token's `expiresIn` was being passed in milliseconds instead of seconds, making a token intended to live 30 seconds actually valid for ~8.3 hours; it now expires in ~30 seconds as intended (the underlying anti-replay check is still just the JWT's own expiry — see `AGENTS.md`'s Gotchas).
+- **Security:** replaced `innerHTML` with React state in `ImportCvSection`, redacted the Sentry breadcrumb `message` field, required a session for avatar/CV uploads, and closed an open-redirect via backslash-prefixed URLs in the AuthNEI callback.
+- **Security:** AuthNEI sign-in no longer relinks an existing password account onto an unconfirmed external identity.
+- **Site-wide:** `--color-primary` — the CSS variable every `bg-primary`/`text-primary` Tailwind utility actually reads — held a translucent white instead of the intended brand orange, the result of two same-day commits during the original brand rollout where the second accidentally reverted the first while detaching a same-named `--primary` variable from it. Every `bg-primary` button across the entire site, not just admin, was rendering near-invisible instead of brand orange.
+- Admin login redirect: the post-login redirect read the session from React context immediately after triggering its own asynchronous refresh, seeing the stale pre-login value every time and falling through to the homepage regardless of role.
+- Company/sponsor logos with light or transparent artwork are no longer invisible against the admin backoffice's white cards and tables (the logo upload preview, the tier board, and the companies/sponsors list tables) — they now render over a dark chip matching the site's own background instead.
+- The admin backoffice inherited the public site's global white text color with no override of its own, so any button or link that didn't set an explicit text color (the list pages' search/pagination controls, the logo upload button, several secondary page links) rendered as invisible white-on-white.
+- Resolved Dependabot-flagged dependency vulnerabilities.
+- Signup flow: resumes instead of retrying account creation on interruption, no longer aborts when CV upload fails, skips stats calls for profile previews, and redirects non-student sessions off the flow earlier.
+- Various FAQ/Schedule correctness fixes: atomic order-assignment and reorder writes, order derived from chronological position instead of append-last, and surfaced real errors instead of swallowing them on save failure.
+
+### Known limitations (carried forward)
+
+- The action-QR anti-replay check is still just the token's own (now-correct) ~30s expiry — no dedicated nonce/replay check exists yet.
+- The CV export link token is intentionally non-expiring for now, pending a retention-policy decision.
+
 ## [1.0.0] - 2026-07-19 - Fallstack 2026 Edition
 
 Baseline cutover for the 2026 edition, closing out the backlog opened by the July 2026 architecture/security/correctness audit of the 2025 codebase (219 commits since the 2025 tag).

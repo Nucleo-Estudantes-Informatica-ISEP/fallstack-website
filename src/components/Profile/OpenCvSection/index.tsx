@@ -3,8 +3,8 @@
 import React from "react";
 
 import { httpClient } from "@/lib/http/client";
+import { OpenCv } from "@/components/ui/Icons";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { OpenCv } from "@/styles/Icons";
 
 interface OpenCvProps {
   student: Pick<StudentDto, "code">;

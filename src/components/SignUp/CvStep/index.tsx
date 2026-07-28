@@ -7,8 +7,8 @@ import { motion } from "framer-motion";
 import { FaFilePdf } from "react-icons/fa";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import FileInput from "@/components/FileInput";
-import PrimaryButton from "@/components/PrimaryButton";
+import FileInput from "@/components/ui/FileInput";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import { uploadCv as uploadCvToSupabase } from "@/client/api/upload";
 
 interface CvStepProps {
@@ -46,7 +46,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 
       const cv = {
         name: file.name,
-        id: uploaded.id,
+        file,
         preview: URL.createObjectURL(file),
       };
 

@@ -2,8 +2,8 @@
 
 import { Dispatch, SetStateAction } from "react";
 
-import Modal from "@/components/Modal";
-import PrimaryButton from "@/components/PrimaryButton";
+import Modal from "@/components/ui/Modal";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface ConfirmDialogProps {
   isVisible: boolean;

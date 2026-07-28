@@ -21,7 +21,7 @@ export const GET = defineHandler<StudentParams>({
     const student = await getStudentProfile(params.code, {
       studentCode: session!.student?.code,
       companyId: session!.employee?.company?.id,
-      isAdmin: session!.isAdmin,
+      isAdmin: session!.adminRole !== null,
     });
     return NextResponse.json(toStudentDto(student));
   },

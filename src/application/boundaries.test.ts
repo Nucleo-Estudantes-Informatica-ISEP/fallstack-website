@@ -92,7 +92,7 @@ test("public DTO mappers omit private database fields", () => {
     id: "user-id",
     email: "private@example.com",
     role: "STUDENT" as const,
-    isAdmin: true,
+    adminRole: "ADMIN" as const,
     updatedAt: new Date(),
     student: { id: "user-id", code: "ABC123", name: "Student" },
   };
@@ -105,6 +105,7 @@ test("public DTO mappers omit private database fields", () => {
   });
   assert.deepEqual(toSessionDto(session), {
     role: "STUDENT",
+    adminRole: "ADMIN",
     student: { code: "ABC123", name: "Student" },
   });
   assert.deepEqual(toInterestDto({ id: "interest-id", name: "TypeScript" }), {

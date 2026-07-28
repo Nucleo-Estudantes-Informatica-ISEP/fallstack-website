@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
-import { ImportCv } from "@/styles/Icons";
+import { ImportCv } from "@/components/ui/Icons";
 
 interface ImportCvSectionProps {
   text: string;
@@ -13,6 +13,8 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
   inputRef,
   text,
 }) => {
+  const [fileName, setFileName] = useState<string | null>(null);
+
   return (
     <div className="my-4 flex flex-col space-y-2 text-black">
       <label className="text-lg text-slate-700">Curriculum Vitae</label>
@@ -25,17 +27,13 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
         >
           {text}
 
-          <span id="lbl" className="ml-4 text-sm"></span>
+          <span className="ml-4 text-sm">
+            {fileName ? `(${fileName})` : null}
+          </span>
         </button>
         <input
           id="inputCv"
-          onChange={() => {
-            document.getElementById("lbl")!.innerHTML =
-              "(" +
-              (document.getElementById("inputCv") as HTMLInputElement).files![0]
-                .name +
-              ")";
-          }}
+          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
           type="file"
           accept=".pdf"
           ref={inputRef}

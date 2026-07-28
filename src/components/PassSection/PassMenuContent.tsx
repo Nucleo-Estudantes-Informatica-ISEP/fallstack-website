@@ -3,9 +3,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 
 import { httpClient } from "@/lib/http/client";
+import { Clipboard } from "@/components/ui/Icons";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { Clipboard } from "@/styles/Icons";
 
 interface PassMenuContentProps {
   student: Pick<StudentDto, "code" | "name">;

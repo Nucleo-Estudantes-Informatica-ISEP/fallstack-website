@@ -40,11 +40,25 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 });
 
 module.exports = withSentryConfig(withPWA(nextConfig), {
+  // Unset, this defaults to sentry.io - override for a self-hosted
+  // Sentry-compatible backend (e.g. GlitchTip). The DSN alone doesn't
+  // control this: it only routes runtime error events, while source-map
+  // upload during `next build` is a separate step that needs its own
+  // upload target.
+  sentryUrl: process.env.SENTRY_URL,
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
   sourcemaps: {
     deleteSourcemapsAfterUpload: true,
+  },
+  // The plugin's default on a release/upload failure is to throw and fail
+  // the whole build — too strict for source maps, which are an
+  // observability nicety, not something that should block a deploy
+  // (especially against a self-hosted backend like GlitchTip, whose API
+  // doesn't fully mirror Sentry's release-management endpoints).
+  errorHandler: (err) => {
+    console.warn("Sentry release/source-map upload failed:", err);
   },
 });
