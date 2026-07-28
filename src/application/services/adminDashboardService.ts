@@ -19,8 +19,17 @@ import {
 } from "../repositories/studentRepository";
 
 const ACTIVITY_FEED_LIMIT = 15;
-const RECENT_PER_SOURCE = 10;
+// Must be >= ACTIVITY_FEED_LIMIT: any event among the true global top 15
+// (across all 3 sources, by timestamp) is necessarily among its own
+// source's top 15 too - removing events from other sources can only raise
+// or hold an event's rank within its own source, never lower it. Fetching
+// fewer than ACTIVITY_FEED_LIMIT per source can silently drop a genuinely
+// recent event from the source with the most activity (e.g. QR scans
+// spiking during a busy period) and backfill the feed with older events
+// from quieter sources instead.
+const RECENT_PER_SOURCE = ACTIVITY_FEED_LIMIT;
 const WEEKLY_DAYS = 7;
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export type ActivityEventType = "signup" | "scan" | "save";
 
@@ -51,17 +60,25 @@ function dayKey(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
+// Midnight UTC for the given date's UTC calendar day. Everything that
+// builds or compares day buckets goes through this (and dayKey's own
+// toISOString, also UTC) - mixing local-time Date mutators (setDate,
+// setHours) with a UTC-keyed bucket map only happened to work while the
+// process ran with no TZ set (local time == UTC), and would silently
+// off-by-one near midnight the moment that stops being true.
+function startOfUTCDay(date: Date) {
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
 // The window is small enough (a single-event fair, not a high-volume
 // product) that fetching raw timestamps and bucketing them here is simpler
 // and more portable than a DB-side date_trunc - see the repository
 // functions' own comments for the same rationale.
 function bucketByDay(timestamps: Date[], days: number) {
   const buckets = new Map<string, number>();
-  const today = new Date();
+  const todayUTC = startOfUTCDay(new Date());
   for (let i = days - 1; i >= 0; i--) {
-    const day = new Date(today);
-    day.setDate(day.getDate() - i);
-    buckets.set(dayKey(day), 0);
+    buckets.set(dayKey(new Date(todayUTC - i * MS_PER_DAY)), 0);
   }
   for (const timestamp of timestamps) {
     const key = dayKey(timestamp);
@@ -71,9 +88,9 @@ function bucketByDay(timestamps: Date[], days: number) {
 }
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
-  const since = new Date();
-  since.setDate(since.getDate() - (WEEKLY_DAYS - 1));
-  since.setHours(0, 0, 0, 0);
+  const since = new Date(
+    startOfUTCDay(new Date()) - (WEEKLY_DAYS - 1) * MS_PER_DAY
+  );
 
   const [
     studentCount,

@@ -24,7 +24,10 @@ const CHART_HEIGHT = 120;
 const LABEL_HEIGHT = 20;
 const RADIUS = 3;
 
-function roundedTopBarPath(
+// Exported for its own unit test (index.test.ts) - the geometry is easy to
+// get subtly wrong (degenerate zero-height bars, radius bigger than the bar)
+// and worth a real regression guard rather than one-off manual checking.
+export function roundedTopBarPath(
   x: number,
   y: number,
   width: number,

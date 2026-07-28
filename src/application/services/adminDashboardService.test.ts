@@ -103,6 +103,35 @@ test("merges the three activity sources into one feed, newest first", async () =
   });
 });
 
+test("fetches at least 15 events per source, so a single busy source can't hide a true top-15 event", async () => {
+  await getAdminDashboardSummary();
+
+  expect(findRecentStudents).toHaveBeenCalledWith(15);
+  expect(findRecentActionCompletions).toHaveBeenCalledWith(15);
+  expect(findRecentSavedStudents).toHaveBeenCalledWith(15);
+});
+
+test("doesn't drop the true most-recent events when one source is far busier than the others", async () => {
+  // 15 scans, all newer than every signup/save below - the real top 15.
+  const scans = Array.from({ length: 15 }, (_, i) => ({
+    completedAt: new Date(Date.UTC(2026, 6, 28, 12, i)),
+    student: { name: `Scanner ${i}` },
+    action: { name: "Visit Booth" },
+  }));
+  // Older events that must NOT displace any of the scans above.
+  const olderSignups = Array.from({ length: 5 }, (_, i) => ({
+    name: `Student ${i}`,
+    createdAt: new Date(Date.UTC(2026, 6, 27, 12, i)),
+  }));
+  vi.mocked(findRecentActionCompletions).mockResolvedValue(scans as never);
+  vi.mocked(findRecentStudents).mockResolvedValue(olderSignups as never);
+
+  const { recentActivity } = await getAdminDashboardSummary();
+
+  expect(recentActivity).toHaveLength(15);
+  expect(recentActivity.every((event) => event.type === "scan")).toBe(true);
+});
+
 test("caps the merged feed at 15 events even when more are available", async () => {
   const many = Array.from({ length: 10 }, (_, i) => ({
     name: `Student ${i}`,
