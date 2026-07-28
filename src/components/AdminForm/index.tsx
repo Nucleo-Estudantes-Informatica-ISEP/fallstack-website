@@ -1,9 +1,9 @@
 "use client";
 
 import { useId, useState } from "react";
-import Image from "next/image";
 import { toast } from "react-toastify";
 
+import LogoThumbnail from "@/components/ui/LogoThumbnail";
 import { uploadAdminImage } from "@/client/api/adminUpload";
 
 export type AdminFormValue = string | number | boolean | string[];
@@ -208,13 +208,7 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
   return (
     <div className="flex items-center gap-4">
       {currentUrl ? (
-        <Image
-          src={currentUrl}
-          alt=""
-          width={64}
-          height={64}
-          className="size-16 rounded-full object-cover"
-        />
+        <LogoThumbnail src={currentUrl} size={64} />
       ) : (
         <div className="flex size-16 items-center justify-center rounded-full bg-gray-100 text-center text-xs text-gray-400">
           Sem imagem

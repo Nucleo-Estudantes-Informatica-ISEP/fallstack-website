@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { FiEdit2 } from "react-icons/fi";
 
@@ -6,6 +5,7 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import LogoThumbnail from "@/components/ui/LogoThumbnail";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminCompanyDto } from "@/application/dto/companyDto";
@@ -24,15 +24,7 @@ const columns: DataTableColumn<CompanyRow>[] = [
     key: "avatar",
     header: "Logótipo",
     render: (company) =>
-      company.avatar ? (
-        <Image
-          src={company.avatar}
-          alt=""
-          width={40}
-          height={40}
-          className="size-10 rounded-full object-cover"
-        />
-      ) : null,
+      company.avatar ? <LogoThumbnail src={company.avatar} size={40} /> : null,
   },
   { key: "name", header: "Nome", render: (c) => c.name, sortable: true },
   { key: "tier", header: "Tier", render: (c) => c.tier, sortable: true },
