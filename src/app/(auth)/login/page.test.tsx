@@ -132,17 +132,15 @@ test("falls back to the homepage for a session with no role and no admin tier", 
   await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
 });
 
-test("still calls fetchSession so the rest of the UI (e.g. TopBar) picks up the new session", async () => {
-  getSessionMock.mockResolvedValue({
-    role: "EMPLOYEE",
-    adminRole: null,
-    student: null,
-  });
+test("still updates the context (e.g. so TopBar picks up the new session) with the same fetched user, not a second request", async () => {
+  const freshUser = { role: "EMPLOYEE", adminRole: null, student: null };
+  getSessionMock.mockResolvedValue(freshUser);
 
   render(<LoginPage />);
   submitLogin();
 
-  await waitFor(() => expect(fetchSessionMock).toHaveBeenCalled());
+  await waitFor(() => expect(fetchSessionMock).toHaveBeenCalledWith(freshUser));
+  expect(getSessionMock).toHaveBeenCalledTimes(1);
 });
 
 test("shows a generic error and doesn't redirect when login fails", async () => {

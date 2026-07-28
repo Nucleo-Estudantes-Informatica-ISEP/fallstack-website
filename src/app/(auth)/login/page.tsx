@@ -51,10 +51,11 @@ const LoginPage: React.FC = () => {
       // updates it via setState, which only takes effect on React's *next*
       // render, not synchronously in this same closure. Fetching directly
       // gets the just-established session's real data for this redirect
-      // decision; fetchSession() still runs (fire-and-forget) so the rest
-      // of the UI - e.g. TopBar - picks up the new session too.
-      session.fetchSession();
+      // decision, then hands that same value to fetchSession() so the rest
+      // of the UI - e.g. TopBar - picks up the new session too, without a
+      // second, redundant request for data already in hand.
       const freshUser = await getSession();
+      session.fetchSession(freshUser);
 
       // Redirect based on user role. Checked before role, since an admin
       // account has role: null (it isn't a STUDENT/EMPLOYEE at all) and
