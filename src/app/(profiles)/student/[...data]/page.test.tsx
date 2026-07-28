@@ -111,7 +111,7 @@ test("a student viewing their own profile is not blocked", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);
@@ -132,7 +132,7 @@ test("a different student viewing someone else's profile is blocked", async () =
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u2",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s2", code: "S999", name: "Bea" },
     employee: null,
   } as never);
@@ -149,7 +149,7 @@ test("an employee whose company saved the student is not blocked", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u3",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);
@@ -169,7 +169,7 @@ test("an employee whose company hasn't saved the student is blocked", async () =
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u3",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);

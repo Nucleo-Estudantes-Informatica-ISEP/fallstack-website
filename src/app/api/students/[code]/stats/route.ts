@@ -14,7 +14,7 @@ export const GET = defineHandler<StudentParams>({
       await getStudentStats(params.code, {
         studentCode: session!.student?.code,
         companyId: session!.employee?.company?.id,
-        isAdmin: session!.isAdmin,
+        isAdmin: session!.adminRole !== null,
       })
     );
   },

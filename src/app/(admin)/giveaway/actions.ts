@@ -18,7 +18,7 @@ interface GiveawayWinner {
  */
 export async function pickGiveawayWinner(): Promise<GiveawayWinner | null> {
   const session = await getServerSession();
-  if (!session || !session.isAdmin) {
+  if (!session || !session.adminRole) {
     throw new Error("Unauthorized");
   }
 

@@ -13,7 +13,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await getServerSession();
-  if (!session || !session.isAdmin) {
+  if (!session || !session.adminRole) {
     notFound();
   }
 
@@ -21,7 +21,7 @@ export default async function AdminLayout({
     <SessionAuthLayout>
       <Topbar />
       <div className="flex min-h-screen pt-16">
-        <AdminSidebar />
+        <AdminSidebar isSuperAdmin={session.adminRole === "SUPER_ADMIN"} />
         <main id="main-content" className="min-w-0 flex-1">
           {children}
         </main>

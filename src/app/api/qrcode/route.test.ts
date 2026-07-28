@@ -42,7 +42,7 @@ test("rejects a non-student session (e.g. an employee) with 403", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: {} },
   } as never);
@@ -60,7 +60,7 @@ test("returns a token embedding the student's own code, verifiable with a ~30 mi
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s1", code: "S123", name: "Ana" },
     employee: null,
   } as never);

@@ -37,7 +37,7 @@ test("passes the caller's ownership info through to getStudentStats and returns 
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u1",
     role: "EMPLOYEE",
-    isAdmin: false,
+    adminRole: null,
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);
@@ -70,7 +70,7 @@ test("propagates getStudentStats' 404 for an unauthorized caller", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "u2",
     role: "STUDENT",
-    isAdmin: false,
+    adminRole: null,
     student: { id: "s2", code: "S999", name: "Bea" },
     employee: null,
   } as never);

@@ -17,7 +17,7 @@ export const GET = defineHandler<StudentParams>({
     const url = await getStudentCv(params.code, {
       studentCode: session!.student?.code,
       companyId: session!.employee?.company?.id,
-      isAdmin: session!.isAdmin,
+      isAdmin: session!.adminRole !== null,
     });
     return NextResponse.json({ url });
   },

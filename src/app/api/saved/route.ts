@@ -40,7 +40,7 @@ export const POST = defineHandler({
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,
-      allowDuplicate: session!.isAdmin,
+      allowDuplicate: session!.adminRole !== null,
       completeBoothAction: true,
     });
     return NextResponse.json({ message: "Student scanned" }, { status: 201 });

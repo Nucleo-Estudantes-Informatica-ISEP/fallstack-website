@@ -15,7 +15,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 // behalf of a Company/Sponsor needs "any record", not "their own record".
 export async function POST(req: NextRequest) {
   const session = await getServerSession();
-  if (!session || !session.isAdmin) {
+  if (!session || !session.adminRole) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 

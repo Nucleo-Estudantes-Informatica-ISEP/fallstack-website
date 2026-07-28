@@ -100,7 +100,7 @@ export const findAllStudents = () =>
 
 export const findStudentsForGiveaway = () =>
   prisma.student.findMany({
-    where: { user: { AND: [{ role: "STUDENT" }, { isAdmin: false }] } },
+    where: { user: { AND: [{ role: "STUDENT" }, { adminRole: null }] } },
     include: {
       user: true,
       actionCompletions: { select: { action: { select: { points: true } } } },
