@@ -1,5 +1,5 @@
 import { fileURLToPath } from "node:url";
-import { defineConfig } from "vitest/config";
+import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({
   oxc: {
@@ -19,6 +19,6 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    exclude: ["**/node_modules/**", ".claude/worktrees/**"],
+    exclude: [...configDefaults.exclude, ".claude/worktrees/**"],
   },
 });
