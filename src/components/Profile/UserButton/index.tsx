@@ -2,18 +2,15 @@
 
 import Link from "next/link";
 import { LiaUser } from "react-icons/lia";
+import { MdOutlineAdminPanelSettings } from "react-icons/md";
 
 import type { SessionDto } from "@/application/dto/sessionDto";
 
 interface UserButtonProps {
   user: SessionDto;
-  // TopBar renders white icons by default (its background is dark
-  // everywhere except the admin backoffice, which is a light page from the
-  // top - a white icon there is invisible, not just low-contrast).
-  light?: boolean;
 }
 
-const UserButton: React.FC<UserButtonProps> = ({ user, light = false }) => {
+const UserButton: React.FC<UserButtonProps> = ({ user }) => {
   // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
   // established the account but the signup wizard was abandoned or
   // interrupted before the profile step. Route back into the wizard to
@@ -32,9 +29,13 @@ const UserButton: React.FC<UserButtonProps> = ({ user, light = false }) => {
   return (
     <Link
       href={profileUrl}
-      className={`z-20 flex size-full items-center justify-center text-2xl transition-colors hover:text-primary ${light ? "fill-gray-700" : "fill-white"}`}
+      aria-label={user.adminRole ? "Área de administração" : "O meu perfil"}
+      className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
     >
-      <LiaUser />
+      {/* A distinct icon for admins - this doesn't lead to a personal
+          profile like it does for everyone else, it opens the admin
+          section, so it shouldn't look like a "your profile" link. */}
+      {user.adminRole ? <MdOutlineAdminPanelSettings /> : <LiaUser />}
     </Link>
   );
 };
