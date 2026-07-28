@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { LiaUser } from "react-icons/lia";
+import { MdOutlineAdminPanelSettings } from "react-icons/md";
 
 import type { SessionDto } from "@/application/dto/sessionDto";
 
@@ -10,19 +11,31 @@ interface UserButtonProps {
 }
 
 const UserButton: React.FC<UserButtonProps> = ({ user }) => {
-  const profileUrl =
-    user.role === "EMPLOYEE"
+  // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
+  // established the account but the signup wizard was abandoned or
+  // interrupted before the profile step. Route back into the wizard to
+  // finish it instead of a dead link. An admin account has role: null and
+  // no student profile either, but for an entirely different reason (it
+  // isn't a STUDENT/EMPLOYEE at all) - checked first so it doesn't fall
+  // into that same "unfinished student signup" branch.
+  const profileUrl = user.adminRole
+    ? "/overview"
+    : user.role === "EMPLOYEE"
       ? "/dashboard"
-      : !!user.student
+      : user.student
         ? "/student/" + user.student.code
-        : "";
+        : "/signup";
 
   return (
     <Link
       href={profileUrl}
+      aria-label={user.adminRole ? "Área de administração" : "O meu perfil"}
       className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
     >
-      <LiaUser />
+      {/* A distinct icon for admins - this doesn't lead to a personal
+          profile like it does for everyone else, it opens the admin
+          section, so it shouldn't look like a "your profile" link. */}
+      {user.adminRole ? <MdOutlineAdminPanelSettings /> : <LiaUser />}
     </Link>
   );
 };

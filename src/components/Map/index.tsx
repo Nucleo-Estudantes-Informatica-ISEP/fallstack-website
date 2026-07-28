@@ -3,7 +3,7 @@
 import Image from "next/image";
 import mapImage from "~/public/assets/images/map.png";
 
-import HeadingText from "@/components/HeadingText";
+import HeadingText from "@/components/ui/HeadingText";
 
 const Map: React.FC = () => {
   return (

@@ -3,19 +3,17 @@ import "client-only";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { httpClient } from "@/lib/http/client";
 
-export async function signUp(data: StudentSignUpData) {
+export async function createStudentProfile(
+  data: StudentSignUpData & { avatarUrl?: string | null; cvId?: string }
+) {
   try {
-    await httpClient.post("/auth/signup", {
-      email: data.email,
-      password: data.password,
-    });
     await httpClient.post("/students", {
       name: data.name,
       bio: data.bio,
       year: data.year,
       interests: data.interests,
       avatarUrl: data.avatarUrl || undefined,
-      cvId: data.cv?.id,
+      cvId: data.cvId,
     });
     return true;
   } catch (error) {

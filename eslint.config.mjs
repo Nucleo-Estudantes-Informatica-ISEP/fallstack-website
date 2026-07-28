@@ -21,7 +21,13 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
-    ignores: [".next/**", "next-env.d.ts"],
+    ignores: [
+      ".next/**",
+      "next-env.d.ts",
+      ".claude/worktrees/**",
+      "public/sw.js",
+      "public/workbox-*.js",
+    ],
   },
   {
     extends: compat.extends(

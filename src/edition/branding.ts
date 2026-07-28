@@ -1,27 +1,26 @@
 export const branding = {
   name: "Fallstack",
-  year: 2025,
+  year: 2026,
   event: {
-    days: [25, 26],
+    days: [17, 18],
     month: "novembro",
     beginningTime: "8:30h",
     endTime: "17:30h",
     venue: "ISEP",
-    scheduleDayTitles: ["25 de Novembro", "26 de Novembro"],
+    scheduleDayTitles: ["17 de Novembro", "18 de Novembro"],
   },
   metadata: {
-    applicationName: "Fallstack 2025",
-    title: "Fallstack 2025",
+    applicationName: "Fallstack 2026",
+    title: "Fallstack 2026",
     description:
-      "Website do evento Fallstack 2025. O evento decorrerá nos dias 25 e 26 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
+      "Website do evento Fallstack 2026. O evento decorrerá nos dias 17 e 18 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
   },
   storage: {
-    authCookie: "@Fallstack25:auth",
-    hideInstallPrompt: "@Fallstack25:hidePrompt",
+    authCookie: "@Fallstack26:auth",
+    hideInstallPrompt: "@Fallstack26:hidePrompt",
   },
-  exportFilename: "fallstack2025.csv",
-  hashtag: "#fallstack2025",
-  heroLogoAlt: "Logo principal do evento Fall-Stack 2025",
+  hashtag: "#fallstack2026",
+  heroLogoAlt: "Logo principal do evento Fall-Stack 2026",
   repositoryUrl:
-    "https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack2025",
+    "https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website",
 };

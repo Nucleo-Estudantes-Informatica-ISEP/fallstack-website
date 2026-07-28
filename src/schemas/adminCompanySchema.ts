@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseCompanyTier } from "@/domain/Company/company-tier";
+import { parseCompanyTier } from "@/domain/company/company-tier";
 import { logoSchema } from "@/schemas/logoSchema";
 import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
@@ -36,3 +36,13 @@ export const updateAdminCompanySchema = z
   .refine((body) => Object.keys(body).length > 0, {
     message: "At least one field is required",
   });
+
+export const updateCompanyTierBoardSchema = z.object({
+  updates: z.array(
+    z.object({
+      id: z.uuid(),
+      tier: tierSchema,
+      order: z.number().int(),
+    })
+  ),
+});

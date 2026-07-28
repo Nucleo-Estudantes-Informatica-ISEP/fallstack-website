@@ -3,7 +3,7 @@
 import React from "react";
 
 import { httpClient } from "@/lib/http/client";
-import { OpenCv } from "@/styles/Icons";
+import { OpenCv } from "@/components/ui/Icons";
 
 interface OpenCvProps {
   code?: string;

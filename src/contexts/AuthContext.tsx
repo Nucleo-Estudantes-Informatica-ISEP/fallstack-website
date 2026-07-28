@@ -8,7 +8,12 @@ import getSession from "@/client/api/session";
 export interface AuthContextData {
   user: SessionDto | null;
   clear: () => void;
-  fetchSession: () => void;
+  // Refreshes the context's user. With no argument, fetches it from the
+  // session endpoint. Pass an already-fetched user (e.g. right after
+  // login, where the caller needs that same value for its own redirect
+  // decision) to update the context from it directly instead of firing a
+  // second, redundant request for data the caller already has.
+  fetchSession: (preFetchedUser?: SessionDto | null) => void;
 }
 
 interface AuthContextProviderProps {
@@ -25,8 +30,9 @@ export function AuthContextProvider({
 }: AuthContextProviderProps) {
   const [user, setUser] = useState<SessionDto | null>(initialUser ?? null);
 
-  const fetchSession = async () => {
-    const user = await getSession();
+  const fetchSession = async (preFetchedUser?: SessionDto | null) => {
+    const user =
+      preFetchedUser !== undefined ? preFetchedUser : await getSession();
     setUser(user);
   };
 

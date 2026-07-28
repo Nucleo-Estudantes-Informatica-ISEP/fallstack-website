@@ -3,7 +3,7 @@
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import PrimaryButton from "@/components/PrimaryButton";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import type { InterestDto } from "@/application/dto/interestDto";
 

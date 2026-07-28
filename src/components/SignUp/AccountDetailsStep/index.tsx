@@ -8,16 +8,22 @@ import {
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import Input from "@/components/Input";
-import InputSelect from "@/components/InputSelect";
-import PrimaryButton from "@/components/PrimaryButton";
-import { isIsepEmail } from "@/utils/isepEmail";
+import InputSelect from "@/components/ui/InputSelect";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import AuthNeiButton from "@/components/AuthNeiButton";
 
 interface AccountDetailsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
+  // True when this step is being rendered after returning from a successful
+  // AuthNEI sign-in — Supabase already has an authenticated identity for
+  // this student at this point, only the year is missing.
+  authNeiMode?: boolean;
+  // Stashes any wizard data collected so far before redirecting to AuthNEI,
+  // since the OAuth flow is a full page navigation that clears React state.
+  onAuthNeiRedirect?: () => void;
 }
 
 const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
@@ -25,68 +31,18 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   setCurrentStep,
   data,
   setData,
+  authNeiMode = false,
+  onAuthNeiRedirect,
 }) => {
   const [error, setError] = useState<string | null>(null);
-
   const yearRef = useRef<HTMLSelectElement>(null);
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
-  const passwordConfirmRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
-    // Validate year
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
     }
-
-    // Validate email
-    if (!emailRef.current?.value) {
-      return setError("Por favor, insere o teu email institucional.");
-    }
-
-    const email = emailRef.current.value;
-
-    if (!isIsepEmail(email)) {
-      return setError("Insere um email institucional válido.");
-    }
-
-    // Validate password
-    if (!passwordRef.current?.value) {
-      return setError("Por favor, insere uma password.");
-    }
-
-    if (!passwordConfirmRef.current?.value) {
-      return setError("Por favor, confirma a tua password.");
-    }
-
-    if (passwordRef.current.value !== passwordConfirmRef.current.value) {
-      return setError("As passwords não coincidem.");
-    }
-
-    const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/);
-    const password = passwordRef.current.value;
-
-    if (password.length < 8) {
-      return setError("A password deve conter pelo menos 8 caracteres.");
-    }
-
-    if (!password.match(passwordRegex)) {
-      return setError(
-        "A password deve conter pelo menos 1 letra maiúscula, 1 letra minúscula e 1 número."
-      );
-    }
-
-    setData({
-      ...data,
-      year: yearRef.current.value,
-      email: emailRef.current.value,
-      password: passwordRef.current.value,
-    });
+    setData({ ...data, year: yearRef.current.value });
     setCurrentStep(currentStep + 1);
-  };
-
-  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleNext();
   };
 
   const yearOptions = [
@@ -96,6 +52,31 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     "1º Ano Mestrado",
     "2º Ano Mestrado",
   ];
+
+  // Account creation happens exclusively through AuthNEI (centralizes
+  // student identity across NEI platforms on Supabase Auth, with Zitadel as
+  // the OAuth provider) — there's no manual email/password fallback, so
+  // there's nothing else to collect on this step until that redirect
+  // completes and authNeiMode flips true.
+  if (!authNeiMode) {
+    return (
+      <div className="flex w-full flex-col items-center">
+        <div className="flex w-[90%] flex-col">
+          <p className="mb-8 font-sans text-[45px] font-semibold text-white">
+            Criar uma conta
+          </p>
+          <p className="mb-4 text-sm text-gray-400">
+            A criação de conta é feita exclusivamente através do AuthNEI, a
+            forma centralizada de te ligares às plataformas do NEI.
+          </p>
+          <AuthNeiButton
+            next="/signup?authnei=1"
+            beforeRedirect={onAuthNeiRedirect}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col items-center">
@@ -114,39 +95,6 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
             autoFocus
             className={`${error && !yearRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
             options={yearOptions}
-          />
-
-          <Input
-            type="email"
-            name="Email Institucional"
-            placeholder=""
-            center
-            inputRef={emailRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.email ? data.email : undefined}
-            className={`${error && !emailRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-          />
-
-          <Input
-            type="password"
-            name="Palavra-passe"
-            placeholder=""
-            center
-            inputRef={passwordRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.password ? data.password : undefined}
-            className={`${error && !passwordRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-          />
-
-          <Input
-            type="password"
-            name="Confirmar Palavra-passe"
-            placeholder=""
-            center
-            inputRef={passwordConfirmRef}
-            onKeyUp={handleKeyUp}
-            defaultValue={data.password ? data.password : undefined}
-            className={`${error && !passwordConfirmRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
           />
         </div>
 

@@ -6,7 +6,7 @@ import { httpClient } from "@/lib/http/client";
 import CompaniesContainer from "@/components/Companies/CompaniesContainer";
 import { CompanyProps } from "@/components/Companies/Company";
 import type { CompanyRosterDto } from "@/application/dto/companyDto";
-import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
+import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
 import { findEditionContentByName } from "@/edition";
 
 function toCompanyProps(company: CompanyRosterDto): CompanyProps | null {
