@@ -19,7 +19,7 @@ export default async function AdminLayout({
 
   return (
     <SessionAuthLayout>
-      <Topbar />
+      <Topbar solid />
       <div className="flex min-h-screen pt-16">
         <AdminSidebar isSuperAdmin={session.adminRole === "SUPER_ADMIN"} />
         <main id="main-content" className="min-w-0 flex-1">

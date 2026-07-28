@@ -10,6 +10,7 @@ import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import AuthNeiButton from "@/components/AuthNeiButton";
 import { logIn } from "@/client/api/auth";
+import getSession from "@/client/api/session";
 
 const LoginPage: React.FC = () => {
   const session = useSession();
@@ -46,7 +47,15 @@ const LoginPage: React.FC = () => {
     const password = passwordRef.current?.value as string;
 
     if (await logIn(email, password)) {
-      await session.fetchSession();
+      // session.user (from the AuthContext) is stale here - fetchSession()
+      // updates it via setState, which only takes effect on React's *next*
+      // render, not synchronously in this same closure. Fetching directly
+      // gets the just-established session's real data for this redirect
+      // decision, then hands that same value to fetchSession() so the rest
+      // of the UI - e.g. TopBar - picks up the new session too, without a
+      // second, redundant request for data already in hand.
+      const freshUser = await getSession();
+      session.fetchSession(freshUser);
 
       // Redirect based on user role. Checked before role, since an admin
       // account has role: null (it isn't a STUDENT/EMPLOYEE at all) and
@@ -55,15 +64,13 @@ const LoginPage: React.FC = () => {
       // established the account but the signup wizard was abandoned before
       // it finished - so send them back into the wizard to complete it
       // instead of the homepage.
-      if (session.user?.adminRole) {
+      if (freshUser?.adminRole) {
         router.push("/overview");
-      } else if (session.user?.role === "EMPLOYEE") {
+      } else if (freshUser?.role === "EMPLOYEE") {
         router.push("/dashboard");
-      } else if (session.user?.role === "STUDENT") {
+      } else if (freshUser?.role === "STUDENT") {
         router.push(
-          session.user.student
-            ? `/student/${session.user.student.code}`
-            : "/signup"
+          freshUser.student ? `/student/${freshUser.student.code}` : "/signup"
         );
       } else {
         router.push("/");

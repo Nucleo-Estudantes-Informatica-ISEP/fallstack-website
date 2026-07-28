@@ -71,7 +71,7 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-primary p-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "A guardar..." : "Save Student"}
         </button>

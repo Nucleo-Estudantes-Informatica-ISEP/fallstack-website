@@ -68,7 +68,9 @@ export interface AdminFormPasswordSection {
 }
 
 export type AdminFormSection =
-  AdminFormFieldsSection | AdminFormImageSection | AdminFormPasswordSection;
+  | AdminFormFieldsSection
+  | AdminFormImageSection
+  | AdminFormPasswordSection;
 
 interface AdminFormProps {
   /** Present -> editing an existing record; absent -> creating a new one. */
@@ -360,7 +362,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-md bg-blue-500 p-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-md bg-primary p-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending
           ? "A guardar..."

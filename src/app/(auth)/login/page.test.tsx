@@ -3,13 +3,13 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import LoginPage from "./page";
 
-const { pushMock, refreshMock, logInMock, fetchSessionMock, sessionUserMock } =
+const { pushMock, refreshMock, logInMock, fetchSessionMock, getSessionMock } =
   vi.hoisted(() => ({
     pushMock: vi.fn(),
     refreshMock: vi.fn(),
     logInMock: vi.fn(),
     fetchSessionMock: vi.fn(),
-    sessionUserMock: vi.fn(),
+    getSessionMock: vi.fn(),
   }));
 
 vi.mock("next/navigation", () => ({
@@ -18,12 +18,22 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/client/api/auth", () => ({
   logIn: (...args: unknown[]) => logInMock(...args),
 }));
+// The AuthContext's `user` is always null here, on purpose: it stays stale
+// until React's *next* render, exactly like the real AuthContextProvider
+// (setUser from fetchSession() doesn't take effect synchronously). If
+// LoginPage ever goes back to reading session.user for the redirect
+// instead of calling getSession() directly, every test below would see a
+// null user and wrongly redirect to "/" - that's the regression this file
+// guards against, not just "does the right URL get picked".
 vi.mock("@/hooks/useSession", () => ({
   default: () => ({
-    user: sessionUserMock(),
+    user: null,
     fetchSession: fetchSessionMock,
     clear: vi.fn(),
   }),
+}));
+vi.mock("@/client/api/session", () => ({
+  default: () => getSessionMock(),
 }));
 vi.mock("@/components/AuthNeiButton", () => ({
   default: () => <button>Continuar com AuthNEI</button>,
@@ -45,7 +55,7 @@ const submitLogin = () => {
 };
 
 test("sends an EMPLOYEE to the dashboard", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: "EMPLOYEE",
     adminRole: null,
     student: null,
@@ -58,7 +68,7 @@ test("sends an EMPLOYEE to the dashboard", async () => {
 });
 
 test("sends a STUDENT with a profile to their student page", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: "STUDENT",
     adminRole: null,
     student: { code: "s1", name: "Jane" },
@@ -71,7 +81,7 @@ test("sends a STUDENT with a profile to their student page", async () => {
 });
 
 test("sends a STUDENT with no profile yet back into signup instead of the homepage", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: "STUDENT",
     adminRole: null,
     student: null,
@@ -84,7 +94,7 @@ test("sends a STUDENT with no profile yet back into signup instead of the homepa
 });
 
 test("sends an admin to the backoffice instead of the homepage, even though role is null", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: null,
     adminRole: "ADMIN",
     student: null,
@@ -97,7 +107,7 @@ test("sends an admin to the backoffice instead of the homepage, even though role
 });
 
 test("sends a super admin to the backoffice too", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: null,
     adminRole: "SUPER_ADMIN",
     student: null,
@@ -110,7 +120,7 @@ test("sends a super admin to the backoffice too", async () => {
 });
 
 test("falls back to the homepage for a session with no role and no admin tier", async () => {
-  sessionUserMock.mockReturnValue({
+  getSessionMock.mockResolvedValue({
     role: null,
     adminRole: null,
     student: null,
@@ -122,9 +132,19 @@ test("falls back to the homepage for a session with no role and no admin tier", 
   await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
 });
 
+test("still updates the context (e.g. so TopBar picks up the new session) with the same fetched user, not a second request", async () => {
+  const freshUser = { role: "EMPLOYEE", adminRole: null, student: null };
+  getSessionMock.mockResolvedValue(freshUser);
+
+  render(<LoginPage />);
+  submitLogin();
+
+  await waitFor(() => expect(fetchSessionMock).toHaveBeenCalledWith(freshUser));
+  expect(getSessionMock).toHaveBeenCalledTimes(1);
+});
+
 test("shows a generic error and doesn't redirect when login fails", async () => {
   logInMock.mockResolvedValue(false);
-  sessionUserMock.mockReturnValue(null);
 
   render(<LoginPage />);
   submitLogin();

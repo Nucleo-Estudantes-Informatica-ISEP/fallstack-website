@@ -1,3 +1,5 @@
+import { FiBookmark, FiCamera, FiUserPlus } from "react-icons/fi";
+
 import type { ActivityEvent } from "@/application/services/adminDashboardService";
 
 interface AdminActivityFeedProps {
@@ -9,11 +11,11 @@ interface AdminActivityFeedProps {
 // noise on a list, unlike the chart).
 const TYPE_STYLE: Record<
   ActivityEvent["type"],
-  { color: string; icon: string }
+  { color: string; icon: React.ComponentType<{ size?: number }> }
 > = {
-  signup: { color: "#2a78d6", icon: "👤" },
-  scan: { color: "#eb6834", icon: "📷" },
-  save: { color: "#1baf7a", icon: "⭐" },
+  signup: { color: "#2a78d6", icon: FiUserPlus },
+  scan: { color: "#eb6834", icon: FiCamera },
+  save: { color: "#1baf7a", icon: FiBookmark },
 };
 
 function formatRelativeTime(iso: string) {
@@ -37,24 +39,27 @@ const AdminActivityFeed: React.FC<AdminActivityFeedProps> = ({ events }) => (
       <p className="text-gray-500">Ainda não há atividade.</p>
     ) : (
       <ul className="flex flex-col gap-3">
-        {events.map((event, index) => (
-          <li
-            key={`${event.type}-${event.timestamp}-${index}`}
-            className="flex items-start gap-3 text-sm"
-          >
-            <span
-              className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs"
-              style={{ backgroundColor: `${TYPE_STYLE[event.type].color}1a` }}
-              aria-hidden="true"
+        {events.map((event, index) => {
+          const { color, icon: Icon } = TYPE_STYLE[event.type];
+          return (
+            <li
+              key={`${event.type}-${event.timestamp}-${index}`}
+              className="flex items-start gap-3 text-sm"
             >
-              {TYPE_STYLE[event.type].icon}
-            </span>
-            <span className="flex-1 text-gray-700">{event.label}</span>
-            <span className="shrink-0 text-gray-400">
-              {formatRelativeTime(event.timestamp)}
-            </span>
-          </li>
-        ))}
+              <span
+                className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full"
+                style={{ backgroundColor: `${color}1a`, color }}
+                aria-hidden="true"
+              >
+                <Icon size={13} />
+              </span>
+              <span className="flex-1 text-gray-700">{event.label}</span>
+              <span className="shrink-0 text-gray-400">
+                {formatRelativeTime(event.timestamp)}
+              </span>
+            </li>
+          );
+        })}
       </ul>
     )}
   </div>

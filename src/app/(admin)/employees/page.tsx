@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FiEdit2 } from "react-icons/fi";
 
 import {
   parseAdminListParams,
@@ -43,7 +44,7 @@ const EmployeesAdminPage = async ({
         <h1 className="text-2xl font-bold text-gray-800">Recrutadores</h1>
         <Link
           href="/employees/new"
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
         >
           Adicionar recrutador
         </Link>
@@ -67,7 +68,7 @@ const EmployeesAdminPage = async ({
               aria-label={`Editar ${employee.name}`}
               className="hover:text-primary"
             >
-              ✏️
+              <FiEdit2 size={16} />
             </Link>
             <AdminToggleButton
               checked={employee.active}

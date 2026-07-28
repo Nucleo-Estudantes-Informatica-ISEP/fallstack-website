@@ -10,7 +10,18 @@ import { LogIn } from "@/components/ui/Icons";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 
-const TopBar: React.FC = () => {
+interface TopBarProps {
+  // The scroll-linked fade (transparent at the top, solidifying as you
+  // scroll) only makes sense over a hero image at the top of the page.
+  // The admin backoffice has no hero - it's a plain page from the very
+  // first pixel - so a fading-from-transparent bar there is invisible at
+  // the top instead of just low-contrast. `solid` skips the fade for an
+  // always-opaque background; the logo/icons stay the same dark-background
+  // white as everywhere else, since the background itself stays dark.
+  solid?: boolean;
+}
+
+const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
@@ -25,12 +36,16 @@ const TopBar: React.FC = () => {
 
   return (
     <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
-      <motion.div
-        className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
-        style={{
-          opacity,
-        }}
-      />
+      {solid ? (
+        <div className="absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background" />
+      ) : (
+        <motion.div
+          className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
+          style={{
+            opacity,
+          }}
+        />
+      )}
       <div className="absolute top-2 right-4 flex h-12 w-full items-center justify-between space-x-4 px-4 py-2">
         {!isAuthPage ? (
           <Link href="/" className="ml-6">

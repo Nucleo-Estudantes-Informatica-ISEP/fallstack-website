@@ -48,7 +48,13 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
   data,
 }) => {
   const max = Math.max(1, ...data.flatMap((d) => SERIES.map((s) => d[s.key])));
-  const totalWidth = data.length * GROUP_WIDTH + (data.length - 1) * GROUP_GAP;
+  // data.length - 1 goes negative for an empty array, producing an invalid
+  // (negative-width) viewBox - Math.max(1, ...) keeps the SVG well-formed
+  // even with no data, rather than rendering unpredictably.
+  const totalWidth = Math.max(
+    1,
+    data.length * GROUP_WIDTH + (data.length - 1) * GROUP_GAP
+  );
   const totalHeight = CHART_HEIGHT + LABEL_HEIGHT;
 
   return (
@@ -72,6 +78,16 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
 
       <svg
         viewBox={`0 0 ${totalWidth} ${totalHeight}`}
+        // Explicit intrinsic width/height (not just viewBox) is what lets
+        // the browser derive the aspect ratio for "w-full h-auto" sizing -
+        // without them, browsers fall back to inconsistent default sizing
+        // for a percentage-width/auto-height SVG, which is what was
+        // stretching this chart to the wrong scale. The inline aspectRatio
+        // is a second, CSS-only safeguard that doesn't depend on that
+        // inference at all.
+        width={totalWidth}
+        height={totalHeight}
+        style={{ aspectRatio: `${totalWidth} / ${totalHeight}` }}
         className="h-auto w-full"
         role="img"
         aria-label="Gráfico de barras com inscrições, scans e estudantes guardados por dia, nos últimos 7 dias"

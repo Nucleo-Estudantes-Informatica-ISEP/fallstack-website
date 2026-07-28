@@ -20,6 +20,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { MdDragIndicator } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
@@ -74,31 +75,62 @@ function findContainer(board: Board, id: string): Day | undefined {
   return DAYS.find((day) => board[day].some((row) => row.id === id));
 }
 
-const ScheduleRowCard: React.FC<{ row: ScheduleRow; invalid?: boolean }> = ({
-  row,
-  invalid,
-}) => (
-  <div className="flex items-center gap-3 rounded-md border border-gray-300 bg-white p-2 shadow-sm">
-    <span
-      className={`shrink-0 rounded px-1.5 py-0.5 font-mono text-xs font-semibold ${
-        invalid
-          ? "border-2 border-red-500 text-red-600"
-          : "border border-transparent text-gray-600"
-      }`}
-    >
-      {row.startTime}
-    </span>
-    <span className="text-xs text-gray-400">–{row.endTime}</span>
+const timeInputClassName = (invalid?: boolean) =>
+  `w-[4.5rem] shrink-0 rounded border bg-transparent px-1 py-0.5 font-mono text-xs font-semibold ${
+    invalid
+      ? "border-red-500 text-red-600"
+      : "border-transparent text-gray-600 hover:border-gray-300"
+  }`;
+
+const ScheduleRowCard: React.FC<{
+  row: ScheduleRow;
+  invalid?: boolean;
+  dragHandleProps?: React.HTMLAttributes<HTMLElement>;
+  onTimeChange?: (field: "startTime" | "endTime", value: string) => void;
+}> = ({ row, invalid, dragHandleProps, onTimeChange }) => (
+  <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-white p-2 shadow-sm">
+    {dragHandleProps && (
+      <span
+        {...dragHandleProps}
+        className="shrink-0 cursor-grab touch-none text-gray-400 active:cursor-grabbing"
+        aria-label="Arrastar para reordenar"
+      >
+        <MdDragIndicator size={18} />
+      </span>
+    )}
+    {onTimeChange ? (
+      <>
+        <input
+          type="time"
+          value={row.startTime}
+          onChange={(e) => onTimeChange("startTime", e.target.value)}
+          className={timeInputClassName(invalid)}
+        />
+        <span className="text-xs text-gray-400">–</span>
+        <input
+          type="time"
+          value={row.endTime}
+          onChange={(e) => onTimeChange("endTime", e.target.value)}
+          className={timeInputClassName(invalid)}
+        />
+      </>
+    ) : (
+      <>
+        <span className={timeInputClassName(invalid)}>{row.startTime}</span>
+        <span className="text-xs text-gray-400">–{row.endTime}</span>
+      </>
+    )}
     <span className="truncate text-sm font-medium text-gray-800">
       {row.activity}
     </span>
   </div>
 );
 
-const SortableRow: React.FC<{ row: ScheduleRow; invalid: boolean }> = ({
-  row,
-  invalid,
-}) => {
+const SortableRow: React.FC<{
+  row: ScheduleRow;
+  invalid: boolean;
+  onTimeChange: (field: "startTime" | "endTime", value: string) => void;
+}> = ({ row, invalid, onTimeChange }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: row.id });
 
@@ -106,10 +138,13 @@ const SortableRow: React.FC<{ row: ScheduleRow; invalid: boolean }> = ({
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...attributes}
-      {...listeners}
     >
-      <ScheduleRowCard row={row} invalid={invalid} />
+      <ScheduleRowCard
+        row={row}
+        invalid={invalid}
+        dragHandleProps={{ ...attributes, ...listeners }}
+        onTimeChange={onTimeChange}
+      />
     </div>
   );
 };
@@ -118,7 +153,12 @@ const DayLane: React.FC<{
   day: Day;
   rows: ScheduleRow[];
   invalidIds: Set<string>;
-}> = ({ day, rows, invalidIds }) => {
+  onTimeChange: (
+    rowId: string,
+    field: "startTime" | "endTime",
+    value: string
+  ) => void;
+}> = ({ day, rows, invalidIds, onTimeChange }) => {
   const { setNodeRef } = useDroppable({ id: String(day) });
 
   return (
@@ -136,6 +176,9 @@ const DayLane: React.FC<{
               key={row.id}
               row={row}
               invalid={invalidIds.has(row.id)}
+              onTimeChange={(field, value) =>
+                onTimeChange(row.id, field, value)
+              }
             />
           ))}
         </div>
@@ -216,9 +259,30 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
     });
   };
 
+  const handleTimeChange = (
+    rowId: string,
+    field: "startTime" | "endTime",
+    value: string
+  ) => {
+    const container = findContainer(board, rowId);
+    if (!container) return;
+    setBoard((prev) => ({
+      ...prev,
+      [container]: prev[container].map((row) =>
+        row.id === rowId ? { ...row, [field]: value } : row
+      ),
+    }));
+  };
+
   const handleSave = async () => {
     const updates = DAYS.flatMap((day) =>
-      board[day].map((row, index) => ({ id: row.id, day, order: index }))
+      board[day].map((row, index) => ({
+        id: row.id,
+        day,
+        order: index,
+        startTime: row.startTime,
+        endTime: row.endTime,
+      }))
     );
     setIsSaving(true);
     try {
@@ -244,7 +308,7 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
           type="button"
           onClick={handleSave}
           disabled={isSaving || invalidIds.size > 0}
-          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSaving ? "A guardar..." : "Guardar"}
         </button>
@@ -264,6 +328,7 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
               day={day}
               rows={board[day]}
               invalidIds={invalidIds}
+              onTimeChange={handleTimeChange}
             />
           ))}
         </div>

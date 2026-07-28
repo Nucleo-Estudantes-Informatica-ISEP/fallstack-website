@@ -108,6 +108,34 @@ test("rejects a partial reorder that would collide with an untouched row in the 
   expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
 });
 
+test("persists a submitted startTime/endTime alongside the reorder", async () => {
+  await updateScheduleOrder([
+    { id: "a", day: 1, order: 0, startTime: "08:00", endTime: "08:30" },
+    { id: "b", day: 1, order: 1 },
+  ]);
+
+  expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith(
+    [
+      { id: "a", day: 1, order: 0, startTime: "08:00", endTime: "08:30" },
+      { id: "b", day: 1, order: 1 },
+    ],
+    transaction
+  );
+});
+
+test("validates a submitted time edit against the rest of its day, not just the reorder", async () => {
+  // a's submitted endTime (10:30) would overlap b's existing 10:00-11:00 -
+  // must be caught even though only the order/time changed, not the day.
+  await expect(
+    updateScheduleOrder([
+      { id: "a", day: 1, order: 0, endTime: "10:30" },
+      { id: "b", day: 1, order: 1 },
+    ])
+  ).rejects.toThrow("Schedule order is not chronologically valid");
+
+  expect(bulkUpdateScheduleOrder).not.toHaveBeenCalled();
+});
+
 test("throws Not found if an update references an id that no longer exists", async () => {
   await expect(
     updateScheduleOrder([{ id: "missing", day: 1, order: 0 }])

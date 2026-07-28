@@ -44,3 +44,19 @@ test("links a super admin to the backoffice too", () => {
   render(<UserButton user={user} />);
   expect(linkHref()).toBe("/overview");
 });
+
+test("shows a distinct admin icon instead of the generic profile icon", () => {
+  const user: SessionDto = { role: null, adminRole: "ADMIN", student: null };
+  render(<UserButton user={user} />);
+  expect(
+    screen.getByRole("link", { name: "Área de administração" })
+  ).toBeInTheDocument();
+});
+
+test("shows the generic profile icon for non-admins", () => {
+  const user: SessionDto = { role: "EMPLOYEE", adminRole: null, student: null };
+  render(<UserButton user={user} />);
+  expect(
+    screen.getByRole("link", { name: "O meu perfil" })
+  ).toBeInTheDocument();
+});
