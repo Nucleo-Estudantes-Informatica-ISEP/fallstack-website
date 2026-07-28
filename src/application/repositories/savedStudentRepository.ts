@@ -57,6 +57,9 @@ export const countStudentSavesSince = (studentId: string, since: Date) =>
 export const countCompanySaves = (companyId: string) =>
   prisma.savedStudent.count({ where: { companyId } });
 
+export const countSavedStudentsByCompany = () =>
+  prisma.savedStudent.groupBy({ by: ["companyId"], _count: { _all: true } });
+
 export const findCompanyHistory = (companyId: string) =>
   prisma.savedStudent.findMany({
     where: { companyId },
@@ -87,13 +90,6 @@ export const findCompanySavedStudentsWithCv = (companyId: string) =>
     include: {
       student: { select: { id: true, name: true, code: true, cv: true } },
     },
-  });
-
-export const findCompanySavesForExport = (companyId: string) =>
-  prisma.savedStudent.findMany({
-    where: { companyId },
-    include: { student: { include: { user: true } } },
-    orderBy: { createdAt: "asc" },
   });
 
 export const findStudentHistory = (studentId: string) =>

@@ -1,5 +1,5 @@
-import { studentYearLabel } from "@/domain/Student/year";
-import type { StudentYear } from "@/domain/Student/year";
+import { studentYearLabel } from "@/domain/student/year";
+import type { StudentYear } from "@/domain/student/year";
 
 export interface StudentDto {
   id: string;
@@ -51,4 +51,17 @@ export const toStudentSummaryDto = (
   linkedin: student.linkedin,
   github: student.github,
   avatar: student.avatar,
+});
+
+export interface AdminStudentDto extends StudentDto {
+  yearKey: StudentYear;
+  active: boolean;
+}
+
+export const toAdminStudentDto = (
+  student: StudentEntity & { user: { email: string; active: boolean } }
+): AdminStudentDto => ({
+  ...toStudentDto(student),
+  yearKey: student.year,
+  active: student.user.active,
 });

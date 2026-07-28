@@ -59,6 +59,24 @@ test("removes PII from Sentry events and retains stack frames", () => {
   ]);
 });
 
+test("redacts breadcrumb message while preserving other fields", () => {
+  const event = {
+    breadcrumbs: [
+      {
+        category: "console",
+        level: "error",
+        message: "some error containing test@example.com",
+      },
+    ],
+  };
+
+  const sanitized = sanitizeSentryEvent(event);
+
+  assert.equal(sanitized.breadcrumbs[0].message, "Application event");
+  assert.equal(sanitized.breadcrumbs[0].category, "console");
+  assert.equal(sanitized.breadcrumbs[0].level, "error");
+});
+
 test("redacts nested Sentry log attributes", () => {
   const log = {
     message: "Operation failed",

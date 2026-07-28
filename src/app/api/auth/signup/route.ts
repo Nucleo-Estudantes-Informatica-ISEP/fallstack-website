@@ -8,13 +8,13 @@ export const POST = defineHandler({
   auth: "public",
   schema: signUpSchema,
   handler: async ({ body }) => {
-    await signUpUser({
+    const { requiresEmailConfirmation } = await signUpUser({
       email: body.email,
       password: body.password,
       role: "STUDENT",
     });
     return NextResponse.json(
-      { message: "Signup successfully" },
+      { message: "Signup successfully", requiresEmailConfirmation },
       { status: 201 }
     );
   },

@@ -15,12 +15,13 @@ import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
-import FileInput from "@/components/FileInput";
-import Input from "@/components/Input";
-import PrimaryButton from "@/components/PrimaryButton";
-import PrivacyPolicyModal from "@/components/PrivacyPolicyModal/page";
+import FileInput from "@/components/ui/FileInput";
+import Input from "@/components/ui/Input";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
-import { signUp } from "@/client/api/auth";
+import { createAccount, createStudentProfile } from "@/client/api/auth";
+import getSession from "@/client/api/session";
 import {
   uploadAvatar as uploadAvatarToSupabase,
   uploadCv as uploadCvToSupabase,
@@ -46,27 +47,20 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const linkedinRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
-  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setLoading(true);
       const file = e.target.files[0];
 
       if (error) setError(null);
 
-      const uploaded = await uploadCvToSupabase(file);
-      if (!uploaded) {
-        setError("Ocorreu um erro ao dar upload.");
-        return setLoading(false);
-      }
-
-      const cv = {
-        name: file.name,
-        id: uploaded.id,
-        preview: URL.createObjectURL(file),
-      };
-
-      setData({ ...data, cv });
-      setLoading(false);
+      setData({
+        ...data,
+        cv: {
+          name: file.name,
+          file,
+          preview: URL.createObjectURL(file),
+        },
+      });
     }
   };
 
@@ -100,20 +94,93 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       }
 
       setLoading(true);
+
+      // A session may already exist from an earlier attempt - e.g. the
+      // account got created but a later step (upload, profile creation)
+      // failed, or the user left and came back. Retrying createAccount in
+      // that case would fail with a duplicate-account error and
+      // permanently strand the user, so check first and resume from
+      // wherever they actually left off instead of always starting over.
+      const existingSession = await getSession();
+
+      if (existingSession?.student) {
+        // The profile was already created in an earlier attempt.
+        session.fetchSession();
+        router.push("/");
+        router.refresh();
+        return;
+      }
+
+      // A session belonging to a different account type (e.g. an
+      // employee/admin browsing this public page) - not a resumable
+      // partial student signup. StudentSignUp's mount-time guard should
+      // already have redirected this case away; this is a defense-in-depth
+      // check for anyone who reaches this point regardless.
+      if (existingSession && existingSession.role !== "STUDENT") {
+        toast.error("Já tens sessão iniciada como outro tipo de conta.");
+        return setLoading(false);
+      }
+
+      if (!existingSession) {
+        // Create the Supabase Auth account (and session) first - uploads
+        // below require an authenticated session.
+        const account = await createAccount({
+          email: data.email,
+          password: data.password,
+        });
+
+        if (account instanceof Error) {
+          toast.error(account.message);
+          return setLoading(false);
+        }
+
+        if (!account) {
+          toast.error("Ocorreu um erro ao criar a conta.");
+          return setLoading(false);
+        }
+
+        // "Confirm email" is on and this account hasn't been confirmed yet,
+        // so Supabase didn't hand back a session - none of the steps below
+        // (uploads, profile creation) can run without one. Stop here instead
+        // of continuing on to confusing "Unauthorized" failures.
+        if (account.requiresEmailConfirmation) {
+          toast.info(
+            "Criámos a tua conta! Verifica o teu email institucional, confirma a conta e depois inicia sessão para continuares o registo."
+          );
+          router.push("/login");
+          return setLoading(false);
+        }
+      }
+
       const avatarUrl = await handleAvatarUpload();
+
+      let cvId: string | undefined;
+      if (data.cv) {
+        const uploaded = await uploadCvToSupabase(data.cv.file);
+        if (!uploaded) {
+          toast.error("Não foi possível dar upload ao CV.");
+        } else {
+          cvId = uploaded.id;
+        }
+      }
 
       // Add LinkedIn if provided
       const linkedin = linkedinRef.current?.value || null;
 
-      const signup = await signUp({ ...data, avatarUrl, linkedin });
+      const profile = await createStudentProfile({
+        ...data,
+        avatarUrl,
+        cvId,
+        linkedin,
+      });
 
-      if (signup instanceof Error) {
-        toast.error(signup.message);
+      if (profile instanceof Error) {
+        toast.error(profile.message);
         return setLoading(false);
       }
 
-      if (!signup) {
-        toast.error("Ocorreu um erro ao criar a conta.");
+      if (!profile) {
+        toast.error("Ocorreu um erro ao criar o perfil.");
         return setLoading(false);
       }
 

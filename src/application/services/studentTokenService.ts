@@ -2,7 +2,7 @@
 
 import "server-only";
 
-import { signJwt } from "@/services/authService";
+import { signJwt } from "@/application/services/authService";
 
 import { findStudentByCode } from "../repositories/studentRepository";
 
