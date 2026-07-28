@@ -104,7 +104,6 @@ const ScheduleRowCard: React.FC<{
           type="time"
           value={row.startTime}
           onChange={(e) => onTimeChange("startTime", e.target.value)}
-          onPointerDown={(e) => e.stopPropagation()}
           className={timeInputClassName(invalid)}
         />
         <span className="text-xs text-gray-400">–</span>
@@ -112,7 +111,6 @@ const ScheduleRowCard: React.FC<{
           type="time"
           value={row.endTime}
           onChange={(e) => onTimeChange("endTime", e.target.value)}
-          onPointerDown={(e) => e.stopPropagation()}
           className={timeInputClassName(invalid)}
         />
       </>
