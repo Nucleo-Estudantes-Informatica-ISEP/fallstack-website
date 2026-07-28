@@ -48,11 +48,16 @@ const LoginPage: React.FC = () => {
     if (await logIn(email, password)) {
       await session.fetchSession();
 
-      // Redirect based on user role. A STUDENT can be logging in with no
-      // Student row yet - e.g. AuthNEI established the account but the
-      // signup wizard was abandoned before it finished - so send them back
-      // into the wizard to complete it instead of the homepage.
-      if (session.user?.role === "EMPLOYEE") {
+      // Redirect based on user role. Checked before role, since an admin
+      // account has role: null (it isn't a STUDENT/EMPLOYEE at all) and
+      // would otherwise fall through to the generic "/" case below. A
+      // STUDENT can be logging in with no Student row yet - e.g. AuthNEI
+      // established the account but the signup wizard was abandoned before
+      // it finished - so send them back into the wizard to complete it
+      // instead of the homepage.
+      if (session.user?.adminRole) {
+        router.push("/students");
+      } else if (session.user?.role === "EMPLOYEE") {
         router.push("/dashboard");
       } else if (session.user?.role === "STUDENT") {
         router.push(

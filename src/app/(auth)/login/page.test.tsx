@@ -45,7 +45,11 @@ const submitLogin = () => {
 };
 
 test("sends an EMPLOYEE to the dashboard", async () => {
-  sessionUserMock.mockReturnValue({ role: "EMPLOYEE", student: null });
+  sessionUserMock.mockReturnValue({
+    role: "EMPLOYEE",
+    adminRole: null,
+    student: null,
+  });
 
   render(<LoginPage />);
   submitLogin();
@@ -56,6 +60,7 @@ test("sends an EMPLOYEE to the dashboard", async () => {
 test("sends a STUDENT with a profile to their student page", async () => {
   sessionUserMock.mockReturnValue({
     role: "STUDENT",
+    adminRole: null,
     student: { code: "s1", name: "Jane" },
   });
 
@@ -66,7 +71,11 @@ test("sends a STUDENT with a profile to their student page", async () => {
 });
 
 test("sends a STUDENT with no profile yet back into signup instead of the homepage", async () => {
-  sessionUserMock.mockReturnValue({ role: "STUDENT", student: null });
+  sessionUserMock.mockReturnValue({
+    role: "STUDENT",
+    adminRole: null,
+    student: null,
+  });
 
   render(<LoginPage />);
   submitLogin();
@@ -74,8 +83,38 @@ test("sends a STUDENT with no profile yet back into signup instead of the homepa
   await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/signup"));
 });
 
-test("falls back to the homepage for any other session shape", async () => {
-  sessionUserMock.mockReturnValue({ role: "ADMIN", student: null });
+test("sends an admin to the backoffice instead of the homepage, even though role is null", async () => {
+  sessionUserMock.mockReturnValue({
+    role: null,
+    adminRole: "ADMIN",
+    student: null,
+  });
+
+  render(<LoginPage />);
+  submitLogin();
+
+  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/students"));
+});
+
+test("sends a super admin to the backoffice too", async () => {
+  sessionUserMock.mockReturnValue({
+    role: null,
+    adminRole: "SUPER_ADMIN",
+    student: null,
+  });
+
+  render(<LoginPage />);
+  submitLogin();
+
+  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/students"));
+});
+
+test("falls back to the homepage for a session with no role and no admin tier", async () => {
+  sessionUserMock.mockReturnValue({
+    role: null,
+    adminRole: null,
+    student: null,
+  });
 
   render(<LoginPage />);
   submitLogin();
