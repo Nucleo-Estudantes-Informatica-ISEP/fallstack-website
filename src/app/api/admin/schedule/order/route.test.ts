@@ -82,6 +82,63 @@ test("PATCH rejects a malformed body with 400, without persisting anything", asy
   assert.equal(vi.mocked(updateScheduleOrder).mock.calls.length, 0);
 });
 
+test("PATCH rejects a malformed time string with 400, without persisting anything", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
+
+  const { updateScheduleOrder } =
+    await import("@/application/services/scheduleService");
+
+  const { PATCH } = await import("./route");
+  const res = await PATCH(
+    patchRequest({
+      updates: [
+        {
+          id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+          day: 1,
+          order: 0,
+          startTime: "9am",
+        },
+      ],
+    }),
+    { params: Promise.resolve({}) }
+  );
+
+  assert.equal(res.status, 400);
+  assert.equal(vi.mocked(updateScheduleOrder).mock.calls.length, 0);
+});
+
+test("PATCH commits a submitted startTime/endTime alongside the reorder", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
+
+  const { updateScheduleOrder } =
+    await import("@/application/services/scheduleService");
+  vi.mocked(updateScheduleOrder).mockResolvedValue(undefined);
+
+  const updates = [
+    {
+      id: "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      day: 1,
+      order: 0,
+      startTime: "09:00",
+      endTime: "09:30",
+    },
+  ];
+
+  const { PATCH } = await import("./route");
+  const res = await PATCH(patchRequest({ updates }), {
+    params: Promise.resolve({}),
+  });
+
+  assert.equal(res.status, 200);
+  assert.deepEqual(vi.mocked(updateScheduleOrder).mock.calls[0]?.[0], updates);
+});
+
 test("PATCH commits the reorder for a valid admin request", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")

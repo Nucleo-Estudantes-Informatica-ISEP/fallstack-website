@@ -37,6 +37,8 @@ export const updateScheduleOrderSchema = z.object({
       id: z.uuid(),
       day: daySchema,
       order: z.number().int(),
+      startTime: timeSchema.optional(),
+      endTime: timeSchema.optional(),
     })
   ),
 });

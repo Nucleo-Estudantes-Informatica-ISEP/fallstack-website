@@ -194,7 +194,13 @@ export async function deleteScheduleEventForAdmin(id: string) {
 // here against each row's actual startTime/endTime before committing,
 // same rule (domain/schedule/scheduleValidation.ts) the board uses.
 export async function updateScheduleOrder(
-  updates: { id: string; day: number; order: number }[]
+  updates: {
+    id: string;
+    day: number;
+    order: number;
+    startTime?: string;
+    endTime?: string;
+  }[]
 ) {
   if (updates.length === 0) return;
 
@@ -220,13 +226,10 @@ export async function updateScheduleOrder(
       const update = updateById.get(event.id);
       const day = update?.day ?? event.day;
       const order = update?.order ?? event.order;
+      const startTime = update?.startTime ?? event.startTime;
+      const endTime = update?.endTime ?? event.endTime;
       const rows = byDay.get(day) ?? [];
-      rows.push({
-        id: event.id,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        order,
-      });
+      rows.push({ id: event.id, startTime, endTime, order });
       byDay.set(day, rows);
     }
 

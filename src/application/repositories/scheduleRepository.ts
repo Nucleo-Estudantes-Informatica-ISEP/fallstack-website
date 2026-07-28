@@ -92,19 +92,31 @@ export const deleteScheduleEvent = (id: string) =>
 // transaction; a passed-in transaction client doesn't expose `$transaction`
 // itself, so updates run sequentially against it instead.
 export const bulkUpdateScheduleOrder = async (
-  updates: { id: string; day: number; order: number }[],
+  updates: {
+    id: string;
+    day: number;
+    order: number;
+    startTime?: string;
+    endTime?: string;
+  }[],
   db: DbClient = prisma
 ) => {
   if (db === prisma) {
     await prisma.$transaction(
-      updates.map(({ id, day, order }) =>
-        prisma.scheduleEvent.update({ where: { id }, data: { day, order } })
+      updates.map(({ id, day, order, startTime, endTime }) =>
+        prisma.scheduleEvent.update({
+          where: { id },
+          data: { day, order, startTime, endTime },
+        })
       )
     );
     return;
   }
 
-  for (const { id, day, order } of updates) {
-    await db.scheduleEvent.update({ where: { id }, data: { day, order } });
+  for (const { id, day, order, startTime, endTime } of updates) {
+    await db.scheduleEvent.update({
+      where: { id },
+      data: { day, order, startTime, endTime },
+    });
   }
 };
