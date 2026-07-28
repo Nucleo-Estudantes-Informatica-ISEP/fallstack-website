@@ -52,13 +52,15 @@ async function createSupabaseAuthUser(email: string, password: string) {
 // for later changes; this is only for initial provisioning.
 export async function createSupabaseAuthUserAsAdmin(
   email: string,
-  password: string
+  password: string,
+  displayName?: string
 ) {
   const admin = createAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
+    user_metadata: displayName ? { name: displayName } : undefined,
   });
   if (error || !data.user)
     throw new HttpError(

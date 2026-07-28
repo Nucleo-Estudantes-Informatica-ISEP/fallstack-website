@@ -1,5 +1,5 @@
 export interface SessionDto {
-  role: "STUDENT" | "EMPLOYEE";
+  role: "STUDENT" | "EMPLOYEE" | null;
   student: {
     code: string;
     name: string;
