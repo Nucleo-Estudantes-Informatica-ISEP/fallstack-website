@@ -10,7 +10,6 @@ const {
   refreshMock,
   fetchSessionMock,
   toastErrorMock,
-  createAccountMock,
   createStudentProfileMock,
   getSessionMock,
 } = vi.hoisted(() => ({
@@ -18,7 +17,6 @@ const {
   refreshMock: vi.fn(),
   fetchSessionMock: vi.fn(),
   toastErrorMock: vi.fn(),
-  createAccountMock: vi.fn(),
   createStudentProfileMock: vi.fn(),
   getSessionMock: vi.fn(),
 }));
@@ -40,7 +38,6 @@ vi.mock("@/client/api/session", () => ({
   default: () => getSessionMock(),
 }));
 vi.mock("@/client/api/auth", () => ({
-  createAccount: (...args: unknown[]) => createAccountMock(...args),
   createStudentProfile: (...args: unknown[]) =>
     createStudentProfileMock(...args),
 }));
@@ -80,24 +77,7 @@ const acceptPrivacyAndSubmit = () => {
   fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
 };
 
-test("fresh signup creates the account then the profile", async () => {
-  getSessionMock.mockResolvedValue(null);
-  createAccountMock.mockResolvedValue(true);
-  createStudentProfileMock.mockResolvedValue(true);
-
-  renderFinalStep();
-  acceptPrivacyAndSubmit();
-
-  await waitFor(() => expect(createStudentProfileMock).toHaveBeenCalled());
-
-  expect(createAccountMock).toHaveBeenCalledWith({
-    email: data.email,
-    password: data.password,
-  });
-  expect(pushMock).toHaveBeenCalledWith("/");
-});
-
-test("resumes profile creation for a student session with no profile yet", async () => {
+test("creates the profile for a student session with no profile yet", async () => {
   getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
   createStudentProfileMock.mockResolvedValue(true);
 
@@ -106,7 +86,6 @@ test("resumes profile creation for a student session with no profile yet", async
 
   await waitFor(() => expect(createStudentProfileMock).toHaveBeenCalled());
 
-  expect(createAccountMock).not.toHaveBeenCalled();
   expect(pushMock).toHaveBeenCalledWith("/");
 });
 
@@ -121,7 +100,6 @@ test("redirects home when the profile already exists", async () => {
 
   await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/"));
 
-  expect(createAccountMock).not.toHaveBeenCalled();
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
 
@@ -137,7 +115,22 @@ test("blocks submission with a clear message for a non-student session", async (
     )
   );
 
-  expect(createAccountMock).not.toHaveBeenCalled();
   expect(createStudentProfileMock).not.toHaveBeenCalled();
   expect(pushMock).not.toHaveBeenCalled();
+});
+
+test("sends back to signup when there's no session (AuthNEI never established one)", async () => {
+  getSessionMock.mockResolvedValue(null);
+
+  renderFinalStep();
+  acceptPrivacyAndSubmit();
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "A tua sessão expirou. Por favor, tenta novamente."
+    )
+  );
+
+  expect(pushMock).toHaveBeenCalledWith("/signup");
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
