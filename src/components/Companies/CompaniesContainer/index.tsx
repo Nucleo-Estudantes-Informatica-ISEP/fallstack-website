@@ -4,11 +4,8 @@ import React, { FunctionComponent } from "react";
 import { motion } from "framer-motion";
 
 import Company, { CompanyProps } from "@/components/Companies/Company";
-import { CompanyTier } from "@/domain/company/company-tier";
-import {
-  getTierStyling,
-  tierDisplayLabel,
-} from "@/domain/company/services/tier-styling";
+import { CompanyTier } from "@/domain/Company/company-tier";
+import { getTierStyling, tierDisplayLabel } from "@/presentation/tier-styling";
 
 interface CompaniesContainerProps {
   tier: CompanyTier;

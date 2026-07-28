@@ -3,31 +3,19 @@ import "client-only";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { httpClient } from "@/lib/http/client";
 
-export async function createAccount(data: {
-  email: string | null;
-  password: string | null;
-}) {
+export async function signUp(data: StudentSignUpData) {
   try {
-    return await httpClient.post<{ requiresEmailConfirmation: boolean }>(
-      "/auth/signup",
-      { email: data.email, password: data.password }
-    );
-  } catch (error) {
-    return error instanceof Error ? error : new Error("Network error");
-  }
-}
-
-export async function createStudentProfile(
-  data: StudentSignUpData & { avatarUrl?: string | null; cvId?: string }
-) {
-  try {
+    await httpClient.post("/auth/signup", {
+      email: data.email,
+      password: data.password,
+    });
     await httpClient.post("/students", {
       name: data.name,
       bio: data.bio,
       year: data.year,
       interests: data.interests,
       avatarUrl: data.avatarUrl || undefined,
-      cvId: data.cvId,
+      cvId: data.cv?.id,
     });
     return true;
   } catch (error) {

@@ -5,13 +5,10 @@ import type { Tier } from "@prisma/client";
 import { HttpError } from "@/types/HttpError";
 
 import {
-  bulkUpdateCompanyTierOrder,
-  countCompaniesForAdmin,
   createCompany,
   createCompanyDisplay,
   findActiveCompanies,
   findAllCompaniesForAdmin,
-  findAllCompaniesForTierBoard,
   findCompanies,
   findCompanyById,
   findCompanyByName,
@@ -19,7 +16,6 @@ import {
   findCompanyInterests,
   updateCompanyAvatar,
   updateCompanyDisplay,
-  type AdminCompanyQuery,
 } from "../repositories/companyRepository";
 import { findInterestsForCompany } from "../repositories/interestRepository";
 import { withTransaction } from "../repositories/transaction";
@@ -32,13 +28,7 @@ export const getActiveCompanies = () => findActiveCompanies();
 export const getCompanyDisplayByName = (name: string) =>
   findCompanyDisplayByName(name);
 
-export async function listCompaniesForAdmin(query: AdminCompanyQuery) {
-  const [items, totalCount] = await Promise.all([
-    findAllCompaniesForAdmin(query),
-    countCompaniesForAdmin(query.search),
-  ]);
-  return { items, totalCount };
-}
+export const listCompaniesForAdmin = () => findAllCompaniesForAdmin();
 
 export async function createCompanyForAdmin(input: {
   name: string;
@@ -64,15 +54,6 @@ export async function updateCompanyForAdmin(
 ) {
   if (!(await findCompanyById(id))) throw new HttpError("Not found", 404);
   return updateCompanyDisplay(id, input);
-}
-
-export const getCompaniesForTierBoard = () => findAllCompaniesForTierBoard();
-
-export async function updateCompanyTierBoard(
-  updates: { id: string; tier: Tier; order: number }[]
-) {
-  if (updates.length === 0) return;
-  await bulkUpdateCompanyTierOrder(updates);
 }
 
 export async function registerCompany(input: {

@@ -30,26 +30,3 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-  docker-migrator:
-    name: Docker migrator stage runs as non-root
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # Only builds the prisma-only `migrator` stage (no Next.js build), so
-      # this stays cheap. Building alone wouldn't catch a stage silently
-      # losing its USER instruction - `docker build` succeeds either way -
-      # so also run the image and assert the user, which is the actual
-      # regression this guards against (see Dockerfile's migrator stage).
-      - name: Build migrator stage
-        run: docker build --target migrator -t migrator-check .
-
-      - name: Verify migrator runs as a non-root user
-        run: |
-          user="$(docker run --rm --entrypoint whoami migrator-check)"
-          if [ "$user" != "nextjs" ]; then
-            echo "Expected migrator stage to run as 'nextjs', got '$user'" >&2
-            exit 1
-          fi

@@ -6,9 +6,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
-import Input from "@/components/ui/Input";
-import PrimaryButton from "@/components/ui/PrimaryButton";
-import AuthNeiButton from "@/components/AuthNeiButton";
+import Input from "@/components/Input";
+import PrimaryButton from "@/components/PrimaryButton";
 import { logIn } from "@/client/api/auth";
 
 const LoginPage: React.FC = () => {
@@ -78,16 +77,6 @@ const LoginPage: React.FC = () => {
         <h1 className="mb-8 w-full text-center font-sans text-[24px] font-semibold text-white md:text-left md:text-[45px]">
           Iniciar Sessão
         </h1>
-
-        <div className="mb-6 w-full">
-          <AuthNeiButton next="/signup?authnei=1" />
-        </div>
-
-        <div className="mb-6 flex w-full items-center gap-3 text-sm text-gray-400">
-          <div className="h-px flex-1 bg-[rgba(255,255,255,0.2)]" />
-          ou
-          <div className="h-px flex-1 bg-[rgba(255,255,255,0.2)]" />
-        </div>
 
         <div className="w-full">
           <Input

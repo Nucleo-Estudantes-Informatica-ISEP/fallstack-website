@@ -3,6 +3,7 @@ import CloseActionButton from "@/components/Action/CloseActionButton";
 import Custom404 from "@/app/not-found";
 import { toActionDto } from "@/application/dto/actionDto";
 import { getActionQrCode } from "@/application/services/actionService";
+import getServerSession from "@/application/services/sessionService";
 
 interface ActionParams {
   params: Promise<{
@@ -11,6 +12,12 @@ interface ActionParams {
 }
 
 const Actions = async ({ params }: ActionParams) => {
+  const session = await getServerSession();
+
+  if (!session || !session.isAdmin) {
+    return Custom404();
+  }
+
   const { id } = await params;
   const actionQrCode = await getActionQrCode(id);
   if (!actionQrCode) return Custom404();

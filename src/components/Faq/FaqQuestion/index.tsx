@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 
-import { Chevron } from "@/components/ui/Icons";
+import { Chevron } from "@/styles/Icons";
 
 export interface FaqProps {
   question: string;

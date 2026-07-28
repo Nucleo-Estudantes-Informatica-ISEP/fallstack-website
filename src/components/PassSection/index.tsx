@@ -1,6 +1,6 @@
 import { FunctionComponent } from "react";
 
-import HeadingText from "@/components/ui/HeadingText";
+import HeadingText from "@/components/HeadingText";
 
 const PassSection: FunctionComponent = () => {
   return (

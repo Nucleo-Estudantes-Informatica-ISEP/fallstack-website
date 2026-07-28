@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { verifyJwt } from "@/application/services/authService";
+import { verifyJwt } from "@/services/authService";
 import {
   saveStudent,
   updateSavedStudentComment,

@@ -2,22 +2,17 @@ import "server-only";
 
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
-import { signJwt } from "@/application/services/authService";
+import { signJwt } from "@/services/authService";
 
 import {
-  countActionsForAdmin,
-  createAction,
   createActionCompletion,
   findActionById,
   findActionByName,
   findActionCompletions,
   findActions,
-  findActionsForAdmin,
   findVisibleActions,
   toggleAction,
-  updateActionFields,
   upsertActionCompletion,
-  type AdminActionQuery,
 } from "../repositories/actionRepository";
 import {
   findStudentAction,
@@ -26,41 +21,6 @@ import {
 import { DbClient, prisma } from "../repositories/transaction";
 
 export const getActions = () => findActions();
-export const getAction = (id: string) => findActionById(id);
-
-export async function listActionsForAdmin(query: AdminActionQuery) {
-  const [items, totalCount] = await Promise.all([
-    findActionsForAdmin(query),
-    countActionsForAdmin(query.search),
-  ]);
-  return { items, totalCount };
-}
-
-export async function createActionForAdmin(input: {
-  name: string;
-  description: string;
-  points: number;
-  altText?: string | null;
-  isLive?: boolean;
-  isVisible?: boolean;
-}) {
-  return createAction(input);
-}
-
-export async function updateActionForAdmin(
-  id: string,
-  input: {
-    name?: string;
-    description?: string;
-    points?: number;
-    altText?: string | null;
-    isLive?: boolean;
-    isVisible?: boolean;
-  }
-) {
-  if (!(await findActionById(id))) throw new HttpError("Not found", 404);
-  return updateActionFields(id, input);
-}
 
 export async function getStudentActions(studentCode: string) {
   const actions = await findVisibleActions();
@@ -100,10 +60,7 @@ export async function getActionQrCode(id: string) {
         { id, timestamp },
         {
           algorithm: "HS256",
-          // jsonwebtoken's numeric `expiresIn` is seconds, not ms - dividing
-          // by 1000 here previously made this token valid for ~8.3 hours
-          // instead of the intended 30s anti-replay window.
-          expiresIn: (config.constants.actionQrCodeRefreshRateMs * 2) / 1000,
+          expiresIn: config.constants.actionQrCodeRefreshRateMs * 2,
         }
       ),
   };

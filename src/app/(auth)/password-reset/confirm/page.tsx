@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 
-import Input from "@/components/ui/Input";
-import PrimaryButton from "@/components/ui/PrimaryButton";
+import Input from "@/components/Input";
+import PrimaryButton from "@/components/PrimaryButton";
 import { createClient } from "@/utils/supabase/client";
 
 const PasswordResetForm: React.FC = () => {

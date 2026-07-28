@@ -3,23 +3,17 @@ import "server-only";
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
-import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
-import {
-  isAllowedToViewStudent,
-  type StudentAccess,
-} from "@/domain/student/studentAccess";
 import { getBoothActionName } from "@/edition/actions";
 import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
+import { assertStudentCanBeSaved } from "../domain/saveRules";
 import {
-  findCompanies,
   findCompanyById,
   findCompanyEmployee,
   findCompanyName,
 } from "../repositories/companyRepository";
 import {
   countCompanySaves,
-  countSavedStudentsByCompany,
   countStudentSaves,
   countStudentSavesSince,
   createSavedStudent,
@@ -27,6 +21,7 @@ import {
   findCompanyHistory,
   findCompanyHistoryWithInterests,
   findCompanySavedStudentsWithCv,
+  findCompanySavesForExport,
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
@@ -117,12 +112,7 @@ export async function saveStudentAsAdmin(
 export const isSaved = (companyId: string, code: string) =>
   isStudentSaved(companyId, code);
 
-export async function getStudentStats(
-  code: string,
-  access: StudentAccess
-): Promise<Stats> {
-  if (!(await isAllowedToViewStudent(code, access, isStudentSaved)))
-    throw new HttpError("Not found", 404);
+export async function getStudentStats(code: string): Promise<Stats> {
   const count = await countStudentSaves(code);
   return { totalScans: count, totalSaves: count };
 }
@@ -140,27 +130,14 @@ export async function getCompanyStats(companyId: string): Promise<Stats> {
   return { totalScans: count, totalSaves: count };
 }
 
-export async function getSavedStudentCountsByCompany() {
-  const [counts, companies] = await Promise.all([
-    countSavedStudentsByCompany(),
-    findCompanies(),
-  ]);
-  const companyNameById = new Map(companies.map((c) => [c.id, c.name]));
-  return counts
-    .map((c) => ({
-      companyId: c.companyId,
-      companyName: companyNameById.get(c.companyId) ?? "Unknown",
-      count: c._count._all,
-    }))
-    .sort((a, b) => b.count - a.count);
-}
-
 export const getCompanyHistory = (companyId: string) =>
   findCompanyHistory(companyId);
 export const getCompanyHistoryWithInterests = (companyId: string) =>
   findCompanyHistoryWithInterests(companyId);
 export const getCompanySavedStudentsWithCv = (companyId: string) =>
   findCompanySavedStudentsWithCv(companyId);
+export const getCompanySavesForExport = (companyId: string) =>
+  findCompanySavesForExport(companyId);
 export const getStudentHistory = (studentId: string) =>
   findStudentHistory(studentId);
 

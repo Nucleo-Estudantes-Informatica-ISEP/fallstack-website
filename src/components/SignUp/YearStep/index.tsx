@@ -11,8 +11,8 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
-import InputSelect from "@/components/ui/InputSelect";
-import PrimaryButton from "@/components/ui/PrimaryButton";
+import InputSelect from "@/components/InputSelect";
+import PrimaryButton from "@/components/PrimaryButton";
 
 interface YearStepProps {
   currentStep: number;

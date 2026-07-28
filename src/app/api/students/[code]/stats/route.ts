@@ -9,13 +9,7 @@ interface StudentParams {
 
 export const GET = defineHandler<StudentParams>({
   auth: "session",
-  handler: async ({ session, params }) => {
-    return NextResponse.json(
-      await getStudentStats(params.code, {
-        studentCode: session!.student?.code,
-        companyId: session!.employee?.company?.id,
-        isAdmin: session!.isAdmin,
-      })
-    );
+  handler: async ({ params }) => {
+    return NextResponse.json(await getStudentStats(params.code));
   },
 });

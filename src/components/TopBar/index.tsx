@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
-import { LogIn } from "@/components/ui/Icons";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
+import { LogIn } from "@/styles/Icons";
 
 const TopBar: React.FC = () => {
   const { scrollYProgress } = useScroll();

@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import config from "@/config";
 import useIsMobile from "@/hooks/useIsMobile";
 import InstallableContext from "@/contexts/InstallableContext";
-import PrimaryButton from "@/components/ui/PrimaryButton";
+import PrimaryButton from "@/components/PrimaryButton";
 
 const CookieConsent: React.FC = () => {
   const isMobile = useIsMobile();

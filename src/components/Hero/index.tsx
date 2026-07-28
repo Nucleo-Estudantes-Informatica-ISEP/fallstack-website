@@ -5,7 +5,7 @@ import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
-import PrimaryLinkButton from "@/components/ui/PrimaryLinkButton";
+import PrimaryLinkButton from "@/components/PrimaryLinkButton";
 
 interface HeaderProps {
   logoSrc: StaticImageData;

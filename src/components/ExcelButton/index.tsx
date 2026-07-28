@@ -3,7 +3,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 
-import Spinner from "@/components/ui/Spinner";
+import Spinner from "@/components/Spinner";
 import type { AdminScanDto } from "@/application/dto/historyDto";
 
 import download from "downloadjs";

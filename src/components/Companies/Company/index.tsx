@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { ModalInformation } from "@/types/ModalProps";
-import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
-import { hrefByCompanyTier } from "@/domain/company/services/company-tier-access";
+import { COMPANY_TIER, CompanyTier } from "@/domain/Company/company-tier";
+import { hrefByCompanyTier } from "@/domain/Company/services/company-tier-access";
 
 export interface CompanyProps {
   logoHref: string;

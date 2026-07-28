@@ -3,7 +3,7 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import { test } from "vitest";
 
-import { COMPANY_TIER } from "@/domain/company/company-tier";
+import { COMPANY_TIER } from "@/domain/Company/company-tier";
 
 import CompaniesContainer from "./index";
 

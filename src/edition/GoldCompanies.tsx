@@ -1,4 +1,4 @@
-import { Archive, Leaf, Trophy } from "@/components/ui/Icons";
+import { Archive, Leaf, Trophy } from "@/styles/Icons";
 
 import { CompanyEditionContent } from "./CompanyEditionContent";
 

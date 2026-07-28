@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
-import Input from "@/components/ui/Input";
-import PrimaryButton from "@/components/ui/PrimaryButton";
+import Input from "@/components/Input";
+import PrimaryButton from "@/components/PrimaryButton";
 
 const RequestResetPage: React.FC = () => {
   const emailRef = useRef<HTMLInputElement>(null);

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
+import { verifyJwt } from "@/services/authService";
 import { toActionDto } from "@/application/dto/actionDto";
 import {
   completeActionById,
   getActionQrCode,
   toggleActionLive,
 } from "@/application/services/actionService";
-import { verifyJwt } from "@/application/services/authService";
 
 interface ActionParams {
   id: string;

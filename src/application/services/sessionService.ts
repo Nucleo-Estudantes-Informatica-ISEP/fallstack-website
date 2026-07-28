@@ -19,14 +19,11 @@ const getServerSession = cache(async () => {
       error,
     } = await supabase.auth.getUser();
     if (error || !user) return null;
-    const appUser =
-      (await findUserSessionById(user.id)) ??
-      (user.email ? await findUserSessionByEmail(user.email as Email) : null);
-    // Deactivated in the admin backoffice - reject the session outright so
-    // every auth-gated route/page treats them as logged out, not just the
-    // ones that happen to check `active` themselves.
-    if (!appUser || !appUser.active) return null;
-    return appUser;
+    const appUser = await findUserSessionById(user.id);
+    if (appUser) return appUser;
+    return user.email
+      ? await findUserSessionByEmail(user.email as Email)
+      : null;
   } catch (error) {
     reportError(
       error,

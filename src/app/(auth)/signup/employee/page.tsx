@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-import Input from "@/components/ui/Input";
-import PrimaryButton from "@/components/ui/PrimaryButton";
+import Input from "@/components/Input";
 import InputLabel from "@/components/InputLabel";
+import PrimaryButton from "@/components/PrimaryButton";
 import { signUpEmployee } from "@/client/api/auth";
 
 export default function EmployeeSignupPage() {

@@ -3,7 +3,7 @@ import React from "react";
 import CompanyPageSection from "@/components/Companies/CompanyPageSection";
 import Custom404 from "@/app/not-found";
 import { getCompanyDisplayByName } from "@/application/services/companyService";
-import { COMPANY_TIER } from "@/domain/company/company-tier";
+import { COMPANY_TIER } from "@/domain/Company/company-tier";
 import { findEditionContentByName } from "@/edition";
 
 interface CompanySearchProps {

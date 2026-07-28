@@ -1,4 +1,4 @@
-import { Archive, Chart, Leaf, Trophy } from "@/components/ui/Icons";
+import { Archive, Chart, Leaf, Trophy } from "@/styles/Icons";
 
 import { CompanyEditionContent } from "./CompanyEditionContent";
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { parseCompanyTier } from "@/domain/company/company-tier";
+import { parseCompanyTier } from "@/domain/Company/company-tier";
 
 export const postCompanySchema = z.object({
   name: z.string().min(1).max(100),

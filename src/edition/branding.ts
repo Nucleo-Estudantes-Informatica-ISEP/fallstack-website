@@ -19,6 +19,7 @@ export const branding = {
     authCookie: "@Fallstack25:auth",
     hideInstallPrompt: "@Fallstack25:hidePrompt",
   },
+  exportFilename: "fallstack2025.csv",
   hashtag: "#fallstack2025",
   heroLogoAlt: "Logo principal do evento Fall-Stack 2025",
   repositoryUrl:

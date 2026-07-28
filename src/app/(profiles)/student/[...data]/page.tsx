@@ -1,6 +1,7 @@
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
+import { verifyJwt } from "@/services/authService";
 import CompanyViewProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyViewProfileSectionContainer";
 import Footer from "@/components/Footer";
 import PreviewProfileSectionContainer from "@/components/Profile/PreviewProfileSectionContainer";
@@ -12,7 +13,6 @@ import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { toStudentDto } from "@/application/dto/studentDto";
 import { getStudentActions } from "@/application/services/actionService";
-import { verifyJwt } from "@/application/services/authService";
 import { getCompanies } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
 import {
@@ -58,7 +58,11 @@ const StudentPage = async (props: ProfileProps) => {
   if (!student) return Custom404();
 
   // companies may access if it's their own profile
-  if (session.student && session.student.code !== student.code && !isPreview)
+  if (
+    session.student &&
+    !session.student.code.match(student.code) &&
+    !isPreview
+  )
     return Custom404();
 
   const isSavedStudent = session.employee
@@ -71,24 +75,10 @@ const StudentPage = async (props: ProfileProps) => {
   const sanitizedInterests = student.user.interests.map((i) => i.name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
-  // Previews (a valid signed preview token, viewed before the company has
-  // saved the student) intentionally bypass the "must be saved" check above,
-  // but getStudentStats' ownership check would reject that same access -
-  // and PreviewProfileSectionContainer never reads either stats value below
-  // anyway, so skip both calls entirely for previews instead of failing.
   const [globalStats, todayStats, companies, history, actions, interests] =
     await Promise.all([
-      isPreview
-        ? Promise.resolve({ totalScans: 0, totalSaves: 0 })
-        : getStudentStats(student.code, {
-            studentCode: session.student?.code,
-            companyId: session.employee?.company?.id,
-            isAdmin: session.isAdmin,
-            // already computed above - avoids re-deriving the same isSaved
-            // lookup a second time inside the ownership check
-            isSaved: isSavedStudent,
-          }),
-      isPreview ? Promise.resolve(0) : getTodayStudentStats(student.id),
+      getStudentStats(student.code),
+      getTodayStudentStats(student.id),
       getCompanies(),
       session.student
         ? getStudentHistory(session.student.id)

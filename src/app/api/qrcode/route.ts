@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { signJwt } from "@/application/services/authService";
+import { signJwt } from "@/services/authService";
 
 export const GET = defineHandler({
   auth: "student",

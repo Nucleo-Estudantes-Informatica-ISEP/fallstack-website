@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError, ZodType } from "zod";
 
 import { HttpError } from "@/types/HttpError";
+import { AuthPolicy, passesAuthPolicy } from "@/application/domain/authPolicy";
 import getServerSession from "@/application/services/sessionService";
-import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
 
 export const httpErrorResponse = (error: unknown) => {
   if (error instanceof HttpError)

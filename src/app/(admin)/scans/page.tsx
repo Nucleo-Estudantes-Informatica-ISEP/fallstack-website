@@ -1,8 +1,15 @@
 import ExcelButton from "@/components/ExcelButton";
+import Custom404 from "@/app/not-found";
 import { toAdminScanDto } from "@/application/dto/historyDto";
 import { getAdminScans } from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
 
 const scans = async () => {
+  const session = await getServerSession();
+  if (!session || !session.isAdmin) {
+    return Custom404();
+  }
+
   const scans = await getAdminScans();
   const scanDtos = scans.map(toAdminScanDto);
 
