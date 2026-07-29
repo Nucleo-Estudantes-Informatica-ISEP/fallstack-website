@@ -41,7 +41,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
     ),
     onError: useCallback(() => {
       setCameraError(
-        "NÃ£o foi possÃ­vel aceder Ã  cÃ¢mara. Confirma permissÃ£o e tenta novamente."
+        "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
       );
       setLoading(false);
     }, []),
