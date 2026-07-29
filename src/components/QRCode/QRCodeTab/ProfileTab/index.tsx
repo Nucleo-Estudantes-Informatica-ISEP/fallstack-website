@@ -13,6 +13,9 @@ interface PerfilTabProps {
   user: SessionDto;
 }
 
+// Personal QR tokens last 30 minutes. Refresh before expiry while the tab stays open.
+const QR_CODE_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
+
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   const [qrcode, setQrcode] = useState<string | null>(null);
 
@@ -21,7 +24,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
 
   const handleCopyClick = () => {
     if (user.student?.code) {
-      navigator.clipboard.writeText(user.student?.code).catch(() => {});
+      navigator.clipboard.writeText(user.student.code).catch(() => {});
 
       // start animation when code is copied
       controls.start({
@@ -45,6 +48,12 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
 
   useEffect(() => {
     void fetchQrcode();
+
+    const refreshInterval = window.setInterval(() => {
+      void fetchQrcode();
+    }, QR_CODE_REFRESH_INTERVAL_MS);
+
+    return () => window.clearInterval(refreshInterval);
   }, [fetchQrcode]);
 
   return (
