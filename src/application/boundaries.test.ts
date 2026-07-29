@@ -31,7 +31,7 @@ test("Prisma runtime access stays inside repositories", async () => {
     const relativePath = relative(sourceRoot, file);
     if (
       relativePath.startsWith(`application${sep}repositories${sep}`) ||
-      file.endsWith(".test.ts")
+      /\.test\.tsx?$/.test(file)
     )
       continue;
     const source = await readFile(file, "utf8");
