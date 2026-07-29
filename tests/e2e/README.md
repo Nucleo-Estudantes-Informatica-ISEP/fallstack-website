@@ -53,5 +53,5 @@ Available scenarios:
 - `health` — safe liveness baseline.
 - `qr` — public action QR issuance; requires `ACTION_ID`.
 - `upload-tickets` — authenticated ticket issuance; requires a
-  comma-separated `STUDENT_COOKIES` pool. Keep each account under its five
-  tickets/minute limit and run only on staging.
+  comma-separated `STUDENT_COOKIES` pool. The script rejects settings that
+  could exceed any account's five tickets/minute limit. Run only on staging.

@@ -4,6 +4,8 @@ import http from "k6/http";
 const baseUrl = (__ENV.E2E_BASE_URL || "").replace(/\/$/, "");
 const scenario = __ENV.K6_SCENARIO || "health";
 const actionId = __ENV.ACTION_ID;
+const vus = Number(__ENV.VUS || 50);
+const requestIntervalSeconds = Number(__ENV.REQUEST_INTERVAL_SECONDS || 1);
 const studentCookies = (__ENV.STUDENT_COOKIES || "")
   .split(",")
   .map((cookie) => cookie.trim())
@@ -18,14 +20,26 @@ if (scenario === "qr" && !actionId)
   throw new Error("Set ACTION_ID for K6_SCENARIO=qr.");
 if (scenario === "upload-tickets" && studentCookies.length === 0)
   throw new Error("Set STUDENT_COOKIES for K6_SCENARIO=upload-tickets.");
+if (!Number.isFinite(vus) || vus < 1)
+  throw new Error("VUS must be a positive number.");
+if (!Number.isFinite(requestIntervalSeconds) || requestIntervalSeconds <= 0)
+  throw new Error("REQUEST_INTERVAL_SECONDS must be a positive number.");
+if (scenario === "upload-tickets") {
+  const ticketsPerStudentPerMinute =
+    Math.ceil(vus / studentCookies.length) * (60 / requestIntervalSeconds);
+  if (ticketsPerStudentPerMinute > 5)
+    throw new Error(
+      "Upload-ticket load exceeds five tickets/minute per student. Add STUDENT_COOKIES, lower VUS, or raise REQUEST_INTERVAL_SECONDS."
+    );
+}
 
 export const options = {
   scenarios: {
     event_peak: {
       executor: "ramping-vus",
       stages: [
-        { duration: "30s", target: Number(__ENV.VUS || 50) },
-        { duration: "2m", target: Number(__ENV.VUS || 50) },
+        { duration: "30s", target: vus },
+        { duration: "2m", target: vus },
         { duration: "30s", target: 0 },
       ],
     },
@@ -70,5 +84,5 @@ export default function () {
     });
   }
 
-  sleep(Number(__ENV.REQUEST_INTERVAL_SECONDS || 1));
+  sleep(requestIntervalSeconds);
 }

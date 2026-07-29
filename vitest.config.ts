@@ -24,5 +24,8 @@ export default defineConfig({
       ".claude/worktrees/**",
       "tests/e2e/playwright/**",
     ],
+    maxWorkers: 4,
+    testTimeout: 15_000,
+    hookTimeout: 90_000,
   },
 });
