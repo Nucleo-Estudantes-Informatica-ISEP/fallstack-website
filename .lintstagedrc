@@ -1,3 +1,7 @@
 {
-  "*": "prettier --ignore-unknown --write"
+  "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": [
+    "prettier --write",
+    "eslint --fix"
+  ],
+  "*.{json,json5,md,mdx,css,scss,yml,yaml,html,prisma,graphql,gql}": "prettier --write"
 }
