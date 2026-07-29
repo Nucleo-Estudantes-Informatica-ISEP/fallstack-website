@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import config from "@/config";
 import { defineHandler } from "@/lib/http/server";
 import { toActionDto } from "@/application/dto/actionDto";
 import {
@@ -35,6 +36,12 @@ export const POST = defineHandler<ActionParams>({
     } | null;
     if (!decoded?.id || !decoded.timestamp)
       return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
+    if (
+      decoded.timestamp > Date.now() ||
+      Date.now() - decoded.timestamp >
+        config.constants.actionQrCodeRefreshRateMs * 2
+    )
+      return NextResponse.json({ error: "QR Code expirado." }, { status: 400 });
     await completeActionById(session!.student!.id, decoded.id);
     return NextResponse.json({ message: "Action completed" });
   },

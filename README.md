@@ -83,10 +83,16 @@ Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVAB
 
 Create two storage buckets:
 
-| Bucket  | Access  |
-| ------- | ------- |
-| avatars | public  |
-| cvs     | private |
+| Bucket  | Access  | Allowed MIME types        | Max file size |
+| ------- | ------- | ------------------------- | ------------- |
+| avatars | public  | `image/png`, `image/jpeg` | 5 MB          |
+| cvs     | private | `application/pdf`         | 10 MB         |
+
+Set these MIME and size restrictions in each bucket's Supabase dashboard.
+Student uploads use a short-lived signed upload URL, so file bytes go directly
+from browser to Storage rather than through the Next.js server. The browser
+checks file signatures before requesting the URL; bucket restrictions remain
+the enforcement boundary for direct uploads.
 
 ### Orphaned-file garbage collection
 

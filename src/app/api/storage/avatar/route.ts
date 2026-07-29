@@ -1,80 +1,53 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
+import { HttpError } from "@/types/HttpError";
 import config from "@/config";
-import { matchesDeclaredType } from "@/lib/fileSignature";
+import { defineHandler } from "@/lib/http/server";
 import { reportError } from "@/lib/logger";
-import {
-  createRateLimiter,
-  getClientIp,
-  tooManyRequestsResponse,
-} from "@/lib/rateLimit";
-import getServerSession from "@/application/services/sessionService";
+import { createRateLimiter, tooManyRequestsResponse } from "@/lib/rateLimit";
+import { storageUploadTicketSchema } from "@/schemas/storageUploadTicketSchema";
 import { createAdminClient } from "@/utils/supabase/admin";
 
 const rateLimiter = createRateLimiter(config.uploads.avatar.rateLimit);
 
-// Not a defineHandler route: multipart/form-data body, and defineHandler's
-// schema option only parses JSON.
-export async function POST(req: NextRequest) {
-  const { allowed, retryAfterMs } = rateLimiter.check(getClientIp(req));
-  if (!allowed) return tooManyRequestsResponse(retryAfterMs);
+export const POST = defineHandler<
+  Record<string, never>,
+  typeof storageUploadTicketSchema
+>({
+  auth: "student",
+  schema: storageUploadTicketSchema,
+  handler: async ({ session, body }) => {
+    const { allowed, retryAfterMs } = rateLimiter.check(session!.id);
+    if (!allowed) return tooManyRequestsResponse(retryAfterMs);
 
-  const session = await getServerSession();
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { contentType, size } = body;
+    const { types, maxSize } = config.uploads.avatar;
 
-  const form = await req.formData();
-  const file = form.get("file");
-  if (!file || !(file instanceof File))
-    return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    if (!types.includes(contentType))
+      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+    if (size > maxSize)
+      return NextResponse.json({ error: "File too large" }, { status: 400 });
 
-  const contentType = file.type;
-  const { types, maxSize } = config.uploads.avatar;
+    const id = uuidv4();
+    const path = `distribution/avatar/${id}`;
+    const { data, error } = await createAdminClient()
+      .storage.from("avatars")
+      .createSignedUploadUrl(path);
 
-  if (!types.includes(contentType))
-    return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
-  if (file.size > maxSize)
-    return NextResponse.json({ error: "File too large" }, { status: 400 });
+    if (error || !data) {
+      reportError(
+        error ?? new Error("Storage returned no upload ticket"),
+        {
+          operation: "create_avatar_upload_ticket",
+          route: "/api/storage/avatar",
+          method: "POST",
+        },
+        "Avatar storage upload ticket failed"
+      );
+      throw new HttpError("Upload service unavailable", 502);
+    }
 
-  const ab = await file.arrayBuffer();
-  const bytes = new Uint8Array(ab);
-
-  if (!matchesDeclaredType(bytes, contentType))
-    return NextResponse.json(
-      { error: "File content does not match its type" },
-      { status: 400 }
-    );
-
-  const id = uuidv4();
-  const path = `distribution/avatar/${id}`;
-
-  const admin = createAdminClient();
-  const { error } = await admin.storage
-    .from("avatars")
-    .upload(path, bytes, { contentType });
-
-  if (error) {
-    reportError(
-      error,
-      {
-        operation: "upload_avatar",
-        route: "/api/storage/avatar",
-        method: "POST",
-      },
-      "Avatar storage upload failed"
-    );
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const {
-    data: { publicUrl },
-  } = admin.storage.from("avatars").getPublicUrl(path);
-
-  return NextResponse.json({
-    id,
-    url: publicUrl,
-    contentType,
-    size: file.size,
-  });
-}
+    return NextResponse.json({ id, path, token: data.token }, { status: 201 });
+  },
+});

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -38,14 +38,14 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
     }
   };
 
-  const fetchQrcode = async () => {
+  const fetchQrcode = useCallback(async () => {
     const { data } = await httpClient.get<{ data: string }>("/qrcode");
     setQrcode(data);
-  };
+  }, []);
 
   useEffect(() => {
-    fetchQrcode();
-  });
+    void fetchQrcode();
+  }, [fetchQrcode]);
 
   return (
     <div className="mt-10 grid grid-cols-1 sm:mt-0 sm:grid-cols-1 md:mt-6 md:grid-cols-2 lg:mt-20">

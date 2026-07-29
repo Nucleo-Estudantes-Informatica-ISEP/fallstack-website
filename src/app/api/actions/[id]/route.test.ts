@@ -175,6 +175,35 @@ test("POST rejects a scanned token once it's past its 30s expiry (the #212 regre
   }
 });
 
+test("POST rejects a signed token from a previous QR refresh window", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "u1",
+    role: "STUDENT",
+    adminRole: null,
+    student: { id: "s1", code: "S123", name: "Ana" },
+    employee: null,
+  } as never);
+
+  const { signJwt } = await import("@/application/services/authService");
+  const token = signJwt(
+    { id: "action-1", timestamp: Date.now() - 31_000 },
+    { algorithm: "HS256", expiresIn: 60 }
+  );
+
+  const { POST } = await import("./route");
+  const { completeActionById } =
+    await import("@/application/services/actionService");
+  const res = await POST(request("POST"), {
+    params: Promise.resolve({ id: token }),
+  });
+
+  assert.equal(res.status, 400);
+  assert.equal(vi.mocked(completeActionById).mock.calls.length, 0);
+});
+
 test("PATCH rejects a non-admin session with 403", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
