@@ -4,11 +4,16 @@ import { createClient } from "@supabase/supabase-js";
 
 const storageState = process.env.E2E_STUDENT_STORAGE_STATE;
 const allowUploadTickets = process.env.E2E_ALLOW_UPLOAD_TICKETS === "yes";
+const confirmNonProduction = process.env.CONFIRM_NON_PRODUCTION === "yes";
 
 test.describe("authenticated student event flow", () => {
   test.skip(
     !storageState,
     "Set E2E_STUDENT_STORAGE_STATE to a staging student Playwright storage-state file."
+  );
+  test.skip(
+    !confirmNonProduction,
+    "Set CONFIRM_NON_PRODUCTION=yes; never run authenticated event tests against production."
   );
 
   test.use({ storageState: storageState! });

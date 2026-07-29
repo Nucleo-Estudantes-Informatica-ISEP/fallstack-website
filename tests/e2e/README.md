@@ -5,10 +5,11 @@ with the code they cover (`*.test.ts`/`*.test.tsx`, auto-discovered by Vitest).
 
 ## Playwright
 
-Install Chromium once per machine:
+Install Chromium and WebKit once per machine. The default test run includes both
+engines:
 
 ```bash
-pnpm exec playwright install chromium
+pnpm exec playwright install chromium webkit
 ```
 
 Run the health smoke test against a local server:
@@ -18,9 +19,13 @@ pnpm test:e2e
 ```
 
 The authenticated QR test needs a Playwright storage-state file captured from a
-staging student account. Never use a production account or a production URL.
+staging student account. It refuses to run unless `CONFIRM_NON_PRODUCTION=yes`
+is set. Never use a production account or a production URL. The storage-state
+file holds a live staging session: it is gitignored, but handle it like a
+credential and never share or commit it.
 
 ```bash
+CONFIRM_NON_PRODUCTION=yes \
 E2E_BASE_URL=https://staging.example.org \
 E2E_STUDENT_STORAGE_STATE=tests/e2e/.staging-student.json \
 pnpm test:e2e
