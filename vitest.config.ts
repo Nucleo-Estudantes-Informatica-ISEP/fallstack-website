@@ -20,5 +20,8 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
     exclude: [...configDefaults.exclude, ".claude/worktrees/**"],
+    maxWorkers: 4,
+    testTimeout: 15_000,
+    hookTimeout: 90_000,
   },
 });

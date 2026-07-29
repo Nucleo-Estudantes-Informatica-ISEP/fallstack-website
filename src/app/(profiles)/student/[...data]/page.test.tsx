@@ -41,7 +41,7 @@ beforeAll(async () => {
   // timeout - import it once here, outside any single test's budget,
   // instead of dynamically inside each test below.
   StudentPage = (await import("./page")).default;
-}, 30_000);
+}, 90_000);
 
 afterAll(() => {
   vi.unstubAllEnvs();
