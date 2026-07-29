@@ -19,6 +19,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    exclude: [...configDefaults.exclude, ".claude/worktrees/**"],
+    exclude: [
+      ...configDefaults.exclude,
+      ".claude/worktrees/**",
+      "tests/e2e/playwright/**",
+    ],
   },
 });
