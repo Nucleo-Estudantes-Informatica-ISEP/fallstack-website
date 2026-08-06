@@ -12,8 +12,8 @@ interface QRCodeScannerProps {
 
 const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
   const [loading, setLoading] = useState(true);
-  const [cameraError, setCameraError] = useState<string | null>(null);
   const handlingResult = useRef(false);
+  const reportedCameraError = useRef(false);
 
   const { ref } = useZxing({
     constraints: { video: { facingMode: { ideal: "environment" } } },
@@ -40,10 +40,15 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
       [handleScan]
     ),
     onError: useCallback(() => {
-      setCameraError(
+      setLoading(false);
+      if (reportedCameraError.current) return;
+
+      // Some mobile browsers report a camera setup error even while the video
+      // stream continues to work. Keep the scanner available in that case.
+      reportedCameraError.current = true;
+      toast.error(
         "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
       );
-      setLoading(false);
     }, []),
   });
 
@@ -57,19 +62,13 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
           </div>
         </div>
       )}
-      {cameraError ? (
-        <p className="p-4 text-center text-red-600" role="alert">
-          {cameraError}
-        </p>
-      ) : (
-        <video
-          ref={ref as React.RefObject<HTMLVideoElement>}
-          className="rounded-lg"
-          onCanPlay={() => setLoading(false)}
-          playsInline
-          style={{ visibility: loading ? "hidden" : "visible" }}
-        />
-      )}
+      <video
+        ref={ref as React.RefObject<HTMLVideoElement>}
+        className="rounded-lg"
+        onCanPlay={() => setLoading(false)}
+        playsInline
+        style={{ visibility: loading ? "hidden" : "visible" }}
+      />
     </div>
   );
 };
