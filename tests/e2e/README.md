@@ -36,6 +36,11 @@ Set `E2E_ALLOW_UPLOAD_TICKETS=yes`, `E2E_SUPABASE_URL`, and
 creates an unlinked staging file; the existing storage garbage collector removes
 it after its retention window.
 
+Add `E2E_VERIFY_BUCKET_RESTRICTIONS=yes` to attempt a wrong-MIME upload and an
+over-10 MiB upload. Both must be rejected by the staging `cvs` bucket. Run this
+only against staging: a misconfigured bucket can retain the rejected-test files
+until the garbage collector removes them.
+
 ## k6 load test
 
 Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) separately.
@@ -54,4 +59,6 @@ Available scenarios:
 - `qr` — public action QR issuance; requires `ACTION_ID`.
 - `upload-tickets` — authenticated ticket issuance; requires a
   comma-separated `STUDENT_COOKIES` pool. The script rejects settings that
-  could exceed any account's five tickets/minute limit. Run only on staging.
+  could exceed any account's five tickets/minute limit. These are live staging
+  session cookies: avoid shell history, never share them, and run only on
+  staging.

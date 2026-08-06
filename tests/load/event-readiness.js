@@ -10,12 +10,17 @@ const studentCookies = (__ENV.STUDENT_COOKIES || "")
   .split(",")
   .map((cookie) => cookie.trim())
   .filter(Boolean);
+const supportedScenarios = ["health", "qr", "upload-tickets"];
 
 if (__ENV.CONFIRM_NON_PRODUCTION !== "yes")
   throw new Error(
     "Set CONFIRM_NON_PRODUCTION=yes; never load-test production."
   );
 if (!baseUrl) throw new Error("Set E2E_BASE_URL to the staging environment.");
+if (!supportedScenarios.includes(scenario))
+  throw new Error(
+    `Unknown K6_SCENARIO "${scenario}". Use health, qr, or upload-tickets.`
+  );
 if (scenario === "qr" && !actionId)
   throw new Error("Set ACTION_ID for K6_SCENARIO=qr.");
 if (scenario === "upload-tickets" && studentCookies.length === 0)
