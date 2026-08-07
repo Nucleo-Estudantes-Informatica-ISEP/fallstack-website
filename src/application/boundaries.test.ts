@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join, relative, sep } from "node:path";
 import { test } from "vitest";
 
 import { toCompanyDto } from "./dto/companyDto";
@@ -28,14 +28,15 @@ test("Prisma runtime access stays inside repositories", async () => {
   );
   const violations: string[] = [];
   for (const file of files) {
+    const relativePath = relative(sourceRoot, file);
     if (
-      file.includes("/application/repositories/") ||
-      file.endsWith(".test.ts")
+      relativePath.startsWith(`application${sep}repositories${sep}`) ||
+      /\.test\.tsx?$/.test(file)
     )
       continue;
     const source = await readFile(file, "utf8");
     if (/\bprisma\.|new PrismaClient\b/.test(source))
-      violations.push(relative(sourceRoot, file));
+      violations.push(relativePath);
   }
   assert.deepEqual(violations, []);
 });
