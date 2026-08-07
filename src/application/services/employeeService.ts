@@ -16,13 +16,10 @@ import {
   type AdminEmployeeQuery,
 } from "../repositories/employeeRepository";
 import { withTransaction } from "../repositories/transaction";
-import {
-  deleteUser,
-  updateUserActive,
-  upsertUser,
-} from "../repositories/userRepository";
+import { updateUserActive, upsertUser } from "../repositories/userRepository";
 import {
   createSupabaseAuthUserAsAdmin,
+  deleteUserAccount,
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
@@ -97,4 +94,4 @@ export async function updateEmployeeForAdmin(
   return employee;
 }
 
-export const deleteEmployeeForAdmin = (id: string) => deleteUser(id);
+export const deleteEmployeeForAdmin = (id: string) => deleteUserAccount(id);

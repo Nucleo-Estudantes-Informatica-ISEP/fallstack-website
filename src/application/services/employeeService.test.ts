@@ -2,8 +2,11 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import { updateEmployeeFields } from "../repositories/employeeRepository";
 import { updateUserActive } from "../repositories/userRepository";
-import { setAuthUserBanned } from "./authApplicationService";
-import { updateEmployeeForAdmin } from "./employeeService";
+import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
+import {
+  deleteEmployeeForAdmin,
+  updateEmployeeForAdmin,
+} from "./employeeService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/supabase/admin", () => ({
@@ -29,6 +32,7 @@ vi.mock("../repositories/userRepository", () => ({
 }));
 vi.mock("./authApplicationService", () => ({
   createSupabaseAuthUserAsAdmin: vi.fn(),
+  deleteUserAccount: vi.fn(),
   rollbackAuthUser: vi.fn(),
   setAuthUserBanned: vi.fn(),
 }));
@@ -57,4 +61,10 @@ test("leaves active status untouched when not part of the update", async () => {
 
   expect(updateUserActive).not.toHaveBeenCalled();
   expect(setAuthUserBanned).not.toHaveBeenCalled();
+});
+
+test("deletes the employee account through the shared auth-aware service", async () => {
+  await deleteEmployeeForAdmin("e1");
+
+  expect(deleteUserAccount).toHaveBeenCalledWith("e1");
 });

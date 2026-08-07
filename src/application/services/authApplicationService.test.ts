@@ -12,6 +12,7 @@ import {
 } from "../repositories/userRepository";
 import {
   completeOAuthSignIn,
+  deleteUserAccount,
   setAuthUserBanned,
 } from "./authApplicationService";
 
@@ -28,6 +29,7 @@ vi.mock("@/utils/supabase/admin", () => ({
 }));
 
 const email = Email.create("student@isep.ipp.pt");
+const deleteAuthUser = vi.fn();
 const getUserById = vi.fn();
 const updateUserById = vi.fn();
 
@@ -36,8 +38,11 @@ beforeEach(() => {
   vi.mocked(findUserSessionById).mockResolvedValue(null);
   vi.mocked(findUserSessionByEmail).mockResolvedValue(null);
   vi.mocked(createAdminClient).mockReturnValue({
-    auth: { admin: { getUserById, updateUserById } },
+    auth: {
+      admin: { deleteUser: deleteAuthUser, getUserById, updateUserById },
+    },
   } as never);
+  deleteAuthUser.mockResolvedValue({ data: {}, error: null });
   updateUserById.mockResolvedValue({ data: {}, error: null });
   // Confirmed by default - individual tests override for the unconfirmed path.
   getUserById.mockResolvedValue({
@@ -191,6 +196,7 @@ test("discards an unconfirmed dangling account found by email instead of relinki
     fallback: "/signup",
   });
 
+  expect(deleteAuthUser).toHaveBeenCalledWith("spoofed-id");
   expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
   expect(relinkUserId).not.toHaveBeenCalled();
   expect(upsertUser).toHaveBeenCalledWith({
@@ -199,6 +205,26 @@ test("discards an unconfirmed dangling account found by email instead of relinki
     role: "STUDENT",
   });
   expect(destination).toBe("/signup");
+});
+
+test("deletes Supabase Auth before the matching application user", async () => {
+  await deleteUserAccount("user-1");
+
+  expect(deleteAuthUser).toHaveBeenCalledWith("user-1");
+  expect(deleteUser).toHaveBeenCalledWith("user-1");
+  expect(deleteAuthUser.mock.invocationCallOrder[0]).toBeLessThan(
+    vi.mocked(deleteUser).mock.invocationCallOrder[0]
+  );
+});
+
+test("keeps the application user when Supabase Auth deletion fails", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("network error"),
+  });
+
+  await expect(deleteUserAccount("user-1")).rejects.toThrow("network error");
+  expect(deleteUser).not.toHaveBeenCalled();
 });
 
 test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {

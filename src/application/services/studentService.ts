@@ -40,7 +40,6 @@ import {
 import { withTransaction } from "../repositories/transaction";
 import {
   connectUserInterests,
-  deleteUser,
   setUserInterests,
   updateUserActive,
   upsertUser,
@@ -48,6 +47,7 @@ import {
 import { completeAction } from "./actionService";
 import {
   createSupabaseAuthUserAsAdmin,
+  deleteUserAccount,
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
@@ -221,7 +221,7 @@ export async function updateStudentForAdmin(
   return student;
 }
 
-export const deleteStudentForAdmin = (id: string) => deleteUser(id);
+export const deleteStudentForAdmin = (id: string) => deleteUserAccount(id);
 export const getAvatar = (id: string) => findStudentAvatar(id);
 export const getStudentInterests = (id: string) => findStudentInterests(id);
 

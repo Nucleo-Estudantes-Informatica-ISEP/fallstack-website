@@ -89,6 +89,15 @@ export async function rollbackAuthUser(userId: string) {
   }
 }
 
+// Supabase Auth and public.User cannot share a foreign key. Delete Auth first
+// so an Auth API failure cannot remove the app row and leave a login identity
+// that the backoffice can no longer retry deleting.
+export async function deleteUserAccount(userId: string) {
+  const { error } = await createAdminClient().auth.admin.deleteUser(userId);
+  if (error) throw new HttpError(error.message, 500);
+  await deleteUser(userId);
+}
+
 // Defense-in-depth alongside User.active, which is what getServerSession()
 // actually enforces on every request - this additionally stops the person
 // from obtaining a *new* Supabase session at all once deactivated. Best-
@@ -181,7 +190,7 @@ export async function completeOAuthSignIn(input: {
     // Unconfirmed - discard the dangling placeholder instead of relinking
     // onto it, so AuthNEI (institutionally-verified) can claim the email
     // fresh below rather than inheriting potentially attacker-planted data.
-    await deleteUser(existingByEmail.id);
+    await deleteUserAccount(existingByEmail.id);
   }
 
   // First AuthNEI sign-in for this identity, no (trustworthy) pre-existing

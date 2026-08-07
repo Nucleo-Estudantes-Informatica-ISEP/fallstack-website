@@ -15,9 +15,10 @@ import {
   updateAdminUserFields,
   type AdminAccountQuery,
 } from "../repositories/adminRepository";
-import { deleteUser, updateUserActive } from "../repositories/userRepository";
+import { updateUserActive } from "../repositories/userRepository";
 import {
   createSupabaseAuthUserAsAdmin,
+  deleteUserAccount,
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
@@ -107,5 +108,5 @@ export async function updateAdminAccount(
 
 export async function deleteAdminAccount(id: string) {
   await assertNotLastActiveSuperAdmin(await findAdminAccountById(id));
-  await deleteUser(id);
+  await deleteUserAccount(id);
 }
