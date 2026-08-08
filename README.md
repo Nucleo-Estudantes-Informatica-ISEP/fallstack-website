@@ -37,7 +37,8 @@ backoffice, which removes the Supabase Auth identity before the application
 row. Never delete users directly in the Supabase Auth dashboard: that leaves an
 unloginable application account.
 
-Before deploying this fix, and after any manual Auth operation, run
+Before deploying changes that affect account deletion, and after any manual
+Auth operation, run
 [`supabase/audit-orphaned-accounts.sql`](./supabase/audit-orphaned-accounts.sql)
 manually in every environment's Supabase SQL editor. It is read-only and reports
 orphans in both directions; investigate each result before deleting anything.

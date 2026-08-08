@@ -227,6 +227,62 @@ test("keeps the application user when Supabase Auth deletion fails", async () =>
   expect(deleteUser).not.toHaveBeenCalled();
 });
 
+test("deletes an application user whose Supabase Auth identity is already missing", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: Object.assign(new Error("User not found"), {
+      code: "user_not_found",
+    }),
+  });
+
+  await deleteUserAccount("user-1");
+
+  expect(deleteUser).toHaveBeenCalledWith("user-1");
+});
+
+test("uses a stable message for opaque Supabase Auth deletion errors", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("{}"),
+  });
+
+  await expect(deleteUserAccount("user-1")).rejects.toThrow(
+    "Unable to delete account"
+  );
+});
+
+test("still provisions a verified identity when spoofed Auth cleanup fails", async () => {
+  vi.mocked(findUserSessionByEmail).mockResolvedValue({
+    id: "spoofed-id",
+    role: "STUDENT",
+    adminRole: null,
+    student: null,
+    employee: null,
+  } as never);
+  getUserById.mockResolvedValue({
+    data: { user: { email_confirmed_at: undefined } },
+    error: null,
+  });
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("network error"),
+  });
+
+  await expect(
+    completeOAuthSignIn({
+      id: "new-authnei-id",
+      email,
+      fallback: "/signup",
+    })
+  ).resolves.toBe("/signup");
+  expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
+  expect(upsertUser).toHaveBeenCalledWith({
+    id: "new-authnei-id",
+    email,
+    role: "STUDENT",
+  });
+});
+
 test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",

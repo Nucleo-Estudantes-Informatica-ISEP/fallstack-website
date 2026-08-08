@@ -94,7 +94,11 @@ export async function rollbackAuthUser(userId: string) {
 // that the backoffice can no longer retry deleting.
 export async function deleteUserAccount(userId: string) {
   const { error } = await createAdminClient().auth.admin.deleteUser(userId);
-  if (error) throw new HttpError(error.message, 500);
+  if (error && error.code !== "user_not_found")
+    throw new HttpError(
+      usableAuthErrorMessage(error?.message, "Unable to delete account"),
+      500
+    );
   await deleteUser(userId);
 }
 
@@ -190,7 +194,18 @@ export async function completeOAuthSignIn(input: {
     // Unconfirmed - discard the dangling placeholder instead of relinking
     // onto it, so AuthNEI (institutionally-verified) can claim the email
     // fresh below rather than inheriting potentially attacker-planted data.
-    await deleteUserAccount(existingByEmail.id);
+    try {
+      await deleteUserAccount(existingByEmail.id);
+    } catch (error) {
+      // ponytail: verified login wins here; audit catches any Auth-only
+      // orphan. Add a retry queue if these failures become frequent.
+      reportError(
+        error,
+        { operation: "delete_unconfirmed_auth_placeholder" },
+        "Failed to delete unconfirmed Supabase Auth placeholder"
+      );
+      await deleteUser(existingByEmail.id);
+    }
   }
 
   // First AuthNEI sign-in for this identity, no (trustworthy) pre-existing
