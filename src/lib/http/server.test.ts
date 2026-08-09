@@ -22,7 +22,11 @@ test("reports unexpected errors and returns a generic 500", async () => {
   assert.equal(response.status, 500);
   assert.deepEqual(await response.json(), { error: "Something went wrong" });
   assert.equal(vi.mocked(reportError).mock.calls.length, 1);
-  assert.equal(vi.mocked(reportError).mock.calls[0][0], error);
+  assert.deepEqual(vi.mocked(reportError).mock.calls[0], [
+    error,
+    { operation: "unhandled_route_error" },
+    "Unhandled error in route handler",
+  ]);
 });
 
 test("does not report expected HttpError instances", async () => {
@@ -41,5 +45,6 @@ test("does not report Zod validation errors", async () => {
   const response = httpErrorResponse(error);
 
   assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: error!.issues });
   assert.equal(vi.mocked(reportError).mock.calls.length, 0);
 });
