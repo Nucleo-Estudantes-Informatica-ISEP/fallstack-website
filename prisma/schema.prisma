@@ -74,8 +74,96 @@ model Company {
 
   code String? @unique
 
+  // Nullable during the #280 migration: `tier` (above) is still what every
+  // current read/write path uses. Once consumers cut over to CompanyRank,
+  // this becomes required and `tier`/Tier get dropped.
+  rank   CompanyRank? @relation(fields: [rankId], references: [id])
+  rankId String?      @db.Uuid
+
+  profile      CompanyProfile?
+  displayStyle CompanyDisplayStyle?
+  interests    Interest[]
+
   employees     Employee[]
   savedStudents SavedStudent[]
+  actions       Action[]
+}
+
+// Replaces the fixed Tier enum so a new rank is a data change, not a code
+// change - see #280. `tier`/Tier stay in place until every consumer of the
+// enum has cut over to this table.
+model CompanyRank {
+  id    String @id @default(uuid()) @db.Uuid
+  name  String @unique
+  order Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies Company[]
+  style     CompanyRankStyle?
+}
+
+// 1:1 companion to CompanyRank - was the hardcoded `Record<CompanyTier, ...>`
+// maps in domain/company/services/tier-styling.ts and
+// company-tier-access.ts.
+model CompanyRankStyle {
+  id     String      @id @default(uuid()) @db.Uuid
+  rank   CompanyRank @relation(fields: [rankId], references: [id], onDelete: Cascade)
+  rankId String      @unique @db.Uuid
+
+  gradientFromColor String
+  gradientFromStop  String
+  gradientToColor   String
+  gradientToStop    String
+  // Whether this rank gets an internal /company/[name] page at all (vs.
+  // always linking out to the company's own website).
+  hasInternalPage   Boolean @default(false)
+  // Whether the internal page's promo-video section renders (was
+  // `tier === COMPANY_TIER.DIAMOND` hardcoded in CompanyInfo).
+  showsPromoVideo   Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 1:1 companion to Company - the rich per-company modal/profile content
+// that used to live in src/edition/{Diamond,Gold}Companies.tsx. Presentation
+// fields are kept off Company itself so the roster table stays lean.
+model CompanyProfile {
+  id        String  @id @default(uuid()) @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @unique @db.Uuid
+
+  // Plain text, not JSX - was ReactNode in ModalInformation.bodyText.
+  bodyText    String
+  videoTitle  String?
+  videoHref   String?
+  // { twitter?, facebook?, instagram?, youtube?, linkedin? } - small,
+  // bounded/ordered blob, no need to query by individual link.
+  socialLinks Json?
+  // [{ iconName, description, className? }][] - iconName resolves through
+  // a fixed icon-name -> component lookup on render, since a react-icons
+  // component reference can't round-trip through JSON.
+  facts       Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 1:1 companion to Company - logo sizing, was the `logoWidth`/`logoHeight`/
+// `className` fields on src/edition/CompanyEditionContent.ts.
+model CompanyDisplayStyle {
+  id        String  @id @default(uuid()) @db.Uuid
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String  @unique @db.Uuid
+
+  logoWidth  Int?
+  logoHeight Int?
+  className  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Employee {
@@ -105,6 +193,12 @@ model Action {
   isVisible   Boolean  @default(true)
   updatedAt   DateTime @updatedAt
 
+  // Nullable: most actions (profile/CV/LinkedIn, talks) aren't booth
+  // actions at all. Replaces edition/actions.ts's name-matched
+  // boothActions map - see #280.
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?  @db.Uuid
+
   actionCompletions ActionCompletion[]
 }
 
@@ -125,7 +219,9 @@ model Interest {
   id   String @id @default(uuid()) @db.Uuid
   name String @unique
 
-  users User[]
+  users     User[]
+  // Mirrors the existing User.interests implicit m:n - see #280.
+  companies Company[]
 }
 
 // Unlike Company, sponsors have no self-registration path - every row is
