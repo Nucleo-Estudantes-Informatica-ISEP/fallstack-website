@@ -76,8 +76,9 @@ test("PATCH rejects an empty body with 400", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { updateFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
 
   const { PATCH } = await import("./route");
   const res = await PATCH(patchRequest({}), {
@@ -94,8 +95,9 @@ test("PATCH updates the entry for an admin request", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { updateFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   vi.mocked(updateFaqEntryForAdmin).mockResolvedValue({
     id: "a",
     question: "Q?",
@@ -120,8 +122,9 @@ test("PATCH maps a duplicate-question conflict to 409", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { updateFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   const { HttpError } = await import("@/types/HttpError");
   vi.mocked(updateFaqEntryForAdmin).mockRejectedValue(
     new HttpError("Já existe uma pergunta igual.", 409)
@@ -155,8 +158,9 @@ test("DELETE removes the entry and returns 204 for an admin request", async () =
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { deleteFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { deleteFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   vi.mocked(deleteFaqEntryForAdmin).mockResolvedValue(undefined);
 
   const { DELETE } = await import("./route");

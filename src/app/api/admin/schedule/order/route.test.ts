@@ -69,8 +69,9 @@ test("PATCH rejects a malformed body with 400, without persisting anything", asy
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleOrder } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleOrder } = await import(
+    "@/application/services/scheduleService"
+  );
 
   const { PATCH } = await import("./route");
   const res = await PATCH(
@@ -88,8 +89,9 @@ test("PATCH rejects a malformed time string with 400, without persisting anythin
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleOrder } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleOrder } = await import(
+    "@/application/services/scheduleService"
+  );
 
   const { PATCH } = await import("./route");
   const res = await PATCH(
@@ -116,8 +118,9 @@ test("PATCH commits a submitted startTime/endTime alongside the reorder", async 
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleOrder } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleOrder } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(updateScheduleOrder).mockResolvedValue(undefined);
 
   const updates = [
@@ -145,8 +148,9 @@ test("PATCH commits the reorder for a valid admin request", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleOrder } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleOrder } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(updateScheduleOrder).mockResolvedValue(undefined);
 
   const updates = [

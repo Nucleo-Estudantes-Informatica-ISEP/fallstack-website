@@ -42,8 +42,9 @@ test("passes the caller's ownership info through to getStudentStats and returns 
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);
 
-  const { getStudentStats } =
-    await import("@/application/services/savedStudentService");
+  const { getStudentStats } = await import(
+    "@/application/services/savedStudentService"
+  );
   vi.mocked(getStudentStats).mockResolvedValue({
     totalScans: 5,
     totalSaves: 2,
@@ -75,8 +76,9 @@ test("propagates getStudentStats' 404 for an unauthorized caller", async () => {
     employee: null,
   } as never);
 
-  const { getStudentStats } =
-    await import("@/application/services/savedStudentService");
+  const { getStudentStats } = await import(
+    "@/application/services/savedStudentService"
+  );
   const { HttpError } = await import("@/types/HttpError");
   vi.mocked(getStudentStats).mockRejectedValue(new HttpError("Not found", 404));
 
