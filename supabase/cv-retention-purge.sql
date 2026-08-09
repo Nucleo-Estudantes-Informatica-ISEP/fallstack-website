@@ -18,13 +18,20 @@
 -- This installer does not enable the purge. Its final query is a required
 -- dry run; inspect every returned row before running
 -- cv-retention-purge-enable.sql.
+--
+-- cvUploadedAt/cvPurgedAt are Prisma DateTime columns, which map to
+-- "timestamp without time zone" (Prisma normalizes to UTC before writing,
+-- there's no zone stored). Comparisons/writes below use
+-- `now() at time zone 'utc'` rather than bare `now()` (timestamptz) to
+-- avoid an implicit, session-timezone-dependent cast against those naive
+-- columns.
 
 create or replace function public.cv_retention_purge_candidates()
 returns table (
   id uuid,
   code text,
   cv text,
-  "cvUploadedAt" timestamptz
+  "cvUploadedAt" timestamp
 )
 language sql
 stable
@@ -34,7 +41,7 @@ as $$
   select students.id, students.code, students.cv, students."cvUploadedAt"
   from public."Student" as students
   where students.cv is not null
-    and students."cvUploadedAt" < now() - interval '6 months'
+    and students."cvUploadedAt" < (now() at time zone 'utc') - interval '6 months'
   order by students."cvUploadedAt"
 $$;
 
@@ -54,7 +61,7 @@ begin
   )
   update public."Student" as students
   set cv = null,
-      "cvPurgedAt" = now()
+      "cvPurgedAt" = (now() at time zone 'utc')
   from expired
   where students.id = expired.id;
 
