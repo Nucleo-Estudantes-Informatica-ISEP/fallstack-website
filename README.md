@@ -137,6 +137,35 @@ group by bucket_id;
 `pg_net` responses expire after six hours by default, so inspect them soon after
 the run. A candidate count that does not shrink indicates persistent failures.
 
+### CV retention purge
+
+Student CVs are purged twice a year, on May 1 and Nov 1 at 02:00 UTC, once
+`Student.cvUploadedAt` is more than 6 months old. The job only clears the DB
+reference (`cv = NULL`, `cvPurgedAt = now()`); the CV upload path stamps
+`cvUploadedAt` and clears `cvPurgedAt` on every successful upload. A profile
+banner tells the student their CV was removed whenever `cvPurgedAt` is set.
+
+1. Run [`supabase/cv-retention-purge.sql`](./supabase/cv-retention-purge.sql)
+   manually in the hosted Supabase SQL editor. Its final query is
+   non-destructive and returns the exact candidate set.
+2. Check every returned row against `Student.cv`/`Student.cvUploadedAt`. The
+   installer intentionally does not schedule the purge.
+3. Only after confirming the dry run, run
+   [`supabase/cv-retention-purge-enable.sql`](./supabase/cv-retention-purge-enable.sql)
+   manually.
+4. Confirm the job exists with:
+
+   ```sql
+   select jobid, schedule, command, active
+   from cron.job
+   where jobname = 'cv-retention-purge';
+   ```
+
+The purge only clears the DB reference; it does not delete the storage object.
+It runs at 02:00 UTC, one hour before the orphaned-file GC job's daily 03:00
+UTC run (above), so the now-unreferenced CV object is deleted the same day
+instead of waiting on its own cadence.
+
 ---
 
 # Supabase CLI (Local Development)
