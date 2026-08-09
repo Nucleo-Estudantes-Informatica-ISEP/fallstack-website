@@ -37,21 +37,30 @@ model Student {
   id   String @id @db.Uuid
   user User   @relation(fields: [id], references: [id], onDelete: Cascade)
 
-  code      String   @unique
-  name      String
-  bio       String?
-  year      Year
+  code         String    @unique
+  name         String
+  bio          String?
+  year         Year
   // avatar/cv are bare Supabase Storage file IDs with no DB-level integrity
   // (no referential constraint, no cascade cleanup) - the root cause of the
   // orphaned-file GC job tracked separately in #37. Consider an Upload
   // tracking table if that gap needs closing; until then the GC job is the
   // only thing keeping storage in sync with these columns.
-  cv        String?
-  linkedin  String?
-  github    String?
-  avatar    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  cv           String?
+  // Set on every successful CV upload, cleared back to null on purge -
+  // updatedAt isn't CV-specific (bumped by any profile edit), so the
+  // twice-yearly retention purge (#286) needs its own clock to tell which
+  // CVs are genuinely older than 6 months.
+  cvUploadedAt DateTime?
+  // Stamped by the retention purge when it nulls out `cv`; drives the
+  // profile "your CV was removed" banner. Cleared back to null on the next
+  // successful upload.
+  cvPurgedAt   DateTime?
+  linkedin     String?
+  github       String?
+  avatar       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   actionCompletions ActionCompletion[]
   savedByEmployees  SavedStudent[]
