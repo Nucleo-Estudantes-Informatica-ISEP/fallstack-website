@@ -34,7 +34,7 @@ async function uploadToStorage(
       .uploadToSignedUrl(ticket.path, ticket.token, file, {
         contentType: file.type,
       });
-    if (error) throw new Error(error.message);
+    if (error) return null;
     return ticket;
   } catch (error) {
     if (error instanceof HttpClientError) return null;
