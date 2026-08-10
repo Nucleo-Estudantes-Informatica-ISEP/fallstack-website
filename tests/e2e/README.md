@@ -34,7 +34,8 @@ pnpm test:e2e
 Set `E2E_ALLOW_UPLOAD_TICKETS=yes`, `E2E_SUPABASE_URL`, and
 `E2E_SUPABASE_ANON_KEY` to also verify direct CV upload. That test deliberately
 creates an unlinked staging file; the existing storage garbage collector removes
-it after its retention window.
+it after its retention window. Ticket tests run only in the `chromium` project,
+keeping one student's total below the five-ticket-per-minute route limit.
 
 Add `E2E_VERIFY_BUCKET_RESTRICTIONS=yes` to attempt a wrong-MIME upload and an
 over-10 MiB upload. Both must be rejected by the staging `cvs` bucket. Run this

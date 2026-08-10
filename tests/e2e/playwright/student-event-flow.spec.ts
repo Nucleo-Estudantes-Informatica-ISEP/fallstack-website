@@ -20,8 +20,8 @@ test.describe("authenticated student event flow", () => {
 
   test.use({ storageState: storageState! });
 
-  test("student QR code is generated", async ({ request }) => {
-    const response = await request.get("/api/qrcode");
+  test("student QR code is generated", async ({ page }) => {
+    const response = await page.request.get("/api/qrcode");
 
     expect(response.status()).toBe(200);
     await expect(response.json()).resolves.toEqual({
@@ -29,10 +29,14 @@ test.describe("authenticated student event flow", () => {
     });
   });
 
-  test("student can obtain and use a CV upload ticket", async ({ request }) => {
+  test("student can obtain and use a CV upload ticket", async ({ page }) => {
     test.skip(
       !allowUploadTickets,
       "Set E2E_ALLOW_UPLOAD_TICKETS=yes to create an orphaned staging CV."
+    );
+    test.skip(
+      test.info().project.name !== "chromium",
+      "Ticket coverage runs once to stay below the per-student rate limit."
     );
 
     const supabaseUrl = process.env.E2E_SUPABASE_URL;
@@ -42,7 +46,7 @@ test.describe("authenticated student event flow", () => {
         "E2E_SUPABASE_URL and E2E_SUPABASE_ANON_KEY are required for direct upload verification."
       );
 
-    const ticketResponse = await request.post("/api/storage/cv", {
+    const ticketResponse = await page.request.post("/api/storage/cv", {
       data: { contentType: "application/pdf", size: 44 },
     });
     expect(ticketResponse.status()).toBe(201);
@@ -66,11 +70,15 @@ test.describe("authenticated student event flow", () => {
   });
 
   test("CV bucket rejects mismatched MIME types and oversized files", async ({
-    request,
+    page,
   }) => {
     test.skip(
       !allowUploadTickets || !verifyBucketRestrictions,
       "Set E2E_ALLOW_UPLOAD_TICKETS=yes and E2E_VERIFY_BUCKET_RESTRICTIONS=yes to verify staging bucket enforcement."
+    );
+    test.skip(
+      test.info().project.name !== "chromium",
+      "Ticket coverage runs once to stay below the per-student rate limit."
     );
 
     const supabaseUrl = process.env.E2E_SUPABASE_URL;
@@ -81,7 +89,7 @@ test.describe("authenticated student event flow", () => {
       );
 
     const storage = createClient(supabaseUrl, supabaseAnonKey);
-    const mismatchedTicketResponse = await request.post("/api/storage/cv", {
+    const mismatchedTicketResponse = await page.request.post("/api/storage/cv", {
       data: { contentType: "application/pdf", size: 44 },
     });
     expect(mismatchedTicketResponse.status()).toBe(201);
@@ -99,7 +107,7 @@ test.describe("authenticated student event flow", () => {
       );
     expect(mismatchedMimeError).not.toBeNull();
 
-    const oversizedTicketResponse = await request.post("/api/storage/cv", {
+    const oversizedTicketResponse = await page.request.post("/api/storage/cv", {
       data: { contentType: "application/pdf", size: 44 },
     });
     expect(oversizedTicketResponse.status()).toBe(201);
