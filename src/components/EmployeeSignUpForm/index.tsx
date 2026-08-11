@@ -36,6 +36,8 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit) return;
+
     setLoading(true);
 
     const res = await signUpEmployee(form);
@@ -46,7 +48,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
       return;
     }
 
-    toast.success("Signup successful");
+    toast.success("Registo efetuado com sucesso.");
     onSuccess?.();
   };
 

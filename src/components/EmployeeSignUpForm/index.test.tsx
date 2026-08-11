@@ -54,8 +54,20 @@ test("submits the entered fields and calls onSuccess", async () => {
       companyCode: "12345678",
     })
   );
-  expect(toastSuccessMock).toHaveBeenCalledWith("Signup successful");
+  expect(toastSuccessMock).toHaveBeenCalledWith(
+    "Registo efetuado com sucesso."
+  );
   expect(onSuccess).toHaveBeenCalled();
+});
+
+test("does not submit when the form is invoked while canSubmit is false", () => {
+  render(<EmployeeSignUpForm />);
+
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Registar" }).closest("form")!
+  );
+
+  expect(signUpEmployeeMock).not.toHaveBeenCalled();
 });
 
 test("shows a validation message for a malformed company code and disables submit", () => {
