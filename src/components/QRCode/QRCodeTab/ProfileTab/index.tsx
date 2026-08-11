@@ -15,6 +15,7 @@ interface PerfilTabProps {
 
 // Personal QR tokens last 30 minutes. Refresh before expiry while the tab stays open.
 const QR_CODE_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
+const QR_CODE_RETRY_INTERVAL_MS = 30 * 1000;
 
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   const [qrcode, setQrcode] = useState<string | null>(null);
@@ -47,13 +48,29 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   }, []);
 
   useEffect(() => {
-    void fetchQrcode();
+    let cancelled = false;
+    let refreshTimeout: number | undefined;
 
-    const refreshInterval = window.setInterval(() => {
-      void fetchQrcode();
-    }, QR_CODE_REFRESH_INTERVAL_MS);
+    const refreshQrcode = async () => {
+      let delay = QR_CODE_RETRY_INTERVAL_MS;
+      try {
+        await fetchQrcode();
+        delay = QR_CODE_REFRESH_INTERVAL_MS;
+      } catch {
+        // Keep the last valid QR visible and retry before its token expires.
+      }
+      if (!cancelled)
+        refreshTimeout = window.setTimeout(() => {
+          void refreshQrcode();
+        }, delay);
+    };
 
-    return () => window.clearInterval(refreshInterval);
+    void refreshQrcode();
+
+    return () => {
+      cancelled = true;
+      if (refreshTimeout !== undefined) window.clearTimeout(refreshTimeout);
+    };
   }, [fetchQrcode]);
 
   return (

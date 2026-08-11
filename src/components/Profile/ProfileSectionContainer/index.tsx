@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
+  FiAlertTriangle,
   FiChevronRight,
   FiFileText,
   FiGrid,
@@ -235,6 +236,21 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         >
           {student.user.email}
         </p>
+        {student.cvPurgedAt && (
+          <div
+            className="mb-6 flex items-center gap-3 px-4 py-3 text-sm text-white"
+            style={{
+              border: "1px solid #ED8326",
+              backgroundColor: "rgba(237,131,38,0.1)",
+            }}
+          >
+            <FiAlertTriangle className="h-5 w-5 shrink-0 text-[#ED8326]" />
+            <span>
+              O teu CV foi removido após o período de retenção. Envia um novo em
+              Definições.
+            </span>
+          </div>
+        )}
         {/*
         <p className="p-2 text-center text-white">
           O teu perfil já foi gravado{" "}

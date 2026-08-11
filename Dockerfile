@@ -13,7 +13,7 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files and Prisma schema (needed for postinstall prisma generate)
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY prisma ./prisma
 
 # Install dependencies based on the preferred package manager.

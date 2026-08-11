@@ -12,7 +12,7 @@ interface UploadTicket {
   token: string;
 }
 
-async function isValidFile(file: Blob): Promise<boolean> {
+async function hasMatchingDeclaredSignature(file: Blob): Promise<boolean> {
   const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
   return matchesDeclaredType(bytes, file.type);
 }
@@ -22,7 +22,7 @@ async function uploadToStorage(
   endpoint: "/storage/avatar" | "/storage/cv",
   bucket: StorageBucket
 ): Promise<UploadTicket | null> {
-  if (!(await isValidFile(file))) return null;
+  if (!(await hasMatchingDeclaredSignature(file))) return null;
 
   try {
     const ticket = await httpClient.post<UploadTicket>(endpoint, {
@@ -34,7 +34,7 @@ async function uploadToStorage(
       .uploadToSignedUrl(ticket.path, ticket.token, file, {
         contentType: file.type,
       });
-    if (error) throw new Error(error.message);
+    if (error) return null;
     return ticket;
   } catch (error) {
     if (error instanceof HttpClientError) return null;

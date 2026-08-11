@@ -9,6 +9,7 @@ import {
   toggleActionLive,
 } from "@/application/services/actionService";
 import { verifyJwt } from "@/application/services/authService";
+import { isActionQrTimestampFresh } from "@/domain/action/actionRules";
 
 interface ActionParams {
   id: string;
@@ -37,9 +38,11 @@ export const POST = defineHandler<ActionParams>({
     if (!decoded?.id || !decoded.timestamp)
       return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
     if (
-      decoded.timestamp > Date.now() ||
-      Date.now() - decoded.timestamp >
-        config.constants.actionQrCodeRefreshRateMs * 2
+      !isActionQrTimestampFresh(
+        decoded.timestamp,
+        Date.now(),
+        config.constants.actionQrCodeRefreshRateMs
+      )
     )
       return NextResponse.json({ error: "QR Code expirado." }, { status: 400 });
     await completeActionById(session!.student!.id, decoded.id);
