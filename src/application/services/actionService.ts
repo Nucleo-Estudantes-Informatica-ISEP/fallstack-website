@@ -90,7 +90,7 @@ export async function getActionQrCode(id: string) {
   const action = await findActionById(id);
   if (!action) return null;
   const timestamp =
-    Math.round(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
+    Math.floor(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
     config.constants.actionQrCodeRefreshRateMs;
   return {
     action,

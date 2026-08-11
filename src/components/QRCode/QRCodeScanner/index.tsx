@@ -1,60 +1,56 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useZxing } from "react-zxing";
 
+type DecodedQrResult = { getText(): string };
+
 interface QRCodeScannerProps {
-  handleScan: (data: string) => void;
+  handleScan: (data: string) => void | Promise<void>;
 }
 
 const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
   const [loading, setLoading] = useState(true);
+  const handlingResult = useRef(false);
+  const reportedCameraError = useRef(false);
 
   const { ref } = useZxing({
-    onDecodeResult(result) {
-      const decodedText = result.getText();
+    constraints: { video: { facingMode: { ideal: "environment" } } },
+    timeBetweenDecodingAttempts: 250,
+    onDecodeResult: useCallback(
+      async (result: DecodedQrResult) => {
+        if (handlingResult.current) return;
+        const decodedText = result.getText();
 
-      if (!decodedText) {
-        toast.error(
-          "Ocorreu um erro a obter o perfil do estudante a partir do QR Code..."
-        );
-        return;
-      }
-
-      // callback
-      handleScan(decodedText);
-    },
-  });
-
-  useEffect(() => {
-    let stream: MediaStream;
-    const checkCameraPermission = async () => {
-      try {
-        // Request camera access
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { exact: "environment" } },
-        });
-
-        // Access granted, set the video stream as the source for the video element
-        if (ref.current) {
-          ref.current.srcObject = stream;
+        if (!decodedText) {
+          toast.error(
+            "Ocorreu um erro a obter o perfil do estudante a partir do QR Code..."
+          );
+          return;
         }
-      } catch {
-        // didn't place anything here because, on mobile, if the user already gave permissions in the past,
-        // it will still throw an error, even tho the camera opens and works as exepected
-      }
-      setLoading(false);
-    };
 
-    checkCameraPermission();
-    return () => {
-      if (stream)
-        stream.getTracks().forEach(function (track) {
-          track.stop();
-        });
-    };
-  }, [ref]);
+        handlingResult.current = true;
+        try {
+          await handleScan(decodedText);
+        } finally {
+          handlingResult.current = false;
+        }
+      },
+      [handleScan]
+    ),
+    onError: useCallback(() => {
+      setLoading(false);
+      if (reportedCameraError.current) return;
+
+      // Some mobile browsers report a camera setup error even while the video
+      // stream continues to work. Keep the scanner available in that case.
+      reportedCameraError.current = true;
+      toast.error(
+        "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
+      );
+    }, []),
+  });
 
   return (
     <div className="flex items-center">
@@ -69,6 +65,8 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
       <video
         ref={ref as React.RefObject<HTMLVideoElement>}
         className="rounded-lg"
+        onCanPlay={() => setLoading(false)}
+        playsInline
         style={{ visibility: loading ? "hidden" : "visible" }}
       />
     </div>
