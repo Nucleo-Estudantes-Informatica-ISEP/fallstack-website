@@ -24,6 +24,19 @@ is set. Never use a production account or a production URL. The storage-state
 file holds a live staging session: it is gitignored, but handle it like a
 credential and never share or commit it.
 
+Capture it by opening the staging login in Playwright, completing login, then
+closing the browser:
+
+```bash
+pnpm exec playwright codegen \
+  --save-storage=tests/e2e/.staging-student.json \
+  https://staging.example.org/login
+```
+
+Repeat that command whenever the session expires. Delete the file immediately
+after testing (`rm tests/e2e/.staging-student.json`; PowerShell:
+`Remove-Item tests/e2e/.staging-student.json`).
+
 ```bash
 CONFIRM_NON_PRODUCTION=yes \
 E2E_BASE_URL=https://staging.example.org \
@@ -42,6 +55,13 @@ over-10 MiB upload. Both must be rejected by the staging `cvs` bucket. Run this
 only against staging: a misconfigured bucket can retain the rejected-test files
 until the garbage collector removes them.
 
+Playwright writes failure screenshots and traces under `test-results/`, plus an
+HTML report under `playwright-report/` when that reporter is selected. Inspect a
+trace with `pnpm exec playwright show-trace <trace.zip>` and an HTML report with
+`pnpm exec playwright show-report`. These directories are gitignored; delete
+them after triage because they can contain staging URLs, page data, and session
+context.
+
 ## k6 load test
 
 Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) separately.
@@ -59,7 +79,8 @@ Available scenarios:
 - `health` — safe liveness baseline.
 - `qr` — public action QR issuance; requires `ACTION_ID`.
 - `upload-tickets` — authenticated ticket issuance; requires a
-  comma-separated `STUDENT_COOKIES` pool. The script rejects settings that
+  comma-separated `STUDENT_COOKIES` pool from distinct student accounts. Exact
+  duplicate cookie entries are rejected, and the script rejects settings that
   could exceed any account's five tickets/minute limit. These are live staging
   session cookies: avoid shell history, never share them, and run only on
   staging.

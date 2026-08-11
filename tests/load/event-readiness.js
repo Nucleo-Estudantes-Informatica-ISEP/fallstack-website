@@ -25,6 +25,13 @@ if (scenario === "qr" && !actionId)
   throw new Error("Set ACTION_ID for K6_SCENARIO=qr.");
 if (scenario === "upload-tickets" && studentCookies.length === 0)
   throw new Error("Set STUDENT_COOKIES for K6_SCENARIO=upload-tickets.");
+if (
+  scenario === "upload-tickets" &&
+  new Set(studentCookies).size !== studentCookies.length
+)
+  throw new Error(
+    "STUDENT_COOKIES must contain one distinct staging student session per entry."
+  );
 if (!Number.isFinite(vus) || vus < 1)
   throw new Error("VUS must be a positive number.");
 if (!Number.isFinite(requestIntervalSeconds) || requestIntervalSeconds <= 0)
@@ -50,6 +57,7 @@ export const options = {
     },
   },
   thresholds: {
+    checks: ["rate==1"],
     http_req_failed: ["rate<0.01"],
     http_req_duration: ["p(95)<750"],
   },
@@ -59,7 +67,7 @@ function headers() {
   return { "Content-Type": "application/json" };
 }
 
-export default function () {
+export default function runScenario() {
   if (scenario === "health") {
     const response = http.get(`${baseUrl}/api/health`);
     check(response, {

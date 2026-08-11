@@ -1,24 +1,42 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type APIRequestContext } from "@playwright/test";
+
+import { e2eEnv } from "../env";
 
 import { createClient } from "@supabase/supabase-js";
 
-const storageState = process.env.E2E_STUDENT_STORAGE_STATE;
-const allowUploadTickets = process.env.E2E_ALLOW_UPLOAD_TICKETS === "yes";
-const verifyBucketRestrictions =
-  process.env.E2E_VERIFY_BUCKET_RESTRICTIONS === "yes";
-const confirmNonProduction = process.env.CONFIRM_NON_PRODUCTION === "yes";
+const CV_SAMPLE_SIZE = 44;
+
+function createStagingSupabaseClient() {
+  if (!e2eEnv.supabaseUrl || !e2eEnv.supabaseAnonKey)
+    throw new Error(
+      "E2E_SUPABASE_URL and E2E_SUPABASE_ANON_KEY are required for direct upload verification."
+    );
+  return createClient(e2eEnv.supabaseUrl, e2eEnv.supabaseAnonKey);
+}
+
+async function requestCvTicket(request: APIRequestContext) {
+  const response = await request.post("/api/storage/cv", {
+    data: { contentType: "application/pdf", size: CV_SAMPLE_SIZE },
+  });
+  expect(response.status()).toBe(201);
+  return (await response.json()) as {
+    id: string;
+    path: string;
+    token: string;
+  };
+}
 
 test.describe("authenticated student event flow", () => {
   test.skip(
-    !storageState,
+    !e2eEnv.storageState,
     "Set E2E_STUDENT_STORAGE_STATE to a staging student Playwright storage-state file."
   );
   test.skip(
-    !confirmNonProduction,
+    !e2eEnv.confirmNonProduction,
     "Set CONFIRM_NON_PRODUCTION=yes; never run authenticated event tests against production."
   );
 
-  test.use({ storageState: storageState! });
+  test.use({ storageState: e2eEnv.storageState! });
 
   test("student QR code is generated", async ({ page }) => {
     const response = await page.request.get("/api/qrcode");
@@ -31,7 +49,7 @@ test.describe("authenticated student event flow", () => {
 
   test("student can obtain and use a CV upload ticket", async ({ page }) => {
     test.skip(
-      !allowUploadTickets,
+      !e2eEnv.allowUploadTickets,
       "Set E2E_ALLOW_UPLOAD_TICKETS=yes to create an orphaned staging CV."
     );
     test.skip(
@@ -39,24 +57,8 @@ test.describe("authenticated student event flow", () => {
       "Ticket coverage runs once to stay below the per-student rate limit."
     );
 
-    const supabaseUrl = process.env.E2E_SUPABASE_URL;
-    const supabaseAnonKey = process.env.E2E_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseAnonKey)
-      throw new Error(
-        "E2E_SUPABASE_URL and E2E_SUPABASE_ANON_KEY are required for direct upload verification."
-      );
-
-    const ticketResponse = await page.request.post("/api/storage/cv", {
-      data: { contentType: "application/pdf", size: 44 },
-    });
-    expect(ticketResponse.status()).toBe(201);
-    const ticket = (await ticketResponse.json()) as {
-      id: string;
-      path: string;
-      token: string;
-    };
-
-    const storage = createClient(supabaseUrl, supabaseAnonKey);
+    const ticket = await requestCvTicket(page.request);
+    const storage = createStagingSupabaseClient();
     const { error } = await storage.storage.from("cvs").uploadToSignedUrl(
       ticket.path,
       ticket.token,
@@ -73,7 +75,7 @@ test.describe("authenticated student event flow", () => {
     page,
   }) => {
     test.skip(
-      !allowUploadTickets || !verifyBucketRestrictions,
+      !e2eEnv.allowUploadTickets || !e2eEnv.verifyBucketRestrictions,
       "Set E2E_ALLOW_UPLOAD_TICKETS=yes and E2E_VERIFY_BUCKET_RESTRICTIONS=yes to verify staging bucket enforcement."
     );
     test.skip(
@@ -81,22 +83,8 @@ test.describe("authenticated student event flow", () => {
       "Ticket coverage runs once to stay below the per-student rate limit."
     );
 
-    const supabaseUrl = process.env.E2E_SUPABASE_URL;
-    const supabaseAnonKey = process.env.E2E_SUPABASE_ANON_KEY;
-    if (!supabaseUrl || !supabaseAnonKey)
-      throw new Error(
-        "E2E_SUPABASE_URL and E2E_SUPABASE_ANON_KEY are required for direct upload verification."
-      );
-
-    const storage = createClient(supabaseUrl, supabaseAnonKey);
-    const mismatchedTicketResponse = await page.request.post("/api/storage/cv", {
-      data: { contentType: "application/pdf", size: 44 },
-    });
-    expect(mismatchedTicketResponse.status()).toBe(201);
-    const mismatchedTicket = (await mismatchedTicketResponse.json()) as {
-      path: string;
-      token: string;
-    };
+    const storage = createStagingSupabaseClient();
+    const mismatchedTicket = await requestCvTicket(page.request);
     const { error: mismatchedMimeError } = await storage.storage
       .from("cvs")
       .uploadToSignedUrl(
@@ -107,14 +95,7 @@ test.describe("authenticated student event flow", () => {
       );
     expect(mismatchedMimeError).not.toBeNull();
 
-    const oversizedTicketResponse = await page.request.post("/api/storage/cv", {
-      data: { contentType: "application/pdf", size: 44 },
-    });
-    expect(oversizedTicketResponse.status()).toBe(201);
-    const oversizedTicket = (await oversizedTicketResponse.json()) as {
-      path: string;
-      token: string;
-    };
+    const oversizedTicket = await requestCvTicket(page.request);
     const { error: oversizedFileError } = await storage.storage
       .from("cvs")
       .uploadToSignedUrl(
