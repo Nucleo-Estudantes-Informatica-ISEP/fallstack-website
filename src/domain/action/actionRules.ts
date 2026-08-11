@@ -9,3 +9,11 @@ export const actionCompletionUpsertArgs = (
   update: {},
   create: { studentId, actionId },
 });
+
+export function isActionQrTimestampFresh(
+  timestamp: number,
+  now: number,
+  refreshRateMs: number
+) {
+  return timestamp <= now && now - timestamp <= refreshRateMs * 2;
+}

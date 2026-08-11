@@ -1,5 +1,5 @@
-import { act, render } from "@testing-library/react";
 import type { PropsWithChildren } from "react";
+import { act, render } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import ProfileTab from ".";
@@ -57,4 +57,33 @@ test("refreshes the personal QR code before its token expires", async () => {
   });
 
   expect(getMock).toHaveBeenCalledTimes(2);
+});
+
+test("retries a failed refresh before the displayed QR expires", async () => {
+  render(
+    <ProfileTab
+      user={{
+        role: "STUDENT",
+        adminRole: null,
+        student: { code: "1234567", name: "Student" },
+      }}
+    />
+  );
+
+  await act(async () => {
+    await Promise.resolve();
+  });
+  getMock.mockRejectedValueOnce(new Error("temporary failure"));
+
+  await act(async () => {
+    vi.advanceTimersByTime(25 * 60 * 1000);
+    await Promise.resolve();
+  });
+  expect(getMock).toHaveBeenCalledTimes(2);
+
+  await act(async () => {
+    vi.advanceTimersByTime(30 * 1000);
+    await Promise.resolve();
+  });
+  expect(getMock).toHaveBeenCalledTimes(3);
 });
