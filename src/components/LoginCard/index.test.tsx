@@ -5,6 +5,7 @@ import LoginCard from ".";
 
 const {
   pushMock,
+  replaceMock,
   refreshMock,
   logInMock,
   signUpEmployeeMock,
@@ -13,6 +14,7 @@ const {
   toastSuccessMock,
 } = vi.hoisted(() => ({
   pushMock: vi.fn(),
+  replaceMock: vi.fn(),
   refreshMock: vi.fn(),
   logInMock: vi.fn(),
   signUpEmployeeMock: vi.fn(),
@@ -22,7 +24,11 @@ const {
 }));
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push: pushMock, refresh: refreshMock }),
+  useRouter: () => ({
+    push: pushMock,
+    replace: replaceMock,
+    refresh: refreshMock,
+  }),
 }));
 vi.mock("react-toastify", () => ({
   toast: { success: toastSuccessMock, error: vi.fn() },
@@ -58,7 +64,9 @@ beforeEach(() => {
 });
 
 const submitLogin = () => {
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
   fireEvent.change(screen.getByLabelText("Email"), {
     target: { value: "jane@isep.ipp.pt" },
   });
@@ -177,7 +185,9 @@ test("opens on the Estudante tab with AuthNEI, not the password form", () => {
 test("the Login tab shows the password form and a link into employee registration", () => {
   render(<LoginCard />);
 
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
 
   expect(screen.getByLabelText("Email")).toBeInTheDocument();
   expect(
@@ -203,7 +213,9 @@ test("the Login tab shows the password form and a link into employee registratio
 test("Já tens conta? returns from employee registration to the password form", () => {
   render(<LoginCard />);
 
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
   fireEvent.click(
     screen.getByRole("button", {
       name: "Ainda não tens conta de colaborador? Regista aqui",
@@ -222,14 +234,18 @@ test("Já tens conta? returns from employee registration to the password form", 
 test("switching to Estudante and back resets any in-progress employee registration", () => {
   render(<LoginCard />);
 
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
   fireEvent.click(
     screen.getByRole("button", {
       name: "Ainda não tens conta de colaborador? Regista aqui",
     })
   );
-  fireEvent.click(screen.getByRole("tab", { name: "Estudante" }));
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(screen.getByRole("button", { name: "Estudante (AuthNEI)" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
 
   expect(
     screen.getByRole("heading", { name: "Iniciar Sessão" })
@@ -239,11 +255,36 @@ test("switching to Estudante and back resets any in-progress employee registrati
   ).not.toBeInTheDocument();
 });
 
+test("?modal=employee deep-links into registration, and leaving it clears the param", () => {
+  const originalLocation = window.location;
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { ...originalLocation, search: "?modal=employee" },
+  });
+
+  render(<LoginCard />);
+
+  expect(
+    screen.getByRole("heading", { name: "Registo de Colaborador" })
+  ).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: /Já tens conta/ }));
+
+  expect(replaceMock).toHaveBeenCalledWith("/login");
+
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: originalLocation,
+  });
+});
+
 test("a successful employee signup returns to the password form", async () => {
   signUpEmployeeMock.mockResolvedValue(true);
 
   render(<LoginCard />);
-  fireEvent.click(screen.getByRole("tab", { name: "Login" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Login (email e password)" })
+  );
   fireEvent.click(
     screen.getByRole("button", {
       name: "Ainda não tens conta de colaborador? Regista aqui",

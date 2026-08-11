@@ -51,9 +51,19 @@ const LoginCard: React.FC = () => {
     }
   }, []);
 
+  // Closes the registration sub-view, also dropping the ?modal=employee
+  // deep-link param if it's what opened it - otherwise a refresh (or
+  // sharing/copying the URL) keeps reopening registration unexpectedly.
+  const closeRegistration = () => {
+    setRegisteringEmployee(false);
+    if (new URLSearchParams(window.location.search).has("modal")) {
+      router.replace("/login");
+    }
+  };
+
   const switchTab = (next: Tab) => {
     setTab(next);
-    setRegisteringEmployee(false);
+    closeRegistration();
   };
 
   const handleClick = async () => {
@@ -133,13 +143,13 @@ const LoginCard: React.FC = () => {
 
       <div
         className="mb-6 grid grid-cols-2 gap-2 rounded-lg border border-[#2A2A2A] p-1"
-        role="tablist"
+        role="group"
         aria-label="Método de acesso"
       >
         <button
           type="button"
-          role="tab"
-          aria-selected={tab === "student"}
+          aria-pressed={tab === "student"}
+          aria-label="Estudante (AuthNEI)"
           onClick={() => switchTab("student")}
           className={tabButtonClassName(tab === "student")}
         >
@@ -147,8 +157,8 @@ const LoginCard: React.FC = () => {
         </button>
         <button
           type="button"
-          role="tab"
-          aria-selected={tab === "login"}
+          aria-pressed={tab === "login"}
+          aria-label="Login (email e password)"
           onClick={() => switchTab("login")}
           className={tabButtonClassName(tab === "login")}
         >
@@ -167,10 +177,10 @@ const LoginCard: React.FC = () => {
         </section>
       ) : registeringEmployee ? (
         <section className="flex max-h-[70vh] flex-col overflow-y-auto">
-          <EmployeeSignUpForm onSuccess={() => setRegisteringEmployee(false)} />
+          <EmployeeSignUpForm onSuccess={closeRegistration} />
           <button
             type="button"
-            onClick={() => setRegisteringEmployee(false)}
+            onClick={closeRegistration}
             className="mt-4 text-center text-sm text-gray-400 underline"
           >
             Já tens conta? Inicia sessão
