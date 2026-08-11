@@ -5,6 +5,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 import {
   deleteUser,
+  deleteUserIfExists,
   findUserSessionByEmail,
   findUserSessionById,
   relinkUserId,
@@ -22,6 +23,7 @@ vi.mock("../repositories/userRepository", () => ({
   findUserSessionByEmail: vi.fn(),
   relinkUserId: vi.fn(),
   deleteUser: vi.fn(),
+  deleteUserIfExists: vi.fn(),
   upsertUser: vi.fn(),
 }));
 vi.mock("@/utils/supabase/admin", () => ({
@@ -275,7 +277,7 @@ test("still provisions a verified identity when spoofed Auth cleanup fails", asy
       fallback: "/signup",
     })
   ).resolves.toBe("/signup");
-  expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
+  expect(deleteUserIfExists).toHaveBeenCalledWith("spoofed-id");
   expect(upsertUser).toHaveBeenCalledWith({
     id: "new-authnei-id",
     email,

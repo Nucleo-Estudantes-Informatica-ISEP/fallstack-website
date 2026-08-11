@@ -13,6 +13,7 @@ import {
 import { withTransaction } from "../repositories/transaction";
 import {
   deleteUser,
+  deleteUserIfExists,
   findUserByEmail,
   findUserSessionByEmail,
   findUserSessionById,
@@ -94,6 +95,8 @@ export async function rollbackAuthUser(userId: string) {
 // that the backoffice can no longer retry deleting.
 export async function deleteUserAccount(userId: string) {
   const { error } = await createAdminClient().auth.admin.deleteUser(userId);
+  // Only an explicit code proves absence. Missing codes can also mean the
+  // malformed self-hosted GoTrue failures described above, so stay fail-closed.
   if (error && error.code !== "user_not_found")
     throw new HttpError(
       usableAuthErrorMessage(error?.message, "Unable to delete account"),
@@ -201,10 +204,10 @@ export async function completeOAuthSignIn(input: {
       // orphan. Add a retry queue if these failures become frequent.
       reportError(
         error,
-        { operation: "delete_unconfirmed_auth_placeholder" },
-        "Failed to delete unconfirmed Supabase Auth placeholder"
+        { operation: "delete_unconfirmed_account_placeholder" },
+        "Failed to fully delete unconfirmed account placeholder"
       );
-      await deleteUser(existingByEmail.id);
+      await deleteUserIfExists(existingByEmail.id);
     }
   }
 
