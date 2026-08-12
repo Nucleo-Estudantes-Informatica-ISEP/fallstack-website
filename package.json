@@ -95,7 +95,7 @@
     "globals": "^16.5.0",
     "jsdom": "^29.1.1",
     "lodash": "^4.18.1",
-    "postcss": "^8.5.20",
+    "postcss": "^8.5.23",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.7.4",
     "prisma": "^6.19.3",
