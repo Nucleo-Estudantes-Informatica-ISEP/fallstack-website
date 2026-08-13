@@ -3,27 +3,37 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import { test } from "vitest";
 
-import { COMPANY_TIER } from "@/domain/company/company-tier";
-
 import CompaniesContainer from "./index";
 
-test("CompaniesContainer passes tier down to Company cards", () => {
+test("CompaniesContainer routes to the internal page when the rank has one and there's content", () => {
   const html = renderToString(
     <CompaniesContainer
-      tier={COMPANY_TIER.DIAMOND}
+      rank={{
+        id: "rank-1",
+        name: "Diamond",
+        order: 0,
+        style: {
+          gradientFromColor: "#000999",
+          gradientFromStop: "13%",
+          gradientToColor: "#3284FF",
+          gradientToStop: "89%",
+          hasInternalPage: true,
+          showsPromoVideo: true,
+        },
+      }}
       companies={[
         {
           name: "TestCorp",
           logoHref: "/dummy.png",
-          modalInformation: { title: "TestCorp", bodyText: "About TestCorp" },
+          hasContent: true,
+          rankStyle: { hasInternalPage: true },
         },
       ]}
     />
   );
 
-  // For Diamond tier, Company component will generate a Link to /company/TestCorp
-  // because hrefByCompanyTier(DIAMOND) returns the internal page route when the
-  // company has edition content (modalInformation) to show there.
-  // If tier was missing, it defaults to BRONZE -> defaults to "/"
+  // A rank with hasInternalPage generates a Link to /company/TestCorp when
+  // the company has content (CompanyProfile) to show there - see
+  // domain/company/services/rank-access.ts's companyProfileHref.
   assert.match(html, /href="\/company\/TestCorp"/);
 });

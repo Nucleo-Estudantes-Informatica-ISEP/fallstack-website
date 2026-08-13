@@ -4,18 +4,15 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { ModalInformation } from "@/types/ModalProps";
-import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
-import { hrefByCompanyTier } from "@/domain/company/services/company-tier-access";
+import { companyProfileHref } from "@/domain/company/services/rank-access";
 
 export interface CompanyProps {
   logoHref: string;
   name: string;
   websiteUrl?: string;
-  modalInformation?: ModalInformation;
-  tier?: CompanyTier;
+  hasContent: boolean;
+  rankStyle: { hasInternalPage: boolean } | null;
   className?: string;
-  interests?: string[];
   divClassName?: string;
   logoWidth?: number;
   logoHeight?: number;
@@ -25,18 +22,18 @@ const Company: React.FC<CompanyProps> = ({
   logoHref,
   name,
   websiteUrl,
-  modalInformation,
-  tier = COMPANY_TIER.BRONZE,
+  hasContent,
+  rankStyle,
   className,
   divClassName,
   logoWidth = 200,
   logoHeight = 100,
 }) => {
-  const companyHref = hrefByCompanyTier(
-    tier,
+  const companyHref = companyProfileHref(
+    rankStyle?.hasInternalPage ?? false,
     name,
     websiteUrl,
-    Boolean(modalInformation)
+    hasContent
   );
 
   return (
