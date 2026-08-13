@@ -255,14 +255,8 @@ test("switching to Estudante and back resets any in-progress employee registrati
   ).not.toBeInTheDocument();
 });
 
-test("?modal=employee deep-links into registration, and leaving it clears the param", () => {
-  const originalLocation = window.location;
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: { ...originalLocation, search: "?modal=employee" },
-  });
-
-  render(<LoginCard />);
+test('initialView="employee" (from the ?modal=employee deep-link, parsed server-side) opens straight into registration, and leaving it clears the param', () => {
+  render(<LoginCard initialView="employee" />);
 
   expect(
     screen.getByRole("heading", { name: "Registo de Colaborador" })
@@ -271,11 +265,6 @@ test("?modal=employee deep-links into registration, and leaving it clears the pa
   fireEvent.click(screen.getByRole("button", { name: /Já tens conta/ }));
 
   expect(replaceMock).toHaveBeenCalledWith("/login");
-
-  Object.defineProperty(window, "location", {
-    configurable: true,
-    value: originalLocation,
-  });
 });
 
 test("a successful employee signup returns to the password form", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -27,36 +27,46 @@ const tabButtonClassName = (active: boolean) =>
     active ? "bg-[#B1440A] text-white" : "text-gray-400 hover:text-white"
   }`;
 
-const LoginCard: React.FC = () => {
+interface LoginCardProps {
+  // Set from the /login?modal=employee deep-link (the old standalone
+  // /signup/employee route now redirects here), parsed server-side by
+  // login/page.tsx and passed in as the initial view. Driving this from a
+  // prop rather than a post-hydration effect means the server-rendered
+  // markup already shows the registration form, instead of flashing the
+  // Estudante/AuthNEI view first.
+  initialView?: "employee";
+}
+
+const LoginCard: React.FC<LoginCardProps> = ({ initialView }) => {
   const session = useSession();
   const router = useRouter();
 
-  const [tab, setTab] = useState<Tab>("student");
-  const [registeringEmployee, setRegisteringEmployee] = useState(false);
+  const [tab, setTab] = useState<Tab>(
+    initialView === "employee" ? "login" : "student"
+  );
+  const [registeringEmployee, setRegisteringEmployee] = useState(
+    initialView === "employee"
+  );
   const [loading, setLoading] = useState<boolean>(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pwError, setPwError] = useState<string | null>(null);
 
+  // Whether the ?modal=employee deep-link is what put us in the
+  // registration view, so closing it should also drop the query param -
+  // otherwise a refresh (or sharing/copying the URL) keeps reopening
+  // registration unexpectedly. Cleared once actually replaced, so switching
+  // tabs back and forth doesn't keep calling router.replace.
+  const [pendingModalClear, setPendingModalClear] = useState(
+    initialView === "employee"
+  );
+
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
-  // Lets the old standalone /signup/employee route (now a redirect to
-  // /login?modal=employee) still land directly on the registration form
-  // instead of just the login tab.
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("modal") === "employee") {
-      setTab("login");
-      setRegisteringEmployee(true);
-    }
-  }, []);
-
-  // Closes the registration sub-view, also dropping the ?modal=employee
-  // deep-link param if it's what opened it - otherwise a refresh (or
-  // sharing/copying the URL) keeps reopening registration unexpectedly.
   const closeRegistration = () => {
     setRegisteringEmployee(false);
-    if (new URLSearchParams(window.location.search).has("modal")) {
+    if (pendingModalClear) {
+      setPendingModalClear(false);
       router.replace("/login");
     }
   };
