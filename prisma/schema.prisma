@@ -61,7 +61,6 @@ model Company {
   id String @id @default(uuid()) @db.Uuid
 
   name      String   @unique
-  tier      Tier
   avatar    String?
   website   String?
   // Gates public-roster visibility: self-registered companies (via the
@@ -74,11 +73,8 @@ model Company {
 
   code String? @unique
 
-  // Nullable during the #280 migration: `tier` (above) is still what every
-  // current read/write path uses. Once consumers cut over to CompanyRank,
-  // this becomes required and `tier`/Tier get dropped.
-  rank   CompanyRank? @relation(fields: [rankId], references: [id])
-  rankId String?      @db.Uuid
+  rank   CompanyRank @relation(fields: [rankId], references: [id])
+  rankId String      @db.Uuid
 
   profile      CompanyProfile?
   displayStyle CompanyDisplayStyle?
@@ -90,8 +86,7 @@ model Company {
 }
 
 // Replaces the fixed Tier enum so a new rank is a data change, not a code
-// change - see #280. `tier`/Tier stay in place until every consumer of the
-// enum has cut over to this table.
+// change - see #280.
 model CompanyRank {
   id    String @id @default(uuid()) @db.Uuid
   name  String @unique
@@ -294,13 +289,6 @@ enum AdminRole {
   // Everything ADMIN can do, plus creating/editing/deactivating other admin
   // accounts.
   SUPER_ADMIN
-}
-
-enum Tier {
-  DIAMOND
-  GOLD
-  SILVER
-  BRONZE
 }
 
 // Prisma-side identifiers are decoupled from the stored/display label via
