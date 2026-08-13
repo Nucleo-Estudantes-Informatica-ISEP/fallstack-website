@@ -2,46 +2,10 @@ export const actionNames = {
   createProfile: "Cria o teu Perfil",
   uploadCv: "Faz o Upload do teu CV",
   updateLinkedin: "Associa o teu LinkedIn",
-  akaPeopleBooth: "Banca AkaPeople",
-  natixisBooth: "Banca Natixis",
-  aprBooth: "Banca APR",
-  hitachiBooth: "Banca Hitachi",
-  convatecBooth: "Banca Convatec",
-  niwBooth: "Banca NiW",
-  deloitteBooth: "Banca Deloitte",
-  accentureBooth: "Banca Accenture",
-  armisBooth: "Banca Armis",
-  devscopeBooth: "Banca Devscope",
-  msgInsurItBooth: "Banca msg insur:it",
-  glinttBooth: "Banca Glintt",
-  konkConsultingBooth: "Banca konk consulting",
 };
-
-const boothActions: Record<string, string> = {
-  akapeople: actionNames.akaPeopleBooth,
-  natixis: actionNames.natixisBooth,
-  apr: actionNames.aprBooth,
-  "apr - technology solutions": actionNames.aprBooth,
-  hitachi: actionNames.hitachiBooth,
-  "hitachi solutions": actionNames.hitachiBooth,
-  convatec: actionNames.convatecBooth,
-  niw: actionNames.niwBooth,
-  deloitte: actionNames.deloitteBooth,
-  accenture: actionNames.accentureBooth,
-  armis: actionNames.armisBooth,
-  devscope: actionNames.devscopeBooth,
-  "insur:it msg": actionNames.msgInsurItBooth,
-  "msg insur:it": actionNames.msgInsurItBooth,
-  glintt: actionNames.glinttBooth,
-  konkconsulting: actionNames.konkConsultingBooth,
-};
-
-export const getBoothActionName = (companyName: string) =>
-  boothActions[companyName.trim().toLowerCase()];
 
 export const actions = {
   names: actionNames,
-  boothByCompanyName: boothActions,
   seed: [
     {
       name: actionNames.createProfile,

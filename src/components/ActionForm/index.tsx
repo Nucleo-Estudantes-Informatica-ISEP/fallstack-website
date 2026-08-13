@@ -5,13 +5,16 @@ import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
-import type { ActionDto } from "@/application/dto/actionDto";
+import type { AdminActionDto } from "@/application/dto/actionDto";
 
 interface ActionFormProps {
-  action?: ActionDto;
+  action?: AdminActionDto;
+  companies: { id: string; name: string }[];
 }
 
-const ActionForm: React.FC<ActionFormProps> = ({ action }) => {
+const NO_COMPANY = "";
+
+const ActionForm: React.FC<ActionFormProps> = ({ action, companies }) => {
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -21,6 +24,7 @@ const ActionForm: React.FC<ActionFormProps> = ({ action }) => {
       points: values.points,
       altText: values.altText || null,
       isVisible: values.isVisible,
+      companyId: values.companyId === NO_COMPANY ? null : values.companyId,
     };
 
     try {
@@ -61,6 +65,18 @@ const ActionForm: React.FC<ActionFormProps> = ({ action }) => {
             },
             { kind: "text", name: "altText", label: "Texto alternativo" },
             { kind: "checkbox", name: "isVisible", label: "Visível" },
+            {
+              kind: "select",
+              name: "companyId",
+              label: "Ação de banca (empresa)",
+              options: [
+                { label: "Nenhuma - ação geral", value: NO_COMPANY },
+                ...companies.map((company) => ({
+                  label: company.name,
+                  value: company.id,
+                })),
+              ],
+            },
           ],
         },
       ]}
@@ -72,8 +88,9 @@ const ActionForm: React.FC<ActionFormProps> = ({ action }) => {
               points: action.points,
               altText: action.altText ?? "",
               isVisible: action.isVisible,
+              companyId: action.companyId ?? NO_COMPANY,
             }
-          : { points: 0, isVisible: true }
+          : { points: 0, isVisible: true, companyId: NO_COMPANY }
       }
       onSubmit={handleSubmit}
     />

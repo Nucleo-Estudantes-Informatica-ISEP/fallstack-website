@@ -2,8 +2,12 @@ import { expect, test, vi } from "vitest";
 
 import { signJwt } from "@/application/services/authService";
 
-import { findActionById } from "../repositories/actionRepository";
-import { getActionQrCode } from "./actionService";
+import {
+  findActionByCompanyId,
+  findActionById,
+} from "../repositories/actionRepository";
+import { findStudentByCode } from "../repositories/studentRepository";
+import { completeCompanyBoothAction, getActionQrCode } from "./actionService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/config", () => ({
@@ -12,6 +16,7 @@ vi.mock("@/config", () => ({
 vi.mock("@/application/services/authService", () => ({ signJwt: vi.fn() }));
 vi.mock("../repositories/actionRepository", () => ({
   createActionCompletion: vi.fn(),
+  findActionByCompanyId: vi.fn(),
   findActionById: vi.fn(),
   findActionByName: vi.fn(),
   findActionCompletions: vi.fn(),
@@ -43,5 +48,32 @@ test("signs the QR token with a real ~30s expiry, not 30000 seconds", async () =
   expect(signJwt).toHaveBeenCalledWith(
     expect.objectContaining({ id: "action-1" }),
     expect.objectContaining({ expiresIn: 30 })
+  );
+});
+
+test("does nothing for a company with no booth action assigned", async () => {
+  vi.mocked(findActionByCompanyId).mockResolvedValue(null);
+  vi.mocked(findStudentByCode).mockResolvedValue({
+    id: "student-1",
+  } as Awaited<ReturnType<typeof findStudentByCode>>);
+
+  await expect(
+    completeCompanyBoothAction("student-code", "company-1")
+  ).resolves.toBeNull();
+});
+
+test("completes the booth action linked to the company", async () => {
+  vi.mocked(findActionByCompanyId).mockResolvedValue({
+    id: "action-1",
+  } as Awaited<ReturnType<typeof findActionByCompanyId>>);
+  vi.mocked(findStudentByCode).mockResolvedValue({
+    id: "student-1",
+  } as Awaited<ReturnType<typeof findStudentByCode>>);
+
+  await completeCompanyBoothAction("student-code", "company-1");
+
+  expect(findActionByCompanyId).toHaveBeenCalledWith(
+    "company-1",
+    expect.anything()
   );
 });

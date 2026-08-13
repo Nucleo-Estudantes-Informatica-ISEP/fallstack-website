@@ -7,6 +7,7 @@ export const createAdminActionSchema = z.object({
   altText: z.string().max(200).nullable().optional(),
   isLive: z.boolean().optional(),
   isVisible: z.boolean().optional(),
+  companyId: z.uuid().nullable().optional(),
 });
 
 export const updateAdminActionSchema = z
@@ -17,6 +18,7 @@ export const updateAdminActionSchema = z
     altText: z.string().max(200).nullable(),
     isLive: z.boolean(),
     isVisible: z.boolean(),
+    companyId: z.uuid().nullable(),
   })
   .partial()
   .refine((body) => Object.keys(body).length > 0, {
