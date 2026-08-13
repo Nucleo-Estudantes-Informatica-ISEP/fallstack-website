@@ -24,18 +24,8 @@ import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import LogoThumbnail from "@/components/ui/LogoThumbnail";
-import type { CompanyTier } from "@/domain/company/company-tier";
 
 import { CSS } from "@dnd-kit/utilities";
-
-const TIERS: CompanyTier[] = ["DIAMOND", "GOLD", "SILVER", "BRONZE"];
-
-const TIER_LABELS: Record<CompanyTier, string> = {
-  DIAMOND: "Diamond",
-  GOLD: "Gold",
-  SILVER: "Silver",
-  BRONZE: "Bronze",
-};
 
 interface CompanyRow {
   id: string;
@@ -43,21 +33,31 @@ interface CompanyRow {
   avatar: string | null;
 }
 
-type Board = Record<CompanyTier, CompanyRow[]>;
+interface RankLane {
+  id: string;
+  name: string;
+  companies: CompanyRow[];
+}
 
-interface CompanyTierBoardProps {
+type Board = Record<string, CompanyRow[]>;
+
+interface CompanyRankBoardProps {
+  ranks: { id: string; name: string }[];
   companies: {
     id: string;
     name: string;
     avatar: string | null;
-    tier: CompanyTier;
+    rankId: string;
   }[];
 }
 
-function groupByTier(companies: CompanyTierBoardProps["companies"]): Board {
-  const board = { DIAMOND: [], GOLD: [], SILVER: [], BRONZE: [] } as Board;
+function groupByRank(
+  ranks: { id: string; name: string }[],
+  companies: CompanyRankBoardProps["companies"]
+): Board {
+  const board: Board = Object.fromEntries(ranks.map((rank) => [rank.id, []]));
   for (const company of companies) {
-    board[company.tier].push({
+    board[company.rankId]?.push({
       id: company.id,
       name: company.name,
       avatar: company.avatar,
@@ -66,9 +66,13 @@ function groupByTier(companies: CompanyTierBoardProps["companies"]): Board {
   return board;
 }
 
-function findContainer(board: Board, id: string): CompanyTier | undefined {
-  if ((TIERS as string[]).includes(id)) return id as CompanyTier;
-  return TIERS.find((tier) => board[tier].some((c) => c.id === id));
+function findContainer(
+  rankIds: string[],
+  board: Board,
+  id: string
+): string | undefined {
+  if (rankIds.includes(id)) return id;
+  return rankIds.find((rankId) => board[rankId].some((c) => c.id === id));
 }
 
 const CompanyRowCard: React.FC<{ company: CompanyRow; dragging?: boolean }> = ({
@@ -113,23 +117,20 @@ const SortableRow: React.FC<{ company: CompanyRow }> = ({ company }) => {
   );
 };
 
-const TierLane: React.FC<{ tier: CompanyTier; companies: CompanyRow[] }> = ({
-  tier,
-  companies,
-}) => {
-  const { setNodeRef } = useDroppable({ id: tier });
+const RankLaneColumn: React.FC<{ rank: RankLane }> = ({ rank }) => {
+  const { setNodeRef } = useDroppable({ id: rank.id });
 
   return (
     <div className="flex w-64 shrink-0 flex-col gap-3 rounded-lg bg-gray-100 p-4">
       <h2 className="text-sm font-semibold tracking-wide text-gray-500 uppercase">
-        {TIER_LABELS[tier]} ({companies.length})
+        {rank.name} ({rank.companies.length})
       </h2>
       <SortableContext
-        items={companies.map((c) => c.id)}
+        items={rank.companies.map((c) => c.id)}
         strategy={verticalListSortingStrategy}
       >
         <div ref={setNodeRef} className="flex min-h-16 flex-col gap-2">
-          {companies.map((company) => (
+          {rank.companies.map((company) => (
             <SortableRow key={company.id} company={company} />
           ))}
         </div>
@@ -138,16 +139,22 @@ const TierLane: React.FC<{ tier: CompanyTier; companies: CompanyRow[] }> = ({
   );
 };
 
-const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
+const CompanyRankBoard: React.FC<CompanyRankBoardProps> = ({
+  ranks,
+  companies,
+}) => {
   const router = useRouter();
-  const [board, setBoard] = useState<Board>(() => groupByTier(companies));
+  const rankIds = ranks.map((rank) => rank.id);
+  const [board, setBoard] = useState<Board>(() =>
+    groupByRank(ranks, companies)
+  );
   const [activeCompany, setActiveCompany] = useState<CompanyRow | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor));
 
   const handleDragStart = (event: DragStartEvent) => {
     const id = String(event.active.id);
-    const container = findContainer(board, id);
+    const container = findContainer(rankIds, board, id);
     if (!container) return;
     setActiveCompany(board[container].find((c) => c.id === id) ?? null);
   };
@@ -157,8 +164,8 @@ const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
     if (!over) return;
     const activeId = String(active.id);
     const overId = String(over.id);
-    const activeContainer = findContainer(board, activeId);
-    const overContainer = findContainer(board, overId);
+    const activeContainer = findContainer(rankIds, board, activeId);
+    const overContainer = findContainer(rankIds, board, overId);
     if (!activeContainer || !overContainer || activeContainer === overContainer)
       return;
 
@@ -188,8 +195,8 @@ const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
     if (!over) return;
     const activeId = String(active.id);
     const overId = String(over.id);
-    const container = findContainer(board, activeId);
-    const overContainer = findContainer(board, overId);
+    const container = findContainer(rankIds, board, activeId);
+    const overContainer = findContainer(rankIds, board, overId);
     if (!container || !overContainer || container !== overContainer) return;
 
     setBoard((prev) => {
@@ -203,16 +210,16 @@ const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
   };
 
   const handleSave = async () => {
-    const updates = TIERS.flatMap((tier) =>
-      board[tier].map((company, index) => ({
+    const updates = rankIds.flatMap((rankId) =>
+      board[rankId].map((company, index) => ({
         id: company.id,
-        tier,
+        rankId,
         order: index,
       }))
     );
     setIsSaving(true);
     try {
-      await httpClient.patch("/admin/companies/tier-board", { updates });
+      await httpClient.patch("/admin/companies/rank-board", { updates });
       toast.success("Ordem guardada.");
       router.refresh();
     } catch {
@@ -241,8 +248,11 @@ const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
         onDragEnd={handleDragEnd}
       >
         <div className="flex gap-4 overflow-x-auto pb-4">
-          {TIERS.map((tier) => (
-            <TierLane key={tier} tier={tier} companies={board[tier]} />
+          {ranks.map((rank) => (
+            <RankLaneColumn
+              key={rank.id}
+              rank={{ ...rank, companies: board[rank.id] }}
+            />
           ))}
         </div>
         <DragOverlay>
@@ -253,4 +263,4 @@ const CompanyTierBoard: React.FC<CompanyTierBoardProps> = ({ companies }) => {
   );
 };
 
-export default CompanyTierBoard;
+export default CompanyRankBoard;
