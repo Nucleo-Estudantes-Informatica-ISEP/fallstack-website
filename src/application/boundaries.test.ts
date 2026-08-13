@@ -84,7 +84,6 @@ test("public DTO mappers omit private database fields", () => {
   const company = {
     id: "company-id",
     name: "Example",
-    tier: "GOLD" as const,
     avatar: null,
     code: "private-code",
     updatedAt: new Date(),
@@ -101,7 +100,6 @@ test("public DTO mappers omit private database fields", () => {
   assert.deepEqual(toCompanyDto(company), {
     id: "company-id",
     name: "Example",
-    tier: "GOLD",
     avatar: null,
   });
   assert.deepEqual(toSessionDto(session), {

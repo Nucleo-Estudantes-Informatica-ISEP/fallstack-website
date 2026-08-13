@@ -18,7 +18,7 @@ const sessionSelect = {
       name: true,
       companyId: true,
       company: {
-        select: { id: true, name: true, tier: true, avatar: true },
+        select: { id: true, name: true, avatar: true },
       },
     },
   },
