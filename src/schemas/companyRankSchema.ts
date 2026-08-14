@@ -30,7 +30,11 @@ export const updateAdminCompanyRankSchema = z
   .partial()
   .refine((body) => Object.keys(body).length > 0, {
     message: "At least one field is required",
-  });
+  })
+  .refine(
+    (body) => body.style === undefined || Object.keys(body.style).length > 0,
+    { message: "style must not be empty" }
+  );
 
 export const updateCompanyRankOrderSchema = z.object({
   updates: z.array(
