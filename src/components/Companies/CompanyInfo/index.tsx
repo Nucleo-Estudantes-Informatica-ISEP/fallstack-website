@@ -23,7 +23,10 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
   facts,
   showsPromoVideo,
 }) => {
-  const paragraphs = bodyText.split(/\n{2,}/).filter(Boolean);
+  const paragraphs = bodyText
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 
   return (
     <section className="mx-auto w-11/12 rounded-lg bg-white p-10 sm:w-3/4 lg:p-12">
@@ -32,7 +35,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           <h1 className="mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             Sobre
           </h1>
-          <div className="text-left font-light text-black md:text-lg lg:text-xl">
+          <div className="space-y-4 text-left font-light text-black md:text-lg lg:text-xl">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
