@@ -95,10 +95,11 @@ export const updateActionFields = (
   });
 
 // Replaces edition/actions.ts's boothActions name-matching map - see #280.
+// companyId is @unique, so at most one Action can be linked per company.
 export const findActionByCompanyId = (
   companyId: string,
   db: DbClient = prisma
-) => db.action.findFirst({ where: { companyId } });
+) => db.action.findUnique({ where: { companyId } });
 
 export const findVisibleActions = () =>
   prisma.action.findMany({ where: { isVisible: true } });

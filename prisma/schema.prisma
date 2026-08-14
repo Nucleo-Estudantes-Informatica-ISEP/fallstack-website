@@ -192,7 +192,7 @@ model Action {
   // actions at all. Replaces edition/actions.ts's name-matched
   // boothActions map - see #280.
   company   Company? @relation(fields: [companyId], references: [id])
-  companyId String?  @db.Uuid
+  companyId String?  @unique @db.Uuid
 
   actionCompletions ActionCompletion[]
 }
