@@ -10,11 +10,11 @@ interface FactSectionProps {
 const FactSection: React.FC<FactSectionProps> = ({ facts }) => {
   return (
     <section className="my-5 flex flex-col space-y-2 text-sm leading-8 font-light sm:text-sm lg:px-10 lg:text-lg">
-      {facts.map((fact) => {
+      {facts.map((fact, index) => {
         const Icon = FACT_ICONS[fact.iconName];
         return (
           <div
-            key={fact.description}
+            key={`${index}-${fact.iconName}`}
             className="my-1 grid grid-cols-10 items-center"
           >
             <Icon className="left-0 fill-stone-500 text-2xl" />
