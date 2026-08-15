@@ -90,6 +90,14 @@ export async function rollbackAuthUser(userId: string) {
   }
 }
 
+// Thrown only when the Supabase Auth deletion call itself failed - i.e.
+// neither the Auth identity nor the app row has been touched yet. Callers
+// that catch a deleteUserAccount() failure must check for this specifically:
+// it's the one case where falling back to an app-only delete would create an
+// Auth-only orphan. Extends HttpError so existing `instanceof HttpError`
+// error-response mapping in every other caller keeps working unchanged.
+export class AuthAccountDeletionError extends HttpError {}
+
 // Supabase Auth and public.User cannot share a foreign key. Delete Auth first
 // so an Auth API failure cannot remove the app row and leave a login identity
 // that the backoffice can no longer retry deleting.
@@ -98,7 +106,7 @@ export async function deleteUserAccount(userId: string) {
   // Only an explicit code proves absence. Missing codes can also mean the
   // malformed self-hosted GoTrue failures described above, so stay fail-closed.
   if (error && error.code !== "user_not_found")
-    throw new HttpError(
+    throw new AuthAccountDeletionError(
       usableAuthErrorMessage(error?.message, "Unable to delete account"),
       500
     );
@@ -200,8 +208,25 @@ export async function completeOAuthSignIn(input: {
     try {
       await deleteUserAccount(existingByEmail.id);
     } catch (error) {
-      // ponytail: verified login wins here; audit catches any Auth-only
-      // orphan. Add a retry queue if these failures become frequent.
+      if (error instanceof AuthAccountDeletionError) {
+        // The Auth deletion call itself failed - neither the Auth identity
+        // nor the app row has been touched, so deleting only the app row
+        // here would create an Auth-only orphan. Leave both sides intact
+        // and let this sign-in attempt fail; the OAuth callback route
+        // catches this and redirects to /auth/auth-code-error, so the user
+        // just retries once Auth is reachable again.
+        reportError(
+          error,
+          { operation: "delete_unconfirmed_account_placeholder" },
+          "Failed to delete unconfirmed account placeholder's Auth identity"
+        );
+        throw error;
+      }
+
+      // Auth was already confirmed deleted or absent (deleteUserAccount only
+      // reaches this point after that) - e.g. a raced concurrent OAuth
+      // callback deleted the app row first. No orphan risk: finish the
+      // cleanup and continue provisioning.
       reportError(
         error,
         { operation: "delete_unconfirmed_account_placeholder" },
