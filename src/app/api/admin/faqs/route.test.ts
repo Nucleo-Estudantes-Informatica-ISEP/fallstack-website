@@ -70,8 +70,9 @@ test("GET returns the paginated list for an admin", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { listFaqEntriesForAdmin } =
-    await import("@/application/services/faqService");
+  const { listFaqEntriesForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   vi.mocked(listFaqEntriesForAdmin).mockResolvedValue({
     items: [{ id: "a", question: "Q?", answer: "A.", order: 0 }],
     totalCount: 1,
@@ -94,8 +95,9 @@ test("POST rejects a malformed body with 400, without creating anything", async 
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { createFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { createFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
 
   const { POST } = await import("./route");
   const res = await POST(postRequest({ question: "" }), {
@@ -112,8 +114,9 @@ test("POST creates the entry and returns 201 for a valid admin request", async (
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { createFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { createFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   vi.mocked(createFaqEntryForAdmin).mockResolvedValue({
     id: "a",
     question: "Q?",
@@ -141,8 +144,9 @@ test("POST maps a duplicate-question conflict to 409", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { createFaqEntryForAdmin } =
-    await import("@/application/services/faqService");
+  const { createFaqEntryForAdmin } = await import(
+    "@/application/services/faqService"
+  );
   const { HttpError } = await import("@/types/HttpError");
   vi.mocked(createFaqEntryForAdmin).mockRejectedValue(
     new HttpError("Já existe uma pergunta igual.", 409)

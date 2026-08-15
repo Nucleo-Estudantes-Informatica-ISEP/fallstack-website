@@ -76,8 +76,9 @@ test("PATCH rejects an empty body with 400", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleEventForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleEventForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
 
   const { PATCH } = await import("./route");
   const res = await PATCH(patchRequest({}), {
@@ -94,8 +95,9 @@ test("PATCH updates the event for an admin request", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { updateScheduleEventForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { updateScheduleEventForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(updateScheduleEventForAdmin).mockResolvedValue({
     id: "a",
     day: 1,
@@ -136,8 +138,9 @@ test("DELETE removes the event and returns 204 for an admin request", async () =
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { deleteScheduleEventForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { deleteScheduleEventForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(deleteScheduleEventForAdmin).mockResolvedValue(undefined);
 
   const { DELETE } = await import("./route");

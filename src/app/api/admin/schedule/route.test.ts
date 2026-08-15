@@ -71,8 +71,9 @@ test("GET returns the paginated list for an admin", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { listScheduleEventsForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { listScheduleEventsForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(listScheduleEventsForAdmin).mockResolvedValue({
     items: [
       {
@@ -105,8 +106,9 @@ test("POST rejects a malformed body with 400, without creating anything", async 
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { createScheduleEventForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { createScheduleEventForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
 
   const { POST } = await import("./route");
   const res = await POST(postRequest({ day: 3, startTime: "09:00" }), {
@@ -123,8 +125,9 @@ test("POST creates the event and returns 201 for a valid admin request", async (
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(adminSession as never);
 
-  const { createScheduleEventForAdmin } =
-    await import("@/application/services/scheduleService");
+  const { createScheduleEventForAdmin } = await import(
+    "@/application/services/scheduleService"
+  );
   vi.mocked(createScheduleEventForAdmin).mockResolvedValue({
     id: "a",
     day: 1,
