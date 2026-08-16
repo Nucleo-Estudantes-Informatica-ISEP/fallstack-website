@@ -42,7 +42,9 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Test
-        run: pnpm test
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: pnpm exec vitest run --maxWorkers=2
 
       - name: Typecheck
         run: pnpm typecheck
