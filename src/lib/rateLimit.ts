@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 
-// Single-server, in-memory fixed-window limiter - no shared store, so this
-// only limits per app instance. Fine while the app runs on one server
-// (see #213); revisit with a shared store (e.g. Redis) if that changes.
+// Single-server, in-memory fixed-window limiter. A key can use the full budget
+// on both sides of a window boundary, so this is traffic shaping rather than a
+// hard security boundary. It is intentionally keyed by authenticated user ID.
+// Revisit with a shared token-bucket store if the app gains multiple replicas
+// or staging load tests show that the boundary burst is material (see #287).
 type Bucket = { count: number; resetAt: number };
 
 export function createRateLimiter({
@@ -41,36 +43,6 @@ export function createRateLimiter({
       return { allowed: true, retryAfterMs: 0 };
     },
   };
-}
-
-/**
- * Best-effort client IP from proxy headers, for rate-limiting keys only - not
- * an auth signal.
- *
- * Reverse proxies (nginx, Traefik/Coolify) append the real client IP as the
- * right-most hop of X-Forwarded-For rather than overwrite the header, since a
- * client can put anything it wants in the header on the original request.
- * Trusting the left-most entry would let a client defeat rate limiting by
- * sending a fresh, arbitrary X-Forwarded-For on every request, so this reads
- * the right-most hop instead - the one the trusted proxy appended. This
- * assumes the deployment sits behind exactly one such proxy; an extra hop
- * (e.g. a CDN in front of it) would require trusting the second-to-last
- * entry instead.
- */
-export function getClientIp(req: { headers: Pick<Headers, "get"> }): string {
-  const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    const hops = forwardedFor
-      .split(",")
-      .map((hop) => hop.trim())
-      .filter(Boolean);
-    if (hops.length > 0) return hops[hops.length - 1];
-  }
-
-  const realIp = req.headers.get("x-real-ip");
-  if (realIp) return realIp.trim();
-
-  return "unknown";
 }
 
 /** Standard 429 response for a rate-limited request. */
