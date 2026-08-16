@@ -21,6 +21,12 @@ import { withTransaction } from "../repositories/transaction";
 export const getFaqEntries = () => findAllFaqEntries();
 export const getFaqEntry = (id: string) => findFaqEntryById(id);
 
+const faqConflict = () =>
+  new HttpError(
+    "Outro administrador já utilizou esta pergunta ou posição. Atualize e tente novamente.",
+    409
+  );
+
 export async function listFaqEntriesForAdmin(query: AdminFaqQuery) {
   const [items, totalCount] = await Promise.all([
     findFaqEntriesForAdmin(query),
@@ -40,8 +46,7 @@ export async function createFaqEntryForAdmin(input: {
       return createFaqEntry({ ...input, order }, tx);
     });
   } catch (error) {
-    if (isUniqueConstraintError(error))
-      throw new HttpError("Já existe uma pergunta igual.", 409);
+    if (isUniqueConstraintError(error)) throw faqConflict();
     throw error;
   }
 }
@@ -54,8 +59,7 @@ export async function updateFaqEntryForAdmin(
   try {
     return await updateFaqEntry(id, input);
   } catch (error) {
-    if (isUniqueConstraintError(error))
-      throw new HttpError("Já existe uma pergunta igual.", 409);
+    if (isUniqueConstraintError(error)) throw faqConflict();
     throw error;
   }
 }
@@ -76,5 +80,12 @@ export async function updateFaqOrder(updates: { id: string; order: number }[]) {
     if (!existingIds.has(update.id)) throw new HttpError("Not found", 404);
   }
 
-  await bulkUpdateFaqOrder(updates);
+  // A deferred unique constraint permits swaps in this transaction but
+  // converts a stale concurrent reorder into a visible retry response.
+  try {
+    await bulkUpdateFaqOrder(updates);
+  } catch (error) {
+    if (isUniqueConstraintError(error)) throw faqConflict();
+    throw error;
+  }
 }

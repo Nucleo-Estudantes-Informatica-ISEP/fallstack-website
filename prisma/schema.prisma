@@ -171,6 +171,8 @@ model ScheduleEvent {
   activity  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([day, order], map: "ScheduleEvent_day_order_key")
 }
 
 model FaqEntry {
@@ -178,7 +180,7 @@ model FaqEntry {
 
   question  String   @unique
   answer    String
-  order     Int      @default(0)
+  order     Int      @unique(map: "FaqEntry_order_key") @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
