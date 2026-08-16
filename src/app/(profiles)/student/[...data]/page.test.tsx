@@ -66,19 +66,16 @@ beforeEach(async () => {
   const { getStudent } = await import("@/application/services/studentService");
   vi.mocked(getStudent).mockResolvedValue(STUDENT as never);
 
-  const { getStudentActions } = await import(
-    "@/application/services/actionService"
-  );
+  const { getStudentActions } =
+    await import("@/application/services/actionService");
   vi.mocked(getStudentActions).mockResolvedValue([]);
 
-  const { getCompanies } = await import(
-    "@/application/services/companyService"
-  );
+  const { getCompanies } =
+    await import("@/application/services/companyService");
   vi.mocked(getCompanies).mockResolvedValue([]);
 
-  const { getInterests } = await import(
-    "@/application/services/interestService"
-  );
+  const { getInterests } =
+    await import("@/application/services/interestService");
   vi.mocked(getInterests).mockResolvedValue([]);
 
   const { getStudentHistory, getStudentStats, getTodayStudentStats, isSaved } =
@@ -156,9 +153,8 @@ test("an employee whose company saved the student is not blocked", async () => {
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);
-  const { isSaved } = await import(
-    "@/application/services/savedStudentService"
-  );
+  const { isSaved } =
+    await import("@/application/services/savedStudentService");
   vi.mocked(isSaved).mockResolvedValue(true);
 
   const result = await renderFor("S123");
@@ -177,9 +173,8 @@ test("an employee whose company hasn't saved the student is blocked", async () =
     student: null,
     employee: { id: "e1", name: "Rui", companyId: "c1", company: { id: "c1" } },
   } as never);
-  const { isSaved } = await import(
-    "@/application/services/savedStudentService"
-  );
+  const { isSaved } =
+    await import("@/application/services/savedStudentService");
   vi.mocked(isSaved).mockResolvedValue(false);
 
   const result = await renderFor("S123");

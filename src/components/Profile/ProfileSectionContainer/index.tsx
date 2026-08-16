@@ -313,12 +313,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
 };
 
 type MenuKey =
-  | "sumario"
-  | "passe"
-  | "desafios"
-  | "info"
-  | "definicoes"
-  | "logout";
+  "sumario" | "passe" | "desafios" | "info" | "definicoes" | "logout";
 
 interface SidebarItem {
   key: MenuKey;

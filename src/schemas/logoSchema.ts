@@ -21,7 +21,7 @@ function hostnameMatches(pattern: string, hostname: string): boolean {
 // matches any sequence (including "/"), "*" matches any sequence except "/".
 function pathnameMatches(pattern: string, pathname: string): boolean {
   let regex = "";
-  for (let i = 0; i < pattern.length; ) {
+  for (let i = 0; i < pattern.length;) {
     if (pattern.startsWith("**", i)) {
       regex += ".*";
       i += 2;

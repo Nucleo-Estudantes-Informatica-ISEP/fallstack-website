@@ -2,28 +2,48 @@ name: CI
 
 on:
   pull_request:
+    branches: [dev, main]
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
+  DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci
+  NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+  NEXT_PUBLIC_BASE_URL: https://ci.invalid/api
+  NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
   quality:
-    name: Test, Typecheck & Lint
+    name: Test, typecheck, lint & build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-
-      - name: Enable Corepack
-        run: corepack enable
+          node-version: 20.19.1
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Test
-        run: pnpm test
+        run: pnpm exec vitest run --maxWorkers=2
 
       - name: Typecheck
         run: pnpm typecheck
@@ -31,25 +51,63 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-  docker-migrator:
-    name: Docker migrator stage runs as non-root
+      - name: Production build
+        run: pnpm build
+
+      - name: Validate Prisma schema
+        run: pnpm exec prisma validate
+
+  docker:
+    name: Production Docker image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      # Only builds the prisma-only `migrator` stage (no Next.js build), so
-      # this stays cheap. Building alone wouldn't catch a stage silently
-      # losing its USER instruction - `docker build` succeeds either way -
-      # so also run the image and assert the user, which is the actual
-      # regression this guards against (see Dockerfile's migrator stage).
       - name: Build migrator stage
-        run: docker build --target migrator -t migrator-check .
+        run: docker build --target migrator -t fallstack-migrator-check .
 
-      - name: Verify migrator runs as a non-root user
+      - name: Verify migrator runs as non-root
         run: |
-          user="$(docker run --rm --entrypoint whoami migrator-check)"
-          if [ "$user" != "nextjs" ]; then
-            echo "Expected migrator stage to run as 'nextjs', got '$user'" >&2
-            exit 1
-          fi
+          user="$(docker run --rm --entrypoint whoami fallstack-migrator-check)"
+          test "$user" = "nextjs"
+
+      - name: Build production application image
+        run: |
+          docker build \
+            --target runner \
+            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://ci-placeholder.supabase.co \
+            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=ci-placeholder \
+            --build-arg NEXT_PUBLIC_BASE_URL=https://ci.invalid/api \
+            -t fallstack-app-check .
+
+      - name: Verify application runs as non-root
+        run: test "$(docker inspect --format '{{.Config.User}}' fallstack-app-check)" = "nextjs"
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Install verified Gitleaks binary
+        env:
+          GITLEAKS_VERSION: 8.30.1
+        run: |
+          asset="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          curl --fail --silent --show-error --location --output "$asset" "$base/$asset"
+          curl --fail --silent --show-error --location --output checksums.txt "$base/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep " $asset$" checksums.txt | sha256sum --check --strict
+          tar -xzf "$asset" gitleaks
+
+      - name: Scan pull-request commits
+        if: github.event_name == 'pull_request'
+        run: ./gitleaks git --redact --no-banner --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.sha }}" .
+
+      - name: Scan pushed commit
+        if: github.event_name != 'pull_request'
+        run: ./gitleaks git --redact --no-banner --log-opts=-1 .

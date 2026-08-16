@@ -23,8 +23,7 @@ export default prisma;
 // derived rather than hand-duplicated so it stays in sync with the `prisma`
 // singleton above.
 export type DbClient =
-  | typeof prisma
-  | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
+  typeof prisma | Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 
 export const withTransaction = <T>(
   fn: (tx: Exclude<DbClient, typeof prisma>) => Promise<T>

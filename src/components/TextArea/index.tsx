@@ -2,8 +2,7 @@
 
 import slugifyId from "@/utils/slugifyId";
 
-interface TextAreaProps
-  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextAreaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   name: string;
   center?: boolean;
   placeholder?: string;

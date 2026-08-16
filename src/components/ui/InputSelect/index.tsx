@@ -2,8 +2,7 @@
 
 import slugifyId from "@/utils/slugifyId";
 
-interface InputSelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
   center?: boolean;
   placeholder?: string;

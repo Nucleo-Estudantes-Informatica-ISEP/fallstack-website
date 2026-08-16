@@ -33,9 +33,8 @@ function request(method: string) {
 }
 
 test("GET returns 404 when the action doesn't exist", async () => {
-  const { getActionQrCode } = await import(
-    "@/application/services/actionService"
-  );
+  const { getActionQrCode } =
+    await import("@/application/services/actionService");
   vi.mocked(getActionQrCode).mockResolvedValue(null);
 
   const { GET } = await import("./route");
@@ -47,9 +46,8 @@ test("GET returns 404 when the action doesn't exist", async () => {
 });
 
 test("GET returns the action and its live QR token for a real action", async () => {
-  const { getActionQrCode } = await import(
-    "@/application/services/actionService"
-  );
+  const { getActionQrCode } =
+    await import("@/application/services/actionService");
   vi.mocked(getActionQrCode).mockResolvedValue({
     action: {
       id: "action-1",
@@ -101,9 +99,8 @@ test("POST rejects a malformed/tampered scanned token with 400, without completi
   } as never);
 
   const { POST } = await import("./route");
-  const { completeActionById } = await import(
-    "@/application/services/actionService"
-  );
+  const { completeActionById } =
+    await import("@/application/services/actionService");
   const res = await POST(request("POST"), {
     params: Promise.resolve({ id: "not-a-real-jwt" }),
   });
@@ -131,9 +128,8 @@ test("POST completes the action for a validly-scanned, unexpired token", async (
   );
 
   const { POST } = await import("./route");
-  const { completeActionById } = await import(
-    "@/application/services/actionService"
-  );
+  const { completeActionById } =
+    await import("@/application/services/actionService");
   const res = await POST(request("POST"), {
     params: Promise.resolve({ id: token }),
   });
@@ -166,9 +162,8 @@ test("POST rejects a scanned token once it's past its 30s expiry (the #212 regre
     vi.advanceTimersByTime(31_000);
 
     const { POST } = await import("./route");
-    const { completeActionById } = await import(
-      "@/application/services/actionService"
-    );
+    const { completeActionById } =
+      await import("@/application/services/actionService");
     const res = await POST(request("POST"), {
       params: Promise.resolve({ id: token }),
     });
@@ -242,9 +237,8 @@ test("PATCH toggles the action live status for an admin", async () => {
   } as never);
 
   const { PATCH } = await import("./route");
-  const { toggleActionLive } = await import(
-    "@/application/services/actionService"
-  );
+  const { toggleActionLive } =
+    await import("@/application/services/actionService");
   const res = await PATCH(request("PATCH"), {
     params: Promise.resolve({ id: "action-1" }),
   });

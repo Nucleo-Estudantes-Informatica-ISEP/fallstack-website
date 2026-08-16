@@ -31,9 +31,8 @@ test("GET returns the schedule without requiring a session", async () => {
   ).default;
   vi.mocked(getServerSession).mockResolvedValue(null);
 
-  const { getScheduleEvents } = await import(
-    "@/application/services/scheduleService"
-  );
+  const { getScheduleEvents } =
+    await import("@/application/services/scheduleService");
   vi.mocked(getScheduleEvents).mockResolvedValue([
     {
       id: "a",
