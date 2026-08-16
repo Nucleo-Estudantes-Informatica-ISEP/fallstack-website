@@ -1,0 +1,59 @@
+name: Release Bootstrap
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/release-bootstrap.yml
+  workflow_dispatch: {}
+
+jobs:
+  bootstrap-v2:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      BOOTSTRAP_SHA: a9e2e24264d9cb49242b60e6b3606e6673e792ff
+    steps:
+      - name: Create release labels
+        run: |
+          gh label create release:major --color B60205 --description "Next merge to main creates a new major release" --force
+          gh label create release:minor --color 0E8A16 --description "Next merge to main creates a new minor release" --force
+          gh label create release:patch --color 1D76DB --description "Next merge to main creates a new patch release" --force
+
+      - name: Publish Fallstack v2 baseline
+        run: |
+          set -euo pipefail
+
+          if gh release view v2.0.0 >/dev/null 2>&1; then
+            echo "v2.0.0 already exists; bootstrap is complete."
+            exit 0
+          fi
+
+          cat > /tmp/release-notes.md <<EOF
+          # Fallstack v2
+
+          Fallstack v2 standardizes the project on the semantic-version release flow used by the NEI platforms.
+
+          ## Baseline
+
+          The code in this release is intentionally identical to the existing v1.1.0 / Fallstack 2026 maintenance baseline. There are no hidden feature changes between those two tags; v2.0.0 is the new versioning baseline from which future automated releases are calculated.
+
+          The historical edition markers remain available: 2025-edition, 2026-edition and v1.1.0.
+
+          ## Current platform
+
+          This baseline contains the Fallstack 2026 application with its admin backoffice, AuthNEI sign-in, student/company workflows, sponsor and schedule management, observability and security hardening, Docker/Coolify deployment, and the existing CI/test gates.
+
+          Open stabilization work is not part of this v2 baseline. Future PRs into main select exactly one semantic-version bump using release:major, release:minor or release:patch.
+          EOF
+
+          gh release create v2.0.0 \
+            --target "$BOOTSTRAP_SHA" \
+            --title "Fallstack v2" \
+            --notes-file /tmp/release-notes.md \
+            --latest
