@@ -8,7 +8,7 @@ import {
   findAdminAccountById,
   updateAdminUserFields,
 } from "../repositories/adminRepository";
-import { deleteUser, updateUserActive } from "../repositories/userRepository";
+import { updateUserActive } from "../repositories/userRepository";
 import {
   createAdminAccount,
   deleteAdminAccount,
@@ -17,6 +17,7 @@ import {
 } from "./adminAccountService";
 import {
   createSupabaseAuthUserAsAdmin,
+  deleteUserAccount,
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
@@ -35,10 +36,10 @@ vi.mock("../repositories/adminRepository", () => ({
 }));
 vi.mock("../repositories/userRepository", () => ({
   updateUserActive: vi.fn(),
-  deleteUser: vi.fn(),
 }));
 vi.mock("./authApplicationService", () => ({
   createSupabaseAuthUserAsAdmin: vi.fn(),
+  deleteUserAccount: vi.fn(),
   rollbackAuthUser: vi.fn(),
   setAuthUserBanned: vi.fn(),
 }));
@@ -159,7 +160,7 @@ test("an already-inactive super admin doesn't block further action on their row"
   await expect(deleteAdminAccount("a1")).resolves.toBeUndefined();
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
-  expect(deleteUser).toHaveBeenCalledWith("a1");
+  expect(deleteUserAccount).toHaveBeenCalledWith("a1");
 });
 
 test("can't delete the last active super admin", async () => {
@@ -169,7 +170,7 @@ test("can't delete the last active super admin", async () => {
   await expect(deleteAdminAccount("a1")).rejects.toThrow(
     "last active Super Admin"
   );
-  expect(deleteUser).not.toHaveBeenCalled();
+  expect(deleteUserAccount).not.toHaveBeenCalled();
 });
 
 test("can delete a regular admin's account freely", async () => {
@@ -178,7 +179,7 @@ test("can delete a regular admin's account freely", async () => {
   await deleteAdminAccount("a2");
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
-  expect(deleteUser).toHaveBeenCalledWith("a2");
+  expect(deleteUserAccount).toHaveBeenCalledWith("a2");
 });
 
 test("getAdminAccountById is a thin passthrough to the repository", async () => {

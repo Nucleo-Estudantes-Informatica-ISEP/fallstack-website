@@ -29,6 +29,20 @@ through Supabase Auth. Application tables must not store passwords or password
 reset tokens, and application routes must not provide separate password-change
 flows.
 
+#### Account deletion
+
+`auth.users.id` and `public."User".id` match by convention; no foreign key can
+span Supabase Auth and Prisma. Always delete accounts through the admin
+backoffice, which removes the Supabase Auth identity before the application
+row. Never delete users directly in the Supabase Auth dashboard: that leaves an
+unloginable application account.
+
+Before deploying changes that affect account deletion, and after any manual
+Auth operation, run
+[`supabase/audit-orphaned-accounts.sql`](./supabase/audit-orphaned-accounts.sql)
+manually in every environment's Supabase SQL editor. It is read-only and reports
+orphans in both directions; investigate each result before deleting anything.
+
 ---
 
 # Getting Started

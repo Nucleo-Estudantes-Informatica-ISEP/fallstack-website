@@ -5,13 +5,16 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 import {
   deleteUser,
+  deleteUserIfExists,
   findUserSessionByEmail,
   findUserSessionById,
   relinkUserId,
   upsertUser,
 } from "../repositories/userRepository";
 import {
+  AuthAccountDeletionError,
   completeOAuthSignIn,
+  deleteUserAccount,
   setAuthUserBanned,
 } from "./authApplicationService";
 
@@ -21,6 +24,7 @@ vi.mock("../repositories/userRepository", () => ({
   findUserSessionByEmail: vi.fn(),
   relinkUserId: vi.fn(),
   deleteUser: vi.fn(),
+  deleteUserIfExists: vi.fn(),
   upsertUser: vi.fn(),
 }));
 vi.mock("@/utils/supabase/admin", () => ({
@@ -28,6 +32,7 @@ vi.mock("@/utils/supabase/admin", () => ({
 }));
 
 const email = Email.create("student@isep.ipp.pt");
+const deleteAuthUser = vi.fn();
 const getUserById = vi.fn();
 const updateUserById = vi.fn();
 
@@ -36,8 +41,11 @@ beforeEach(() => {
   vi.mocked(findUserSessionById).mockResolvedValue(null);
   vi.mocked(findUserSessionByEmail).mockResolvedValue(null);
   vi.mocked(createAdminClient).mockReturnValue({
-    auth: { admin: { getUserById, updateUserById } },
+    auth: {
+      admin: { deleteUser: deleteAuthUser, getUserById, updateUserById },
+    },
   } as never);
+  deleteAuthUser.mockResolvedValue({ data: {}, error: null });
   updateUserById.mockResolvedValue({ data: {}, error: null });
   // Confirmed by default - individual tests override for the unconfirmed path.
   getUserById.mockResolvedValue({
@@ -191,6 +199,7 @@ test("discards an unconfirmed dangling account found by email instead of relinki
     fallback: "/signup",
   });
 
+  expect(deleteAuthUser).toHaveBeenCalledWith("spoofed-id");
   expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
   expect(relinkUserId).not.toHaveBeenCalled();
   expect(upsertUser).toHaveBeenCalledWith({
@@ -199,6 +208,122 @@ test("discards an unconfirmed dangling account found by email instead of relinki
     role: "STUDENT",
   });
   expect(destination).toBe("/signup");
+});
+
+test("deletes Supabase Auth before the matching application user", async () => {
+  await deleteUserAccount("user-1");
+
+  expect(deleteAuthUser).toHaveBeenCalledWith("user-1");
+  expect(deleteUser).toHaveBeenCalledWith("user-1");
+  expect(deleteAuthUser.mock.invocationCallOrder[0]).toBeLessThan(
+    vi.mocked(deleteUser).mock.invocationCallOrder[0]
+  );
+});
+
+test("keeps the application user when Supabase Auth deletion fails", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("network error"),
+  });
+
+  await expect(deleteUserAccount("user-1")).rejects.toThrow("network error");
+  await expect(deleteUserAccount("user-1")).rejects.toBeInstanceOf(
+    AuthAccountDeletionError
+  );
+  expect(deleteUser).not.toHaveBeenCalled();
+});
+
+test("deletes an application user whose Supabase Auth identity is already missing", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: Object.assign(new Error("User not found"), {
+      code: "user_not_found",
+    }),
+  });
+
+  await deleteUserAccount("user-1");
+
+  expect(deleteUser).toHaveBeenCalledWith("user-1");
+});
+
+test("uses a stable message for opaque Supabase Auth deletion errors", async () => {
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("{}"),
+  });
+
+  await expect(deleteUserAccount("user-1")).rejects.toThrow(
+    "Unable to delete account"
+  );
+  await expect(deleteUserAccount("user-1")).rejects.toBeInstanceOf(
+    AuthAccountDeletionError
+  );
+});
+
+test("blocks sign-in and leaves both sides intact when spoofed Auth cleanup fails", async () => {
+  vi.mocked(findUserSessionByEmail).mockResolvedValue({
+    id: "spoofed-id",
+    role: "STUDENT",
+    adminRole: null,
+    student: null,
+    employee: null,
+  } as never);
+  getUserById.mockResolvedValue({
+    data: { user: { email_confirmed_at: undefined } },
+    error: null,
+  });
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: new Error("network error"),
+  });
+
+  await expect(
+    completeOAuthSignIn({
+      id: "new-authnei-id",
+      email,
+      fallback: "/signup",
+    })
+  ).rejects.toBeInstanceOf(AuthAccountDeletionError);
+  expect(deleteUserIfExists).not.toHaveBeenCalled();
+  expect(upsertUser).not.toHaveBeenCalled();
+});
+
+test("finishes cleanup and provisions the verified identity when only the app-row delete races", async () => {
+  vi.mocked(findUserSessionByEmail).mockResolvedValue({
+    id: "spoofed-id",
+    role: "STUDENT",
+    adminRole: null,
+    student: null,
+    employee: null,
+  } as never);
+  getUserById.mockResolvedValue({
+    data: { user: { email_confirmed_at: undefined } },
+    error: null,
+  });
+  // Auth identity is already confirmed gone, so deleteUserAccount reaches
+  // the Prisma delete - which fails here (e.g. a concurrent OAuth callback
+  // already removed the row). No orphan risk: Auth is provably absent.
+  deleteAuthUser.mockResolvedValue({
+    data: null,
+    error: Object.assign(new Error("User not found"), {
+      code: "user_not_found",
+    }),
+  });
+  vi.mocked(deleteUser).mockRejectedValue(new Error("Record not found"));
+
+  await expect(
+    completeOAuthSignIn({
+      id: "new-authnei-id",
+      email,
+      fallback: "/signup",
+    })
+  ).resolves.toBe("/signup");
+  expect(deleteUserIfExists).toHaveBeenCalledWith("spoofed-id");
+  expect(upsertUser).toHaveBeenCalledWith({
+    id: "new-authnei-id",
+    email,
+    role: "STUDENT",
+  });
 });
 
 test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {
