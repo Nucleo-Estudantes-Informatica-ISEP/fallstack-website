@@ -28,9 +28,7 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   // Hide certain TopBar elements on auth pages (those inside the (auth) group)
   const isAuthPage = Boolean(
     pathname &&
-      ["/login", "/signup", "/password-reset"].some((p) =>
-        pathname.startsWith(p)
-      )
+    ["/login", "/signup", "/password-reset"].some((p) => pathname.startsWith(p))
   );
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 

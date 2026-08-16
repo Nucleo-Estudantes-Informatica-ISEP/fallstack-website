@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { uploadAvatar } from "./upload";
+
 const { post, uploadToSignedUrl } = vi.hoisted(() => ({
   post: vi.fn(),
   uploadToSignedUrl: vi.fn(),
@@ -21,12 +23,14 @@ vi.mock("@/utils/supabase/client", () => ({
   }),
 }));
 
-import { uploadAvatar } from "./upload";
-
 describe("uploadAvatar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    post.mockResolvedValue({ id: "avatar-id", path: "avatar-path", token: "token" });
+    post.mockResolvedValue({
+      id: "avatar-id",
+      path: "avatar-path",
+      token: "token",
+    });
   });
 
   it("returns null when Storage rejects a signed upload", async () => {
