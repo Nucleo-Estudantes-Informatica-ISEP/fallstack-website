@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ZodError, ZodType } from "zod";
 
 import { HttpError } from "@/types/HttpError";
+import { reportError } from "@/lib/logger";
 import getServerSession from "@/application/services/sessionService";
 import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
 
@@ -15,6 +16,12 @@ export const httpErrorResponse = (error: unknown) => {
     );
   if (error instanceof ZodError)
     return NextResponse.json({ error: error.issues }, { status: 400 });
+
+  reportError(
+    error,
+    { operation: "unhandled_route_error" },
+    "Unhandled error in route handler"
+  );
   return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
 };
 

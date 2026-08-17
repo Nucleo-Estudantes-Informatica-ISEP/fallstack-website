@@ -68,7 +68,17 @@ export const updateStudentMedia = (
   id: string,
   data: { avatar?: string | null; cv?: string | null },
   db: DbClient = prisma
-) => db.student.update({ where: { id }, data });
+) =>
+  db.student.update({
+    where: { id },
+    data: {
+      ...data,
+      // A fresh cv upload restarts its retention window and un-purges the
+      // profile banner; an omitted or explicitly null cv (no upload at
+      // signup) leaves cvUploadedAt/cvPurgedAt untouched.
+      ...(data.cv ? { cvUploadedAt: new Date(), cvPurgedAt: null } : {}),
+    },
+  });
 
 export const updateStudentAvatar = (code: string, avatar: string) =>
   prisma.student.update({ where: { code }, data: { avatar } });
@@ -77,7 +87,11 @@ export const updateStudentCv = (
   code: string,
   cv: string,
   db: DbClient = prisma
-) => db.student.update({ where: { code }, data: { cv } });
+) =>
+  db.student.update({
+    where: { code },
+    data: { cv, cvUploadedAt: new Date(), cvPurgedAt: null },
+  });
 
 export const countStudents = () =>
   prisma.student.count({ where: { user: { AND: [{ role: "STUDENT" }] } } });

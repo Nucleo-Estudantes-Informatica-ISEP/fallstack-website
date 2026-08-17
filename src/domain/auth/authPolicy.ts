@@ -7,12 +7,7 @@
  * "superadmin" - logged-in user with session.adminRole === "SUPER_ADMIN"
  */
 export type AuthPolicy =
-  | "public"
-  | "session"
-  | "student"
-  | "employee"
-  | "admin"
-  | "superadmin";
+  "public" | "session" | "student" | "employee" | "admin" | "superadmin";
 
 export interface AuthPolicySession {
   // Null for an admin-only account - it isn't a STUDENT or EMPLOYEE.

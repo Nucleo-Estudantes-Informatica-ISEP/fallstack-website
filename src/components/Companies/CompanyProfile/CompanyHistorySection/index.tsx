@@ -113,7 +113,7 @@ const CompanySavesSection = ({
   return (
     <div className="my-4 flex w-full flex-col items-center justify-center text-white">
       <div
-        className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 scrollbar max-h-80 w-full overflow-y-scroll pl-1 scrollbar-thumb-slate-500 scrollbar-track-transparent"
+        className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 scrollbar max-h-80 w-full scrollbar-thumb-slate-500 scrollbar-track-transparent overflow-y-scroll pl-1"
         style={{ scrollbarGutter: "stable" }}
       >
         {!historyData.length ? (

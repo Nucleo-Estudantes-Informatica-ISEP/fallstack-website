@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -13,6 +13,10 @@ interface PerfilTabProps {
   user: SessionDto;
 }
 
+// Personal QR tokens last 30 minutes. Refresh before expiry while the tab stays open.
+const QR_CODE_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
+const QR_CODE_RETRY_INTERVAL_MS = 30 * 1000;
+
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
   const [qrcode, setQrcode] = useState<string | null>(null);
 
@@ -21,7 +25,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
 
   const handleCopyClick = () => {
     if (user.student?.code) {
-      navigator.clipboard.writeText(user.student?.code).catch(() => {});
+      navigator.clipboard.writeText(user.student.code).catch(() => {});
 
       // start animation when code is copied
       controls.start({
@@ -38,14 +42,36 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
     }
   };
 
-  const fetchQrcode = async () => {
+  const fetchQrcode = useCallback(async () => {
     const { data } = await httpClient.get<{ data: string }>("/qrcode");
     setQrcode(data);
-  };
+  }, []);
 
   useEffect(() => {
-    fetchQrcode();
-  });
+    let cancelled = false;
+    let refreshTimeout: number | undefined;
+
+    const refreshQrcode = async () => {
+      let delay = QR_CODE_RETRY_INTERVAL_MS;
+      try {
+        await fetchQrcode();
+        delay = QR_CODE_REFRESH_INTERVAL_MS;
+      } catch {
+        // Keep the last valid QR visible and retry before its token expires.
+      }
+      if (!cancelled)
+        refreshTimeout = window.setTimeout(() => {
+          void refreshQrcode();
+        }, delay);
+    };
+
+    void refreshQrcode();
+
+    return () => {
+      cancelled = true;
+      if (refreshTimeout !== undefined) window.clearTimeout(refreshTimeout);
+    };
+  }, [fetchQrcode]);
 
   return (
     <div className="mt-10 grid grid-cols-1 sm:mt-0 sm:grid-cols-1 md:mt-6 md:grid-cols-2 lg:mt-20">

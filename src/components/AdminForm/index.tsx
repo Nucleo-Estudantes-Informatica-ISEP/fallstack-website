@@ -68,9 +68,7 @@ export interface AdminFormPasswordSection {
 }
 
 export type AdminFormSection =
-  | AdminFormFieldsSection
-  | AdminFormImageSection
-  | AdminFormPasswordSection;
+  AdminFormFieldsSection | AdminFormImageSection | AdminFormPasswordSection;
 
 interface AdminFormProps {
   /** Present -> editing an existing record; absent -> creating a new one. */
