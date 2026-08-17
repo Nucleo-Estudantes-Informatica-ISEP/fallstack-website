@@ -53,3 +53,9 @@ jobs:
             echo "Expected migrator stage to run as 'nextjs', got '$user'" >&2
             exit 1
           fi
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: Nucleo-Estudantes-Informatica-ISEP/.github/.github/actions/secret-scan@master
