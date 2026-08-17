@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { FACT_ICON_NAMES } from "@/domain/company/factIcons";
+import { LOGO_WIDTH_CLASSES } from "@/domain/company/logoDisplayClasses";
 import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
 const optionalLink = websiteUrlSchema
@@ -35,7 +36,7 @@ export const updateCompanyProfileSchema = z.object({
 export const updateCompanyDisplayStyleSchema = z.object({
   logoWidth: z.number().int().positive().nullable().optional(),
   logoHeight: z.number().int().positive().nullable().optional(),
-  className: z.string().max(100).nullable().optional(),
+  className: z.enum(LOGO_WIDTH_CLASSES).nullable().optional(),
 });
 
 export const updateCompanyInterestsSchema = z.object({
