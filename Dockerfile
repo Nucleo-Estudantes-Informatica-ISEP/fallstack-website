@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:26-alpine AS base
+FROM node:24-alpine AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
 RUN apk add --no-cache libc6-compat curl openssl && corepack enable
