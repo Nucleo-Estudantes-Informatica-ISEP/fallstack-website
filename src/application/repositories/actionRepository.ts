@@ -5,7 +5,10 @@ import { actionCompletionUpsertArgs } from "@/domain/action/actionRules";
 import prisma, { DbClient } from "./database";
 
 export const findActionById = (id: string) =>
-  prisma.action.findUnique({ where: { id } });
+  prisma.action.findUnique({
+    where: { id },
+    include: { company: { select: { id: true, name: true } } },
+  });
 
 export const findActionByName = (name: string, db: DbClient = prisma) =>
   db.action.findUnique({ where: { name } });
@@ -56,6 +59,7 @@ export const findActionsForAdmin = ({
     orderBy: actionOrderBy(sort, order),
     skip: (page - 1) * pageSize,
     take: pageSize,
+    include: { company: { select: { id: true, name: true } } },
   });
 
 export const createAction = (data: {
@@ -65,7 +69,12 @@ export const createAction = (data: {
   altText?: string | null;
   isLive?: boolean;
   isVisible?: boolean;
-}) => prisma.action.create({ data });
+  companyId?: string | null;
+}) =>
+  prisma.action.create({
+    data,
+    include: { company: { select: { id: true, name: true } } },
+  });
 
 export const updateActionFields = (
   id: string,
@@ -76,8 +85,21 @@ export const updateActionFields = (
     altText?: string | null;
     isLive?: boolean;
     isVisible?: boolean;
+    companyId?: string | null;
   }
-) => prisma.action.update({ where: { id }, data });
+) =>
+  prisma.action.update({
+    where: { id },
+    data,
+    include: { company: { select: { id: true, name: true } } },
+  });
+
+// Replaces edition/actions.ts's boothActions name-matching map - see #280.
+// companyId is @unique, so at most one Action can be linked per company.
+export const findActionByCompanyId = (
+  companyId: string,
+  db: DbClient = prisma
+) => db.action.findUnique({ where: { companyId } });
 
 export const findVisibleActions = () =>
   prisma.action.findMany({ where: { isVisible: true } });

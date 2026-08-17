@@ -1,4 +1,4 @@
-import { AdminRole, PrismaClient, Role, Tier, Year } from "@prisma/client";
+import { AdminRole, PrismaClient, Role, Year } from "@prisma/client";
 
 import { actions } from "@/edition/actions";
 import { createAdminClient } from "@/utils/supabase/admin";
@@ -34,7 +34,7 @@ const INTERESTS = [
 const COMPANIES = [
   {
     name: "armis",
-    tier: Tier.DIAMOND,
+    rankName: "Diamond",
     interests: ["Cyber Security", "Networking"],
   },
 ];
@@ -176,11 +176,17 @@ async function seedStudent2() {
   return newUser;
 }
 
+async function getRankIdByName(name: string) {
+  const rank = await prisma.companyRank.findUniqueOrThrow({ where: { name } });
+  return rank.id;
+}
+
 async function seedNei(userId: string) {
+  const rankId = await getRankIdByName("Diamond");
   const company = await prisma.company.upsert({
     where: { name: "NEI" },
-    create: { name: "NEI", tier: Tier.DIAMOND },
-    update: { tier: Tier.DIAMOND },
+    create: { name: "NEI", rankId },
+    update: { rankId },
   });
 
   await prisma.employee.upsert({
@@ -223,10 +229,11 @@ async function seedCompanies() {
       });
     }
 
+    const rankId = await getRankIdByName(c.rankName);
     const company = await prisma.company.upsert({
       where: { name: c.name },
-      create: { name: c.name, tier: c.tier },
-      update: { name: c.name, tier: c.tier },
+      create: { name: c.name, rankId },
+      update: { name: c.name, rankId },
     });
 
     await prisma.employee.upsert({

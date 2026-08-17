@@ -2,9 +2,8 @@ import React from "react";
 
 import CompanyPageSection from "@/components/Companies/CompanyPageSection";
 import Custom404 from "@/app/not-found";
+import { toCompanyDisplayDto } from "@/application/dto/companyDto";
 import { getCompanyDisplayByName } from "@/application/services/companyService";
-import { COMPANY_TIER } from "@/domain/company/company-tier";
-import { findEditionContentByName } from "@/edition";
 
 interface CompanySearchProps {
   params: Promise<{
@@ -14,20 +13,21 @@ interface CompanySearchProps {
 
 const CompanyPage = async (props: CompanySearchProps) => {
   const params = await props.params;
-  const company = await getCompanyDisplayByName(params.name);
+  // Historically arrives with literal "%20"s undecoded (see the old
+  // CompanyByName.ts's `.replaceAll("%20", " ")`) - decodeURIComponent
+  // covers that plus any other percent-encoded character generally.
+  const name = decodeURIComponent(params.name);
+  const company = await getCompanyDisplayByName(name);
 
-  if (!company || company.tier === COMPANY_TIER.SILVER) return Custom404();
-
-  const editionContent = findEditionContentByName(params.name);
-  if (!editionContent?.modalInformation) return Custom404();
+  // A rank without hasInternalPage never gets this page, and neither does a
+  // rank that does but has no CompanyProfile content to show - both 404
+  // rather than rendering an empty shell.
+  if (!company || !company.rank.style?.hasInternalPage || !company.profile)
+    return Custom404();
 
   return (
     <section className="flex size-full flex-col items-center bg-black">
-      <CompanyPageSection
-        companyName={params.name}
-        logoHref={company.avatar}
-        tier={company.tier}
-      />
+      <CompanyPageSection company={toCompanyDisplayDto(company)} />
     </section>
   );
 };

@@ -27,7 +27,7 @@ const columns: DataTableColumn<CompanyRow>[] = [
       company.avatar ? <LogoThumbnail src={company.avatar} size={40} /> : null,
   },
   { key: "name", header: "Nome", render: (c) => c.name, sortable: true },
-  { key: "tier", header: "Tier", render: (c) => c.tier, sortable: true },
+  { key: "rank", header: "Rank", render: (c) => c.rank.name },
   { key: "website", header: "Website", render: (c) => c.website ?? "-" },
   { key: "order", header: "Ordem", render: (c) => c.order, sortable: true },
 ];
@@ -51,10 +51,16 @@ const CompaniesAdminPage = async ({
         <h1 className="text-2xl font-bold text-gray-800">Empresas</h1>
         <div className="flex gap-2">
           <Link
-            href="/companies/tier-board"
+            href="/companies/ranks"
             className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-100"
           >
-            Ordenar por tier
+            Gerir ranks
+          </Link>
+          <Link
+            href="/companies/rank-board"
+            className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-100"
+          >
+            Ordenar por rank
           </Link>
           <Link
             href="/companies/new"
