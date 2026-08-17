@@ -30,12 +30,14 @@ export default defineConfig([
     ],
   },
   {
-    extends: compat.extends(
-      "next/core-web-vitals",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:prettier/recommended",
-      "plugin:tailwindcss/recommended"
-    ),
+    extends: [
+      ...compat.extends(
+        "next/core-web-vitals",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:prettier/recommended"
+      ),
+      tailwindcss.configs.recommended,
+    ],
 
     plugins: {
       "@typescript-eslint": typescriptEslint,
@@ -54,7 +56,7 @@ export default defineConfig([
 
     settings: {
       tailwindcss: {
-        config: path.join(__dirname, "src/app/globals.css"),
+        cssConfigPath: path.join(__dirname, "src/app/globals.css"),
       },
     },
 
