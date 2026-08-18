@@ -42,18 +42,18 @@ beforeEach(() => {
   vi.mocked(updateEmployeeFields).mockResolvedValue({ id: "e1" } as never);
 });
 
-test("deactivating an employee updates the DB flag and bans the Supabase auth user", async () => {
+test("deactivating an employee is local to Fallstack", async () => {
   await updateEmployeeForAdmin("e1", { active: false });
 
   expect(updateUserActive).toHaveBeenCalledWith("e1", false);
-  expect(setAuthUserBanned).toHaveBeenCalledWith("e1", true);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
-test("reactivating an employee clears the DB flag and unbans the Supabase auth user", async () => {
+test("reactivating an employee is local to Fallstack", async () => {
   await updateEmployeeForAdmin("e1", { active: true });
 
   expect(updateUserActive).toHaveBeenCalledWith("e1", true);
-  expect(setAuthUserBanned).toHaveBeenCalledWith("e1", false);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
 test("leaves active status untouched when not part of the update", async () => {
@@ -63,7 +63,7 @@ test("leaves active status untouched when not part of the update", async () => {
   expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
-test("deletes the employee account through the shared auth-aware service", async () => {
+test("deletes only the Fallstack employee account", async () => {
   await deleteEmployeeForAdmin("e1");
 
   expect(deleteUserAccount).toHaveBeenCalledWith("e1");
