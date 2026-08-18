@@ -6,10 +6,8 @@ import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 
-import {
-  createEmployee,
-  findCompanyByInviteCodeHash,
-} from "../repositories/companyRepository";
+import { createEmployee } from "../repositories/companyRepository";
+import { findCompanyByInviteCodeHash } from "../repositories/companyInviteRepository";
 import { withTransaction } from "../repositories/transaction";
 import {
   deleteUser,
@@ -24,27 +22,21 @@ import {
   type ZitadelIdentity,
 } from "./zitadelAuthService";
 
-// Retained as a compatibility type for callers/tests while #305 removes the
-// old dual-write account-deletion flow. Direct ZITADEL auth has no second
-// Supabase Auth record that can fail independently.
 export class AuthAccountDeletionError extends HttpError {}
 
 export async function deleteUserAccount(userId: string) {
   await deleteUser(userId);
 }
 
-// User.active is now the application-side deactivation enforcement point.
-// ZITADEL credentials are shared across NEI applications, so Fallstack must
-// not globally ban/deactivate the identity when a Fallstack account is
-// deactivated.
+// User.active is the Fallstack-specific deactivation gate. ZITADEL identities
+// are shared across NEI apps, so Fallstack must never globally ban the person.
 export async function setAuthUserBanned(_userId: string, _banned: boolean) {
   return;
 }
 
-// Admin-created rows are invitations/placeholders only. Authentication and
-// passwords are always created/managed in AuthNEI. The old function name is
-// kept temporarily to avoid a broad unrelated admin CRUD rewrite in this PR;
-// callers only consume the generated application UUID.
+// Compatibility shim for existing admin CRUD: it now allocates only a local
+// application UUID. Authentication/passwords are owned exclusively by
+// AuthNEI; the row is linked by verified email on the person's first login.
 export async function createSupabaseAuthUserAsAdmin(
   _email: string,
   _password: string,
@@ -99,10 +91,6 @@ export async function signUpEmployee(input: {
     throw new HttpError("Unable to resolve AuthNEI account", 401);
   if (existing.employee) throw new HttpError("Employee profile already exists", 409);
 
-  // Grant the ZITADEL role first. If the DB transaction then fails the user
-  // can safely retry onboarding; having the role without a local Employee
-  // profile grants no Fallstack employee access because sessionService also
-  // requires the local profile/company.
   await assignEmployeeRole(input.zitadelUserId);
 
   try {
@@ -127,9 +115,6 @@ export async function signUpEmployee(input: {
     throw new HttpError("Unable to create employee profile", 500);
   }
 
-  // The browser's pre-onboarding app session predates the new ZITADEL role.
-  // Return a replacement app-session JWT immediately so access works without
-  // forcing an extra round trip through the IdP.
   return signAppSession({
     sub: input.zitadelUserId,
     email: input.email,
