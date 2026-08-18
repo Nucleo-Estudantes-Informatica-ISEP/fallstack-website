@@ -111,6 +111,13 @@ function expectRequiredComposeVariable(block: string, name: string) {
   ).toContain(`${name}: ${requiredExpansion}`);
 }
 
+function expectComposeVariable(block: string, name: string, expansion: string) {
+  expect(
+    block,
+    `docker-compose.app.yml must wire ${name} to ${expansion}`
+  ).toContain(`${name}: ${expansion}`);
+}
+
 test("every NEXT_PUBLIC_* var declared in env.client.ts is wired through the Dockerfile's app-builder ARG/ENV pair", () => {
   const declaredVars = readClientEnvVarNames();
   expect(declaredVars.length).toBeGreaterThan(0);
@@ -141,31 +148,43 @@ test("every NEXT_PUBLIC_* var declared in env.client.ts is passed as a build arg
   }
 });
 
-test("Coolify compose marks production build and runtime configuration as required", () => {
+test("Coolify compose keeps secrets required and derives safe service defaults", () => {
+  const baseUrlExpansion =
+    "${NEXT_PUBLIC_BASE_URL:-${SERVICE_URL_WEB:-http://localhost:4000}/api}";
+  const directUrlExpansion =
+    "${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}";
+
   const webBuildArgs = extractComposeWebBuildArgs();
   for (const name of [
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "NEXT_PUBLIC_BASE_URL",
   ]) {
     expectRequiredComposeVariable(webBuildArgs, name);
   }
+  expectComposeVariable(
+    webBuildArgs,
+    "NEXT_PUBLIC_BASE_URL",
+    baseUrlExpansion
+  );
 
   const migrateEnvironment = extractComposeServiceEnvironment("migrate");
-  for (const name of ["DATABASE_URL", "DIRECT_URL"]) {
-    expectRequiredComposeVariable(migrateEnvironment, name);
-  }
+  expectRequiredComposeVariable(migrateEnvironment, "DATABASE_URL");
+  expectComposeVariable(migrateEnvironment, "DIRECT_URL", directUrlExpansion);
 
   const webEnvironment = extractComposeServiceEnvironment("web");
   for (const name of [
     "DATABASE_URL",
-    "DIRECT_URL",
     "JWT_SECRET",
     "SUPABASE_SERVICE_ROLE_KEY",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    "NEXT_PUBLIC_BASE_URL",
   ]) {
     expectRequiredComposeVariable(webEnvironment, name);
   }
+  expectComposeVariable(webEnvironment, "DIRECT_URL", directUrlExpansion);
+  expectComposeVariable(
+    webEnvironment,
+    "NEXT_PUBLIC_BASE_URL",
+    baseUrlExpansion
+  );
 });
