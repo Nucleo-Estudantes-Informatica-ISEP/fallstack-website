@@ -326,7 +326,7 @@ test("finishes cleanup and provisions the verified identity when only the app-ro
   });
 });
 
-test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {
+test("aborts without deleting when confirmation status is unknown", async () => {
   vi.mocked(findUserSessionByEmail).mockResolvedValue({
     id: "old-password-id",
     role: "STUDENT",
@@ -339,14 +339,19 @@ test("fails closed (treats as unconfirmed) when the admin lookup errors", async 
     error: new Error("network error"),
   });
 
-  await completeOAuthSignIn({
-    id: "new-authnei-id",
-    email,
-    fallback: "/signup",
-  });
+  await expect(
+    completeOAuthSignIn({
+      id: "new-authnei-id",
+      email,
+      fallback: "/signup",
+    })
+  ).rejects.toThrow("Unable to verify existing account");
 
-  expect(deleteUser).toHaveBeenCalledWith("old-password-id");
+  expect(deleteAuthUser).not.toHaveBeenCalled();
+  expect(deleteUser).not.toHaveBeenCalled();
+  expect(deleteUserIfExists).not.toHaveBeenCalled();
   expect(relinkUserId).not.toHaveBeenCalled();
+  expect(upsertUser).not.toHaveBeenCalled();
 });
 
 test("setAuthUserBanned(true) sets a long ban_duration", async () => {
