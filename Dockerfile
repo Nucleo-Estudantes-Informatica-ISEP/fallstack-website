@@ -60,13 +60,12 @@ ARG NEXT_PUBLIC_SENTRY_DSN=""
 ARG SENTRY_URL=""
 ARG SENTRY_ORG=""
 ARG SENTRY_PROJECT=""
-# Public (non-secret) Supabase values: Next.js inlines these into the
-# browser bundle at build time, so the builder stage needs them directly —
-# unlike JWT_SECRET/SUPABASE_SERVICE_ROLE_KEY, which stay runtime-only via
-# env_file (see docker-compose.app.yml).
+# Public (non-secret) Supabase/AuthNEI values: Next.js inlines these into the
+# browser bundle at build time, so the builder stage needs them directly.
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ARG NEXT_PUBLIC_BASE_URL=""
+ARG NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID=""
 # Links the admin backoffice's Logs nav item out to GlitchTip/Sentry -
 # NEXT_PUBLIC_*, so (like the others above) it must be supplied as a build
 # arg to actually land in the compiled bundle; declaring it only in
@@ -80,6 +79,7 @@ ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
+ENV NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID=$NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID
 ENV NEXT_PUBLIC_LOGS_DASHBOARD_URL=$NEXT_PUBLIC_LOGS_DASHBOARD_URL
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 
