@@ -17,13 +17,13 @@ const config = {
   uploads: {
     avatar: {
       types: ["image/png", "image/jpeg"],
-      maxSize: 5 * 1024 * 1024, // 50mb
-      rateLimit: { windowMs: 60 * 1000, max: 5 }, // 5 uploads per minute per IP
+      maxSize: 5 * 1024 * 1024, // 5 MB
+      rateLimit: { windowMs: 60 * 1000, max: 5 }, // 5 upload tickets/minute/student
     },
     cv: {
       types: ["application/pdf"],
-      maxSize: 10 * 1024 * 1024, // 50mb
-      rateLimit: { windowMs: 60 * 1000, max: 5 }, // 5 uploads per minute per IP
+      maxSize: 10 * 1024 * 1024, // 10 MB
+      rateLimit: { windowMs: 60 * 1000, max: 5 }, // 5 upload tickets/minute/student
     },
   },
 

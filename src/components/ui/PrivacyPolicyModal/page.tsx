@@ -30,7 +30,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
       ></div>
 
       <section className="relative z-10 flex h-full w-full flex-col overflow-hidden border border-white/10 bg-black text-white antialiased shadow-2xl md:max-h-[90vh] md:max-w-5xl md:rounded-xl">
-        <div className="scrollbar-thin flex-1 overflow-y-auto scrollbar-thumb-gray-600 scrollbar-track-black">
+        <div className="scrollbar-thin flex-1 scrollbar-thumb-gray-600 scrollbar-track-black overflow-y-auto">
           <div className="relative flex h-[300px] w-full shrink-0 items-center justify-center bg-gray-900">
             <div className="absolute inset-0 z-0 flex items-center justify-center">
               <Image

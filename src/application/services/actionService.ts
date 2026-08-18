@@ -8,6 +8,7 @@ import {
   countActionsForAdmin,
   createAction,
   createActionCompletion,
+  findActionByCompanyId,
   findActionById,
   findActionByName,
   findActionCompletions,
@@ -43,6 +44,7 @@ export async function createActionForAdmin(input: {
   altText?: string | null;
   isLive?: boolean;
   isVisible?: boolean;
+  companyId?: string | null;
 }) {
   return createAction(input);
 }
@@ -56,6 +58,7 @@ export async function updateActionForAdmin(
     altText?: string | null;
     isLive?: boolean;
     isVisible?: boolean;
+    companyId?: string | null;
   }
 ) {
   if (!(await findActionById(id))) throw new HttpError("Not found", 404);
@@ -86,11 +89,27 @@ export async function completeAction(
   return upsertActionCompletion(student.id, action.id, db);
 }
 
+// Replaces edition/actions.ts's boothActions name-matching map - see #280.
+// A company with no booth Action assigned (Action.companyId) simply has
+// nothing to complete, same as completeAction's "unknown action name" case.
+export async function completeCompanyBoothAction(
+  studentCode: string,
+  companyId: string,
+  db: DbClient = prisma
+) {
+  const [action, student] = await Promise.all([
+    findActionByCompanyId(companyId, db),
+    findStudentByCode(studentCode, db),
+  ]);
+  if (!action || !student) return null;
+  return upsertActionCompletion(student.id, action.id, db);
+}
+
 export async function getActionQrCode(id: string) {
   const action = await findActionById(id);
   if (!action) return null;
   const timestamp =
-    Math.round(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
+    Math.floor(Date.now() / config.constants.actionQrCodeRefreshRateMs) *
     config.constants.actionQrCodeRefreshRateMs;
   return {
     action,

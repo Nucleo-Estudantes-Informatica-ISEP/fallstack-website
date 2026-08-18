@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import config from "@/config";
 import { defineHandler } from "@/lib/http/server";
 import { toActionDto } from "@/application/dto/actionDto";
 import {
@@ -8,6 +9,7 @@ import {
   toggleActionLive,
 } from "@/application/services/actionService";
 import { verifyJwt } from "@/application/services/authService";
+import { isActionQrTimestampFresh } from "@/domain/action/actionRules";
 
 interface ActionParams {
   id: string;
@@ -35,6 +37,14 @@ export const POST = defineHandler<ActionParams>({
     } | null;
     if (!decoded?.id || !decoded.timestamp)
       return NextResponse.json({ error: "Erro inesperado." }, { status: 400 });
+    if (
+      !isActionQrTimestampFresh(
+        decoded.timestamp,
+        Date.now(),
+        config.constants.actionQrCodeRefreshRateMs
+      )
+    )
+      return NextResponse.json({ error: "QR Code expirado." }, { status: 400 });
     await completeActionById(session!.student!.id, decoded.id);
     return NextResponse.json({ message: "Action completed" });
   },

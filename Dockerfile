@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
 RUN apk add --no-cache libc6-compat curl openssl && corepack enable
@@ -13,7 +13,7 @@ FROM base AS deps
 WORKDIR /app
 
 # Copy package files and Prisma schema (needed for postinstall prisma generate)
-COPY package.json package-lock.json* pnpm-lock.yaml* ./
+COPY package.json package-lock.json* pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY prisma ./prisma
 
 # Install dependencies based on the preferred package manager.

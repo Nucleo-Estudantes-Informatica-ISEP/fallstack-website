@@ -2,8 +2,7 @@
 
 import Spinner from "@/components/ui/Spinner";
 
-interface PrimaryButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface PrimaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   href: string;
   className?: string;

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toActionDto } from "@/application/dto/actionDto";
+import { toAdminActionDto } from "@/application/dto/actionDto";
 import {
   createActionForAdmin,
   listActionsForAdmin,
@@ -19,7 +19,10 @@ export const GET = defineHandler({
       order: params.get("order") === "desc" ? "desc" : "asc",
       search: params.get("q") ?? undefined,
     });
-    return NextResponse.json({ items: items.map(toActionDto), totalCount });
+    return NextResponse.json({
+      items: items.map(toAdminActionDto),
+      totalCount,
+    });
   },
 });
 
@@ -28,6 +31,6 @@ export const POST = defineHandler({
   schema: createAdminActionSchema,
   handler: async ({ body }) => {
     const action = await createActionForAdmin(body);
-    return NextResponse.json(toActionDto(action), { status: 201 });
+    return NextResponse.json(toAdminActionDto(action), { status: 201 });
   },
 });

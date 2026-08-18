@@ -2,18 +2,17 @@
 
 import React from "react";
 
-import FactData from "@/types/FactData";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
-import { COMPANY_TIER, CompanyTier } from "@/domain/company/company-tier";
+import { Fact } from "@/domain/company/companyProfileContent";
 
 interface CompanyInfoProps {
-  bodyText: React.ReactNode;
+  bodyText: string;
   videoHref: string | undefined;
   videoTitle: string | undefined;
-  tier: CompanyTier;
+  showsPromoVideo: boolean;
   interests?: string[];
-  facts?: FactData[];
+  facts?: Fact[];
 }
 
 const CompanyInfo: React.FC<CompanyInfoProps> = ({
@@ -22,22 +21,29 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
   videoTitle,
   interests,
   facts,
-  tier,
+  showsPromoVideo,
 }) => {
+  const paragraphs = bodyText
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
   return (
     <section className="mx-auto w-11/12 rounded-lg bg-white p-10 sm:w-3/4 lg:p-12">
-      {bodyText && (
+      {paragraphs.length > 0 && (
         <CompanyDescription>
           <h1 className="mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             Sobre
           </h1>
-          <div className="text-left font-light text-black md:text-lg lg:text-xl">
-            {bodyText}
+          <div className="space-y-4 text-left font-light text-black md:text-lg lg:text-xl">
+            {paragraphs.map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
           </div>
         </CompanyDescription>
       )}
-      {facts && <FactSection facts={facts} />}
-      {tier === COMPANY_TIER.DIAMOND && (
+      {facts && facts.length > 0 && <FactSection facts={facts} />}
+      {showsPromoVideo && (
         <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
           <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
             {videoTitle || "Vídeo"}

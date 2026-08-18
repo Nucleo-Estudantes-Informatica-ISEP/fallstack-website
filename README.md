@@ -83,10 +83,21 @@ Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVAB
 
 Create two storage buckets:
 
-| Bucket  | Access  |
-| ------- | ------- |
-| avatars | public  |
-| cvs     | private |
+| Bucket  | Access  | Allowed MIME types        | Max file size |
+| ------- | ------- | ------------------------- | ------------- |
+| avatars | public  | `image/png`, `image/jpeg` | 5 MB          |
+| cvs     | private | `application/pdf`         | 10 MB         |
+
+After creating the buckets, run
+[`supabase/storage-bucket-limits.sql`](./supabase/storage-bucket-limits.sql)
+in the Supabase SQL editor for **every Supabase project** (including staging
+and production). It fails if either bucket is missing and configures the MIME
+and size restrictions without changing the bucket access policy.
+
+Student uploads use a short-lived signed upload URL, so file bytes go directly
+from browser to Storage rather than through the Next.js server. Browser file
+signature checks are UX only; the bucket restrictions are the enforcement
+boundary for direct uploads.
 
 ### Orphaned-file garbage collection
 
@@ -136,6 +147,35 @@ group by bucket_id;
 
 `pg_net` responses expire after six hours by default, so inspect them soon after
 the run. A candidate count that does not shrink indicates persistent failures.
+
+### CV retention purge
+
+Student CVs are purged twice a year, on May 1 and Nov 1 at 02:00 UTC, once
+`Student.cvUploadedAt` is more than 6 months old. The job only clears the DB
+reference (`cv = NULL`, `cvPurgedAt = now()`); the CV upload path stamps
+`cvUploadedAt` and clears `cvPurgedAt` on every successful upload. A profile
+banner tells the student their CV was removed whenever `cvPurgedAt` is set.
+
+1. Run [`supabase/cv-retention-purge.sql`](./supabase/cv-retention-purge.sql)
+   manually in the hosted Supabase SQL editor. Its final query is
+   non-destructive and returns the exact candidate set.
+2. Check every returned row against `Student.cv`/`Student.cvUploadedAt`. The
+   installer intentionally does not schedule the purge.
+3. Only after confirming the dry run, run
+   [`supabase/cv-retention-purge-enable.sql`](./supabase/cv-retention-purge-enable.sql)
+   manually.
+4. Confirm the job exists with:
+
+   ```sql
+   select jobid, schedule, command, active
+   from cron.job
+   where jobname = 'cv-retention-purge';
+   ```
+
+The purge only clears the DB reference; it does not delete the storage object.
+It runs at 02:00 UTC, one hour before the orphaned-file GC job's daily 03:00
+UTC run (above), so the now-unreferenced CV object is deleted the same day
+instead of waiting on its own cadence.
 
 ---
 

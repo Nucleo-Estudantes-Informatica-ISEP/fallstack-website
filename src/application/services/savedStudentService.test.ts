@@ -7,7 +7,6 @@ vi.mock("server-only", () => ({}));
 vi.mock("../repositories/companyRepository", () => ({
   findCompanyById: vi.fn(),
   findCompanyEmployee: vi.fn(),
-  findCompanyName: vi.fn(),
 }));
 vi.mock("../repositories/savedStudentRepository", () => ({
   countCompanySaves: vi.fn(),
@@ -31,7 +30,7 @@ vi.mock("../repositories/studentRepository", () => ({
 vi.mock("../repositories/transaction", () => ({
   withTransaction: vi.fn(),
 }));
-vi.mock("./actionService", () => ({ completeAction: vi.fn() }));
+vi.mock("./actionService", () => ({ completeCompanyBoothAction: vi.fn() }));
 
 test("a student can query their own stats", async () => {
   await expect(
