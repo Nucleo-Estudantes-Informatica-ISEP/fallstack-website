@@ -2,10 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
-// Secrets and server-only config. Reads the full `process.env` (the real
-// runtime environment on the server, unlike the client bundle) so this
-// module never needs to enumerate the passthrough NODE_ENV/LOG_LEVEL vars
-// by hand. Importing this from client code is a build-time error.
+// Secrets and server-only config. Supabase remains the Storage/Postgres
+// provider, but authentication is owned directly by ZITADEL/AuthNEI.
 const serverEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -16,6 +14,20 @@ const serverEnvSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+
+  AUTH_ISSUER_URL: z.string().url(),
+  AUTH_PROJECT_ID: z.string().min(1),
+  AUTH_GLOBAL_PROJECT_ID: z.string().min(1),
+  AUTH_CLIENT_ID: z.string().min(1),
+  AUTH_CLIENT_SECRET: z.string().min(1),
+  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
+  AUTH_SCOPES: z.string().min(1),
+  AUTH_ROLE_CLAIM: z.string().min(1),
+  AUTH_GLOBAL_ROLE_CLAIM: z.string().min(1),
+  AUTH_REDIRECT_URI: z.string().url(),
+  AUTH_POST_LOGOUT_REDIRECT_URI: z.string().url(),
+  ZITADEL_ORG_ID: z.string().min(1),
+  ZITADEL_ROLE_ASSIGNER_TOKEN: z.string().min(1),
 });
 
 type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -39,13 +51,8 @@ function parseServerEnv(): ServerEnv {
   return cachedServerEnv;
 }
 
-// Validated lazily, on first property access, rather than at import time.
-// `next build`'s page-data collection imports every route module (and so
-// transitively this one) without ever reading a property off `serverEnv` —
-// the production Dockerfile's builder stage only has the Sentry build args,
-// not these secrets, so eager validation here broke `next build`. Real
-// requests always read a property before the response is sent, so this
-// still validates before the value is ever used.
+// Validated lazily so Next's build-time route import pass does not require
+// production secrets. Real requests read these properties before use.
 export const serverEnv: ServerEnv = new Proxy({} as ServerEnv, {
   get(_target, prop: keyof ServerEnv) {
     return parseServerEnv()[prop];
