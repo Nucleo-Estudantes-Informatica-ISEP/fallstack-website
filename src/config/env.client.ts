@@ -18,6 +18,12 @@ const clientEnvSchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().url().default("http://localhost:3000/api")
   ),
+  // Public ZITADEL project id containing cross-application roles such as
+  // `admin`. Empty means the shared-role project has not been configured yet.
+  NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.string().trim().min(1).optional()
+  ),
   // Empty string (the Dockerfile's `ARG NEXT_PUBLIC_SENTRY_DSN=""` default
   // when no build arg is supplied) means "unset", same as undefined — not
   // an invalid URL.
@@ -39,6 +45,8 @@ function parseClientEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL,
+    NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID:
+      process.env.NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_LOGS_DASHBOARD_URL: process.env.NEXT_PUBLIC_LOGS_DASHBOARD_URL,
   });
