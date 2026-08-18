@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 
 import config from "@/config";
+import { clientEnv } from "@/config/env.client";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { createClient } from "@/utils/supabase/client";
 
@@ -23,6 +24,20 @@ interface AuthNeiButtonProps {
   // shared button everywhere except callers that explicitly want it (the
   // /login card's icon isn't part of the signup wizard's design).
   icon?: React.ReactNode;
+}
+
+function authNeiScopes() {
+  const scopes = ["openid", "email", "profile"];
+  const globalProjectId = clientEnv.NEXT_PUBLIC_AUTHNEI_GLOBAL_PROJECT_ID;
+
+  if (globalProjectId) {
+    scopes.push(
+      "urn:zitadel:iam:org:projects:roles",
+      `urn:zitadel:iam:org:project:id:${globalProjectId}:aud`
+    );
+  }
+
+  return scopes.join(" ");
 }
 
 const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
@@ -47,7 +62,13 @@ const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
       // GoTrue's admin API, not a fixed built-in name, hence the cast
       // (it isn't part of the SDK's Provider union).
       provider: config.constants.authneiProvider as Provider,
-      options: { redirectTo: redirectTo.toString() },
+      options: {
+        redirectTo: redirectTo.toString(),
+        // Supabase forwards this space-separated list to the upstream OIDC
+        // provider. Passing it overrides the custom provider's configured
+        // scopes, so the standard identity scopes must stay in the list.
+        scopes: authNeiScopes(),
+      },
     });
 
     if (error) {
