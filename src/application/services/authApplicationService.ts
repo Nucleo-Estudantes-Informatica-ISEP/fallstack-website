@@ -166,12 +166,13 @@ function destinationFor(user: SessionUser, fallback: string) {
 async function isEmailConfirmed(id: string) {
   const { data, error } = await createAdminClient().auth.admin.getUserById(id);
   if (error || !data.user) {
+    const lookupError = error ?? new Error("Existing identity not found");
     reportError(
-      error,
+      lookupError,
       { operation: "authnei_check_email_confirmed" },
       "Failed to look up existing identity's confirmation status"
     );
-    return false;
+    throw new HttpError("Unable to verify existing account", 500);
   }
   return Boolean(data.user.email_confirmed_at);
 }
