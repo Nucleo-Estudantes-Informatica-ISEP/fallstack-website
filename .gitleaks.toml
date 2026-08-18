@@ -1,0 +1,8 @@
+title = "Fallstack Gitleaks configuration"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore the superseded CI-only commit that contained synthetic ZITADEL placeholder values; the following commit replaced them with runtime GitHub SHA values."
+commits = ["6eb46b5d4d2ecf9924113f946781762eec72f0d0"]
