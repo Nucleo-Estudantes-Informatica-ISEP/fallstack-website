@@ -206,17 +206,12 @@ export async function updateStudentForAdmin(
     active?: boolean;
   }
 ) {
-  const { password, avatar, active, ...profile } = input;
+  const { password: _password, avatar, active, ...profile } = input;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
   if (active !== undefined) {
     await updateUserActive(id, active);
     await setAuthUserBanned(id, !active);
-  }
-  if (password) {
-    const admin = createAdminClient();
-    const { error } = await admin.auth.admin.updateUserById(id, { password });
-    if (error) throw new HttpError(error.message, 400);
   }
   return student;
 }
