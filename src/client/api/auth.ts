@@ -21,19 +21,7 @@ export async function createStudentProfile(
   }
 }
 
-export async function logIn(email: string, password: string) {
-  try {
-    await httpClient.post("/auth/login", { email, password });
-    return true;
-  } catch (error) {
-    console.error(error);
-    return false;
-  }
-}
-
 export async function signUpEmployee(body: {
-  email: string;
-  password: string;
   name: string;
   linkedin?: string;
   companyCode: string;
