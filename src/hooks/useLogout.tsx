@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
@@ -11,26 +10,24 @@ import useSession from "./useSession";
 
 export function useLogout() {
   const session = useSession();
-  const router = useRouter();
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await httpClient.post("/auth/logout");
-
+      const { logoutUrl } = await httpClient.post<{ logoutUrl: string }>(
+        "/auth/logout"
+      );
       session.clear();
-      toast.success("Sessão terminada com sucesso");
       setIsConfirmVisible(false);
-      router.push("/");
+      window.location.assign(logoutUrl);
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
           : "Não foi possível terminar a sessão."
       );
-    } finally {
       setIsLoggingOut(false);
     }
   };
