@@ -104,10 +104,11 @@ function extractComposeServiceEnvironment(service: string): string {
 }
 
 function expectRequiredComposeVariable(block: string, name: string) {
+  const requiredExpansion = "${" + name + ":?";
   expect(
     block,
     `docker-compose.app.yml must mark ${name} as required with Compose's :? expansion`
-  ).toMatch(new RegExp(`^\\s*${name}: \\${\\{${name}:\\?`, "m"));
+  ).toContain(`${name}: ${requiredExpansion}`);
 }
 
 test("every NEXT_PUBLIC_* var declared in env.client.ts is wired through the Dockerfile's app-builder ARG/ENV pair", () => {
