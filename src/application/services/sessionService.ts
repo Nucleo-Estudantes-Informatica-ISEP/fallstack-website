@@ -23,7 +23,7 @@ const getServerSession = cache(async () => {
     // ZITADEL is authoritative for privileged roles. The DB fields remain
     // useful for domain/profile state, but stale local role data can never
     // manufacture admin/employee authorization by itself.
-    const adminRole = claims.admin ? "SUPER_ADMIN" : null;
+    const adminRole: "SUPER_ADMIN" | null = claims.admin ? "SUPER_ADMIN" : null;
     const employeeAllowed = claims.employee && !!appUser.employee;
 
     return {
