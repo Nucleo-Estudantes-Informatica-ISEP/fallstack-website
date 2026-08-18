@@ -1,57 +1,65 @@
-import { describe, beforeEach, expect, test, vi } from "vitest";
+import { NextRequest } from "next/server";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import getServerSession from "@/application/services/sessionService";
-import { createClient } from "@/utils/supabase/server";
 
+import { POST as avatarPost } from "./avatar/route";
+import { POST as cvPost } from "./cv/route";
+
+vi.mock("server-only", () => ({}));
 vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));
-
-const createSignedUploadUrl = vi.fn();
-vi.mock("@/utils/supabase/server", () => ({
-  createClient: vi.fn(() => ({
-    storage: {
-      from: vi.fn(() => ({ createSignedUploadUrl })),
-    },
+const { createSignedUploadUrl } = vi.hoisted(() => ({
+  createSignedUploadUrl: vi.fn(),
+}));
+vi.mock("@/utils/supabase/admin", () => ({
+  createAdminClient: vi.fn(() => ({
+    storage: { from: vi.fn(() => ({ createSignedUploadUrl })) },
   })),
 }));
 
-describe.each([
+function studentSession(id: string) {
+  return {
+    id,
+    zitadelUserId: `zitadel-${id}`,
+    email: `${id}@isep.ipp.pt`,
+    role: "STUDENT",
+    adminRole: null,
+    student: { id, code: "S123", name: "Student" },
+    employee: null,
+    active: true,
+  } as Awaited<ReturnType<typeof getServerSession>>;
+}
+
+const routeCases = [
   {
-    label: "avatar",
-    module: "./avatar/route",
-    storagePath: "student-signup/avatar.webp",
-    body: { filename: "avatar.webp" },
+    name: "avatar",
+    post: avatarPost,
+    url: "http://localhost/api/storage/avatar",
+    contentType: "image/png",
+    storagePath: "distribution/avatar/id",
+    pathPattern: /^distribution\/avatar\//,
   },
   {
-    label: "cv",
-    module: "./cv/route",
-    storagePath: "student-signup/cv.pdf",
-    body: { filename: "cv.pdf" },
+    name: "CV",
+    post: cvPost,
+    url: "http://localhost/api/storage/cv",
+    contentType: "application/pdf",
+    storagePath: "distribution/cv/id.pdf",
+    pathPattern: /^distribution\/cv\/.+\.pdf$/,
   },
-])("$label upload route", ({ module, storagePath, body }) => {
-  let routeCase: {
-    post: (
-      request: Request,
-      context: { params: Promise<Record<string, string>> }
-    ) => Promise<Response>;
-    storagePath: string;
-  };
+] as const;
 
-  beforeEach(async () => {
-    vi.resetModules();
-    createSignedUploadUrl.mockReset();
-    vi.mocked(createClient).mockClear();
-
-    const route = await import(module);
-    routeCase = { post: route.POST, storagePath };
-  });
-
+describe.each(routeCases)("$name upload ticket route", (routeCase) => {
   function request() {
-    return new Request("http://localhost/api/storage", {
+    return new NextRequest(routeCase.url, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        contentType: routeCase.contentType,
+        size: 1024,
+      }),
     });
   }
 
@@ -78,7 +86,7 @@ describe.each([
     vi.mocked(getServerSession).mockResolvedValue({
       id: "student-signup",
       zitadelUserId: "zitadel-student-signup",
-      email: "student@isep.ipp.pt",
+      email: "student-signup@isep.ipp.pt",
       role: "STUDENT",
       adminRole: null,
       student: null,
@@ -96,43 +104,41 @@ describe.each([
       data: { token: "signed-token", path: routeCase.storagePath },
       error: null,
     });
+    vi.mocked(getServerSession).mockResolvedValue(
+      studentSession("student-three")
+    );
 
-    for (let index = 0; index < 10; index += 1) {
-      vi.mocked(getServerSession).mockResolvedValue({
-        id: "student-a",
-        zitadelUserId: "zitadel-student-a",
-        email: "student-a@isep.ipp.pt",
-        role: "STUDENT",
-        adminRole: null,
-        student: null,
-        employee: null,
-        active: true,
-      });
-      expect((await post()).status).toBe(201);
+    for (let i = 0; i < 5; i++) {
+      const res = await post();
+      expect(res.status).toBe(201);
     }
 
-    vi.mocked(getServerSession).mockResolvedValue({
-      id: "student-a",
-      zitadelUserId: "zitadel-student-a",
-      email: "student-a@isep.ipp.pt",
-      role: "STUDENT",
-      adminRole: null,
-      student: null,
-      employee: null,
-      active: true,
-    });
-    expect((await post()).status).toBe(429);
+    const blocked = await post();
+    expect(blocked.status).toBe(429);
+    expect(Number(blocked.headers.get("Retry-After"))).toBeGreaterThan(0);
 
-    vi.mocked(getServerSession).mockResolvedValue({
-      id: "student-b",
-      zitadelUserId: "zitadel-student-b",
-      email: "student-b@isep.ipp.pt",
-      role: "STUDENT",
-      adminRole: null,
-      student: null,
-      employee: null,
-      active: true,
+    vi.mocked(getServerSession).mockResolvedValue(
+      studentSession("student-two")
+    );
+    const allowed = await post();
+    expect(allowed.status).toBe(201);
+  });
+
+  test("returns a ticket without receiving file bytes", async () => {
+    createSignedUploadUrl.mockResolvedValue({
+      data: { token: "signed-token", path: routeCase.storagePath },
+      error: null,
     });
-    expect((await post()).status).toBe(201);
+    vi.mocked(getServerSession).mockResolvedValue(
+      studentSession("student-one")
+    );
+
+    const res = await post();
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({
+      id: expect.any(String),
+      path: expect.stringMatching(routeCase.pathPattern),
+      token: "signed-token",
+    });
   });
 });
