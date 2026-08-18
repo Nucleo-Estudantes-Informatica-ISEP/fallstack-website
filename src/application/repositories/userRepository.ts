@@ -65,6 +65,9 @@ export const relinkUserId = (
 export const deleteUser = (id: string, db: DbClient = prisma) =>
   db.user.delete({ where: { id } });
 
+export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
+  db.user.deleteMany({ where: { id } });
+
 export const setUserInterests = (
   id: string,
   interests: string[],
