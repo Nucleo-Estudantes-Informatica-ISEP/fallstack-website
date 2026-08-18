@@ -54,7 +54,7 @@ beforeEach(() => {
   vi.mocked(countActiveSuperAdmins).mockResolvedValue(2);
 });
 
-test("creating an admin rolls back the Supabase auth user if the DB write fails", async () => {
+test("creating an admin rolls back the local placeholder if the DB write fails", async () => {
   vi.mocked(createSupabaseAuthUserAsAdmin).mockResolvedValue({
     id: "new-admin-id",
   } as never);
@@ -72,7 +72,7 @@ test("creating an admin rolls back the Supabase auth user if the DB write fails"
   expect(rollbackAuthUser).toHaveBeenCalledWith("new-admin-id");
 });
 
-test("creating an admin passes the display name through to Supabase and the DB row", async () => {
+test("creating an admin provisions only the local application row", async () => {
   vi.mocked(createSupabaseAuthUserAsAdmin).mockResolvedValue({
     id: "new-admin-id",
   } as never);
@@ -110,14 +110,14 @@ test("can't deactivate the last active super admin", async () => {
   expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
-test("can deactivate a super admin when another active one remains", async () => {
+test("can deactivate a super admin locally when another active one remains", async () => {
   vi.mocked(findAdminAccountById).mockResolvedValue(superAdminTarget);
   vi.mocked(countActiveSuperAdmins).mockResolvedValue(2);
 
   await updateAdminAccount("a1", { active: false });
 
   expect(updateUserActive).toHaveBeenCalledWith("a1", false);
-  expect(setAuthUserBanned).toHaveBeenCalledWith("a1", true);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
 test("can't demote the last active super admin", async () => {
@@ -149,6 +149,7 @@ test("deactivating/renaming a regular admin never checks the super admin count",
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
   expect(updateUserActive).toHaveBeenCalledWith("a2", false);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
 test("an already-inactive super admin doesn't block further action on their row", async () => {
