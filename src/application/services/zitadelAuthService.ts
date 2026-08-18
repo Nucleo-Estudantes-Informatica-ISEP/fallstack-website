@@ -1,7 +1,7 @@
 import "server-only";
 
-import { createHash, randomBytes } from "crypto";
-import jwt from "jsonwebtoken";
+import { createHash, createPublicKey, randomBytes } from "crypto";
+import jwt, { type Algorithm } from "jsonwebtoken";
 
 import { HttpError } from "@/types/HttpError";
 import { serverEnv } from "@/config/env.server";
@@ -19,17 +19,32 @@ export const oidcCookieNames = {
 } as const;
 
 interface OidcDiscovery {
+  issuer: string;
   authorization_endpoint: string;
   token_endpoint: string;
   userinfo_endpoint: string;
+  jwks_uri: string;
+  id_token_signing_alg_values_supported?: string[];
   end_session_endpoint?: string;
 }
 
 interface TokenResponse {
   access_token: string;
-  id_token?: string;
+  id_token: string;
   token_type: string;
   expires_in?: number;
+}
+
+interface JsonWebKeyRecord {
+  kid?: string;
+  kty?: string;
+  alg?: string;
+  use?: string;
+  [key: string]: unknown;
+}
+
+interface JwksResponse {
+  keys: JsonWebKeyRecord[];
 }
 
 type RoleClaim = Record<string, unknown> | string[] | string | undefined;
@@ -52,6 +67,7 @@ export interface AppSessionClaims extends jwt.JwtPayload {
 }
 
 let discoveryPromise: Promise<OidcDiscovery> | undefined;
+let jwksPromise: Promise<JwksResponse> | undefined;
 
 function base64Url(bytes: Buffer) {
   return bytes.toString("base64url");
@@ -71,16 +87,39 @@ async function getDiscovery(): Promise<OidcDiscovery> {
 
     const body = (await response.json()) as Partial<OidcDiscovery>;
     if (
+      !body.issuer ||
       !body.authorization_endpoint ||
       !body.token_endpoint ||
-      !body.userinfo_endpoint
+      !body.userinfo_endpoint ||
+      !body.jwks_uri
     )
       throw new HttpError("Invalid AuthNEI configuration", 502);
+
+    if (body.issuer.replace(/\/$/u, "") !== serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, ""))
+      throw new HttpError("AuthNEI issuer does not match configuration", 502);
 
     return body as OidcDiscovery;
   });
 
   return discoveryPromise;
+}
+
+async function getJwks(forceRefresh = false): Promise<JwksResponse> {
+  if (forceRefresh) jwksPromise = undefined;
+  if (jwksPromise) return jwksPromise;
+
+  jwksPromise = getDiscovery().then(async (discovery) => {
+    const response = await fetch(discovery.jwks_uri, { cache: "force-cache" });
+    if (!response.ok) throw new HttpError("Unable to load AuthNEI signing keys", 502);
+
+    const body = (await response.json()) as Partial<JwksResponse>;
+    if (!Array.isArray(body.keys))
+      throw new HttpError("Invalid AuthNEI signing-key response", 502);
+
+    return { keys: body.keys };
+  });
+
+  return jwksPromise;
 }
 
 function roleKeys(value: RoleClaim): string[] {
@@ -95,14 +134,77 @@ function safeNext(value: string | null | undefined) {
   return value;
 }
 
+async function verifyIdToken(idToken: string, expectedNonce: string) {
+  const discovery = await getDiscovery();
+  const decoded = jwt.decode(idToken, { complete: true });
+
+  if (!decoded || typeof decoded.payload === "string")
+    throw new HttpError("Invalid AuthNEI ID token", 401);
+
+  const { alg, kid } = decoded.header;
+  const advertisedAlgorithms = discovery.id_token_signing_alg_values_supported;
+
+  // Never accept symmetric or unsigned ID tokens from an external IdP. The
+  // algorithm also has to be one advertised by the issuer's discovery doc.
+  if (
+    !alg ||
+    alg === "none" ||
+    alg.startsWith("HS") ||
+    (advertisedAlgorithms && !advertisedAlgorithms.includes(alg))
+  )
+    throw new HttpError("Unsupported AuthNEI ID-token algorithm", 401);
+
+  if (!kid) throw new HttpError("AuthNEI ID token has no signing-key id", 401);
+
+  let jwks = await getJwks();
+  let jwk = jwks.keys.find((candidate) => candidate.kid === kid);
+
+  // ZITADEL rotates signing keys. If a cached set does not contain the token's
+  // kid, refresh once before rejecting the login.
+  if (!jwk) {
+    jwks = await getJwks(true);
+    jwk = jwks.keys.find((candidate) => candidate.kid === kid);
+  }
+
+  if (!jwk) throw new HttpError("Unknown AuthNEI signing key", 401);
+
+  let publicKey;
+  try {
+    publicKey = createPublicKey({
+      key: jwk as never,
+      format: "jwk",
+    });
+  } catch {
+    throw new HttpError("Invalid AuthNEI signing key", 401);
+  }
+
+  let claims: string | jwt.JwtPayload;
+  try {
+    claims = jwt.verify(idToken, publicKey, {
+      algorithms: [alg as Algorithm],
+      issuer: discovery.issuer,
+      audience: serverEnv.AUTH_CLIENT_ID,
+    });
+  } catch {
+    throw new HttpError("Invalid AuthNEI ID token", 401);
+  }
+
+  if (
+    typeof claims === "string" ||
+    !claims.sub ||
+    claims.nonce !== expectedNonce
+  )
+    throw new HttpError("Invalid AuthNEI ID-token claims", 401);
+
+  return claims;
+}
+
 export async function createAuthorizationRequest(next?: string | null) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
   const state = randomToken();
   const nonce = randomToken();
-  const challenge = createHash("sha256")
-    .update(verifier)
-    .digest("base64url");
+  const challenge = createHash("sha256").update(verifier).digest("base64url");
 
   const url = new URL(discovery.authorization_endpoint);
   url.searchParams.set("client_id", serverEnv.AUTH_CLIENT_ID);
@@ -152,8 +254,8 @@ async function exchangeCode(code: string, verifier: string) {
     throw new HttpError("AuthNEI authorization code exchange failed", 401);
 
   const token = (await response.json()) as Partial<TokenResponse>;
-  if (!token.access_token)
-    throw new HttpError("AuthNEI returned no access token", 401);
+  if (!token.access_token || !token.id_token)
+    throw new HttpError("AuthNEI returned an incomplete OIDC token response", 401);
 
   return token as TokenResponse;
 }
@@ -164,11 +266,11 @@ export async function completeAuthorizationCode(input: {
   expectedNonce: string;
 }): Promise<ZitadelIdentity> {
   const token = await exchangeCode(input.code, input.verifier);
+  const idTokenClaims = await verifyIdToken(token.id_token, input.expectedNonce);
   const discovery = await getDiscovery();
 
-  // Resolve the identity from the issuer's UserInfo endpoint instead of
-  // trusting browser-provided claims. The access token was obtained directly
-  // from AuthNEI through Authorization Code + PKCE.
+  // Resolve profile and role claims from UserInfo using the access token, but
+  // also require the subject to match the independently verified ID token.
   const response = await fetch(discovery.userinfo_endpoint, {
     headers: { Authorization: `Bearer ${token.access_token}` },
     cache: "no-store",
@@ -179,20 +281,10 @@ export async function completeAuthorizationCode(input: {
   const sub = typeof claims.sub === "string" ? claims.sub : "";
   const email = typeof claims.email === "string" ? claims.email : "";
   const name = typeof claims.name === "string" ? claims.name : undefined;
-  const emailVerified = claims.email_verified !== false;
+  const emailVerified = claims.email_verified === true;
 
-  if (!sub || !email || !emailVerified)
+  if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
-
-  // When an ID token is present, check the nonce from the authorization
-  // request before accepting the login. Signature/audience validation remains
-  // the issuer's responsibility for UserInfo because we never trust claims
-  // extracted from the ID token itself.
-  if (token.id_token) {
-    const decoded = jwt.decode(token.id_token) as jwt.JwtPayload | null;
-    if (!decoded || decoded.nonce !== input.expectedNonce)
-      throw new HttpError("Invalid AuthNEI nonce", 401);
-  }
 
   const employeeRoles = roleKeys(claims[serverEnv.AUTH_ROLE_CLAIM] as RoleClaim);
   const globalRoles = roleKeys(
@@ -219,6 +311,7 @@ export function signAppSession(identity: ZitadelIdentity) {
     },
     serverEnv.AUTH_SECRET,
     {
+      algorithm: "HS256",
       subject: identity.sub,
       issuer: APP_SESSION_ISSUER,
       audience: APP_SESSION_AUDIENCE,
@@ -230,6 +323,7 @@ export function signAppSession(identity: ZitadelIdentity) {
 export function verifyAppSession(token: string): AppSessionClaims | null {
   try {
     const claims = jwt.verify(token, serverEnv.AUTH_SECRET, {
+      algorithms: ["HS256"],
       issuer: APP_SESSION_ISSUER,
       audience: APP_SESSION_AUDIENCE,
     });
@@ -242,7 +336,8 @@ export function verifyAppSession(token: string): AppSessionClaims | null {
 
 export async function getLogoutUrl(idTokenHint?: string) {
   const discovery = await getDiscovery();
-  if (!discovery.end_session_endpoint) return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+  if (!discovery.end_session_endpoint)
+    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(
@@ -275,7 +370,8 @@ export async function assignEmployeeRole(zitadelUserId: string) {
   if (response.ok) return;
 
   const text = await response.text();
-  if (response.status === 409 || /already|exist|ALREADY_EXISTS/iu.test(text)) return;
+  if (response.status === 409 || /already|exist|ALREADY_EXISTS/iu.test(text))
+    return;
 
   throw new HttpError("Unable to assign Fallstack employee role", 502);
 }
