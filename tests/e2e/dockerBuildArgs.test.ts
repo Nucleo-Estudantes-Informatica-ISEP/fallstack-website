@@ -47,6 +47,10 @@ function extractDockerfileAppBuilderStage(): string {
   return dockerfile.slice(start, nextStage === -1 ? undefined : nextStage);
 }
 
+function readCompose(): string {
+  return readFileSync(path.join(ROOT, "docker-compose.app.yml"), "utf-8");
+}
+
 function sliceIndentedBlock(lines: string[], fromIndex: number): string[] {
   const blockIndent = lines[fromIndex].search(/\S/);
   const blockLines: string[] = [];
@@ -59,24 +63,21 @@ function sliceIndentedBlock(lines: string[], fromIndex: number): string[] {
   return blockLines;
 }
 
-function extractComposeWebBuildArgs(): string {
-  const compose = readFileSync(
-    path.join(ROOT, "docker-compose.app.yml"),
-    "utf-8"
+function extractComposeServiceBlock(service: string): string[] {
+  const lines = readCompose().split("\n");
+  const serviceLineIndex = lines.findIndex(
+    (line) => line.trim() === `${service}:`
   );
-  const lines = compose.split("\n");
-
-  // Anchored to the `web:` service specifically, not just the first
-  // `args:` block anywhere in the file - a sibling service (e.g.
-  // `migrate:`) could grow its own `build.args:` block in the future
-  // without this test noticing it was looking at the wrong one.
-  const webLineIndex = lines.findIndex((line) => line.trim() === "web:");
-  if (webLineIndex === -1) {
+  if (serviceLineIndex === -1) {
     throw new Error(
-      "Couldn't find a top-level `web:` service in docker-compose.app.yml - has it been renamed?"
+      `Couldn't find a top-level \`${service}:\` service in docker-compose.app.yml`
     );
   }
-  const webBlockLines = sliceIndentedBlock(lines, webLineIndex);
+  return sliceIndentedBlock(lines, serviceLineIndex);
+}
+
+function extractComposeWebBuildArgs(): string {
+  const webBlockLines = extractComposeServiceBlock("web");
 
   const argsLineIndex = webBlockLines.findIndex(
     (line) => line.trim() === "args:"
@@ -87,6 +88,26 @@ function extractComposeWebBuildArgs(): string {
     );
   }
   return sliceIndentedBlock(webBlockLines, argsLineIndex).join("\n");
+}
+
+function extractComposeServiceEnvironment(service: string): string {
+  const serviceBlockLines = extractComposeServiceBlock(service);
+  const environmentLineIndex = serviceBlockLines.findIndex(
+    (line) => line.trim() === "environment:"
+  );
+  if (environmentLineIndex === -1) {
+    throw new Error(
+      `Couldn't find \`${service}.environment:\` in docker-compose.app.yml`
+    );
+  }
+  return sliceIndentedBlock(serviceBlockLines, environmentLineIndex).join("\n");
+}
+
+function expectRequiredComposeVariable(block: string, name: string) {
+  expect(
+    block,
+    `docker-compose.app.yml must mark ${name} as required with Compose's :? expansion`
+  ).toMatch(new RegExp(`^\\s*${name}: \\${\\{${name}:\\?`, "m"));
 }
 
 test("every NEXT_PUBLIC_* var declared in env.client.ts is wired through the Dockerfile's app-builder ARG/ENV pair", () => {
@@ -116,5 +137,34 @@ test("every NEXT_PUBLIC_* var declared in env.client.ts is passed as a build arg
       webBuildArgs,
       `docker-compose.app.yml's web.build.args is missing "${name}"`
     ).toMatch(new RegExp(`^\\s*${name}:`, "m"));
+  }
+});
+
+test("Coolify compose marks production build and runtime configuration as required", () => {
+  const webBuildArgs = extractComposeWebBuildArgs();
+  for (const name of [
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_BASE_URL",
+  ]) {
+    expectRequiredComposeVariable(webBuildArgs, name);
+  }
+
+  const migrateEnvironment = extractComposeServiceEnvironment("migrate");
+  for (const name of ["DATABASE_URL", "DIRECT_URL"]) {
+    expectRequiredComposeVariable(migrateEnvironment, name);
+  }
+
+  const webEnvironment = extractComposeServiceEnvironment("web");
+  for (const name of [
+    "DATABASE_URL",
+    "DIRECT_URL",
+    "JWT_SECRET",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "NEXT_PUBLIC_BASE_URL",
+  ]) {
+    expectRequiredComposeVariable(webEnvironment, name);
   }
 });
