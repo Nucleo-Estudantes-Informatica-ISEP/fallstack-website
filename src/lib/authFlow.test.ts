@@ -28,7 +28,7 @@ test("authentication and password recovery no longer depend on Supabase Auth", a
     /resetPasswordForEmail|exchangeCodeForSession|auth\.updateUser/
   );
 
-  assert.match(confirmPage, /AuthNEI/);
+  assert.match(confirmPage, /redirect\("\/login"\)/);
   assert.doesNotMatch(confirmPage, /supabase|verifyOtp|auth\.updateUser/i);
 
   assert.match(legacyConfirmRoute, /NextResponse\.redirect/);
