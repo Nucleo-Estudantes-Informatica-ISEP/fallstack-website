@@ -6,8 +6,9 @@ services:
       target: migrator
     container_name: fallstack-migrate
     restart: "no"
-    env_file:
-      - ./.env # adjust to .env.production if you want production settings
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      DIRECT_URL: ${DIRECT_URL:?Configure DIRECT_URL in Coolify}
 
   web:
     build:
@@ -18,17 +19,15 @@ services:
         SENTRY_URL: ${SENTRY_URL:-}
         SENTRY_ORG: ${SENTRY_ORG:-}
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
-        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
+        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:?Configure NEXT_PUBLIC_BASE_URL in Coolify}
         NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
     container_name: fallstack-app
     restart: unless-stopped
     depends_on:
       migrate:
         condition: service_completed_successfully
-    env_file:
-      - ./.env # adjust to .env.production if you want production settings
     ports:
       - "4000:4000" # Host:Container matches Dockerfile EXPOSE 4000
     # Uncomment if you want live code mounting during development (only works with dev build)
@@ -38,3 +37,13 @@ services:
     environment:
       PORT: 4000
       HOSTNAME: 0.0.0.0
+      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      DIRECT_URL: ${DIRECT_URL:?Configure DIRECT_URL in Coolify}
+      JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET in Coolify}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?Configure SUPABASE_SERVICE_ROLE_KEY in Coolify}
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:?Configure NEXT_PUBLIC_BASE_URL in Coolify}
+      NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+      NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
