@@ -3,28 +3,22 @@
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
-import { httpClient } from "@/lib/http/client";
+import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminCompanyDto } from "@/application/dto/companyDto";
 
 interface CompanyFormProps {
   company?: AdminCompanyDto;
+  ranks: { id: string; name: string }[];
 }
 
-const TIER_OPTIONS = [
-  { label: "Diamond", value: "DIAMOND" },
-  { label: "Gold", value: "GOLD" },
-  { label: "Silver", value: "SILVER" },
-  { label: "Bronze", value: "BRONZE" },
-];
-
-const CompanyForm: React.FC<CompanyFormProps> = ({ company }) => {
+const CompanyForm: React.FC<CompanyFormProps> = ({ company, ranks }) => {
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
     const payload = {
       name: values.name,
-      tier: values.tier,
+      rankId: values.rankId,
       website: values.website || null,
       avatar: values.avatar || null,
       order: values.order,
@@ -41,8 +35,12 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ company }) => {
       }
       router.push("/companies");
       router.refresh();
-    } catch {
-      toast.error("Não foi possível guardar a empresa.");
+    } catch (error) {
+      toast.error(
+        error instanceof HttpClientError
+          ? error.message
+          : "Não foi possível guardar a empresa."
+      );
     }
   };
 
@@ -63,9 +61,12 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ company }) => {
             { kind: "text", name: "name", label: "Nome", required: true },
             {
               kind: "select",
-              name: "tier",
-              label: "Tier",
-              options: TIER_OPTIONS,
+              name: "rankId",
+              label: "Rank",
+              options: ranks.map((rank) => ({
+                label: rank.name,
+                value: rank.id,
+              })),
               required: true,
             },
             { kind: "text", name: "website", label: "Website" },
@@ -78,12 +79,12 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ company }) => {
         company
           ? {
               name: company.name,
-              tier: company.tier,
+              rankId: company.rank.id,
               website: company.website ?? "",
               order: company.order,
               active: company.active,
             }
-          : { tier: "BRONZE", order: 0, active: false }
+          : { rankId: ranks[0]?.id ?? "", order: 0, active: false }
       }
       onSubmit={handleSubmit}
     />

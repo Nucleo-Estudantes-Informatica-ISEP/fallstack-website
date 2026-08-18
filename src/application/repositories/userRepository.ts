@@ -18,7 +18,7 @@ const sessionSelect = {
       name: true,
       companyId: true,
       company: {
-        select: { id: true, name: true, tier: true, avatar: true },
+        select: { id: true, name: true, avatar: true },
       },
     },
   },
@@ -64,9 +64,6 @@ export const relinkUserId = (
 // Cascades to Student/Employee/interests via the same ON DELETE CASCADE FKs.
 export const deleteUser = (id: string, db: DbClient = prisma) =>
   db.user.delete({ where: { id } });
-
-export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
-  db.user.deleteMany({ where: { id } });
 
 export const setUserInterests = (
   id: string,

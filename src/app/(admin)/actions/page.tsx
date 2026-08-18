@@ -7,7 +7,7 @@ import {
 } from "@/lib/adminListParams";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
-import { toActionDto } from "@/application/dto/actionDto";
+import { toAdminActionDto } from "@/application/dto/actionDto";
 import { listActionsForAdmin } from "@/application/services/actionService";
 
 const PAGE_SIZE = 20;
@@ -16,12 +16,17 @@ interface ActionsAdminPageProps {
   searchParams: AdminListSearchParams;
 }
 
-type ActionRow = ReturnType<typeof toActionDto>;
+type ActionRow = ReturnType<typeof toAdminActionDto>;
 
 const columns: DataTableColumn<ActionRow>[] = [
   { key: "name", header: "Nome", render: (a) => a.name, sortable: true },
   { key: "points", header: "Pontos", render: (a) => a.points, sortable: true },
   { key: "altText", header: "Texto alt.", render: (a) => a.altText || "-" },
+  {
+    key: "companyName",
+    header: "Empresa (banca)",
+    render: (a) => a.companyName ?? "-",
+  },
 ];
 
 const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
@@ -33,7 +38,7 @@ const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
     order,
     search: q,
   });
-  const actions = items.map(toActionDto);
+  const actions = items.map(toAdminActionDto);
 
   return (
     <section className="flex flex-col gap-6 p-8">

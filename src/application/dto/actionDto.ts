@@ -20,6 +20,22 @@ export const toActionDto = (action: ActionDto): ActionDto => ({
   isVisible: action.isVisible,
 });
 
+export interface AdminActionDto extends ActionDto {
+  companyId: string | null;
+  companyName: string | null;
+}
+
+export const toAdminActionDto = (
+  action: ActionDto & {
+    companyId: string | null;
+    company: { name: string } | null;
+  }
+): AdminActionDto => ({
+  ...toActionDto(action),
+  companyId: action.companyId,
+  companyName: action.company?.name ?? null,
+});
+
 export const toStudentActionDto = (
   action: StudentActionDto
 ): StudentActionDto => ({ ...toActionDto(action), done: action.done });

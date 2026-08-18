@@ -12,37 +12,28 @@ import {
   Twitter,
 } from "@/components/ui/Icons";
 import CompanyInfo from "@/components/Companies/CompanyInfo";
-import { CompanyTier } from "@/domain/company/company-tier";
-import { findEditionContentByName } from "@/edition";
+import type { CompanyDisplayDto } from "@/application/dto/companyDto";
 
 interface CompanyPageSectionProps {
-  companyName: string;
-  logoHref: string | null;
-  tier: CompanyTier;
+  company: CompanyDisplayDto;
 }
 
-const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
-  companyName,
-  logoHref,
-  tier,
-}) => {
-  const editionContent = findEditionContentByName(companyName);
-  const modalInformation = editionContent?.modalInformation;
+const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
+  const profile = company.profile;
+  if (!profile) return null;
 
-  if (!modalInformation) return null;
-
-  const interests = editionContent?.interests || [];
+  const social = profile.socialLinks;
 
   return (
     <div className="mt-12 size-full items-center justify-center bg-black md:my-14">
       <div className="mt-4 mb-12 flex size-full flex-col items-center">
         <div className="flex flex-col items-center justify-center pt-8">
-          {logoHref ? (
+          {company.avatar ? (
             <div className="relative my-8 flex size-full flex-col items-center">
               <Image
                 width={320}
                 height={320}
-                src={logoHref}
+                src={company.avatar}
                 alt="profile image"
                 className="w-full max-w-64"
               />
@@ -52,49 +43,49 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
           )}
           <div className="flex flex-col gap-y-2 px-4 text-center">
             <p className="text-3xl font-bold text-white md:text-5xl">
-              <span>{modalInformation.title}</span>
+              <span>{company.name}</span>
             </p>
           </div>
           <p className="flex gap-x-4 pt-6">
-            {modalInformation.twitterLink && (
+            {social.twitter && (
               <Link
-                href={modalInformation.twitterLink}
+                href={social.twitter}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Twitter className="size-6 text-white hover:scale-105 md:size-8" />
               </Link>
             )}
-            {modalInformation.linkedinLink && (
+            {social.linkedin && (
               <Link
-                href={modalInformation.linkedinLink}
+                href={social.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Linkedin className="size-6 text-white transition-all hover:scale-105 hover:drop-shadow-2xl md:size-8" />
               </Link>
             )}
-            {modalInformation.facebookLink && (
+            {social.facebook && (
               <Link
-                href={modalInformation.facebookLink}
+                href={social.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Facebook className="size-6 text-white transition-all hover:scale-105 hover:drop-shadow-2xl md:size-8" />
               </Link>
             )}
-            {modalInformation.instagramLink && (
+            {social.instagram && (
               <Link
-                href={modalInformation.instagramLink}
+                href={social.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <Instagram className="size-6 text-white transition-all hover:scale-105 hover:drop-shadow-2xl md:size-8" />
               </Link>
             )}
-            {modalInformation.website && (
+            {company.website && (
               <Link
-                href={modalInformation.website}
+                href={company.website}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -105,12 +96,12 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({
         </div>
       </div>
       <CompanyInfo
-        bodyText={modalInformation.bodyText}
-        videoHref={modalInformation.videoHref}
-        videoTitle={modalInformation.videoTitle}
-        tier={tier}
-        facts={modalInformation.facts}
-        interests={interests}
+        bodyText={profile.bodyText}
+        videoHref={profile.videoHref ?? undefined}
+        videoTitle={profile.videoTitle ?? undefined}
+        showsPromoVideo={company.rank.style?.showsPromoVideo ?? false}
+        facts={profile.facts}
+        interests={company.interests}
       />
     </div>
   );

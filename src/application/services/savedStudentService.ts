@@ -8,14 +8,12 @@ import {
   isAllowedToViewStudent,
   type StudentAccess,
 } from "@/domain/student/studentAccess";
-import { getBoothActionName } from "@/edition/actions";
 import { ISEP_EMAIL_DOMAIN } from "@/utils/isepEmail";
 
 import {
   findCompanies,
   findCompanyById,
   findCompanyEmployee,
-  findCompanyName,
 } from "../repositories/companyRepository";
 import {
   countCompanySaves,
@@ -37,7 +35,7 @@ import {
   findStudentByEmail,
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
-import { completeAction } from "./actionService";
+import { completeCompanyBoothAction } from "./actionService";
 
 export async function saveStudent(input: {
   studentCode: string;
@@ -63,10 +61,7 @@ export async function saveStudent(input: {
         input.comment
       );
       if (input.completeBoothAction) {
-        const company = await findCompanyName(input.companyId, tx);
-        if (!company) throw new HttpError("Company not found", 404);
-        const action = getBoothActionName(company.name);
-        if (action) await completeAction(student.code, action, tx);
+        await completeCompanyBoothAction(student.code, input.companyId, tx);
       }
       return saved;
     });

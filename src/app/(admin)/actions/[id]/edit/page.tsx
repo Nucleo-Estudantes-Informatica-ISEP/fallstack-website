@@ -1,8 +1,9 @@
 import { notFound } from "next/navigation";
 
 import ActionForm from "@/components/ActionForm";
-import { toActionDto } from "@/application/dto/actionDto";
+import { toAdminActionDto } from "@/application/dto/actionDto";
 import { getAction } from "@/application/services/actionService";
+import { getCompanies } from "@/application/services/companyService";
 
 interface EditActionPageProps {
   params: Promise<{ id: string }>;
@@ -10,13 +11,16 @@ interface EditActionPageProps {
 
 const EditActionPage = async ({ params }: EditActionPageProps) => {
   const { id } = await params;
-  const action = await getAction(id);
+  const [action, companies] = await Promise.all([
+    getAction(id),
+    getCompanies(),
+  ]);
   if (!action) notFound();
 
   return (
     <section className="flex flex-col gap-6 p-8">
       <h1 className="text-2xl font-bold text-gray-800">Editar ação</h1>
-      <ActionForm action={toActionDto(action)} />
+      <ActionForm action={toAdminActionDto(action)} companies={companies} />
     </section>
   );
 };
