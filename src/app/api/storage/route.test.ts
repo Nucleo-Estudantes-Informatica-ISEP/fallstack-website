@@ -22,10 +22,13 @@ vi.mock("@/utils/supabase/admin", () => ({
 function studentSession(id: string) {
   return {
     id,
+    zitadelUserId: `zitadel-${id}`,
+    email: `${id}@isep.ipp.pt`,
     role: "STUDENT",
     adminRole: null,
     student: { id, code: "S123", name: "Student" },
     employee: null,
+    active: true,
   } as Awaited<ReturnType<typeof getServerSession>>;
 }
 
@@ -82,6 +85,8 @@ describe.each(routeCases)("$name upload ticket route", (routeCase) => {
     });
     vi.mocked(getServerSession).mockResolvedValue({
       id: "student-signup",
+      zitadelUserId: "zitadel-student-signup",
+      email: "student-signup@isep.ipp.pt",
       role: "STUDENT",
       adminRole: null,
       student: null,

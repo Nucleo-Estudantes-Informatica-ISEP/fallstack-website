@@ -1,11 +1,7 @@
 import { z } from "zod";
 
-import { EmailSchema } from "@/schemas/customEmailZod";
-
 export const employeeSignUpSchema = z.object({
-  email: EmailSchema,
-  password: z.string().min(8, "Password must be at least 8 characters").max(72),
-  name: z.string().min(2, "Name is too short").max(100),
+  name: z.string().trim().min(2, "Name is too short").max(100),
   linkedin: z
     .string()
     .trim()
@@ -13,10 +9,11 @@ export const employeeSignUpSchema = z.object({
     .max(2048)
     .optional()
     .or(z.literal(""))
-    .transform((v) => (v === "" ? undefined : v)),
+    .transform((value) => (value === "" ? undefined : value)),
   companyCode: z
     .string()
-    .regex(/^\d{8}$/u, "Company code must be exactly 8 digits"),
+    .trim()
+    .regex(/^[A-Za-z0-9_-]{8,80}$/u, "Invalid company code"),
 });
 
 export type EmployeeSignUpInput = z.infer<typeof employeeSignUpSchema>;

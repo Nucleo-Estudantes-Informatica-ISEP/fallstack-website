@@ -5,8 +5,8 @@ import {
   updateStudentMedia,
 } from "../repositories/studentRepository";
 import { updateUserActive } from "../repositories/userRepository";
-import { setAuthUserBanned } from "./authApplicationService";
-import { updateStudentForAdmin } from "./studentService";
+import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
+import { deleteStudentForAdmin, updateStudentForAdmin } from "./studentService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/utils/supabase/admin", () => ({
@@ -29,6 +29,7 @@ vi.mock("../repositories/userRepository", () => ({
 vi.mock("./actionService", () => ({ completeAction: vi.fn() }));
 vi.mock("./authApplicationService", () => ({
   createSupabaseAuthUserAsAdmin: vi.fn(),
+  deleteUserAccount: vi.fn(),
   rollbackAuthUser: vi.fn(),
   setAuthUserBanned: vi.fn(),
 }));
@@ -58,4 +59,10 @@ test("leaves active status untouched when not part of the update", async () => {
   expect(updateUserActive).not.toHaveBeenCalled();
   expect(setAuthUserBanned).not.toHaveBeenCalled();
   expect(updateStudentMedia).not.toHaveBeenCalled();
+});
+
+test("deletes the student account through the shared auth-aware service", async () => {
+  await deleteStudentForAdmin("s1");
+
+  expect(deleteUserAccount).toHaveBeenCalledWith("s1");
 });

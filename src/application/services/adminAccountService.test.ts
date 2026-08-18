@@ -8,7 +8,7 @@ import {
   findAdminAccountById,
   updateAdminUserFields,
 } from "../repositories/adminRepository";
-import { deleteUser, updateUserActive } from "../repositories/userRepository";
+import { updateUserActive } from "../repositories/userRepository";
 import {
   createAdminAccount,
   deleteAdminAccount,
@@ -17,6 +17,7 @@ import {
 } from "./adminAccountService";
 import {
   createSupabaseAuthUserAsAdmin,
+  deleteUserAccount,
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
@@ -35,10 +36,10 @@ vi.mock("../repositories/adminRepository", () => ({
 }));
 vi.mock("../repositories/userRepository", () => ({
   updateUserActive: vi.fn(),
-  deleteUser: vi.fn(),
 }));
 vi.mock("./authApplicationService", () => ({
   createSupabaseAuthUserAsAdmin: vi.fn(),
+  deleteUserAccount: vi.fn(),
   rollbackAuthUser: vi.fn(),
   setAuthUserBanned: vi.fn(),
 }));
@@ -53,7 +54,7 @@ beforeEach(() => {
   vi.mocked(countActiveSuperAdmins).mockResolvedValue(2);
 });
 
-test("creating an admin rolls back the Supabase auth user if the DB write fails", async () => {
+test("creating an admin rolls back the local placeholder if the DB write fails", async () => {
   vi.mocked(createSupabaseAuthUserAsAdmin).mockResolvedValue({
     id: "new-admin-id",
   } as never);
@@ -71,7 +72,7 @@ test("creating an admin rolls back the Supabase auth user if the DB write fails"
   expect(rollbackAuthUser).toHaveBeenCalledWith("new-admin-id");
 });
 
-test("creating an admin passes the display name through to Supabase and the DB row", async () => {
+test("creating an admin provisions only the local application row", async () => {
   vi.mocked(createSupabaseAuthUserAsAdmin).mockResolvedValue({
     id: "new-admin-id",
   } as never);
@@ -109,14 +110,14 @@ test("can't deactivate the last active super admin", async () => {
   expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
-test("can deactivate a super admin when another active one remains", async () => {
+test("can deactivate a super admin locally when another active one remains", async () => {
   vi.mocked(findAdminAccountById).mockResolvedValue(superAdminTarget);
   vi.mocked(countActiveSuperAdmins).mockResolvedValue(2);
 
   await updateAdminAccount("a1", { active: false });
 
   expect(updateUserActive).toHaveBeenCalledWith("a1", false);
-  expect(setAuthUserBanned).toHaveBeenCalledWith("a1", true);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
 test("can't demote the last active super admin", async () => {
@@ -148,6 +149,7 @@ test("deactivating/renaming a regular admin never checks the super admin count",
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
   expect(updateUserActive).toHaveBeenCalledWith("a2", false);
+  expect(setAuthUserBanned).not.toHaveBeenCalled();
 });
 
 test("an already-inactive super admin doesn't block further action on their row", async () => {
@@ -159,7 +161,7 @@ test("an already-inactive super admin doesn't block further action on their row"
   await expect(deleteAdminAccount("a1")).resolves.toBeUndefined();
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
-  expect(deleteUser).toHaveBeenCalledWith("a1");
+  expect(deleteUserAccount).toHaveBeenCalledWith("a1");
 });
 
 test("can't delete the last active super admin", async () => {
@@ -169,7 +171,7 @@ test("can't delete the last active super admin", async () => {
   await expect(deleteAdminAccount("a1")).rejects.toThrow(
     "last active Super Admin"
   );
-  expect(deleteUser).not.toHaveBeenCalled();
+  expect(deleteUserAccount).not.toHaveBeenCalled();
 });
 
 test("can delete a regular admin's account freely", async () => {
@@ -178,7 +180,7 @@ test("can delete a regular admin's account freely", async () => {
   await deleteAdminAccount("a2");
 
   expect(countActiveSuperAdmins).not.toHaveBeenCalled();
-  expect(deleteUser).toHaveBeenCalledWith("a2");
+  expect(deleteUserAccount).toHaveBeenCalledWith("a2");
 });
 
 test("getAdminAccountById is a thin passthrough to the repository", async () => {

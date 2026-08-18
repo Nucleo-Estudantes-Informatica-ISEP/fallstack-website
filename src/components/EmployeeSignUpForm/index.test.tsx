@@ -23,76 +23,68 @@ beforeEach(() => {
 });
 
 const fillValidForm = () => {
-  fireEvent.change(screen.getByLabelText("Email"), {
-    target: { value: "jane@company.com" },
-  });
-  fireEvent.change(screen.getByLabelText("Password"), {
-    target: { value: "password123" },
-  });
   fireEvent.change(screen.getByLabelText("Nome"), {
     target: { value: "Jane Doe" },
   });
-  fireEvent.change(screen.getByLabelText("Código da Empresa (8 dígitos)"), {
-    target: { value: "12345678" },
+  fireEvent.change(screen.getByLabelText("LinkedIn (opcional)"), {
+    target: { value: "https://linkedin.com/in/jane" },
+  });
+  fireEvent.change(screen.getByLabelText("Código da Empresa"), {
+    target: { value: "fs_emp_1234567890" },
   });
 };
 
-test("submits the entered fields and calls onSuccess", async () => {
+test("submits profile data and the company invite code", async () => {
   signUpEmployeeMock.mockResolvedValue(true);
   const onSuccess = vi.fn();
 
   render(<EmployeeSignUpForm onSuccess={onSuccess} />);
   fillValidForm();
-  fireEvent.click(screen.getByRole("button", { name: "Registar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Associar à empresa" }));
 
   await waitFor(() =>
     expect(signUpEmployeeMock).toHaveBeenCalledWith({
-      email: "jane@company.com",
-      password: "password123",
       name: "Jane Doe",
-      linkedin: "",
-      companyCode: "12345678",
+      linkedin: "https://linkedin.com/in/jane",
+      companyCode: "fs_emp_1234567890",
     })
   );
   expect(toastSuccessMock).toHaveBeenCalledWith(
-    "Registo efetuado com sucesso."
+    "Conta associada à empresa com sucesso."
   );
   expect(onSuccess).toHaveBeenCalled();
 });
 
-test("does not submit when the form is invoked while canSubmit is false", () => {
+test("does not collect email or password because AuthNEI already owns identity", () => {
   render(<EmployeeSignUpForm />);
 
-  fireEvent.submit(
-    screen.getByRole("button", { name: "Registar" }).closest("form")!
-  );
-
-  expect(signUpEmployeeMock).not.toHaveBeenCalled();
+  expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
 });
 
-test("shows a validation message for a malformed company code and disables submit", () => {
+test("rejects a malformed company code", () => {
   render(<EmployeeSignUpForm />);
 
-  fireEvent.change(screen.getByLabelText("Código da Empresa (8 dígitos)"), {
-    target: { value: "123" },
+  fireEvent.change(screen.getByLabelText("Código da Empresa"), {
+    target: { value: "bad!" },
   });
 
+  expect(screen.getByText("Código de empresa inválido.")).toBeInTheDocument();
   expect(
-    screen.getByText("Tem de ter exatamente 8 dígitos numéricos.")
-  ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "Registar" })).toBeDisabled();
+    screen.getByRole("button", { name: "Associar à empresa" })
+  ).toBeDisabled();
 });
 
-test("shows the API error and doesn't call onSuccess when signup fails", async () => {
-  signUpEmployeeMock.mockResolvedValue(new Error("Company code not found."));
+test("shows the API error and does not complete onboarding on failure", async () => {
+  signUpEmployeeMock.mockResolvedValue(new Error("Invalid company code"));
   const onSuccess = vi.fn();
 
   render(<EmployeeSignUpForm onSuccess={onSuccess} />);
   fillValidForm();
-  fireEvent.click(screen.getByRole("button", { name: "Registar" }));
+  fireEvent.click(screen.getByRole("button", { name: "Associar à empresa" }));
 
   await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith("Company code not found.")
+    expect(toastErrorMock).toHaveBeenCalledWith("Invalid company code")
   );
   expect(onSuccess).not.toHaveBeenCalled();
 });

@@ -143,3 +143,13 @@ test("rejects a reorder referencing an id that no longer exists, without saving"
   ).rejects.toMatchObject({ message: "Not found", status: 404 });
   expect(bulkUpdateFaqOrder).not.toHaveBeenCalled();
 });
+
+test("surfaces a concurrent FAQ position collision as a retryable 409", async () => {
+  vi.mocked(findFaqEntriesByIds).mockResolvedValue([{ id: "a" }] as never);
+  vi.mocked(bulkUpdateFaqOrder).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isUniqueConstraintError).mockReturnValue(true);
+
+  await expect(updateFaqOrder([{ id: "a", order: 0 }])).rejects.toMatchObject({
+    status: 409,
+  });
+});

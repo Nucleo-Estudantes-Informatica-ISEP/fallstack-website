@@ -1,32 +1,39 @@
 import "server-only";
 
 import { cache } from "react";
+import { cookies } from "next/headers";
 
-import { Email } from "@/types/Email";
+import config from "@/config";
 import { reportError } from "@/lib/logger";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
 
-import {
-  findUserSessionByEmail,
-  findUserSessionById,
-} from "../repositories/userRepository";
+import { findUserSessionByZitadelUserId } from "../repositories/userRepository";
+import { verifyAppSession } from "./zitadelAuthService";
 
 const getServerSession = cache(async () => {
   try {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !user) return null;
-    const appUser =
-      (await findUserSessionById(user.id)) ??
-      (user.email ? await findUserSessionByEmail(user.email as Email) : null);
-    // Deactivated in the admin backoffice - reject the session outright so
-    // every auth-gated route/page treats them as logged out, not just the
-    // ones that happen to check `active` themselves.
+    const token = (await cookies()).get(config.cookies.auth.name)?.value;
+    if (!token) return null;
+
+    const claims = verifyAppSession(token);
+    if (!claims) return null;
+
+    const appUser = await findUserSessionByZitadelUserId(claims.sub);
     if (!appUser || !appUser.active) return null;
-    return appUser;
+
+    // ZITADEL is authoritative for privileged roles. The DB fields remain
+    // useful for domain/profile state, but stale local role data can never
+    // manufacture admin/employee authorization by itself.
+    const adminRole: "SUPER_ADMIN" | null = claims.admin ? "SUPER_ADMIN" : null;
+    const employeeAllowed = claims.employee && !!appUser.employee;
+
+    return {
+      ...appUser,
+      adminRole,
+      role:
+        appUser.role === "EMPLOYEE" && !employeeAllowed
+          ? null
+          : appUser.role,
+    };
   } catch (error) {
     reportError(
       error,

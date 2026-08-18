@@ -1,250 +1,168 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { Email } from "@/types/Email";
-import { createAdminClient } from "@/utils/supabase/admin";
 
+import { findCompanyByInviteCodeHash } from "../repositories/companyInviteRepository";
 import {
   deleteUser,
-  findUserSessionByEmail,
-  findUserSessionById,
-  relinkUserId,
-  upsertUser,
+  findUserSessionByZitadelUserId,
+  provisionZitadelUser,
 } from "../repositories/userRepository";
 import {
-  completeOAuthSignIn,
+  completeZitadelSignIn,
+  deleteUserAccount,
   setAuthUserBanned,
+  signUpEmployee,
 } from "./authApplicationService";
+import { assignEmployeeRole, signAppSession } from "./zitadelAuthService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("../repositories/userRepository", () => ({
-  findUserSessionById: vi.fn(),
-  findUserSessionByEmail: vi.fn(),
-  relinkUserId: vi.fn(),
-  deleteUser: vi.fn(),
-  upsertUser: vi.fn(),
+vi.mock("../repositories/companyInviteRepository", () => ({
+  findCompanyByInviteCodeHash: vi.fn(),
 }));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
+vi.mock("../repositories/companyRepository", () => ({
+  createEmployee: vi.fn(),
+}));
+vi.mock("../repositories/transaction", () => ({
+  withTransaction: vi.fn(async (callback) => callback({})),
+}));
+vi.mock("../repositories/userRepository", () => ({
+  deleteUser: vi.fn(),
+  findUserByEmail: vi.fn(),
+  findUserSessionByZitadelUserId: vi.fn(),
+  provisionZitadelUser: vi.fn(),
+  setUserRole: vi.fn(),
+}));
+vi.mock("./zitadelAuthService", () => ({
+  assignEmployeeRole: vi.fn(),
+  signAppSession: vi.fn(() => "new-session"),
 }));
 
-const email = Email.create("student@isep.ipp.pt");
-const getUserById = vi.fn();
-const updateUserById = vi.fn();
+const identity = {
+  sub: "zitadel-user-1",
+  email: "student@isep.ipp.pt",
+  name: "Student",
+  emailVerified: true,
+  isEmployee: false,
+  isGlobalAdmin: false,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(findUserSessionById).mockResolvedValue(null);
-  vi.mocked(findUserSessionByEmail).mockResolvedValue(null);
-  vi.mocked(createAdminClient).mockReturnValue({
-    auth: { admin: { getUserById, updateUserById } },
-  } as never);
-  updateUserById.mockResolvedValue({ data: {}, error: null });
-  // Confirmed by default - individual tests override for the unconfirmed path.
-  getUserById.mockResolvedValue({
-    data: { user: { email_confirmed_at: "2026-01-01T00:00:00Z" } },
-    error: null,
-  });
 });
 
-test("routes an existing student with a profile to their student page", async () => {
-  vi.mocked(findUserSessionById).mockResolvedValue({
-    id: "auth-id-1",
+test("provisions a verified ZITADEL student and sends an incomplete profile to signup", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
     role: "STUDENT",
-    adminRole: null,
-    student: { id: "auth-id-1", code: "S123", name: "Ana" },
+    student: null,
     employee: null,
   } as never);
 
-  const destination = await completeOAuthSignIn({
-    id: "auth-id-1",
-    email,
-    fallback: "/signup",
-  });
+  await expect(
+    completeZitadelSignIn({ identity, fallback: "/" })
+  ).resolves.toBe("/signup?authnei=1");
 
-  expect(destination).toBe("/student/S123");
-  expect(upsertUser).not.toHaveBeenCalled();
-  expect(relinkUserId).not.toHaveBeenCalled();
+  expect(provisionZitadelUser).toHaveBeenCalledWith({
+    zitadelUserId: identity.sub,
+    email: Email.create(identity.email),
+    name: identity.name,
+    isEmployee: false,
+    isGlobalAdmin: false,
+  });
 });
 
-test("routes an existing employee to the dashboard", async () => {
-  vi.mocked(findUserSessionById).mockResolvedValue({
-    id: "auth-id-1",
+test("routes a returning employee to the dashboard", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
     role: "EMPLOYEE",
-    adminRole: null,
     student: null,
-    employee: { id: "auth-id-1", name: "Rui", companyId: "c1", company: {} },
+    employee: { id: "app-user-1", company: {} },
   } as never);
 
-  const destination = await completeOAuthSignIn({
-    id: "auth-id-1",
-    email,
-    fallback: "/signup",
-  });
-
-  expect(destination).toBe("/dashboard");
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isEmployee: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/dashboard");
 });
 
-test("falls back to the wizard for a STUDENT role with no profile yet", async () => {
-  vi.mocked(findUserSessionById).mockResolvedValue({
-    id: "auth-id-1",
-    role: "STUDENT",
-    adminRole: null,
+test("maps the NEI Global admin grant to the admin backoffice", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-admin",
+    role: null,
     student: null,
     employee: null,
   } as never);
 
-  const destination = await completeOAuthSignIn({
-    id: "auth-id-1",
-    email,
-    fallback: "/signup?next=1",
-  });
-
-  expect(destination).toBe("/signup?next=1");
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isGlobalAdmin: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/overview");
 });
 
-test("provisions a brand-new identity when no account exists by id or email", async () => {
-  const destination = await completeOAuthSignIn({
-    id: "auth-id-new",
-    email,
-    fallback: "/signup",
-  });
-
-  expect(upsertUser).toHaveBeenCalledWith({
-    id: "auth-id-new",
-    email,
+test("preserves a sanitized requested destination after AuthNEI", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
     role: "STUDENT",
-  });
-  expect(relinkUserId).not.toHaveBeenCalled();
-  expect(deleteUser).not.toHaveBeenCalled();
-  expect(destination).toBe("/signup");
-});
-
-test("re-keys a confirmed existing password-account student found by email to the new AuthNEI id", async () => {
-  vi.mocked(findUserSessionByEmail).mockResolvedValue({
-    id: "old-password-id",
-    role: "STUDENT",
-    adminRole: null,
-    student: { id: "old-password-id", code: "S456", name: "Bea" },
+    student: null,
     employee: null,
   } as never);
 
-  const destination = await completeOAuthSignIn({
-    id: "new-authnei-id",
-    email,
-    fallback: "/signup",
-  });
+  await expect(
+    completeZitadelSignIn({ identity, fallback: "/login?modal=employee" })
+  ).resolves.toBe("/login?modal=employee");
+});
 
-  expect(findUserSessionByEmail).toHaveBeenCalledWith(email);
-  expect(getUserById).toHaveBeenCalledWith("old-password-id");
-  expect(relinkUserId).toHaveBeenCalledWith(
-    "old-password-id",
-    "new-authnei-id"
+test("account deletion is app-local and does not touch the shared ZITADEL identity", async () => {
+  await deleteUserAccount("app-user-1");
+  expect(deleteUser).toHaveBeenCalledWith("app-user-1");
+});
+
+test("Fallstack deactivation does not ban the shared ZITADEL account", async () => {
+  await expect(setAuthUserBanned("app-user-1", true)).resolves.toBeUndefined();
+});
+
+test("employee onboarding rejects an invalid company code before assigning a role", async () => {
+  vi.mocked(findCompanyByInviteCodeHash).mockResolvedValue(null);
+
+  await expect(
+    signUpEmployee({
+      userId: "app-user-1",
+      zitadelUserId: "zitadel-user-1",
+      email: Email.create("employee@example.com"),
+      name: "Employee",
+      companyCode: "fs_emp_invalid",
+    })
+  ).rejects.toThrow("Invalid company code");
+
+  expect(assignEmployeeRole).not.toHaveBeenCalled();
+});
+
+test("employee onboarding assigns the project role and returns a refreshed app session", async () => {
+  vi.mocked(findCompanyByInviteCodeHash).mockResolvedValue({
+    id: "company-1",
+  } as never);
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-user-1",
+    employee: null,
+  } as never);
+
+  await expect(
+    signUpEmployee({
+      userId: "app-user-1",
+      zitadelUserId: "zitadel-user-1",
+      email: Email.create("employee@example.com"),
+      name: "Employee",
+      companyCode: "fs_emp_12345678",
+    })
+  ).resolves.toBe("new-session");
+
+  expect(assignEmployeeRole).toHaveBeenCalledWith("zitadel-user-1");
+  expect(signAppSession).toHaveBeenCalledWith(
+    expect.objectContaining({ isEmployee: true, sub: "zitadel-user-1" })
   );
-  expect(deleteUser).not.toHaveBeenCalled();
-  expect(upsertUser).not.toHaveBeenCalled();
-  expect(destination).toBe("/student/S456");
-});
-
-test("re-keys a confirmed existing password-account employee found by email to the dashboard", async () => {
-  vi.mocked(findUserSessionByEmail).mockResolvedValue({
-    id: "old-password-id",
-    role: "EMPLOYEE",
-    adminRole: null,
-    student: null,
-    employee: {
-      id: "old-password-id",
-      name: "Rui",
-      companyId: "c1",
-      company: {},
-    },
-  } as never);
-
-  const destination = await completeOAuthSignIn({
-    id: "new-authnei-id",
-    email,
-    fallback: "/signup",
-  });
-
-  expect(relinkUserId).toHaveBeenCalledWith(
-    "old-password-id",
-    "new-authnei-id"
-  );
-  expect(destination).toBe("/dashboard");
-});
-
-test("discards an unconfirmed dangling account found by email instead of relinking onto it", async () => {
-  vi.mocked(findUserSessionByEmail).mockResolvedValue({
-    id: "spoofed-id",
-    role: "STUDENT",
-    adminRole: null,
-    student: { id: "spoofed-id", code: "S999", name: "Attacker-planted" },
-    employee: null,
-  } as never);
-  getUserById.mockResolvedValue({
-    data: { user: { email_confirmed_at: undefined } },
-    error: null,
-  });
-
-  const destination = await completeOAuthSignIn({
-    id: "new-authnei-id",
-    email,
-    fallback: "/signup",
-  });
-
-  expect(deleteUser).toHaveBeenCalledWith("spoofed-id");
-  expect(relinkUserId).not.toHaveBeenCalled();
-  expect(upsertUser).toHaveBeenCalledWith({
-    id: "new-authnei-id",
-    email,
-    role: "STUDENT",
-  });
-  expect(destination).toBe("/signup");
-});
-
-test("fails closed (treats as unconfirmed) when the admin lookup errors", async () => {
-  vi.mocked(findUserSessionByEmail).mockResolvedValue({
-    id: "old-password-id",
-    role: "STUDENT",
-    adminRole: null,
-    student: null,
-    employee: null,
-  } as never);
-  getUserById.mockResolvedValue({
-    data: { user: null },
-    error: new Error("network error"),
-  });
-
-  await completeOAuthSignIn({
-    id: "new-authnei-id",
-    email,
-    fallback: "/signup",
-  });
-
-  expect(deleteUser).toHaveBeenCalledWith("old-password-id");
-  expect(relinkUserId).not.toHaveBeenCalled();
-});
-
-test("setAuthUserBanned(true) sets a long ban_duration", async () => {
-  await setAuthUserBanned("user-1", true);
-
-  expect(updateUserById).toHaveBeenCalledWith("user-1", {
-    ban_duration: "876000h",
-  });
-});
-
-test("setAuthUserBanned(false) clears the ban", async () => {
-  await setAuthUserBanned("user-1", false);
-
-  expect(updateUserById).toHaveBeenCalledWith("user-1", {
-    ban_duration: "none",
-  });
-});
-
-test("setAuthUserBanned doesn't throw if the Supabase call errors", async () => {
-  updateUserById.mockResolvedValue({
-    data: null,
-    error: new Error("network error"),
-  });
-
-  await expect(setAuthUserBanned("user-1", true)).resolves.toBeUndefined();
 });

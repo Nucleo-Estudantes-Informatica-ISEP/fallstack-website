@@ -5,6 +5,7 @@ import {
   createScheduleEvent,
   findAllScheduleEvents,
   findScheduleEventById,
+  isUniqueSchedulePositionError,
   updateScheduleEvent,
 } from "../repositories/scheduleRepository";
 import { withTransaction } from "../repositories/transaction";
@@ -21,6 +22,7 @@ vi.mock("../repositories/scheduleRepository", () => ({
   createScheduleEvent: vi.fn(),
   updateScheduleEvent: vi.fn(),
   bulkUpdateScheduleOrder: vi.fn(),
+  isUniqueSchedulePositionError: vi.fn(),
 }));
 vi.mock("../repositories/transaction", () => ({
   withTransaction: vi.fn(),
@@ -36,6 +38,7 @@ const transaction = {} as never;
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(findAllScheduleEvents).mockResolvedValue(existing as never);
+  vi.mocked(isUniqueSchedulePositionError).mockReturnValue(false);
   vi.mocked(withTransaction).mockImplementation(async (callback) =>
     callback(transaction)
   );
@@ -282,4 +285,16 @@ test("an update with no explicit order that moves a row between two others witho
     },
     transaction
   );
+});
+
+test("surfaces a concurrent schedule position collision as a retryable 409", async () => {
+  vi.mocked(bulkUpdateScheduleOrder).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isUniqueSchedulePositionError).mockReturnValue(true);
+
+  await expect(
+    updateScheduleOrder([
+      { id: "a", day: 1, order: 0 },
+      { id: "b", day: 1, order: 1 },
+    ])
+  ).rejects.toMatchObject({ status: 409 });
 });
