@@ -22,21 +22,30 @@ For every requested task:
 3. Push the task branch to the remote repository.
 4. Create a pull request from the task branch into `dev`, never `main`.
 
+### CI/CD and test-first workflow
+
+- Prefer TDD for bug fixes and business rules: add a focused test that fails for the reported behavior, implement the smallest fix, then refactor with the suite green. When a pre-fix test cannot be practical (for example, a hosted Supabase policy), document why and provide a repeatable staging check.
+- Every behavior change needs a regression test at the lowest useful level. Use integration or Playwright smoke coverage when unit tests cannot prove the boundary.
+- A PR is reviewable only after the local equivalents of the required checks pass. Do not weaken lint, TypeScript, tests, builds, migrations, Docker checks, or secret scanning to obtain green CI.
+- PRs target `dev`. A reviewed release promotes `dev` to the production branch; Coolify deploys that production branch. Do not add a second competing deployment workflow.
+- Database migrations must be committed and deploy through the migrator service before the application becomes healthy. Never claim a migration or deployment succeeded without observing it.
+- Dependency PRs may merge only after the same quality gates. Major upgrades require an explicit migration plan rather than being mixed into routine Dependabot groups.
+
 ---
 
 ## Stack
 
-| Layer | Tech |
-|---|---|
-| Framework | Next.js 15 (App Router), React 18 |
-| Language | TypeScript (`strict: true`) |
-| Styling | Tailwind CSS 4, HeroUI 2.8 |
-| Database | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`) |
-| Auth | Supabase Auth (session) — see [Auth model](#auth-model) |
-| Storage | Supabase Storage (avatars: public bucket, CVs: private bucket) |
-| Validation | Zod, schemas in `src/schemas/` |
-| Package manager | pnpm (see `packageManager` in `package.json`) |
-| Deploy | Docker → Coolify |
+| Layer           | Tech                                                           |
+| --------------- | -------------------------------------------------------------- |
+| Framework       | Next.js 15 (App Router), React 18                              |
+| Language        | TypeScript (`strict: true`)                                    |
+| Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
+| Database        | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`)     |
+| Auth            | Supabase Auth (session) — see [Auth model](#auth-model)        |
+| Storage         | Supabase Storage (avatars: public bucket, CVs: private bucket) |
+| Validation      | Zod, schemas in `src/schemas/`                                 |
+| Package manager | pnpm (see `packageManager` in `package.json`)                  |
+| Deploy          | Docker → Coolify                                               |
 
 ## Common commands
 
@@ -114,24 +123,25 @@ Two independent mechanisms — don't conflate them:
 - **Validation:** new request validation goes in `src/schemas/` as a named Zod schema, imported by the route — don't add another inline `z.object(...)` in a route file.
 - **Route responses:** always pass an explicit status code to `NextResponse.json(body, { status })`. The default is 200, and some existing routes rely on that default even for validation/auth failures — don't copy that pattern in new code.
 - **`app/auth/confirm/route.ts`** lives outside the `(auth)`/`api` conventions on purpose — it's the Supabase email-confirmation callback URL, which Supabase itself constructs, so it can't move without reconfiguring Supabase. Leave it where it is.
-- **Edition-specific content** still hardcoded (branding, `edition/actions.ts`'s `actionNames`/seed points) is centralized under `src/edition/`. When editing that content for a new event, change `edition/`, not `config/` or `utils/`. Company ranks/profile content (bio, socials, facts, video, display styling) and booth-action linkage are DB-backed instead (`CompanyRank`/`CompanyRankStyle`/`CompanyProfile`/`CompanyDisplayStyle` models, `Action.companyId`), editable through the admin backoffice — `savedStudentService.saveStudent()` now calls `completeCompanyBoothAction()` (`src/application/services/actionService.ts`), which looks up the booth action via `findActionByCompanyId()` instead of the old `edition/actions.ts` name-matching map. Sponsors, FAQ, and the schedule/timetable are likewise DB-backed (`Sponsor`/`FaqEntry`/`ScheduleEvent` models), editable through the admin backoffice — don't add a static `edition/` file for any of these.
+- **Edition-specific content** still hardcoded (tier company lists, booth-to-action mapping, branding) is centralized under `src/edition/` — `edition/actions.ts` holds `actionNames` and the `getBoothActionName()` lookup that `savedStudentService.saveStudent()` calls instead of an inline `switch`. When editing that content for a new event, change `edition/`, not `config/` or `utils/`. Sponsors, FAQ, and the schedule/timetable are DB-backed instead (`Sponsor`/`FaqEntry`/`ScheduleEvent` models), editable through the admin backoffice — don't add a static `edition/` file for any of them.
 - **Env vars:** validated through Zod, not read from `process.env` directly. Server-only secrets/config go through `serverEnv` (`src/config/env.server.ts`, guarded by `server-only`, validated lazily on first property access); `NEXT_PUBLIC_*` vars go through `clientEnv` (`src/config/env.client.ts`, validated eagerly at import time, since Next.js inlines them into the browser bundle at build time). Import whichever matches where your code runs — don't add a new raw `process.env.*` read. `.env.example` is the source of truth for required keys; keep it in sync with both schemas when you add or rename one.
 - **Components:** every component gets its own `PascalCaseName/index.tsx` folder. Shared, reusable primitives go in `components/ui/` (e.g. `Icons.tsx`, `Input`, `Modal`, `PrimaryButton`); everything else — reusable feature composites or single-use page sections alike (e.g. `Companies`, `Profile`, `GiveawaySection`, `AdminSavedSection`) — stays at the top level of `components/`, following the same pattern. There is no route-local `_components/` convention in use — keep new components in `components/` rather than colocating them under `app/`.
 - **Where new code goes:**
 
-  | Kind of code | Goes in |
-  |---|---|
-  | Prisma/DB access | `application/repositories/` |
-  | Orchestration (multi-repo calls, external services) | `application/services/` (mark `"server-only"`) |
-  | Pure business rule, no I/O | `domain/<entity-or-concern>/` (camelCase folder) |
-  | Browser fetch wrapper | `client/api/` (mark `"client-only"`, built on `lib/http/client.ts`'s `httpClient`) |
-  | Zod validation schema | `schemas/` |
-  | Static/env config | `config/` |
-  | Per-edition content still hardcoded (tier company lists, branding) | `edition/` |
-  | Generic helper (date, files, canvas) | `utils/` |
-  | Shared UI primitive | `components/ui/` |
-  | Any other component, reusable or single-use | top level of `components/` |
-  | Integration/smoke test | `tests/e2e/` (unit tests stay colocated) |
+  | Kind of code                                                       | Goes in                                                                            |
+  | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+  | Prisma/DB access                                                   | `application/repositories/`                                                        |
+  | Orchestration (multi-repo calls, external services)                | `application/services/` (mark `"server-only"`)                                     |
+  | Pure business rule, no I/O                                         | `domain/<entity-or-concern>/` (camelCase folder)                                   |
+  | Browser fetch wrapper                                              | `client/api/` (mark `"client-only"`, built on `lib/http/client.ts`'s `httpClient`) |
+  | Zod validation schema                                              | `schemas/`                                                                         |
+  | Static/env config                                                  | `config/`                                                                          |
+  | Per-edition content still hardcoded (tier company lists, branding) | `edition/`                                                                         |
+  | Generic helper (date, files, canvas)                               | `utils/`                                                                           |
+  | Shared UI primitive                                                | `components/ui/`                                                                   |
+  | Any other component, reusable or single-use                        | top level of `components/`                                                         |
+  | Integration/smoke test                                             | `tests/e2e/` (unit tests stay colocated)                                           |
+
 - **API error responses:** shapes are inconsistent across existing routes (`{ error }`, `{ message }`, raw Zod `e.errors`/`e.issues`/`.error`, English and Portuguese strings all appear). For **new** routes, standardize on `{ error: string }` for failures (the majority pattern) with an explicit status code every time — don't add another one-off shape, and don't rely on the 200 default (a few existing routes do this on validation/auth failure; that's a known bug, not a pattern to copy).
 
 ## Editions & releases
@@ -140,18 +150,19 @@ Each yearly edition is tracked as a git tag + GitHub Release on this one persist
 
 - **Tag name:** `<year>-edition` (e.g. `2025-edition`, `2026-edition`).
 - **Source archive:** GitHub auto-generates a "Source code (zip/tar.gz)" download for every tag/release — that's the frozen, downloadable artifact for a past edition. This is a dynamic Next.js + Postgres app, not a static site, so the archive is source only: running it still needs your own Postgres, a Supabase project, and the usual local setup in `README.md`. No Docker image is published per edition at this time — the source tag is the deliverable (see `CHANGELOG.md` for what changed each edition).
-- **Versioning resets per edition:** a freshly-cut edition's `CHANGELOG.md` entry/release starts at `1.0.0`; further within-edition maintenance (fixes, restructuring, hygiene) increments from there (`1.0.1`, `1.1.0`, ...) until the *next* edition's cutover restarts the count at `1.0.0`. Editions are distinguished by the `<year>-edition` tag, not by a version number that climbs forever across editions.
+- **Versioning resets per edition:** a freshly-cut edition's `CHANGELOG.md` entry/release starts at `1.0.0`; further within-edition maintenance (fixes, restructuring, hygiene) increments from there (`1.0.1`, `1.1.0`, ...) until the _next_ edition's cutover restarts the count at `1.0.0`. Editions are distinguished by the `<year>-edition` tag, not by a version number that climbs forever across editions.
 - The 2026 edition's own `1.0.0` cutover happens once the current backlog of open architecture/security/correctness issues is merged to `main`.
 
 ## Verification (definition of done)
 
-CI (`.github/workflows/ci.yml`) runs `pnpm test`, `pnpm typecheck`, and `pnpm lint` on every PR, and `next build` also fails on type/lint errors. Before considering a task done:
+CI (`.github/workflows/ci.yml`) uses a frozen install and runs tests, typecheck, lint, the production Next.js build, Prisma schema validation, the production/migrator Docker builds with non-root assertions, and Gitleaks on every PR to `dev` or `main`. Before considering a task done:
 
 1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
-2. Run `pnpm test` — keep it green, and extend the relevant test file when behavior changes. CI reruns the full auto-discovered suite.
+2. Run `pnpm test` — keep it green, and extend the relevant test file when behavior changes. For a regression, prefer proving the failure first and then implementing the fix. CI reruns the full auto-discovered suite.
 3. Run `pnpm typecheck` — this also runs in CI, but don't rely on CI alone to catch it.
-4. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body *and* status code. For UI: load the page and interact with the changed flow.
-5. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
+4. Run `pnpm build` and `pnpm exec prisma validate`. For deployment-sensitive changes, also build the affected Docker target.
+5. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body _and_ status code. For UI: load the page and interact with the changed flow.
+6. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
 ## Gotchas
 

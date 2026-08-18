@@ -29,6 +29,20 @@ through Supabase Auth. Application tables must not store passwords or password
 reset tokens, and application routes must not provide separate password-change
 flows.
 
+#### Account deletion
+
+`auth.users.id` and `public."User".id` match by convention; no foreign key can
+span Supabase Auth and Prisma. Always delete accounts through the admin
+backoffice, which removes the Supabase Auth identity before the application
+row. Never delete users directly in the Supabase Auth dashboard: that leaves an
+unloginable application account.
+
+Before deploying changes that affect account deletion, and after any manual
+Auth operation, run
+[`supabase/audit-orphaned-accounts.sql`](./supabase/audit-orphaned-accounts.sql)
+manually in every environment's Supabase SQL editor. It is read-only and reports
+orphans in both directions; investigate each result before deleting anything.
+
 ---
 
 # Getting Started
@@ -78,6 +92,18 @@ See `.env.example` for the full list, including optional docker compose override
 ### Observability
 
 Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVABILITY.md`](./docs/OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
+
+### Pre-event load validation
+
+The in-process upload limiter is keyed by authenticated student ID and uses a
+fixed window. It does not trust proxy IP headers. Before an event, exercise the
+QR and upload-ticket paths against staging with
+[`tests/load/event-readiness.js`](./tests/load/event-readiness.js). The harness
+requires `CONFIRM_NON_PRODUCTION=yes` and rejects an upload load that would
+exceed five tickets per minute for any supplied staging student session.
+
+Only replace the limiter with a shared token bucket if staging results exceed
+the latency/error thresholds, or before scaling the app beyond one replica.
 
 ### Storage setup (Supabase hosted)
 

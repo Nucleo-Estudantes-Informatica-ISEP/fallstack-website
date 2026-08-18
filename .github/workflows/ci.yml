@@ -19,7 +19,22 @@ env:
   DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci
   NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+  SUPABASE_SERVICE_ROLE_KEY: ${{ github.sha }}
   NEXT_PUBLIC_BASE_URL: https://ci.invalid/api
+  JWT_SECRET: ${{ github.sha }}
+  AUTH_ISSUER_URL: https://auth.ci.invalid
+  AUTH_PROJECT_ID: ci-fallstack-project
+  AUTH_GLOBAL_PROJECT_ID: ci-nei-global-project
+  AUTH_CLIENT_ID: ci-fallstack-client
+  AUTH_CLIENT_SECRET: ${{ github.sha }}
+  AUTH_SECRET: ${{ github.sha }}
+  AUTH_SCOPES: openid email profile offline_access urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:project:id:ci-nei-global-project:aud
+  AUTH_ROLE_CLAIM: urn:zitadel:iam:org:project:ci-fallstack-project:roles
+  AUTH_GLOBAL_ROLE_CLAIM: urn:zitadel:iam:org:project:ci-nei-global-project:roles
+  AUTH_REDIRECT_URI: https://ci.invalid/api/auth/callback/zitadel
+  AUTH_POST_LOGOUT_REDIRECT_URI: https://ci.invalid
+  ZITADEL_ORG_ID: ci-nei-org
+  ZITADEL_ROLE_ASSIGNER_TOKEN: ${{ github.sha }}
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:

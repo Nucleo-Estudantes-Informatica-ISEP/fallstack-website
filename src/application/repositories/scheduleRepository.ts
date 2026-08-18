@@ -1,6 +1,12 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
+
 import prisma, { DbClient } from "./database";
+
+export const isUniqueSchedulePositionError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
 
 export const findAllScheduleEvents = (db: DbClient = prisma) =>
   db.scheduleEvent.findMany({

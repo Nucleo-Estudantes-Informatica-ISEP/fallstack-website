@@ -1,86 +1,120 @@
 import { beforeEach, expect, test, vi } from "vitest";
+import { cookies } from "next/headers";
 
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
-
-import {
-  findUserSessionByEmail,
-  findUserSessionById,
-} from "../repositories/userRepository";
+import { findUserSessionByZitadelUserId } from "../repositories/userRepository";
+import { verifyAppSession } from "./zitadelAuthService";
 import getServerSession from "./sessionService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/server", () => ({ createClient: vi.fn() }));
+vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 vi.mock("../repositories/userRepository", () => ({
-  findUserSessionById: vi.fn(),
-  findUserSessionByEmail: vi.fn(),
+  findUserSessionByZitadelUserId: vi.fn(),
 }));
+vi.mock("./zitadelAuthService", () => ({ verifyAppSession: vi.fn() }));
 
-const getUser = vi.fn();
+const cookieGet = vi.fn();
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(createSupabaseServerClient).mockResolvedValue({
-    auth: { getUser },
-  } as never);
+  vi.mocked(cookies).mockResolvedValue({ get: cookieGet } as never);
+  cookieGet.mockReturnValue({ value: "session-token" });
 });
 
-test("returns null when there is no Supabase session", async () => {
-  getUser.mockResolvedValue({ data: { user: null }, error: null });
+test("returns null when there is no Fallstack session cookie", async () => {
+  cookieGet.mockReturnValue(undefined);
 
   expect(await getServerSession()).toBeNull();
-  expect(findUserSessionById).not.toHaveBeenCalled();
+  expect(findUserSessionByZitadelUserId).not.toHaveBeenCalled();
 });
 
-test("returns the app user for an active session", async () => {
-  getUser.mockResolvedValue({
-    data: { user: { id: "u1", email: "a@isep.ipp.pt" } },
-    error: null,
+test("returns null for an invalid app session", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue(null);
+
+  expect(await getServerSession()).toBeNull();
+});
+
+test("resolves an active student by ZITADEL subject", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "zitadel-user-1",
+    email: "a@isep.ipp.pt",
+    employee: false,
+    admin: false,
   });
-  vi.mocked(findUserSessionById).mockResolvedValue({
-    id: "u1",
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-user-1",
+    zitadelUserId: "zitadel-user-1",
+    email: "a@isep.ipp.pt",
     role: "STUDENT",
+    adminRole: null,
     active: true,
+    student: { id: "app-user-1", code: "A123", name: "Student" },
+    employee: null,
   } as never);
 
-  expect(await getServerSession()).toEqual({
-    id: "u1",
-    role: "STUDENT",
-    active: true,
-  });
+  const session = await getServerSession();
+  expect(session?.role).toBe("STUDENT");
+  expect(session?.adminRole).toBeNull();
+  expect(findUserSessionByZitadelUserId).toHaveBeenCalledWith("zitadel-user-1");
 });
 
-test("rejects a deactivated user's session even though Supabase itself still considers them logged in", async () => {
-  getUser.mockResolvedValue({
-    data: { user: { id: "u1", email: "a@isep.ipp.pt" } },
-    error: null,
+test("maps the NEI Global admin role to superadmin access", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "admin-sub",
+    email: "admin@nei-isep.org",
+    employee: false,
+    admin: true,
   });
-  vi.mocked(findUserSessionById).mockResolvedValue({
-    id: "u1",
-    role: "STUDENT",
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-admin",
+    zitadelUserId: "admin-sub",
+    email: "admin@nei-isep.org",
+    role: null,
+    adminRole: null,
+    active: true,
+    student: null,
+    employee: null,
+  } as never);
+
+  expect((await getServerSession())?.adminRole).toBe("SUPER_ADMIN");
+});
+
+test("does not trust a stale local employee role without the ZITADEL role", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "employee-sub",
+    email: "employee@example.com",
+    employee: false,
+    admin: false,
+  });
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-employee",
+    zitadelUserId: "employee-sub",
+    email: "employee@example.com",
+    role: "EMPLOYEE",
+    adminRole: null,
+    active: true,
+    student: null,
+    employee: {
+      id: "app-employee",
+      name: "Employee",
+      companyId: "company-1",
+      company: { id: "company-1", name: "Company", avatar: null },
+    },
+  } as never);
+
+  expect((await getServerSession())?.role).toBeNull();
+});
+
+test("rejects deactivated local accounts", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "zitadel-user-1",
+    email: "a@isep.ipp.pt",
+    employee: false,
+    admin: false,
+  });
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-user-1",
     active: false,
   } as never);
-
-  expect(await getServerSession()).toBeNull();
-});
-
-test("falls back to an email lookup and still enforces active there too", async () => {
-  getUser.mockResolvedValue({
-    data: { user: { id: "u1", email: "a@isep.ipp.pt" } },
-    error: null,
-  });
-  vi.mocked(findUserSessionById).mockResolvedValue(null);
-  vi.mocked(findUserSessionByEmail).mockResolvedValue({
-    id: "u1",
-    role: "STUDENT",
-    active: false,
-  } as never);
-
-  expect(await getServerSession()).toBeNull();
-  expect(findUserSessionByEmail).toHaveBeenCalled();
-});
-
-test("returns null and reports the error if the Supabase call throws", async () => {
-  getUser.mockRejectedValue(new Error("network error"));
 
   expect(await getServerSession()).toBeNull();
 });

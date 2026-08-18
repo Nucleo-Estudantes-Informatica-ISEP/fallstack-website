@@ -8,6 +8,8 @@ import prisma, { DbClient } from "./database";
 
 const sessionSelect = {
   id: true,
+  zitadelUserId: true,
+  email: true,
   role: true,
   adminRole: true,
   active: true,
@@ -24,18 +26,25 @@ const sessionSelect = {
   },
 } satisfies Prisma.UserSelect;
 
+export type SessionUserRecord = Prisma.UserGetPayload<{
+  select: typeof sessionSelect;
+}>;
+
 export const findUserSessionById = (id: string) =>
   prisma.user.findUnique({ where: { id }, select: sessionSelect });
 
+export const findUserSessionByZitadelUserId = (zitadelUserId: string) =>
+  prisma.user.findUnique({ where: { zitadelUserId }, select: sessionSelect });
+
 export const findUserSessionByEmail = (email: Email) =>
-  prisma.user.findUnique({
-    where: { email },
-    select: sessionSelect,
-  });
+  prisma.user.findUnique({ where: { email }, select: sessionSelect });
 
 export const findUserByEmail = (email: Email) =>
   prisma.user.findUnique({ where: { email } });
 
+// Legacy-compatible app-row helper used by admin/domain services. User.id is
+// always an application-owned UUID; callers may supply one when creating a
+// 1:1 Student/Employee row in the same transaction.
 export const upsertUser = (
   data: {
     id: string;
@@ -50,20 +59,85 @@ export const upsertUser = (
     create: data,
   });
 
-// Re-keys an existing User row onto a new id (e.g. adopting a new Supabase
-// auth id for the same person via a different sign-in provider). Safe to do
-// as a plain id update: Student.id, Employee.id, and _InterestToUser's User
-// FK are all ON UPDATE CASCADE at the DB level, so their rows follow the
-// rename automatically.
-export const relinkUserId = (
-  oldId: string,
-  newId: string,
-  db: DbClient = prisma
-) => db.user.update({ where: { id: oldId }, data: { id: newId } });
+export async function provisionZitadelUser(input: {
+  zitadelUserId: string;
+  email: Email;
+  name?: string;
+  isEmployee: boolean;
+  isGlobalAdmin: boolean;
+}) {
+  const existingBySubject = await prisma.user.findUnique({
+    where: { zitadelUserId: input.zitadelUserId },
+    select: sessionSelect,
+  });
 
-// Cascades to Student/Employee/interests via the same ON DELETE CASCADE FKs.
+  const role = input.isEmployee ? "EMPLOYEE" : undefined;
+  const adminRole = input.isGlobalAdmin ? "SUPER_ADMIN" : null;
+
+  if (existingBySubject) {
+    return prisma.user.update({
+      where: { id: existingBySubject.id },
+      data: {
+        email: input.email,
+        adminRole,
+        ...(role ? { role } : {}),
+        ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
+      },
+      select: sessionSelect,
+    });
+  }
+
+  // This also provides a safe bridge for pre-cutover/test rows: preserve the
+  // internal UUID and every Student/Employee FK, then attach the verified
+  // ZITADEL subject. No application row is ever re-keyed to an IdP id.
+  const existingByEmail = await prisma.user.findUnique({
+    where: { email: input.email },
+    select: sessionSelect,
+  });
+
+  if (existingByEmail) {
+    if (
+      existingByEmail.zitadelUserId &&
+      existingByEmail.zitadelUserId !== input.zitadelUserId
+    )
+      throw new Error("Email is already linked to another AuthNEI identity");
+
+    return prisma.user.update({
+      where: { id: existingByEmail.id },
+      data: {
+        zitadelUserId: input.zitadelUserId,
+        adminRole,
+        ...(role ? { role } : {}),
+        ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
+      },
+      select: sessionSelect,
+    });
+  }
+
+  return prisma.user.create({
+    data: {
+      zitadelUserId: input.zitadelUserId,
+      email: input.email,
+      role: input.isEmployee ? "EMPLOYEE" : "STUDENT",
+      adminRole,
+      name: input.isGlobalAdmin ? input.name : undefined,
+    },
+    select: sessionSelect,
+  });
+}
+
+export const setUserRole = (
+  id: string,
+  role: "STUDENT" | "EMPLOYEE",
+  db: DbClient = prisma
+) => db.user.update({ where: { id }, data: { role } });
+
+// Cascades to Student/Employee/interests via the DB foreign keys.
 export const deleteUser = (id: string, db: DbClient = prisma) =>
   db.user.delete({ where: { id } });
+
+export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
+  db.user.deleteMany({ where: { id } });
 
 export const setUserInterests = (
   id: string,

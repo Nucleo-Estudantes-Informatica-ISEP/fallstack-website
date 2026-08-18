@@ -1,25 +1,27 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-import { defineHandler } from "@/lib/http/server";
-import { signInSchema } from "@/schemas/signInSchema";
-import { createClient as createSupabaseServerClient } from "@/utils/supabase/server";
+import { serverEnv } from "@/config/env.server";
+import {
+  createAuthorizationRequest,
+  oidcCookieNames,
+} from "@/application/services/zitadelAuthService";
 
-export const POST = defineHandler({
-  auth: "public",
-  schema: signInSchema,
-  handler: async ({ body }) => {
-    const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword(body);
+export async function GET(request: NextRequest) {
+  const auth = await createAuthorizationRequest(
+    request.nextUrl.searchParams.get("next")
+  );
+  const response = NextResponse.redirect(auth.url);
+  const cookieOptions = {
+    httpOnly: true,
+    secure: serverEnv.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: auth.maxAge,
+  };
 
-    if (error)
-      return NextResponse.json(
-        { message: "Invalid email or password" },
-        { status: 401 }
-      );
-
-    return NextResponse.json(
-      { message: "Sign in successfully" },
-      { status: 200 }
-    );
-  },
-});
+  response.cookies.set(oidcCookieNames.state, auth.state, cookieOptions);
+  response.cookies.set(oidcCookieNames.nonce, auth.nonce, cookieOptions);
+  response.cookies.set(oidcCookieNames.verifier, auth.verifier, cookieOptions);
+  response.cookies.set(oidcCookieNames.next, auth.next, cookieOptions);
+  return response;
+}
