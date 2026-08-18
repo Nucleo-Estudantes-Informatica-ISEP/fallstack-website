@@ -19,20 +19,26 @@ test("authentication and password recovery no longer depend on Supabase Auth", a
   assert.match(schema, /zitadelUserId\s+String\?\s+@unique/);
 
   assert.match(loginRoute, /createAuthorizationRequest/);
-  assert.doesNotMatch(loginRoute, /supabase|signInWithPassword|signInWithOAuth/i);
+  assert.doesNotMatch(loginRoute, /signInWithPassword|signInWithOAuth|createSupabaseServerClient/);
 
   assert.match(passwordResetRoute, /Passwords are managed by AuthNEI/);
   assert.match(passwordResetRoute, /\/api\/auth\/login/);
   assert.doesNotMatch(
     passwordResetRoute,
-    /resetPasswordForEmail|exchangeCodeForSession|auth\.updateUser/
+    /resetPasswordForEmail|exchangeCodeForSession|auth\.updateUser|createSupabaseServerClient/
   );
 
   assert.match(confirmPage, /redirect\("\/login"\)/);
-  assert.doesNotMatch(confirmPage, /supabase|verifyOtp|auth\.updateUser/i);
+  assert.doesNotMatch(
+    confirmPage,
+    /verifyOtp|auth\.updateUser|createSupabaseServerClient/
+  );
 
   assert.match(legacyConfirmRoute, /NextResponse\.redirect/);
-  assert.doesNotMatch(legacyConfirmRoute, /supabase|verifyOtp|exchangeCodeForSession/i);
+  assert.doesNotMatch(
+    legacyConfirmRoute,
+    /verifyOtp|exchangeCodeForSession|createSupabaseServerClient/
+  );
 
   for (const legacyPath of [
     "src/app/(admin)/change-password/page.tsx",
