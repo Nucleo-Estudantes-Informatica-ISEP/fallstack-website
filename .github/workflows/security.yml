@@ -6,8 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  dependency-review:
-    if: github.event_name == 'pull_request' && github.event.repository.private == false
-    uses: Nucleo-Estudantes-Informatica-ISEP/.github/.github/workflows/dependency-review.yml@master
+  security:
+    name: Security
     permissions:
       contents: read
+    uses: Nucleo-Estudantes-Informatica-ISEP/.github/.github/workflows/security.yml@master
