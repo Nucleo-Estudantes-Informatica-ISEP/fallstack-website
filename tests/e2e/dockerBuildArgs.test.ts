@@ -161,11 +161,7 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
   ]) {
     expectRequiredComposeVariable(webBuildArgs, name);
   }
-  expectComposeVariable(
-    webBuildArgs,
-    "NEXT_PUBLIC_BASE_URL",
-    baseUrlExpansion
-  );
+  expectComposeVariable(webBuildArgs, "NEXT_PUBLIC_BASE_URL", baseUrlExpansion);
 
   const migrateEnvironment = extractComposeServiceEnvironment("migrate");
   expectRequiredComposeVariable(migrateEnvironment, "DATABASE_URL");
@@ -174,7 +170,6 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
   const webEnvironment = extractComposeServiceEnvironment("web");
   for (const name of [
     "DATABASE_URL",
-    "JWT_SECRET",
     "SUPABASE_SERVICE_ROLE_KEY",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
@@ -186,5 +181,15 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
     webEnvironment,
     "NEXT_PUBLIC_BASE_URL",
     baseUrlExpansion
+  );
+  expectComposeVariable(
+    webEnvironment,
+    "JWT_SECRET",
+    "${JWT_SECRET:-${SERVICE_REALBASE64_64_JWT}}"
+  );
+  expectComposeVariable(
+    webEnvironment,
+    "AUTH_SECRET",
+    "${AUTH_SECRET:-${SERVICE_REALBASE64_64_AUTH}}"
   );
 });

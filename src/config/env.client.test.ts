@@ -11,14 +11,14 @@ afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
 });
 
-test("falls back to the default NEXT_PUBLIC_BASE_URL when the Dockerfile's empty-string ARG default is passed through", async () => {
+test("falls back to the Docker port when NEXT_PUBLIC_BASE_URL is empty", async () => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
   process.env.NEXT_PUBLIC_BASE_URL = "";
 
   const { clientEnv } = await import("./env.client");
 
-  expect(clientEnv.NEXT_PUBLIC_BASE_URL).toBe("http://localhost:3000/api");
+  expect(clientEnv.NEXT_PUBLIC_BASE_URL).toBe("http://localhost:4000/api");
 });
 
 test("still requires a real NEXT_PUBLIC_SUPABASE_URL (no default)", async () => {
