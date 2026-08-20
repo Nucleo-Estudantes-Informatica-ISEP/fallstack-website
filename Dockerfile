@@ -66,7 +66,7 @@ ARG SENTRY_PROJECT=""
 # env_file (see docker-compose.app.yml).
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
-ARG NEXT_PUBLIC_BASE_URL=""
+ARG NEXT_PUBLIC_BASE_URL="http://localhost:4000/api"
 # Links the admin backoffice's Logs nav item out to GlitchTip/Sentry -
 # NEXT_PUBLIC_*, so (like the others above) it must be supplied as a build
 # arg to actually land in the compiled bundle; declaring it only in
