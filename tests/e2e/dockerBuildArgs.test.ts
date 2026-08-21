@@ -193,3 +193,13 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
     "${AUTH_SECRET:-${SERVICE_REALBASE64_64_AUTH}}"
   );
 });
+
+test("Coolify compose keeps the migrator one-shot and avoids global container names", () => {
+  const migrateBlock = extractComposeServiceBlock("migrate").join("\n");
+  const webBlock = extractComposeServiceBlock("web").join("\n");
+
+  expect(migrateBlock).toContain('restart: "no"');
+  expect(migrateBlock).toContain("exclude_from_hc: true");
+  expect(migrateBlock).not.toMatch(/^\s*container_name:/m);
+  expect(webBlock).not.toMatch(/^\s*container_name:/m);
+});
