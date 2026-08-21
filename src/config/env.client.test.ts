@@ -11,7 +11,7 @@ afterEach(() => {
   process.env = { ...ORIGINAL_ENV };
 });
 
-test("falls back to the default NEXT_PUBLIC_BASE_URL when the Dockerfile's empty-string ARG default is passed through", async () => {
+test("falls back to the native Next dev port when NEXT_PUBLIC_BASE_URL is empty", async () => {
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
   process.env.NEXT_PUBLIC_BASE_URL = "";
