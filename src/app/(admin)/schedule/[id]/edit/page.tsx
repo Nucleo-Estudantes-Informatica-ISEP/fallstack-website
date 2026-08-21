@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import ScheduleForm from "@/components/ScheduleForm";
-import { toScheduleEventDto } from "@/application/dto/scheduleDto";
+import { toAdminScheduleEventDto } from "@/application/dto/scheduleDto";
 import { getScheduleEvent } from "@/application/services/scheduleService";
 
 interface EditScheduleEventPageProps {
@@ -18,7 +18,7 @@ const EditScheduleEventPage = async ({
   return (
     <section className="flex flex-col gap-6 p-8">
       <h1 className="text-2xl font-bold text-gray-800">Editar atividade</h1>
-      <ScheduleForm event={toScheduleEventDto(event)} />
+      <ScheduleForm event={toAdminScheduleEventDto(event)} />
     </section>
   );
 };

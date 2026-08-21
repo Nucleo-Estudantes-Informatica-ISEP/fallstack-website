@@ -19,7 +19,12 @@ interface InterestsAdminPageProps {
 type InterestRow = ReturnType<typeof toAdminInterestDto>;
 
 const columns: DataTableColumn<InterestRow>[] = [
-  { key: "name", header: "Nome", render: (i) => i.name, sortable: true },
+  {
+    key: "name",
+    header: "Nome",
+    render: (i) => i.name.PT,
+    sortable: true,
+  },
   {
     key: "usersCount",
     header: "Em uso por",
@@ -68,14 +73,14 @@ const InterestsAdminPage = async ({
           <div className="flex items-center gap-3">
             <Link
               href={`/interests/${interest.id}/edit`}
-              aria-label={`Editar ${interest.name}`}
+              aria-label={`Editar ${interest.name.PT}`}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />
             </Link>
             <AdminDeleteButton
               deleteUrl={`/admin/interests/${interest.id}`}
-              itemLabel={interest.name}
+              itemLabel={interest.name.PT}
               disabled={interest.usersCount > 0}
               disabledReason="Não é possível eliminar um interesse em uso."
             />

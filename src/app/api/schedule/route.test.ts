@@ -40,14 +40,17 @@ test("GET returns the schedule without requiring a session", async () => {
       order: 0,
       startTime: "09:00",
       endTime: "10:00",
-      activity: "Opening",
+      activity: { PT: "Abertura", EN: "Opening" },
     },
   ] as never);
 
   const { GET } = await import("./route");
-  const res = await GET(new NextRequest("http://localhost/api/schedule"), {
-    params: Promise.resolve({}),
-  });
+  const res = await GET(
+    new NextRequest("http://localhost/api/schedule", {
+      headers: { "accept-language": "en" },
+    }),
+    { params: Promise.resolve({}) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 200);

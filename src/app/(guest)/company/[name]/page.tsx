@@ -1,9 +1,11 @@
 import React from "react";
+import { headers } from "next/headers";
 
 import CompanyPageSection from "@/components/Companies/CompanyPageSection";
 import Custom404 from "@/app/not-found";
 import { toCompanyDisplayDto } from "@/application/dto/companyDto";
 import { getCompanyDisplayByName } from "@/application/services/companyService";
+import { resolveLanguage } from "@/domain/i18n/translations";
 
 interface CompanySearchProps {
   params: Promise<{
@@ -18,6 +20,7 @@ const CompanyPage = async (props: CompanySearchProps) => {
   // covers that plus any other percent-encoded character generally.
   const name = decodeURIComponent(params.name);
   const company = await getCompanyDisplayByName(name);
+  const language = resolveLanguage((await headers()).get("accept-language"));
 
   // A rank without hasInternalPage never gets this page, and neither does a
   // rank that does but has no CompanyProfile content to show - both 404
@@ -27,7 +30,7 @@ const CompanyPage = async (props: CompanySearchProps) => {
 
   return (
     <section className="flex size-full flex-col items-center bg-black">
-      <CompanyPageSection company={toCompanyDisplayDto(company)} />
+      <CompanyPageSection company={toCompanyDisplayDto(company, language)} />
     </section>
   );
 };

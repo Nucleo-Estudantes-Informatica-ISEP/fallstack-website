@@ -2,10 +2,18 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
+import {
+  Language,
+  Translations,
+  type TranslationValues,
+} from "@/domain/i18n/translations";
+
 import prisma, { DbClient } from "./database";
 
 export const findAllFaqEntries = () =>
-  prisma.faqEntry.findMany({ orderBy: { order: "asc" } });
+  prisma.faqEntry
+    .findMany({ orderBy: { order: "asc" } })
+    .then((entries) => entries.map(parseFaqEntry));
 
 export const findFaqEntriesByIds = (ids: string[]) =>
   prisma.faqEntry.findMany({
@@ -46,7 +54,15 @@ export interface AdminFaqQuery {
 
 function faqWhere(search?: string) {
   return search
-    ? { question: { contains: search, mode: "insensitive" as const } }
+    ? {
+        OR: Object.values(Language).map((language) => ({
+          question: {
+            path: [language],
+            string_contains: search,
+            mode: "insensitive" as const,
+          },
+        })),
+      }
     : undefined;
 }
 
@@ -61,36 +77,93 @@ function faqOrderBy(sort: string | undefined, order: "asc" | "desc") {
 export const countFaqEntriesForAdmin = (search?: string) =>
   prisma.faqEntry.count({ where: faqWhere(search) });
 
-export const findFaqEntriesForAdmin = ({
+export const findFaqEntriesForAdmin = async ({
   page,
   pageSize,
   sort,
   order,
   search,
-}: AdminFaqQuery) =>
-  prisma.faqEntry.findMany({
-    where: faqWhere(search),
-    orderBy: faqOrderBy(sort, order),
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-  });
+}: AdminFaqQuery) => {
+  if (sort === "question") {
+    // ponytail: trusted-admin data stays tiny; move to a generated PT column
+    // if translated list sorting ever needs DB-scale pagination.
+    const entries = (
+      await prisma.faqEntry.findMany({ where: faqWhere(search) })
+    )
+      .map(parseFaqEntry)
+      .sort((a, b) =>
+        a.question.PT.localeCompare(b.question.PT, "pt", {
+          sensitivity: "base",
+        })
+      );
+    if (order === "desc") entries.reverse();
+    return entries.slice((page - 1) * pageSize, page * pageSize);
+  }
+
+  return prisma.faqEntry
+    .findMany({
+      where: faqWhere(search),
+      orderBy: faqOrderBy(sort, order),
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    })
+    .then((entries) => entries.map(parseFaqEntry));
+};
 
 export const findFaqEntryById = (id: string) =>
-  prisma.faqEntry.findUnique({ where: { id } });
+  prisma.faqEntry
+    .findUnique({ where: { id } })
+    .then((entry) => (entry ? parseFaqEntry(entry) : null));
+
+const toJson = (value: TranslationValues) =>
+  Translations.create(value).toJSON() as Prisma.InputJsonObject;
+
+function parseFaqEntry<
+  T extends { question: Prisma.JsonValue; answer: Prisma.JsonValue },
+>(entry: T) {
+  return {
+    ...entry,
+    question: Translations.fromJSON(entry.question).toJSON(),
+    answer: Translations.fromJSON(entry.answer).toJSON(),
+  };
+}
 
 export const createFaqEntry = (
   data: {
-    question: string;
-    answer: string;
+    question: TranslationValues;
+    answer: TranslationValues;
     order?: number;
   },
   db: DbClient = prisma
-) => db.faqEntry.create({ data });
+) =>
+  db.faqEntry
+    .create({
+      data: {
+        ...data,
+        question: toJson(data.question),
+        answer: toJson(data.answer),
+      },
+    })
+    .then(parseFaqEntry);
 
 export const updateFaqEntry = (
   id: string,
-  data: { question?: string; answer?: string; order?: number }
-) => prisma.faqEntry.update({ where: { id }, data });
+  data: {
+    question?: TranslationValues;
+    answer?: TranslationValues;
+    order?: number;
+  }
+) =>
+  prisma.faqEntry
+    .update({
+      where: { id },
+      data: {
+        ...data,
+        question: data.question ? toJson(data.question) : undefined,
+        answer: data.answer ? toJson(data.answer) : undefined,
+      },
+    })
+    .then(parseFaqEntry);
 
 export const deleteFaqEntry = (id: string) =>
   prisma.faqEntry.delete({ where: { id } });

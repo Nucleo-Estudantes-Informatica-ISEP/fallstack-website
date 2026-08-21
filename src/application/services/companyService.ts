@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
+import { Language, Translations } from "@/domain/i18n/translations";
 
 import {
   bulkUpdateCompanyRankBoard,
@@ -31,7 +32,13 @@ import { withTransaction } from "../repositories/transaction";
 
 export const getCompanies = () => findCompanies();
 export const getCompany = (id: string) => findCompanyById(id);
-export const getCompanyInterests = (id: string) => findCompanyInterests(id);
+export const getCompanyInterests = async (
+  id: string,
+  language: Language = Language.PT
+) =>
+  (await findCompanyInterests(id)).map((name) =>
+    Translations.fromJSON(name).get(language)
+  );
 export const getCompanyWithContent = (id: string) => findCompanyWithContent(id);
 
 export const getActiveCompanies = () => findActiveCompanies();
@@ -99,10 +106,15 @@ export async function registerCompany(input: {
   });
 }
 
-export async function getInterestsByCompanyName(companyName: string) {
+export async function getInterestsByCompanyName(
+  companyName: string,
+  language: Language = Language.PT
+) {
   const company = await findCompanyByName(companyName);
   if (!company) throw new Error("Company not found");
-  return (await findInterestsForCompany(company.id)).map(({ name }) => name);
+  return (await findInterestsForCompany(company.id)).map(({ name }) =>
+    Translations.fromJSON(name).get(language)
+  );
 }
 
 // CompanyProfile/CompanyDisplayStyle/interests editing - the DB home for the

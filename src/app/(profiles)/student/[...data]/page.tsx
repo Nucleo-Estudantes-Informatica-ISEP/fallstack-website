@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
@@ -23,6 +24,7 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudent } from "@/application/services/studentService";
+import { resolveLanguage, Translations } from "@/domain/i18n/translations";
 
 interface ProfileProps {
   params: Promise<{
@@ -33,6 +35,7 @@ interface ProfileProps {
 const StudentPage = async (props: ProfileProps) => {
   const params = await props.params;
   const session = await getServerSession();
+  const language = resolveLanguage((await headers()).get("accept-language"));
 
   if (!session) return Custom404();
 
@@ -68,7 +71,9 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
-  const sanitizedInterests = student.user.interests.map((i) => i.name);
+  const sanitizedInterests = student.user.interests.map((interest) =>
+    Translations.fromJSON(interest.name).get(language)
+  );
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
   // Previews (a valid signed preview token, viewed before the company has
@@ -154,7 +159,9 @@ const StudentPage = async (props: ProfileProps) => {
             actions={actions.map(toStudentActionDto)}
             student={studentDto}
             interests={sanitizedInterests}
-            availableInterests={interests.map(toInterestDto)}
+            availableInterests={interests.map((interest) =>
+              toInterestDto(interest, language)
+            )}
           />
         )}
       </section>

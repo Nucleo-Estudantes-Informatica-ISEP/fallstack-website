@@ -3,7 +3,10 @@ import type { ReactElement } from "react";
 import { afterAll, beforeAll, beforeEach, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({ cookies: vi.fn() }));
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
 vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));

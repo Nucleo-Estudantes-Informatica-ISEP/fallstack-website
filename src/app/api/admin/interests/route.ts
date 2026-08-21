@@ -31,6 +31,6 @@ export const POST = defineHandler({
   schema: createAdminInterestSchema,
   handler: async ({ body }) => {
     const interest = await createInterestForAdmin(body.name);
-    return NextResponse.json(interest, { status: 201 });
+    return NextResponse.json(toAdminInterestDto(interest), { status: 201 });
   },
 });

@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
-import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
+import type { AdminScheduleEventDto } from "@/application/dto/scheduleDto";
 
 interface ScheduleFormProps {
-  event?: ScheduleEventDto;
+  event?: AdminScheduleEventDto;
 }
 
 const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
@@ -19,7 +19,7 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
       day: values.day,
       startTime: values.startTime,
       endTime: values.endTime,
-      activity: values.activity,
+      activity: { PT: values.activityPT, EN: values.activityEN },
     };
 
     try {
@@ -64,8 +64,14 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
             },
             {
               kind: "text",
-              name: "activity",
-              label: "Atividade",
+              name: "activityPT",
+              label: "Atividade (PT)",
+              required: true,
+            },
+            {
+              kind: "text",
+              name: "activityEN",
+              label: "Atividade (EN)",
               required: true,
             },
           ],
@@ -77,7 +83,8 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
               day: event.day,
               startTime: event.startTime,
               endTime: event.endTime,
-              activity: event.activity,
+              activityPT: event.activity.PT,
+              activityEN: event.activity.EN,
             }
           : { day: 1 }
       }

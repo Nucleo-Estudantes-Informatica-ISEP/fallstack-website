@@ -36,6 +36,8 @@ vi.mock("../repositories/transaction", () => ({
 }));
 
 const transaction = {} as never;
+const question = { PT: "Q?", EN: "Question?" };
+const answer = { PT: "A.", EN: "Answer." };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -50,12 +52,12 @@ test("a new entry with no explicit order lands at the end of the list", async ()
   vi.mocked(findMaxFaqOrder).mockResolvedValue(4);
   vi.mocked(createFaqEntry).mockResolvedValue({ id: "f1" } as never);
 
-  await createFaqEntryForAdmin({ question: "Q?", answer: "A." });
+  await createFaqEntryForAdmin({ question, answer });
 
   expect(withTransaction).toHaveBeenCalledOnce();
   expect(findMaxFaqOrder).toHaveBeenCalledWith(transaction);
   expect(createFaqEntry).toHaveBeenCalledWith(
-    { question: "Q?", answer: "A.", order: 5 },
+    { question, answer, order: 5 },
     transaction
   );
 });
@@ -64,31 +66,31 @@ test("an explicit order is respected over the computed default", async () => {
   vi.mocked(findMaxFaqOrder).mockResolvedValue(4);
   vi.mocked(createFaqEntry).mockResolvedValue({ id: "f1" } as never);
 
-  await createFaqEntryForAdmin({ question: "Q?", answer: "A.", order: 0 });
+  await createFaqEntryForAdmin({ question, answer, order: 0 });
 
   expect(findMaxFaqOrder).not.toHaveBeenCalled();
   expect(createFaqEntry).toHaveBeenCalledWith(
-    { question: "Q?", answer: "A.", order: 0 },
+    { question, answer, order: 0 },
     transaction
   );
 });
 
-test("a duplicate question on create surfaces as a 409, not a raw Prisma error", async () => {
+test("a position conflict on create surfaces as a 409", async () => {
   vi.mocked(createFaqEntry).mockRejectedValue(new Error("P2002"));
   vi.mocked(isUniqueConstraintError).mockReturnValue(true);
 
   await expect(
-    createFaqEntryForAdmin({ question: "Existing?", answer: "A." })
+    createFaqEntryForAdmin({ question, answer })
   ).rejects.toMatchObject({ status: 409 });
 });
 
-test("a duplicate question on update surfaces as a 409, not a raw Prisma error", async () => {
+test("a position conflict on update surfaces as a 409", async () => {
   vi.mocked(findFaqEntryById).mockResolvedValue({ id: "f1" } as never);
   vi.mocked(updateFaqEntry).mockRejectedValue(new Error("P2002"));
   vi.mocked(isUniqueConstraintError).mockReturnValue(true);
 
   await expect(
-    updateFaqEntryForAdmin("f1", { question: "Existing?" })
+    updateFaqEntryForAdmin("f1", { question })
   ).rejects.toMatchObject({ status: 409 });
 });
 
@@ -96,7 +98,7 @@ test("updating a missing entry throws Not found before touching the repository",
   vi.mocked(findFaqEntryById).mockResolvedValue(null);
 
   await expect(
-    updateFaqEntryForAdmin("missing", { question: "Q?" })
+    updateFaqEntryForAdmin("missing", { question })
   ).rejects.toMatchObject({ message: "Not found", status: 404 });
   expect(updateFaqEntry).not.toHaveBeenCalled();
 });

@@ -4,6 +4,11 @@ import {
   parseSocialLinks,
   SocialLinks,
 } from "@/domain/company/companyProfileContent";
+import {
+  Language,
+  Translations,
+  type TranslationValues,
+} from "@/domain/i18n/translations";
 
 export interface CompanyRankStyleDto {
   gradientFromColor: string;
@@ -102,12 +107,13 @@ interface CompanyRosterInput {
     logoHeight: number | null;
     className: string | null;
   } | null;
-  interests: { name: string }[];
+  interests: { name: TranslationValues }[];
   profile: { id: string } | null;
 }
 
 export const toCompanyRosterDto = (
-  company: CompanyRosterInput
+  company: CompanyRosterInput,
+  language: Language = Language.PT
 ): CompanyRosterDto => ({
   id: company.id,
   name: company.name,
@@ -118,7 +124,9 @@ export const toCompanyRosterDto = (
   logoWidth: company.displayStyle?.logoWidth ?? null,
   logoHeight: company.displayStyle?.logoHeight ?? null,
   className: company.displayStyle?.className ?? null,
-  interests: company.interests.map(({ name }) => name),
+  interests: company.interests.map(({ name }) =>
+    Translations.fromJSON(name).get(language)
+  ),
   hasContent: company.profile !== null,
 });
 
@@ -158,11 +166,12 @@ interface CompanyDisplayInput {
     socialLinks: unknown;
     facts: unknown;
   } | null;
-  interests: { name: string }[];
+  interests: { name: TranslationValues }[];
 }
 
 export const toCompanyDisplayDto = (
-  company: CompanyDisplayInput
+  company: CompanyDisplayInput,
+  language: Language = Language.PT
 ): CompanyDisplayDto => ({
   id: company.id,
   name: company.name,
@@ -178,5 +187,7 @@ export const toCompanyDisplayDto = (
         facts: parseFacts(company.profile.facts),
       }
     : null,
-  interests: company.interests.map(({ name }) => name),
+  interests: company.interests.map(({ name }) =>
+    Translations.fromJSON(name).get(language)
+  ),
 });
