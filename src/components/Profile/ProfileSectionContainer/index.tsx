@@ -33,7 +33,7 @@ type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 
 interface ProfileSectionContainerProps {
   student: StudentDto;
-  interests: string[];
+  interestIds: string[];
   globalStats: Stats;
   todayStats: number;
   companiesLeft: number;
@@ -51,7 +51,7 @@ const menuMap: Record<TabValue, MenuKey> = {
 
 const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   student,
-  interests,
+  interestIds,
   globalStats,
   companiesLeft,
   historyData,
@@ -69,7 +69,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   }, [activeTab]);
 
   const [profile, setProfile] = useState<ProfileData>({
-    interests,
+    interests: interestIds,
     bio: student.bio,
     linkedin: student.linkedin,
     github: student.github,

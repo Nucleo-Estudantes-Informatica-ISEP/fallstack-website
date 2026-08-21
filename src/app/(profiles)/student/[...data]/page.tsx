@@ -71,9 +71,11 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
-  const sanitizedInterests = student.user.interests.map((interest) =>
-    Translations.fromJSON(interest.name).get(language)
-  );
+  const studentInterests = student.user.interests.map(({ id, name }) => ({
+    id,
+    name: Translations.fromJSON(name).get(language),
+  }));
+  const localizedInterestNames = studentInterests.map(({ name }) => name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
   // Previews (a valid signed preview token, viewed before the company has
@@ -119,7 +121,7 @@ const StudentPage = async (props: ProfileProps) => {
       <>
         <PreviewProfileSectionContainer
           student={studentDto}
-          interests={sanitizedInterests}
+          interests={localizedInterestNames}
           token={code}
           isCompanyView={!!session.employee}
           isSavedStudent={isSavedStudent}
@@ -138,14 +140,14 @@ const StudentPage = async (props: ProfileProps) => {
       >
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
-            interests={sanitizedInterests}
+            interests={localizedInterestNames}
             student={studentDto}
             token={code}
             isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer
-            interests={sanitizedInterests}
+            interests={localizedInterestNames}
             student={studentDto}
           />
         ) : (
@@ -158,7 +160,7 @@ const StudentPage = async (props: ProfileProps) => {
             }
             actions={actions.map(toStudentActionDto)}
             student={studentDto}
-            interests={sanitizedInterests}
+            interestIds={studentInterests.map(({ id }) => id)}
             availableInterests={interests.map((interest) =>
               toInterestDto(interest, language)
             )}

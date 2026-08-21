@@ -32,13 +32,8 @@ import { withTransaction } from "../repositories/transaction";
 
 export const getCompanies = () => findCompanies();
 export const getCompany = (id: string) => findCompanyById(id);
-export const getCompanyInterests = async (
-  id: string,
-  language: Language = Language.PT
-) =>
-  (await findCompanyInterests(id)).map((name) =>
-    Translations.fromJSON(name).get(language)
-  );
+export const getCompanyInterestIds = async (id: string) =>
+  (await findCompanyInterests(id)).map(({ id }) => id);
 export const getCompanyWithContent = (id: string) => findCompanyWithContent(id);
 
 export const getActiveCompanies = () => findActiveCompanies();

@@ -22,10 +22,12 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setData,
   availableInterests,
 }) => {
-  const [interests, setInterests] = useState<string[]>(data.interests || []);
+  const [interestIds, setInterestIds] = useState<string[]>(
+    data.interests || []
+  );
 
   const handleNext = () => {
-    setData({ ...data, interests });
+    setData({ ...data, interests: interestIds });
     setCurrentStep(currentStep + 1);
   };
 
@@ -42,8 +44,8 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
 
         <InterestSelector
           availableInterests={availableInterests}
-          userInterests={interests}
-          setUserInterests={setInterests}
+          selectedInterestIds={interestIds}
+          setSelectedInterestIds={setInterestIds}
           scrollable
         />
 

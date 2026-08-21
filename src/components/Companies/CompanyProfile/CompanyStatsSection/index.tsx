@@ -17,7 +17,7 @@ interface StatsProps {
   stats: Stats;
   students: number;
   history: SavedStudentDto[];
-  interests: string[];
+  interestIds: string[];
   availableInterests: InterestDto[];
 }
 
@@ -25,12 +25,13 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   stats,
   students,
   history,
-  interests,
+  interestIds,
   availableInterests,
 }) => {
   const { totalScans, totalSaves } = stats;
   const studentsLeft = students - totalScans;
-  const [companyInterests, setInterests] = useState<string[]>(interests);
+  const [companyInterestIds, setCompanyInterestIds] =
+    useState<string[]>(interestIds);
   const router = useRouter();
   const { mutate, isPending } = useMutation(
     "Ocorreu um erro ao atualizar o teu perfil..."
@@ -38,7 +39,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
 
   const handleSave = () =>
     mutate(async () => {
-      await httpClient.patch("/user", { interests: companyInterests });
+      await httpClient.patch("/user", { interests: companyInterestIds });
       toast.success("Perfil atualizado com sucesso!");
       router.refresh();
     });
@@ -73,8 +74,8 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
       </h1>
       <InterestSelector
         availableInterests={availableInterests}
-        userInterests={companyInterests}
-        setUserInterests={setInterests}
+        selectedInterestIds={companyInterestIds}
+        setSelectedInterestIds={setCompanyInterestIds}
       />
       <PrimaryButton
         onClick={handleSave}

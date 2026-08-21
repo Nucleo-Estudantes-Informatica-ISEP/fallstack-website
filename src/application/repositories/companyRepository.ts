@@ -196,10 +196,7 @@ export const findCompanyInterests = async (companyId: string) => {
     where: { companyId },
     include: { user: { include: { interests: true } } },
   });
-  return (
-    employee?.user.interests.map((interest) => parseInterest(interest).name) ??
-    []
-  );
+  return employee?.user.interests.map(parseInterest) ?? [];
 };
 
 // CompanyProfile/CompanyDisplayStyle/interests are the DB home for the rich

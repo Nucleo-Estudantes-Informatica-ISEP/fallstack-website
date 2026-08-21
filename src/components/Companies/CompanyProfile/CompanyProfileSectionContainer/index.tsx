@@ -21,7 +21,7 @@ interface CompanyProfileSectionContainerProps {
   globalStats: Stats;
   totalStudents: number;
   history: SavedStudentDto[];
-  interests: string[];
+  interestIds: string[];
   availableInterests: InterestDto[];
 }
 
@@ -49,7 +49,7 @@ const CompanyProfileSectionContainer: React.FC<
   globalStats,
   totalStudents,
   history,
-  interests,
+  interestIds,
   availableInterests,
 }) => {
   const { handleLogout, ConfirmDialog } = useLogout();
@@ -118,7 +118,7 @@ const CompanyProfileSectionContainer: React.FC<
             stats={globalStats}
             students={totalStudents}
             history={history}
-            interests={interests}
+            interestIds={interestIds}
             availableInterests={availableInterests}
           />
         );

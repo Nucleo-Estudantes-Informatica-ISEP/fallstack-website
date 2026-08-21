@@ -3,7 +3,6 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
-import { Translations } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
 
@@ -140,47 +139,25 @@ export const deleteUser = (id: string, db: DbClient = prisma) =>
 export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
   db.user.deleteMany({ where: { id } });
 
-async function interestIdsForNames(names: string[], db: DbClient) {
-  const interests = await db.interest.findMany({
-    select: { id: true, name: true },
-  });
-  const idsByName = new Map(
-    interests.flatMap((interest) =>
-      Object.values(Translations.fromJSON(interest.name).toJSON()).map(
-        (name) => [name, interest.id] as const
-      )
-    )
-  );
-  return names.map((name) => {
-    const id = idsByName.get(name);
-    if (!id) throw new Error(`Unknown interest: ${name}`);
-    return id;
-  });
-}
-
-export const setUserInterests = async (
+export const setUserInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
-) => {
-  const interestIds = await interestIdsForNames(interests, db);
-  return db.user.update({
+) =>
+  db.user.update({
     where: { id },
     data: { interests: { set: interestIds.map((id) => ({ id })) } },
   });
-};
 
-export const connectUserInterests = async (
+export const connectUserInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
-) => {
-  const interestIds = await interestIdsForNames(interests, db);
-  return db.user.update({
+) =>
+  db.user.update({
     where: { id },
     data: { interests: { connect: interestIds.map((id) => ({ id })) } },
   });
-};
 
 export const updateUserActive = (id: string, active: boolean) =>
   prisma.user.update({ where: { id }, data: { active } });
