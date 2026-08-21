@@ -39,5 +39,40 @@ export class Translations {
 }
 
 export function resolveLanguage(value: string | null | undefined): Language {
-  return value?.toLowerCase().startsWith("en") ? Language.EN : Language.PT;
+  const preferences = value
+    ?.split(",")
+    .map((entry, index) => {
+      const [tag = "", ...parameters] = entry.trim().toLowerCase().split(";");
+      const qualityParameter = parameters.find((parameter) =>
+        parameter.trim().startsWith("q=")
+      );
+      const quality = qualityParameter
+        ? Number(qualityParameter.trim().slice(2))
+        : 1;
+      const baseLanguage = tag.split("-")[0];
+      const language =
+        baseLanguage === "en"
+          ? Language.EN
+          : baseLanguage === "pt" || baseLanguage === "*"
+            ? Language.PT
+            : undefined;
+
+      return {
+        language,
+        quality:
+          Number.isFinite(quality) && quality >= 0 && quality <= 1
+            ? quality
+            : 0,
+        index,
+      };
+    })
+    .filter(
+      (preference): preference is typeof preference & { language: Language } =>
+        preference.language !== undefined && preference.quality > 0
+    )
+    .sort(
+      (left, right) => right.quality - left.quality || left.index - right.index
+    );
+
+  return preferences?.[0]?.language ?? Language.PT;
 }
