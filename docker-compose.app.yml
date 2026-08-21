@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: migrator
-    container_name: fallstack-migrate
     restart: "no"
+    exclude_from_hc: true
     environment:
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
@@ -25,19 +25,14 @@ services:
         NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
       secrets:
         - sentry_auth_token
-    container_name: fallstack-app
     restart: unless-stopped
     depends_on:
       migrate:
         condition: service_completed_successfully
-    ports:
-      - "4000:4000"
     environment:
-      PORT: 4000
-      HOSTNAME: 0.0.0.0
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
-      JWT_SECRET: ${JWT_SECRET:?Configure JWT_SECRET in Coolify}
+      JWT_SECRET: ${JWT_SECRET:-${SERVICE_REALBASE64_64_JWT}}
 
       # Supabase is retained for Storage/Postgres only; GoTrue is no longer in
       # the Fallstack authentication path.
@@ -45,16 +40,18 @@ services:
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
 
-      # Direct AuthNEI/ZITADEL OIDC.
-      AUTH_ISSUER_URL: ${AUTH_ISSUER_URL:?Configure AUTH_ISSUER_URL in Coolify}
+      # Direct AuthNEI/ZITADEL OIDC. Only values that identify this concrete
+      # ZITADEL application/organization need to be configured in Coolify;
+      # stable URLs, generated secrets, scopes and claim names are derived.
+      AUTH_ISSUER_URL: ${AUTH_ISSUER_URL:-https://auth.nei-isep.org}
       AUTH_PROJECT_ID: ${AUTH_PROJECT_ID:?Configure AUTH_PROJECT_ID in Coolify}
       AUTH_GLOBAL_PROJECT_ID: ${AUTH_GLOBAL_PROJECT_ID:?Configure AUTH_GLOBAL_PROJECT_ID in Coolify}
       AUTH_CLIENT_ID: ${AUTH_CLIENT_ID:?Configure AUTH_CLIENT_ID in Coolify}
       AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET:?Configure AUTH_CLIENT_SECRET in Coolify}
-      AUTH_SECRET: ${AUTH_SECRET:?Configure AUTH_SECRET in Coolify}
-      AUTH_SCOPES: ${AUTH_SCOPES:?Configure AUTH_SCOPES in Coolify}
-      AUTH_ROLE_CLAIM: ${AUTH_ROLE_CLAIM:?Configure AUTH_ROLE_CLAIM in Coolify}
-      AUTH_GLOBAL_ROLE_CLAIM: ${AUTH_GLOBAL_ROLE_CLAIM:?Configure AUTH_GLOBAL_ROLE_CLAIM in Coolify}
+      AUTH_SECRET: ${AUTH_SECRET:-${SERVICE_REALBASE64_64_AUTH}}
+      AUTH_SCOPES: ${AUTH_SCOPES:-openid email profile urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:project:id:${AUTH_PROJECT_ID}:aud urn:zitadel:iam:org:project:id:${AUTH_GLOBAL_PROJECT_ID}:aud}
+      AUTH_ROLE_CLAIM: ${AUTH_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_PROJECT_ID}:roles}
+      AUTH_GLOBAL_ROLE_CLAIM: ${AUTH_GLOBAL_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_GLOBAL_PROJECT_ID}:roles}
       AUTH_REDIRECT_URI: ${AUTH_REDIRECT_URI:-${SERVICE_URL_WEB:-http://localhost:4000}/api/auth/callback/zitadel}
       AUTH_POST_LOGOUT_REDIRECT_URI: ${AUTH_POST_LOGOUT_REDIRECT_URI:-${SERVICE_URL_WEB:-http://localhost:4000}}
       ZITADEL_ORG_ID: ${ZITADEL_ORG_ID:?Configure ZITADEL_ORG_ID in Coolify}
