@@ -6,11 +6,11 @@ import { z } from "zod";
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
-  // Explicit empty values still mean "unset" so direct builds can fall back
-  // to the same local port used by the Docker runner and .env.example.
+  // Explicit empty values still mean "unset". Native `pnpm dev` uses Next's
+  // default port 3000; Docker/Compose inject their own port-4000 public URL.
   NEXT_PUBLIC_BASE_URL: z.preprocess(
     (value) => (value === "" ? undefined : value),
-    z.string().url().default("http://localhost:4000/api")
+    z.string().url().default("http://localhost:3000/api")
   ),
   // Empty string (the Dockerfile's `ARG NEXT_PUBLIC_SENTRY_DSN=""` default
   // when no build arg is supplied) means "unset", same as undefined — not
