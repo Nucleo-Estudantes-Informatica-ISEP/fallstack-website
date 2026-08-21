@@ -24,7 +24,17 @@ jobs:
       contents: write
       pull-requests: read
     steps:
+      - name: Checkout merged commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Compute edition label
+        id: edition
+        run: echo "label=$(grep -oP '(?<=year: )\d+' src/edition/branding.ts) Edition" >> "$GITHUB_OUTPUT"
+
       - uses: Nucleo-Estudantes-Informatica-ISEP/.github/.github/actions/release-publish@master
         with:
           github-token: ${{ github.token }}
           product-name: Fallstack
+          edition-label: ${{ steps.edition.outputs.label }}
