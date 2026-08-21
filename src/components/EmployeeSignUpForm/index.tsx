@@ -14,7 +14,9 @@ interface EmployeeSignUpFormProps {
 const fieldClassName =
   "!rounded-lg !border-[rgba(255,255,255,0.35)] bg-transparent px-3 py-2 text-white placeholder:text-gray-500 sm:py-3";
 
-const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({ onSuccess }) => {
+const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
+  onSuccess,
+}) => {
   const [form, setForm] = useState({
     name: "",
     linkedin: "",
@@ -88,7 +90,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({ onSuccess }) =>
         loading={loading}
         type="submit"
         disabled={!canSubmit}
-        className="!flex w-full cursor-pointer !items-center !justify-center !rounded-lg !bg-[#B1440A] !px-3 py-3 !text-[17px] font-semibold !tracking-normal hover:!bg-[#8d3508] disabled:cursor-not-allowed disabled:!bg-[#3d1806] sm:py-4 sm:!text-[19px]"
+        className="flex! w-full cursor-pointer items-center! justify-center! rounded-lg! bg-[#B1440A]! px-3! py-3 text-[17px]! font-semibold tracking-normal! hover:bg-[#8d3508]! disabled:cursor-not-allowed disabled:bg-[#3d1806]! sm:py-4 sm:text-[19px]!"
       >
         Associar à empresa
       </PrimaryButton>

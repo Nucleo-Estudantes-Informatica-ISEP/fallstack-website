@@ -100,10 +100,10 @@ const CompanyProfileSectionContainer: React.FC<
         }}
       >
         <div className="flex items-center gap-3">
-          <item.icon className="h-5 w-5" />
+          <item.icon className="size-5" />
           <span>{item.label}</span>
         </div>
-        <FiChevronRight className="h-4 w-4" />
+        <FiChevronRight className="size-4" />
       </button>
     );
   };

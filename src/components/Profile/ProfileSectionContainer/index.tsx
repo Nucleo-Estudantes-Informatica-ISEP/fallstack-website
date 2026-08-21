@@ -128,10 +128,10 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         }}
       >
         <div className="flex items-center gap-3">
-          <item.icon className="h-5 w-5" />
+          <item.icon className="size-5" />
           <span>{item.label}</span>
         </div>
-        <FiChevronRight className="h-4 w-4" />
+        <FiChevronRight className="size-4" />
       </button>
     );
   };
@@ -244,7 +244,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
               backgroundColor: "rgba(237,131,38,0.1)",
             }}
           >
-            <FiAlertTriangle className="h-5 w-5 shrink-0 text-[#ED8326]" />
+            <FiAlertTriangle className="size-5 shrink-0 text-[#ED8326]" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
               Definições.

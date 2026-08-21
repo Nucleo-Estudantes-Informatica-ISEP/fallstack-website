@@ -5,7 +5,7 @@ export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-black text-white">
       <section
-        className="relative flex h-[300px] w-full items-center justify-center bg-cover bg-center"
+        className="relative flex h-75 w-full items-center justify-center bg-cover bg-center"
         style={{
           backgroundImage: "url('/icons/header-privacy-policy-background.png')",
         }}

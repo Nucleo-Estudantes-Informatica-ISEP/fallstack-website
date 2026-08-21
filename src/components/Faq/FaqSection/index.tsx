@@ -24,7 +24,7 @@ const FaqSection: FunctionComponent = () => {
       <div className="mx-auto flex w-full flex-col gap-10">
         <HeadingText
           text="FAQs"
-          className="!mb-0 !text-left text-4xl text-secondary md:!text-5xl"
+          className="mb-0! text-left! text-4xl text-secondary md:text-5xl!"
         />
         <FaqContainer
           faqs={faqs.map((faq, index) => ({

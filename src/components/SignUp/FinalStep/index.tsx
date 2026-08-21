@@ -216,7 +216,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           <input
             type="checkbox"
             id="privacy"
-            className="mt-1 mr-3 size-4 cursor-pointer appearance-none border border-white bg-[#141414] checked:border-white checked:bg-white"
+            className="mt-1 mr-3 size-4 cursor-pointer appearance-none border border-white bg-background checked:border-white checked:bg-white"
             style={{
               backgroundImage: "none",
             }}
