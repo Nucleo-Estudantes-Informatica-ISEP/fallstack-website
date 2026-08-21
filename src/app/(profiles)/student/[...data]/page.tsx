@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
@@ -23,6 +24,7 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudent } from "@/application/services/studentService";
+import { resolveLanguage, Translations } from "@/domain/i18n/translations";
 
 interface ProfileProps {
   params: Promise<{
@@ -33,6 +35,7 @@ interface ProfileProps {
 const StudentPage = async (props: ProfileProps) => {
   const params = await props.params;
   const session = await getServerSession();
+  const language = resolveLanguage((await headers()).get("accept-language"));
 
   if (!session) return Custom404();
 
@@ -68,7 +71,11 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
-  const sanitizedInterests = student.user.interests.map((i) => i.name);
+  const studentInterests = student.user.interests.map(({ id, name }) => ({
+    id,
+    name: Translations.fromJSON(name).get(language),
+  }));
+  const localizedInterestNames = studentInterests.map(({ name }) => name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
   // Previews (a valid signed preview token, viewed before the company has
@@ -114,7 +121,7 @@ const StudentPage = async (props: ProfileProps) => {
       <>
         <PreviewProfileSectionContainer
           student={studentDto}
-          interests={sanitizedInterests}
+          interests={localizedInterestNames}
           token={code}
           isCompanyView={!!session.employee}
           isSavedStudent={isSavedStudent}
@@ -133,14 +140,14 @@ const StudentPage = async (props: ProfileProps) => {
       >
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
-            interests={sanitizedInterests}
+            interests={localizedInterestNames}
             student={studentDto}
             token={code}
             isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer
-            interests={sanitizedInterests}
+            interests={localizedInterestNames}
             student={studentDto}
           />
         ) : (
@@ -153,8 +160,10 @@ const StudentPage = async (props: ProfileProps) => {
             }
             actions={actions.map(toStudentActionDto)}
             student={studentDto}
-            interests={sanitizedInterests}
-            availableInterests={interests.map(toInterestDto)}
+            interestIds={studentInterests.map(({ id }) => id)}
+            availableInterests={interests.map((interest) =>
+              toInterestDto(interest, language)
+            )}
           />
         )}
       </section>

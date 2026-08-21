@@ -322,8 +322,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         {/* INTERESSES */}
         <InterestSelector
           availableInterests={availableInterests}
-          userInterests={profile.interests}
-          setUserInterests={setUserInterests}
+          selectedInterestIds={profile.interests}
+          setSelectedInterestIds={setUserInterests}
         />
 
         {/* BOTÃO GUARDAR */}

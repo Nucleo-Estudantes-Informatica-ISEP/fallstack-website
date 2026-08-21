@@ -64,7 +64,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
           onClick={handleCopy}
           className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-[#ED8326] hover:text-[#ED8326]"
         >
-          <Clipboard className="h-4 w-4" />
+          <Clipboard className="size-4" />
           <span className="font-mono">{student.code}</span>
           {copied && <span className="ml-1 text-green-400">Copiado!</span>}
         </button>

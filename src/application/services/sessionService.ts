@@ -30,9 +30,7 @@ const getServerSession = cache(async () => {
       ...appUser,
       adminRole,
       role:
-        appUser.role === "EMPLOYEE" && !employeeAllowed
-          ? null
-          : appUser.role,
+        appUser.role === "EMPLOYEE" && !employeeAllowed ? null : appUser.role,
     };
   } catch (error) {
     reportError(

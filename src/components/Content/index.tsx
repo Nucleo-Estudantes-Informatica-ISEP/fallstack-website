@@ -38,7 +38,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
       </section>
 
       <section className="flex w-full flex-col items-center bg-[url('/assets/images/bgInterview.svg')] bg-cover bg-center bg-no-repeat pb-12 text-center">
-        <HeadingText className="!font-normal" text="Speed Interviews" />
+        <HeadingText className="font-normal!" text="Speed Interviews" />
         <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
           Este ano podes experienciar a modalidade de speed interviews com
           algumas das empresas presentes.
@@ -49,7 +49,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         <PassSection />
       </section>*/}
 
-      <section className="w-full bg-background !px-0">
+      <section className="w-full bg-background px-0!">
         <CompaniesSection />
       </section>
 

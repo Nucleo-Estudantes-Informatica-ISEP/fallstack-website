@@ -4,7 +4,7 @@ import { expect, test, vi } from "vitest";
 import InterestSelector from ".";
 
 test("renders server-provided interests and updates selection", () => {
-  const setUserInterests = vi.fn();
+  const setSelectedInterestIds = vi.fn();
 
   render(
     <InterestSelector
@@ -12,12 +12,12 @@ test("renders server-provided interests and updates selection", () => {
         { id: "typescript", name: "TypeScript" },
         { id: "react", name: "React" },
       ]}
-      userInterests={["TypeScript"]}
-      setUserInterests={setUserInterests}
+      selectedInterestIds={["typescript"]}
+      setSelectedInterestIds={setSelectedInterestIds}
     />
   );
 
   fireEvent.click(screen.getByRole("button", { name: "React" }));
 
-  expect(setUserInterests).toHaveBeenCalledWith(["TypeScript", "React"]);
+  expect(setSelectedInterestIds).toHaveBeenCalledWith(["typescript", "react"]);
 });

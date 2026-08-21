@@ -3,5 +3,6 @@
     "prettier --write",
     "eslint --fix"
   ],
-  "*.{json,json5,md,mdx,css,scss,yml,yaml,html,prisma,graphql,gql}": "prettier --write"
+  "*.{json,json5,md,mdx,css,scss,yml,yaml,html,graphql,gql}": "prettier --write",
+  "*.prisma": "prisma format --schema"
 }

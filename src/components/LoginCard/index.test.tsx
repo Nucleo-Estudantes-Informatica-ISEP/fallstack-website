@@ -47,7 +47,9 @@ test("uses AuthNEI as the single login method", () => {
 
   expect(screen.getByText("Continuar com AuthNEI")).toBeInTheDocument();
   expect(screen.queryByLabelText("Email")).not.toBeInTheDocument();
-  expect(screen.queryByLabelText("A tua palavra-passe")).not.toBeInTheDocument();
+  expect(
+    screen.queryByLabelText("A tua palavra-passe")
+  ).not.toBeInTheDocument();
   expect(
     screen.getByRole("button", {
       name: "Tens um código de empresa? Regista-te como colaborador",

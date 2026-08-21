@@ -2,7 +2,23 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
+import { Translations } from "@/domain/i18n/translations";
+
 import prisma, { DbClient } from "./database";
+
+const parseInterest = <T extends { name: Prisma.JsonValue }>(interest: T) => ({
+  ...interest,
+  name: Translations.fromJSON(interest.name).toJSON(),
+});
+
+const parseCompanyInterests = <
+  T extends { interests: { name: Prisma.JsonValue }[] },
+>(
+  company: T
+) => ({
+  ...company,
+  interests: company.interests.map(parseInterest),
+});
 
 export const findCompanyById = (id: string) =>
   prisma.company.findUnique({ where: { id } });
@@ -33,11 +49,13 @@ const rosterSelect = {
 } satisfies Prisma.CompanySelect;
 
 export const findActiveCompanies = () =>
-  prisma.company.findMany({
-    where: { active: true },
-    orderBy: { order: "asc" },
-    select: rosterSelect,
-  });
+  prisma.company
+    .findMany({
+      where: { active: true },
+      orderBy: { order: "asc" },
+      select: rosterSelect,
+    })
+    .then((companies) => companies.map(parseCompanyInterests));
 
 const displaySelect = {
   id: true,
@@ -50,10 +68,12 @@ const displaySelect = {
 } satisfies Prisma.CompanySelect;
 
 export const findCompanyDisplayByName = (name: string) =>
-  prisma.company.findFirst({
-    where: { name: { equals: name, mode: "insensitive" }, active: true },
-    select: displaySelect,
-  });
+  prisma.company
+    .findFirst({
+      where: { name: { equals: name, mode: "insensitive" }, active: true },
+      select: displaySelect,
+    })
+    .then((company) => (company ? parseCompanyInterests(company) : null));
 
 const ADMIN_SORTABLE_FIELDS = ["name", "order", "active"] as const;
 export type AdminCompanySortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
@@ -176,7 +196,7 @@ export const findCompanyInterests = async (companyId: string) => {
     where: { companyId },
     include: { user: { include: { interests: true } } },
   });
-  return employee?.user.interests.map(({ name }) => name) ?? [];
+  return employee?.user.interests.map(parseInterest) ?? [];
 };
 
 // CompanyProfile/CompanyDisplayStyle/interests are the DB home for the rich
@@ -185,15 +205,17 @@ export const findCompanyInterests = async (companyId: string) => {
 // admin company content form.
 
 export const findCompanyWithContent = (id: string) =>
-  prisma.company.findUnique({
-    where: { id },
-    include: {
-      rank: { select: { id: true, name: true } },
-      profile: true,
-      displayStyle: true,
-      interests: { select: { id: true, name: true } },
-    },
-  });
+  prisma.company
+    .findUnique({
+      where: { id },
+      include: {
+        rank: { select: { id: true, name: true } },
+        profile: true,
+        displayStyle: true,
+        interests: { select: { id: true, name: true } },
+      },
+    })
+    .then((company) => (company ? parseCompanyInterests(company) : null));
 
 // CompanyProfile.bodyText is required (NOT NULL) - a company either has a
 // profile row or none at all (Company.profile is optional). Clearing

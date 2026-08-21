@@ -17,6 +17,8 @@ vi.mock("../repositories/userRepository", () => ({
 }));
 
 const transaction = {} as never;
+const AI_ID = "00000000-0000-4000-8000-000000000001";
+const WEB_ID = "00000000-0000-4000-8000-000000000002";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -26,9 +28,9 @@ beforeEach(() => {
 });
 
 test("updates only the current user when no company is provided", async () => {
-  await updateUserInterests({ userId: "user-1", interests: ["AI"] });
+  await updateUserInterests({ userId: "user-1", interests: [AI_ID] });
 
-  expect(setUserInterests).toHaveBeenCalledWith("user-1", ["AI"]);
+  expect(setUserInterests).toHaveBeenCalledWith("user-1", [AI_ID]);
   expect(findEmployeeUserIds).not.toHaveBeenCalled();
   expect(withTransaction).not.toHaveBeenCalled();
 });
@@ -42,7 +44,7 @@ test("updates every company employee in one transaction", async () => {
   const result = await updateUserInterests({
     userId: "company-1",
     companyId: "company-1",
-    interests: ["Web"],
+    interests: [WEB_ID],
   });
 
   expect(findEmployeeUserIds).toHaveBeenCalledWith("company-1");
@@ -50,13 +52,13 @@ test("updates every company employee in one transaction", async () => {
   expect(setUserInterests).toHaveBeenNthCalledWith(
     1,
     "employee-1",
-    ["Web"],
+    [WEB_ID],
     transaction
   );
   expect(setUserInterests).toHaveBeenNthCalledWith(
     2,
     "employee-2",
-    ["Web"],
+    [WEB_ID],
     transaction
   );
   expect(result).toEqual({ success: true });

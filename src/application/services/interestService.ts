@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import type { TranslationValues } from "@/domain/i18n/translations";
 
 import {
   countInterestsForAdmin,
@@ -25,11 +26,14 @@ export async function listInterestsForAdmin(query: AdminInterestQuery) {
   return { items, totalCount };
 }
 
-export async function createInterestForAdmin(name: string) {
+export async function createInterestForAdmin(name: TranslationValues) {
   return createInterest(name);
 }
 
-export async function updateInterestForAdmin(id: string, name: string) {
+export async function updateInterestForAdmin(
+  id: string,
+  name: TranslationValues
+) {
   if (!(await findInterestById(id))) throw new HttpError("Not found", 404);
   return updateInterestName(id, name);
 }

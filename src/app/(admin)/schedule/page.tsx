@@ -44,7 +44,7 @@ const ScheduleAdminPage = async ({ searchParams }: ScheduleAdminPageProps) => {
     order,
     search: q,
   });
-  const events = items.map(toScheduleEventDto);
+  const events = items.map((event) => toScheduleEventDto(event));
 
   return (
     <section className="flex flex-col gap-6 p-8">

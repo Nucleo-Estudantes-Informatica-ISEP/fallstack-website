@@ -1,9 +1,9 @@
-import { beforeEach, expect, test, vi } from "vitest";
 import { cookies } from "next/headers";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { findUserSessionByZitadelUserId } from "../repositories/userRepository";
-import { verifyAppSession } from "./zitadelAuthService";
 import getServerSession from "./sessionService";
+import { verifyAppSession } from "./zitadelAuthService";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));

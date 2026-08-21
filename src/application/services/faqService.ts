@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import type { TranslationValues } from "@/domain/i18n/translations";
 
 import {
   bulkUpdateFaqOrder,
@@ -23,7 +24,7 @@ export const getFaqEntry = (id: string) => findFaqEntryById(id);
 
 const faqConflict = () =>
   new HttpError(
-    "Outro administrador já utilizou esta pergunta ou posição. Atualize e tente novamente.",
+    "Outro administrador já utilizou esta posição. Atualize e tente novamente.",
     409
   );
 
@@ -36,8 +37,8 @@ export async function listFaqEntriesForAdmin(query: AdminFaqQuery) {
 }
 
 export async function createFaqEntryForAdmin(input: {
-  question: string;
-  answer: string;
+  question: TranslationValues;
+  answer: TranslationValues;
   order?: number;
 }) {
   try {
@@ -53,7 +54,11 @@ export async function createFaqEntryForAdmin(input: {
 
 export async function updateFaqEntryForAdmin(
   id: string,
-  input: { question?: string; answer?: string; order?: number }
+  input: {
+    question?: TranslationValues;
+    answer?: TranslationValues;
+    order?: number;
+  }
 ) {
   if (!(await findFaqEntryById(id))) throw new HttpError("Not found", 404);
   try {

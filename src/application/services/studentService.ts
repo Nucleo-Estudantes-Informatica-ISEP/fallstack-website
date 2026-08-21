@@ -207,6 +207,7 @@ export async function updateStudentForAdmin(
   }
 ) {
   const { password: _password, avatar, active, ...profile } = input;
+  void _password;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
   if (active !== undefined) {
