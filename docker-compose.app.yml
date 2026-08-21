@@ -9,6 +9,9 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
+    networks:
+      - default
+      - supabase_stack
 
   web:
     build:
@@ -61,7 +64,15 @@ services:
       NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
       NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
+    networks:
+      - default
+      - supabase_stack
 
 secrets:
   sentry_auth_token:
     environment: SENTRY_AUTH_TOKEN
+
+networks:
+  supabase_stack:
+    external: true
+    name: ${SUPABASE_NETWORK_NAME}
