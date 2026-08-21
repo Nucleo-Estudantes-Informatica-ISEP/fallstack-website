@@ -4,8 +4,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: migrator
-    container_name: fallstack-migrate
     restart: "no"
+    exclude_from_hc: true
     environment:
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
@@ -25,7 +25,6 @@ services:
         NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
       secrets:
         - sentry_auth_token
-    container_name: fallstack-app
     restart: unless-stopped
     depends_on:
       migrate:
