@@ -31,7 +31,8 @@ jobs:
 
       - name: Compute edition label
         id: edition
-        run: echo "label=$(grep -oP '(?<=year: )\d+' src/edition/branding.ts) Edition" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "label=$(grep -oP '(?<=year: )\d+' src/edition/branding.ts) Edition" >> "$GITHUB_OUTPUT"
 
       - uses: Nucleo-Estudantes-Informatica-ISEP/.github/.github/actions/release-publish@master
         with:
