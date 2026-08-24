@@ -93,7 +93,7 @@ utils/          # generic helpers only now (date, files, canvas, isepEmail, Supa
 
 ### Data model
 
-Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` as `User`), `Student`, `Company` (has `tier`: DIAMOND/GOLD/SILVER/BRONZE), `Employee` (belongs to `Company`), `Action` / `ActionCompletion` (points for QR-scanned actions), `Interest` (many-to-many with `User`), `SavedStudent` (company saves a student).
+Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` as `User`), `Student`, `Company` (has `tier`: DIAMOND/GOLD/SILVER/BRONZE), `Employee` (belongs to `Company`), `Action` / `ActionCompletion` (points for QR-scanned actions), `Interest` (many-to-many with `Student` and `Company`), `SavedStudent` (company saves a student).
 
 **`SavedStudent` grain mismatch:** the table's primary key is `[studentId, employeeId]` (employee-scoped), but `isStudentSaved()` in `src/application/repositories/savedStudentRepository.ts` (exposed as `isSaved()` via `src/application/services/savedStudentService.ts`) checks `savedBy: { companyId }` — i.e. the app-level dedup rule is company-scoped while the DB constraint is employee-scoped. Two employees at the same company can currently save the same student twice. Don't assume the DB enforces what the app-level check assumes.
 
@@ -101,7 +101,8 @@ Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` 
 erDiagram
   User ||--o| Student : "id"
   User ||--o| Employee : "id"
-  User }o--o{ Interest : "interests"
+  Student }o--o{ Interest : "interests"
+  Company }o--o{ Interest : "interests"
   Company ||--o{ Employee : "employs"
   Employee ||--o{ SavedStudent : "saves"
   Student ||--o{ SavedStudent : "saved by"
