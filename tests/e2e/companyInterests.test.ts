@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PrismaClient, Role } from "@prisma/client";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterAll, afterEach, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
@@ -35,6 +35,10 @@ afterEach(async () => {
   createdCompanyIds.length = 0;
   createdRankIds.length = 0;
   createdInterestIds.length = 0;
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });
 
 test("existing and newly added employees share the same company interests", async () => {
