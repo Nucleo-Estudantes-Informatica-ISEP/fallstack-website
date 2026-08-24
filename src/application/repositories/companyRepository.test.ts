@@ -1,10 +1,29 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { findCompanyInterests } from "./companyRepository";
+const mocks = vi.hoisted(() => {
+  let interests: { name: string }[] = [];
 
-const mocks = vi.hoisted(() => ({
-  companyFindUnique: vi.fn(),
-}));
+  return {
+    reset() {
+      interests = [];
+    },
+
+    companyFindUnique: vi.fn(async () => ({
+      interests,
+    })),
+
+    companyUpdate: vi.fn(
+      async ({
+        data,
+      }: {
+        data: { interests: { set: { name: string }[] } };
+      }) => {
+        interests = data.interests.set;
+        return {};
+      }
+    ),
+  };
+});
 
 vi.mock("server-only", () => ({}));
 
@@ -12,36 +31,38 @@ vi.mock("./database", () => ({
   default: {
     company: {
       findUnique: mocks.companyFindUnique,
+      update: mocks.companyUpdate,
     },
   },
 }));
 
+import {
+  findCompanyInterests,
+  setCompanyInterestsByName,
+} from "./companyRepository";
+
 beforeEach(() => {
   vi.clearAllMocks();
+  mocks.reset();
 });
 
-test("reads interests directly from the company", async () => {
-  mocks.companyFindUnique.mockResolvedValue({
-    interests: [{ name: "AI" }, { name: "Web" }],
-  });
+test("employees sharing a company read and update the same company interests", async () => {
+  const companyId = "company-1";
 
-  await expect(findCompanyInterests("company-1")).resolves.toEqual([
+  // Employee A updates the shared company interests.
+  await setCompanyInterestsByName(companyId, ["AI", "Web"]);
+
+  // Employee B reads interests for the same company.
+  await expect(findCompanyInterests(companyId)).resolves.toEqual([
     "AI",
     "Web",
   ]);
 
-  expect(mocks.companyFindUnique).toHaveBeenCalledWith({
-    where: { id: "company-1" },
-    select: {
-      interests: {
-        select: { name: true },
-      },
-    },
-  });
-});
+  // Employee B updates that same shared state.
+  await setCompanyInterestsByName(companyId, ["Cloud"]);
 
-test("returns an empty list when the company does not exist", async () => {
-  mocks.companyFindUnique.mockResolvedValue(null);
+  // Employee A immediately sees the updated company-wide value.
+  await expect(findCompanyInterests(companyId)).resolves.toEqual(["Cloud"]);
 
-  await expect(findCompanyInterests("missing")).resolves.toEqual([]);
+  expect(mocks.companyUpdate).toHaveBeenCalledTimes(2);
 });
