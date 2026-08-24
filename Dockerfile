@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
-RUN apk add --no-cache libc6-compat curl openssl && corepack enable
+RUN apk add --no-cache libc6-compat curl openssl \
+  && npm install --global corepack@0.35.0 \
+  && corepack enable
 
 # Create the non-root user here so every stage descending from `base`
 # (both builder -> migrator and runner) inherits it without duplication.
