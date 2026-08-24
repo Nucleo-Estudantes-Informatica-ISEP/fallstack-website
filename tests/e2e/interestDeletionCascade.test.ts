@@ -1,32 +1,148 @@
-import { readFile } from "node:fs/promises";
-import { expect, test } from "vitest";
+import { randomUUID } from "node:crypto";
+import { PrismaClient, Role, Year } from "@prisma/client";
+import { afterAll, afterEach, expect, test, vi } from "vitest";
 
-test("interest deletion cascades only through student join rows", async () => {
-  const migration = await readFile(
-    "prisma/migrations/20260822230505_move_interests_to_student/migration.sql",
-    "utf8"
-  );
+vi.mock("server-only", () => ({}));
 
-  expect(migration).toMatch(
-    /"_InterestToStudent_A_fkey"[\s\S]*FOREIGN KEY \("A"\) REFERENCES "Interest"\("id"\)[\s\S]*ON DELETE CASCADE/
-  );
+const prisma = new PrismaClient();
 
-  expect(migration).toMatch(
-    /"_InterestToStudent_B_fkey"[\s\S]*FOREIGN KEY \("B"\) REFERENCES "Student"\("id"\)[\s\S]*ON DELETE CASCADE/
-  );
+const { deleteInterestForAdmin } =
+  await import("../../src/application/services/interestService");
+
+const createdUserIds: string[] = [];
+const createdCompanyIds: string[] = [];
+const createdRankIds: string[] = [];
+const createdInterestIds: string[] = [];
+
+afterEach(async () => {
+  await prisma.company.deleteMany({
+    where: { id: { in: createdCompanyIds } },
+  });
+
+  await prisma.user.deleteMany({
+    where: { id: { in: createdUserIds } },
+  });
+
+  await prisma.interest.deleteMany({
+    where: { id: { in: createdInterestIds } },
+  });
+
+  await prisma.companyRank.deleteMany({
+    where: { id: { in: createdRankIds } },
+  });
+
+  createdUserIds.length = 0;
+  createdCompanyIds.length = 0;
+  createdRankIds.length = 0;
+  createdInterestIds.length = 0;
 });
 
-test("interest deletion cascades only through company join rows", async () => {
-  const migration = await readFile(
-    "prisma/migrations/20260809100000_add_company_profile_and_rank/migration.sql",
-    "utf8"
-  );
+afterAll(async () => {
+  await prisma.$disconnect();
+});
 
-  expect(migration).toMatch(
-    /"_CompanyToInterest_A_fkey"[\s\S]*FOREIGN KEY \("A"\) REFERENCES "Company"\("id"\)[\s\S]*ON DELETE CASCADE/
-  );
+test("deleting a linked interest removes only its join rows", async () => {
+  const suffix = randomUUID();
 
-  expect(migration).toMatch(
-    /"_CompanyToInterest_B_fkey"[\s\S]*FOREIGN KEY \("B"\) REFERENCES "Interest"\("id"\)[\s\S]*ON DELETE CASCADE/
-  );
+  const rank = await prisma.companyRank.create({
+    data: {
+      name: `Cascade Rank ${suffix}`,
+    },
+  });
+  createdRankIds.push(rank.id);
+
+  const company = await prisma.company.create({
+    data: {
+      name: `Cascade Company ${suffix}`,
+      rankId: rank.id,
+    },
+  });
+  createdCompanyIds.push(company.id);
+
+  const user = await prisma.user.create({
+    data: {
+      email: `student-${suffix}@example.com`,
+      role: Role.STUDENT,
+    },
+  });
+  createdUserIds.push(user.id);
+
+  const student = await prisma.student.create({
+    data: {
+      id: user.id,
+      code: `T${suffix.slice(0, 8)}`,
+      name: "Cascade Student",
+      year: Year.LICENCIATURA_1,
+    },
+  });
+
+  const interestToDelete = await prisma.interest.create({
+    data: {
+      name: `Cascade Delete ${suffix}`,
+      students: {
+        connect: { id: student.id },
+      },
+      companies: {
+        connect: { id: company.id },
+      },
+    },
+  });
+
+  const interestToKeep = await prisma.interest.create({
+    data: {
+      name: `Cascade Keep ${suffix}`,
+      students: {
+        connect: { id: student.id },
+      },
+      companies: {
+        connect: { id: company.id },
+      },
+    },
+  });
+
+  createdInterestIds.push(interestToDelete.id, interestToKeep.id);
+
+  await deleteInterestForAdmin(interestToDelete.id);
+
+  await expect(
+    prisma.interest.findUnique({
+      where: { id: interestToDelete.id },
+    })
+  ).resolves.toBeNull();
+
+  await expect(
+    prisma.interest.findUnique({
+      where: { id: interestToKeep.id },
+    })
+  ).resolves.not.toBeNull();
+
+  await expect(
+    prisma.student.findUnique({
+      where: { id: student.id },
+    })
+  ).resolves.not.toBeNull();
+
+  await expect(
+    prisma.company.findUnique({
+      where: { id: company.id },
+    })
+  ).resolves.not.toBeNull();
+
+  const storedStudent = await prisma.student.findUniqueOrThrow({
+    where: { id: student.id },
+    include: { interests: true },
+  });
+
+  const storedCompany = await prisma.company.findUniqueOrThrow({
+    where: { id: company.id },
+    include: { interests: true },
+  });
+
+  expect(storedStudent.interests.map((interest) => interest.id)).toEqual([
+    interestToKeep.id,
+  ]);
+
+  expect(storedCompany.interests.map((interest) => interest.id)).toEqual([
+    interestToKeep.id,
+  ]);
 });
