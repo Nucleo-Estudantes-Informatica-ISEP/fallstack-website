@@ -4,7 +4,7 @@ import { HttpError } from "@/types/HttpError";
 
 import {
   countInterestsForAdmin,
-  countInterestUsers,
+  countInterestStudents,
   createInterest,
   deleteInterest,
   findInterestById,
@@ -36,7 +36,7 @@ export async function updateInterestForAdmin(id: string, name: string) {
 
 export async function deleteInterestForAdmin(id: string) {
   if (!(await findInterestById(id))) throw new HttpError("Not found", 404);
-  const usersCount = await countInterestUsers(id);
+  const usersCount = await countInterestStudents(id);
   if (usersCount > 0)
     throw new HttpError("Não é possível eliminar um interesse em uso.", 409);
   await deleteInterest(id);

@@ -139,33 +139,25 @@ export const deleteUser = (id: string, db: DbClient = prisma) =>
 export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
   db.user.deleteMany({ where: { id } });
 
-export const setUserInterests = (
+export const setStudentInterests = (
   id: string,
   interests: string[],
   db: DbClient = prisma
 ) =>
-  db.user.update({
+  db.student.update({
     where: { id },
     data: { interests: { set: interests.map((name) => ({ name })) } },
   });
 
-export const connectUserInterests = (
+export const connectStudentInterests = (
   id: string,
   interests: string[],
   db: DbClient = prisma
 ) =>
-  db.user.update({
+  db.student.update({
     where: { id },
     data: { interests: { connect: interests.map((name) => ({ name })) } },
   });
 
 export const updateUserActive = (id: string, active: boolean) =>
   prisma.user.update({ where: { id }, data: { active } });
-
-export const findEmployeeUserIds = async (companyId: string) => {
-  const employees = await prisma.employee.findMany({
-    where: { companyId },
-    select: { id: true },
-  });
-  return employees.map(({ id }) => id);
-};

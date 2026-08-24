@@ -5,14 +5,16 @@ import prisma from "./database";
 export const findInterests = () =>
   prisma.interest.findMany({ select: { id: true, name: true } });
 
-export const findUserInterests = (userId: string) =>
+export const findStudentInterests = (studentId: string) =>
   prisma.interest.findMany({
-    where: { users: { some: { id: userId } } },
+    where: { students: { some: { id: studentId } } },
     select: { id: true, name: true },
   });
 
 export const findInterestsForCompany = (companyId: string) =>
-  prisma.interest.findMany({ where: { users: { some: { id: companyId } } } });
+  prisma.interest.findMany({
+    where: { companies: { some: { id: companyId } } },
+  });
 
 const ADMIN_SORTABLE_FIELDS = ["name"] as const;
 export type AdminInterestSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
@@ -48,14 +50,14 @@ export const findInterestsForAdmin = ({
       : { name: "asc" },
     skip: (page - 1) * pageSize,
     take: pageSize,
-    select: { id: true, name: true, _count: { select: { users: true } } },
+    select: { id: true, name: true, _count: { select: { students: true } } },
   });
 
 export const findInterestById = (id: string) =>
   prisma.interest.findUnique({ where: { id } });
 
-export const countInterestUsers = (id: string) =>
-  prisma.user.count({ where: { interests: { some: { id } } } });
+export const countInterestStudents = (id: string) =>
+  prisma.student.count({ where: { interests: { some: { id } } } });
 
 export const createInterest = (name: string) =>
   prisma.interest.create({ data: { name } });

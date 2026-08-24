@@ -172,11 +172,16 @@ export const findCompanyEmployee = (companyId: string) =>
   prisma.employee.findFirst({ where: { companyId } });
 
 export const findCompanyInterests = async (companyId: string) => {
-  const employee = await prisma.employee.findFirst({
-    where: { companyId },
-    include: { user: { include: { interests: true } } },
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: {
+      interests: {
+        select: { name: true },
+      },
+    },
   });
-  return employee?.user.interests.map(({ name }) => name) ?? [];
+
+  return company?.interests.map(({ name }) => name) ?? [];
 };
 
 // CompanyProfile/CompanyDisplayStyle/interests are the DB home for the rich
@@ -236,4 +241,17 @@ export const setCompanyInterests = (companyId: string, interestIds: string[]) =>
   prisma.company.update({
     where: { id: companyId },
     data: { interests: { set: interestIds.map((id) => ({ id })) } },
+  });
+
+export const setCompanyInterestsByName = (
+  companyId: string,
+  interests: string[]
+) =>
+  prisma.company.update({
+    where: { id: companyId },
+    data: {
+      interests: {
+        set: interests.map((name) => ({ name })),
+      },
+    },
   });

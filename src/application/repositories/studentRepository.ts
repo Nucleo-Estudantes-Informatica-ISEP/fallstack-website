@@ -13,13 +13,13 @@ export const findStudentByCode = (code: string, db: DbClient = prisma) =>
 export const findStudentProfileByCode = (code: string) =>
   prisma.student.findUnique({
     where: { code },
-    include: { user: { include: { interests: true } } },
+    include: { user: true, interests: true },
   });
 
 export const findStudentProfileById = (id: string) =>
   prisma.student.findUnique({
     where: { id },
-    include: { user: { include: { interests: true } } },
+    include: { user: true, interests: true },
   });
 
 export const findStudentWithUserByCode = (code: string) =>
@@ -142,9 +142,9 @@ export const findStudentAvatar = (id: string) =>
   prisma.student.findUnique({ where: { id }, select: { avatar: true } });
 
 export const findStudentInterests = (id: string) =>
-  prisma.student.findMany({
+  prisma.student.findUnique({
     where: { id },
-    select: { user: { select: { interests: true } } },
+    select: { interests: true },
   });
 
 const ADMIN_SORTABLE_FIELDS = ["name", "code", "year"] as const;

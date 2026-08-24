@@ -95,7 +95,7 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
       student: {
         select: {
           name: true,
-          user: { include: { interests: true } },
+          interests: true,
           code: true,
           cv: true,
         },

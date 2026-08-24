@@ -15,9 +15,9 @@ export interface AdminInterestDto extends InterestDto {
 export const toAdminInterestDto = (interest: {
   id: string;
   name: string;
-  _count: { users: number };
+  _count: { students: number };
 }): AdminInterestDto => ({
   id: interest.id,
   name: interest.name,
-  usersCount: interest._count.users,
+  usersCount: interest._count.students,
 });

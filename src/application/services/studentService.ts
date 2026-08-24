@@ -39,8 +39,8 @@ import {
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
 import {
-  connectUserInterests,
-  setUserInterests,
+  connectStudentInterests,
+  setStudentInterests,
   updateUserActive,
   upsertUser,
 } from "../repositories/userRepository";
@@ -83,7 +83,7 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
       },
       tx
     );
-    await connectUserInterests(userId, body.interests, tx);
+    await connectStudentInterests(userId, body.interests, tx);
     await completeAction(code, actionNames.createProfile, tx);
     if (cv) await completeAction(code, actionNames.uploadCv, tx);
     await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
@@ -108,7 +108,7 @@ export async function updateStudent(
     const student = await updateStudentProfile(code, body, tx);
     if (student.linkedin)
       await completeAction(code, actionNames.updateLinkedin, tx);
-    if (body.interests) await setUserInterests(userId, body.interests, tx);
+    if (body.interests) await setStudentInterests(userId, body.interests, tx);
     return student;
   });
 }

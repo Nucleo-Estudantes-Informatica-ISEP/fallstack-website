@@ -68,7 +68,7 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
-  const sanitizedInterests = student.user.interests.map((i) => i.name);
+  const sanitizedInterests = student.interests.map((i) => i.name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;
 
   // Previews (a valid signed preview token, viewed before the company has

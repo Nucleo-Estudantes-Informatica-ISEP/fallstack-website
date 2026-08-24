@@ -57,7 +57,8 @@ const STUDENT = {
   linkedin: null,
   github: null,
   avatar: null,
-  user: { email: "ana@isep.ipp.pt", interests: [] },
+  interests: [],
+  user: { email: "ana@isep.ipp.pt" },
 };
 
 beforeEach(async () => {
