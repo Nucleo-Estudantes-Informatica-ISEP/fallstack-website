@@ -50,14 +50,11 @@ export const findInterestsForAdmin = ({
       : { name: "asc" },
     skip: (page - 1) * pageSize,
     take: pageSize,
-    select: { id: true, name: true, _count: { select: { students: true } } },
+    select: { id: true, name: true },
   });
 
 export const findInterestById = (id: string) =>
   prisma.interest.findUnique({ where: { id } });
-
-export const countInterestStudents = (id: string) =>
-  prisma.student.count({ where: { interests: { some: { id } } } });
 
 export const createInterest = (name: string) =>
   prisma.interest.create({ data: { name } });

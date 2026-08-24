@@ -19,6 +19,7 @@ import { createAdminClient } from "@/utils/supabase/admin";
 
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
+  connectStudentInterests,
   countStudents,
   countStudentsForAdmin,
   createStudent,
@@ -30,6 +31,7 @@ import {
   findStudentProfileById,
   findStudentsForAdmin,
   findStudentsForGiveaway,
+  setStudentInterests,
   updateStudentAvatar,
   updateStudentCv,
   updateStudentFields,
@@ -38,12 +40,7 @@ import {
   type AdminStudentQuery,
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
-import {
-  connectStudentInterests,
-  setStudentInterests,
-  updateUserActive,
-  upsertUser,
-} from "../repositories/userRepository";
+import { updateUserActive, upsertUser } from "../repositories/userRepository";
 import { completeAction } from "./actionService";
 import {
   createSupabaseAuthUserAsAdmin,

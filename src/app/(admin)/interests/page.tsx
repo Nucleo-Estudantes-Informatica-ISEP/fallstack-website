@@ -20,12 +20,6 @@ type InterestRow = ReturnType<typeof toAdminInterestDto>;
 
 const columns: DataTableColumn<InterestRow>[] = [
   { key: "name", header: "Nome", render: (i) => i.name, sortable: true },
-  {
-    key: "usersCount",
-    header: "Em uso por",
-    render: (i) =>
-      `${i.usersCount} utilizador${i.usersCount === 1 ? "" : "es"}`,
-  },
 ];
 
 const InterestsAdminPage = async ({
@@ -76,8 +70,6 @@ const InterestsAdminPage = async ({
             <AdminDeleteButton
               deleteUrl={`/admin/interests/${interest.id}`}
               itemLabel={interest.name}
-              disabled={interest.usersCount > 0}
-              disabledReason="Não é possível eliminar um interesse em uso."
             />
           </div>
         )}

@@ -147,7 +147,36 @@ export const findStudentInterests = (id: string) =>
     select: { interests: true },
   });
 
+export const setStudentInterests = (
+  id: string,
+  interests: string[],
+  db: DbClient = prisma
+) =>
+  db.student.update({
+    where: { id },
+    data: {
+      interests: {
+        set: interests.map((name) => ({ name })),
+      },
+    },
+  });
+
+export const connectStudentInterests = (
+  id: string,
+  interests: string[],
+  db: DbClient = prisma
+) =>
+  db.student.update({
+    where: { id },
+    data: {
+      interests: {
+        connect: interests.map((name) => ({ name })),
+      },
+    },
+  });
+
 const ADMIN_SORTABLE_FIELDS = ["name", "code", "year"] as const;
+
 export type AdminStudentSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
 
 export interface AdminStudentQuery {
@@ -160,7 +189,9 @@ export interface AdminStudentQuery {
 
 function studentWhere(search?: string): Prisma.StudentWhereInput {
   const base: Prisma.StudentWhereInput = { user: { role: "STUDENT" } };
+
   if (!search) return base;
+
   return {
     ...base,
     OR: [
@@ -174,6 +205,7 @@ function studentOrderBy(sort: string | undefined, order: "asc" | "desc") {
   const field = ADMIN_SORTABLE_FIELDS.includes(sort as AdminStudentSortField)
     ? (sort as AdminStudentSortField)
     : undefined;
+
   return field ? { [field]: order } : { name: "asc" as const };
 }
 

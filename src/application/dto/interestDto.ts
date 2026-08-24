@@ -8,16 +8,11 @@ export const toInterestDto = (interest: InterestDto): InterestDto => ({
   name: interest.name,
 });
 
-export interface AdminInterestDto extends InterestDto {
-  usersCount: number;
-}
+export type AdminInterestDto = InterestDto;
 
-export const toAdminInterestDto = (interest: {
-  id: string;
-  name: string;
-  _count: { students: number };
-}): AdminInterestDto => ({
+export const toAdminInterestDto = (
+  interest: InterestDto
+): AdminInterestDto => ({
   id: interest.id,
   name: interest.name,
-  usersCount: interest._count.students,
 });

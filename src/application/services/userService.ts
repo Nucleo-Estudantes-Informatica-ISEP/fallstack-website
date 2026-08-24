@@ -1,7 +1,7 @@
 import "server-only";
 
 import { setCompanyInterestsByName } from "../repositories/companyRepository";
-import { setStudentInterests } from "../repositories/userRepository";
+import { setStudentInterests } from "../repositories/studentRepository";
 
 export async function updateUserInterests(input: {
   userId: string;
