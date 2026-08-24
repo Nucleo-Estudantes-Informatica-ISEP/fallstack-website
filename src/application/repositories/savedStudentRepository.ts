@@ -7,7 +7,7 @@ import {
   savedStudentCommentData,
   savedStudentCompanyWhere,
 } from "@/lib/savedStudentComments";
-import { Translations } from "@/domain/i18n/translations";
+import { parseTranslatedField } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
 
@@ -113,10 +113,9 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
           ...record.student,
           user: {
             ...record.student.user,
-            interests: record.student.user.interests.map((interest) => ({
-              ...interest,
-              name: Translations.fromJSON(interest.name).toJSON(),
-            })),
+            interests: record.student.user.interests.map((interest) =>
+              parseTranslatedField(interest, "name")
+            ),
           },
         },
       }))

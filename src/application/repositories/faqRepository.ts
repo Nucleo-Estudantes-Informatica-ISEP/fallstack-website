@@ -3,12 +3,13 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import {
-  Language,
-  Translations,
+  parseTranslatedFields,
+  toTranslationJson,
   type TranslationValues,
 } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
+import { translatedFieldWhere } from "./translationRepositoryHelpers";
 
 export const findAllFaqEntries = () =>
   prisma.faqEntry
@@ -52,19 +53,7 @@ export interface AdminFaqQuery {
   search?: string;
 }
 
-function faqWhere(search?: string) {
-  return search
-    ? {
-        OR: Object.values(Language).map((language) => ({
-          question: {
-            path: [language],
-            string_contains: search,
-            mode: "insensitive" as const,
-          },
-        })),
-      }
-    : undefined;
-}
+const faqWhere = (search?: string) => translatedFieldWhere("question", search);
 
 function faqOrderBy(sort: string | undefined, order: "asc" | "desc") {
   const field = ADMIN_SORTABLE_FIELDS.includes(sort as AdminFaqSortField)
@@ -115,17 +104,10 @@ export const findFaqEntryById = (id: string) =>
     .findUnique({ where: { id } })
     .then((entry) => (entry ? parseFaqEntry(entry) : null));
 
-const toJson = (value: TranslationValues) =>
-  Translations.create(value).toJSON() as Prisma.InputJsonObject;
-
 function parseFaqEntry<
   T extends { question: Prisma.JsonValue; answer: Prisma.JsonValue },
 >(entry: T) {
-  return {
-    ...entry,
-    question: Translations.fromJSON(entry.question).toJSON(),
-    answer: Translations.fromJSON(entry.answer).toJSON(),
-  };
+  return parseTranslatedFields(entry, "question", "answer");
 }
 
 export const createFaqEntry = (
@@ -140,8 +122,8 @@ export const createFaqEntry = (
     .create({
       data: {
         ...data,
-        question: toJson(data.question),
-        answer: toJson(data.answer),
+        question: toTranslationJson(data.question),
+        answer: toTranslationJson(data.answer),
       },
     })
     .then(parseFaqEntry);
@@ -159,8 +141,8 @@ export const updateFaqEntry = (
       where: { id },
       data: {
         ...data,
-        question: data.question ? toJson(data.question) : undefined,
-        answer: data.answer ? toJson(data.answer) : undefined,
+        question: data.question ? toTranslationJson(data.question) : undefined,
+        answer: data.answer ? toTranslationJson(data.answer) : undefined,
       },
     })
     .then(parseFaqEntry);

@@ -4,13 +4,15 @@ import FaqSection from "@/components/Faq/FaqSection";
 import InfoText from "@/components/InfoText";
 import ScheduleSection from "@/components/ScheduleSection";
 import SponsorsSection from "@/components/SponsorsSection";
+import type { Language } from "@/domain/i18n/translations";
 import { edition } from "@/edition";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
+  language: Language;
 }
 
-const Content: React.FC<ContentProps> = ({ contentRef }) => {
+const Content: React.FC<ContentProps> = ({ contentRef, language }) => {
   const { branding } = edition;
 
   return (
@@ -34,6 +36,7 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         <ScheduleSection
           firstDayTitle={branding.event.scheduleDayTitles[0]}
           secondDayTitle={branding.event.scheduleDayTitles[1]}
+          language={language}
         />
       </section>
 
@@ -50,12 +53,12 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
       </section>*/}
 
       <section className="w-full bg-background px-0!">
-        <CompaniesSection />
+        <CompaniesSection language={language} />
       </section>
 
       <SponsorsSection />
 
-      <FaqSection />
+      <FaqSection language={language} />
     </>
   );
 };

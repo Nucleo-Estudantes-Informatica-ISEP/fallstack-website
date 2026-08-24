@@ -3,7 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
-import { Language, Translations } from "@/domain/i18n/translations";
+import { Language } from "@/domain/i18n/translations";
 
 import {
   bulkUpdateCompanyRankBoard,
@@ -107,8 +107,8 @@ export async function getInterestsByCompanyName(
 ) {
   const company = await findCompanyByName(companyName);
   if (!company) throw new Error("Company not found");
-  return (await findInterestsForCompany(company.id)).map(({ name }) =>
-    Translations.fromJSON(name).get(language)
+  return (await findInterestsForCompany(company.id)).map(
+    ({ name }) => name[language]
   );
 }
 

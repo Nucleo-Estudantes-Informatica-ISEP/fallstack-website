@@ -3,25 +3,39 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
-import { Translations } from "@/domain/i18n/translations";
+import {
+  parseTranslatedField,
+  type ParsedTranslatedField,
+} from "@/domain/i18n/translations";
 import type { StudentYear } from "@/domain/student/year";
 
 import prisma, { DbClient } from "./database";
 
-const parseStudentInterests = <
-  T extends { user: { interests: { name: Prisma.JsonValue }[] } },
->(
+type StudentWithRawInterests = {
+  user: { interests: { name: Prisma.JsonValue }[] };
+};
+
+type StudentWithParsedInterests<T extends StudentWithRawInterests> = Omit<
+  T,
+  "user"
+> & {
+  user: Omit<T["user"], "interests"> & {
+    interests: ParsedTranslatedField<T["user"]["interests"][number], "name">[];
+  };
+};
+
+const parseStudentInterests = <T extends StudentWithRawInterests>(
   student: T
-) => ({
-  ...student,
-  user: {
-    ...student.user,
-    interests: student.user.interests.map((interest) => ({
-      ...interest,
-      name: Translations.fromJSON(interest.name).toJSON(),
-    })),
-  },
-});
+): StudentWithParsedInterests<T> =>
+  ({
+    ...student,
+    user: {
+      ...student.user,
+      interests: student.user.interests.map((interest) =>
+        parseTranslatedField(interest, "name")
+      ),
+    },
+  }) as StudentWithParsedInterests<T>;
 
 export const findStudentByCode = (code: string, db: DbClient = prisma) =>
   db.student.findUnique({ where: { code } });

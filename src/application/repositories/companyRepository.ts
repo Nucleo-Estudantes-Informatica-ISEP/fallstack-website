@@ -2,14 +2,12 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import { Translations } from "@/domain/i18n/translations";
+import { parseTranslatedField } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
 
-const parseInterest = <T extends { name: Prisma.JsonValue }>(interest: T) => ({
-  ...interest,
-  name: Translations.fromJSON(interest.name).toJSON(),
-});
+const parseInterest = <T extends { name: Prisma.JsonValue }>(interest: T) =>
+  parseTranslatedField(interest, "name");
 
 const parseCompanyInterests = <
   T extends { interests: { name: Prisma.JsonValue }[] },

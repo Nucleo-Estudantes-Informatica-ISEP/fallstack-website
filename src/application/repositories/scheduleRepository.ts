@@ -3,12 +3,13 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import {
-  Language,
-  Translations,
+  parseTranslatedField,
+  toTranslationJson,
   type TranslationValues,
 } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
+import { translatedFieldWhere } from "./translationRepositoryHelpers";
 
 export const isUniqueSchedulePositionError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -37,19 +38,8 @@ export interface AdminScheduleQuery {
   search?: string;
 }
 
-function scheduleWhere(search?: string) {
-  return search
-    ? {
-        OR: Object.values(Language).map((language) => ({
-          activity: {
-            path: [language],
-            string_contains: search,
-            mode: "insensitive" as const,
-          },
-        })),
-      }
-    : undefined;
-}
+const scheduleWhere = (search?: string) =>
+  translatedFieldWhere("activity", search);
 
 function scheduleOrderBy(sort: string | undefined, order: "asc" | "desc") {
   const field = ADMIN_SORTABLE_FIELDS.includes(sort as AdminScheduleSortField)
@@ -100,16 +90,10 @@ export const findScheduleEventById = (id: string, db: DbClient = prisma) =>
     .findUnique({ where: { id } })
     .then((event) => (event ? parseScheduleEvent(event) : null));
 
-const toJson = (value: TranslationValues) =>
-  Translations.create(value).toJSON() as Prisma.InputJsonObject;
-
 function parseScheduleEvent<T extends { activity: Prisma.JsonValue }>(
   event: T
 ) {
-  return {
-    ...event,
-    activity: Translations.fromJSON(event.activity).toJSON(),
-  };
+  return parseTranslatedField(event, "activity");
 }
 
 export const createScheduleEvent = (
@@ -123,7 +107,7 @@ export const createScheduleEvent = (
   db: DbClient = prisma
 ) =>
   db.scheduleEvent
-    .create({ data: { ...data, activity: toJson(data.activity) } })
+    .create({ data: { ...data, activity: toTranslationJson(data.activity) } })
     .then(parseScheduleEvent);
 
 export const updateScheduleEvent = (
@@ -142,7 +126,7 @@ export const updateScheduleEvent = (
       where: { id },
       data: {
         ...data,
-        activity: data.activity ? toJson(data.activity) : undefined,
+        activity: data.activity ? toTranslationJson(data.activity) : undefined,
       },
     })
     .then(parseScheduleEvent);

@@ -3,12 +3,13 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import {
-  Language,
-  Translations,
+  parseTranslatedField,
+  toTranslationJson,
   type TranslationValues,
 } from "@/domain/i18n/translations";
 
 import prisma from "./database";
+import { translatedFieldWhere } from "./translationRepositoryHelpers";
 
 export const findInterests = () =>
   prisma.interest
@@ -36,27 +37,9 @@ export interface AdminInterestQuery {
   search?: string;
 }
 
-function interestWhere(search?: string) {
-  return search
-    ? {
-        OR: Object.values(Language).map((language) => ({
-          name: {
-            path: [language],
-            string_contains: search,
-            mode: "insensitive" as const,
-          },
-        })),
-      }
-    : undefined;
-}
-
-export const countInterestsForAdmin = (search?: string) =>
-  prisma.interest.count({ where: interestWhere(search) });
+const interestWhere = (search?: string) => translatedFieldWhere("name", search);
 
 export const findInterestsForAdmin = async ({
-  page,
-  pageSize,
-  sort,
   order,
   search,
 }: AdminInterestQuery) => {
@@ -72,8 +55,8 @@ export const findInterestsForAdmin = async ({
     .sort((a, b) =>
       a.name.PT.localeCompare(b.name.PT, "pt", { sensitivity: "base" })
     );
-  if (order === "desc" && sort === "name") interests.reverse();
-  return interests.slice((page - 1) * pageSize, page * pageSize);
+  if (order === "desc") interests.reverse();
+  return interests;
 };
 
 export const findInterestById = (id: string) =>
@@ -84,22 +67,22 @@ export const findInterestById = (id: string) =>
 export const countInterestUsers = (id: string) =>
   prisma.user.count({ where: { interests: { some: { id } } } });
 
-const toJson = (value: TranslationValues) =>
-  Translations.create(value).toJSON() as Prisma.InputJsonObject;
-
 function parseInterest<T extends { name: Prisma.JsonValue }>(interest: T) {
-  return {
-    ...interest,
-    name: Translations.fromJSON(interest.name).toJSON(),
-  };
+  return parseTranslatedField(interest, "name");
 }
 
+export const isUniqueInterestNameError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
+
 export const createInterest = (name: TranslationValues) =>
-  prisma.interest.create({ data: { name: toJson(name) } }).then(parseInterest);
+  prisma.interest
+    .create({ data: { name: toTranslationJson(name) } })
+    .then(parseInterest);
 
 export const updateInterestName = (id: string, name: TranslationValues) =>
   prisma.interest
-    .update({ where: { id }, data: { name: toJson(name) } })
+    .update({ where: { id }, data: { name: toTranslationJson(name) } })
     .then(parseInterest);
 
 export const deleteInterest = (id: string) =>

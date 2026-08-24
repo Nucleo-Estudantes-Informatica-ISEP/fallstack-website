@@ -6,16 +6,21 @@ import { httpClient } from "@/lib/http/client";
 import HeadingText from "@/components/ui/HeadingText";
 import FaqContainer from "@/components/Faq/FaqContainer";
 import type { FaqDto } from "@/application/dto/faqDto";
+import type { Language } from "@/domain/i18n/translations";
 
-const FaqSection: FunctionComponent = () => {
+interface FaqSectionProps {
+  language: Language;
+}
+
+const FaqSection: FunctionComponent<FaqSectionProps> = ({ language }) => {
   const [faqs, setFaqs] = useState<FaqDto[] | null>(null);
 
   useEffect(() => {
     httpClient
-      .get<FaqDto[]>("/faqs")
+      .get<FaqDto[]>(`/faqs?lang=${language}`)
       .then(setFaqs)
       .catch(() => setFaqs([]));
-  }, []);
+  }, [language]);
 
   if (!faqs) return null;
 

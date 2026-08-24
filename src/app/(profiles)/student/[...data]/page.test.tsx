@@ -104,7 +104,10 @@ function isBlocked(element: ReactElement) {
 }
 
 function renderFor(code: string) {
-  return StudentPage({ params: Promise.resolve({ data: [code] }) });
+  return StudentPage({
+    params: Promise.resolve({ data: [code] }),
+    searchParams: Promise.resolve({}),
+  });
 }
 
 test("a student viewing their own profile is not blocked", async () => {

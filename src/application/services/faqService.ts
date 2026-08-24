@@ -24,7 +24,7 @@ export const getFaqEntry = (id: string) => findFaqEntryById(id);
 
 const faqConflict = () =>
   new HttpError(
-    "Outro administrador já utilizou esta posição. Atualize e tente novamente.",
+    "Já existe uma FAQ com esta pergunta ou posição. Atualize e tente novamente.",
     409
   );
 

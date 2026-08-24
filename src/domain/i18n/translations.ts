@@ -6,11 +6,13 @@ export enum Language {
 }
 
 export type TranslationValues = Record<Language, string>;
+export type ParsedTranslatedField<T, K extends keyof T> = Omit<T, K> &
+  Record<K, TranslationValues>;
 
 export const translationsSchema = z
   .object({
-    [Language.PT]: z.string().min(1),
-    [Language.EN]: z.string().min(1).optional(),
+    [Language.PT]: z.string(),
+    [Language.EN]: z.string().optional(),
   })
   .strict();
 
@@ -38,10 +40,34 @@ export class Translations {
   }
 }
 
+export const toTranslationJson = (
+  value: TranslationValues
+): Record<string, string> => Translations.create(value).toJSON();
+
+export function parseTranslatedField<T extends object, K extends keyof T>(
+  entity: T,
+  field: K
+): ParsedTranslatedField<T, K> {
+  return parseTranslatedFields(entity, field);
+}
+
+export function parseTranslatedFields<T extends object, K extends keyof T>(
+  entity: T,
+  ...fields: K[]
+): ParsedTranslatedField<T, K> {
+  return fields.reduce(
+    (parsed, field) => ({
+      ...parsed,
+      [field]: Translations.fromJSON(entity[field]).toJSON(),
+    }),
+    entity
+  ) as ParsedTranslatedField<T, K>;
+}
+
 export function resolveLanguage(value: string | null | undefined): Language {
   const preferences = value
     ?.split(",")
-    .map((entry, index) => {
+    .map((entry) => {
       const [tag = "", ...parameters] = entry.trim().toLowerCase().split(";");
       const qualityParameter = parameters.find((parameter) =>
         parameter.trim().startsWith("q=")
@@ -63,16 +89,23 @@ export function resolveLanguage(value: string | null | undefined): Language {
           Number.isFinite(quality) && quality >= 0 && quality <= 1
             ? quality
             : 0,
-        index,
       };
     })
     .filter(
       (preference): preference is typeof preference & { language: Language } =>
         preference.language !== undefined && preference.quality > 0
     )
-    .sort(
-      (left, right) => right.quality - left.quality || left.index - right.index
-    );
+    .sort((left, right) => right.quality - left.quality);
 
   return preferences?.[0]?.language ?? Language.PT;
+}
+
+export function resolveRequestLanguage(
+  queryLanguage: string | string[] | null | undefined,
+  acceptLanguage: string | null | undefined
+): Language {
+  const requested = Array.isArray(queryLanguage)
+    ? queryLanguage[0]
+    : queryLanguage;
+  return resolveLanguage(requested ?? acceptLanguage);
 }

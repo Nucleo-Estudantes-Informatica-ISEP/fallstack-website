@@ -1,8 +1,4 @@
-import {
-  Language,
-  Translations,
-  type TranslationValues,
-} from "@/domain/i18n/translations";
+import { Language, type TranslationValues } from "@/domain/i18n/translations";
 
 export interface ScheduleEventDto {
   id: string;
@@ -26,7 +22,7 @@ export const toScheduleEventDto = (
   order: event.order,
   startTime: event.startTime,
   endTime: event.endTime,
-  activity: Translations.fromJSON(event.activity).get(language),
+  activity: event.activity[language],
 });
 
 export interface AdminScheduleEventDto extends Omit<
@@ -44,5 +40,5 @@ export const toAdminScheduleEventDto = (
   order: event.order,
   startTime: event.startTime,
   endTime: event.endTime,
-  activity: Translations.fromJSON(event.activity).toJSON(),
+  activity: event.activity,
 });

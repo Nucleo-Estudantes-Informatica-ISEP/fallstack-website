@@ -1,8 +1,4 @@
-import {
-  Language,
-  Translations,
-  type TranslationValues,
-} from "@/domain/i18n/translations";
+import { Language, type TranslationValues } from "@/domain/i18n/translations";
 
 export interface FaqDto {
   id: string;
@@ -23,8 +19,8 @@ export const toFaqDto = (
   language: Language = Language.PT
 ): FaqDto => ({
   id: faq.id,
-  question: Translations.fromJSON(faq.question).get(language),
-  answer: Translations.fromJSON(faq.answer).get(language),
+  question: faq.question[language],
+  answer: faq.answer[language],
   order: faq.order,
 });
 
@@ -37,7 +33,7 @@ export interface AdminFaqDto {
 
 export const toAdminFaqDto = (faq: FaqEntity): AdminFaqDto => ({
   id: faq.id,
-  question: Translations.fromJSON(faq.question).toJSON(),
-  answer: Translations.fromJSON(faq.answer).toJSON(),
+  question: faq.question,
+  answer: faq.answer,
   order: faq.order,
 });

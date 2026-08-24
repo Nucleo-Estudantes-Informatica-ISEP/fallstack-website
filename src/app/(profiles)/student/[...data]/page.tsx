@@ -24,18 +24,23 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudent } from "@/application/services/studentService";
-import { resolveLanguage, Translations } from "@/domain/i18n/translations";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface ProfileProps {
   params: Promise<{
     data: string[];
   }>;
+  searchParams: Promise<{ lang?: string | string[] }>;
 }
 
 const StudentPage = async (props: ProfileProps) => {
   const params = await props.params;
+  const { lang } = await props.searchParams;
   const session = await getServerSession();
-  const language = resolveLanguage((await headers()).get("accept-language"));
+  const language = resolveRequestLanguage(
+    lang,
+    (await headers()).get("accept-language")
+  );
 
   if (!session) return Custom404();
 
@@ -73,7 +78,7 @@ const StudentPage = async (props: ProfileProps) => {
 
   const studentInterests = student.user.interests.map(({ id, name }) => ({
     id,
-    name: Translations.fromJSON(name).get(language),
+    name: name[language],
   }));
   const localizedInterestNames = studentInterests.map(({ name }) => name);
   const isOwnProfile = !isPreview && session.student?.code === student.code;

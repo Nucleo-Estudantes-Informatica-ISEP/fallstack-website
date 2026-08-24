@@ -4,11 +4,7 @@ import {
   parseSocialLinks,
   SocialLinks,
 } from "@/domain/company/companyProfileContent";
-import {
-  Language,
-  Translations,
-  type TranslationValues,
-} from "@/domain/i18n/translations";
+import { Language, type TranslationValues } from "@/domain/i18n/translations";
 
 export interface CompanyRankStyleDto {
   gradientFromColor: string;
@@ -124,9 +120,7 @@ export const toCompanyRosterDto = (
   logoWidth: company.displayStyle?.logoWidth ?? null,
   logoHeight: company.displayStyle?.logoHeight ?? null,
   className: company.displayStyle?.className ?? null,
-  interests: company.interests.map(({ name }) =>
-    Translations.fromJSON(name).get(language)
-  ),
+  interests: company.interests.map(({ name }) => name[language]),
   hasContent: company.profile !== null,
 });
 
@@ -187,7 +181,5 @@ export const toCompanyDisplayDto = (
         facts: parseFacts(company.profile.facts),
       }
     : null,
-  interests: company.interests.map(({ name }) =>
-    Translations.fromJSON(name).get(language)
-  ),
+  interests: company.interests.map(({ name }) => name[language]),
 });

@@ -14,12 +14,20 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudents } from "@/application/services/studentService";
-import { resolveLanguage } from "@/domain/i18n/translations";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
-const Dashboard = async () => {
+interface DashboardProps {
+  searchParams: Promise<{ lang?: string | string[] }>;
+}
+
+const Dashboard = async ({ searchParams }: DashboardProps) => {
   const session = await getServerSession();
   if (!session || !session.employee?.company) return Custom404();
-  const language = resolveLanguage((await headers()).get("accept-language"));
+  const { lang } = await searchParams;
+  const language = resolveRequestLanguage(
+    lang,
+    (await headers()).get("accept-language")
+  );
 
   const [globalStats, students, history, companyInterestIds, interests] =
     await Promise.all([

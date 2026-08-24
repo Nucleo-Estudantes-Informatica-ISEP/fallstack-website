@@ -1,8 +1,4 @@
-import {
-  Language,
-  Translations,
-  type TranslationValues,
-} from "@/domain/i18n/translations";
+import { Language, type TranslationValues } from "@/domain/i18n/translations";
 
 export interface InterestDto {
   id: string;
@@ -19,7 +15,7 @@ export const toInterestDto = (
   language: Language = Language.PT
 ): InterestDto => ({
   id: interest.id,
-  name: Translations.fromJSON(interest.name).get(language),
+  name: interest.name[language],
 });
 
 export interface AdminInterestDto {
@@ -34,6 +30,6 @@ export const toAdminInterestDto = (
   }
 ): AdminInterestDto => ({
   id: interest.id,
-  name: Translations.fromJSON(interest.name).toJSON(),
+  name: interest.name,
   usersCount: interest._count?.users ?? 0,
 });
