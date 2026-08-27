@@ -3,7 +3,10 @@ import type { ReactElement } from "react";
 import { afterAll, beforeAll, beforeEach, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("next/headers", () => ({ cookies: vi.fn() }));
+vi.mock("next/headers", () => ({
+  cookies: vi.fn(),
+  headers: vi.fn().mockResolvedValue(new Headers()),
+}));
 vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));
@@ -101,7 +104,10 @@ function isBlocked(element: ReactElement) {
 }
 
 function renderFor(code: string) {
-  return StudentPage({ params: Promise.resolve({ data: [code] }) });
+  return StudentPage({
+    params: Promise.resolve({ data: [code] }),
+    searchParams: Promise.resolve({}),
+  });
 }
 
 test("a student viewing their own profile is not blocked", async () => {

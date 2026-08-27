@@ -9,6 +9,7 @@ import type {
   CompanyRankDto,
   CompanyRosterDto,
 } from "@/application/dto/companyDto";
+import type { Language } from "@/domain/i18n/translations";
 
 function toCompanyProps(company: CompanyRosterDto): CompanyProps | null {
   if (!company.avatar) return null;
@@ -46,15 +47,21 @@ function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
   return [...groups.values()].sort((a, b) => a.rank.order - b.rank.order);
 }
 
-const CompaniesSection: FunctionComponent = () => {
+interface CompaniesSectionProps {
+  language: Language;
+}
+
+const CompaniesSection: FunctionComponent<CompaniesSectionProps> = ({
+  language,
+}) => {
   const [companies, setCompanies] = useState<CompanyRosterDto[] | null>(null);
 
   useEffect(() => {
     httpClient
-      .get<CompanyRosterDto[]>("/companies/roster")
+      .get<CompanyRosterDto[]>(`/companies/roster?lang=${language}`)
       .then(setCompanies)
       .catch(() => setCompanies([]));
-  }, []);
+  }, [language]);
 
   if (!companies) return null;
 

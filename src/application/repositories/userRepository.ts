@@ -141,22 +141,22 @@ export const deleteUserIfExists = (id: string, db: DbClient = prisma) =>
 
 export const setUserInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
 ) =>
   db.user.update({
     where: { id },
-    data: { interests: { set: interests.map((name) => ({ name })) } },
+    data: { interests: { set: interestIds.map((id) => ({ id })) } },
   });
 
 export const connectUserInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
 ) =>
   db.user.update({
     where: { id },
-    data: { interests: { connect: interests.map((name) => ({ name })) } },
+    data: { interests: { connect: interestIds.map((id) => ({ id })) } },
   });
 
 export const updateUserActive = (id: string, active: boolean) =>

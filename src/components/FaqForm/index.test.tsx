@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import type { FaqDto } from "@/application/dto/faqDto";
+import type { AdminFaqDto } from "@/application/dto/faqDto";
 
 import FaqForm from ".";
 
@@ -47,7 +47,12 @@ vi.mock("@/lib/http/client", () => ({
   HttpClientError: MockHttpClientError,
 }));
 
-const faq: FaqDto = { id: "f1", question: "Q?", answer: "A.", order: 0 };
+const faq: AdminFaqDto = {
+  id: "f1",
+  question: { PT: "Q?", EN: "Question?" },
+  answer: { PT: "A.", EN: "Answer." },
+  order: 0,
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -55,14 +60,22 @@ beforeEach(() => {
 
 const fillAndSubmit = (
   buttonName: string,
-  question: string,
-  answer: string
+  questionPT: string,
+  answerPT: string,
+  questionEN = "Question?",
+  answerEN = "Answer."
 ) => {
-  fireEvent.change(screen.getByLabelText("Pergunta"), {
-    target: { value: question },
+  fireEvent.change(screen.getByLabelText("Pergunta (PT)"), {
+    target: { value: questionPT },
   });
-  fireEvent.change(screen.getByLabelText("Resposta"), {
-    target: { value: answer },
+  fireEvent.change(screen.getByLabelText("Resposta (PT)"), {
+    target: { value: answerPT },
+  });
+  fireEvent.change(screen.getByLabelText("Pergunta (EN)"), {
+    target: { value: questionEN },
+  });
+  fireEvent.change(screen.getByLabelText("Resposta (EN)"), {
+    target: { value: answerEN },
   });
   fireEvent.click(screen.getByRole("button", { name: buttonName }));
 };
@@ -75,8 +88,8 @@ test("creates a new FAQ entry and navigates back to the list", async () => {
 
   await waitFor(() =>
     expect(postMock).toHaveBeenCalledWith("/admin/faqs", {
-      question: "Novo?",
-      answer: "Sim.",
+      question: { PT: "Novo?", EN: "Question?" },
+      answer: { PT: "Sim.", EN: "Answer." },
     })
   );
   expect(toastSuccessMock).toHaveBeenCalledWith("Pergunta criada.");
@@ -92,24 +105,24 @@ test("edits an existing FAQ entry", async () => {
 
   await waitFor(() =>
     expect(patchMock).toHaveBeenCalledWith("/admin/faqs/f1", {
-      question: "Atualizada?",
-      answer: "A.",
+      question: { PT: "Atualizada?", EN: "Question?" },
+      answer: { PT: "A.", EN: "Answer." },
     })
   );
   expect(toastSuccessMock).toHaveBeenCalledWith("Pergunta atualizada.");
   expect(pushMock).toHaveBeenCalledWith("/faqs");
 });
 
-test("surfaces the server's real error message on a duplicate question", async () => {
+test("surfaces the server's real conflict message", async () => {
   postMock.mockRejectedValue(
-    new MockHttpClientError("Já existe uma pergunta igual.", 409)
+    new MockHttpClientError("A posição já está ocupada.", 409)
   );
 
   render(<FaqForm />);
   fillAndSubmit("Criar", "Existing?", "A.");
 
   await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith("Já existe uma pergunta igual.")
+    expect(toastErrorMock).toHaveBeenCalledWith("A posição já está ocupada.")
   );
   expect(pushMock).not.toHaveBeenCalled();
 });

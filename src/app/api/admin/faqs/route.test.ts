@@ -73,7 +73,14 @@ test("GET returns the paginated list for an admin", async () => {
   const { listFaqEntriesForAdmin } =
     await import("@/application/services/faqService");
   vi.mocked(listFaqEntriesForAdmin).mockResolvedValue({
-    items: [{ id: "a", question: "Q?", answer: "A.", order: 0 }],
+    items: [
+      {
+        id: "a",
+        question: { PT: "Q?", EN: "Question?" },
+        answer: { PT: "A.", EN: "Answer." },
+        order: 0,
+      },
+    ],
     totalCount: 1,
   } as never);
 
@@ -85,7 +92,7 @@ test("GET returns the paginated list for an admin", async () => {
 
   assert.equal(res.status, 200);
   assert.equal(body.totalCount, 1);
-  assert.equal(body.items[0].question, "Q?");
+  assert.equal(body.items[0].question.PT, "Q?");
 });
 
 test("POST rejects a malformed body with 400, without creating anything", async () => {
@@ -116,26 +123,30 @@ test("POST creates the entry and returns 201 for a valid admin request", async (
     await import("@/application/services/faqService");
   vi.mocked(createFaqEntryForAdmin).mockResolvedValue({
     id: "a",
-    question: "Q?",
-    answer: "A.",
+    question: { PT: "Q?", EN: "Question?" },
+    answer: { PT: "A.", EN: "Answer." },
     order: 0,
   } as never);
 
   const { POST } = await import("./route");
-  const res = await POST(postRequest({ question: "Q?", answer: "A." }), {
-    params: Promise.resolve({}),
-  });
+  const res = await POST(
+    postRequest({
+      question: { PT: "Q?", EN: "Question?" },
+      answer: { PT: "A.", EN: "Answer." },
+    }),
+    { params: Promise.resolve({}) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 201);
   assert.equal(body.id, "a");
-  assert.equal(
+  assert.deepEqual(
     vi.mocked(createFaqEntryForAdmin).mock.calls[0]?.[0].question,
-    "Q?"
+    { PT: "Q?", EN: "Question?" }
   );
 });
 
-test("POST maps a duplicate-question conflict to 409", async () => {
+test("POST maps a position conflict to 409", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -145,13 +156,17 @@ test("POST maps a duplicate-question conflict to 409", async () => {
     await import("@/application/services/faqService");
   const { HttpError } = await import("@/types/HttpError");
   vi.mocked(createFaqEntryForAdmin).mockRejectedValue(
-    new HttpError("Já existe uma pergunta igual.", 409)
+    new HttpError("A posição já está ocupada.", 409)
   );
 
   const { POST } = await import("./route");
-  const res = await POST(postRequest({ question: "Existing?", answer: "A." }), {
-    params: Promise.resolve({}),
-  });
+  const res = await POST(
+    postRequest({
+      question: { PT: "Existing?", EN: "Existing?" },
+      answer: { PT: "A.", EN: "A." },
+    }),
+    { params: Promise.resolve({}) }
+  );
 
   assert.equal(res.status, 409);
 });

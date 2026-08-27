@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toScheduleEventDto } from "@/application/dto/scheduleDto";
+import { toAdminScheduleEventDto } from "@/application/dto/scheduleDto";
 import {
   deleteScheduleEventForAdmin,
   updateScheduleEventForAdmin,
@@ -20,7 +20,7 @@ export const PATCH = defineHandler<
   schema: updateAdminScheduleSchema,
   handler: async ({ params, body }) => {
     const event = await updateScheduleEventForAdmin(params.id, body);
-    return NextResponse.json(toScheduleEventDto(event));
+    return NextResponse.json(toAdminScheduleEventDto(event));
   },
 });
 

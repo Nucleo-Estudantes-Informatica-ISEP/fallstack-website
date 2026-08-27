@@ -102,17 +102,18 @@ test("PATCH updates the event for an admin request", async () => {
     order: 0,
     startTime: "09:00",
     endTime: "10:00",
-    activity: "Renamed",
+    activity: { PT: "Renomeada", EN: "Renamed" },
   } as never);
 
   const { PATCH } = await import("./route");
-  const res = await PATCH(patchRequest({ activity: "Renamed" }), {
-    params: Promise.resolve({ id: "a" }),
-  });
+  const res = await PATCH(
+    patchRequest({ activity: { PT: "Renomeada", EN: "Renamed" } }),
+    { params: Promise.resolve({ id: "a" }) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 200);
-  assert.equal(body.activity, "Renamed");
+  assert.equal(body.activity.EN, "Renamed");
   assert.equal(vi.mocked(updateScheduleEventForAdmin).mock.calls[0]?.[0], "a");
 });
 

@@ -3,24 +3,58 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import {
+  parseTranslatedField,
+  type ParsedTranslatedField,
+} from "@/domain/i18n/translations";
 import type { StudentYear } from "@/domain/student/year";
 
 import prisma, { DbClient } from "./database";
+
+type StudentWithRawInterests = {
+  user: { interests: { name: Prisma.JsonValue }[] };
+};
+
+type StudentWithParsedInterests<T extends StudentWithRawInterests> = Omit<
+  T,
+  "user"
+> & {
+  user: Omit<T["user"], "interests"> & {
+    interests: ParsedTranslatedField<T["user"]["interests"][number], "name">[];
+  };
+};
+
+const parseStudentInterests = <T extends StudentWithRawInterests>(
+  student: T
+): StudentWithParsedInterests<T> =>
+  ({
+    ...student,
+    user: {
+      ...student.user,
+      interests: student.user.interests.map((interest) =>
+        parseTranslatedField(interest, "name")
+      ),
+    },
+  }) as StudentWithParsedInterests<T>;
 
 export const findStudentByCode = (code: string, db: DbClient = prisma) =>
   db.student.findUnique({ where: { code } });
 
 export const findStudentProfileByCode = (code: string) =>
-  prisma.student.findUnique({
-    where: { code },
-    include: { user: { include: { interests: true } } },
-  });
+  prisma.student
+    .findUnique({
+      where: { code },
+      include: { user: { include: { interests: true } } },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentProfileById = (id: string) =>
-  prisma.student.findUnique({
-    where: { id },
-    include: { user: { include: { interests: true } } },
-  });
+  prisma.student
+    .findUnique({
+      where: { id },
+      include: { user: { include: { interests: true } } },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentWithUserByCode = (code: string) =>
   prisma.student.findUnique({ where: { code }, include: { user: true } });
@@ -142,10 +176,12 @@ export const findStudentAvatar = (id: string) =>
   prisma.student.findUnique({ where: { id }, select: { avatar: true } });
 
 export const findStudentInterests = (id: string) =>
-  prisma.student.findMany({
-    where: { id },
-    select: { user: { select: { interests: true } } },
-  });
+  prisma.student
+    .findMany({
+      where: { id },
+      select: { user: { select: { interests: true } } },
+    })
+    .then((students) => students.map(parseStudentInterests));
 
 const ADMIN_SORTABLE_FIELDS = ["name", "code", "year"] as const;
 export type AdminStudentSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];

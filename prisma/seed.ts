@@ -1,5 +1,6 @@
 import { AdminRole, PrismaClient, Role, Year } from "@prisma/client";
 
+import { Language, Translations } from "@/domain/i18n/translations";
 import { actions } from "@/edition/actions";
 
 const prisma = new PrismaClient();
@@ -46,7 +47,7 @@ async function seedInterests() {
   }
 
   await prisma.interest.createMany({
-    data: INTERESTS.map((name) => ({ name })),
+    data: INTERESTS.map((name) => ({ name: { PT: name, EN: name } })),
   });
   console.log("✅ Interests seeded");
 }
@@ -193,7 +194,11 @@ async function seedCompanies() {
       data: {
         interests: {
           connect: interests
-            .filter((interest) => companySeed.interests.includes(interest.name))
+            .filter((interest) =>
+              companySeed.interests.includes(
+                Translations.fromJSON(interest.name).get(Language.EN)
+              )
+            )
             .map((interest) => ({ id: interest.id })),
         },
       },

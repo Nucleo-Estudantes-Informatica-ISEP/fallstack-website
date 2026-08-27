@@ -3,23 +3,25 @@
 import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestSelectorProps {
-  userInterests: string[];
+  selectedInterestIds: string[];
   availableInterests: InterestDto[];
-  setUserInterests: (interests: string[]) => void;
+  setSelectedInterestIds: (interestIds: string[]) => void;
   scrollable?: boolean;
 }
 
 const InterestSelector: React.FC<InterestSelectorProps> = ({
-  setUserInterests,
-  userInterests,
+  setSelectedInterestIds,
+  selectedInterestIds,
   availableInterests,
   scrollable = false,
 }) => {
-  const toggleInterest = (interestName: string) => {
-    if (userInterests.includes(interestName)) {
-      setUserInterests(userInterests.filter((i) => i !== interestName));
+  const toggleInterest = (interestId: string) => {
+    if (selectedInterestIds.includes(interestId)) {
+      setSelectedInterestIds(
+        selectedInterestIds.filter((id) => id !== interestId)
+      );
     } else {
-      setUserInterests([...userInterests, interestName]);
+      setSelectedInterestIds([...selectedInterestIds, interestId]);
     }
   };
 
@@ -38,12 +40,12 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
       }`}
     >
       {availableInterests.map((interest) => {
-        const isSelected = userInterests.includes(interest.name);
+        const isSelected = selectedInterestIds.includes(interest.id);
         return (
           <button
             type="button"
-            key={interest.id ?? interest.name}
-            onClick={() => toggleInterest(interest.name)}
+            key={interest.id}
+            onClick={() => toggleInterest(interest.id)}
             className={`relative cursor-pointer rounded border px-3 py-2 text-sm transition-colors ${
               isSelected
                 ? "border-white bg-white/10 text-white"

@@ -1,34 +1,19 @@
-"use client";
+import { headers } from "next/headers";
 
-import { FunctionComponent, useRef } from "react";
-import LogoWhite from "~/public/assets/images/logo_white.svg";
-import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-white.png";
+import HomePage from "@/components/HomePage";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
-import Content from "@/components/Content";
-import Footer from "@/components/Footer";
-import GenericContainer from "@/components/GenericContainer";
-import HeadsUp from "@/components/HeadsUp";
-import Hero from "@/components/Hero";
-import HeroContainer from "@/components/HeroContainer";
-import { branding } from "@/edition/branding";
+interface AppProps {
+  searchParams: Promise<{ lang?: string | string[] }>;
+}
 
-const App: FunctionComponent = () => {
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <HeroContainer>
-      <GenericContainer>
-        <Hero
-          logoSrc={LogoWhite}
-          logoAlt={branding.heroLogoAlt}
-          contentRef={contentRef}
-        />
-        <Content contentRef={contentRef} />
-        <HeadsUp />
-        <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
-      </GenericContainer>
-    </HeroContainer>
+const App = async ({ searchParams }: AppProps) => {
+  const { lang } = await searchParams;
+  const language = resolveRequestLanguage(
+    lang,
+    (await headers()).get("accept-language")
   );
+  return <HomePage language={language} />;
 };
 
 export default App;

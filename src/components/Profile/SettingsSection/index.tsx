@@ -219,8 +219,8 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
 
         <InterestSelector
           availableInterests={availableInterests}
-          userInterests={profile.interests}
-          setUserInterests={setUserInterests}
+          selectedInterestIds={profile.interests}
+          setSelectedInterestIds={setUserInterests}
         />
 
         <PrimaryButton

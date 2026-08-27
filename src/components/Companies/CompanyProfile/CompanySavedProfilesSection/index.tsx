@@ -175,7 +175,7 @@ const CompanySavedProfilesSection = ({
             className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
             role="status"
           >
-            <span className="absolute! -m-px! h-px! w-px! overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
+            <span className="absolute! -m-px! size-px overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
               A processar...
             </span>
           </div>
@@ -187,7 +187,7 @@ const CompanySavedProfilesSection = ({
       </div>
 
       <div className="mt-8 flex w-full flex-col items-center justify-center">
-        <div className="relative flex w-full max-w-[568px] items-center">
+        <div className="relative flex w-full max-w-142 items-center">
           <input
             type="text"
             placeholder="código"
@@ -204,7 +204,7 @@ const CompanySavedProfilesSection = ({
           <button
             onClick={handleManualEntry}
             disabled={isSubmittingManualEntry}
-            className="absolute top-2 right-2 bottom-2 flex w-[104px] items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="absolute inset-y-2 right-2 flex w-26 items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             style={{
               fontFamily: "Inter",
               fontWeight: 400,

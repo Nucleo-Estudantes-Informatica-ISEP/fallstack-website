@@ -5,6 +5,7 @@ import CompanyContentForm, {
 } from "@/components/CompanyContentForm";
 import CompanyForm from "@/components/CompanyForm";
 import type { AdminCompanyDto } from "@/application/dto/companyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
 import { getCompanyRanks } from "@/application/services/companyRankService";
 import { getCompanyWithContent } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
@@ -72,7 +73,7 @@ const EditCompanyPage = async ({ params }: EditCompanyPageProps) => {
       </h2>
       <CompanyContentForm
         content={toContentValue(id, company)}
-        interestOptions={interests}
+        interestOptions={interests.map((interest) => toInterestDto(interest))}
       />
     </section>
   );

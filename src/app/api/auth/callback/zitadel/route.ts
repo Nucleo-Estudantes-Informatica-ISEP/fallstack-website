@@ -15,7 +15,8 @@ function appUrl(path: string) {
 }
 
 function clearOidcCookies(response: NextResponse) {
-  for (const name of Object.values(oidcCookieNames)) response.cookies.delete(name);
+  for (const name of Object.values(oidcCookieNames))
+    response.cookies.delete(name);
 }
 
 export async function GET(request: NextRequest) {
@@ -26,7 +27,14 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
   const next = request.cookies.get(oidcCookieNames.next)?.value ?? "/";
 
-  if (!code || !state || !expectedState || state !== expectedState || !expectedNonce || !verifier) {
+  if (
+    !code ||
+    !state ||
+    !expectedState ||
+    state !== expectedState ||
+    !expectedNonce ||
+    !verifier
+  ) {
     const response = NextResponse.redirect(appUrl("/auth/auth-code-error"));
     clearOidcCookies(response);
     return response;
@@ -38,7 +46,10 @@ export async function GET(request: NextRequest) {
       verifier,
       expectedNonce,
     });
-    const destination = await completeZitadelSignIn({ identity, fallback: next });
+    const destination = await completeZitadelSignIn({
+      identity,
+      fallback: next,
+    });
     const response = NextResponse.redirect(appUrl(destination));
 
     response.cookies.set(config.cookies.auth.name, signAppSession(identity), {

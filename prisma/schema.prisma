@@ -9,26 +9,26 @@ datasource db {
 }
 
 model User {
-  id            String  @id @default(uuid()) @db.Uuid
+  id            String     @id @default(uuid()) @db.Uuid
   // Stable external identity from ZITADEL's OIDC `sub`. User.id remains an
   // application-owned UUID so all profile/domain foreign keys stay IdP-agnostic.
-  zitadelUserId String? @unique
+  zitadelUserId String?    @unique
   // Null for an admin-only account (no Student/Employee profile - see
   // adminRole below). Non-null for every self-service/admin-provisioned
   // Student or Employee account.
-  role      Role?
-  email     String     @unique
+  role          Role?
+  email         String     @unique
   // Cached/local presentation of the global NEI admin grant. Runtime
   // authorization is derived from the signed ZITADEL-backed app session.
-  adminRole AdminRole?
+  adminRole     AdminRole?
   // Display name for an admin-only account - Student/Employee have their
   // own `name` on their respective profile table instead.
-  name      String?
+  name          String?
   // Gates this application's access without disabling the shared AuthNEI
   // identity for the user's other NEI applications.
-  active    Boolean    @default(true)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  active        Boolean    @default(true)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   student   Student?
   employee  Employee?
@@ -228,7 +228,7 @@ model ActionCompletion {
 
 model Interest {
   id   String @id @default(uuid()) @db.Uuid
-  name String @unique
+  name Json
 
   users     User[]
   // Mirrors the existing User.interests implicit m:n - see #280.
@@ -265,7 +265,7 @@ model ScheduleEvent {
   order     Int      @default(0)
   startTime String
   endTime   String
-  activity  String
+  activity  Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -275,8 +275,8 @@ model ScheduleEvent {
 model FaqEntry {
   id String @id @default(uuid()) @db.Uuid
 
-  question  String   @unique
-  answer    String
+  question  Json
+  answer    Json
   order     Int      @unique(map: "FaqEntry_order_key") @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
