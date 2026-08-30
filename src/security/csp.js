@@ -62,8 +62,6 @@ const directives = {
   "frame-src": ["'self'", sources.youtube],
 
   "frame-ancestors": ["'none'"],
-
-  ...(isProduction ? {} : { "report-uri": ["/api/csp-report"] }),
 };
 /**
  * Builds the CSP header value from the directive configuration.
@@ -73,15 +71,4 @@ export function buildCsp() {
     .filter(([, values]) => values.every(Boolean))
     .map(([directive, values]) => `${directive} ${values.join(" ")}`)
     .join("; ");
-}
-
-/**
- * Choses the CSP header name based on the environment.
- * In development, we use the report-only header to avoid breaking the app
- * while we tune the policy.
- */
-export function getCspHeaderName() {
-  return isProduction
-    ? "Content-Security-Policy"
-    : "Content-Security-Policy-Report-Only";
 }

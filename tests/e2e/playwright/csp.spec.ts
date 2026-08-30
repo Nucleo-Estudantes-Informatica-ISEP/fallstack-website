@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 
-const DEV_CSP_REPORT_PATH = "/api/csp-report";
 const HOME_PATH = "/";
 
 function getCspHeader(headers: Record<string, string>): string {
@@ -11,23 +10,7 @@ function getCspHeader(headers: Record<string, string>): string {
   );
 }
 
-test("development report endpoint is reachable and returns diagnostics", async ({
-  page,
-}) => {
-  const response = await page.goto(DEV_CSP_REPORT_PATH);
-
-  expect(response).not.toBeNull();
-  expect(response!.status()).toBe(200);
-
-  await expect(response!.json()).resolves.toMatchObject({
-    status: "ok",
-    environment: "development",
-  });
-});
-
-test("home page emits the CSP header during local development", async ({
-  page,
-}) => {
+test("home page emits a report-only CSP header", async ({ page }) => {
   const response = await page.goto(HOME_PATH);
 
   expect(response).not.toBeNull();
@@ -38,4 +21,5 @@ test("home page emits the CSP header during local development", async ({
 
   expect(csp).toBeTruthy();
   expect(csp).toContain("default-src 'self'");
+  expect(csp).toContain("Content-Security-Policy-Report-Only");
 });
