@@ -17,7 +17,7 @@ env:
   DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci
   NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
   NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
-  SUPABASE_SERVICE_ROLE_KEY: ${{ github.sha }}
+  SUPABASE_SECRET_KEY: ${{ github.sha }}
   NEXT_PUBLIC_BASE_URL: https://ci.invalid/api
   JWT_SECRET: ${{ github.sha }}
   AUTH_ISSUER_URL: https://auth.ci.invalid

@@ -170,7 +170,7 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
   const webEnvironment = extractComposeServiceEnvironment("web");
   for (const name of [
     "DATABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
+    "SUPABASE_SECRET_KEY",
     "NEXT_PUBLIC_SUPABASE_URL",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   ]) {
