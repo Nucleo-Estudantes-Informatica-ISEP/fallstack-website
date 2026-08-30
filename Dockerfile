@@ -64,7 +64,7 @@ ARG SENTRY_ORG=""
 ARG SENTRY_PROJECT=""
 # Public (non-secret) Supabase values: Next.js inlines these into the
 # browser bundle at build time, so the builder stage needs them directly —
-# unlike JWT_SECRET/SUPABASE_SERVICE_ROLE_KEY, which stay runtime-only via
+# unlike JWT_SECRET/SUPABASE_SECRET_KEY, which stay runtime-only via
 # env_file (see docker-compose.app.yml).
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""

@@ -48,3 +48,8 @@ next-env.d.ts
 certificates
 
 prisma/seed.prod.ts
+
+# Local environment files (NEI)
+.env*
+!.env.example
+!**/.env.example
