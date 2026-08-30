@@ -36,8 +36,6 @@ const sources = {
   youtube: "https://www.youtube.com",
 };
 
-const isProduction = process.env.NODE_ENV === "production";
-
 const directives = {
   "default-src": ["'self'"],
 

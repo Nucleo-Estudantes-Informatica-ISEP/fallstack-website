@@ -29,7 +29,7 @@
 ## 2. Scope and Assumptions
 
 - This document centralizes the project's security practices, controls, and reporting processes.
-- The current CSP is intentionally restrictive and is set to `Content-Security-Policy-Report-Only` in development, while production uses the enforced `Content-Security-Policy` header.
+- The current CSP is intentionally restrictive and is always emitted as `Content-Security-Policy-Report-Only` so the app can surface violations without blocking the live experience during tuning.
 - Authentication and session identity are provided by the institutional OIDC provider (ZITADEL / AuthNEI) and reconciled into the application session via the project's Zitadel/OIDC integration (`getServerSession` / `zitadelAuthService`). Supabase is used for PostgreSQL and Storage only — it is not the session identity provider.
 - The project uses a layered approach: Zod validation, Prisma query building, server-side session checks, strict cookies, and a narrow CSP. No single control replaces the others.
 
@@ -175,25 +175,13 @@ For example, a new source would be added in the `sources` object and then only w
 - Add the exact origin, not a broad wildcard, and explain why it is necessary.
 - Validate the changed behavior in staging after adding a new origin.
 
-#### Development vs production:
+#### Reporting mode
 
-- The project chooses the header name dynamically:
-  - production: `Content-Security-Policy`
-  - development: `Content-Security-Policy-Report-Only`
-- This is deliberate: in development, the team can detect violations without accidentally breaking the local experience while tuning the policy.
+- The project uses `Content-Security-Policy-Report-Only` as the sole header mode.
+- This is deliberate: the app surfaces policy violations without blocking the live experience while the team tunes the allowlist.
+- There is no browser `report-uri` endpoint and no dedicated CSP report route in the app.
 
-#### CSP reporting endpoint for development and tests
-
-The app exposes a development-only diagnostic endpoint at `/api/csp-report` when `NODE_ENV !== "production"`.
-
-- `GET /api/csp-report` returns small runtime metadata (`status`, `environment`, and a note) so developers can confirm the route is available while testing the local CSP configuration.
-- `POST /api/csp-report` accepts browser CSP violation payloads in the standard `{"csp-report": {...}}` shape and logs them for local inspection.
-- In production, the route is intentionally blocked with a `403` response so browser reports are not accepted in deployed environments.
-- This route is used in the test suite to validate both the browser-level policy behavior and the route contract itself:
-  - Vitest covers valid/invalid payload handling and the production-block behavior.
-  - Playwright checks that the app emits the real CSP header and that the dev diagnostic endpoint is reachable.
-
-This keeps the app safe in production while giving developers a reliable way to confirm that `report-uri` is being hit in development and that the CSP is behaving as expected during local testing.
+This keeps the policy observable during development without introducing a local reporting endpoint or a production-only exception path.
 
 Related file: `src/security/csp.js`
 Related config: `next.config.js`

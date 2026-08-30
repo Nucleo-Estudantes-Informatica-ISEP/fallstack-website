@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
@@ -6,10 +5,6 @@ import {
   getDirective,
   parseCsp,
   setDefaultTrustedEnv,
-  TEST_BLOCKED_URI,
-  TEST_DOCUMENT_URI,
-  TEST_REPORT_ENDPOINT,
-  TEST_SENTRY_DSN,
   TEST_SENTRY_ORIGIN,
   TEST_SUPABASE_URL,
   UNTRUSTED_ORIGIN,

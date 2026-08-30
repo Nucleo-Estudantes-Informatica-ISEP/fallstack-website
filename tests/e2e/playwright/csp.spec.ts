@@ -21,5 +21,5 @@ test("home page emits a report-only CSP header", async ({ page }) => {
 
   expect(csp).toBeTruthy();
   expect(csp).toContain("default-src 'self'");
-  expect(csp).toContain("Content-Security-Policy-Report-Only");
+  expect(csp).not.toContain("report-uri");
 });

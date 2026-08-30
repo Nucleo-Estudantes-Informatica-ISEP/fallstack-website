@@ -1,7 +1,7 @@
 const isDev = process.env.NODE_ENV !== "production";
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
-const { buildCsp, getCspHeaderName } = require("./src/security/csp");
+const { buildCsp } = require("./src/security/csp");
 
 // Baseline security headers (securityheaders.com "easy wins").
 // Full Content-Security-Policy is deferred — it needs tuning against Next's
