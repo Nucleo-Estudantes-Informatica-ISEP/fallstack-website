@@ -21,20 +21,6 @@
  * and maintain as the application evolves.
  */
 const sources = {
-    // Supabase API, authentication and storage.
-    supabase: process.env.NEXT_PUBLIC_SUPABASE_URL,
-    sentry: process.env.NEXT_PUBLIC_SENTRY_DSN ? new URL(process.env.NEXT_PUBLIC_SENTRY_DSN).origin : undefined,
-    rsms: "https://rsms.me",
-    youtube: "https://www.youtube.com",
-};
-
-/**
- * CSP directives.
- *
- * Each directive is intentionally defined separately so that an origin
- * is only allowed for the resource type that actually requires it.
- */
-const sources = {
   // Supabase API, Auth and Storage.
   supabase: process.env.NEXT_PUBLIC_SUPABASE_URL,
 
@@ -50,34 +36,20 @@ const sources = {
   youtube: "https://www.youtube.com",
 };
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const directives = {
   "default-src": ["'self'"],
 
   "script-src": ["'self'"],
 
-  "style-src": [
-    "'self'",
-    "'unsafe-inline'",
-    sources.rsms,
-  ],
+  "style-src": ["'self'", "'unsafe-inline'", sources.rsms],
 
-  "img-src": [
-    "'self'",
-    "data:",
-    "blob:",
-    sources.supabase,
-  ],
+  "img-src": ["'self'", "data:", "blob:", sources.supabase],
 
-  "font-src": [
-    "'self'",
-    sources.rsms,
-  ],
+  "font-src": ["'self'", sources.rsms],
 
-  "connect-src": [
-    "'self'",
-    sources.supabase,
-    sources.sentry,
-  ],
+  "connect-src": ["'self'", sources.supabase, sources.sentry],
 
   "worker-src": ["'self'"],
 
@@ -87,12 +59,11 @@ const directives = {
 
   "form-action": ["'self'"],
 
-  "frame-src": [
-    "'self'",
-    sources.youtube,
-  ],
+  "frame-src": ["'self'", sources.youtube],
 
   "frame-ancestors": ["'none'"],
+
+  ...(isProduction ? {} : { "report-uri": ["/api/csp-report"] }),
 };
 /**
  * Builds the CSP header value from the directive configuration.
@@ -110,7 +81,7 @@ export function buildCsp() {
  * while we tune the policy.
  */
 export function getCspHeaderName() {
-  return process.env.NODE_ENV === "production"
+  return isProduction
     ? "Content-Security-Policy"
     : "Content-Security-Policy-Report-Only";
 }
