@@ -24,10 +24,7 @@ Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, and Supabase (Auth
 
 ### Authentication
 
-All authentication, including password recovery and password updates, goes
-through Supabase Auth. Application tables must not store passwords or password
-reset tokens, and application routes must not provide separate password-change
-flows.
+All authentication flows (institutional login, password recovery, and password updates) are handled via the institutional OIDC provider (ZITADEL / AuthNEI) and the project's Zitadel/OIDC integration. Application routes should reconcile the external identity into the application session using the server-side session machinery; application tables must not store raw passwords or password reset tokens. Supabase is used for storage (buckets) and as the PostgreSQL host, not as the primary authentication provider.
 
 #### Account deletion
 

@@ -41,7 +41,7 @@ For every requested task:
 | Language        | TypeScript (`strict: true`)                                    |
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
 | Database        | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`)     |
-| Auth            | Supabase Auth (session) — see [Auth model](#auth-model)        |
+| Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
 | Storage         | Supabase Storage (avatars: public bucket, CVs: private bucket) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |
 | Package manager | pnpm (see `packageManager` in `package.json`)                  |

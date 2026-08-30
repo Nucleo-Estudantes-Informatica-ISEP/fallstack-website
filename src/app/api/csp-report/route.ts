@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
+/**
+ *
+ * Ensures the methods only work outside of production
+ */
+function ensureDevelopmentStage() {
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "Not available in production" },
       { status: 403 }
     );
   }
+
+  return null;
+}
+
+export async function POST(request: NextRequest) {
+  const blocked = ensureDevelopmentStage();
+  if (blocked) return blocked; //if response is not null means this is production
 
   try {
     const payload = await request.json();
@@ -33,9 +44,15 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const blocked = ensureDevelopmentStage();
+
+  if (blocked) {
+    return blocked;
+  }
+
   return NextResponse.json({
     status: "ok",
     environment: process.env.NODE_ENV,
-    note: "Development-only CSP report endpoint. Browser CSP violations are posted here when report-uri is enabled.",
+    note: "Development-only CSP report endpoint.",
   });
 }

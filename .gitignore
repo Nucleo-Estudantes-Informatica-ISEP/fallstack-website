@@ -48,3 +48,4 @@ next-env.d.ts
 certificates
 
 prisma/seed.prod.ts
+.envrc

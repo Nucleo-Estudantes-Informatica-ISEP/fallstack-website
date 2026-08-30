@@ -221,6 +221,21 @@ describe("CSP report endpoint", () => {
     expect(body).toEqual({ error: "Not available in production" });
   });
 
+  test("blocks GET in production", async () => {
+    // Arrange
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", "production");
+
+    // Act
+    const { GET } = await import("../../src/app/api/csp-report/route");
+    const response = await GET();
+    const body = await response.json();
+
+    // Assert
+    expect(response.status).toBe(403);
+    expect(body).toEqual({ error: "Not available in production" });
+  });
+
   test("development GET exposes the diagnostic metadata", async () => {
     // Arrange
     // The diagnostic route is intentionally available only to tune the local CSP safely.

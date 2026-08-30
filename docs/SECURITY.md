@@ -30,7 +30,7 @@
 
 - This document centralizes the project's security practices, controls, and reporting processes.
 - The current CSP is intentionally restrictive and is set to `Content-Security-Policy-Report-Only` in development, while production uses the enforced `Content-Security-Policy` header.
-- Authentication relies heavily on Supabase; do not modify session providers without extensive review.
+- Authentication and session identity are provided by the institutional OIDC provider (ZITADEL / AuthNEI) and reconciled into the application session via the project's Zitadel/OIDC integration (`getServerSession` / `zitadelAuthService`). Supabase is used for PostgreSQL and Storage only — it is not the session identity provider.
 - The project uses a layered approach: Zod validation, Prisma query building, server-side session checks, strict cookies, and a narrow CSP. No single control replaces the others.
 
 ## 3. Security Controls
@@ -224,7 +224,8 @@ These headers reduce the risk of MIME confusion, framing abuse, information leak
 
 ### Authentication and Authorization
 
-- Supabase Auth is used for session-based identity.
+- Session identity: the app relies on an external OIDC provider (ZITADEL/AuthNEI) for user authentication. The OIDC flow is handled by the application's Zitadel integration and reconciled to an application session object (see `src/application/services/sessionService.ts` and `src/application/services/zitadelAuthService.ts`).
+- Supabase is used as the application's PostgreSQL host and object storage provider only; it is not the authentication/session provider.
 - Short-lived JWTs are used for QR/action tokens and preview flows.
 - Authorization is enforced server-side, not only on the client.
 - The route layer uses auth strategies and explicit validation before running business logic.
