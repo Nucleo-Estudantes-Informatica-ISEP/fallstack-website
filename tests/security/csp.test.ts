@@ -40,12 +40,15 @@ describe("CSP generation", () => {
     expect(directives["connect-src"]).toEqual(
       expect.arrayContaining(["'self'", TEST_SUPABASE_URL, TEST_SENTRY_ORIGIN])
     );
+
     expect(directives["img-src"]).toEqual(
       expect.arrayContaining(["'self'", "data:", "blob:", TEST_SUPABASE_URL])
     );
+
     expect(getDirective(csp, "style-src")).toEqual(
       expect.arrayContaining(["'self'", "'unsafe-inline'"])
     );
+
     expect(getDirective(csp, "font-src")).toEqual(
       expect.arrayContaining(["'self'"])
     );

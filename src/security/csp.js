@@ -61,12 +61,21 @@ const directives = {
 
   "frame-ancestors": ["'none'"],
 };
+
+function filterDirectiveValues(values) {
+  return values.filter((value) => Boolean(value));
+}
+
 /**
  * Builds the CSP header value from the directive configuration.
  */
 export function buildCsp() {
   return Object.entries(directives)
-    .filter(([, values]) => values.every(Boolean))
-    .map(([directive, values]) => `${directive} ${values.join(" ")}`)
+    .map(([directive, values]) => ({
+      directive,
+      values: filterDirectiveValues(values),
+    }))
+    .filter(({ values }) => values.length > 0)
+    .map(({ directive, values }) => `${directive} ${values.join(" ")}`)
     .join("; ");
 }
