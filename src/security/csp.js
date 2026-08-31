@@ -20,14 +20,22 @@
  * Keep external origins centralized here so they are easy to audit
  * and maintain as the application evolves.
  */
+function getOriginFromDsn(dsn) {
+  if (!dsn) return undefined;
+
+  try {
+    return new URL(dsn).origin;
+  } catch {
+    return undefined;
+  }
+}
+
 const sources = {
   // Supabase API, Auth and Storage.
   supabase: process.env.NEXT_PUBLIC_SUPABASE_URL,
 
   // Client-side error reporting endpoint.
-  sentry: process.env.NEXT_PUBLIC_SENTRY_DSN
-    ? new URL(process.env.NEXT_PUBLIC_SENTRY_DSN).origin
-    : undefined,
+  sentry: getOriginFromDsn(process.env.NEXT_PUBLIC_SENTRY_DSN),
 
   // External Inter font stylesheet and font files.
   rsms: "https://rsms.me",

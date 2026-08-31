@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 
 const HOME_PATH = "/";
 
-test("home page emits a report-only CSP header", async ({ page }) => {
+test("home page emits a report-only CSP header and rejects enforced headers", async ({
+  page,
+}) => {
   const response = await page.goto(HOME_PATH);
 
   expect(response).not.toBeNull();
@@ -17,4 +19,5 @@ test("home page emits a report-only CSP header", async ({ page }) => {
 
   expect(csp).toContain("default-src 'self'");
   expect(csp).not.toContain("report-uri");
+  expect(headers["content-security-policy"]).not.toBeTruthy();
 });

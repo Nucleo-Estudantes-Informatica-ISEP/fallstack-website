@@ -68,6 +68,36 @@ describe("CSP generation", () => {
       expect.arrayContaining(["'self'"])
     );
   });
+
+  test("Supabase remains allowed when Sentry is unset or empty", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", TEST_SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "");
+
+    const { buildCsp } = await import("../../src/security/csp.js");
+    const csp = buildCsp();
+    const connectSources = getDirective(csp, "connect-src");
+
+    expect(connectSources).toEqual(
+      expect.arrayContaining(["'self'", TEST_SUPABASE_URL])
+    );
+    expect(connectSources).not.toContain("");
+  });
+
+  test("invalid Sentry DSNs are ignored without weakening the Supabase allowance", async () => {
+    vi.resetModules();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", TEST_SUPABASE_URL);
+    vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "not-a-valid-dsn");
+
+    const { buildCsp } = await import("../../src/security/csp.js");
+    const csp = buildCsp();
+    const connectSources = getDirective(csp, "connect-src");
+
+    expect(connectSources).toEqual(
+      expect.arrayContaining(["'self'", TEST_SUPABASE_URL])
+    );
+    expect(connectSources).not.toContain("invalid");
+  });
 });
 
 describe("CSP security invariants", () => {
