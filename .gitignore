@@ -53,3 +53,4 @@ prisma/seed.prod.ts
 .env*
 !.env.example
 !**/.env.example
+.envrc
