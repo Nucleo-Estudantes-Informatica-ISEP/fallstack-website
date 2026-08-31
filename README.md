@@ -71,7 +71,7 @@ cp .env.example .env
 - `DIRECT_URL`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (service role)
+- `SUPABASE_SECRET_KEY` (service role)
 - `JWT_SECRET`
 
 Defaulted (override only if you need something other than local dev defaults):
