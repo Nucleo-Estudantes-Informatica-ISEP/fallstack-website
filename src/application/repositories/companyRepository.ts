@@ -190,11 +190,16 @@ export const findCompanyEmployee = (companyId: string) =>
   prisma.employee.findFirst({ where: { companyId } });
 
 export const findCompanyInterests = async (companyId: string) => {
-  const employee = await prisma.employee.findFirst({
-    where: { companyId },
-    include: { user: { include: { interests: true } } },
+  const company = await prisma.company.findUnique({
+    where: { id: companyId },
+    select: {
+      interests: {
+        select: { id: true, name: true },
+      },
+    },
   });
-  return employee?.user.interests.map(parseInterest) ?? [];
+
+  return company?.interests.map(parseInterest) ?? [];
 };
 
 // CompanyProfile/CompanyDisplayStyle/interests are the DB home for the rich

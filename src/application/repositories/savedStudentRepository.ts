@@ -97,7 +97,7 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
         student: {
           select: {
             name: true,
-            user: { include: { interests: true } },
+            interests: true,
             code: true,
             cv: true,
           },
@@ -111,12 +111,9 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
         ...record,
         student: {
           ...record.student,
-          user: {
-            ...record.student.user,
-            interests: record.student.user.interests.map((interest) =>
-              parseTranslatedField(interest, "name")
-            ),
-          },
+          interests: record.student.interests.map((interest) =>
+            parseTranslatedField(interest, "name")
+          ),
         },
       }))
     );

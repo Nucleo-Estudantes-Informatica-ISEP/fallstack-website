@@ -16,17 +16,12 @@ export const findInterests = () =>
     .findMany({ select: { id: true, name: true } })
     .then((interests) => interests.map(parseInterest));
 
-export const findUserInterests = (userId: string) =>
-  prisma.interest
-    .findMany({
-      where: { users: { some: { id: userId } } },
-      select: { id: true, name: true },
-    })
-    .then((interests) => interests.map(parseInterest));
-
 export const findInterestsForCompany = (companyId: string) =>
   prisma.interest
-    .findMany({ where: { users: { some: { id: companyId } } } })
+    .findMany({
+      where: { companies: { some: { id: companyId } } },
+      select: { id: true, name: true },
+    })
     .then((interests) => interests.map(parseInterest));
 
 export interface AdminInterestQuery {
@@ -48,7 +43,7 @@ export const findInterestsForAdmin = async ({
   const interests = (
     await prisma.interest.findMany({
       where: interestWhere(search),
-      select: { id: true, name: true, _count: { select: { users: true } } },
+      select: { id: true, name: true },
     })
   )
     .map(parseInterest)
@@ -63,9 +58,6 @@ export const findInterestById = (id: string) =>
   prisma.interest
     .findUnique({ where: { id } })
     .then((interest) => (interest ? parseInterest(interest) : null));
-
-export const countInterestUsers = (id: string) =>
-  prisma.user.count({ where: { interests: { some: { id } } } });
 
 function parseInterest<T extends { name: Prisma.JsonValue }>(interest: T) {
   return parseTranslatedField(interest, "name");

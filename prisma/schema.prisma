@@ -30,9 +30,8 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  student   Student?
-  employee  Employee?
-  interests Interest[]
+  student  Student?
+  employee Employee?
 }
 
 model Student {
@@ -67,6 +66,7 @@ model Student {
 
   actionCompletions ActionCompletion[]
   savedByEmployees  SavedStudent[]
+  interests         Interest[]
 }
 
 model Company {
@@ -230,8 +230,7 @@ model Interest {
   id   String @id @default(uuid()) @db.Uuid
   name Json
 
-  users     User[]
-  // Mirrors the existing User.interests implicit m:n - see #280.
+  students  Student[]
   companies Company[]
 }
 

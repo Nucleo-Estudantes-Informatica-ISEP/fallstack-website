@@ -76,7 +76,7 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
-  const studentInterests = student.user.interests.map(({ id, name }) => ({
+  const studentInterests = student.interests.map(({ id, name }) => ({
     id,
     name: name[language],
   }));

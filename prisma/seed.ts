@@ -189,8 +189,8 @@ async function seedCompanies() {
       },
     });
 
-    await prisma.user.update({
-      where: { id: user.id },
+    await prisma.company.update({
+      where: { id: company.id },
       data: {
         interests: {
           connect: interests

@@ -1,6 +1,9 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { connectUserInterests, setUserInterests } from "./userRepository";
+import {
+  connectStudentInterests,
+  setStudentInterests,
+} from "./studentRepository";
 
 const { update } = vi.hoisted(() => ({
   update: vi.fn(),
@@ -8,7 +11,7 @@ const { update } = vi.hoisted(() => ({
 
 vi.mock("server-only", () => ({}));
 vi.mock("./database", () => ({
-  default: { user: { update } },
+  default: { student: { update } },
 }));
 
 const AI_ID = "00000000-0000-4000-8000-000000000001";
@@ -20,7 +23,7 @@ beforeEach(() => {
 });
 
 test("sets interest relations directly by stable id", async () => {
-  await setUserInterests("user-id", [AI_ID, WEB_ID]);
+  await setStudentInterests("user-id", [AI_ID, WEB_ID]);
 
   expect(update).toHaveBeenCalledWith({
     where: { id: "user-id" },
@@ -29,7 +32,7 @@ test("sets interest relations directly by stable id", async () => {
 });
 
 test("connects interest relations directly by stable id", async () => {
-  await connectUserInterests("user-id", [AI_ID]);
+  await connectStudentInterests("user-id", [AI_ID]);
 
   expect(update).toHaveBeenCalledWith({
     where: { id: "user-id" },

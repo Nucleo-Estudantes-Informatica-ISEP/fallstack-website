@@ -21,15 +21,11 @@ export const toInterestDto = (
 export interface AdminInterestDto {
   id: string;
   name: TranslationValues;
-  usersCount: number;
 }
 
 export const toAdminInterestDto = (
-  interest: InterestEntity & {
-    _count?: { users: number };
-  }
+  interest: InterestEntity
 ): AdminInterestDto => ({
   id: interest.id,
   name: interest.name,
-  usersCount: interest._count?.users ?? 0,
 });

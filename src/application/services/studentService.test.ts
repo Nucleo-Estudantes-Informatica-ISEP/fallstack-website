@@ -22,8 +22,6 @@ vi.mock("../repositories/studentRepository", () => ({
 vi.mock("../repositories/userRepository", () => ({
   updateUserActive: vi.fn(),
   deleteUser: vi.fn(),
-  setUserInterests: vi.fn(),
-  connectUserInterests: vi.fn(),
   upsertUser: vi.fn(),
 }));
 vi.mock("./actionService", () => ({ completeAction: vi.fn() }));

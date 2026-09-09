@@ -25,12 +25,6 @@ const columns: DataTableColumn<InterestRow>[] = [
     render: (i) => i.name.PT,
     sortable: true,
   },
-  {
-    key: "usersCount",
-    header: "Em uso por",
-    render: (i) =>
-      `${i.usersCount} utilizador${i.usersCount === 1 ? "" : "es"}`,
-  },
 ];
 
 const InterestsAdminPage = async ({
@@ -81,8 +75,6 @@ const InterestsAdminPage = async ({
             <AdminDeleteButton
               deleteUrl={`/admin/interests/${interest.id}`}
               itemLabel={interest.name.PT}
-              disabled={interest.usersCount > 0}
-              disabledReason="Não é possível eliminar um interesse em uso."
             />
           </div>
         )}
