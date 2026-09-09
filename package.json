@@ -82,7 +82,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.24",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import-helpers": "^0.2.0",
+    "eslint-plugin-import-helpers": "^2.0.2",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-tailwindcss": "4.4.0",
     "globals": "^16.5.0",
