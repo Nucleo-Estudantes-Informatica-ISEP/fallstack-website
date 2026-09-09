@@ -1,7 +1,11 @@
 import assert from "node:assert/strict";
 import { test } from "vitest";
 
-import { AuthPolicySession, passesAuthPolicy } from "./authPolicy";
+import {
+  AuthPolicySession,
+  passesAuthPolicy,
+  resolveAdminRole,
+} from "./authPolicy";
 
 const studentSession: AuthPolicySession = {
   role: "STUDENT",
@@ -81,6 +85,13 @@ test("superadmin policy requires SUPER_ADMIN specifically", () => {
     false
   );
   assert.equal(passesAuthPolicy("superadmin", studentSession), false);
+});
+
+test("global admin grant preserves configured tier and defaults new admins to Super Admin", () => {
+  assert.equal(resolveAdminRole(true, "ADMIN"), "ADMIN");
+  assert.equal(resolveAdminRole(true, "SUPER_ADMIN"), "SUPER_ADMIN");
+  assert.equal(resolveAdminRole(true, null), "SUPER_ADMIN");
+  assert.equal(resolveAdminRole(false, "SUPER_ADMIN"), null);
 });
 
 test("every non-public policy rejects a missing session", () => {
