@@ -41,7 +41,7 @@ const Hero: FunctionComponent<HeaderProps> = ({
           className="flex w-full flex-col items-center justify-center gap-28 pt-20 md:px-14"
         >
           <Image
-            className="mt-12 max-h-[380px] w-1/2 object-contain drop-shadow-md md:mt-0 lg:max-h-[580px] lg:w-96"
+            className="mt-12 max-h-95 w-1/2 object-contain drop-shadow-md md:mt-0 lg:max-h-145 lg:w-96"
             src={logoSrc}
             alt={logoAlt}
           />
@@ -87,7 +87,7 @@ const Hero: FunctionComponent<HeaderProps> = ({
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-white opacity-70"
+              className="size-6 text-white opacity-70"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"

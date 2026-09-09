@@ -1,6 +1,7 @@
 const isDev = process.env.NODE_ENV !== "production";
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
+const { buildCsp } = require("./src/security/csp");
 
 // Baseline security headers (securityheaders.com "easy wins").
 // Full Content-Security-Policy is deferred — it needs tuning against Next's
@@ -16,6 +17,10 @@ const securityHeaders = [
   {
     key: "Permissions-Policy",
     value: "camera=(self), microphone=(), geolocation=()",
+  },
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value: buildCsp(), //Generates the CSP header value from the directives defined in src/security/csp.js
   },
 ];
 

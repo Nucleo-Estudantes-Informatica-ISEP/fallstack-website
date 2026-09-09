@@ -95,7 +95,10 @@ async function getDiscovery(): Promise<OidcDiscovery> {
     )
       throw new HttpError("Invalid AuthNEI configuration", 502);
 
-    if (body.issuer.replace(/\/$/u, "") !== serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, ""))
+    if (
+      body.issuer.replace(/\/$/u, "") !==
+      serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")
+    )
       throw new HttpError("AuthNEI issuer does not match configuration", 502);
 
     return body as OidcDiscovery;
@@ -110,7 +113,8 @@ async function getJwks(forceRefresh = false): Promise<JwksResponse> {
 
   jwksPromise = getDiscovery().then(async (discovery) => {
     const response = await fetch(discovery.jwks_uri, { cache: "force-cache" });
-    if (!response.ok) throw new HttpError("Unable to load AuthNEI signing keys", 502);
+    if (!response.ok)
+      throw new HttpError("Unable to load AuthNEI signing keys", 502);
 
     const body = (await response.json()) as Partial<JwksResponse>;
     if (!Array.isArray(body.keys))
@@ -255,7 +259,10 @@ async function exchangeCode(code: string, verifier: string) {
 
   const token = (await response.json()) as Partial<TokenResponse>;
   if (!token.access_token || !token.id_token)
-    throw new HttpError("AuthNEI returned an incomplete OIDC token response", 401);
+    throw new HttpError(
+      "AuthNEI returned an incomplete OIDC token response",
+      401
+    );
 
   return token as TokenResponse;
 }
@@ -266,7 +273,10 @@ export async function completeAuthorizationCode(input: {
   expectedNonce: string;
 }): Promise<ZitadelIdentity> {
   const token = await exchangeCode(input.code, input.verifier);
-  const idTokenClaims = await verifyIdToken(token.id_token, input.expectedNonce);
+  const idTokenClaims = await verifyIdToken(
+    token.id_token,
+    input.expectedNonce
+  );
   const discovery = await getDiscovery();
 
   // Resolve profile and role claims from UserInfo using the access token, but
@@ -286,7 +296,9 @@ export async function completeAuthorizationCode(input: {
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 
-  const employeeRoles = roleKeys(claims[serverEnv.AUTH_ROLE_CLAIM] as RoleClaim);
+  const employeeRoles = roleKeys(
+    claims[serverEnv.AUTH_ROLE_CLAIM] as RoleClaim
+  );
   const globalRoles = roleKeys(
     claims[serverEnv.AUTH_GLOBAL_ROLE_CLAIM] as RoleClaim
   );

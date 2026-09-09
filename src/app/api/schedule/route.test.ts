@@ -12,7 +12,7 @@ vi.mock("@/application/services/scheduleService", () => ({
 }));
 
 beforeAll(() => {
-  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });
@@ -40,14 +40,17 @@ test("GET returns the schedule without requiring a session", async () => {
       order: 0,
       startTime: "09:00",
       endTime: "10:00",
-      activity: "Opening",
+      activity: { PT: "Abertura", EN: "Opening" },
     },
   ] as never);
 
   const { GET } = await import("./route");
-  const res = await GET(new NextRequest("http://localhost/api/schedule"), {
-    params: Promise.resolve({}),
-  });
+  const res = await GET(
+    new NextRequest("http://localhost/api/schedule", {
+      headers: { "accept-language": "en" },
+    }),
+    { params: Promise.resolve({}) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 200);

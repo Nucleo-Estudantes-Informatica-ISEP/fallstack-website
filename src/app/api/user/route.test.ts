@@ -25,7 +25,9 @@ afterAll(() => {
 function request() {
   return new NextRequest("http://localhost/api/user", {
     method: "PATCH",
-    body: JSON.stringify({ interests: ["AI"] }),
+    body: JSON.stringify({
+      interests: ["00000000-0000-4000-8000-000000000001"],
+    }),
     headers: { "content-type": "application/json" },
   });
 }
@@ -39,10 +41,31 @@ test("rejects an admin-only session with 403", async () => {
 
   vi.mocked(getServerSession).mockResolvedValue({
     id: "admin-1",
-    role: "ADMIN",
+    role: null,
     adminRole: "ADMIN",
     student: null,
     employee: null,
+  } as never);
+
+  const { PATCH } = await import("./route");
+  const res = await PATCH(request(), { params: Promise.resolve({}) });
+
+  assert.equal(res.status, 403);
+  assert.equal(vi.mocked(updateUserInterests).mock.calls.length, 0);
+});
+
+test("rejects stale employee data after the employee role is revoked", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  const { updateUserInterests } =
+    await import("@/application/services/userService");
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "former-employee-1",
+    role: null,
+    adminRole: null,
+    student: null,
+    employee: { companyId: "company-1" },
   } as never);
 
   const { PATCH } = await import("./route");

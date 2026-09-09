@@ -1,6 +1,6 @@
 import "server-only";
 
-import { setCompanyInterestsByName } from "../repositories/companyRepository";
+import { setCompanyInterests } from "../repositories/companyRepository";
 import { setStudentInterests } from "../repositories/studentRepository";
 
 export async function updateUserInterests(input: {
@@ -9,7 +9,7 @@ export async function updateUserInterests(input: {
   interests: string[];
 }) {
   if (input.companyId) {
-    await setCompanyInterestsByName(input.companyId, input.interests);
+    await setCompanyInterests(input.companyId, input.interests);
   } else {
     await setStudentInterests(input.userId, input.interests);
   }

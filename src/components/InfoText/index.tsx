@@ -49,7 +49,7 @@ const InfoText: React.FC<InfoTextProps> = ({
         href="/assets/images/fallstack-map.pdf"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-full max-w-xs justify-center gap-2 !px-4 !py-3 text-base font-semibold sm:text-lg lg:mt-0 lg:max-w-none lg:self-center"
+        className="w-full max-w-xs justify-center gap-2 px-4! py-3! text-base font-semibold sm:text-lg lg:mt-0 lg:max-w-none lg:self-center"
       >
         <QuestionCircle /> Como chegar?
       </PrimaryLinkButton>

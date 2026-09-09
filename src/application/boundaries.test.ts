@@ -107,10 +107,13 @@ test("public DTO mappers omit private database fields", () => {
     adminRole: "ADMIN",
     student: { code: "ABC123", name: "Student" },
   });
-  assert.deepEqual(toInterestDto({ id: "interest-id", name: "TypeScript" }), {
-    id: "interest-id",
-    name: "TypeScript",
-  });
+  assert.deepEqual(
+    toInterestDto({
+      id: "interest-id",
+      name: { PT: "TypeScript", EN: "TypeScript" },
+    }),
+    { id: "interest-id", name: "TypeScript" }
+  );
 });
 
 test("history DTO mappers preserve ids and serialize dates", () => {

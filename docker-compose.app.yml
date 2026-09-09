@@ -39,7 +39,7 @@ services:
 
       # Supabase is retained for Storage/Postgres only; GoTrue is no longer in
       # the Fallstack authentication path.
-      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?Configure SUPABASE_SERVICE_ROLE_KEY in Coolify}
+      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?Configure SUPABASE_SECRET_KEY in Coolify}
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
 

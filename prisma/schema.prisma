@@ -228,7 +228,7 @@ model ActionCompletion {
 
 model Interest {
   id   String @id @default(uuid()) @db.Uuid
-  name String @unique
+  name Json
 
   students  Student[]
   companies Company[]
@@ -264,7 +264,7 @@ model ScheduleEvent {
   order     Int      @default(0)
   startTime String
   endTime   String
-  activity  String
+  activity  Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -274,8 +274,8 @@ model ScheduleEvent {
 model FaqEntry {
   id String @id @default(uuid()) @db.Uuid
 
-  question  String   @unique
-  answer    String
+  question  Json
+  answer    Json
   order     Int      @unique(map: "FaqEntry_order_key") @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

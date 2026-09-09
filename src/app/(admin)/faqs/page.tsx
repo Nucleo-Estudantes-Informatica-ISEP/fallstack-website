@@ -37,7 +37,7 @@ const FaqsAdminPage = async ({ searchParams }: FaqsAdminPageProps) => {
     order,
     search: q,
   });
-  const faqs = items.map(toFaqDto);
+  const faqs = items.map((faq) => toFaqDto(faq));
 
   return (
     <section className="flex flex-col gap-6 p-8">

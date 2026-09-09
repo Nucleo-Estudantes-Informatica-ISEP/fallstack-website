@@ -7,7 +7,7 @@ vi.mock("server-only", () => ({}));
 // values - CI runs `pnpm test` with no .env file at all.
 vi.stubEnv("NODE_ENV", "test");
 vi.stubEnv("JWT_SECRET", "a".repeat(32));
-vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service-role-key");
+vi.stubEnv("SUPABASE_SECRET_KEY", "service-role-key");
 vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
 vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon-key");
 

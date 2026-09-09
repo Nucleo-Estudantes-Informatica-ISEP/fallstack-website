@@ -5,10 +5,10 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
-import type { FaqDto } from "@/application/dto/faqDto";
+import type { AdminFaqDto } from "@/application/dto/faqDto";
 
 interface FaqFormProps {
-  faq?: FaqDto;
+  faq?: AdminFaqDto;
 }
 
 const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
@@ -16,8 +16,8 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
     const payload = {
-      question: values.question,
-      answer: values.answer,
+      question: { PT: values.questionPT, EN: values.questionEN },
+      answer: { PT: values.answerPT, EN: values.answerEN },
     };
 
     try {
@@ -49,21 +49,43 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
           fields: [
             {
               kind: "text",
-              name: "question",
-              label: "Pergunta",
+              name: "questionPT",
+              label: "Pergunta (PT)",
               required: true,
             },
             {
               kind: "textarea",
-              name: "answer",
-              label: "Resposta",
+              name: "answerPT",
+              label: "Resposta (PT)",
+              required: true,
+              rows: 6,
+            },
+            {
+              kind: "text",
+              name: "questionEN",
+              label: "Pergunta (EN)",
+              required: true,
+            },
+            {
+              kind: "textarea",
+              name: "answerEN",
+              label: "Resposta (EN)",
               required: true,
               rows: 6,
             },
           ],
         },
       ]}
-      defaultValues={faq ? { question: faq.question, answer: faq.answer } : {}}
+      defaultValues={
+        faq
+          ? {
+              questionPT: faq.question.PT,
+              answerPT: faq.answer.PT,
+              questionEN: faq.question.EN,
+              answerEN: faq.answer.EN,
+            }
+          : {}
+      }
       onSubmit={handleSubmit}
     />
   );

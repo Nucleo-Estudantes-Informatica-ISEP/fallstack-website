@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toFaqDto } from "@/application/dto/faqDto";
+import { toAdminFaqDto } from "@/application/dto/faqDto";
 import {
   createFaqEntryForAdmin,
   listFaqEntriesForAdmin,
@@ -20,7 +20,7 @@ export const GET = defineHandler({
       search: params.get("q") ?? undefined,
     });
     return NextResponse.json({
-      items: items.map(toFaqDto),
+      items: items.map(toAdminFaqDto),
       totalCount,
     });
   },
@@ -31,6 +31,6 @@ export const POST = defineHandler({
   schema: createAdminFaqSchema,
   handler: async ({ body }) => {
     const faq = await createFaqEntryForAdmin(body);
-    return NextResponse.json(toFaqDto(faq), { status: 201 });
+    return NextResponse.json(toAdminFaqDto(faq), { status: 201 });
   },
 });

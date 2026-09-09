@@ -7,19 +7,27 @@ const root = process.cwd();
 const read = (file: string) => readFile(path.join(root, file), "utf8");
 
 test("authentication and password recovery no longer depend on Supabase Auth", async () => {
-  const [schema, loginRoute, passwordResetRoute, confirmPage, legacyConfirmRoute] =
-    await Promise.all([
-      read("prisma/schema.prisma"),
-      read("src/app/api/auth/login/route.ts"),
-      read("src/app/api/auth/password-reset/route.ts"),
-      read("src/app/(auth)/password-reset/confirm/page.tsx"),
-      read("src/app/auth/confirm/route.ts"),
-    ]);
+  const [
+    schema,
+    loginRoute,
+    passwordResetRoute,
+    confirmPage,
+    legacyConfirmRoute,
+  ] = await Promise.all([
+    read("prisma/schema.prisma"),
+    read("src/app/api/auth/login/route.ts"),
+    read("src/app/api/auth/password-reset/route.ts"),
+    read("src/app/(auth)/password-reset/confirm/page.tsx"),
+    read("src/app/auth/confirm/route.ts"),
+  ]);
 
   assert.match(schema, /zitadelUserId\s+String\?\s+@unique/);
 
   assert.match(loginRoute, /createAuthorizationRequest/);
-  assert.doesNotMatch(loginRoute, /signInWithPassword|signInWithOAuth|createSupabaseServerClient/);
+  assert.doesNotMatch(
+    loginRoute,
+    /signInWithPassword|signInWithOAuth|createSupabaseServerClient/
+  );
 
   assert.match(passwordResetRoute, /Passwords are managed by AuthNEI/);
   assert.match(passwordResetRoute, /\/api\/auth\/login/);

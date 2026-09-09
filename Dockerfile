@@ -1,9 +1,11 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:24-alpine AS base
+FROM node:26-alpine AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
-RUN apk add --no-cache libc6-compat curl openssl && corepack enable
+RUN apk add --no-cache libc6-compat curl openssl \
+  && npm install --global corepack@0.35.0 \
+  && corepack enable
 
 # Create the non-root user here so every stage descending from `base`
 # (both builder -> migrator and runner) inherits it without duplication.
@@ -62,7 +64,7 @@ ARG SENTRY_ORG=""
 ARG SENTRY_PROJECT=""
 # Public (non-secret) Supabase values: Next.js inlines these into the
 # browser bundle at build time, so the builder stage needs them directly —
-# unlike JWT_SECRET/SUPABASE_SERVICE_ROLE_KEY, which stay runtime-only via
+# unlike JWT_SECRET/SUPABASE_SECRET_KEY, which stay runtime-only via
 # env_file (see docker-compose.app.yml).
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""

@@ -13,7 +13,7 @@ const Sponsor: React.FC<SponsorProps> = ({ logoHref, name, website }) => {
   const className =
     "mx-2 flex h-24 w-24 items-center justify-center transition duration-300 ease-in-out hover:scale-105 sm:h-32 sm:w-32 md:h-40 md:w-40 lg:size-48";
   const logo = (
-    <div className="relative h-[85%] w-[85%] sm:h-[90%] sm:w-[90%]">
+    <div className="relative size-[85%] sm:size-[90%]">
       <Image
         className="rounded-[5px] object-contain"
         src={logoHref}

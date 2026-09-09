@@ -41,7 +41,7 @@ For every requested task:
 | Language        | TypeScript (`strict: true`)                                    |
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
 | Database        | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`)     |
-| Auth            | Supabase Auth (session) — see [Auth model](#auth-model)        |
+| Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
 | Storage         | Supabase Storage (avatars: public bucket, CVs: private bucket) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |
 | Package manager | pnpm (see `packageManager` in `package.json`)                  |
@@ -114,10 +114,10 @@ erDiagram
 
 Two independent mechanisms — don't conflate them:
 
-- **Session auth (login state):** Supabase Auth. `getServerSession()` (`src/application/services/sessionService.ts`) reads the Supabase session via `supabase.auth.getUser()`, then looks up the corresponding Prisma `User` (student or employee profile). Client-side equivalent is `getSession()` in `src/client/api/session.ts`, which hits `src/app/api/auth/session/route.ts`.
+- **Session auth (login state):** ZITADEL / AuthNEI OIDC. `getServerSession()` (`src/application/services/sessionService.ts`) verifies the signed app session and resolves the matching Prisma `User` (student or employee profile). The browser path is the normal app session cookie flow, not a Supabase Auth session.
 - **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/application/services/authService.ts` (`signJwt`/`verifyJwt`, using `serverEnv.JWT_SECRET` from `@/config/env.server` — not raw `process.env`). Used for the student's personal QR code (`src/app/api/qrcode/route.ts`, 30-minute expiry) and temporary student-profile preview access (`jwtStudent()` in `src/application/services/studentTokenService.ts` signs a token embedding the student `code`, 15-minute expiry; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access within an existing authenticated session, without requiring the profile to be saved) — all genuinely short-lived. **Action QR codes** (`getActionQrCode()` in `src/application/services/actionService.ts`) used to be an exception — a units bug passed a millisecond value straight into `jsonwebtoken`'s numeric `expiresIn` (interpreted as seconds), so the token actually lived ~8.3 hours instead of the intended 30 seconds; fixed in #212, with a regression test asserting `expiresIn: 30` colocated in `actionService.test.ts`. None of these are for login sessions.
-- `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through Supabase.
-- Password resets are self-service only: `src/app/(auth)/password-reset/page.tsx` posts an email to `src/app/api/auth/password-reset/route.ts`, which calls Supabase's `resetPasswordForEmail` (PKCE flow, verifier persisted in cookies) with a redirect to `/password-reset/confirm`. The confirm page (`src/app/(auth)/password-reset/confirm/page.tsx`) then calls `supabase.auth.updateUser({ password })` directly from the browser client using the session Supabase restored from the PKCE callback — there is no server route for the confirm step. The old admin-reset-another-user's-password route (`src/app/api/auth/password-change/route.ts`) has been removed; `changePassword()` still exists in `src/application/services/authApplicationService.ts` but is currently **unused dead code** — no route calls it. Don't add a third path — extend the self-service flow, or wire `changePassword()` up if an admin-reset route is genuinely needed again.
+- `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through AuthNEI/ZITADEL.
+- Password resets are self-service through AuthNEI: the UI tells the user to continue through the institutional identity provider rather than storing or issuing app-side reset tokens. Supabase remains the PostgreSQL/storage back end, not the session provider.
 
 ## Conventions
 

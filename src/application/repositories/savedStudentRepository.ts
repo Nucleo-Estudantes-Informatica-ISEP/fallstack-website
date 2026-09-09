@@ -7,6 +7,7 @@ import {
   savedStudentCommentData,
   savedStudentCompanyWhere,
 } from "@/lib/savedStudentComments";
+import { parseTranslatedField } from "@/domain/i18n/translations";
 
 import prisma, { DbClient } from "./database";
 
@@ -89,21 +90,33 @@ export const findCompanyHistory = (companyId: string) =>
   });
 
 export const findCompanyHistoryWithInterests = (companyId: string) =>
-  prisma.savedStudent.findMany({
-    where: { companyId },
-    include: {
-      student: {
-        select: {
-          name: true,
-          interests: true,
-          code: true,
-          cv: true,
+  prisma.savedStudent
+    .findMany({
+      where: { companyId },
+      include: {
+        student: {
+          select: {
+            name: true,
+            interests: true,
+            code: true,
+            cv: true,
+          },
         },
+        savedBy: true,
       },
-      savedBy: true,
-    },
-    orderBy: { createdAt: "desc" },
-  });
+      orderBy: { createdAt: "desc" },
+    })
+    .then((records) =>
+      records.map((record) => ({
+        ...record,
+        student: {
+          ...record.student,
+          interests: record.student.interests.map((interest) =>
+            parseTranslatedField(interest, "name")
+          ),
+        },
+      }))
+    );
 
 export const findCompanySavedStudentsWithCv = (companyId: string) =>
   prisma.savedStudent.findMany({

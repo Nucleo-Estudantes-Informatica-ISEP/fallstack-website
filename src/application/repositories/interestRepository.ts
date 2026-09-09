@@ -1,23 +1,28 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
+
+import {
+  parseTranslatedField,
+  toTranslationJson,
+  type TranslationValues,
+} from "@/domain/i18n/translations";
+
 import prisma from "./database";
+import { translatedFieldWhere } from "./translationRepositoryHelpers";
 
 export const findInterests = () =>
-  prisma.interest.findMany({ select: { id: true, name: true } });
-
-export const findStudentInterests = (studentId: string) =>
-  prisma.interest.findMany({
-    where: { students: { some: { id: studentId } } },
-    select: { id: true, name: true },
-  });
+  prisma.interest
+    .findMany({ select: { id: true, name: true } })
+    .then((interests) => interests.map(parseInterest));
 
 export const findInterestsForCompany = (companyId: string) =>
-  prisma.interest.findMany({
-    where: { companies: { some: { id: companyId } } },
-  });
-
-const ADMIN_SORTABLE_FIELDS = ["name"] as const;
-export type AdminInterestSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
+  prisma.interest
+    .findMany({
+      where: { companies: { some: { id: companyId } } },
+      select: { id: true, name: true },
+    })
+    .then((interests) => interests.map(parseInterest));
 
 export interface AdminInterestQuery {
   page: number;
@@ -27,40 +32,50 @@ export interface AdminInterestQuery {
   search?: string;
 }
 
-function interestWhere(search?: string) {
-  return search
-    ? { name: { contains: search, mode: "insensitive" as const } }
-    : undefined;
-}
+const interestWhere = (search?: string) => translatedFieldWhere("name", search);
 
-export const countInterestsForAdmin = (search?: string) =>
-  prisma.interest.count({ where: interestWhere(search) });
-
-export const findInterestsForAdmin = ({
-  page,
-  pageSize,
-  sort,
+export const findInterestsForAdmin = async ({
   order,
   search,
-}: AdminInterestQuery) =>
-  prisma.interest.findMany({
-    where: interestWhere(search),
-    orderBy: ADMIN_SORTABLE_FIELDS.includes(sort as AdminInterestSortField)
-      ? { name: order }
-      : { name: "asc" },
-    skip: (page - 1) * pageSize,
-    take: pageSize,
-    select: { id: true, name: true },
-  });
+}: AdminInterestQuery) => {
+  // ponytail: trusted-admin data stays tiny; move to a generated PT column
+  // if translated list sorting ever needs DB-scale pagination.
+  const interests = (
+    await prisma.interest.findMany({
+      where: interestWhere(search),
+      select: { id: true, name: true },
+    })
+  )
+    .map(parseInterest)
+    .sort((a, b) =>
+      a.name.PT.localeCompare(b.name.PT, "pt", { sensitivity: "base" })
+    );
+  if (order === "desc") interests.reverse();
+  return interests;
+};
 
 export const findInterestById = (id: string) =>
-  prisma.interest.findUnique({ where: { id } });
+  prisma.interest
+    .findUnique({ where: { id } })
+    .then((interest) => (interest ? parseInterest(interest) : null));
 
-export const createInterest = (name: string) =>
-  prisma.interest.create({ data: { name } });
+function parseInterest<T extends { name: Prisma.JsonValue }>(interest: T) {
+  return parseTranslatedField(interest, "name");
+}
 
-export const updateInterestName = (id: string, name: string) =>
-  prisma.interest.update({ where: { id }, data: { name } });
+export const isUniqueInterestNameError = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2002";
+
+export const createInterest = (name: TranslationValues) =>
+  prisma.interest
+    .create({ data: { name: toTranslationJson(name) } })
+    .then(parseInterest);
+
+export const updateInterestName = (id: string, name: TranslationValues) =>
+  prisma.interest
+    .update({ where: { id }, data: { name: toTranslationJson(name) } })
+    .then(parseInterest);
 
 export const deleteInterest = (id: string) =>
   prisma.interest.delete({ where: { id } });

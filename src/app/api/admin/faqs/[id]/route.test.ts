@@ -13,7 +13,7 @@ vi.mock("@/application/services/faqService", () => ({
 }));
 
 beforeAll(() => {
-  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });
@@ -98,23 +98,24 @@ test("PATCH updates the entry for an admin request", async () => {
     await import("@/application/services/faqService");
   vi.mocked(updateFaqEntryForAdmin).mockResolvedValue({
     id: "a",
-    question: "Q?",
-    answer: "Updated.",
+    question: { PT: "Q?", EN: "Question?" },
+    answer: { PT: "Atualizada.", EN: "Updated." },
     order: 0,
   } as never);
 
   const { PATCH } = await import("./route");
-  const res = await PATCH(patchRequest({ answer: "Updated." }), {
-    params: Promise.resolve({ id: "a" }),
-  });
+  const res = await PATCH(
+    patchRequest({ answer: { PT: "Atualizada.", EN: "Updated." } }),
+    { params: Promise.resolve({ id: "a" }) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 200);
-  assert.equal(body.answer, "Updated.");
+  assert.equal(body.answer.EN, "Updated.");
   assert.equal(vi.mocked(updateFaqEntryForAdmin).mock.calls[0]?.[0], "a");
 });
 
-test("PATCH maps a duplicate-question conflict to 409", async () => {
+test("PATCH maps a position conflict to 409", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -124,13 +125,14 @@ test("PATCH maps a duplicate-question conflict to 409", async () => {
     await import("@/application/services/faqService");
   const { HttpError } = await import("@/types/HttpError");
   vi.mocked(updateFaqEntryForAdmin).mockRejectedValue(
-    new HttpError("Já existe uma pergunta igual.", 409)
+    new HttpError("A posição já está ocupada.", 409)
   );
 
   const { PATCH } = await import("./route");
-  const res = await PATCH(patchRequest({ question: "Existing?" }), {
-    params: Promise.resolve({ id: "a" }),
-  });
+  const res = await PATCH(
+    patchRequest({ question: { PT: "Existing?", EN: "Existing?" } }),
+    { params: Promise.resolve({ id: "a" }) }
+  );
 
   assert.equal(res.status, 409);
 });

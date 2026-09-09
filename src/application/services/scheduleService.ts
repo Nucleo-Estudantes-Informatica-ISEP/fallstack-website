@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import type { TranslationValues } from "@/domain/i18n/translations";
 import { findInvalidScheduleRowIds } from "@/domain/schedule/scheduleValidation";
 
 import {
@@ -112,7 +113,7 @@ export async function createScheduleEventForAdmin(input: {
   day: number;
   startTime: string;
   endTime: string;
-  activity: string;
+  activity: TranslationValues;
   order?: number;
 }) {
   // The deferred (day, order) constraint is the concurrency boundary: it
@@ -161,7 +162,7 @@ export async function updateScheduleEventForAdmin(
     day?: number;
     startTime?: string;
     endTime?: string;
-    activity?: string;
+    activity?: TranslationValues;
     order?: number;
   }
 ) {

@@ -77,7 +77,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       />
       {/* Noise overlay */}
       <div
-        className="absolute inset-0 opacity-[0.06]"
+        className="opacity-0.06 absolute inset-0"
         style={{
           backgroundImage:
             "radial-gradient(rgba(255,255,255,0.5) 0, rgba(255,255,255,0.5) 1px, transparent 1px)",
@@ -156,11 +156,11 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
           onKeyDown={handleKeyDown}
         >
           {loading ? (
-            <div className="inline-block h-[122px] w-[122px] animate-spin rounded-full border-4 border-solid border-[#2F8E00] border-r-transparent" />
+            <div className="inline-block size-[122px] animate-spin rounded-full border-4 border-solid border-[#2F8E00] border-r-transparent" />
           ) : qrValue ? (
             <QRCodeSVG value={qrValue} size={209} />
           ) : (
-            <div className="flex h-[122px] w-[122px] items-center justify-center text-[10px] text-gray-500">
+            <div className="flex size-[122px] items-center justify-center text-[10px] text-gray-500">
               Sem QR
             </div>
           )}
@@ -214,7 +214,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       {/* Enlarged overlay */}
       {isEnlarged && qrValue && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-9999 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
           aria-label="QR Code ampliado"

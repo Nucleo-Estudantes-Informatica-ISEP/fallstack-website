@@ -1,4 +1,5 @@
 import ScheduleBoard from "@/components/ScheduleBoard";
+import { toScheduleEventDto } from "@/application/dto/scheduleDto";
 import { getScheduleEvents } from "@/application/services/scheduleService";
 
 const ScheduleOrderPage = async () => {
@@ -13,13 +14,7 @@ const ScheduleOrderPage = async () => {
         a vermelho e impede guardar até ser corrigida.
       </p>
       <ScheduleBoard
-        events={events.map((event) => ({
-          id: event.id,
-          day: event.day,
-          startTime: event.startTime,
-          endTime: event.endTime,
-          activity: event.activity,
-        }))}
+        events={events.map((event) => toScheduleEventDto(event))}
       />
     </section>
   );

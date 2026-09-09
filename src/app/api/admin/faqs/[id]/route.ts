@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toFaqDto } from "@/application/dto/faqDto";
+import { toAdminFaqDto } from "@/application/dto/faqDto";
 import {
   deleteFaqEntryForAdmin,
   updateFaqEntryForAdmin,
@@ -17,7 +17,7 @@ export const PATCH = defineHandler<FaqParams, typeof updateAdminFaqSchema>({
   schema: updateAdminFaqSchema,
   handler: async ({ params, body }) => {
     const faq = await updateFaqEntryForAdmin(params.id, body);
-    return NextResponse.json(toFaqDto(faq));
+    return NextResponse.json(toAdminFaqDto(faq));
   },
 });
 

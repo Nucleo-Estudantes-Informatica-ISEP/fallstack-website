@@ -3,24 +3,53 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import {
+  parseTranslatedField,
+  type ParsedTranslatedField,
+} from "@/domain/i18n/translations";
 import type { StudentYear } from "@/domain/student/year";
 
 import prisma, { DbClient } from "./database";
+
+type StudentWithRawInterests = {
+  interests: { name: Prisma.JsonValue }[];
+};
+
+type StudentWithParsedInterests<T extends StudentWithRawInterests> = Omit<
+  T,
+  "interests"
+> & {
+  interests: ParsedTranslatedField<T["interests"][number], "name">[];
+};
+
+const parseStudentInterests = <T extends StudentWithRawInterests>(
+  student: T
+): StudentWithParsedInterests<T> =>
+  ({
+    ...student,
+    interests: student.interests.map((interest) =>
+      parseTranslatedField(interest, "name")
+    ),
+  }) as StudentWithParsedInterests<T>;
 
 export const findStudentByCode = (code: string, db: DbClient = prisma) =>
   db.student.findUnique({ where: { code } });
 
 export const findStudentProfileByCode = (code: string) =>
-  prisma.student.findUnique({
-    where: { code },
-    include: { user: true, interests: true },
-  });
+  prisma.student
+    .findUnique({
+      where: { code },
+      include: { user: true, interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentProfileById = (id: string) =>
-  prisma.student.findUnique({
-    where: { id },
-    include: { user: true, interests: true },
-  });
+  prisma.student
+    .findUnique({
+      where: { id },
+      include: { user: true, interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentWithUserByCode = (code: string) =>
   prisma.student.findUnique({ where: { code }, include: { user: true } });
@@ -142,35 +171,37 @@ export const findStudentAvatar = (id: string) =>
   prisma.student.findUnique({ where: { id }, select: { avatar: true } });
 
 export const findStudentInterests = (id: string) =>
-  prisma.student.findUnique({
-    where: { id },
-    select: { interests: true },
-  });
+  prisma.student
+    .findUnique({
+      where: { id },
+      select: { interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const setStudentInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
 ) =>
   db.student.update({
     where: { id },
     data: {
       interests: {
-        set: interests.map((name) => ({ name })),
+        set: interestIds.map((interestId) => ({ id: interestId })),
       },
     },
   });
 
 export const connectStudentInterests = (
   id: string,
-  interests: string[],
+  interestIds: string[],
   db: DbClient = prisma
 ) =>
   db.student.update({
     where: { id },
     data: {
       interests: {
-        connect: interests.map((name) => ({ name })),
+        connect: interestIds.map((interestId) => ({ id: interestId })),
       },
     },
   });

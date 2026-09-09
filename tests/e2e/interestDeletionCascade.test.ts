@@ -78,7 +78,10 @@ test("deleting a linked interest removes only its join rows", async () => {
 
   const interestToDelete = await prisma.interest.create({
     data: {
-      name: `Cascade Delete ${suffix}`,
+      name: {
+        PT: `Eliminar cascata ${suffix}`,
+        EN: `Cascade Delete ${suffix}`,
+      },
       students: {
         connect: { id: student.id },
       },
@@ -90,7 +93,10 @@ test("deleting a linked interest removes only its join rows", async () => {
 
   const interestToKeep = await prisma.interest.create({
     data: {
-      name: `Cascade Keep ${suffix}`,
+      name: {
+        PT: `Manter cascata ${suffix}`,
+        EN: `Cascade Keep ${suffix}`,
+      },
       students: {
         connect: { id: student.id },
       },

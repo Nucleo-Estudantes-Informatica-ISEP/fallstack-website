@@ -4,13 +4,15 @@ import FaqSection from "@/components/Faq/FaqSection";
 import InfoText from "@/components/InfoText";
 import ScheduleSection from "@/components/ScheduleSection";
 import SponsorsSection from "@/components/SponsorsSection";
+import type { Language } from "@/domain/i18n/translations";
 import { edition } from "@/edition";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
+  language: Language;
 }
 
-const Content: React.FC<ContentProps> = ({ contentRef }) => {
+const Content: React.FC<ContentProps> = ({ contentRef, language }) => {
   const { branding } = edition;
 
   return (
@@ -34,11 +36,12 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         <ScheduleSection
           firstDayTitle={branding.event.scheduleDayTitles[0]}
           secondDayTitle={branding.event.scheduleDayTitles[1]}
+          language={language}
         />
       </section>
 
       <section className="flex w-full flex-col items-center bg-[url('/assets/images/bgInterview.svg')] bg-cover bg-center bg-no-repeat pb-12 text-center">
-        <HeadingText className="!font-normal" text="Speed Interviews" />
+        <HeadingText className="font-normal!" text="Speed Interviews" />
         <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
           Este ano podes experienciar a modalidade de speed interviews com
           algumas das empresas presentes.
@@ -49,13 +52,13 @@ const Content: React.FC<ContentProps> = ({ contentRef }) => {
         <PassSection />
       </section>*/}
 
-      <section className="w-full bg-background !px-0">
-        <CompaniesSection />
+      <section className="w-full bg-background px-0!">
+        <CompaniesSection language={language} />
       </section>
 
       <SponsorsSection />
 
-      <FaqSection />
+      <FaqSection language={language} />
     </>
   );
 };

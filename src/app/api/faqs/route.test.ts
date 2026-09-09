@@ -12,7 +12,7 @@ vi.mock("@/application/services/faqService", () => ({
 }));
 
 beforeAll(() => {
-  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });
@@ -33,16 +33,24 @@ test("GET returns the FAQ list without requiring a session", async () => {
 
   const { getFaqEntries } = await import("@/application/services/faqService");
   vi.mocked(getFaqEntries).mockResolvedValue([
-    { id: "a", question: "Q?", answer: "A.", order: 0 },
+    {
+      id: "a",
+      question: { PT: "Pergunta?", EN: "Question?" },
+      answer: { PT: "Resposta.", EN: "Answer." },
+      order: 0,
+    },
   ] as never);
 
   const { GET } = await import("./route");
-  const res = await GET(new NextRequest("http://localhost/api/faqs"), {
-    params: Promise.resolve({}),
-  });
+  const res = await GET(
+    new NextRequest("http://localhost/api/faqs", {
+      headers: { "accept-language": "en-GB" },
+    }),
+    { params: Promise.resolve({}) }
+  );
   const body = await res.json();
 
   assert.equal(res.status, 200);
   assert.equal(body.length, 1);
-  assert.equal(body[0].question, "Q?");
+  assert.equal(body[0].question, "Question?");
 });
