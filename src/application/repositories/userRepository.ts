@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import { resolveAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
 
@@ -72,14 +73,16 @@ export async function provisionZitadelUser(input: {
   });
 
   const role = input.isEmployee ? "EMPLOYEE" : undefined;
-  const adminRole = input.isGlobalAdmin ? "SUPER_ADMIN" : null;
 
   if (existingBySubject) {
     return prisma.user.update({
       where: { id: existingBySubject.id },
       data: {
         email: input.email,
-        adminRole,
+        adminRole: resolveAdminRole(
+          input.isGlobalAdmin,
+          existingBySubject.adminRole
+        ),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -106,7 +109,10 @@ export async function provisionZitadelUser(input: {
       where: { id: existingByEmail.id },
       data: {
         zitadelUserId: input.zitadelUserId,
-        adminRole,
+        adminRole: resolveAdminRole(
+          input.isGlobalAdmin,
+          existingByEmail.adminRole
+        ),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -119,7 +125,7 @@ export async function provisionZitadelUser(input: {
       zitadelUserId: input.zitadelUserId,
       email: input.email,
       role: input.isEmployee ? "EMPLOYEE" : "STUDENT",
-      adminRole,
+      adminRole: resolveAdminRole(input.isGlobalAdmin, null),
       name: input.isGlobalAdmin ? input.name : undefined,
     },
     select: sessionSelect,
