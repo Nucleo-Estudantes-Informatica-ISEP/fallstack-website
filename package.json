@@ -51,7 +51,7 @@
     "react-loading-skeleton": "^3.5.0",
     "react-zxing": "^2.2.0",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.3",
+    "sharp": "^0.35.4",
     "typewriter-effect": "^2.22.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz#sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA==",
     "zod": "^4.4.3"
