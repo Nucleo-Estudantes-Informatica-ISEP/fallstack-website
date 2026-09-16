@@ -2,6 +2,11 @@ import "server-only";
 
 import { z } from "zod";
 
+const optionalNonEmptyString = z.preprocess(
+  (value) => (value === "" ? undefined : value),
+  z.string().min(1).optional()
+);
+
 // Secrets and server-only config. Supabase remains the Storage/Postgres
 // provider, but authentication is owned directly by ZITADEL/AuthNEI.
 const serverEnvSchema = z.object({
@@ -28,6 +33,12 @@ const serverEnvSchema = z.object({
   AUTH_POST_LOGOUT_REDIRECT_URI: z.string().url(),
   ZITADEL_ORG_ID: z.string().min(1),
   ZITADEL_ROLE_ASSIGNER_TOKEN: z.string().min(1),
+
+  // Optional at process level so non-Wallet environments still boot. The
+  // Wallet endpoint requires all three together and responds 503 otherwise.
+  GOOGLE_WALLET_ISSUER_ID: optionalNonEmptyString,
+  GOOGLE_WALLET_CLASS_ID: optionalNonEmptyString,
+  GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: optionalNonEmptyString,
 });
 
 type ServerEnv = z.infer<typeof serverEnvSchema>;
