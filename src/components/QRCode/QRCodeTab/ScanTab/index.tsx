@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { isStudentCode, normalizeStudentCode } from "@/domain/student/studentCode";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import { jwtStudent } from "@/application/services/studentTokenService";
 
 interface ScanTabProps {
   setHidden: React.Dispatch<React.SetStateAction<boolean>>;
@@ -37,6 +39,39 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
     setProcessing(false);
   }
 
+  async function saveAndOpenStudent(token: string) {
+    try {
+      await httpClient.post("/saved", { token });
+    } catch (error) {
+      if (error instanceof HttpClientError && error.status === 409) {
+        toast.warning("Este estudante já foi guardado anteriormente.");
+      } else {
+        toast.error(
+          error instanceof Error ? error.message : "Erro ao guardar perfil"
+        );
+      }
+      setProcessing(false);
+      return;
+    }
+
+    setHidden(true);
+    router.push(`/student/${token}/preview`);
+    setProcessing(false);
+  }
+
+  async function handleStudentCodeScan(data: string) {
+    const code = normalizeStudentCode(data);
+    const token = await jwtStudent(code);
+
+    if (!token) {
+      toast.error("O código de estudante deste passe é inválido.");
+      setProcessing(false);
+      return;
+    }
+
+    await saveAndOpenStudent(token);
+  }
+
   const handleScan = async (data: string) => {
     try {
       setProcessing(true);
@@ -51,28 +86,12 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      try {
-        await httpClient.post("/saved", { token: data });
-      } catch (error) {
-        if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
-        } else {
-          toast.error(
-            error instanceof Error ? error.message : "Erro ao guardar perfil"
-          );
-        }
-        setProcessing(false);
+      if (isStudentCode(data)) {
+        await handleStudentCodeScan(data);
         return;
       }
 
-      setHidden(true);
-      router.push(`/student/${data}/preview`);
-
-      /* it's dumb doing this for sure, but if i dont set a delay, on mobile, it wont let open the
-       camera again and the user will need to close and open the modal again so, this is a workaround
-       the user won't even feel the delay delay */
-
-      setProcessing(false);
+      await saveAndOpenStudent(data);
     } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
