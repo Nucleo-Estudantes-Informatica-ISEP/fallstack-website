@@ -57,6 +57,15 @@ test.describe("staging event flows across roles", () => {
       expect(studentSession.student).not.toBeNull();
       const code = studentSession.student!.code;
 
+      const initialHistoryResponse = await employee.get(
+        "/api/companies/history"
+      );
+      expect(initialHistoryResponse.status()).toBe(200);
+      const initialMatches = (
+        (await initialHistoryResponse.json()) as SavedStudentBody[]
+      ).filter((item) => item.student.code === code);
+      expect(initialMatches.length).toBeLessThanOrEqual(1);
+
       const qrResponse = await student.get("/api/qrcode");
       expect(qrResponse.status()).toBe(200);
       const { data: token } = (await qrResponse.json()) as { data: string };
@@ -64,7 +73,7 @@ test.describe("staging event flows across roles", () => {
       const firstScan = await employee.post("/api/saved", {
         data: { token, comment: marker },
       });
-      expect([201, 409]).toContain(firstScan.status());
+      expect(firstScan.status()).toBe(initialMatches.length ? 409 : 201);
 
       const historyResponse = await employee.get("/api/companies/history");
       expect(historyResponse.status()).toBe(200);
