@@ -104,18 +104,21 @@ the latency/error thresholds, or before scaling the app beyond one replica.
 
 ### Storage setup (Supabase hosted)
 
-Create two storage buckets:
-
-| Bucket  | Access  | Allowed MIME types        | Max file size |
-| ------- | ------- | ------------------------- | ------------- |
-| avatars | public  | `image/png`, `image/jpeg` | 5 MB          |
-| cvs     | private | `application/pdf`         | 10 MB         |
-
-After creating the buckets, run
-[`supabase/storage-bucket-limits.sql`](./supabase/storage-bucket-limits.sql)
+Run [`supabase/storage-bucket-limits.sql`](./supabase/storage-bucket-limits.sql)
 in the Supabase SQL editor for **every Supabase project** (including staging
-and production). It fails if either bucket is missing and configures the MIME
-and size restrictions without changing the bucket access policy.
+and production). It creates missing buckets and enforces these settings:
+
+| Bucket  | Access  | Allowed MIME types        | Max file size | App-managed path      |
+| ------- | ------- | ------------------------- | ------------- | --------------------- |
+| avatars | public  | `image/png`, `image/jpeg` | 5 MB          | `distribution/avatar` |
+| cvs     | private | `application/pdf`         | 10 MB         | `distribution/cv`     |
+| logos   | public  | `image/png`, `image/webp` | 5 MB          | `distribution/logo`   |
+
+Logo uploads are admin-only and use the dedicated `logos` bucket. Existing
+company and sponsor logo objects are not copied from `avatars`: after deploying
+this change, re-upload each current logo once through the admin backoffice.
+Saved records then point at the new public `logos` URL. Student avatars remain
+in `avatars` and need no migration.
 
 Student uploads use a short-lived signed upload URL, so file bytes go directly
 from browser to Storage rather than through the Next.js server. Browser file
