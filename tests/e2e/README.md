@@ -36,9 +36,12 @@ pnpm exec playwright codegen \
 
 Repeat this command for `.staging-employee.json`, `.staging-admin.json`, and
 `.staging-super-admin.json`, signing in as the matching synthetic account each
-time. The Employee account must belong to a synthetic company. Verify the Admin
-account resolves as `ADMIN`, not `SUPER_ADMIN`; the suite checks every supplied
-session through `/api/auth/session` before mutating data.
+time. The Employee account must belong to a synthetic company. Before capturing
+the Admin session, have a Super Admin create that synthetic account with the
+`ADMIN` tier in the staging backoffice, then apply its NEI Global admin grant.
+A freshly granted account without a preconfigured local tier defaults to
+`SUPER_ADMIN`, so it cannot stand in for this account. The suite checks every
+supplied session through `/api/auth/session` before mutating data.
 
 Repeat capture whenever a session expires. Delete all four files immediately
 after testing (`rm tests/e2e/.staging-*.json`; PowerShell:

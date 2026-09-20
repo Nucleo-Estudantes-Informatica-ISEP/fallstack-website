@@ -146,11 +146,14 @@ test.describe("staging event flows across roles", () => {
         totalCount: 1,
       });
     } finally {
-      if (faqId) {
-        const cleanup = await admin.delete(`/api/admin/faqs/${faqId}`);
-        expect(cleanup.status()).toBe(204);
+      try {
+        if (faqId) {
+          const cleanup = await admin.delete(`/api/admin/faqs/${faqId}`);
+          expect.soft(cleanup.status()).toBe(204);
+        }
+      } finally {
+        await admin.dispose();
       }
-      await admin.dispose();
     }
   });
 
