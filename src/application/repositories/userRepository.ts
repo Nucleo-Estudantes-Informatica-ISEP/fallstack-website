@@ -3,7 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
-import { resolveAdminRole } from "@/domain/auth/authPolicy";
+import { resolveStoredAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
 
@@ -75,14 +75,15 @@ export async function provisionZitadelUser(input: {
   const role = input.isEmployee ? "EMPLOYEE" : undefined;
 
   if (existingBySubject) {
+    const adminRole = resolveStoredAdminRole(
+      input.isGlobalAdmin,
+      existingBySubject.adminRole
+    );
     return prisma.user.update({
       where: { id: existingBySubject.id },
       data: {
         email: input.email,
-        adminRole: resolveAdminRole(
-          input.isGlobalAdmin,
-          existingBySubject.adminRole
-        ),
+        ...(adminRole ? { adminRole } : {}),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -105,14 +106,15 @@ export async function provisionZitadelUser(input: {
     )
       throw new Error("Email is already linked to another AuthNEI identity");
 
+    const adminRole = resolveStoredAdminRole(
+      input.isGlobalAdmin,
+      existingByEmail.adminRole
+    );
     return prisma.user.update({
       where: { id: existingByEmail.id },
       data: {
         zitadelUserId: input.zitadelUserId,
-        adminRole: resolveAdminRole(
-          input.isGlobalAdmin,
-          existingByEmail.adminRole
-        ),
+        ...(adminRole ? { adminRole } : {}),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -125,7 +127,7 @@ export async function provisionZitadelUser(input: {
       zitadelUserId: input.zitadelUserId,
       email: input.email,
       role: input.isEmployee ? "EMPLOYEE" : "STUDENT",
-      adminRole: resolveAdminRole(input.isGlobalAdmin, null),
+      adminRole: resolveStoredAdminRole(input.isGlobalAdmin, null) ?? null,
       name: input.isGlobalAdmin ? input.name : undefined,
     },
     select: sessionSelect,

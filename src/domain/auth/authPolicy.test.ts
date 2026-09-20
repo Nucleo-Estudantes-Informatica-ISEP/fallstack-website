@@ -5,6 +5,7 @@ import {
   AuthPolicySession,
   passesAuthPolicy,
   resolveAdminRole,
+  resolveStoredAdminRole,
 } from "./authPolicy";
 
 const studentSession: AuthPolicySession = {
@@ -92,6 +93,13 @@ test("global admin grant preserves configured tier and defaults new admins to Su
   assert.equal(resolveAdminRole(true, "SUPER_ADMIN"), "SUPER_ADMIN");
   assert.equal(resolveAdminRole(true, null), "SUPER_ADMIN");
   assert.equal(resolveAdminRole(false, "SUPER_ADMIN"), null);
+});
+
+test("grant-less provisioning leaves the configured admin tier untouched", () => {
+  assert.equal(resolveStoredAdminRole(false, "ADMIN"), undefined);
+  assert.equal(resolveStoredAdminRole(false, "SUPER_ADMIN"), undefined);
+  assert.equal(resolveStoredAdminRole(false, null), undefined);
+  assert.equal(resolveStoredAdminRole(true, null), "SUPER_ADMIN");
 });
 
 test("every non-public policy rejects a missing session", () => {
