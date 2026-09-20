@@ -69,22 +69,8 @@ function isAllowedLogoUrl(value: string): boolean {
   return patterns.some((pattern) => matchesRemotePattern(pattern, url));
 }
 
-// Logos may be an absolute URL into configured Storage (a freshly-uploaded
-// object) or an absolute path into public/ (the pre-existing static assets -
-// see the add_sponsor_table/company_display_fields migrations' backfills,
-// which reference them by path rather than re-uploading them). A
-// protocol-relative value ("//host/...") is rejected even though it starts
-// with "/" - browsers resolve it against the current page's protocol, so
-// it's effectively an unvalidated external URL, not a same-origin path.
-export const logoSchema = z
-  .string()
-  .max(2048)
-  .refine(
-    (value) =>
-      (value.startsWith("/") && !value.startsWith("//")) ||
-      isAllowedLogoUrl(value),
-    {
-      message:
-        'Must be an absolute path starting with "/" or a URL from configured storage',
-    }
-  );
+// Logos must come from configured remote Storage. Legacy public/ asset paths
+// are deliberately rejected now that company/sponsor logos use Storage only.
+export const logoSchema = z.string().max(2048).refine(isAllowedLogoUrl, {
+  message: "Must be a URL from configured storage",
+});

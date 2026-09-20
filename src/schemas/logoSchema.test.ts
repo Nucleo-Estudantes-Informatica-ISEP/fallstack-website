@@ -14,10 +14,10 @@ vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon-key");
 const { logoSchema } = await import("@/schemas/logoSchema");
 
 describe("logoSchema", () => {
-  it("accepts an absolute path into public/", () => {
+  it("rejects a legacy static logo path", () => {
     expect(
       logoSchema.safeParse("/assets/images/sponsors/redbull.png").success
-    ).toBe(true);
+    ).toBe(false);
   });
 
   it("rejects a protocol-relative value", () => {
