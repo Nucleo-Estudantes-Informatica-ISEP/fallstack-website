@@ -46,6 +46,7 @@ const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor }) => {
           kind: "image",
           title: "Logótipo",
           name: "logo",
+          uploadKind: "logo",
           currentUrl: sponsor?.logo ?? undefined,
         },
         {

@@ -62,6 +62,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
             kind: "image",
             title: "Foto de perfil",
             name: "avatar",
+            uploadKind: "avatar",
             currentUrl: student.avatar ?? undefined,
           },
         ] as AdminFormSection[])

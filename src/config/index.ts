@@ -20,6 +20,12 @@ const config = {
       maxSize: 5 * 1024 * 1024,
       rateLimit: { windowMs: 60 * 1000, max: 5 },
     },
+    logo: {
+      bucket: "logos",
+      pathPrefix: "distribution/logo",
+      types: ["image/png", "image/webp"],
+      maxSize: 5 * 1024 * 1024,
+    },
     cv: {
       types: ["application/pdf"],
       maxSize: 10 * 1024 * 1024,
