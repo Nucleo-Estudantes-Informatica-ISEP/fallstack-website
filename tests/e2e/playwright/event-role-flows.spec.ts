@@ -183,6 +183,7 @@ test.describe("staging event flows across roles", () => {
       expect((await student.get("/api/admin/faqs")).status()).toBe(403);
       expect((await employee.get("/api/qrcode")).status()).toBe(403);
       expect((await employee.get("/api/admin/faqs")).status()).toBe(403);
+      expect((await admin.get("/api/admin/faqs")).status()).toBe(200);
       expect((await admin.get("/api/admin/admins")).status()).toBe(403);
       expect((await superAdmin.get("/api/admin/faqs")).status()).toBe(200);
       expect((await superAdmin.get("/api/admin/admins")).status()).toBe(200);
