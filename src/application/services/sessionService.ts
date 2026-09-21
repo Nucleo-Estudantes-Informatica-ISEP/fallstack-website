@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 
 import config from "@/config";
 import { reportError } from "@/lib/logger";
+import { resolveAdminRole } from "@/domain/auth/authPolicy";
 
 import { findUserSessionByZitadelUserId } from "../repositories/userRepository";
 import { verifyAppSession } from "./zitadelAuthService";
@@ -20,10 +21,9 @@ const getServerSession = cache(async () => {
     const appUser = await findUserSessionByZitadelUserId(claims.sub);
     if (!appUser || !appUser.active) return null;
 
-    // ZITADEL is authoritative for privileged roles. The DB fields remain
-    // useful for domain/profile state, but stale local role data can never
-    // manufacture admin/employee authorization by itself.
-    const adminRole: "SUPER_ADMIN" | null = claims.admin ? "SUPER_ADMIN" : null;
+    // ZITADEL grant gates admin access; local tier only narrows that grant.
+    // Missing tier defaults existing global admins to Super Admin.
+    const adminRole = resolveAdminRole(claims.admin, appUser.adminRole);
     const employeeAllowed = claims.employee && !!appUser.employee;
 
     return {

@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import { resolveStoredAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
 
@@ -72,14 +73,17 @@ export async function provisionZitadelUser(input: {
   });
 
   const role = input.isEmployee ? "EMPLOYEE" : undefined;
-  const adminRole = input.isGlobalAdmin ? "SUPER_ADMIN" : null;
 
   if (existingBySubject) {
+    const adminRole = resolveStoredAdminRole(
+      input.isGlobalAdmin,
+      existingBySubject.adminRole
+    );
     return prisma.user.update({
       where: { id: existingBySubject.id },
       data: {
         email: input.email,
-        adminRole,
+        ...(adminRole ? { adminRole } : {}),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -102,11 +106,15 @@ export async function provisionZitadelUser(input: {
     )
       throw new Error("Email is already linked to another AuthNEI identity");
 
+    const adminRole = resolveStoredAdminRole(
+      input.isGlobalAdmin,
+      existingByEmail.adminRole
+    );
     return prisma.user.update({
       where: { id: existingByEmail.id },
       data: {
         zitadelUserId: input.zitadelUserId,
-        adminRole,
+        ...(adminRole ? { adminRole } : {}),
         ...(role ? { role } : {}),
         ...(input.isGlobalAdmin && input.name ? { name: input.name } : {}),
       },
@@ -119,7 +127,7 @@ export async function provisionZitadelUser(input: {
       zitadelUserId: input.zitadelUserId,
       email: input.email,
       role: input.isEmployee ? "EMPLOYEE" : "STUDENT",
-      adminRole,
+      adminRole: resolveStoredAdminRole(input.isGlobalAdmin, null) ?? null,
       name: input.isGlobalAdmin ? input.name : undefined,
     },
     select: sessionSelect,

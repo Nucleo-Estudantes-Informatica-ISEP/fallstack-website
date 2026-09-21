@@ -78,6 +78,48 @@ test("maps the NEI Global admin role to superadmin access", async () => {
   expect((await getServerSession())?.adminRole).toBe("SUPER_ADMIN");
 });
 
+test("preserves the configured Admin tier behind the NEI Global grant", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "admin-sub",
+    email: "admin@nei-isep.org",
+    employee: false,
+    admin: true,
+  });
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-admin",
+    zitadelUserId: "admin-sub",
+    email: "admin@nei-isep.org",
+    role: null,
+    adminRole: "ADMIN",
+    active: true,
+    student: null,
+    employee: null,
+  } as never);
+
+  expect((await getServerSession())?.adminRole).toBe("ADMIN");
+});
+
+test("does not trust a stale local admin tier without the NEI Global grant", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "former-admin-sub",
+    email: "former-admin@nei-isep.org",
+    employee: false,
+    admin: false,
+  });
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "app-admin",
+    zitadelUserId: "former-admin-sub",
+    email: "former-admin@nei-isep.org",
+    role: null,
+    adminRole: "SUPER_ADMIN",
+    active: true,
+    student: null,
+    employee: null,
+  } as never);
+
+  expect((await getServerSession())?.adminRole).toBeNull();
+});
+
 test("does not trust a stale local employee role without the ZITADEL role", async () => {
   vi.mocked(verifyAppSession).mockReturnValue({
     sub: "employee-sub",
