@@ -1,8 +1,14 @@
 # Google Wallet infrastructure
 
 This document covers the infrastructure/onboarding work tracked by issue #340.
-It intentionally does **not** implement the attendee-facing Wallet integration from
-#3.
+The attendee-facing Wallet integration tracked by #3 is implemented separately
+in PR #364.
+
+PR #363 (this infrastructure guide) must merge before PR #364. This keeps the
+operational prerequisites and secret-handling contract in `dev` before the
+application starts consuming them. The two work streams were developed in
+parallel; the order describes how they land, not whether implementation has
+started.
 
 The Fallstack Wallet pass is a **Generic Pass** used as another presentation
 surface for the existing attendee identifier. It is not an event ticket and the
@@ -10,7 +16,7 @@ Fallstack application remains the source of truth.
 
 ## What #340 must deliver
 
-Before #3 starts, the project needs:
+Before PR #364 is deployed, the project needs:
 
 - a Google Wallet API Issuer account owned by NEI-ISEP;
 - a Google Cloud project for the Wallet integration;
@@ -61,18 +67,18 @@ https://developers.google.com/wallet/generic/getting-started/issuer-onboarding
 Official credential documentation:
 https://developers.google.com/wallet/generic/getting-started/auth/rest
 
-When #3 is implemented, the intended server-only configuration contract is:
+PR #364 uses this server-only configuration contract:
 
-| Variable | Secret | Purpose |
-| --- | --- | --- |
-| `GOOGLE_WALLET_ISSUER_ID` | No | Google Wallet Issuer ID. |
-| `GOOGLE_WALLET_CLASS_ID` | No | Full Generic Class ID (`issuerId.suffix`) for that environment. |
+| Variable                                 | Secret  | Purpose                                                          |
+| ---------------------------------------- | ------- | ---------------------------------------------------------------- |
+| `GOOGLE_WALLET_ISSUER_ID`                | No      | Google Wallet Issuer ID.                                         |
+| `GOOGLE_WALLET_CLASS_ID`                 | No      | Full Generic Class ID (`issuerId.suffix`) for that environment.  |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64` | **Yes** | Base64-encoded service-account JSON, decoded only on the server. |
 
-These variables are documented now so infrastructure can be prepared before #3,
-but they should only be added to the application's validated runtime schema when
-#3 starts consuming them. Base64 is only a transport format; it does not make the
-credential non-secret.
+PR #364 adds these variables to the application's validated runtime schema. They
+must be configured in each environment before that application change is
+deployed. Base64 is only a transport format; it does not make the credential
+non-secret.
 
 ## 4. Create the Fallstack Generic Class
 
@@ -89,16 +95,16 @@ A class ID has the form `ISSUER_ID.SUFFIX`.
 
 The class should contain only shared Fallstack 2026 presentation data (brand,
 logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by #3.
+Generic Object created by the #3 implementation in PR #364.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create
 
 ## 5. Create a demo Generic Object
 
-Before #3 is implemented, create one demo object using Google's Generic Pass
-sample/codelab or REST API. Use a disposable object suffix, for example
-`fallstack-2026-demo-<timestamp>`.
+To validate the infrastructure independently of PR #364, create one demo object
+using Google's Generic Pass sample/codelab or REST API. Use a disposable object
+suffix, for example `fallstack-2026-demo-<timestamp>`.
 
 Minimum useful shape:
 
@@ -148,11 +154,9 @@ For the #340 demo only:
 6. Confirm the existing save/profile flow behaves the same as scanning the web
    QR.
 
-Do **not** treat that short-lived JWT as the final design for #3. A Wallet pass
-is persistent, so #3 must use a stable, revocable identification representation
-that the backend can safely resolve (or explicitly extend the scanner to accept
-the existing attendee code) instead of embedding a JWT that expires after 30
-minutes.
+Do **not** treat that short-lived JWT as the application design. A Wallet pass is
+persistent, so PR #364 uses the existing attendee code and extends the scanner
+to recognize it instead of embedding a JWT that expires after 30 minutes.
 
 ## 6. Add Wallet test users
 
@@ -182,29 +186,29 @@ Wallet users. Before requesting it:
 Official publishing documentation:
 https://developers.google.com/wallet/generic/test-and-go-live/request-publishing-access
 
-Do this early: approval is external to the Fallstack deployment process and #3
-should not be left waiting on basic issuer setup.
+Do this early: approval is external to the Fallstack deployment process and PR
+#364 must not be deployed while basic issuer setup is incomplete.
 
 ## 8. Environment and secret placement
 
-| Environment | Class | Credential location | Notes |
-| --- | --- | --- | --- |
-| Local/dev | Dedicated dev class | Local untracked `.env` | Use only test accounts; never commit the JSON key. |
-| Staging | Dedicated staging class | Coolify staging secrets | Main end-to-end validation target before release. |
-| Production | Production Fallstack 2026 class | Coolify production secrets | Only use after publishing access and final validation. |
+| Environment | Class                           | Credential location        | Notes                                                  |
+| ----------- | ------------------------------- | -------------------------- | ------------------------------------------------------ |
+| Local/dev   | Dedicated dev class             | Local untracked `.env`     | Use only test accounts; never commit the JSON key.     |
+| Staging     | Dedicated staging class         | Coolify staging secrets    | Main end-to-end validation target before release.      |
+| Production  | Production Fallstack 2026 class | Coolify production secrets | Only use after publishing access and final validation. |
 
 Prefer distinct service-account keys per hosted environment if operationally
 possible. Revoke/rotate keys that are no longer needed. Service-account material
 must remain server-side; no Wallet private key or service-account JSON may be
 exposed through `NEXT_PUBLIC_*` variables or sent to the browser.
 
-## Handoff to #3
+## Handoff to #3 / PR #364
 
 Issue #340 is complete when the external issuer/project/API/service-account
 setup exists, the demo Generic Pass works end-to-end, publishing access has been
 requested, and the concrete environment values/secret locations are recorded.
 
-Issue #3 then owns the application work:
+Issue #3 and PR #364 own the application work:
 
 - authenticated endpoint/service for a student's Wallet object;
 - ownership enforcement;
