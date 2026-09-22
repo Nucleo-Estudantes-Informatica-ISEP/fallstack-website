@@ -6,17 +6,22 @@ import { z } from "zod";
 import { HttpError } from "@/types/HttpError";
 import { clientEnv } from "@/config/env.client";
 import { serverEnv } from "@/config/env.server";
+import { edition } from "@/edition";
 
 const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
 const GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const WALLET_SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer";
+const ACCESS_TOKEN_REFRESH_SKEW_MS = 60 * 1000;
 
 const serviceAccountSchema = z.object({
   client_email: z.string().email(),
   private_key: z.string().min(1),
 });
 
-const oauthTokenSchema = z.object({ access_token: z.string().min(1) });
+const oauthTokenSchema = z.object({
+  access_token: z.string().min(1),
+  expires_in: z.number().positive(),
+});
 
 type WalletStudent = {
   id: string;
@@ -27,6 +32,16 @@ type WalletStudent = {
 type WalletCredentials = z.infer<typeof serviceAccountSchema>;
 
 type GenericObject = ReturnType<typeof buildGenericObject>;
+
+type CachedAccessToken = {
+  clientEmail: string;
+  value: string;
+  expiresAt: number;
+};
+
+let cachedAccessToken: CachedAccessToken | undefined;
+let accessTokenRequest:
+  { clientEmail: string; promise: Promise<string> } | undefined;
 
 function localized(value: string) {
   return {
@@ -46,11 +61,17 @@ function getWalletConfig() {
     throw new HttpError("Google Wallet is not configured", 503);
 
   if (!classId.startsWith(`${issuerId}.`))
-    throw new HttpError("Google Wallet class does not belong to this issuer", 503);
+    throw new HttpError(
+      "Google Wallet class does not belong to this issuer",
+      503
+    );
 
   let credentials: WalletCredentials;
   try {
-    const decoded = Buffer.from(encodedCredentials, "base64").toString("utf8");
+    const encoded = encodedCredentials.trim();
+    const decodedBuffer = Buffer.from(encoded, "base64");
+    if (decodedBuffer.toString("base64") !== encoded) throw new Error();
+    const decoded = decodedBuffer.toString("utf8");
     credentials = serviceAccountSchema.parse(JSON.parse(decoded));
   } catch {
     throw new HttpError("Google Wallet credentials are invalid", 503);
@@ -65,7 +86,7 @@ function getWalletConfig() {
 }
 
 export function buildGoogleWalletObjectId(issuerId: string, studentId: string) {
-  return `${issuerId}.fallstack-2026-${studentId}`;
+  return `${issuerId}.${edition.branding.wallet.objectIdPrefix}-${studentId}`;
 }
 
 function buildGenericObject(
@@ -77,7 +98,7 @@ function buildGenericObject(
     id: buildGoogleWalletObjectId(issuerId, student.id),
     classId,
     state: "ACTIVE" as const,
-    cardTitle: localized("Fallstack 2026"),
+    cardTitle: localized(edition.branding.wallet.cardTitle),
     subheader: localized(`Código ${student.code}`),
     header: localized(student.name),
     barcode: {
@@ -88,7 +109,7 @@ function buildGenericObject(
   };
 }
 
-async function getAccessToken(credentials: WalletCredentials) {
+async function requestAccessToken(credentials: WalletCredentials) {
   const issuedAt = Math.floor(Date.now() / 1000);
   const assertion = jwt.sign(
     {
@@ -116,9 +137,44 @@ async function getAccessToken(credentials: WalletCredentials) {
 
   const parsed = oauthTokenSchema.safeParse(await response.json());
   if (!parsed.success)
-    throw new HttpError("Google Wallet returned an invalid OAuth response", 502);
+    throw new HttpError(
+      "Google Wallet returned an invalid OAuth response",
+      502
+    );
 
-  return parsed.data.access_token;
+  return parsed.data;
+}
+
+async function getAccessToken(credentials: WalletCredentials) {
+  const now = Date.now();
+  if (
+    cachedAccessToken?.clientEmail === credentials.client_email &&
+    cachedAccessToken.expiresAt - ACCESS_TOKEN_REFRESH_SKEW_MS > now
+  )
+    return cachedAccessToken.value;
+
+  if (accessTokenRequest?.clientEmail === credentials.client_email)
+    return accessTokenRequest.promise;
+
+  const promise = requestAccessToken(credentials)
+    .then(({ access_token, expires_in }) => {
+      cachedAccessToken = {
+        clientEmail: credentials.client_email,
+        value: access_token,
+        expiresAt: Date.now() + expires_in * 1000,
+      };
+      return access_token;
+    })
+    .finally(() => {
+      if (accessTokenRequest?.promise === promise)
+        accessTokenRequest = undefined;
+    });
+
+  accessTokenRequest = {
+    clientEmail: credentials.client_email,
+    promise,
+  };
+  return promise;
 }
 
 function walletHeaders(accessToken: string) {
@@ -128,10 +184,7 @@ function walletHeaders(accessToken: string) {
   };
 }
 
-async function patchGenericObject(
-  object: GenericObject,
-  accessToken: string
-) {
+async function patchGenericObject(object: GenericObject, accessToken: string) {
   const { id: _id, classId: _classId, ...mutableFields } = object;
   const response = await fetch(
     `${WALLET_API_BASE}/genericObject/${encodeURIComponent(object.id)}`,
