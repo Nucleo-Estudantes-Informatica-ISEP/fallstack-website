@@ -1,10 +1,16 @@
 import { randomInt } from "crypto";
 
+import {
+  STUDENT_CODE_CHARACTERS,
+  STUDENT_CODE_LENGTH,
+} from "@/domain/student/studentCode";
+
 export default function generateRandomCode() {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let code = "";
-  for (let i = 0; i < 4; i++) {
-    code += characters.charAt(randomInt(characters.length));
+  for (let i = 0; i < STUDENT_CODE_LENGTH; i++) {
+    code += STUDENT_CODE_CHARACTERS.charAt(
+      randomInt(STUDENT_CODE_CHARACTERS.length)
+    );
   }
   return code;
 }

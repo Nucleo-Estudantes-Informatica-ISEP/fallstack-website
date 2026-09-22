@@ -1,9 +1,16 @@
-const STUDENT_CODE_PATTERN = /^[A-Z0-9]{4}$/;
+export const STUDENT_CODE_CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+export const STUDENT_CODE_LENGTH = 4;
 
 export function normalizeStudentCode(value: string) {
   return value.trim().toUpperCase();
 }
 
 export function isStudentCode(value: string) {
-  return STUDENT_CODE_PATTERN.test(normalizeStudentCode(value));
+  const normalized = normalizeStudentCode(value);
+  return (
+    normalized.length === STUDENT_CODE_LENGTH &&
+    [...normalized].every((character) =>
+      STUDENT_CODE_CHARACTERS.includes(character)
+    )
+  );
 }
