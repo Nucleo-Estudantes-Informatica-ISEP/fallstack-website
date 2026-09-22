@@ -9,7 +9,7 @@ import { useMutation } from "@/hooks/useMutation";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
-import { jwtStudent } from "@/application/services/studentTokenService";
+import { getStudentPreviewToken } from "@/client/api/studentToken";
 
 interface CompanySavedProfilesSectionProps {
   history: SavedStudentDto[];
@@ -89,7 +89,7 @@ const CompanySavedProfilesSection = ({
       }
 
       const code = inputRef.current?.value;
-      const token = await jwtStudent(code);
+      const token = await getStudentPreviewToken(code);
 
       if (!token) {
         toast.error("O código introduzido é inválido.");

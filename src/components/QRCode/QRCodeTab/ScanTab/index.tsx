@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
-import { isStudentCode, normalizeStudentCode } from "@/domain/student/studentCode";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
-import { jwtStudent } from "@/application/services/studentTokenService";
+import { getStudentPreviewToken } from "@/client/api/studentToken";
+import {
+  isStudentCode,
+  normalizeStudentCode,
+} from "@/domain/student/studentCode";
 
 interface ScanTabProps {
   setHidden: React.Dispatch<React.SetStateAction<boolean>>;
@@ -61,7 +64,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
 
   async function handleStudentCodeScan(data: string) {
     const code = normalizeStudentCode(data);
-    const token = await jwtStudent(code);
+    const token = await getStudentPreviewToken(code);
 
     if (!token) {
       toast.error("O código de estudante deste passe é inválido.");

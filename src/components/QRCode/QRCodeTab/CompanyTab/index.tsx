@@ -9,7 +9,7 @@ import { httpClient, HttpClientError } from "@/lib/http/client";
 import useIsMobile from "@/hooks/useIsMobile";
 import { useMutation } from "@/hooks/useMutation";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
-import { jwtStudent } from "@/application/services/studentTokenService";
+import { getStudentPreviewToken } from "@/client/api/studentToken";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
@@ -36,7 +36,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
       }
 
       const code = inputRef.current?.value;
-      const token = await jwtStudent(code);
+      const token = await getStudentPreviewToken(code);
 
       if (!token) {
         toast.error("O código introduzido é inválido.");
