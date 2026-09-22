@@ -1,4 +1,4 @@
-"client-only";
+import "client-only";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 
