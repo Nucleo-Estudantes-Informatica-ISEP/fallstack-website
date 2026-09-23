@@ -23,9 +23,6 @@ import {
 } from "./authApplicationService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
-}));
 vi.mock("../repositories/adminRepository", () => ({
   countActiveSuperAdmins: vi.fn(),
   createAdminUser: vi.fn(),

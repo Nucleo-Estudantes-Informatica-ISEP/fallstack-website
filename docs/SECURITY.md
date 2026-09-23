@@ -30,7 +30,7 @@
 
 - This document centralizes the project's security practices, controls, and reporting processes.
 - The current CSP is intentionally restrictive and is always emitted as `Content-Security-Policy-Report-Only` so the app can surface violations without blocking the live experience during tuning.
-- Authentication and session identity are provided by the institutional OIDC provider (ZITADEL / AuthNEI) and reconciled into the application session via the project's Zitadel/OIDC integration (`getServerSession` / `zitadelAuthService`). Supabase is used for PostgreSQL and Storage only — it is not the session identity provider.
+- Authentication and session identity are provided by the institutional OIDC provider (ZITADEL / AuthNEI) and reconciled into the application session via the project's Zitadel/OIDC integration (`getServerSession` / `zitadelAuthService`). Shared PostgreSQL and MinIO provide application data and files.
 - The project uses a layered approach: Zod validation, Prisma query building, server-side session checks, strict cookies, and a narrow CSP. No single control replaces the others.
 
 ## 3. Security Controls
@@ -128,8 +128,8 @@ Current policy is intentionally minimal and explicit:
 - `default-src 'self'` — only same-origin resources by default.
 - `script-src 'self'` — JavaScript may only come from the current origin.
 - `style-src 'self' 'unsafe-inline' https://rsms.me` — same-origin CSS plus the Inter font stylesheet origin.
-- `img-src 'self' data: blob: <supabase-origin>` — local images, inline data URIs, blobs, and Supabase storage are allowed.
-- `connect-src 'self' <supabase-origin> <sentry-origin>` — API calls and telemetry are restricted to the app, Supabase, and Sentry.
+- `img-src 'self' data: blob:` — same-origin images, inline data URIs, and blobs.
+- `connect-src 'self' <sentry-origin>` — app API calls and Sentry telemetry.
 - `font-src 'self' https://rsms.me` — only local fonts and the specific font host.
 - `object-src 'none'` — disables plugin/object execution.
 - `base-uri 'self'` — prevents changing the document base URL to an attacker-controlled origin.
@@ -144,7 +144,6 @@ The following table reflects the current explicit origins defined in `src/securi
 | Origin / source                 | Used in directive(s)     | Why it is allowed                                                              | Why this is safe                                                                   |
 | ------------------------------- | ------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | `'self'`                        | all relevant directives  | Same-origin app assets and endpoints                                           | Keeps the application within its own domain unless explicitly approved             |
-| `NEXT_PUBLIC_SUPABASE_URL`      | `img-src`, `connect-src` | Supabase storage and API access for avatars, files, and authenticated requests | This is a single, known backend dependency; it is not a generic wildcard           |
 | `NEXT_PUBLIC_SENTRY_DSN` origin | `connect-src`            | Browser crash/telemetry reporting to Sentry                                    | Only the exact Sentry origin is allowed; no arbitrary remote endpoint is permitted |
 | `https://rsms.me`               | `style-src`, `font-src`  | Inter font stylesheet and font files                                           | Required only for typography; no script execution is allowed from this host        |
 | `https://www.youtube.com`       | `frame-src`              | Embedded YouTube videos in public/company content                              | The application allows a specific embed target instead of arbitrary iframe content |
@@ -163,7 +162,6 @@ Policy source handling: when adding a new external source, do it explicitly and 
 
 For example, a new source would be added in the `sources` object and then only whitelisted in the specific directive that needs it:
 
-- `supabase` is allowed only in `img-src` and `connect-src` because the app uses it for storage and API access.
 - `youtube` is allowed only in `frame-src` because the app embeds YouTube content.
 - `rsms` is allowed only in `style-src` and `font-src` because the app loads the Inter font from that provider.
 
@@ -213,7 +211,7 @@ These headers reduce the risk of MIME confusion, framing abuse, information leak
 ### Authentication and Authorization
 
 - Session identity: the app relies on an external OIDC provider (ZITADEL/AuthNEI) for user authentication. The OIDC flow is handled by the application's Zitadel integration and reconciled to an application session object (see `src/application/services/sessionService.ts` and `src/application/services/zitadelAuthService.ts`).
-- Supabase is used as the application's PostgreSQL host and object storage provider only; it is not the authentication/session provider.
+- Shared PostgreSQL and MinIO provide application data and files; AuthNEI/ZITADEL provides authentication.
 - Short-lived JWTs are used for QR/action tokens and preview flows.
 - Authorization is enforced server-side, not only on the client.
 - The route layer uses auth strategies and explicit validation before running business logic.
