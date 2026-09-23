@@ -12,7 +12,7 @@ import {
 
 import { serverEnv } from "@/config/env.server";
 
-export type StorageBucket = "avatar" | "cv";
+export type StorageBucket = "avatar" | "logo" | "cv";
 
 let client: S3Client;
 function storageClient() {
@@ -30,14 +30,21 @@ function storageClient() {
 function bucket(kind: StorageBucket) {
   return kind === "avatar"
     ? serverEnv.S3_BUCKET_AVATARS
-    : serverEnv.S3_BUCKET_CVS;
+    : kind === "logo"
+      ? serverEnv.S3_BUCKET_LOGOS
+      : serverEnv.S3_BUCKET_CVS;
 }
 
 export const avatarKey = (id: string) => `distribution/avatar/${id}`;
+export const logoKey = (id: string) => `distribution/logo/${id}`;
 export const cvKey = (id: string) => `distribution/cv/${id}.pdf`;
 
 export function publicAvatarUrl(id: string) {
   return `/api/media/avatar/${id}`;
+}
+
+export function publicLogoUrl(id: string) {
+  return `/api/media/logo/${id}`;
 }
 
 export async function putObject(

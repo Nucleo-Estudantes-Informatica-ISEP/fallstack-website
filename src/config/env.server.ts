@@ -15,6 +15,7 @@ const serverEnvSchema = z.object({
   S3_ACCESS_KEY_ID: z.string().min(1),
   S3_SECRET_ACCESS_KEY: z.string().min(1),
   S3_BUCKET_AVATARS: z.string().min(1),
+  S3_BUCKET_LOGOS: z.string().min(1),
   S3_BUCKET_CVS: z.string().min(1),
 
   AUTH_ISSUER_URL: z.string().url(),

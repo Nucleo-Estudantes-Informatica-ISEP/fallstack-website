@@ -12,6 +12,11 @@ describe("logoSchema", () => {
         "/api/media/avatar/00000000-0000-0000-0000-000000000000"
       ).success
     ).toBe(true);
+    expect(
+      logoSchema.safeParse(
+        "/api/media/logo/00000000-0000-0000-0000-000000000000"
+      ).success
+    ).toBe(true);
   });
 
   it("rejects protocol-relative and retired storage URLs", () => {

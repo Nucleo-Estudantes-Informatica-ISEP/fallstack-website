@@ -11,6 +11,7 @@ const testEnv = {
   S3_ACCESS_KEY_ID: "test-access-key",
   S3_SECRET_ACCESS_KEY: "test-secret-key",
   S3_BUCKET_AVATARS: "test-avatars",
+  S3_BUCKET_LOGOS: "test-logos",
   S3_BUCKET_CVS: "test-cvs",
   AUTH_ISSUER_URL: "https://auth.example.test",
   AUTH_PROJECT_ID: "test-project",

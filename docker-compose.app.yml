@@ -39,6 +39,7 @@ services:
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure S3_ACCESS_KEY_ID in Coolify}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure S3_SECRET_ACCESS_KEY in Coolify}
       S3_BUCKET_AVATARS: ${S3_BUCKET_AVATARS:?Configure S3_BUCKET_AVATARS in Coolify}
+      S3_BUCKET_LOGOS: ${S3_BUCKET_LOGOS:?Configure S3_BUCKET_LOGOS in Coolify}
       S3_BUCKET_CVS: ${S3_BUCKET_CVS:?Configure S3_BUCKET_CVS in Coolify}
 
       # Direct AuthNEI/ZITADEL OIDC. Only values that identify this concrete

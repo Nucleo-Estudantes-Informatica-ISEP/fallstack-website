@@ -61,7 +61,7 @@ cp .env.example .env
 Set `DATABASE_URL` for the runtime PostgreSQL identity and `DIRECT_URL` for the
 migration identity. Both require the environment's `?schema=fallstack` on
 shared services. Set `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
-`S3_BUCKET_AVATARS`, `S3_BUCKET_CVS`, and the AuthNEI/ZITADEL and JWT values
+`S3_BUCKET_AVATARS`, `S3_BUCKET_LOGOS`, `S3_BUCKET_CVS`, and the AuthNEI/ZITADEL and JWT values
 listed in [`.env.example`](./.env.example). `NEXT_PUBLIC_BASE_URL` defaults to
 `http://localhost:3000/api` during local development. For local storage, use
 an isolated MinIO instance and the same bucket names or environment-specific
@@ -82,7 +82,7 @@ staging upload objects created during verification.
 ### Storage and retention
 
 Avatars and logos uploaded by admins are public through same-origin
-`/api/media/avatar/<id>`. CVs remain private; download routes recheck the
+`/api/media/avatar/<id>` and `/api/media/logo/<id>`. CVs remain private; download routes recheck the
 student/company/admin policy on every request. S3 credentials stay server-side.
 Legacy [`supabase/`](./supabase/) SQL and bucket policies belong only to
 pre-cutover source stacks and must not be copied into shared PostgreSQL or
@@ -118,7 +118,7 @@ http://localhost:3000
 # Local data services
 
 Run PostgreSQL and MinIO locally or connect to dedicated development services.
-Create the two environment buckets and use scoped credentials. The deployed
+Create the three environment buckets and use scoped credentials. The deployed
 Coolify Compose file is [`docker-compose.app.yml`](./docker-compose.app.yml)
 and expects the shared external network; it is not a local database service
 Compose file. See [`docs/SHARED_DATA.md`](./docs/SHARED_DATA.md).

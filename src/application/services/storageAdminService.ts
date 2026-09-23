@@ -7,6 +7,7 @@ import {
   getObject,
   listObjects,
   publicAvatarUrl,
+  publicLogoUrl,
   type StorageBucket,
 } from "./objectStorageService";
 
@@ -19,7 +20,11 @@ export interface StorageObjectDto {
 }
 
 export type StorageBucketType = StorageBucket;
-const PREFIX = { avatar: "distribution/avatar", cv: "distribution/cv" };
+const PREFIX = {
+  avatar: "distribution/avatar",
+  logo: "distribution/logo",
+  cv: "distribution/cv",
+};
 const SAFE_OBJECT_NAME = /^[a-zA-Z0-9_.-]+$/;
 
 function key(type: StorageBucketType, name: string) {
@@ -53,7 +58,9 @@ export async function listStorageObjects(
         url:
           type === "avatar"
             ? publicAvatarUrl(name)
-            : `/api/admin/storage/cv/${encodeURIComponent(name)}`,
+            : type === "logo"
+              ? publicLogoUrl(name)
+              : `/api/admin/storage/cv/${encodeURIComponent(name)}`,
       };
     });
   return { items, totalCount: files.length };

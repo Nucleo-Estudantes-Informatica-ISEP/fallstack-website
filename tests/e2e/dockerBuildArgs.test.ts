@@ -167,6 +167,7 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
     "S3_ACCESS_KEY_ID",
     "S3_SECRET_ACCESS_KEY",
     "S3_BUCKET_AVATARS",
+    "S3_BUCKET_LOGOS",
     "S3_BUCKET_CVS",
   ]) {
     expectRequiredComposeVariable(webEnvironment, name);

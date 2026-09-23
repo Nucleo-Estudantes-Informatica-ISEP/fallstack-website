@@ -9,7 +9,7 @@ import {
 } from "@/application/services/storageAdminService";
 
 function storageType(value: string): StorageBucketType {
-  if (value !== "avatar" && value !== "cv")
+  if (value !== "avatar" && value !== "logo" && value !== "cv")
     throw new HttpError("Invalid storage type", 400);
   return value;
 }

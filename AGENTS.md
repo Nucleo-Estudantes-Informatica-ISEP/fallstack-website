@@ -42,7 +42,7 @@ For every requested task:
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
 | Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)     |
 | Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
-| Storage         | Shared MinIO (avatars via public app route; CVs private) |
+| Storage         | Shared MinIO (avatars/logos via public app route; CVs private) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |
 | Package manager | pnpm (see `packageManager` in `package.json`)                  |
 | Deploy          | Docker → Coolify                                               |

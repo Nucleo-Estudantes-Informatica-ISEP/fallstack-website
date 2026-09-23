@@ -10,7 +10,9 @@ import { createRateLimiter } from "@/lib/rateLimit";
 import {
   avatarKey,
   cvKey,
+  logoKey,
   publicAvatarUrl,
+  publicLogoUrl,
   putObject,
   type StorageBucket,
 } from "./objectStorageService";
@@ -20,8 +22,10 @@ const limiters = {
   cv: createRateLimiter(config.uploads.cv.rateLimit),
 };
 
-export const checkUploadRateLimit = (kind: StorageBucket, studentId: string) =>
-  limiters[kind].check(studentId);
+export const checkUploadRateLimit = (
+  kind: "avatar" | "cv",
+  studentId: string
+) => limiters[kind].check(studentId);
 
 export async function readUploadFile(request: Request, kind: StorageBucket) {
   const maxBodySize = config.uploads[kind].maxSize + 16 * 1024;
@@ -70,9 +74,17 @@ export async function uploadFile(kind: StorageBucket, file: File) {
   const id = uuidv4();
   await putObject(
     kind,
-    kind === "avatar" ? avatarKey(id) : cvKey(id),
+    kind === "avatar"
+      ? avatarKey(id)
+      : kind === "logo"
+        ? logoKey(id)
+        : cvKey(id),
     bytes,
     file.type
   );
-  return kind === "avatar" ? { id, url: publicAvatarUrl(id) } : { id };
+  return kind === "avatar"
+    ? { id, url: publicAvatarUrl(id) }
+    : kind === "logo"
+      ? { id, url: publicLogoUrl(id) }
+      : { id };
 }
