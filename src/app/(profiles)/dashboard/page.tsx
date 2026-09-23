@@ -1,10 +1,12 @@
+import { headers } from "next/headers";
+
 import { HttpError } from "@/types/HttpError";
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
 import { toCompanyDto } from "@/application/dto/companyDto";
 import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { toInterestDto } from "@/application/dto/interestDto";
-import { getCompanyInterests } from "@/application/services/companyService";
+import { getCompanyInterestIds } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
 import {
   getCompanyHistory,
@@ -12,17 +14,27 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudents } from "@/application/services/studentService";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
-const Dashboard = async () => {
+interface DashboardProps {
+  searchParams: Promise<{ lang?: string | string[] }>;
+}
+
+const Dashboard = async ({ searchParams }: DashboardProps) => {
   const session = await getServerSession();
   if (!session || !session.employee?.company) return Custom404();
+  const { lang } = await searchParams;
+  const language = resolveRequestLanguage(
+    lang,
+    (await headers()).get("accept-language")
+  );
 
-  const [globalStats, students, history, companyInterests, interests] =
+  const [globalStats, students, history, companyInterestIds, interests] =
     await Promise.all([
       getCompanyStats(session.employee.company.id),
       getStudents(),
       getCompanyHistory(session.employee.company.id),
-      getCompanyInterests(session.employee.company.id),
+      getCompanyInterestIds(session.employee.company.id),
       getInterests(),
     ]);
 
@@ -38,8 +50,10 @@ const Dashboard = async () => {
         history={
           history instanceof HttpError ? [] : history.map(toSavedStudentDto)
         }
-        interests={companyInterests}
-        availableInterests={interests.map(toInterestDto)}
+        interestIds={companyInterestIds}
+        availableInterests={interests.map((interest) =>
+          toInterestDto(interest, language)
+        )}
       />
     </section>
   );

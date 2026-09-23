@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toScheduleEventDto } from "@/application/dto/scheduleDto";
+import { toAdminScheduleEventDto } from "@/application/dto/scheduleDto";
 import {
   createScheduleEventForAdmin,
   listScheduleEventsForAdmin,
@@ -20,7 +20,7 @@ export const GET = defineHandler({
       search: params.get("q") ?? undefined,
     });
     return NextResponse.json({
-      items: items.map(toScheduleEventDto),
+      items: items.map(toAdminScheduleEventDto),
       totalCount,
     });
   },
@@ -31,6 +31,6 @@ export const POST = defineHandler({
   schema: createAdminScheduleSchema,
   handler: async ({ body }) => {
     const event = await createScheduleEventForAdmin(body);
-    return NextResponse.json(toScheduleEventDto(event), { status: 201 });
+    return NextResponse.json(toAdminScheduleEventDto(event), { status: 201 });
   },
 });

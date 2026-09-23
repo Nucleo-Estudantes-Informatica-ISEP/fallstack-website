@@ -78,6 +78,7 @@ export async function updateAdminAccount(
   }
 ) {
   const { password: _password, active, ...fields } = input;
+  void _password;
   if (fields.adminRole === "ADMIN" || active === false)
     await assertNotLastActiveSuperAdmin(await findAdminAccountById(id));
 

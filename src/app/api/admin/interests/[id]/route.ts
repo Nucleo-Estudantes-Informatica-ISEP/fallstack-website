@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
+import { toAdminInterestDto } from "@/application/dto/interestDto";
 import {
   deleteInterestForAdmin,
   updateInterestForAdmin,
@@ -19,7 +20,7 @@ export const PATCH = defineHandler<
   schema: updateAdminInterestSchema,
   handler: async ({ params, body }) => {
     const interest = await updateInterestForAdmin(params.id, body.name);
-    return NextResponse.json(interest);
+    return NextResponse.json(toAdminInterestDto(interest));
   },
 });
 

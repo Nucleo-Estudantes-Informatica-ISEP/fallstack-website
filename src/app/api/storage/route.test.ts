@@ -1,144 +1,96 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
+import { HttpError } from "@/types/HttpError";
 import getServerSession from "@/application/services/sessionService";
+import {
+  checkUploadRateLimit,
+  readUploadFile,
+  uploadFile,
+} from "@/application/services/uploadService";
 
 import { POST as avatarPost } from "./avatar/route";
 import { POST as cvPost } from "./cv/route";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/application/services/sessionService", () => ({
-  default: vi.fn(),
-}));
-const { createSignedUploadUrl } = vi.hoisted(() => ({
-  createSignedUploadUrl: vi.fn(),
-}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(() => ({
-    storage: { from: vi.fn(() => ({ createSignedUploadUrl })) },
-  })),
+vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
+vi.mock("@/application/services/uploadService", () => ({
+  checkUploadRateLimit: vi.fn(),
+  readUploadFile: vi.fn(),
+  uploadFile: vi.fn(),
 }));
 
-function studentSession(id: string) {
-  return {
-    id,
-    zitadelUserId: `zitadel-${id}`,
-    email: `${id}@isep.ipp.pt`,
-    role: "STUDENT",
-    adminRole: null,
-    student: { id, code: "S123", name: "Student" },
-    employee: null,
-    active: true,
-  } as Awaited<ReturnType<typeof getServerSession>>;
-}
+const student = {
+  id: "signup-student",
+  role: "STUDENT",
+  student: null,
+  employee: null,
+  adminRole: null,
+} as Awaited<ReturnType<typeof getServerSession>>;
 
-const routeCases = [
+describe.each([
   {
     name: "avatar",
     post: avatarPost,
     url: "http://localhost/api/storage/avatar",
-    contentType: "image/png",
-    storagePath: "distribution/avatar/id",
-    pathPattern: /^distribution\/avatar\//,
   },
-  {
-    name: "CV",
-    post: cvPost,
-    url: "http://localhost/api/storage/cv",
-    contentType: "application/pdf",
-    storagePath: "distribution/cv/id.pdf",
-    pathPattern: /^distribution\/cv\/.+\.pdf$/,
-  },
-] as const;
-
-describe.each(routeCases)("$name upload ticket route", (routeCase) => {
-  function request() {
-    return new NextRequest(routeCase.url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        contentType: routeCase.contentType,
-        size: 1024,
-      }),
-    });
+  { name: "cv", post: cvPost, url: "http://localhost/api/storage/cv" },
+] as const)("$name upload", ({ name, post, url }) => {
+  function request(withFile = true) {
+    const form = new FormData();
+    if (withFile)
+      form.append("file", new File(["bytes"], "file", { type: "image/png" }));
+    return new NextRequest(url, { method: "POST", body: form });
   }
 
-  const post = () => routeCase.post(request(), { params: Promise.resolve({}) });
+  const send = (withFile = true) =>
+    post(request(withFile), { params: Promise.resolve({}) });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(getServerSession).mockResolvedValue(student);
+    vi.mocked(checkUploadRateLimit).mockReturnValue({
+      allowed: true,
+      retryAfterMs: 0,
+    });
+    vi.mocked(readUploadFile).mockResolvedValue(
+      new File(["bytes"], "file", { type: "image/png" })
+    );
+    vi.mocked(uploadFile).mockResolvedValue({
+      id: "file-id",
+      url: "/media/avatar/file-id",
+    });
   });
 
-  test("rejects an unauthenticated upload with 401", async () => {
+  test("rejects unauthenticated upload", async () => {
     vi.mocked(getServerSession).mockResolvedValue(null);
-
-    const res = await post();
-
-    expect(res.status).toBe(401);
-    expect(await res.json()).toEqual({ error: "Unauthorized" });
+    expect((await send()).status).toBe(401);
   });
 
-  test("allows a student-role session before its profile is created", async () => {
-    createSignedUploadUrl.mockResolvedValue({
-      data: { token: "signed-token", path: routeCase.storagePath },
-      error: null,
-    });
-    vi.mocked(getServerSession).mockResolvedValue({
-      id: "student-signup",
-      zitadelUserId: "zitadel-student-signup",
-      email: "student-signup@isep.ipp.pt",
-      role: "STUDENT",
-      adminRole: null,
-      student: null,
-      employee: null,
-      active: true,
-    });
-
-    const res = await post();
-
-    expect(res.status).toBe(201);
+  test("accepts student account before profile exists", async () => {
+    const response = await send();
+    expect(response.status).toBe(201);
+    expect(uploadFile).toHaveBeenCalledWith(
+      name,
+      expect.objectContaining({ size: 5, type: "image/png" })
+    );
   });
 
-  test("limits one student without blocking another on same event Wi-Fi", async () => {
-    createSignedUploadUrl.mockResolvedValue({
-      data: { token: "signed-token", path: routeCase.storagePath },
-      error: null,
-    });
-    vi.mocked(getServerSession).mockResolvedValue(
-      studentSession("student-three")
+  test("rejects missing file", async () => {
+    vi.mocked(readUploadFile).mockRejectedValue(
+      new HttpError("Missing file", 400)
     );
-
-    for (let i = 0; i < 5; i++) {
-      const res = await post();
-      expect(res.status).toBe(201);
-    }
-
-    const blocked = await post();
-    expect(blocked.status).toBe(429);
-    expect(Number(blocked.headers.get("Retry-After"))).toBeGreaterThan(0);
-
-    vi.mocked(getServerSession).mockResolvedValue(
-      studentSession("student-two")
-    );
-    const allowed = await post();
-    expect(allowed.status).toBe(201);
+    expect((await send(false)).status).toBe(400);
   });
 
-  test("returns a ticket without receiving file bytes", async () => {
-    createSignedUploadUrl.mockResolvedValue({
-      data: { token: "signed-token", path: routeCase.storagePath },
-      error: null,
+  test("returns retry delay on rate limit", async () => {
+    vi.mocked(checkUploadRateLimit).mockReturnValue({
+      allowed: false,
+      retryAfterMs: 1500,
     });
-    vi.mocked(getServerSession).mockResolvedValue(
-      studentSession("student-one")
-    );
-
-    const res = await post();
-    expect(res.status).toBe(201);
-    expect(await res.json()).toEqual({
-      id: expect.any(String),
-      path: expect.stringMatching(routeCase.pathPattern),
-      token: "signed-token",
-    });
+    const response = await send();
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("2");
+    expect(uploadFile).not.toHaveBeenCalled();
   });
 });

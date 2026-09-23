@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 
 import InterestForm from "@/components/InterestForm";
-import { toInterestDto } from "@/application/dto/interestDto";
+import { toAdminInterestDto } from "@/application/dto/interestDto";
 import { getInterest } from "@/application/services/interestService";
 
 interface EditInterestPageProps {
@@ -16,7 +16,7 @@ const EditInterestPage = async ({ params }: EditInterestPageProps) => {
   return (
     <section className="flex flex-col gap-6 p-8">
       <h1 className="text-2xl font-bold text-gray-800">Editar interesse</h1>
-      <InterestForm interest={toInterestDto(interest)} />
+      <InterestForm interest={toAdminInterestDto(interest)} />
     </section>
   );
 };

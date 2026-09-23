@@ -20,28 +20,16 @@ The event takes place at ISEP (Instituto Superior de Engenharia do Porto). Each 
 
 ## Tech stack
 
-Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, and Supabase (Auth + Storage). See [`AGENTS.md`](./AGENTS.md)'s Stack table for the full, authoritative list.
+Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, MinIO and
+ZITADEL/AuthNEI. See [`AGENTS.md`](./AGENTS.md) for architecture and
+[`docs/SHARED_DATA.md`](./docs/SHARED_DATA.md) for deployment.
 
 ### Authentication
 
-All authentication, including password recovery and password updates, goes
-through Supabase Auth. Application tables must not store passwords or password
-reset tokens, and application routes must not provide separate password-change
-flows.
-
-#### Account deletion
-
-`auth.users.id` and `public."User".id` match by convention; no foreign key can
-span Supabase Auth and Prisma. Always delete accounts through the admin
-backoffice, which removes the Supabase Auth identity before the application
-row. Never delete users directly in the Supabase Auth dashboard: that leaves an
-unloginable application account.
-
-Before deploying changes that affect account deletion, and after any manual
-Auth operation, run
-[`supabase/audit-orphaned-accounts.sql`](./supabase/audit-orphaned-accounts.sql)
-manually in every environment's Supabase SQL editor. It is read-only and reports
-orphans in both directions; investigate each result before deleting anything.
+Institutional OIDC handles login and password recovery. The application keeps
+its own signed session and `User` rows. PostgreSQL and MinIO do not provide
+login sessions. Delete accounts through the admin backoffice to preserve app
+relationships and permissions.
 
 ---
 
@@ -68,26 +56,16 @@ Copy:
 cp .env.example .env
 ```
 
-### Required values (hosted Supabase)
+### Required values
 
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (service role)
-- `JWT_SECRET`
-
-Defaulted (override only if you need something other than local dev defaults):
-
-- `NEXT_PUBLIC_BASE_URL` (defaults to `http://localhost:3000/api`)
-- `NODE_ENV` (defaults to `development`)
-
-Only needed to run `pnpm seed`:
-
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-
-See `.env.example` for the full list, including optional docker compose overrides and Sentry/Pino observability variables (covered below).
+Set `DATABASE_URL` for the runtime PostgreSQL identity and `DIRECT_URL` for the
+migration identity. Both require the environment's `?schema=fallstack` on
+shared services. Set `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`S3_BUCKET_AVATARS`, `S3_BUCKET_LOGOS`, `S3_BUCKET_CVS`, and the AuthNEI/ZITADEL and JWT values
+listed in [`.env.example`](./.env.example). `NEXT_PUBLIC_BASE_URL` defaults to
+`http://localhost:3000/api` during local development. For local storage, use
+an isolated MinIO instance and the same bucket names or environment-specific
+local equivalents. Never use production credentials locally.
 
 ### Observability
 
@@ -95,205 +73,23 @@ Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVAB
 
 ### Pre-event load validation
 
-The in-process upload limiter is keyed by authenticated student ID and uses a
-fixed window. It does not trust proxy IP headers. Before an event, exercise the
-QR and upload-ticket paths against staging with
-[`tests/load/event-readiness.js`](./tests/load/event-readiness.js). The harness
-requires `CONFIRM_NON_PRODUCTION=yes` and rejects an upload load that would
-exceed five tickets per minute for any supplied staging student session.
+Run staging load checks only with `CONFIRM_NON_PRODUCTION=yes`. Uploads now pass
+through authenticated application routes, with per-student rate limits and
+server-side size, MIME and file-signature checks. See
+[`tests/e2e/README.md`](./tests/e2e/README.md) for browser checks. Remove
+staging upload objects created during verification.
 
-Only replace the limiter with a shared token bucket if staging results exceed
-the latency/error thresholds, or before scaling the app beyond one replica.
+### Storage and retention
 
-### Storage setup (Supabase hosted)
-
-Create two storage buckets:
-
-| Bucket  | Access  | Allowed MIME types        | Max file size |
-| ------- | ------- | ------------------------- | ------------- |
-| avatars | public  | `image/png`, `image/jpeg` | 5 MB          |
-| cvs     | private | `application/pdf`         | 10 MB         |
-
-After creating the buckets, run
-[`supabase/storage-bucket-limits.sql`](./supabase/storage-bucket-limits.sql)
-in the Supabase SQL editor for **every Supabase project** (including staging
-and production). It fails if either bucket is missing and configures the MIME
-and size restrictions without changing the bucket access policy.
-
-Student uploads use a short-lived signed upload URL, so file bytes go directly
-from browser to Storage rather than through the Next.js server. Browser file
-signature checks are UX only; the bucket restrictions are the enforcement
-boundary for direct uploads.
-
-### Orphaned-file garbage collection
-
-Student media uploads are reconciled daily at 03:00 UTC. Objects are eligible
-only when they are under the app-managed avatar/CV prefixes, are unreferenced by
-`Student.avatar`/`Student.cv`, and are at least 48 hours old.
-
-1. In Supabase Vault, create `storage_gc_project_url` with the project URL and
-   `storage_gc_service_role_key` with the service-role key.
-2. Run [`supabase/storage-gc.sql`](./supabase/storage-gc.sql) manually in the
-   hosted Supabase SQL editor. Do not add the service-role key to the SQL file.
-   Its final query is non-destructive and returns the exact candidate set.
-3. Check every returned bucket/path against `Student.avatar`/`Student.cv`. The
-   installer intentionally does not schedule deletion.
-4. Only after confirming the dry run, run
-   [`supabase/storage-gc-enable.sql`](./supabase/storage-gc-enable.sql) manually.
-5. Confirm the job exists with:
-
-   ```sql
-   select jobid, schedule, command, active
-   from cron.job
-   where jobname = 'storage-orphan-gc';
-   ```
-
-The job reads `storage.objects` but deletes through the Storage API; direct SQL
-deletion would remove only metadata and leave the billed blob behind. Failed API
-deletions remain in `storage.objects`, so the next daily run retries them.
-
-Monitor runs and asynchronous deletion failures after 03:00 UTC:
-
-```sql
-select status, return_message, start_time, end_time
-from cron.job_run_details
-where jobid = (select jobid from cron.job where jobname = 'storage-orphan-gc')
-order by start_time desc
-limit 10;
-
-select id, status_code, timed_out, error_msg, created
-from net._http_response
-where timed_out or error_msg is not null or status_code not between 200 and 299
-order by created desc;
-
-select bucket_id, count(*)
-from public.storage_gc_candidates()
-group by bucket_id;
-```
-
-`pg_net` responses expire after six hours by default, so inspect them soon after
-the run. A candidate count that does not shrink indicates persistent failures.
-
-### CV retention purge
-
-Student CVs are purged twice a year, on May 1 and Nov 1 at 02:00 UTC, once
-`Student.cvUploadedAt` is more than 6 months old. The job only clears the DB
-reference (`cv = NULL`, `cvPurgedAt = now()`); the CV upload path stamps
-`cvUploadedAt` and clears `cvPurgedAt` on every successful upload. A profile
-banner tells the student their CV was removed whenever `cvPurgedAt` is set.
-
-1. Run [`supabase/cv-retention-purge.sql`](./supabase/cv-retention-purge.sql)
-   manually in the hosted Supabase SQL editor. Its final query is
-   non-destructive and returns the exact candidate set.
-2. Check every returned row against `Student.cv`/`Student.cvUploadedAt`. The
-   installer intentionally does not schedule the purge.
-3. Only after confirming the dry run, run
-   [`supabase/cv-retention-purge-enable.sql`](./supabase/cv-retention-purge-enable.sql)
-   manually.
-4. Confirm the job exists with:
-
-   ```sql
-   select jobid, schedule, command, active
-   from cron.job
-   where jobname = 'cv-retention-purge';
-   ```
-
-The purge only clears the DB reference; it does not delete the storage object.
-It runs at 02:00 UTC, one hour before the orphaned-file GC job's daily 03:00
-UTC run (above), so the now-unreferenced CV object is deleted the same day
-instead of waiting on its own cadence.
-
----
-
-# Supabase CLI (Local Development)
-
-You can run a full Supabase stack locally (Auth, Storage, DB, Studio, Realtime, Gateway).
-
----
-
-## Installing Supabase CLI (Windows via Scoop)
-
-```bash
-scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-scoop install supabase
-```
-
-Verify installation:
-
-```bash
-supabase --version
-```
-
----
-
-## Starting Supabase locally
-
-Run from the project root:
-
-```bash
-supabase start
-```
-
-This launches:
-
-| Service         | URL                                                                    |
-| --------------- | ---------------------------------------------------------------------- |
-| API Gateway     | [http://127.0.0.1:54321](http://127.0.0.1:54321)                       |
-| GraphQL API     | [http://127.0.0.1:54321/graphql/v1](http://127.0.0.1:54321/graphql/v1) |
-| Supabase Studio | [http://127.0.0.1:54323](http://127.0.0.1:54323)                       |
-| SMTP Inbox      | [http://127.0.0.1:54324](http://127.0.0.1:54324)                       |
-| Database        | postgresql://postgres:postgres@127.0.0.1:54322                         |
-
----
-
-## Windows Vector Container Issue (harmless but annoying)
-
-Supabase CLI sometimes starts a **vector** container that repeatedly fails on Windows.
-
-This container is NOT required to run the app.
-
-### Option A — Remove vector automatically after start
-
-You may run:
-
-```bash
-docker rm -f supabase_vector_fallstack-website
-```
-
-If the name differs, check:
-
-```bash
-docker ps -a
-```
-
-### Option B — Clean all Supabase containers before starting
-
-After stopping:
-
-```bash
-supabase stop
-docker rm -f $(docker ps -aq --filter "name=supabase")
-```
-
-Then:
-
-```bash
-supabase start
-```
-
----
-
-## Stopping Supabase
-
-```bash
-supabase stop
-```
-
-To also remove local data volumes:
-
-```bash
-docker compose --profile supabase down -v
-```
+Avatars and logos uploaded by admins are public through same-origin
+`/api/media/avatar/<id>` and `/api/media/logo/<id>`. CVs remain private; download routes recheck the
+student/company/admin policy on every request. S3 credentials stay server-side.
+Legacy [`supabase/`](./supabase/) SQL and bucket policies belong only to
+pre-cutover source stacks and must not be copied into shared PostgreSQL or
+MinIO. Source production has a Supabase-specific orphan GC job; S3-aware
+cleanup is a separate reviewed migration step. Scheduled backups of the shared
+services must be configured and restore-tested independently of one-time
+migration archives.
 
 ---
 
@@ -319,35 +115,13 @@ http://localhost:3000
 
 ---
 
-# Local Supabase Tools
+# Local data services
 
-| Tool            | URL                                              |
-| --------------- | ------------------------------------------------ |
-| Supabase Studio | [http://127.0.0.1:54323](http://127.0.0.1:54323) |
-| API Gateway     | [http://127.0.0.1:54321](http://127.0.0.1:54321) |
-| SMTP Inbox      | [http://127.0.0.1:54324](http://127.0.0.1:54324) |
-
----
-
-# Docker Profiles
-
-### PostgreSQL only (no Supabase)
-
-```bash
-docker compose up -d db
-```
-
-### Full Supabase stack
-
-```bash
-docker compose --profile supabase up -d
-```
-
-Stop:
-
-```bash
-docker compose --profile supabase down
-```
+Run PostgreSQL and MinIO locally or connect to dedicated development services.
+Create the three environment buckets and use scoped credentials. The deployed
+Coolify Compose file is [`docker-compose.app.yml`](./docker-compose.app.yml)
+and expects the shared external network; it is not a local database service
+Compose file. See [`docs/SHARED_DATA.md`](./docs/SHARED_DATA.md).
 
 ---
 

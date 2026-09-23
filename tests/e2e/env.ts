@@ -6,22 +6,24 @@ const parsedEnv = z
   .object({
     CI: z.string().min(1).optional(),
     CONFIRM_NON_PRODUCTION: yesNoFlag,
-    E2E_ALLOW_UPLOAD_TICKETS: yesNoFlag,
+    E2E_ALLOW_UPLOADS: yesNoFlag,
+    E2E_ADMIN_STORAGE_STATE: z.string().min(1).optional(),
     E2E_BASE_URL: z.url().optional(),
+    E2E_EMPLOYEE_STORAGE_STATE: z.string().min(1).optional(),
     E2E_STUDENT_STORAGE_STATE: z.string().min(1).optional(),
-    E2E_SUPABASE_ANON_KEY: z.string().min(1).optional(),
-    E2E_SUPABASE_URL: z.url().optional(),
-    E2E_VERIFY_BUCKET_RESTRICTIONS: yesNoFlag,
+    E2E_SUPER_ADMIN_STORAGE_STATE: z.string().min(1).optional(),
+    E2E_VERIFY_UPLOAD_LIMITS: yesNoFlag,
   })
   .parse(process.env);
 
 export const e2eEnv = {
   ci: parsedEnv.CI !== undefined,
   confirmNonProduction: parsedEnv.CONFIRM_NON_PRODUCTION === "yes",
-  allowUploadTickets: parsedEnv.E2E_ALLOW_UPLOAD_TICKETS === "yes",
+  allowUploads: parsedEnv.E2E_ALLOW_UPLOADS === "yes",
+  adminStorageState: parsedEnv.E2E_ADMIN_STORAGE_STATE,
   baseUrl: parsedEnv.E2E_BASE_URL,
+  employeeStorageState: parsedEnv.E2E_EMPLOYEE_STORAGE_STATE,
   storageState: parsedEnv.E2E_STUDENT_STORAGE_STATE,
-  supabaseAnonKey: parsedEnv.E2E_SUPABASE_ANON_KEY,
-  supabaseUrl: parsedEnv.E2E_SUPABASE_URL,
-  verifyBucketRestrictions: parsedEnv.E2E_VERIFY_BUCKET_RESTRICTIONS === "yes",
+  superAdminStorageState: parsedEnv.E2E_SUPER_ADMIN_STORAGE_STATE,
+  verifyUploadLimits: parsedEnv.E2E_VERIFY_UPLOAD_LIMITS === "yes",
 } as const;

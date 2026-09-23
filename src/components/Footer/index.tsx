@@ -25,7 +25,7 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
   return (
     <footer className="flex w-full flex-col items-center gap-10 bg-background px-6 pt-12 text-center">
       <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-around">
-        <div className="max-h-[200px] max-w-[220px] transition-all duration-300 hover:scale-105 sm:max-w-[275px] lg:max-w-[320px]">
+        <div className="max-h-50 max-w-55 transition-all duration-300 hover:scale-105 sm:max-w-[275px] lg:max-w-80">
           <a href={NEI_WEBSITE_URL} target="_blank" rel="noreferrer">
             <Image
               className="mx-auto block h-auto max-w-full drop-shadow-xl transition-all duration-300 hover:drop-shadow-2xl"

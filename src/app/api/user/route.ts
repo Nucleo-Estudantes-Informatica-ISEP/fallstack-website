@@ -7,6 +7,9 @@ import { userInterestsSchema } from "@/schemas/userInterestsSchema";
 export const PATCH = defineHandler({
   auth: "session",
   schema: userInterestsSchema,
+  authorize: (session) =>
+    (session.role === "STUDENT" && !!session.student) ||
+    (session.role === "EMPLOYEE" && !!session.employee?.companyId),
   handler: async ({ session, body }) => {
     return NextResponse.json(
       await updateUserInterests({

@@ -85,6 +85,7 @@ export async function updateEmployeeForAdmin(
   }
 ) {
   const { password: _password, active, ...profile } = input;
+  void _password;
   const employee = await updateEmployeeFields(id, profile);
   if (active !== undefined) await updateUserActive(id, active);
   return employee;

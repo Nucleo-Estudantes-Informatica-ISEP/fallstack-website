@@ -13,7 +13,7 @@ vi.mock("@/application/services/scheduleService", () => ({
 }));
 
 beforeAll(() => {
-  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });
@@ -81,7 +81,7 @@ test("GET returns the paginated list for an admin", async () => {
         order: 0,
         startTime: "09:00",
         endTime: "10:00",
-        activity: "Opening",
+        activity: { PT: "Abertura", EN: "Opening" },
       },
     ],
     totalCount: 1,
@@ -96,7 +96,7 @@ test("GET returns the paginated list for an admin", async () => {
 
   assert.equal(res.status, 200);
   assert.equal(body.totalCount, 1);
-  assert.equal(body.items[0].activity, "Opening");
+  assert.equal(body.items[0].activity.EN, "Opening");
 });
 
 test("POST rejects a malformed body with 400, without creating anything", async () => {
@@ -131,7 +131,7 @@ test("POST creates the event and returns 201 for a valid admin request", async (
     order: 0,
     startTime: "09:00",
     endTime: "10:00",
-    activity: "Opening",
+    activity: { PT: "Abertura", EN: "Opening" },
   } as never);
 
   const { POST } = await import("./route");
@@ -140,7 +140,7 @@ test("POST creates the event and returns 201 for a valid admin request", async (
       day: 1,
       startTime: "09:00",
       endTime: "10:00",
-      activity: "Opening",
+      activity: { PT: "Abertura", EN: "Opening" },
     }),
     { params: Promise.resolve({}) }
   );
@@ -148,8 +148,8 @@ test("POST creates the event and returns 201 for a valid admin request", async (
 
   assert.equal(res.status, 201);
   assert.equal(body.id, "a");
-  assert.equal(
+  assert.deepEqual(
     vi.mocked(createScheduleEventForAdmin).mock.calls[0]?.[0].activity,
-    "Opening"
+    { PT: "Abertura", EN: "Opening" }
   );
 });

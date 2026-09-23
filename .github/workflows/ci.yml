@@ -15,9 +15,12 @@ concurrency:
 env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
   DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci
-  NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
-  SUPABASE_SERVICE_ROLE_KEY: ${{ github.sha }}
+  S3_ENDPOINT: http://127.0.0.1:9000
+  S3_ACCESS_KEY_ID: ci-placeholder
+  S3_SECRET_ACCESS_KEY: ${{ github.sha }}
+  S3_BUCKET_AVATARS: ci-avatars
+  S3_BUCKET_LOGOS: ci-logos
+  S3_BUCKET_CVS: ci-cvs
   NEXT_PUBLIC_BASE_URL: https://ci.invalid/api
   JWT_SECRET: ${{ github.sha }}
   AUTH_ISSUER_URL: https://auth.ci.invalid
@@ -39,6 +42,22 @@ jobs:
   quality:
     name: Test, typecheck, lint & build
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -49,11 +68,14 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
-          node-version: 20.19.1
+          node-version: 24
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Apply database migrations
+        run: pnpm exec prisma migrate deploy
 
       - name: Test
         run: pnpm exec vitest run --maxWorkers=2
@@ -89,8 +111,6 @@ jobs:
         run: |
           docker build \
             --target runner \
-            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://ci-placeholder.supabase.co \
-            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=ci-placeholder \
             --build-arg NEXT_PUBLIC_BASE_URL=https://ci.invalid/api \
             -t fallstack-app-check .
 

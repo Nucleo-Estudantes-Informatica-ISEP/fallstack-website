@@ -1,23 +1,18 @@
 import "server-only";
 
-import { withTransaction } from "../repositories/transaction";
-import {
-  findEmployeeUserIds,
-  setUserInterests,
-} from "../repositories/userRepository";
+import { setCompanyInterests } from "../repositories/companyRepository";
+import { setStudentInterests } from "../repositories/studentRepository";
 
 export async function updateUserInterests(input: {
   userId: string;
   companyId?: string;
   interests: string[];
 }) {
-  if (!input.companyId) {
-    await setUserInterests(input.userId, input.interests);
+  if (input.companyId) {
+    await setCompanyInterests(input.companyId, input.interests);
   } else {
-    const ids = await findEmployeeUserIds(input.companyId);
-    await withTransaction(async (tx) =>
-      Promise.all(ids.map((id) => setUserInterests(id, input.interests, tx)))
-    );
+    await setStudentInterests(input.userId, input.interests);
   }
+
   return { success: true };
 }

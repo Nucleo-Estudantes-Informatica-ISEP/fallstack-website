@@ -11,9 +11,12 @@ const serverEnvSchema = z.object({
   JWT_SECRET: z
     .string()
     .min(32, "JWT_SECRET must be at least 32 characters long"),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1),
+  S3_ENDPOINT: z.url(),
+  S3_ACCESS_KEY_ID: z.string().min(1),
+  S3_SECRET_ACCESS_KEY: z.string().min(1),
+  S3_BUCKET_AVATARS: z.string().min(1),
+  S3_BUCKET_LOGOS: z.string().min(1),
+  S3_BUCKET_CVS: z.string().min(1),
 
   AUTH_ISSUER_URL: z.string().url(),
   AUTH_PROJECT_ID: z.string().min(1),

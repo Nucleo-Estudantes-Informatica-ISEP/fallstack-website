@@ -40,9 +40,9 @@ For every requested task:
 | Framework       | Next.js 15 (App Router), React 18                              |
 | Language        | TypeScript (`strict: true`)                                    |
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
-| Database        | PostgreSQL via Supabase, Prisma 6 (`prisma/schema.prisma`)     |
-| Auth            | Supabase Auth (session) — see [Auth model](#auth-model)        |
-| Storage         | Supabase Storage (avatars: public bucket, CVs: private bucket) |
+| Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)     |
+| Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
+| Storage         | Shared MinIO (avatars/logos via public app route; CVs private) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |
 | Package manager | pnpm (see `packageManager` in `package.json`)                  |
 | Deploy          | Docker → Coolify                                               |
@@ -82,7 +82,7 @@ hooks/          # React hooks
 lib/            # remaining server + shared helpers not yet moved into application/ (logger, Sentry privacy, file signatures, saved-student comment formatting) + http/ (client.ts's HttpClient, server.ts's defineHandler)
 schemas/        # Zod input validation
 types/          # shared TypeScript types
-utils/          # generic helpers only now (date, files, canvas, isepEmail, Supabase client factories) — edition content was moved out to edition/
+utils/          # generic helpers only now (date, files, canvas, isepEmail) — edition content was moved out to edition/
 ```
 
 `tests/e2e/` is reserved at the repo root (outside `src/`) for future integration/smoke tests — existing unit tests stay colocated with the code they cover, don't move them there.
@@ -93,7 +93,7 @@ utils/          # generic helpers only now (date, files, canvas, isepEmail, Supa
 
 ### Data model
 
-Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` as `User`), `Student`, `Company` (has `tier`: DIAMOND/GOLD/SILVER/BRONZE), `Employee` (belongs to `Company`), `Action` / `ActionCompletion` (points for QR-scanned actions), `Interest` (many-to-many with `User`), `SavedStudent` (company saves a student).
+Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` as `User`), `Student`, `Company` (has `tier`: DIAMOND/GOLD/SILVER/BRONZE), `Employee` (belongs to `Company`), `Action` / `ActionCompletion` (points for QR-scanned actions), `Interest` (many-to-many with `Student` and `Company`), `SavedStudent` (company saves a student).
 
 **`SavedStudent` grain mismatch:** the table's primary key is `[studentId, employeeId]` (employee-scoped), but `isStudentSaved()` in `src/application/repositories/savedStudentRepository.ts` (exposed as `isSaved()` via `src/application/services/savedStudentService.ts`) checks `savedBy: { companyId }` — i.e. the app-level dedup rule is company-scoped while the DB constraint is employee-scoped. Two employees at the same company can currently save the same student twice. Don't assume the DB enforces what the app-level check assumes.
 
@@ -101,7 +101,8 @@ Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` 
 erDiagram
   User ||--o| Student : "id"
   User ||--o| Employee : "id"
-  User }o--o{ Interest : "interests"
+  Student }o--o{ Interest : "interests"
+  Company }o--o{ Interest : "interests"
   Company ||--o{ Employee : "employs"
   Employee ||--o{ SavedStudent : "saves"
   Student ||--o{ SavedStudent : "saved by"
@@ -113,16 +114,16 @@ erDiagram
 
 Two independent mechanisms — don't conflate them:
 
-- **Session auth (login state):** Supabase Auth. `getServerSession()` (`src/application/services/sessionService.ts`) reads the Supabase session via `supabase.auth.getUser()`, then looks up the corresponding Prisma `User` (student or employee profile). Client-side equivalent is `getSession()` in `src/client/api/session.ts`, which hits `src/app/api/auth/session/route.ts`.
+- **Session auth (login state):** ZITADEL / AuthNEI OIDC. `getServerSession()` (`src/application/services/sessionService.ts`) verifies the signed app session and resolves the matching Prisma `User` (student or employee profile). The browser path is the normal app session cookie flow, not a Supabase Auth session.
 - **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/application/services/authService.ts` (`signJwt`/`verifyJwt`, using `serverEnv.JWT_SECRET` from `@/config/env.server` — not raw `process.env`). Used for the student's personal QR code (`src/app/api/qrcode/route.ts`, 30-minute expiry) and temporary student-profile preview access (`jwtStudent()` in `src/application/services/studentTokenService.ts` signs a token embedding the student `code`, 15-minute expiry; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access within an existing authenticated session, without requiring the profile to be saved) — all genuinely short-lived. **Action QR codes** (`getActionQrCode()` in `src/application/services/actionService.ts`) used to be an exception — a units bug passed a millisecond value straight into `jsonwebtoken`'s numeric `expiresIn` (interpreted as seconds), so the token actually lived ~8.3 hours instead of the intended 30 seconds; fixed in #212, with a regression test asserting `expiresIn: 30` colocated in `actionService.test.ts`. None of these are for login sessions.
-- `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through Supabase.
-- Password resets are self-service only: `src/app/(auth)/password-reset/page.tsx` posts an email to `src/app/api/auth/password-reset/route.ts`, which calls Supabase's `resetPasswordForEmail` (PKCE flow, verifier persisted in cookies) with a redirect to `/password-reset/confirm`. The confirm page (`src/app/(auth)/password-reset/confirm/page.tsx`) then calls `supabase.auth.updateUser({ password })` directly from the browser client using the session Supabase restored from the PKCE callback — there is no server route for the confirm step. The old admin-reset-another-user's-password route (`src/app/api/auth/password-change/route.ts`) has been removed; `changePassword()` still exists in `src/application/services/authApplicationService.ts` but is currently **unused dead code** — no route calls it. Don't add a third path — extend the self-service flow, or wire `changePassword()` up if an admin-reset route is genuinely needed again.
+- `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through AuthNEI/ZITADEL.
+- Password resets are self-service through AuthNEI: the UI tells the user to continue through the institutional identity provider rather than storing or issuing app-side reset tokens. PostgreSQL and MinIO provide app data and files; neither handles sessions.
 
 ## Conventions
 
 - **Validation:** new request validation goes in `src/schemas/` as a named Zod schema, imported by the route — don't add another inline `z.object(...)` in a route file.
 - **Route responses:** always pass an explicit status code to `NextResponse.json(body, { status })`. The default is 200, and some existing routes rely on that default even for validation/auth failures — don't copy that pattern in new code.
-- **`app/auth/confirm/route.ts`** lives outside the `(auth)`/`api` conventions on purpose — it's the Supabase email-confirmation callback URL, which Supabase itself constructs, so it can't move without reconfiguring Supabase. Leave it where it is.
+- **`app/auth/confirm/route.ts`** redirects legacy Supabase email links to login. Keep while old links may exist.
 - **Edition-specific content** still hardcoded (tier company lists, booth-to-action mapping, branding) is centralized under `src/edition/` — `edition/actions.ts` holds `actionNames` and the `getBoothActionName()` lookup that `savedStudentService.saveStudent()` calls instead of an inline `switch`. When editing that content for a new event, change `edition/`, not `config/` or `utils/`. Sponsors, FAQ, and the schedule/timetable are DB-backed instead (`Sponsor`/`FaqEntry`/`ScheduleEvent` models), editable through the admin backoffice — don't add a static `edition/` file for any of them.
 - **Env vars:** validated through Zod, not read from `process.env` directly. Server-only secrets/config go through `serverEnv` (`src/config/env.server.ts`, guarded by `server-only`, validated lazily on first property access); `NEXT_PUBLIC_*` vars go through `clientEnv` (`src/config/env.client.ts`, validated eagerly at import time, since Next.js inlines them into the browser bundle at build time). Import whichever matches where your code runs — don't add a new raw `process.env.*` read. `.env.example` is the source of truth for required keys; keep it in sync with both schemas when you add or rename one.
 - **Components:** every component gets its own `PascalCaseName/index.tsx` folder. Shared, reusable primitives go in `components/ui/` (e.g. `Icons.tsx`, `Input`, `Modal`, `PrimaryButton`); everything else — reusable feature composites or single-use page sections alike (e.g. `Companies`, `Profile`, `GiveawaySection`, `AdminSavedSection`) — stays at the top level of `components/`, following the same pattern. There is no route-local `_components/` convention in use — keep new components in `components/` rather than colocating them under `app/`.

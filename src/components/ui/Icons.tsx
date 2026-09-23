@@ -40,7 +40,7 @@ const Chevron: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
     <ChevronDown
       className={`transition-transform duration-300 ${
         isOpen ? "rotate-180" : "rotate-0"
-      } h-6 w-6 text-white md:h-8 md:w-8`}
+      } size-6 text-white md:size-8`}
     />
   );
 };

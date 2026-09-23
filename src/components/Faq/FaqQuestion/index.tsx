@@ -39,7 +39,7 @@ const FaqQuestion: React.FC<FaqQuestionProps> = ({
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls={panelId}
-        className="flex w-full items-center justify-between gap-6 px-6 py-6 text-left text-base font-semibold text-white transition-colors duration-200 sm:px-8 sm:py-8 sm:text-lg"
+        className="flex w-full items-center justify-between gap-6 p-6 text-left text-base font-semibold text-white transition-colors duration-200 sm:p-8 sm:text-lg"
       >
         <span className="flex-1 text-xl leading-tight sm:text-2xl md:text-3xl">
           {question}

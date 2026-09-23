@@ -10,7 +10,7 @@ vi.mock("@/application/services/sessionService", () => ({
 
 beforeAll(() => {
   vi.stubEnv("JWT_SECRET", "test-only-secret-at-least-32-characters-long");
-  vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "test-service-role-key");
+  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
 });

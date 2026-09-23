@@ -6,8 +6,8 @@ import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 
-import { createEmployee } from "../repositories/companyRepository";
 import { findCompanyByInviteCodeHash } from "../repositories/companyInviteRepository";
+import { createEmployee } from "../repositories/companyRepository";
 import { withTransaction } from "../repositories/transaction";
 import {
   deleteUser,
@@ -31,6 +31,8 @@ export async function deleteUserAccount(userId: string) {
 // User.active is the Fallstack-specific deactivation gate. ZITADEL identities
 // are shared across NEI apps, so Fallstack must never globally ban the person.
 export async function setAuthUserBanned(_userId: string, _banned: boolean) {
+  void _userId;
+  void _banned;
   return;
 }
 
@@ -42,10 +44,14 @@ export async function createSupabaseAuthUserAsAdmin(
   _password: string,
   _displayName?: string
 ) {
+  void _email;
+  void _password;
+  void _displayName;
   return { id: randomUUID() };
 }
 
 export async function rollbackAuthUser(_userId: string) {
+  void _userId;
   // No external identity was created, so there is nothing to roll back.
 }
 
@@ -89,7 +95,8 @@ export async function signUpEmployee(input: {
   const existing = await findUserSessionByZitadelUserId(input.zitadelUserId);
   if (!existing || existing.id !== input.userId)
     throw new HttpError("Unable to resolve AuthNEI account", 401);
-  if (existing.employee) throw new HttpError("Employee profile already exists", 409);
+  if (existing.employee)
+    throw new HttpError("Employee profile already exists", 409);
 
   await assignEmployeeRole(input.zitadelUserId);
 

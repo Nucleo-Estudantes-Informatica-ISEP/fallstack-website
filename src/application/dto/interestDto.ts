@@ -1,23 +1,31 @@
+import { Language, type TranslationValues } from "@/domain/i18n/translations";
+
 export interface InterestDto {
   id: string;
   name: string;
 }
 
-export const toInterestDto = (interest: InterestDto): InterestDto => ({
-  id: interest.id,
-  name: interest.name,
-});
-
-export interface AdminInterestDto extends InterestDto {
-  usersCount: number;
+interface InterestEntity {
+  id: string;
+  name: TranslationValues;
 }
 
-export const toAdminInterestDto = (interest: {
+export const toInterestDto = (
+  interest: InterestEntity,
+  language: Language = Language.PT
+): InterestDto => ({
+  id: interest.id,
+  name: interest.name[language],
+});
+
+export interface AdminInterestDto {
   id: string;
-  name: string;
-  _count: { users: number };
-}): AdminInterestDto => ({
+  name: TranslationValues;
+}
+
+export const toAdminInterestDto = (
+  interest: InterestEntity
+): AdminInterestDto => ({
   id: interest.id,
   name: interest.name,
-  usersCount: interest._count.users,
 });

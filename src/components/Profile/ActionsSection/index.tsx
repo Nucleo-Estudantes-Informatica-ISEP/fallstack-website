@@ -57,7 +57,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
               }}
             >
               {action.done && (
-                <FiCheck className="h-5 w-5 text-[rgba(237,131,38,1)]" />
+                <FiCheck className="size-5 text-[rgba(237,131,38,1)]" />
               )}
             </span>
           </div>

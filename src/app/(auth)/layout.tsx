@@ -12,7 +12,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     <AuthContextProvider>
       <Topbar />
       <main id="main-content">
-        <div className="flex h-svh flex-col bg-[#141414] pt-16 md:flex-row md:pt-0">
+        <div className="flex h-svh flex-col bg-background pt-16 md:flex-row md:pt-0">
           <div className="w-full md:hidden">
             <Image
               src={"/assets/images/hero_privacy_policy.png"}
@@ -22,7 +22,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               className="h-auto w-full"
             />
           </div>
-          <div className="relative hidden h-full w-full md:block md:w-1/2">
+          <div className="relative hidden size-full md:block md:w-1/2">
             <Image
               src={"/assets/images/auth-component.png"}
               fill
@@ -30,7 +30,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               className="object-cover"
             />
           </div>
-          <div className="flex h-full w-full items-center justify-center overflow-y-auto px-6 py-8 md:w-1/2 md:px-12 md:py-16">
+          <div className="flex size-full items-center justify-center overflow-y-auto px-6 py-8 md:w-1/2 md:px-12 md:py-16">
             {children}
           </div>
         </div>

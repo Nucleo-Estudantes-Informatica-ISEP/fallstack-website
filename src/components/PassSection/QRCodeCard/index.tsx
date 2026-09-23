@@ -27,7 +27,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
 }) => {
   return (
     <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#121212] shadow-xl">
-      <div className="bg-gradient-to-br from-[#ED8326] to-[#FFB347] px-6 py-6 text-white">
+      <div className="bg-gradient-to-br from-[#ED8326] to-[#FFB347] p-6 text-white">
         <h3
           className="text-2xl leading-tight font-bold"
           style={{ fontFamily: "Coolvetica, sans-serif" }}
@@ -50,7 +50,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
           ) : qrValue ? (
             <QRCodeSVG value={qrValue} size={180} />
           ) : (
-            <div className="flex h-44 w-44 items-center justify-center text-xs text-gray-500">
+            <div className="flex size-44 items-center justify-center text-xs text-gray-500">
               Sem QR Code
             </div>
           )}
@@ -60,7 +60,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
             onClick={onCopy}
             className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-[#ED8326] hover:text-[#ED8326]"
           >
-            <FiClipboard className="h-4 w-4" />
+            <FiClipboard className="size-4" />
             <span className="font-mono">{code}</span>
             {isCopied && <span className="ml-1 text-green-400">Copiado!</span>}
           </button>
@@ -70,7 +70,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
             onClick={onRefresh}
             className="mt-4 flex items-center gap-2 rounded-md bg-[#ED8326] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
           >
-            <FiRefreshCw className="h-4 w-4" />
+            <FiRefreshCw className="size-4" />
             Atualizar QR Code
           </button>
         )}

@@ -3,24 +3,53 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import {
+  parseTranslatedField,
+  type ParsedTranslatedField,
+} from "@/domain/i18n/translations";
 import type { StudentYear } from "@/domain/student/year";
 
 import prisma, { DbClient } from "./database";
+
+type StudentWithRawInterests = {
+  interests: { name: Prisma.JsonValue }[];
+};
+
+type StudentWithParsedInterests<T extends StudentWithRawInterests> = Omit<
+  T,
+  "interests"
+> & {
+  interests: ParsedTranslatedField<T["interests"][number], "name">[];
+};
+
+const parseStudentInterests = <T extends StudentWithRawInterests>(
+  student: T
+): StudentWithParsedInterests<T> =>
+  ({
+    ...student,
+    interests: student.interests.map((interest) =>
+      parseTranslatedField(interest, "name")
+    ),
+  }) as StudentWithParsedInterests<T>;
 
 export const findStudentByCode = (code: string, db: DbClient = prisma) =>
   db.student.findUnique({ where: { code } });
 
 export const findStudentProfileByCode = (code: string) =>
-  prisma.student.findUnique({
-    where: { code },
-    include: { user: { include: { interests: true } } },
-  });
+  prisma.student
+    .findUnique({
+      where: { code },
+      include: { user: true, interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentProfileById = (id: string) =>
-  prisma.student.findUnique({
-    where: { id },
-    include: { user: { include: { interests: true } } },
-  });
+  prisma.student
+    .findUnique({
+      where: { id },
+      include: { user: true, interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
 
 export const findStudentWithUserByCode = (code: string) =>
   prisma.student.findUnique({ where: { code }, include: { user: true } });
@@ -142,12 +171,43 @@ export const findStudentAvatar = (id: string) =>
   prisma.student.findUnique({ where: { id }, select: { avatar: true } });
 
 export const findStudentInterests = (id: string) =>
-  prisma.student.findMany({
+  prisma.student
+    .findUnique({
+      where: { id },
+      select: { interests: true },
+    })
+    .then((student) => (student ? parseStudentInterests(student) : null));
+
+export const setStudentInterests = (
+  id: string,
+  interestIds: string[],
+  db: DbClient = prisma
+) =>
+  db.student.update({
     where: { id },
-    select: { user: { select: { interests: true } } },
+    data: {
+      interests: {
+        set: interestIds.map((interestId) => ({ id: interestId })),
+      },
+    },
+  });
+
+export const connectStudentInterests = (
+  id: string,
+  interestIds: string[],
+  db: DbClient = prisma
+) =>
+  db.student.update({
+    where: { id },
+    data: {
+      interests: {
+        connect: interestIds.map((interestId) => ({ id: interestId })),
+      },
+    },
   });
 
 const ADMIN_SORTABLE_FIELDS = ["name", "code", "year"] as const;
+
 export type AdminStudentSortField = (typeof ADMIN_SORTABLE_FIELDS)[number];
 
 export interface AdminStudentQuery {
@@ -160,7 +220,9 @@ export interface AdminStudentQuery {
 
 function studentWhere(search?: string): Prisma.StudentWhereInput {
   const base: Prisma.StudentWhereInput = { user: { role: "STUDENT" } };
+
   if (!search) return base;
+
   return {
     ...base,
     OR: [
@@ -174,6 +236,7 @@ function studentOrderBy(sort: string | undefined, order: "asc" | "desc") {
   const field = ADMIN_SORTABLE_FIELDS.includes(sort as AdminStudentSortField)
     ? (sort as AdminStudentSortField)
     : undefined;
+
   return field ? { [field]: order } : { name: "asc" as const };
 }
 

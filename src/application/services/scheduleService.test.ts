@@ -154,7 +154,7 @@ test("a new event with no explicit order lands at the end of its day when it sta
     day: 1,
     startTime: "11:00",
     endTime: "12:00",
-    activity: "Talk",
+    activity: { PT: "Palestra", EN: "Talk" },
   });
 
   expect(findAllScheduleEvents).toHaveBeenCalledWith(transaction);
@@ -163,7 +163,7 @@ test("a new event with no explicit order lands at the end of its day when it sta
       day: 1,
       startTime: "11:00",
       endTime: "12:00",
-      activity: "Talk",
+      activity: { PT: "Palestra", EN: "Talk" },
       order: 2,
     },
     transaction
@@ -178,7 +178,7 @@ test("a new event with no explicit order that starts earlier than every existing
     day: 1,
     startTime: "08:00",
     endTime: "08:30",
-    activity: "Early talk",
+    activity: { PT: "Palestra cedo", EN: "Early talk" },
   });
 
   expect(bulkUpdateScheduleOrder).toHaveBeenCalledWith(
@@ -193,7 +193,7 @@ test("a new event with no explicit order that starts earlier than every existing
       day: 1,
       startTime: "08:00",
       endTime: "08:30",
-      activity: "Early talk",
+      activity: { PT: "Palestra cedo", EN: "Early talk" },
       order: 0,
     },
     transaction
@@ -206,7 +206,7 @@ test("rejects creating an event that overlaps an existing row in the same day", 
       day: 1,
       startTime: "09:30",
       endTime: "10:30",
-      activity: "Overlaps b",
+      activity: { PT: "Sobreposição", EN: "Overlaps b" },
     })
   ).rejects.toThrow("Schedule order is not chronologically valid");
 

@@ -9,12 +9,16 @@ const timeSchema = z
 // value here instead of accepting an arbitrary positive integer that would
 // silently fall out of every day-keyed lookup downstream.
 const daySchema = z.union([z.literal(1), z.literal(2)]);
+const activitySchema = z.object({
+  PT: z.string().min(1).max(300),
+  EN: z.string().min(1).max(300),
+});
 
 export const createAdminScheduleSchema = z.object({
   day: daySchema,
   startTime: timeSchema,
   endTime: timeSchema,
-  activity: z.string().min(1).max(300),
+  activity: activitySchema,
   order: z.number().int().optional(),
 });
 
@@ -23,7 +27,7 @@ export const updateAdminScheduleSchema = z
     day: daySchema,
     startTime: timeSchema,
     endTime: timeSchema,
-    activity: z.string().min(1).max(300),
+    activity: activitySchema,
     order: z.number().int(),
   })
   .partial()

@@ -5,10 +5,12 @@ import { FunctionComponent, useEffect, useState } from "react";
 import { httpClient } from "@/lib/http/client";
 import Schedule, { type ScheduleDay } from "@/components/Schedule";
 import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
+import type { Language } from "@/domain/i18n/translations";
 
 interface ScheduleSectionProps {
   firstDayTitle: string;
   secondDayTitle: string;
+  language: Language;
 }
 
 // "09:45" -> "09.45h", matching the site's existing time notation (Schedule
@@ -34,15 +36,16 @@ function groupByDay(events: ScheduleEventDto[]): ScheduleDay[][] {
 const ScheduleSection: FunctionComponent<ScheduleSectionProps> = ({
   firstDayTitle,
   secondDayTitle,
+  language,
 }) => {
   const [events, setEvents] = useState<ScheduleEventDto[] | null>(null);
 
   useEffect(() => {
     httpClient
-      .get<ScheduleEventDto[]>("/schedule")
+      .get<ScheduleEventDto[]>(`/schedule?lang=${language}`)
       .then(setEvents)
       .catch(() => setEvents([]));
-  }, []);
+  }, [language]);
 
   if (!events) return null;
 

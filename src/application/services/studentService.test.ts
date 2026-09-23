@@ -9,9 +9,6 @@ import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
 import { deleteStudentForAdmin, updateStudentForAdmin } from "./studentService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
-}));
 vi.mock("../repositories/savedStudentRepository", () => ({
   isStudentSaved: vi.fn(),
 }));
@@ -22,8 +19,6 @@ vi.mock("../repositories/studentRepository", () => ({
 vi.mock("../repositories/userRepository", () => ({
   updateUserActive: vi.fn(),
   deleteUser: vi.fn(),
-  setUserInterests: vi.fn(),
-  connectUserInterests: vi.fn(),
   upsertUser: vi.fn(),
 }));
 vi.mock("./actionService", () => ({ completeAction: vi.fn() }));

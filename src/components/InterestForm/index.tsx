@@ -5,17 +5,17 @@ import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
-import type { InterestDto } from "@/application/dto/interestDto";
+import type { AdminInterestDto } from "@/application/dto/interestDto";
 
 interface InterestFormProps {
-  interest?: InterestDto;
+  interest?: AdminInterestDto;
 }
 
 const InterestForm: React.FC<InterestFormProps> = ({ interest }) => {
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
-    const payload = { name: values.name };
+    const payload = { name: { PT: values.namePT, EN: values.nameEN } };
 
     try {
       if (interest) {
@@ -40,11 +40,24 @@ const InterestForm: React.FC<InterestFormProps> = ({ interest }) => {
           kind: "fields",
           title: "Detalhes",
           fields: [
-            { kind: "text", name: "name", label: "Nome", required: true },
+            {
+              kind: "text",
+              name: "namePT",
+              label: "Nome (PT)",
+              required: true,
+            },
+            {
+              kind: "text",
+              name: "nameEN",
+              label: "Nome (EN)",
+              required: true,
+            },
           ],
         },
       ]}
-      defaultValues={interest ? { name: interest.name } : {}}
+      defaultValues={
+        interest ? { namePT: interest.name.PT, nameEN: interest.name.EN } : {}
+      }
       onSubmit={handleSubmit}
     />
   );
