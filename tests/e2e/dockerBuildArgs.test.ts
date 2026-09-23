@@ -172,7 +172,13 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
   ]) {
     expectRequiredComposeVariable(webEnvironment, name);
   }
-  expect(webEnvironment).not.toMatch(/^\s*DIRECT_URL:/m);
+  // Coolify adds its runtime .env to every Compose service; give web only
+  // the scoped runtime URL even when DIRECT_URL holds migrator credentials.
+  expectComposeVariable(
+    webEnvironment,
+    "DIRECT_URL",
+    "${DATABASE_URL:?Configure DATABASE_URL in Coolify}"
+  );
   expectComposeVariable(
     webEnvironment,
     "NEXT_PUBLIC_BASE_URL",
