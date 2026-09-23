@@ -11,7 +11,7 @@ services:
       DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
     networks:
       - default
-      - supabase_stack
+      - shared_data
 
   web:
     build:
@@ -22,8 +22,6 @@ services:
         SENTRY_URL: ${SENTRY_URL:-}
         SENTRY_ORG: ${SENTRY_ORG:-}
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
         NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-${SERVICE_URL_WEB:-http://localhost:4000}/api}
         NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
       secrets:
@@ -34,14 +32,14 @@ services:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
-      DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
       JWT_SECRET: ${JWT_SECRET:-${SERVICE_REALBASE64_64_JWT}}
 
-      # Supabase is retained for Storage/Postgres only; GoTrue is no longer in
-      # the Fallstack authentication path.
-      SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY:?Configure SUPABASE_SECRET_KEY in Coolify}
-      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:?Configure NEXT_PUBLIC_SUPABASE_URL in Coolify}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:?Configure NEXT_PUBLIC_SUPABASE_ANON_KEY in Coolify}
+      # Storage credentials stay server-side; AuthNEI handles login.
+      S3_ENDPOINT: http://minio-gbheij1ljds8nrhfgdf9teeo:9000
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure S3_ACCESS_KEY_ID in Coolify}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure S3_SECRET_ACCESS_KEY in Coolify}
+      S3_BUCKET_AVATARS: ${S3_BUCKET_AVATARS:?Configure S3_BUCKET_AVATARS in Coolify}
+      S3_BUCKET_CVS: ${S3_BUCKET_CVS:?Configure S3_BUCKET_CVS in Coolify}
 
       # Direct AuthNEI/ZITADEL OIDC. Only values that identify this concrete
       # ZITADEL application/organization need to be configured in Coolify;
@@ -66,13 +64,13 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
     networks:
       - default
-      - supabase_stack
+      - shared_data
 
 secrets:
   sentry_auth_token:
     environment: SENTRY_AUTH_TOKEN
 
 networks:
-  supabase_stack:
+  shared_data:
     external: true
-    name: ${SUPABASE_NETWORK_NAME}
+    name: gbheij1ljds8nrhfgdf9teeo

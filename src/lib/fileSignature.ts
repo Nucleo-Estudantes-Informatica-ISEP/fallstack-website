@@ -1,7 +1,6 @@
 // Leading "magic bytes" for the file types we accept on upload. When bytes
-// reach the server this validates their declared type. For signed direct
-// uploads it is an early browser-side check only; Storage bucket restrictions
-// are the enforcement boundary.
+// reach the server this validates their declared type before storage. The
+// browser repeats the check for quick feedback.
 const SIGNATURES: Record<string, { offset: number; bytes: number[] }[]> = {
   "image/png": [{ offset: 0, bytes: [0x89, 0x50, 0x4e, 0x47] }],
   "image/jpeg": [{ offset: 0, bytes: [0xff, 0xd8, 0xff] }],
