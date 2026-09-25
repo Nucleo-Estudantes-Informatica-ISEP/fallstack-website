@@ -31,7 +31,7 @@ as its callback. Use development credentials and data only.
 
    ```bash
    docker run -d --name fallstack-postgres -p 54322:5432 -e POSTGRES_PASSWORD=postgres postgres:16
-   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret quay.io/minio/minio server /data --console-address ':9001'
+   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:latest server /data --console-address ':9001'
    ```
 
    Open the MinIO console at `http://localhost:9001` and create three buckets:
