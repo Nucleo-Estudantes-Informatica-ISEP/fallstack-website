@@ -40,7 +40,7 @@ For every requested task:
 | Framework       | Next.js 15 (App Router), React 18                              |
 | Language        | TypeScript (`strict: true`)                                    |
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
-| Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)     |
+| Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)        |
 | Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
 | Storage         | Shared MinIO (avatars/logos via public app route; CVs private) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |
@@ -67,57 +67,13 @@ pnpm wipe -- --confirm   # wipe the DB — only runs when NODE_ENV=development
 
 ## Architecture
 
-### Current layout (`src/`)
-
-```
-app/            # Next.js App Router: route groups (auth)/(admin)/(guest)/(profiles) + api/** — routes stay thin, delegating to application/
-application/    # service + repository layers: services/ (orchestration, "server-only"), repositories/ (Prisma access) — pure domain rules live in top-level domain/, not here
-client/         # client-safe fetch wrappers (e.g. client/api/session.ts) built on lib/http/client.ts's httpClient, "client-only"
-components/     # components/ui/ holds shared, reusable primitives (Icons.tsx, Input, Modal, buttons, ...); everything else — reusable or single-use — stays flat at the top level, one PascalCaseName/index.tsx folder each
-config/         # static config object (cookies, upload limits), api.ts (client BASE_URL) + env.server.ts/env.client.ts (Zod-validated env) — edition content now lives in edition/, not here
-contexts/       # React contexts
-domain/         # pure business rules, no I/O, grouped by entity/concern: action/, auth/, company/, savedStudent/, student/
-edition/        # single source of truth for per-event content still hardcoded: tier company lists, branding, actions.ts (action names + booth-to-action mapping) — Sponsors, FAQ, and the schedule/timetable moved to the DB (Sponsor/FaqEntry/ScheduleEvent models, admin CRUD + drag-and-drop reorder boards for FAQ/schedule), don't add any of them back here
-hooks/          # React hooks
-lib/            # remaining server + shared helpers not yet moved into application/ (logger, Sentry privacy, file signatures, saved-student comment formatting) + http/ (client.ts's HttpClient, server.ts's defineHandler)
-schemas/        # Zod input validation
-types/          # shared TypeScript types
-utils/          # generic helpers only now (date, files, canvas, isepEmail) — edition content was moved out to edition/
-```
-
-`tests/e2e/` is reserved at the repo root (outside `src/`) for future integration/smoke tests — existing unit tests stay colocated with the code they cover, don't move them there.
-
-**Layer boundary:** `application/repositories/` is the only place that should query through the Prisma client (i.e. call `prisma.*` at runtime) — type-only imports from `@prisma/client` (e.g. `import type { Tier } from "@prisma/client"` in components/types/services) are fine elsewhere and aren't a boundary violation. `application/services/` orchestrates repositories and domain rules and is marked `"server-only"`; top-level `domain/` holds pure business rules with no I/O, grouped by entity/concern (e.g. `domain/auth/authPolicy.ts`'s `passesAuthPolicy` is the predicate `defineHandler`'s auth Strategy is built on). `client/` holds browser fetch wrappers marked `"client-only"`, built on `lib/http/client.ts`'s `httpClient`. `lib/` is what's left after that split — check the top of a file (`"server-only"`, `"client-only"`, or a Prisma/Supabase-server import) before assuming a function's execution context; the migration to `application/`/`client/` isn't total yet.
-
-**HTTP layer:** `lib/http/` is the two-sided extraction of the old inline `auth → parse → work → respond → error-map` per route. `lib/http/server.ts` (`"server-only"`) exports `defineHandler({ auth, schema?, authorize?, handler })`: `auth` is a Strategy (`"public" | "session" | "student" | "employee" | "admin"`, default `"session"`) resolved against the current session by `passesAuthPolicy`; `schema` is an optional Zod schema whose parsed body lands in `handler`'s `body` (a thrown `ZodError` is mapped to `{ error: issues }`/400 by `httpErrorResponse`, same as any thrown `HttpError`/unknown error); `authorize` is an optional `(session, params) => boolean` for ownership checks (e.g. `session.student?.code === params.code`) that runs after the auth Strategy passes. `lib/http/client.ts` (`"client-only"`) exports `httpClient`, a `FetchHttpClient` implementing the `HttpClient` interface (`get`/`post`/`patch`/`put`/`delete`, JSON in/out, throws a typed `HttpClientError` — with `.status` — on a non-2xx response) plus a `raw()` escape hatch for blob/redirect responses that don't fit the JSON contract (e.g. CSV/zip exports). New routes and new client fetch call sites should go through these instead of hand-rolled session checks or raw `fetch`. See `src/app/api/saved/route.ts` (multiple auth Strategies + `authorize` + schema in one file) and `src/client/api/session.ts` (a `try`/`catch HttpClientError` around a call whose non-2xx response — no session — is an expected outcome, not a failure) for the current pattern. Not every route fits: a hot liveness-probe path that shouldn't pay for a session lookup (`health`), and multipart/form-data uploads (`storage/avatar`, `storage/cv` — `schema` only parses JSON) stay as plain route exports; each says why in a comment. Don't put Prisma calls or business rules directly in a route file — add or extend a repository/service instead.
-
-### Data model
-
-Prisma models: `User` (1:1 `Student` or `Employee`, both keyed by the same `id` as `User`), `Student`, `Company` (has `tier`: DIAMOND/GOLD/SILVER/BRONZE), `Employee` (belongs to `Company`), `Action` / `ActionCompletion` (points for QR-scanned actions), `Interest` (many-to-many with `Student` and `Company`), `SavedStudent` (company saves a student).
-
-**`SavedStudent` grain mismatch:** the table's primary key is `[studentId, employeeId]` (employee-scoped), but `isStudentSaved()` in `src/application/repositories/savedStudentRepository.ts` (exposed as `isSaved()` via `src/application/services/savedStudentService.ts`) checks `savedBy: { companyId }` — i.e. the app-level dedup rule is company-scoped while the DB constraint is employee-scoped. Two employees at the same company can currently save the same student twice. Don't assume the DB enforces what the app-level check assumes.
-
-```mermaid
-erDiagram
-  User ||--o| Student : "id"
-  User ||--o| Employee : "id"
-  Student }o--o{ Interest : "interests"
-  Company }o--o{ Interest : "interests"
-  Company ||--o{ Employee : "employs"
-  Employee ||--o{ SavedStudent : "saves"
-  Student ||--o{ SavedStudent : "saved by"
-  Student ||--o{ ActionCompletion : "completes"
-  Action ||--o{ ActionCompletion : "completed via"
-```
+- Keep runtime Prisma access in `src/application/repositories/`, orchestration in server-only `src/application/services/`, and pure rules in `src/domain/`. Routes stay thin. See [layer boundaries](docs/architecture.md#layer-boundaries).
+- Use `defineHandler` for JSON routes and `httpClient` through `src/client/api/` for browser calls. Keep request schemas in `src/schemas/`. See [HTTP conventions](docs/architecture.md#http-conventions).
+- `SavedStudent` is unique per `(studentId, companyId)` despite its employee-attributed primary key. See [data ownership](docs/architecture.md#data-ownership).
 
 ## Auth model
 
-Two independent mechanisms — don't conflate them:
-
-- **Session auth (login state):** ZITADEL / AuthNEI OIDC. `getServerSession()` (`src/application/services/sessionService.ts`) verifies the signed app session and resolves the matching Prisma `User` (student or employee profile). The browser path is the normal app session cookie flow, not a Supabase Auth session.
-- **Short-lived action tokens:** hand-rolled JWTs via `jsonwebtoken`, signed/verified in `src/application/services/authService.ts` (`signJwt`/`verifyJwt`, using `serverEnv.JWT_SECRET` from `@/config/env.server` — not raw `process.env`). Used for the student's personal QR code (`src/app/api/qrcode/route.ts`, 30-minute expiry) and temporary student-profile preview access (`jwtStudent()` in `src/application/services/studentTokenService.ts` signs a token embedding the student `code`, 15-minute expiry; `src/app/(profiles)/student/[...data]/page.tsx` verifies it via `verifyJwt` when the route's `preview` segment is set — used by the company-facing QR and saved-profile flows to grant time-limited profile access within an existing authenticated session, without requiring the profile to be saved) — all genuinely short-lived. **Action QR codes** (`getActionQrCode()` in `src/application/services/actionService.ts`) used to be an exception — a units bug passed a millisecond value straight into `jsonwebtoken`'s numeric `expiresIn` (interpreted as seconds), so the token actually lived ~8.3 hours instead of the intended 30 seconds; fixed in #212, with a regression test asserting `expiresIn: 30` colocated in `actionService.test.ts`. None of these are for login sessions.
-- `authService.ts` also exports `hashPassword`/`comparePassword`/`validatePassword` (bcrypt). These are currently **unused dead code** — no route calls them. Don't assume there's a bcrypt-based credential path; all real login goes through AuthNEI/ZITADEL.
-- Password resets are self-service through AuthNEI: the UI tells the user to continue through the institutional identity provider rather than storing or issuing app-side reset tokens. PostgreSQL and MinIO provide app data and files; neither handles sessions.
+Login uses AuthNEI/ZITADEL OIDC and an app session. QR and profile-preview JWTs are separate short-lived tokens. See [authentication and short-lived tokens](docs/architecture.md#authentication-and-short-lived-tokens).
 
 ## Conventions
 
@@ -171,4 +127,4 @@ CI (`.github/workflows/ci.yml`) uses a frozen install and runs tests, typecheck,
 - **`prisma/wipe.ts` is destructive** (`pnpm wipe -- --confirm`) and only runs when `NODE_ENV` is exactly `development` — it refuses in any other environment (including staging or a non-`development` test setup, not just `production`) — double-check `DATABASE_URL` and `NODE_ENV` before running it anywhere but local.
 - **PWA is enabled** (`@ducanh2912/next-pwa`) — changes to caching behavior or service-worker-adjacent routes should be checked on a real device/PWA install, not just the dev server.
 - **CSP is not yet configured** in `next.config.js`'s `headers()` — only the baseline headers (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy`, `Permissions-Policy`) are set. Don't assume a `Content-Security-Policy` or CSP `frame-ancestors` directive exists.
-- **QR action codes have no dedicated anti-replay/nonce check** in `src/app/api/actions/[id]/route.ts` beyond the JWT's own `exp` claim — since #212 fixed that claim to actually be ~30 seconds (see [Auth model](#auth-model)) rather than ~8.3 hours, a captured/screenshotted code is only replayable within that ~30s window (e.g. showing it to another student before it expires), not indefinitely. Still worth knowing before assuming stronger replay protection exists than this.
+- **QR action codes have no nonce or one-time-consumption check.** The route checks both JWT expiry and timestamp freshness; another student could use a captured code during that short window. See [authentication and short-lived tokens](docs/architecture.md#authentication-and-short-lived-tokens).
