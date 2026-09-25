@@ -69,7 +69,7 @@ local equivalents. Never use production credentials locally.
 
 ### Observability
 
-Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVABILITY.md`](./docs/OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
+Production logging and error monitoring use Pino and Sentry. See [`docs/observability.md`](./docs/observability.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
 
 ### Pre-event load validation
 
