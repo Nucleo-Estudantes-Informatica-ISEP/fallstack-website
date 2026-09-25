@@ -12,8 +12,6 @@ afterEach(() => {
 });
 
 test("falls back to the native Next dev port when NEXT_PUBLIC_BASE_URL is empty", async () => {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = "https://project.supabase.co";
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
   process.env.NEXT_PUBLIC_BASE_URL = "";
 
   const { clientEnv } = await import("./env.client");
@@ -21,10 +19,8 @@ test("falls back to the native Next dev port when NEXT_PUBLIC_BASE_URL is empty"
   expect(clientEnv.NEXT_PUBLIC_BASE_URL).toBe("http://localhost:3000/api");
 });
 
-test("still requires a real NEXT_PUBLIC_SUPABASE_URL (no default)", async () => {
-  process.env.NEXT_PUBLIC_SUPABASE_URL = "";
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
-  process.env.NEXT_PUBLIC_BASE_URL = "";
+test("rejects an invalid NEXT_PUBLIC_BASE_URL", async () => {
+  process.env.NEXT_PUBLIC_BASE_URL = "not-a-url";
 
   await expect(import("./env.client")).rejects.toThrow(
     /Invalid client environment variables/

@@ -11,12 +11,10 @@ import type {
 } from "@/application/dto/companyDto";
 import type { Language } from "@/domain/i18n/translations";
 
-function toCompanyProps(company: CompanyRosterDto): CompanyProps | null {
-  if (!company.avatar) return null;
-
+function toCompanyProps(company: CompanyRosterDto): CompanyProps {
   return {
     name: company.name,
-    logoHref: company.avatar,
+    logoHref: company.avatar ?? undefined,
     websiteUrl: company.website ?? undefined,
     hasContent: company.hasContent,
     rankStyle: company.rank.style,
@@ -38,7 +36,6 @@ function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
   const groups = new Map<string, RankGroup>();
   for (const company of companies) {
     const props = toCompanyProps(company);
-    if (!props) continue;
     const group = groups.get(company.rank.id);
     if (group) group.companies.push(props);
     else

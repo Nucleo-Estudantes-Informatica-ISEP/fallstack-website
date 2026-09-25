@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-import { serverEnv } from "@/config/env.server";
 import { getImageRemotePatterns } from "@/config/imageRemotePatterns";
 
 // Escapes regex metacharacters in a literal (non-wildcard) glob segment.
@@ -50,8 +49,8 @@ function matchesRemotePattern(
 // getImageRemotePatterns()) - next/image throws a render-time "hostname is
 // not configured" error for any URL that doesn't match protocol, port,
 // hostname, *and* pathname there, so an admin-submitted logo URL that only
-// happens to share a hostname (e.g. a Supabase project's URL outside its
-// storage path) would save fine and only break the public page when
+// happens to share a hostname but not an allowed path would save fine and
+// only break the public page when
 // rendered.
 //
 // Computed inside the function, not at module scope: `serverEnv` validates
@@ -65,12 +64,22 @@ function isAllowedLogoUrl(value: string): boolean {
   if (!parsed.success) return false;
 
   const url = new URL(value);
-  const patterns = getImageRemotePatterns(serverEnv.NODE_ENV !== "production");
+  const patterns = getImageRemotePatterns();
   return patterns.some((pattern) => matchesRemotePattern(pattern, url));
 }
 
-// Logos must come from configured remote Storage. Legacy public/ asset paths
-// are deliberately rejected now that company/sponsor logos use Storage only.
-export const logoSchema = z.string().max(2048).refine(isAllowedLogoUrl, {
-  message: "Must be a URL from configured storage",
-});
+// App media paths and surviving public assets are valid. The deleted company
+// and sponsor asset directories cannot be used for new logo submissions.
+export const logoSchema = z
+  .string()
+  .max(2048)
+  .refine(
+    (value) =>
+      (value.startsWith("/") &&
+        !value.startsWith("//") &&
+        !/^\/assets\/images\/(companies|sponsors)\//.test(value)) ||
+      isAllowedLogoUrl(value),
+    {
+      message: "Must be an existing app path or a URL from configured storage",
+    }
+  );

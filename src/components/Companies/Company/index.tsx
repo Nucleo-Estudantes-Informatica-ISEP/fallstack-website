@@ -7,7 +7,7 @@ import Link from "next/link";
 import { companyProfileHref } from "@/domain/company/services/rank-access";
 
 export interface CompanyProps {
-  logoHref: string;
+  logoHref?: string;
   name: string;
   websiteUrl?: string;
   hasContent: boolean;
@@ -46,13 +46,17 @@ const Company: React.FC<CompanyProps> = ({
         target={companyHref.startsWith("/") ? "_self" : "_blank"}
         className="flex items-center justify-center"
       >
-        <Image
-          className={`${className} object-cover`}
-          src={logoHref}
-          alt={name}
-          width={logoWidth}
-          height={logoHeight}
-        />
+        {logoHref ? (
+          <Image
+            className={`${className} object-cover`}
+            src={logoHref}
+            alt={name}
+            width={logoWidth}
+            height={logoHeight}
+          />
+        ) : (
+          <span className="text-lg font-semibold">{name}</span>
+        )}
       </Link>
     </div>
   );

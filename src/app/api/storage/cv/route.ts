@@ -2,19 +2,22 @@ import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
 import { tooManyRequestsResponse } from "@/lib/rateLimit";
-import { createUploadTicket } from "@/application/services/uploadTicketService";
-import { storageUploadTicketSchema } from "@/schemas/storageUploadTicketSchema";
+import {
+  checkUploadRateLimit,
+  readUploadFile,
+  uploadFile,
+} from "@/application/services/uploadService";
 
-export const POST = defineHandler<
-  Record<string, never>,
-  typeof storageUploadTicketSchema
->({
+// Multipart upload: defineHandler's schema parses JSON only.
+export const POST = defineHandler({
   auth: "session",
   authorize: (session) => session.role === "STUDENT",
-  schema: storageUploadTicketSchema,
-  handler: async ({ session, body }) => {
-    const result = await createUploadTicket("cv", session!.id, body);
-    if (!result.allowed) return tooManyRequestsResponse(result.retryAfterMs);
-    return NextResponse.json(result.ticket, { status: 201 });
+  handler: async ({ req, session }) => {
+    const rate = checkUploadRateLimit("cv", session!.id);
+    if (!rate.allowed) return tooManyRequestsResponse(rate.retryAfterMs);
+    const file = await readUploadFile(req, "cv");
+    return NextResponse.json(await uploadFile("cv", file), {
+      status: 201,
+    });
   },
 });

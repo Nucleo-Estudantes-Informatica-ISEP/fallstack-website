@@ -3,7 +3,7 @@ UPDATE "Company"
 SET "avatar" = NULL
 WHERE "avatar" LIKE '/assets/images/companies/%';
 
--- Sponsor.logo is required, so stale legacy rows cannot remain editable or renderable.
--- Current sponsors re-uploaded through the admin backoffice use Storage URLs and remain.
-DELETE FROM "Sponsor"
+-- Keep sponsor metadata for re-upload; inactive rows are hidden publicly.
+UPDATE "Sponsor"
+SET "active" = false
 WHERE "logo" LIKE '/assets/images/sponsors/%';
