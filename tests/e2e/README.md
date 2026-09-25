@@ -103,9 +103,28 @@ Available scenarios:
 
 - `health` — safe liveness baseline.
 - `qr` — public action QR issuance; requires `ACTION_ID`.
-- `upload-tickets` — authenticated ticket issuance; requires a
-  comma-separated `STUDENT_COOKIES` pool from distinct student accounts. Exact
-  duplicate cookie entries are rejected, and the script rejects settings that
-  could exceed any account's five tickets/minute limit. These are live staging
-  session cookies: avoid shell history, never share them, and run only on
-  staging.
+- `upload-tickets` — authenticated ticket issuance at a normal, ramping pace;
+  requires a comma-separated `STUDENT_COOKIES` pool from distinct student
+  accounts. Exact duplicate cookie entries are rejected, and the script
+  rejects settings that could exceed any account's five tickets/minute limit.
+  These are live staging session cookies: avoid shell history, never share
+  them, and run only on staging.
+- `upload-tickets-boundary` — deterministic rate-limiter validation (#287):
+  for each `STUDENT_COOKIES` entry, fires a burst of requests, waits until
+  that student's rate-limit window resets, then bursts again. Asserts the
+  limiter allows exactly `RATE_LIMIT_MAX` (default 5, matching
+  `config.uploads.*.rateLimit`) through each burst and rejects the rest with
+  `429`. `boundary_combined_allowed` in the summary reports how many total
+  requests cleared the limiter across a pre/post-boundary pair, for
+  quantifying the known both-sides-of-a-window trade-off documented on
+  `createRateLimiter` (`src/lib/rateLimit.ts`). `RATE_LIMIT_WINDOW_MS`
+  (default 60000) overrides the window if the config value changes. Run this
+  scenario alongside `qr` (and optionally `upload-tickets`) in separate
+  concurrent `pnpm test:load` invocations against the same target to get a
+  realistic mixed-traffic picture rather than an isolated probe.
+
+Set `ALLOW_STORAGE_UNAVAILABLE=yes` only for a local run against a dev server
+with no reachable Supabase Storage: it accepts `502` (Storage unreachable) as
+well as `201` wherever the script would otherwise require a `201`, since the
+rate limiter's decision happens before the Storage call. Never set this
+against staging or production — a real run there must still require `201`.
