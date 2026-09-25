@@ -68,22 +68,18 @@ function isAllowedLogoUrl(value: string): boolean {
   return patterns.some((pattern) => matchesRemotePattern(pattern, url));
 }
 
-// Logos may be an allowed external URL or an absolute app path (a freshly
-// uploaded avatar or a pre-existing static asset in public/ -
-// see the add_sponsor_table/company_display_fields migrations' backfills,
-// which reference them by path rather than re-uploading them). A
-// protocol-relative value ("//host/...") is rejected even though it starts
-// with "/" - browsers resolve it against the current page's protocol, so
-// it's effectively an unvalidated external URL, not a same-origin path.
+// App media paths and surviving public assets are valid. The deleted company
+// and sponsor asset directories cannot be used for new logo submissions.
 export const logoSchema = z
   .string()
   .max(2048)
   .refine(
     (value) =>
-      (value.startsWith("/") && !value.startsWith("//")) ||
+      (value.startsWith("/") &&
+        !value.startsWith("//") &&
+        !/^\/assets\/images\/(companies|sponsors)\//.test(value)) ||
       isAllowedLogoUrl(value),
     {
-      message:
-        'Must be an absolute path starting with "/" or a URL from configured storage',
+      message: "Must be an existing app path or a URL from configured storage",
     }
   );

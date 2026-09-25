@@ -40,7 +40,7 @@ For every requested task:
 | Framework       | Next.js 15 (App Router), React 18                              |
 | Language        | TypeScript (`strict: true`)                                    |
 | Styling         | Tailwind CSS 4, HeroUI 2.8                                     |
-| Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)     |
+| Database        | Shared PostgreSQL 16, Prisma 6 (`prisma/schema.prisma`)        |
 | Auth            | ZITADEL / AuthNEI (OIDC) — see [Auth model](#auth-model)       |
 | Storage         | Shared MinIO (avatars/logos via public app route; CVs private) |
 | Validation      | Zod, schemas in `src/schemas/`                                 |

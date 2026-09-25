@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import { logoSchema } from "@/schemas/logoSchema";
 
 import {
   countSponsorsForAdmin,
@@ -43,6 +44,9 @@ export async function updateSponsorForAdmin(
     order?: number;
   }
 ) {
-  if (!(await findSponsorById(id))) throw new HttpError("Not found", 404);
+  const sponsor = await findSponsorById(id);
+  if (!sponsor) throw new HttpError("Not found", 404);
+  if (input.active && !logoSchema.safeParse(input.logo ?? sponsor.logo).success)
+    throw new HttpError("Upload a valid logo before activation", 400);
   return updateSponsor(id, input);
 }
