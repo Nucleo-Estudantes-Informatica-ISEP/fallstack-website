@@ -14,8 +14,10 @@ const studentCookies = (__ENV.STUDENT_COOKIES || "")
   .filter(Boolean);
 const rateLimitMax = Number(__ENV.RATE_LIMIT_MAX || 5);
 const rateLimitWindowMs = Number(__ENV.RATE_LIMIT_WINDOW_MS || 60000);
-const burstSize = rateLimitMax + 2;
 const allowStorageUnavailable = __ENV.ALLOW_STORAGE_UNAVAILABLE === "yes";
+const preResetMarginMs = 500;
+const resetPollIntervalMs = 100;
+const resetDetectionSlackMs = 5000;
 const supportedScenarios = [
   "health",
   "qr",
@@ -60,6 +62,7 @@ if (scenario === "upload-tickets") {
 }
 
 const boundaryCombinedAllowed = new Trend("boundary_combined_allowed", false);
+const boundaryElapsedMs = new Trend("boundary_elapsed_ms", true);
 const isBoundaryScenario = scenario === "upload-tickets-boundary";
 
 export const options = {
@@ -89,8 +92,18 @@ export const options = {
       },
 };
 
-function headers() {
-  return { "Content-Type": "application/json" };
+const samplePdf = http.file(
+  "%PDF-1.4\n% event-readiness\n%%EOF\n",
+  "event-readiness.pdf",
+  "application/pdf"
+);
+
+function uploadCv(cookie) {
+  return http.post(
+    `${baseUrl}/api/storage/cv`,
+    { file: samplePdf },
+    { headers: { Cookie: cookie } }
+  );
 }
 
 function isAllowedUploadStatus(status) {
@@ -98,32 +111,55 @@ function isAllowedUploadStatus(status) {
   return allowStorageUnavailable && status === 502;
 }
 
-function burstUploadTickets(cookie, label) {
-  const statuses = [];
-  for (let i = 0; i < burstSize; i++) {
-    const response = http.post(
-      `${baseUrl}/api/storage/cv`,
-      JSON.stringify({ contentType: "application/pdf", size: 44 }),
-      { headers: { ...headers(), Cookie: cookie } }
-    );
-    statuses.push(response.status);
-  }
+function sendAllowance(cookie, count) {
+  let allowed = 0;
+  for (let i = 0; i < count; i++)
+    if (isAllowedUploadStatus(uploadCv(cookie).status)) allowed++;
+  return allowed;
+}
 
-  const allowed = statuses.filter((status) =>
-    isAllowedUploadStatus(status)
-  ).length;
-  const limited = statuses.filter((status) => status === 429).length;
+function probeWindowBoundary(cookie) {
+  const primeSentAt = Date.now();
+  const primeAllowed = isAllowedUploadStatus(uploadCv(cookie).status);
+  const primeRoundTripMs = Date.now() - primeSentAt;
+  const preResetLeadMs = preResetMarginMs + rateLimitMax * primeRoundTripMs;
+
+  sleep(
+    Math.max(primeSentAt + rateLimitWindowMs - preResetLeadMs - Date.now(), 0) /
+      1000
+  );
+  const burstStartedAt = Date.now();
+  const preResetAllowed = sendAllowance(cookie, rateLimitMax - 1);
+
+  const deadline = primeSentAt + rateLimitWindowMs + resetDetectionSlackMs;
+  let probe;
+  do {
+    probe = uploadCv(cookie);
+    if (probe.status !== 429) break;
+    sleep(resetPollIntervalMs / 1000);
+  } while (Date.now() < deadline);
+
+  const resetDetected = isAllowedUploadStatus(probe.status);
+  const postResetAllowed = resetDetected
+    ? 1 + sendAllowance(cookie, rateLimitMax - 1)
+    : 0;
+  const burstEndedAt = Date.now();
+  const beyondAllowance = resetDetected ? uploadCv(cookie) : undefined;
 
   check(null, {
-    [`${label}: exactly ${rateLimitMax} requests pass the limiter`]: () =>
-      allowed === rateLimitMax,
-    [`${label}: exactly ${burstSize - rateLimitMax} requests get 429`]: () =>
-      limited === burstSize - rateLimitMax,
-    [`${label}: every response accounted for (no unexpected status)`]: () =>
-      allowed + limited === burstSize,
+    "prime request passes the limiter": () => primeAllowed,
+    [`pre-reset: remaining ${rateLimitMax - 1} requests pass the limiter`]:
+      () => preResetAllowed === rateLimitMax - 1,
+    [`post-reset: next ${rateLimitMax} requests pass the limiter`]: () =>
+      postResetAllowed === rateLimitMax,
+    "post-reset: a request beyond that allowance gets 429": () =>
+      beyondAllowance !== undefined && beyondAllowance.status === 429,
   });
 
-  return allowed;
+  if (resetDetected) {
+    boundaryCombinedAllowed.add(preResetAllowed + postResetAllowed);
+    boundaryElapsedMs.add(burstEndedAt - burstStartedAt);
+  }
 }
 
 export default function runScenario() {
@@ -145,31 +181,15 @@ export default function runScenario() {
 
   if (scenario === "upload-tickets") {
     const cookie = studentCookies[(__VU - 1) % studentCookies.length];
-    const response = http.post(
-      `${baseUrl}/api/storage/cv`,
-      JSON.stringify({ contentType: "application/pdf", size: 44 }),
-      { headers: { ...headers(), Cookie: cookie } }
-    );
+    const response = uploadCv(cookie);
     check(response, {
-      "upload ticket returns 201": (res) => res.status === 201,
-      "upload ticket has signed token": (res) => Boolean(res.json("token")),
+      "CV upload returns 201": (res) => res.status === 201,
+      "CV upload returns a file id": (res) => Boolean(res.json("id")),
     });
   }
 
   if (scenario === "upload-tickets-boundary") {
-    const cookie = studentCookies[(__VU - 1) % studentCookies.length];
-    const windowStart = Date.now();
-    const before = burstUploadTickets(cookie, "pre-boundary burst");
-
-    const elapsedMs = Date.now() - windowStart;
-    const waitSeconds = Math.max(
-      (rateLimitWindowMs - elapsedMs + 250) / 1000,
-      0
-    );
-    sleep(waitSeconds);
-
-    const after = burstUploadTickets(cookie, "post-boundary burst");
-    boundaryCombinedAllowed.add(before + after);
+    probeWindowBoundary(studentCookies[(__VU - 1) % studentCookies.length]);
     return;
   }
 
