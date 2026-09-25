@@ -21,8 +21,6 @@ const config = {
       rateLimit: { windowMs: 60 * 1000, max: 5 },
     },
     logo: {
-      bucket: "logos",
-      pathPrefix: "distribution/logo",
       types: ["image/png", "image/webp"],
       maxSize: 5 * 1024 * 1024,
     },

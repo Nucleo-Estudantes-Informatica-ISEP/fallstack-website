@@ -75,16 +75,10 @@ replace only its `e2e-*` comment. Admin coverage creates one uniquely named
 event participants or companies. If a run is killed before cleanup, remove any
 leftover `e2e-*` FAQ through the staging backoffice before the next run.
 
-Set `E2E_ALLOW_UPLOAD_TICKETS=yes`, `E2E_SUPABASE_URL`, and
-`E2E_SUPABASE_ANON_KEY` to also verify direct CV upload. That test deliberately
-creates an unlinked staging file; the existing storage garbage collector removes
-it after its retention window. Ticket tests run only in the `chromium` project,
-keeping one student's total below the five-ticket-per-minute route limit.
-
-Add `E2E_VERIFY_BUCKET_RESTRICTIONS=yes` to attempt a wrong-MIME upload and an
-over-10 MiB upload. Both must be rejected by the staging `cvs` bucket. Run this
-only against staging: a misconfigured bucket can retain the rejected-test files
-until the garbage collector removes them.
+Set `E2E_ALLOW_UPLOADS=yes` to verify authenticated CV upload through the app.
+Add `E2E_VERIFY_UPLOAD_LIMITS=yes` to check wrong MIME and over-10 MiB
+rejections. These checks run in Chromium only and create an unlinked staging
+object; delete it through the admin storage page after the run. Use staging only.
 
 Playwright writes failure screenshots and traces under `test-results/`, plus an
 HTML report under `playwright-report/` when that reporter is selected. Inspect a

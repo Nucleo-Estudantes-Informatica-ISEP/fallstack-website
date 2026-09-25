@@ -15,7 +15,6 @@ import { actionNames } from "@/edition/actions";
 import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
-import { createAdminClient } from "@/utils/supabase/admin";
 
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
@@ -48,6 +47,13 @@ import {
   rollbackAuthUser,
   setAuthUserBanned,
 } from "./authApplicationService";
+import {
+  avatarKey,
+  cvKey,
+  getObject,
+  objectExists,
+  publicAvatarUrl,
+} from "./objectStorageService";
 
 type NewStudent = z.infer<typeof postStudentSchema>;
 type StudentPatch = z.infer<typeof patchStudentSchema>;
@@ -57,15 +63,13 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
   do code = generateRandomCode();
   while (await findStudentByCode(code));
 
-  // External I/O (Supabase Storage) stays outside the transaction below —
+  // External storage I/O stays outside the transaction below —
   // no network calls while holding a DB transaction open.
   let avatarUrl = body.avatarUrl ?? null;
   if (!avatarUrl && body.avatar) {
-    const admin = createAdminClient();
-    const path = `distribution/avatar/${body.avatar}`;
-    const check = await admin.storage.from("avatars").createSignedUrl(path, 60);
-    if (check.error) throw new HttpError("Invalid avatar upload id", 400);
-    avatarUrl = admin.storage.from("avatars").getPublicUrl(path).data.publicUrl;
+    if (!(await objectExists("avatar", avatarKey(body.avatar))))
+      throw new HttpError("Invalid avatar upload id", 400);
+    avatarUrl = publicAvatarUrl(body.avatar);
   }
   const cv = body.cvId ?? null;
 
@@ -114,10 +118,8 @@ export const setStudentAvatar = (code: string, url: string) =>
   updateStudentAvatar(code, url);
 
 export async function setStudentCv(code: string, id: string) {
-  const check = await createAdminClient()
-    .storage.from("cvs")
-    .createSignedUrl(`distribution/cv/${id}.pdf`, 60);
-  if (check.error) throw new HttpError("Invalid upload id", 400);
+  if (!(await objectExists("cv", cvKey(id))))
+    throw new HttpError("Invalid upload id", 400);
   await withTransaction(async (tx) => {
     await updateStudentCv(code, id, tx);
     await completeAction(code, actionNames.uploadCv, tx);
@@ -132,11 +134,20 @@ export async function getStudentCv(code: string, access: StudentAccess) {
     !student.cv
   )
     throw new HttpError("CV not found", 404);
-  const signed = await createAdminClient()
-    .storage.from("cvs")
-    .createSignedUrl(`distribution/cv/${student.cv}.pdf`, 60 * 5);
-  if (signed.error || !signed.data) throw new HttpError("CV not found", 404);
-  return signed.data.signedUrl;
+  return `/api/students/${encodeURIComponent(code)}/cv/file`;
+}
+
+export async function downloadStudentCv(code: string, access: StudentAccess) {
+  const student = await findStudentByCode(code);
+  if (
+    !student ||
+    !(await isAllowedToViewStudent(code, access, isStudentSaved)) ||
+    !student.cv
+  )
+    throw new HttpError("CV not found", 404);
+  const file = await getObject("cv", cvKey(student.cv));
+  if (!file) throw new HttpError("CV not found", 404);
+  return file;
 }
 
 export const getStudent = (code: string) => findStudentProfileByCode(code);
