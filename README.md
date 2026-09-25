@@ -1,130 +1,81 @@
 # Fallstack
 
-## Hello there! 👋
+Fallstack is NEI-ISEP's annual event connecting ISEP students with technology
+companies. Editions share this repository and are tagged `<year>-edition`; see
+[CHANGELOG.md](CHANGELOG.md).
 
-Welcome to the Fall Stack event's GitHub repository. Here you'll find everything you need to contribute with your amazing code and ideas!
+## Stack
 
-This is a Núcleo de Estudantes de Informática project, made by students from ISEP.
+Next.js 15, React 18, TypeScript, Tailwind CSS 4, HeroUI, PostgreSQL 16 with
+Prisma 6, MinIO, and AuthNEI/ZITADEL OIDC. See the
+[architecture guide](docs/architecture.md) for application boundaries.
 
----
+## Run locally
 
-## Description
+Requires Node.js 24+, pnpm 10 (via Corepack or a local install), PostgreSQL 16,
+MinIO, and a development AuthNEI/ZITADEL OIDC client. Ask a maintainer for the
+client credentials and register `http://localhost:3000/api/auth/callback/zitadel`
+as its callback. Use development credentials and data only.
 
-Fall Stack is a tech event that happens every year with the intention of presenting tech companies to students that are looking for an internship.
+1. Clone and install:
 
-This is also a great place for networking and really getting to know the market.
+   ```bash
+   git clone https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website.git
+   cd fallstack-website
+   corepack enable
+   pnpm install
+   ```
 
-The event takes place at ISEP (Instituto Superior de Engenharia do Porto). Each year's edition is tracked as a `<year>-edition` git tag on this repo — see [`CHANGELOG.md`](./CHANGELOG.md) for the current edition's dates and what changed.
+2. Start isolated local PostgreSQL and MinIO, or point `.env` at dedicated
+   development services. One Docker setup matching `.env.example` is:
 
----
+   ```bash
+   docker run -d --name fallstack-postgres -p 54322:5432 -e POSTGRES_PASSWORD=postgres postgres:16
+   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:latest server /data --console-address ':9001'
+   ```
 
-## Tech stack
+   Open the MinIO console at `http://localhost:9001` and create three buckets:
+   `fallstack-dev-avatars`, `fallstack-dev-logos`, and `fallstack-dev-cvs`.
+   Use the same names and credentials in `.env`. A local database uses the
+   default `public` schema; shared environments use `?schema=fallstack`.
 
-Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, MinIO and
-ZITADEL/AuthNEI. See [`AGENTS.md`](./AGENTS.md) for architecture and
-[`docs/SHARED_DATA.md`](./docs/SHARED_DATA.md) for deployment.
+3. Configure the app:
 
-### Authentication
+   ```bash
+   cp .env.example .env
+   ```
 
-Institutional OIDC handles login and password recovery. The application keeps
-its own signed session and `User` rows. PostgreSQL and MinIO do not provide
-login sessions. Delete accounts through the admin backoffice to preserve app
-relationships and permissions.
+   Set `DATABASE_URL`, `DIRECT_URL` (use the same URL locally), `S3_*`, and
+   the `AUTH_*`/`ZITADEL_*` values in `.env`. Change `JWT_SECRET` and
+   `AUTH_SECRET` from example values. Keep `NEXT_PUBLIC_BASE_URL` at
+   `http://localhost:3000/api` for this setup. `.env.example` lists all keys.
+   Do not use production credentials locally.
 
----
+4. Apply migrations, then start the app:
 
-# Getting Started
+   ```bash
+   pnpm migrate:deploy
+   pnpm dev
+   ```
 
-## 1. Clone the repository
+   Open `http://localhost:3000`. Existing databases created before Prisma
+   Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
+   before applying migrations. Login requires the configured OIDC client.
 
-```bash
-git clone https://github.com/<org>/fallstack-website.git
-cd fallstack-website
-```
+## More documentation
 
-## 2. Install dependencies
+- [Contribution workflow](docs/agents/contribution.md): issues, branches, PRs,
+  and checks.
+- [Database workflow](docs/database-workflow.md): migrations, seed, and local
+  reset.
+- [Shared data and deployment](docs/SHARED_DATA.md): shared PostgreSQL,
+  MinIO, and Coolify Compose. Current deployment uses
+  [`docker-compose.app.yml`](docker-compose.app.yml), not a local service profile.
+- [Observability](docs/observability.md), [security](docs/SECURITY.md), and
+  [architecture decisions](docs/decisions/README.md).
+- [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file
+  GC and CV retention purge for source Supabase projects only.
+- [Legacy Supabase local setup](docs/legacy-supabase-local.md): CLI, Windows
+  Vector workaround, and retired Docker profile commands.
 
-```bash
-pnpm install
-```
-
-## 3. Environment Variables
-
-Copy:
-
-```bash
-cp .env.example .env
-```
-
-### Required values
-
-Set `DATABASE_URL` for the runtime PostgreSQL identity and `DIRECT_URL` for the
-migration identity. Both require the environment's `?schema=fallstack` on
-shared services. Set `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
-`S3_BUCKET_AVATARS`, `S3_BUCKET_LOGOS`, `S3_BUCKET_CVS`, and the AuthNEI/ZITADEL and JWT values
-listed in [`.env.example`](./.env.example). `NEXT_PUBLIC_BASE_URL` defaults to
-`http://localhost:3000/api` during local development. For local storage, use
-an isolated MinIO instance and the same bucket names or environment-specific
-local equivalents. Never use production credentials locally.
-
-### Observability
-
-Production logging and error monitoring use Pino and Sentry. See [`docs/observability.md`](./docs/observability.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
-
-### Pre-event load validation
-
-Run staging load checks only with `CONFIRM_NON_PRODUCTION=yes`. Uploads now pass
-through authenticated application routes, with per-student rate limits and
-server-side size, MIME and file-signature checks. See
-[`tests/e2e/README.md`](./tests/e2e/README.md) for browser checks. Remove
-staging upload objects created during verification.
-
-### Storage and retention
-
-Avatars and logos uploaded by admins are public through same-origin
-`/api/media/avatar/<id>` and `/api/media/logo/<id>`. CVs remain private; download routes recheck the
-student/company/admin policy on every request. S3 credentials stay server-side.
-Legacy [`supabase/`](./supabase/) SQL and bucket policies belong only to
-pre-cutover source stacks and must not be copied into shared PostgreSQL or
-MinIO. Source production has a Supabase-specific orphan GC job; S3-aware
-cleanup is a separate reviewed migration step. Scheduled backups of the shared
-services must be configured and restore-tested independently of one-time
-migration archives.
-
----
-
-# Database Workflow (Prisma)
-
-Schema changes are tracked with **Prisma Migrate** (`prisma/migrations/`), not `db push`. See [`docs/database-workflow.md`](./docs/database-workflow.md) for creating and applying migrations, the one-time baseline-adoption note, resetting a local database, seeding, and wiping the database.
-
----
-
-# Running the App
-
-Start the Next.js dev server:
-
-```bash
-pnpm dev
-```
-
-App runs on:
-
-```
-http://localhost:3000
-```
-
----
-
-# Local data services
-
-Run PostgreSQL and MinIO locally or connect to dedicated development services.
-Create the three environment buckets and use scoped credentials. The deployed
-Coolify Compose file is [`docker-compose.app.yml`](./docker-compose.app.yml)
-and expects the shared external network; it is not a local database service
-Compose file. See [`docs/SHARED_DATA.md`](./docs/SHARED_DATA.md).
-
----
-
-# Contributing
-
-See [`AGENTS.md`](./AGENTS.md)'s Contribution workflow section for branch naming (Conventional Branch), commit style (Conventional Commits), and the PR-into-`dev` process. Task tracking lives on the repository's [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).
+Task tracking is on the [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).
