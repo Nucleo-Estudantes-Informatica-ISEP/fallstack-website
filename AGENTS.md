@@ -21,6 +21,7 @@ For every requested task:
    - If a task touches multiple unrelated concerns, split the work into separate, logically-scoped commits instead of one bulk commit.
 3. Push the task branch to the remote repository.
 4. Create a pull request from the task branch into `dev`, never `main`.
+5. When a PR settles a meaningful architecture or product decision, add or update its ADR in [`docs/decisions/`](docs/decisions/README.md) in the same PR.
 
 ### CI/CD and test-first workflow
 
@@ -157,6 +158,8 @@ Each yearly edition is tracked as a git tag + GitHub Release on this one persist
 ## Verification (definition of done)
 
 CI (`.github/workflows/ci.yml`) uses a frozen install and runs tests, typecheck, lint, the production Next.js build, Prisma schema validation, the production/migrator Docker builds with non-root assertions, and Gitleaks on every PR to `dev` or `main`. Before considering a task done:
+
+For documentation-only changes (including `AGENTS.md`, `README.md`, and `docs/`), verify changed content, links, filenames, and `git diff --check`. Application lint, tests, typecheck, builds, Prisma validation, Docker checks, and dev-server exercises are unnecessary locally. CI still runs its configured checks on the PR.
 
 1. Run `pnpm lint` and fix anything it flags in touched files — this also runs in CI, but don't wait for CI to tell you.
 2. Run `pnpm test` — keep it green, and extend the relevant test file when behavior changes. For a regression, prefer proving the failure first and then implementing the fix. CI reruns the full auto-discovered suite.
