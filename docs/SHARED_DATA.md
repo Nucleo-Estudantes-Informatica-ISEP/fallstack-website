@@ -4,10 +4,10 @@ Fallstack uses NEI shared PostgreSQL 16 and MinIO after each environment's
 cutover. During migration, source Supabase remains live until verified retired.
 See the private Fallstack cutover runbook for current environment status.
 
-| Environment | Database / schema | MinIO buckets |
-| --- | --- | --- |
-| Development | `fallstack_dev` / `fallstack` | `fallstack-dev-avatars`, `fallstack-dev-logos`, `fallstack-dev-cvs` |
-| Production | `fallstack_prod` / `fallstack` | `fallstack-prod-avatars`, `fallstack-prod-logos`, `fallstack-prod-cvs` |
+| Environment | Database / schema              | MinIO buckets                                                          |
+| ----------- | ------------------------------ | ---------------------------------------------------------------------- |
+| Development | `fallstack_dev` / `fallstack`  | `fallstack-dev-avatars`, `fallstack-dev-logos`, `fallstack-dev-cvs`    |
+| Production  | `fallstack_prod` / `fallstack` | `fallstack-prod-avatars`, `fallstack-prod-logos`, `fallstack-prod-cvs` |
 
 Coolify Compose path: `/docker-compose.app.yml`. Both app and migrator join
 external Docker network `gbheij1ljds8nrhfgdf9teeo`. The migrator runs before
