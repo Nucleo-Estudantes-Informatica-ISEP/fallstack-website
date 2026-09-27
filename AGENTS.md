@@ -21,6 +21,7 @@ For every requested task:
    - If a task touches multiple unrelated concerns, split the work into separate, logically-scoped commits instead of one bulk commit.
 3. Push the task branch to the remote repository.
 4. Create a pull request from the task branch into `dev`, never `main`.
+5. When a PR settles a meaningful architecture or product decision, add or update its ADR in [`docs/decisions/`](docs/decisions/README.md) in the same PR.
 
 ### CI/CD and test-first workflow
 
@@ -147,12 +148,11 @@ Two independent mechanisms — don't conflate them:
 
 ## Editions & releases
 
-Each yearly edition is tracked as a git tag + GitHub Release on this one persistent repo (no more forking a new repo per edition) plus a hand-written `CHANGELOG.md` entry — not generated from Conventional Commits, since this ships once a year for a small team.
+Each yearly edition is tracked in this one persistent repo. See [ADR 0001](docs/decisions/0001-track-editions-in-one-repository.md) for the decision and release history.
 
-- **Tag name:** `<year>-edition` (e.g. `2025-edition`, `2026-edition`).
+- **Edition tag:** `<year>-edition` (e.g. `2025-edition`, `2026-edition`) marks an edition cutover.
+- **Version tags:** `vX.Y.Z` tags mark subsequent releases within an edition; the 2026 edition has reached `v2.2.0`. GitHub Releases record those version changes. `CHANGELOG.md` remains a hand-written summary of edition cutovers and notable milestones.
 - **Source archive:** GitHub auto-generates a "Source code (zip/tar.gz)" download for every tag/release — that's the frozen, downloadable artifact for a past edition. This is a dynamic Next.js + Postgres app, not a static site, so the archive is source only: running it still needs your own Postgres, a Supabase project, and the usual local setup in `README.md`. No Docker image is published per edition at this time — the source tag is the deliverable (see `CHANGELOG.md` for what changed each edition).
-- **Versioning resets per edition:** a freshly-cut edition's `CHANGELOG.md` entry/release starts at `1.0.0`; further within-edition maintenance (fixes, restructuring, hygiene) increments from there (`1.0.1`, `1.1.0`, ...) until the _next_ edition's cutover restarts the count at `1.0.0`. Editions are distinguished by the `<year>-edition` tag, not by a version number that climbs forever across editions.
-- The 2026 edition's own `1.0.0` cutover happens once the current backlog of open architecture/security/correctness issues is merged to `main`.
 
 ## Verification (definition of done)
 
@@ -164,6 +164,8 @@ CI (`.github/workflows/ci.yml`) uses a frozen install and runs tests, typecheck,
 4. Run `pnpm build` and `pnpm exec prisma validate`. For deployment-sensitive changes, also build the affected Docker target.
 5. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body _and_ status code. For UI: load the page and interact with the changed flow.
 6. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
+
+Exception: for documentation-only changes, verify content, links, filenames, `git diff --check`, and `pnpm exec prettier --check` on changed Markdown files. Application lint, tests, typecheck, builds, Prisma validation, Docker checks, and dev-server exercises are unnecessary locally. CI still runs its configured checks on the PR.
 
 ## Gotchas
 
