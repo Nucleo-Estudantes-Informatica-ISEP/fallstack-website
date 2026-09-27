@@ -1,7 +1,7 @@
 ---
 name: Task
 about: Propose a scoped change with clear acceptance criteria
-title: ""
+title: "[Type] "
 labels: ""
 assignees: ""
 ---
@@ -26,4 +26,4 @@ assignees: ""
 
 <!-- Optional. Remove this section if none. Use one checkbox per dependency. -->
 
-- [ ]
+<!-- Example: - [ ] #123 -->
