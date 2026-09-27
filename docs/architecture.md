@@ -78,6 +78,8 @@ Use it for the current data model; a copied model list or diagram goes stale.
 key is `(studentId, employeeId)` and a separate unique constraint on
 `(studentId, companyId)` enforces one save per company. The service checks the
 company before insert and handles a uniqueness race at the database boundary.
+Admin saves skip the pre-insert company check; the unique constraint still
+rejects a duplicate.
 
 Schema changes use committed Prisma migrations. See the
 [database workflow](database-workflow.md) for commands and existing database
