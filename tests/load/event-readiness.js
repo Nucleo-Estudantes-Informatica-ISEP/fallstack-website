@@ -157,7 +157,9 @@ function probeWindowBoundary(cookie) {
   });
 
   if (resetDetected) {
-    boundaryCombinedAllowed.add(preResetAllowed + postResetAllowed);
+    boundaryCombinedAllowed.add(
+      Number(primeAllowed) + preResetAllowed + postResetAllowed
+    );
     boundaryElapsedMs.add(burstEndedAt - burstStartedAt);
   }
 }

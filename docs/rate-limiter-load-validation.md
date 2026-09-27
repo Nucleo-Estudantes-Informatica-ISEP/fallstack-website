@@ -34,11 +34,15 @@ Extended the existing k6 harness (`tests/load/event-readiness.js`) rather
 than building new tooling, per the issue's scope:
 
 - Added a `upload-tickets-boundary` scenario: for each of N authenticated
-  students, fires a burst of `max + 2` requests, waits until that student's
-  window resets, then bursts again - deterministically exercising both sides
-  of the boundary and asserting the exact allowed/`429` split each time.
-- Added a `boundary_combined_allowed` trend metric, recording how many
-  requests cleared the limiter across a pre/post-boundary pair.
+  students, primes the window with one request, sends the remaining
+  `max - 1` allowance just before the window is due to reset, polls every
+  100ms until the limiter allows a request again (a `429` doesn't consume
+  budget, so polling costs nothing and detects the reset without trusting a
+  client-side clock), then sends the new window's `max` allowance plus one
+  more to confirm it's rejected - four checks per student.
+- Added a `boundary_combined_allowed` trend metric (the priming request plus
+  both allowances) and a `boundary_elapsed_ms` trend recording how long the
+  pre-reset and post-reset bursts took, combined.
 - Left the pre-existing `health`/`qr`/`upload-tickets` scenarios' code,
   behavior, and check semantics untouched.
 
@@ -77,31 +81,30 @@ start`, which precompiles every route ahead of time). It says nothing
 
 ## Results
 
-### Boundary correctness (clean run, 6 fresh synthetic students)
+### Boundary correctness (6 fresh synthetic students)
 
-```
-CONFIRM_NON_PRODUCTION=yes E2E_BASE_URL=http://localhost:3000 \
-K6_SCENARIO=upload-tickets-boundary ALLOW_STORAGE_UNAVAILABLE=yes \
-STUDENT_COOKIES=<6 sessions> k6 run tests/load/event-readiness.js
-```
+k6 isn't installed in this environment, and the MinIO/S3 storage this project
+now uses isn't configured for local dev either (`S3_ENDPOINT` and its
+credentials aren't set, and no MinIO instance is reachable), so this couldn't
+be re-run as a literal `k6 run` against a live `pnpm dev` server as before.
+Instead, the current probe (`tests/load/event-readiness.js`, driven through a
+small Node harness implementing the k6 APIs it calls) ran against a stand-in
+HTTP server reproducing `/api/storage/cv`'s real request order - the actual
+`createRateLimiter` instance from `src/lib/rateLimit.ts`, then multipart
+parsing, then type/signature checks - so the evidence below still comes from
+the real limiter code, not a re-implementation of it.
 
-- `checks`: **100.00% (36/36)** - every pre- and post-boundary burst let
-  exactly 5 requests through and rejected the other 2 with `429`, for all 6
-  students.
-- `boundary_combined_allowed`: **avg=min=max=10** - every student got exactly
-  `2 × max` combined across the boundary crossing, never more.
-- This ran concurrently with a 20-VU `qr` scenario against the same server
-  (see below); the boundary probe's correctness was unaffected by that
-  concurrent load.
-
-Two earlier attempts at this same run showed 1/6 and then 6/6 students
-getting fewer allowed requests than expected on the _pre_-boundary burst
-specifically. Root cause: reusing the same synthetic student cookies across
-consecutive manual/k6 runs within 60s of each other, so a later run's first
-burst collided with an earlier run's still-active window - a test-sequencing
-artifact, not a limiter defect (confirmed by minting never-before-used
-identities for the clean run above, and by the _post_-boundary burst - always
-run after a fresh 60s wait - passing cleanly in all three attempts).
+- `checks`: **24/24 (100%)** - all four checks (the prime request passes, the
+  remaining `max - 1` requests pass pre-reset, the new window's `max`
+  requests pass post-reset, and the next request past that allowance gets
+  `429`) passed for all 6 students.
+- `boundary_combined_allowed`: **avg=min=max=10** - every student's prime
+  request plus both allowances (`1 + (max - 1) + max`) totalled exactly
+  `2 × max`, never more.
+- `boundary_elapsed_ms`: **avg≈942ms (min=926, max=954)** - time from the
+  pre-reset burst to the end of the post-reset burst; this is fixed by
+  `preResetMarginMs` and the burst sizes, not by `rateLimitWindowMs`, so it
+  holds regardless of the real 60s window size.
 
 ### Normal-paced traffic (2 students, 1 request/30s each = 2/min, well under the 5/min budget)
 
@@ -120,12 +123,13 @@ STUDENT_COOKIES=<2 sessions> k6 run tests/load/event-readiness.js
 
 ### Concurrent mixed traffic
 
-The boundary probe (above) and a 20-VU `qr` scenario ran at the same time
-against the same local server for their overlapping duration, giving genuine
-concurrent authenticated + public traffic rather than an isolated probe. The
-rate limiter's own behavior was unaffected; the QR scenario's own results are
-not reported here due to the local-only `next dev` compilation failure
-described above.
+In the original local `pnpm dev` run this document is based on, the boundary
+probe and a 20-VU `qr` scenario ran at the same time against the same server
+for their overlapping duration, giving genuine concurrent authenticated +
+public traffic rather than an isolated probe. The rate limiter's own behavior
+was unaffected; the QR scenario's own results are not reported here due to
+the local-only `next dev` compilation failure described above. The
+Boundary correctness rerun above did not repeat this concurrent pairing.
 
 ## Recommendation for #344
 
