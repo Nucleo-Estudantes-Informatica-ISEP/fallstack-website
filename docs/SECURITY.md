@@ -141,14 +141,14 @@ Current policy is intentionally minimal and explicit:
 
 The following table reflects the current explicit origins defined in `src/security/csp.js` and the reason they are enabled.
 
-| Origin / source                 | Used in directive(s)     | Why it is allowed                                                              | Why this is safe                                                                   |
-| ------------------------------- | ------------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `'self'`                        | all relevant directives  | Same-origin app assets and endpoints                                           | Keeps the application within its own domain unless explicitly approved             |
-| `NEXT_PUBLIC_SENTRY_DSN` origin | `connect-src`            | Browser crash/telemetry reporting to Sentry                                    | Only the exact Sentry origin is allowed; no arbitrary remote endpoint is permitted |
-| `https://rsms.me`               | `style-src`, `font-src`  | Inter font stylesheet and font files                                           | Required only for typography; no script execution is allowed from this host        |
-| `https://www.youtube.com`       | `frame-src`              | Embedded YouTube videos in public/company content                              | The application allows a specific embed target instead of arbitrary iframe content |
-| `data:`                         | `img-src`                | Inline images/data-URI resources                                               | Needed only for image rendering; it does not permit script execution               |
-| `blob:`                         | `img-src`                | In-browser generated blobs (e.g. temporary images or file previews)            | Restricts blob usage to image resources and not to script or plugin execution      |
+| Origin / source                 | Used in directive(s)    | Why it is allowed                                                   | Why this is safe                                                                   |
+| ------------------------------- | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `'self'`                        | all relevant directives | Same-origin app assets and endpoints                                | Keeps the application within its own domain unless explicitly approved             |
+| `NEXT_PUBLIC_SENTRY_DSN` origin | `connect-src`           | Browser crash/telemetry reporting to Sentry                         | Only the exact Sentry origin is allowed; no arbitrary remote endpoint is permitted |
+| `https://rsms.me`               | `style-src`, `font-src` | Inter font stylesheet and font files                                | Required only for typography; no script execution is allowed from this host        |
+| `https://www.youtube.com`       | `frame-src`             | Embedded YouTube videos in public/company content                   | The application allows a specific embed target instead of arbitrary iframe content |
+| `data:`                         | `img-src`               | Inline images/data-URI resources                                    | Needed only for image rendering; it does not permit script execution               |
+| `blob:`                         | `img-src`               | In-browser generated blobs (e.g. temporary images or file previews) | Restricts blob usage to image resources and not to script or plugin execution      |
 
 This is intentionally stricter than a permissive `*` policy. A wildcard would allow any host to become a script, stylesheet, image, or frame source, which would undermine the browser's ability to protect the app.
 
