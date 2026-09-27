@@ -31,13 +31,15 @@ as its callback. Use development credentials and data only.
 
    ```bash
    docker run -d --name fallstack-postgres -p 54322:5432 -e POSTGRES_PASSWORD=postgres postgres:16
-   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:latest server /data --console-address ':9001'
+   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:RELEASE.2025-10-15T17-29-55Z server /data --console-address ':9001'
    ```
 
    Open the MinIO console at `http://localhost:9001` and create three buckets:
    `fallstack-dev-avatars`, `fallstack-dev-logos`, and `fallstack-dev-cvs`.
    Use the same names and credentials in `.env`. A local database uses the
    default `public` schema; shared environments use `?schema=fallstack`.
+   This pinned Coolify image matches the deployment's MinIO distribution;
+   avoid silently switching the local setup to a different upstream image.
 
 3. Configure the app:
 
@@ -77,5 +79,10 @@ as its callback. Use development credentials and data only.
   GC and CV retention purge for source Supabase projects only.
 - [Legacy Supabase local setup](docs/legacy-supabase-local.md): CLI, Windows
   Vector workaround, and retired Docker profile commands.
+- [Pre-event staging checks](tests/e2e/README.md): load and end-to-end checks;
+  read the `CONFIRM_NON_PRODUCTION` guard before running them.
+
+Delete accounts through the admin backoffice so application relationships and
+permissions are handled together.
 
 Task tracking is on the [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).

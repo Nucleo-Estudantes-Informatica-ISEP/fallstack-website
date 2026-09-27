@@ -58,7 +58,7 @@ This container is NOT required to run the app.
 You may run:
 
 ```bash
-docker rm -f supabase_vector_fallstack-website
+docker rm -f supabase_vector_fallstack2025
 ```
 
 If the name differs, check:

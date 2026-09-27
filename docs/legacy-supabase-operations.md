@@ -5,9 +5,14 @@ Supabase project that still uses the `supabase/` SQL jobs. **Do not run them
 against shared PostgreSQL or MinIO.** Current shared storage cleanup needs a
 separately reviewed S3 process; see [shared data](SHARED_DATA.md).
 
+**Current stack status:** Shared PostgreSQL/MinIO has no scheduled CV retention
+purge or orphaned-object cleanup. Upload timestamps remain in the app, but the
+six-month purge does not currently run. Track replacement work in [#389](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/389).
+
 ## Orphaned-file garbage collection
 
-Student media uploads are reconciled daily at 03:00 UTC. Objects are eligible
+On a source Supabase project, student media uploads are reconciled daily at
+03:00 UTC. Objects are eligible
 only when they are under the app-managed avatar/CV prefixes, are unreferenced by
 `Student.avatar`/`Student.cv`, and are at least 48 hours old.
 
@@ -56,7 +61,8 @@ the run. A candidate count that does not shrink indicates persistent failures.
 
 ## CV retention purge
 
-Student CVs are purged twice a year, on May 1 and Nov 1 at 02:00 UTC, once
+On a source Supabase project, student CVs are purged twice a year, on May 1 and
+Nov 1 at 02:00 UTC, once
 `Student.cvUploadedAt` is more than 6 months old. The job only clears the DB
 reference (`cv = NULL`, `cvPurgedAt = now()`); the CV upload path stamps
 `cvUploadedAt` and clears `cvPurgedAt` on every successful upload. A profile
@@ -79,6 +85,17 @@ banner tells the student their CV was removed whenever `cvPurgedAt` is set.
    ```
 
 The purge only clears the DB reference; it does not delete the storage object.
-It runs at 02:00 UTC, one hour before the orphaned-file GC job's daily 03:00
-UTC run (above), so the now-unreferenced CV object is deleted the same day
-instead of waiting on its own cadence.
+On a source Supabase project with both jobs enabled, it runs at 02:00 UTC, one
+hour before orphaned-file GC at 03:00 UTC. That job deletes the now-unreferenced
+CV object the same day.
+
+## Other legacy SQL jobs
+
+[`supabase/storage-bucket-limits.sql`](../supabase/storage-bucket-limits.sql)
+creates or updates Supabase Storage bucket privacy, MIME, and size limits. It
+does not configure MinIO; current bucket configuration belongs in the shared
+storage setup.
+
+[`supabase/audit-orphaned-accounts.sql`](../supabase/audit-orphaned-accounts.sql)
+reports mismatches between Supabase Auth and `public.User`. It is read-only and
+obsolete for current AuthNEI/ZITADEL identities.
