@@ -9,6 +9,8 @@ Use the [task issue template](../../.github/ISSUE_TEMPLATE/task.md). Issues use
 **Description**, optional **Why**, **Scope**, **Acceptance Criteria**, and
 optional **Dependencies**. List each dependency as its own checkbox; remove
 optional sections when they do not apply.
+Use the [bug template](../../.github/ISSUE_TEMPLATE/bug.md) for reproducible
+problems.
 
 ## Branches, commits, and pull requests
 
@@ -33,6 +35,15 @@ release; Coolify deploys that production branch. Do not add a competing deploy
 workflow. A PR that settles a meaningful design decision should add or update
 an [ADR](../decisions/README.md).
 
+## Releases
+
+Each edition cutover gets a `<year>-edition` tag and GitHub Release. Subsequent
+versions use `vX.Y.Z` tags; keep `CHANGELOG.md` as the hand-written summary of
+edition cutovers and notable milestones. See [ADR 0001](../decisions/0001-track-editions-in-one-repository.md).
+Runtime-changing `dev` to `main` PRs need exactly one `release:major`,
+`release:minor`, or `release:patch` label. Documentation and CI-only PRs are
+exempt.
+
 ## Checks and test-first work
 
 Prefer a focused failing test first for bug fixes and business rules. Every
@@ -46,8 +57,14 @@ Before requesting review, run `pnpm lint`, `pnpm test`, `pnpm typecheck`,
 build the affected Docker target. Start `pnpm dev` and exercise the changed
 route or page; for API routes check body and status. Report any part that
 could not be exercised. CI also runs frozen install, production and migrator
-Docker builds, non-root assertions, and Gitleaks. Do not weaken checks to make
-them pass.
+Docker builds, non-root assertions, and applies migrations to a PostgreSQL
+service before tests. The separate Security workflow runs Gitleaks. Do not
+weaken checks to make them pass.
+
+For documentation-only changes, verify content, links, filenames,
+`git diff --check`, and `pnpm exec prettier --check` on changed Markdown.
+Application checks and dev-server exercises are unnecessary locally; CI still
+runs its configured checks on the PR.
 
 Commit Prisma migrations with schema changes. The migrator service applies
 them before the app becomes healthy; report deployment only after observing
