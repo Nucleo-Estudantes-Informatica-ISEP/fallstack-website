@@ -18,8 +18,8 @@ and gives rules a useful test boundary.
   they are server-only.
 - `src/domain/` holds pure rules without I/O. Repositories can change without
   changing these rules, and rules can be tested without a database.
-- `src/client/api/` owns browser fetch wrappers and is client-only. Shared
-  types and UI remain outside the server-only dependency graph.
+- `src/client/api/` owns browser fetch wrappers and is client-only. Client
+  components must not import server-only modules except through server actions.
 - `src/lib/` still contains shared and server helpers that have not moved into
   those layers. Check each module's imports and `server-only` or `client-only`
   marker before using it across a boundary.
@@ -33,7 +33,8 @@ For JSON API routes, `src/lib/http/server.ts` provides `defineHandler`:
 session/auth policy, optional Zod body parsing, optional ownership authorization,
 handler execution, and error mapping in one place. Strategies are `public`,
 `session`, `student`, `employee`, and `admin`; `session` is the default. An
-ownership check belongs in `authorize` after the strategy passes. Request
+ownership check belongs in `authorize` after the strategy passes (and only when
+a session exists). Request
 schemas live in `src/schemas/`. New route-authored failures use
 `{ error: string }` with explicit HTTP status codes; the wrapper retains its
 existing Zod issue response for parse failures.
@@ -42,6 +43,9 @@ Browser calls use the `httpClient` in `src/lib/http/client.ts` through
 `src/client/api/`. Its typed non-2xx error carries the HTTP status; use `raw()`
 for responses outside the JSON contract. This avoids repeating response and
 error handling in components.
+
+See `src/app/api/saved/route.ts` for strategies, `authorize`, and a schema in
+one route; see `src/client/api/session.ts` for expected `HttpClientError` handling.
 
 The wrapper is for JSON requests. Health probes that must avoid a session
 lookup and multipart upload routes use plain route exports. Keep their
@@ -53,6 +57,9 @@ Login uses AuthNEI/ZITADEL OIDC. The app signs its own session cookie, and
 `getServerSession()` resolves the matching application `User` and profile.
 PostgreSQL and MinIO store application data; neither creates login sessions.
 Password recovery stays with the identity provider.
+The exported bcrypt helpers (`hashPassword`, `comparePassword`, and
+`validatePassword`) in `authService.ts` have no callers; there is no app-side
+password login.
 
 Short-lived JWTs from `src/application/services/authService.ts` serve QR and
 temporary student-profile access, not login. The student's personal QR expires
@@ -63,6 +70,9 @@ check: a captured code can be reused during its valid window by another
 student. A student's duplicate completion of the same action is rejected.
 
 ## Data ownership
+
+`prisma/schema.prisma` is the source of truth for models and relationships.
+Use it for the current data model; a copied model list or diagram goes stale.
 
 `SavedStudent` stores both an employee attribution and a company. Its primary
 key is `(studentId, employeeId)` and a separate unique constraint on
