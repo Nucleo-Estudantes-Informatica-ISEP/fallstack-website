@@ -165,6 +165,8 @@ CI (`.github/workflows/ci.yml`) uses a frozen install and runs tests, typecheck,
 5. Start `pnpm dev` and actually exercise the changed behavior — hit the changed route/page, not just read the diff. For an API route: call it (browser/curl) and check the actual response body _and_ status code. For UI: load the page and interact with the changed flow.
 6. Do not report a task as complete on the basis of "it compiles" or "lint passed" alone — those are necessary, not sufficient. State plainly if something couldn't be verified this way (e.g. requires a real Supabase session, a QR scan, or an external service) rather than implying it was checked.
 
+Exception: for documentation-only changes, verify content, links, filenames, `git diff --check`, and `pnpm exec prettier --check` on changed Markdown files. Application lint, tests, typecheck, builds, Prisma validation, Docker checks, and dev-server exercises are unnecessary locally. CI still runs its configured checks on the PR.
+
 ## Gotchas
 
 - **`pnpm test` uses Vitest auto-discovery** for `*.test.ts` and `*.test.tsx`, and CI runs the suite on every PR. Add colocated tests without maintaining a central file list; still verify changed runtime flows manually where unit tests don't cover them.
