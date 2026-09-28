@@ -155,12 +155,6 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
     "${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}";
 
   const webBuildArgs = extractComposeWebBuildArgs();
-  for (const name of [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-  ]) {
-    expectRequiredComposeVariable(webBuildArgs, name);
-  }
   expectComposeVariable(webBuildArgs, "NEXT_PUBLIC_BASE_URL", baseUrlExpansion);
 
   const migrateEnvironment = extractComposeServiceEnvironment("migrate");
@@ -170,13 +164,21 @@ test("Coolify compose keeps secrets required and derives safe service defaults",
   const webEnvironment = extractComposeServiceEnvironment("web");
   for (const name of [
     "DATABASE_URL",
-    "SUPABASE_SECRET_KEY",
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+    "S3_ACCESS_KEY_ID",
+    "S3_SECRET_ACCESS_KEY",
+    "S3_BUCKET_AVATARS",
+    "S3_BUCKET_LOGOS",
+    "S3_BUCKET_CVS",
   ]) {
     expectRequiredComposeVariable(webEnvironment, name);
   }
-  expectComposeVariable(webEnvironment, "DIRECT_URL", directUrlExpansion);
+  // Coolify adds its runtime .env to every Compose service; give web only
+  // the scoped runtime URL even when DIRECT_URL holds migrator credentials.
+  expectComposeVariable(
+    webEnvironment,
+    "DIRECT_URL",
+    "${DATABASE_URL:?Configure DATABASE_URL in Coolify}"
+  );
   expectComposeVariable(
     webEnvironment,
     "NEXT_PUBLIC_BASE_URL",

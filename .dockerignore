@@ -15,6 +15,7 @@ docker-compose*.yml
 
 # OS / editor cruft
 .DS_Store
+**/._*
 *.swp
 
 # Logs
@@ -34,5 +35,4 @@ supabase/.temp
 
 # Optional large markdown docs (uncomment to exclude)
 # *.md
-
 

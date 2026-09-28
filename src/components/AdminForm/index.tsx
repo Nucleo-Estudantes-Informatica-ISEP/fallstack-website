@@ -4,7 +4,10 @@ import { useId, useState } from "react";
 import { toast } from "react-toastify";
 
 import LogoThumbnail from "@/components/ui/LogoThumbnail";
-import { uploadAdminImage } from "@/client/api/adminUpload";
+import {
+  uploadAdminImage,
+  type AdminUploadKind,
+} from "@/client/api/adminUpload";
 
 export type AdminFormValue = string | number | boolean | string[];
 
@@ -58,6 +61,7 @@ export interface AdminFormImageSection {
   /** Key this section's uploaded URL lands under in the submitted values. */
   name: string;
   currentUrl?: string;
+  uploadKind: AdminUploadKind;
 }
 
 export interface AdminFormPasswordSection {
@@ -176,11 +180,13 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
 
 interface AdminFormImageFieldProps {
   currentUrl?: string;
+  uploadKind: AdminUploadKind;
   onUploaded: (url: string) => void;
 }
 
 const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
   currentUrl,
+  uploadKind,
   onUploaded,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -191,7 +197,7 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
     if (!file) return;
     setIsUploading(true);
     try {
-      const result = await uploadAdminImage(file);
+      const result = await uploadAdminImage(file, uploadKind);
       if (!result) {
         toast.error("Não foi possível enviar a imagem.");
         return;
@@ -221,7 +227,11 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
       <input
         id={inputId}
         type="file"
-        accept="image/*"
+        accept={
+          uploadKind === "logo"
+            ? "image/png,image/webp"
+            : "image/png,image/jpeg"
+        }
         className="hidden"
         disabled={isUploading}
         onChange={handleChange}
@@ -317,6 +327,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           {section.kind === "image" && (
             <AdminFormImageField
               currentUrl={imageValues[section.name]}
+              uploadKind={section.uploadKind}
               onUploaded={(url) =>
                 setImageValues((prev) => ({ ...prev, [section.name]: url }))
               }

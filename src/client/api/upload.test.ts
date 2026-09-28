@@ -1,44 +1,49 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import { httpClient, HttpClientError } from "@/lib/http/client";
 
 import { uploadAvatar } from "./upload";
 
-const { post, uploadToSignedUrl } = vi.hoisted(() => ({
-  post: vi.fn(),
-  uploadToSignedUrl: vi.fn(),
-}));
-
+vi.mock("client-only", () => ({}));
 vi.mock("@/lib/http/client", () => ({
+  httpClient: { post: vi.fn() },
   HttpClientError: class HttpClientError extends Error {},
-  httpClient: { post },
 }));
 
-vi.mock("@/utils/supabase/client", () => ({
-  createClient: () => ({
-    storage: {
-      from: () => ({
-        getPublicUrl: vi.fn(),
-        uploadToSignedUrl,
-      }),
-    },
-  }),
-}));
+const png = new Blob(
+  [new Uint8Array([0x89, 0x50, 0x4e, 0x47, 13, 10, 26, 10])],
+  {
+    type: "image/png",
+  }
+);
 
-describe("uploadAvatar", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    post.mockResolvedValue({
-      id: "avatar-id",
-      path: "avatar-path",
-      token: "token",
-    });
+beforeEach(() => vi.clearAllMocks());
+
+test("uploads file through authenticated application API", async () => {
+  vi.mocked(httpClient.post).mockResolvedValue({
+    id: "id",
+    url: "/api/media/avatar/id",
   });
-
-  it("returns null when Storage rejects a signed upload", async () => {
-    uploadToSignedUrl.mockResolvedValue({ error: new Error("expired ticket") });
-    const avatar = new Blob([new Uint8Array([0x89, 0x50, 0x4e, 0x47])], {
-      type: "image/png",
-    });
-
-    await expect(uploadAvatar(avatar)).resolves.toBeNull();
+  expect(await uploadAvatar(png)).toEqual({
+    id: "id",
+    url: "/api/media/avatar/id",
   });
+  expect(httpClient.post).toHaveBeenCalledWith(
+    "/storage/avatar",
+    expect.any(FormData)
+  );
+});
+
+test("rejects mismatched content before upload", async () => {
+  expect(
+    await uploadAvatar(new Blob(["bad"], { type: "image/png" }))
+  ).toBeNull();
+  expect(httpClient.post).not.toHaveBeenCalled();
+});
+
+test("returns null when application rejects upload", async () => {
+  vi.mocked(httpClient.post).mockRejectedValue(
+    new HttpClientError("Rejected", 400)
+  );
+  expect(await uploadAvatar(png)).toBeNull();
 });

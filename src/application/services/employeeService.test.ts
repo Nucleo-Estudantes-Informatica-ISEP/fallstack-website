@@ -9,9 +9,6 @@ import {
 } from "./employeeService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
-}));
 vi.mock("../repositories/companyRepository", () => ({
   createEmployee: vi.fn(),
   findCompanyById: vi.fn(),

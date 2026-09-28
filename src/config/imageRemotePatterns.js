@@ -10,17 +10,10 @@
  * Plain CommonJS (not TypeScript) because next.config.js requires it
  * directly at build/start time, before any TS transpilation happens.
  *
- * @param {boolean} isDev
  * @returns {{protocol: "http"|"https", hostname: string, port?: string, pathname: string}[]}
  */
-function getImageRemotePatterns(isDev) {
+function getImageRemotePatterns() {
   return [
-    // Supabase public storage (avatars, logos)
-    {
-      protocol: "https",
-      hostname: "*.supabase.co",
-      pathname: "/storage/v1/object/public/**",
-    },
     // Google Cloud Storage buckets (generic)
     {
       protocol: "https",
@@ -38,17 +31,6 @@ function getImageRemotePatterns(isDev) {
       hostname: "firebasestorage.googleapis.com",
       pathname: "/v0/b/**",
     },
-    // Local Supabase storage gateway (dev only)
-    ...(isDev
-      ? [
-          {
-            protocol: "http",
-            hostname: "127.0.0.1",
-            port: "54321",
-            pathname: "/storage/v1/object/public/**",
-          },
-        ]
-      : []),
   ];
 }
 

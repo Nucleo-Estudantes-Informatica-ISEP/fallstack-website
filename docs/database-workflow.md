@@ -24,6 +24,32 @@ pnpm migrate:deploy
 
 This runs `prisma migrate deploy` directly, which applies any pending migrations without prompting or generating new ones.
 
+### Admin-tier rollout pre-check
+
+Before deploying the split between `ADMIN` and `SUPER_ADMIN`, manually confirm
+that at least one active Super Admin exists:
+
+```sql
+SELECT "id", "email", "adminRole", "active"
+FROM "User"
+WHERE "adminRole" = 'SUPER_ADMIN' AND "active" = true;
+```
+
+If it returns no rows, choose an intended existing NEI Global admin and manually
+promote that account before deployment:
+
+```sql
+UPDATE "User"
+SET "adminRole" = 'SUPER_ADMIN'
+WHERE "email" = '<super-admin-email>'
+  AND "active" = true
+  AND "adminRole" IS NOT NULL;
+```
+
+Re-run the `SELECT` and stop the deployment unless it returns at least one row.
+The NEI Global grant remains mandatory at runtime; this local tier only narrows
+that external grant.
+
 ## One-time adoption note
 
 This project previously used `prisma db push`, so `prisma/migrations/` didn't exist until a baseline migration (`20260712000000_init`) capturing the current schema was added. For any environment where the tables **already exist** from a prior `db push` (e.g. an existing local or shared dev database), mark that baseline as already applied instead of running it for real:

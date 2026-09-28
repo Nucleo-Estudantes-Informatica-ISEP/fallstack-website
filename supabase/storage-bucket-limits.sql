@@ -1,33 +1,17 @@
--- Run manually in the hosted Supabase SQL editor after creating the avatars
--- and cvs buckets. This keeps direct signed uploads constrained by Storage,
--- where the bytes are received. It intentionally does not modify public/private
--- access or Storage RLS policies.
-
-do $$
-begin
-  if not exists (select 1 from storage.buckets where id = 'avatars') then
-    raise exception 'Storage bucket "avatars" does not exist';
-  end if;
-
-  if not exists (select 1 from storage.buckets where id = 'cvs') then
-    raise exception 'Storage bucket "cvs" does not exist';
-  end if;
-end
-$$;
-
-update storage.buckets
-set
-  file_size_limit = 5 * 1024 * 1024,
-  allowed_mime_types = array['image/png', 'image/jpeg']::text[]
-where id = 'avatars';
-
-update storage.buckets
-set
-  file_size_limit = 10 * 1024 * 1024,
-  allowed_mime_types = array['application/pdf']::text[]
-where id = 'cvs';
+-- Run manually in every hosted Supabase project. Creates missing buckets and
+-- enforces access, MIME, and size policy. Writes still require authenticated
+-- app routes: public buckets only make object reads public.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values
+  ('avatars', 'avatars', true, 5 * 1024 * 1024, array['image/png', 'image/jpeg']::text[]),
+  ('cvs', 'cvs', false, 10 * 1024 * 1024, array['application/pdf']::text[]),
+  ('logos', 'logos', true, 5 * 1024 * 1024, array['image/png', 'image/webp']::text[])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
 
 select id, public, file_size_limit, allowed_mime_types
 from storage.buckets
-where id in ('avatars', 'cvs')
+where id in ('avatars', 'cvs', 'logos')
 order by id;

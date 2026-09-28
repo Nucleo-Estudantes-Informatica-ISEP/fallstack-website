@@ -1,4 +1,3 @@
-const isDev = process.env.NODE_ENV !== "production";
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
 const { buildCsp } = require("./src/security/csp");
@@ -28,7 +27,7 @@ const securityHeaders = [
 const nextConfig = {
   output: "standalone",
   images: {
-    remotePatterns: getImageRemotePatterns(isDev),
+    remotePatterns: getImageRemotePatterns(),
   },
   async headers() {
     return [

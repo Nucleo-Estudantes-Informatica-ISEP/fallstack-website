@@ -52,6 +52,7 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ company, ranks }) => {
           kind: "image",
           title: "Logótipo",
           name: "avatar",
+          uploadKind: "logo",
           currentUrl: company?.avatar ?? undefined,
         },
         {

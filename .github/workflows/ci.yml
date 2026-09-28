@@ -15,9 +15,12 @@ concurrency:
 env:
   DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ci
   DIRECT_URL: postgresql://postgres:postgres@localhost:5432/ci
-  NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
-  SUPABASE_SECRET_KEY: ${{ github.sha }}
+  S3_ENDPOINT: http://127.0.0.1:9000
+  S3_ACCESS_KEY_ID: ci-placeholder
+  S3_SECRET_ACCESS_KEY: ${{ github.sha }}
+  S3_BUCKET_AVATARS: ci-avatars
+  S3_BUCKET_LOGOS: ci-logos
+  S3_BUCKET_CVS: ci-cvs
   NEXT_PUBLIC_BASE_URL: https://ci.invalid/api
   JWT_SECRET: ${{ github.sha }}
   AUTH_ISSUER_URL: https://auth.ci.invalid
@@ -108,8 +111,6 @@ jobs:
         run: |
           docker build \
             --target runner \
-            --build-arg NEXT_PUBLIC_SUPABASE_URL=https://ci-placeholder.supabase.co \
-            --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY=ci-placeholder \
             --build-arg NEXT_PUBLIC_BASE_URL=https://ci.invalid/api \
             -t fallstack-app-check .
 
