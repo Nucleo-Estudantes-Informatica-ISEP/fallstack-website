@@ -25,6 +25,8 @@ for procedure and rationale.
   trailer, and separate commits for unrelated concerns.
 - Push the branch and open its PR into `dev`, never `main`. Promote reviewed
   `dev` to `main` through a release PR.
+- Add or update an [ADR](docs/decisions/README.md) in the same PR when it
+  settles a meaningful architecture or product decision.
 - Run the checks and manual flow in the
   [contribution workflow](docs/agents/contribution.md#checks-and-test-first-work).
 
