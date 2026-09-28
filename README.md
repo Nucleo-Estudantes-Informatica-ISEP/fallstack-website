@@ -66,7 +66,7 @@ as its callback. Use development credentials and data only.
 
 ## More documentation
 
-- [Contribution workflow](AGENTS.md#contribution-workflow): issues, branches, PRs,
+- [Contribution workflow](docs/agents/contribution.md): issues, branches, PRs,
   and checks.
 - [Database workflow](docs/database-workflow.md): migrations, seed, and local
   reset.
