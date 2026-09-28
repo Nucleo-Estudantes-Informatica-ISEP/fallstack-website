@@ -14,7 +14,6 @@ const studentCookies = (__ENV.STUDENT_COOKIES || "")
   .filter(Boolean);
 const rateLimitMax = Number(__ENV.RATE_LIMIT_MAX || 5);
 const rateLimitWindowMs = Number(__ENV.RATE_LIMIT_WINDOW_MS || 60000);
-const allowStorageUnavailable = __ENV.ALLOW_STORAGE_UNAVAILABLE === "yes";
 const preResetMarginMs = 500;
 const resetPollIntervalMs = 100;
 const resetDetectionSlackMs = 5000;
@@ -107,8 +106,7 @@ function uploadCv(cookie) {
 }
 
 function isAllowedUploadStatus(status) {
-  if (status === 201) return true;
-  return allowStorageUnavailable && status === 502;
+  return status === 201;
 }
 
 function sendAllowance(cookie, count) {
