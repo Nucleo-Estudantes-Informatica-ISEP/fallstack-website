@@ -17,7 +17,7 @@ const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor }) => {
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
     const payload = {
       name: values.name,
-      logo: values.logo,
+      ...(sponsor?.logo === values.logo ? {} : { logo: values.logo }),
       website: values.website || null,
       order: values.order,
       active: values.active,
