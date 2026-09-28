@@ -3,10 +3,14 @@ import { describe, expect, it } from "vitest";
 import { logoSchema } from "./logoSchema";
 
 describe("logoSchema", () => {
-  it("accepts static and application media paths", () => {
+  it("rejects deleted logo paths but accepts app media and other assets", () => {
     expect(
       logoSchema.safeParse("/assets/images/sponsors/redbull.png").success
-    ).toBe(true);
+    ).toBe(false);
+    expect(
+      logoSchema.safeParse("/assets/images/companies/gold/cgi.webp").success
+    ).toBe(false);
+    expect(logoSchema.safeParse("/other/logo.png").success).toBe(true);
     expect(
       logoSchema.safeParse(
         "/api/media/avatar/00000000-0000-0000-0000-000000000000"
