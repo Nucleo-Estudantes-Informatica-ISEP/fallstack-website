@@ -103,9 +103,25 @@ Available scenarios:
 
 - `health` — safe liveness baseline.
 - `qr` — public action QR issuance; requires `ACTION_ID`.
-- `upload-tickets` — authenticated ticket issuance; requires a
-  comma-separated `STUDENT_COOKIES` pool from distinct student accounts. Exact
-  duplicate cookie entries are rejected, and the script rejects settings that
-  could exceed any account's five tickets/minute limit. These are live staging
-  session cookies: avoid shell history, never share them, and run only on
-  staging.
+- `upload-tickets` — authenticated CV uploads at a normal, ramping pace;
+  requires a comma-separated `STUDENT_COOKIES` pool from distinct student
+  accounts. Exact duplicate cookie entries are rejected, and the script
+  rejects settings that could exceed any account's five uploads/minute limit.
+  These are live staging session cookies: avoid shell history, never share
+  them, and run only on staging.
+- `upload-tickets-boundary` — for each `STUDENT_COOKIES` entry, sends one
+  priming upload, the remaining four just before reset, then five after reset
+  and one more to confirm `429`. All accepted uploads must return `201`.
+  `boundary_combined_allowed` includes the priming request; the close burst
+  contains nine uploads. `boundary_elapsed_ms` times only that close burst.
+  `RATE_LIMIT_MAX` (default 5) and `RATE_LIMIT_WINDOW_MS` (default 60000)
+  must match `config.uploads.cv.rateLimit`. Run this
+  scenario alongside `qr` (and optionally `upload-tickets`) in separate
+  concurrent `pnpm test:load` invocations against the same target to get a
+  realistic mixed-traffic picture rather than an isolated probe.
+
+For a repeatable local route check without staging services, run
+`pnpm exec vitest run tests/e2e/rateLimiterBoundary.test.ts`. It calls the real
+CV route and limiter with six synthetic student identities; session lookup and
+object storage are stubbed. This verifies route behavior, not k6 load or
+deployment latency.
