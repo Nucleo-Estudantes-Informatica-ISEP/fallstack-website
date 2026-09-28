@@ -31,9 +31,6 @@ function getOriginFromDsn(dsn) {
 }
 
 const sources = {
-  // Supabase API, Auth and Storage.
-  supabase: process.env.NEXT_PUBLIC_SUPABASE_URL,
-
   // Client-side error reporting endpoint.
   sentry: getOriginFromDsn(process.env.NEXT_PUBLIC_SENTRY_DSN),
 
@@ -51,11 +48,11 @@ const directives = {
 
   "style-src": ["'self'", "'unsafe-inline'", sources.rsms],
 
-  "img-src": ["'self'", "data:", "blob:", sources.supabase],
+  "img-src": ["'self'", "data:", "blob:"],
 
   "font-src": ["'self'", sources.rsms],
 
-  "connect-src": ["'self'", sources.supabase, sources.sentry],
+  "connect-src": ["'self'", sources.sentry],
 
   "worker-src": ["'self'"],
 

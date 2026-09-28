@@ -1,6 +1,5 @@
 import { vi } from "vitest";
 
-export const TEST_SUPABASE_URL = "https://example.supabase.co";
 export const TEST_SENTRY_DSN = "https://public@example.ingest.sentry.io/123";
 export const TEST_SENTRY_ORIGIN = new URL(TEST_SENTRY_DSN).origin;
 export const UNTRUSTED_ORIGIN = "https://untrusted.example";
@@ -28,6 +27,5 @@ export function getAllSources(csp: string): string[] {
 
 export function setDefaultTrustedEnv() {
   vi.stubEnv("NODE_ENV", "development");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", TEST_SUPABASE_URL);
   vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", TEST_SENTRY_DSN);
 }

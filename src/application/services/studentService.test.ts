@@ -9,9 +9,6 @@ import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
 import { deleteStudentForAdmin, updateStudentForAdmin } from "./studentService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
-}));
 vi.mock("../repositories/savedStudentRepository", () => ({
   isStudentSaved: vi.fn(),
 }));

@@ -1,353 +1,88 @@
 # Fallstack
 
-## Hello there! 👋
+Fallstack is NEI-ISEP's annual event connecting ISEP students with technology
+companies. Editions share this repository and are tagged `<year>-edition`; see
+[CHANGELOG.md](CHANGELOG.md).
 
-Welcome to the Fall Stack event's GitHub repository. Here you'll find everything you need to contribute with your amazing code and ideas!
+## Stack
 
-This is a Núcleo de Estudantes de Informática project, made by students from ISEP.
+Next.js 15, React 18, TypeScript, Tailwind CSS 4, HeroUI, PostgreSQL 16 with
+Prisma 6, MinIO, and AuthNEI/ZITADEL OIDC. See the
+[architecture guide](docs/architecture.md) for application boundaries.
 
----
+## Run locally
 
-## Description
+Requires Node.js 24+, pnpm 10 (via Corepack or a local install), PostgreSQL 16,
+MinIO, and a development AuthNEI/ZITADEL OIDC client. Ask a maintainer for the
+client credentials and register `http://localhost:3000/api/auth/callback/zitadel`
+as its callback. Use development credentials and data only.
 
-Fall Stack is a tech event that happens every year with the intention of presenting tech companies to students that are looking for an internship.
+1. Clone and install:
 
-This is also a great place for networking and really getting to know the market.
-
-The event takes place at ISEP (Instituto Superior de Engenharia do Porto). Each year's edition is tracked as a `<year>-edition` git tag on this repo — see [`CHANGELOG.md`](./CHANGELOG.md) for the current edition's dates and what changed.
-
----
-
-## Tech stack
-
-Next.js, TypeScript, Tailwind CSS, HeroUI, PostgreSQL/Prisma, and Supabase (Auth + Storage). See [`AGENTS.md`](./AGENTS.md)'s Stack table for the full, authoritative list.
-
-### Authentication
-
-All authentication flows (institutional login, password recovery, and password updates) are handled via the institutional OIDC provider (ZITADEL / AuthNEI) and the project's Zitadel/OIDC integration. Application routes should reconcile the external identity into the application session using the server-side session machinery; application tables must not store raw passwords or password reset tokens. Supabase is used for storage (buckets) and as the PostgreSQL host, not as the primary authentication provider.
-
-#### Account deletion
-
-`auth.users.id` and `public."User".id` match by convention; no foreign key can
-span Supabase Auth and Prisma. Always delete accounts through the admin
-backoffice, which removes the Supabase Auth identity before the application
-row. Never delete users directly in the Supabase Auth dashboard: that leaves an
-unloginable application account.
-
-Before deploying changes that affect account deletion, and after any manual
-Auth operation, run
-[`supabase/audit-orphaned-accounts.sql`](./supabase/audit-orphaned-accounts.sql)
-manually in every environment's Supabase SQL editor. It is read-only and reports
-orphans in both directions; investigate each result before deleting anything.
-
----
-
-# Getting Started
-
-## 1. Clone the repository
-
-```bash
-git clone https://github.com/<org>/fallstack-website.git
-cd fallstack-website
-```
-
-## 2. Install dependencies
-
-```bash
-pnpm install
-```
-
-## 3. Environment Variables
-
-Copy:
-
-```bash
-cp .env.example .env
-```
-
-### Required values (hosted Supabase)
-
-- `DATABASE_URL`
-- `DIRECT_URL`
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SECRET_KEY` (service role)
-- `JWT_SECRET`
-
-Defaulted (override only if you need something other than local dev defaults):
-
-- `NEXT_PUBLIC_BASE_URL` (defaults to `http://localhost:3000/api`)
-- `NODE_ENV` (defaults to `development`)
-
-Only needed to run `pnpm seed`:
-
-- `ADMIN_EMAIL`
-- `ADMIN_PASSWORD`
-
-See `.env.example` for the full list, including optional docker compose overrides and Sentry/Pino observability variables (covered below).
-
-### Observability
-
-Production logging and error monitoring use Pino and Sentry. See [`docs/OBSERVABILITY.md`](./docs/OBSERVABILITY.md) for Sentry project creation, environment variables, privacy controls, Docker source-map uploads, alerts, verification, and troubleshooting.
-
-### Pre-event load validation
-
-The in-process upload limiter is keyed by authenticated student ID and uses a
-fixed window. It does not trust proxy IP headers. Before an event, exercise the
-QR and upload-ticket paths against staging with
-[`tests/load/event-readiness.js`](./tests/load/event-readiness.js). The harness
-requires `CONFIRM_NON_PRODUCTION=yes` and rejects an upload load that would
-exceed five tickets per minute for any supplied staging student session.
-
-Only replace the limiter with a shared token bucket if staging results exceed
-the latency/error thresholds, or before scaling the app beyond one replica.
-
-### Storage setup (Supabase hosted)
-
-Create two storage buckets:
-
-| Bucket  | Access  | Allowed MIME types        | Max file size |
-| ------- | ------- | ------------------------- | ------------- |
-| avatars | public  | `image/png`, `image/jpeg` | 5 MB          |
-| cvs     | private | `application/pdf`         | 10 MB         |
-
-After creating the buckets, run
-[`supabase/storage-bucket-limits.sql`](./supabase/storage-bucket-limits.sql)
-in the Supabase SQL editor for **every Supabase project** (including staging
-and production). It fails if either bucket is missing and configures the MIME
-and size restrictions without changing the bucket access policy.
-
-Student uploads use a short-lived signed upload URL, so file bytes go directly
-from browser to Storage rather than through the Next.js server. Browser file
-signature checks are UX only; the bucket restrictions are the enforcement
-boundary for direct uploads.
-
-### Orphaned-file garbage collection
-
-Student media uploads are reconciled daily at 03:00 UTC. Objects are eligible
-only when they are under the app-managed avatar/CV prefixes, are unreferenced by
-`Student.avatar`/`Student.cv`, and are at least 48 hours old.
-
-1. In Supabase Vault, create `storage_gc_project_url` with the project URL and
-   `storage_gc_service_role_key` with the service-role key.
-2. Run [`supabase/storage-gc.sql`](./supabase/storage-gc.sql) manually in the
-   hosted Supabase SQL editor. Do not add the service-role key to the SQL file.
-   Its final query is non-destructive and returns the exact candidate set.
-3. Check every returned bucket/path against `Student.avatar`/`Student.cv`. The
-   installer intentionally does not schedule deletion.
-4. Only after confirming the dry run, run
-   [`supabase/storage-gc-enable.sql`](./supabase/storage-gc-enable.sql) manually.
-5. Confirm the job exists with:
-
-   ```sql
-   select jobid, schedule, command, active
-   from cron.job
-   where jobname = 'storage-orphan-gc';
+   ```bash
+   git clone https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website.git
+   cd fallstack-website
+   corepack enable
+   pnpm install
    ```
 
-The job reads `storage.objects` but deletes through the Storage API; direct SQL
-deletion would remove only metadata and leave the billed blob behind. Failed API
-deletions remain in `storage.objects`, so the next daily run retries them.
+2. Start isolated local PostgreSQL and MinIO, or point `.env` at dedicated
+   development services. One Docker setup matching `.env.example` is:
 
-Monitor runs and asynchronous deletion failures after 03:00 UTC:
-
-```sql
-select status, return_message, start_time, end_time
-from cron.job_run_details
-where jobid = (select jobid from cron.job where jobname = 'storage-orphan-gc')
-order by start_time desc
-limit 10;
-
-select id, status_code, timed_out, error_msg, created
-from net._http_response
-where timed_out or error_msg is not null or status_code not between 200 and 299
-order by created desc;
-
-select bucket_id, count(*)
-from public.storage_gc_candidates()
-group by bucket_id;
-```
-
-`pg_net` responses expire after six hours by default, so inspect them soon after
-the run. A candidate count that does not shrink indicates persistent failures.
-
-### CV retention purge
-
-Student CVs are purged twice a year, on May 1 and Nov 1 at 02:00 UTC, once
-`Student.cvUploadedAt` is more than 6 months old. The job only clears the DB
-reference (`cv = NULL`, `cvPurgedAt = now()`); the CV upload path stamps
-`cvUploadedAt` and clears `cvPurgedAt` on every successful upload. A profile
-banner tells the student their CV was removed whenever `cvPurgedAt` is set.
-
-1. Run [`supabase/cv-retention-purge.sql`](./supabase/cv-retention-purge.sql)
-   manually in the hosted Supabase SQL editor. Its final query is
-   non-destructive and returns the exact candidate set.
-2. Check every returned row against `Student.cv`/`Student.cvUploadedAt`. The
-   installer intentionally does not schedule the purge.
-3. Only after confirming the dry run, run
-   [`supabase/cv-retention-purge-enable.sql`](./supabase/cv-retention-purge-enable.sql)
-   manually.
-4. Confirm the job exists with:
-
-   ```sql
-   select jobid, schedule, command, active
-   from cron.job
-   where jobname = 'cv-retention-purge';
+   ```bash
+   docker run -d --name fallstack-postgres -p 54322:5432 -e POSTGRES_PASSWORD=postgres postgres:16
+   docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:RELEASE.2025-10-15T17-29-55Z server /data --console-address ':9001'
    ```
 
-The purge only clears the DB reference; it does not delete the storage object.
-It runs at 02:00 UTC, one hour before the orphaned-file GC job's daily 03:00
-UTC run (above), so the now-unreferenced CV object is deleted the same day
-instead of waiting on its own cadence.
+   Open the MinIO console at `http://localhost:9001` and create three buckets:
+   `fallstack-dev-avatars`, `fallstack-dev-logos`, and `fallstack-dev-cvs`.
+   Use the same names and credentials in `.env`. A local database uses the
+   default `public` schema; shared environments use `?schema=fallstack`.
+   This pinned Coolify image matches the deployment's MinIO distribution;
+   avoid silently switching the local setup to a different upstream image.
 
----
+3. Configure the app:
 
-# Supabase CLI (Local Development)
+   ```bash
+   cp .env.example .env
+   ```
 
-You can run a full Supabase stack locally (Auth, Storage, DB, Studio, Realtime, Gateway).
+   Set `DATABASE_URL`, `DIRECT_URL` (use the same URL locally), `S3_*`, and
+   the `AUTH_*`/`ZITADEL_*` values in `.env`. Change `JWT_SECRET` and
+   `AUTH_SECRET` from example values. Keep `NEXT_PUBLIC_BASE_URL` at
+   `http://localhost:3000/api` for this setup. `.env.example` lists all keys.
+   Do not use production credentials locally.
 
----
+4. Apply migrations, then start the app:
 
-## Installing Supabase CLI (Windows via Scoop)
+   ```bash
+   pnpm migrate:deploy
+   pnpm dev
+   ```
 
-```bash
-scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-scoop install supabase
-```
+   Open `http://localhost:3000`. Existing databases created before Prisma
+   Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
+   before applying migrations. Login requires the configured OIDC client.
 
-Verify installation:
+## More documentation
 
-```bash
-supabase --version
-```
+- [Contribution workflow](docs/agents/contribution.md): issues, branches, PRs,
+  and checks.
+- [Database workflow](docs/database-workflow.md): migrations, seed, and local
+  reset.
+- [Shared data and deployment](docs/SHARED_DATA.md): shared PostgreSQL,
+  MinIO, and Coolify Compose. Current deployment uses
+  [`docker-compose.app.yml`](docker-compose.app.yml), not a local service profile.
+- [Observability](docs/observability.md), [security](docs/SECURITY.md), and
+  [architecture decisions](docs/decisions/README.md).
+- [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file
+  GC and CV retention purge for source Supabase projects only.
+- [Legacy Supabase local setup](docs/legacy-supabase-local.md): CLI, Windows
+  Vector workaround, and retired Docker profile commands.
+- [Pre-event staging checks](tests/e2e/README.md): load and end-to-end checks;
+  read the `CONFIRM_NON_PRODUCTION` guard before running them.
 
----
+Delete accounts through the admin backoffice so application relationships and
+permissions are handled together.
 
-## Starting Supabase locally
-
-Run from the project root:
-
-```bash
-supabase start
-```
-
-This launches:
-
-| Service         | URL                                                                    |
-| --------------- | ---------------------------------------------------------------------- |
-| API Gateway     | [http://127.0.0.1:54321](http://127.0.0.1:54321)                       |
-| GraphQL API     | [http://127.0.0.1:54321/graphql/v1](http://127.0.0.1:54321/graphql/v1) |
-| Supabase Studio | [http://127.0.0.1:54323](http://127.0.0.1:54323)                       |
-| SMTP Inbox      | [http://127.0.0.1:54324](http://127.0.0.1:54324)                       |
-| Database        | postgresql://postgres:postgres@127.0.0.1:54322                         |
-
----
-
-## Windows Vector Container Issue (harmless but annoying)
-
-Supabase CLI sometimes starts a **vector** container that repeatedly fails on Windows.
-
-This container is NOT required to run the app.
-
-### Option A — Remove vector automatically after start
-
-You may run:
-
-```bash
-docker rm -f supabase_vector_fallstack-website
-```
-
-If the name differs, check:
-
-```bash
-docker ps -a
-```
-
-### Option B — Clean all Supabase containers before starting
-
-After stopping:
-
-```bash
-supabase stop
-docker rm -f $(docker ps -aq --filter "name=supabase")
-```
-
-Then:
-
-```bash
-supabase start
-```
-
----
-
-## Stopping Supabase
-
-```bash
-supabase stop
-```
-
-To also remove local data volumes:
-
-```bash
-docker compose --profile supabase down -v
-```
-
----
-
-# Database Workflow (Prisma)
-
-Schema changes are tracked with **Prisma Migrate** (`prisma/migrations/`), not `db push`. See [`docs/database-workflow.md`](./docs/database-workflow.md) for creating and applying migrations, the one-time baseline-adoption note, resetting a local database, seeding, and wiping the database.
-
----
-
-# Running the App
-
-Start the Next.js dev server:
-
-```bash
-pnpm dev
-```
-
-App runs on:
-
-```
-http://localhost:3000
-```
-
----
-
-# Local Supabase Tools
-
-| Tool            | URL                                              |
-| --------------- | ------------------------------------------------ |
-| Supabase Studio | [http://127.0.0.1:54323](http://127.0.0.1:54323) |
-| API Gateway     | [http://127.0.0.1:54321](http://127.0.0.1:54321) |
-| SMTP Inbox      | [http://127.0.0.1:54324](http://127.0.0.1:54324) |
-
----
-
-# Docker Profiles
-
-### PostgreSQL only (no Supabase)
-
-```bash
-docker compose up -d db
-```
-
-### Full Supabase stack
-
-```bash
-docker compose --profile supabase up -d
-```
-
-Stop:
-
-```bash
-docker compose --profile supabase down
-```
-
----
-
-# Contributing
-
-See [`AGENTS.md`](./AGENTS.md)'s Contribution workflow section for branch naming (Conventional Branch), commit style (Conventional Commits), and the PR-into-`dev` process. Task tracking lives on the repository's [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).
+Task tracking is on the [GitHub Projects board](https://github.com/orgs/Nucleo-Estudantes-Informatica-ISEP/projects/11).

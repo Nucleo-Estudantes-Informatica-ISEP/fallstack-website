@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/blob/dev/docs/SECURITY.md#5-report-vulnerabilities
+    about: Do not open a public issue; follow the private disclosure process.

@@ -1,7 +1,15 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
-import { createAdminClient } from "@/utils/supabase/admin";
+
+import {
+  deleteObject,
+  getObject,
+  listObjects,
+  publicAvatarUrl,
+  publicLogoUrl,
+  type StorageBucket,
+} from "./objectStorageService";
 
 export interface StorageObjectDto {
   name: string;
@@ -11,18 +19,19 @@ export interface StorageObjectDto {
   url: string;
 }
 
-export type StorageBucketType = "avatar" | "cv";
+export type StorageBucketType = StorageBucket;
+const PREFIX = {
+  avatar: "distribution/avatar",
+  logo: "distribution/logo",
+  cv: "distribution/cv",
+};
+const SAFE_OBJECT_NAME = /^[a-zA-Z0-9_.-]+$/;
 
-const BUCKET_CONFIG = {
-  avatar: { bucket: "avatars", prefix: "distribution/avatar", signed: false },
-  cv: { bucket: "cvs", prefix: "distribution/cv", signed: true },
-} as const;
-
-// Supabase Storage's list() has no total-count response - buckets here hold
-// one edition's worth of avatars/CVs (hundreds, not millions), so listing up
-// to this cap and paginating/counting in memory is a reasonable trade-off
-// against building a second paginated-listing API shape just for this.
-const LIST_CAP = 5000;
+function key(type: StorageBucketType, name: string) {
+  if (!SAFE_OBJECT_NAME.test(name) || name.includes(".."))
+    throw new HttpError("Invalid file name", 400);
+  return `${PREFIX[type]}/${name}`;
+}
 
 export async function listStorageObjects(
   type: StorageBucketType,
@@ -30,57 +39,45 @@ export async function listStorageObjects(
   pageSize: number,
   search?: string
 ) {
-  const { bucket, prefix, signed } = BUCKET_CONFIG[type];
-  const admin = createAdminClient();
-  const { data, error } = await admin.storage.from(bucket).list(prefix, {
-    limit: LIST_CAP,
-    sortBy: { column: "created_at", order: "desc" },
-    search,
-  });
-  if (error || !data) return { items: [], totalCount: 0 };
-
-  const files = data.filter((file) => file.id);
-  const totalCount = files.length;
-  const pageFiles = files.slice((page - 1) * pageSize, page * pageSize);
-
-  const items: StorageObjectDto[] = await Promise.all(
-    pageFiles.map(async (file) => {
-      const path = `${prefix}/${file.name}`;
-      const url = signed
-        ? ((await admin.storage.from(bucket).createSignedUrl(path, 60 * 5)).data
-            ?.signedUrl ?? "")
-        : admin.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+  const files = (await listObjects(type, PREFIX[type]))
+    .filter((file) => file.Key && (!search || file.Key.includes(search)))
+    .sort(
+      (a, b) =>
+        (b.LastModified?.getTime() ?? 0) - (a.LastModified?.getTime() ?? 0)
+    );
+  const items: StorageObjectDto[] = files
+    .slice((page - 1) * pageSize, page * pageSize)
+    .map((file) => {
+      const path = file.Key!;
+      const name = path.slice(PREFIX[type].length + 1);
       return {
-        name: file.name,
+        name,
         path,
-        size: file.metadata?.size ?? null,
-        updatedAt: file.updated_at ?? null,
-        url,
+        size: file.Size ?? null,
+        updatedAt: file.LastModified?.toISOString() ?? null,
+        url:
+          type === "avatar"
+            ? publicAvatarUrl(name)
+            : type === "logo"
+              ? publicLogoUrl(name)
+              : `/api/admin/storage/cv/${encodeURIComponent(name)}`,
       };
-    })
-  );
-
-  return { items, totalCount };
+    });
+  return { items, totalCount: files.length };
 }
 
-// Legitimate names are always what the avatar/cv upload routes generate -
-// a bare uuidv4(), optionally with a .pdf suffix - never a path separator.
-// `name` reaches here decodeURIComponent'd from the [name] route segment,
-// so reject anything that could escape the intended prefix (e.g. an
-// encoded ../) before it's interpolated into the object key below.
-const SAFE_OBJECT_NAME = /^[a-zA-Z0-9_.-]+$/;
+export async function downloadStorageObject(
+  type: StorageBucketType,
+  name: string
+) {
+  const file = await getObject(type, key(type, name));
+  if (!file) throw new HttpError("File not found", 404);
+  return file;
+}
 
 export async function deleteStorageObject(
   type: StorageBucketType,
   name: string
 ) {
-  if (!SAFE_OBJECT_NAME.test(name) || name.includes(".."))
-    throw new HttpError("Invalid file name", 400);
-
-  const { bucket, prefix } = BUCKET_CONFIG[type];
-  const admin = createAdminClient();
-  const { error } = await admin.storage
-    .from(bucket)
-    .remove([`${prefix}/${name}`]);
-  if (error) throw new Error(error.message);
+  await deleteObject(type, key(type, name));
 }

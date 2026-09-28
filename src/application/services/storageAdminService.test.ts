@@ -1,52 +1,34 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { createAdminClient } from "@/utils/supabase/admin";
-
-import { deleteStorageObject } from "./storageAdminService";
+import { deleteObject, listObjects } from "./objectStorageService";
+import { deleteStorageObject, listStorageObjects } from "./storageAdminService";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/utils/supabase/admin", () => ({
-  createAdminClient: vi.fn(),
+vi.mock("./objectStorageService", () => ({
+  deleteObject: vi.fn(),
+  getObject: vi.fn(),
+  listObjects: vi.fn(),
+  publicAvatarUrl: vi.fn((id: string) => `/api/media/avatar/${id}`),
 }));
 
-const remove = vi.fn();
+beforeEach(() => vi.clearAllMocks());
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  vi.mocked(createAdminClient).mockReturnValue({
-    storage: { from: () => ({ remove }) },
-  } as never);
-  remove.mockResolvedValue({ error: null });
-});
-
-test("removes a legitimate avatar object by its plain uuid name", async () => {
-  await deleteStorageObject("avatar", "3fa85f64-5717-4562-b3fc-2c963f66afa6");
-
-  expect(remove).toHaveBeenCalledWith([
-    "distribution/avatar/3fa85f64-5717-4562-b3fc-2c963f66afa6",
+test("lists private CVs through admin route", async () => {
+  vi.mocked(listObjects).mockResolvedValue([
+    {
+      Key: "distribution/cv/test.pdf",
+      Size: 10,
+      LastModified: new Date("2026-01-01"),
+    },
   ]);
+  const result = await listStorageObjects("cv", 1, 20);
+  expect(result.items[0].url).toBe("/api/admin/storage/cv/test.pdf");
+  expect(result.totalCount).toBe(1);
 });
 
-test("removes a legitimate cv object with its .pdf suffix", async () => {
-  await deleteStorageObject("cv", "3fa85f64-5717-4562-b3fc-2c963f66afa6.pdf");
-
-  expect(remove).toHaveBeenCalledWith([
-    "distribution/cv/3fa85f64-5717-4562-b3fc-2c963f66afa6.pdf",
-  ]);
-});
-
-test("rejects a name containing a path separator instead of building the object key", async () => {
-  await expect(
-    deleteStorageObject("cv", "../../avatar/some-other-file")
-  ).rejects.toThrow("Invalid file name");
-
-  expect(remove).not.toHaveBeenCalled();
-});
-
-test("rejects a name that is just parent-directory segments", async () => {
-  await expect(deleteStorageObject("avatar", "..")).rejects.toThrow(
+test("rejects traversal before deletion", async () => {
+  await expect(deleteStorageObject("cv", "../test.pdf")).rejects.toThrow(
     "Invalid file name"
   );
-
-  expect(remove).not.toHaveBeenCalled();
+  expect(deleteObject).not.toHaveBeenCalled();
 });

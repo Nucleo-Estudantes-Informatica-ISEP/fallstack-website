@@ -18,6 +18,21 @@ export interface AuthPolicySession {
   employee: { company: unknown } | null;
 }
 
+export function resolveAdminRole(
+  hasGlobalAdminGrant: boolean,
+  configuredRole: "ADMIN" | "SUPER_ADMIN" | null
+) {
+  return hasGlobalAdminGrant ? (configuredRole ?? "SUPER_ADMIN") : null;
+}
+
+export function resolveStoredAdminRole(
+  hasGlobalAdminGrant: boolean,
+  configuredRole: "ADMIN" | "SUPER_ADMIN" | null
+) {
+  if (!hasGlobalAdminGrant) return undefined;
+  return configuredRole ?? "SUPER_ADMIN";
+}
+
 export function passesAuthPolicy(
   policy: AuthPolicy,
   session: AuthPolicySession | null
