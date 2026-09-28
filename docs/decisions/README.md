@@ -21,7 +21,8 @@ Supersedes: [ADR NNNN](NNNN-title.md)
 ## Consequences
 ```
 
-See the [contribution workflow](../../AGENTS.md#contribution-workflow) for when an implementation PR needs an ADR.
+See the [contribution workflow](../agents/contribution.md) for when an
+implementation PR needs an ADR.
 
 ## Index
 
