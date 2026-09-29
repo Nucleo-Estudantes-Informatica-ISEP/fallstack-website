@@ -24,6 +24,8 @@ vi.mock("qrcode.react", () => ({
   QRCodeSVG: ({ value }: { value: string }) => <output>{value}</output>,
 }));
 
+vi.mock("@/components/GoogleWalletButton", () => ({ default: () => null }));
+
 beforeEach(() => {
   vi.useFakeTimers();
   vi.clearAllMocks();

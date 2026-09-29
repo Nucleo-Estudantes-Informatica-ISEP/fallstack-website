@@ -1,22 +1,31 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-const { createSaveUrlMock } = vi.hoisted(() => ({
+import { GET, POST } from "./route";
+
+const { createSaveUrlMock, isConfiguredMock } = vi.hoisted(() => ({
   createSaveUrlMock: vi.fn(),
+  isConfiguredMock: vi.fn(),
 }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("@/application/services/googleWalletService", () => ({
   createGoogleWalletSaveUrl: createSaveUrlMock,
+  isGoogleWalletConfigured: isConfiguredMock,
 }));
 vi.mock("@/lib/http/server", () => ({
   defineHandler: (config: { handler: (args: unknown) => Promise<Response> }) =>
     config.handler,
 }));
 
-import { POST } from "./route";
-
 beforeEach(() => {
   createSaveUrlMock.mockReset();
+  isConfiguredMock.mockReset();
+});
+
+test("reports Wallet availability from server configuration", async () => {
+  isConfiguredMock.mockReturnValue(false);
+  const response = await (GET as unknown as () => Promise<Response>)();
+  await expect(response.json()).resolves.toEqual({ enabled: false });
 });
 
 test("builds the pass only from the authenticated student's session data", async () => {

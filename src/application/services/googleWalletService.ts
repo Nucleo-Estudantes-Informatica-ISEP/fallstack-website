@@ -6,6 +6,7 @@ import { z } from "zod";
 import { HttpError } from "@/types/HttpError";
 import { clientEnv } from "@/config/env.client";
 import { serverEnv } from "@/config/env.server";
+import { reportError } from "@/lib/logger";
 import { edition } from "@/edition";
 
 const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
@@ -68,7 +69,7 @@ function getWalletConfig() {
 
   let credentials: WalletCredentials;
   try {
-    const encoded = encodedCredentials.trim();
+    const encoded = encodedCredentials.replace(/\s+/g, "");
     const decodedBuffer = Buffer.from(encoded, "base64");
     if (decodedBuffer.toString("base64") !== encoded) throw new Error();
     const decoded = decodedBuffer.toString("utf8");
@@ -85,17 +86,23 @@ function getWalletConfig() {
   };
 }
 
-export function buildGoogleWalletObjectId(issuerId: string, studentId: string) {
-  return `${issuerId}.${edition.branding.wallet.objectIdPrefix}-${studentId}`;
+export function isGoogleWalletConfigured() {
+  try {
+    getWalletConfig();
+    return true;
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 503) return false;
+    throw error;
+  }
 }
 
-function buildGenericObject(
-  issuerId: string,
-  classId: string,
-  student: WalletStudent
-) {
+export function buildGoogleWalletObjectId(classId: string, studentId: string) {
+  return `${classId}-${studentId}`;
+}
+
+function buildGenericObject(classId: string, student: WalletStudent) {
   return {
-    id: buildGoogleWalletObjectId(issuerId, student.id),
+    id: buildGoogleWalletObjectId(classId, student.id),
     classId,
     state: "ACTIVE" as const,
     cardTitle: localized(edition.branding.wallet.cardTitle),
@@ -107,6 +114,37 @@ function buildGenericObject(
       alternateText: student.code,
     },
   };
+}
+
+// Google error messages can contain object IDs or account data. Log only
+// machine-readable fields with a restricted character set.
+async function reportGoogleApiError(response: Response, operation: string) {
+  const body: unknown = await response.json().catch(() => undefined);
+  const envelope =
+    body && typeof body === "object" && "error" in body
+      ? body.error
+      : undefined;
+  const error = envelope && typeof envelope === "object" ? envelope : undefined;
+  const safeCode = (value: unknown) =>
+    typeof value === "string" && /^[A-Za-z_]{1,64}$/.test(value)
+      ? value
+      : undefined;
+
+  reportError(
+    new Error(`Google Wallet ${operation} failed`),
+    {
+      operation: `google_wallet_${operation}`,
+      upstreamStatus: response.status,
+      upstreamErrorCode:
+        error && "code" in error && typeof error.code === "number"
+          ? error.code
+          : undefined,
+      upstreamErrorStatus:
+        error && "status" in error ? safeCode(error.status) : undefined,
+      upstreamOAuthError: safeCode(envelope),
+    },
+    "Google Wallet upstream request failed"
+  );
 }
 
 async function requestAccessToken(credentials: WalletCredentials) {
@@ -132,15 +170,25 @@ async function requestAccessToken(credentials: WalletCredentials) {
     }),
   });
 
-  if (!response.ok)
+  if (!response.ok) {
+    await reportGoogleApiError(response, "oauth");
     throw new HttpError("Unable to authenticate with Google Wallet", 502);
+  }
 
-  const parsed = oauthTokenSchema.safeParse(await response.json());
-  if (!parsed.success)
+  const parsed = oauthTokenSchema.safeParse(
+    await response.json().catch(() => undefined)
+  );
+  if (!parsed.success) {
+    reportError(
+      new Error("Invalid Google Wallet OAuth response"),
+      { operation: "google_wallet_oauth", upstreamStatus: response.status },
+      "Google Wallet returned an invalid OAuth response"
+    );
     throw new HttpError(
       "Google Wallet returned an invalid OAuth response",
       502
     );
+  }
 
   return parsed.data;
 }
@@ -195,8 +243,10 @@ async function patchGenericObject(object: GenericObject, accessToken: string) {
     }
   );
 
-  if (!response.ok)
+  if (!response.ok) {
+    await reportGoogleApiError(response, "patch");
     throw new HttpError("Unable to update Google Wallet pass", 502);
+  }
 }
 
 async function syncGenericObject(object: GenericObject, accessToken: string) {
@@ -210,8 +260,10 @@ async function syncGenericObject(object: GenericObject, accessToken: string) {
     return;
   }
 
-  if (existing.status !== 404)
+  if (existing.status !== 404) {
+    await reportGoogleApiError(existing, "get");
     throw new HttpError("Unable to read Google Wallet pass", 502);
+  }
 
   const inserted = await fetch(`${WALLET_API_BASE}/genericObject`, {
     method: "POST",
@@ -228,6 +280,7 @@ async function syncGenericObject(object: GenericObject, accessToken: string) {
     return;
   }
 
+  await reportGoogleApiError(inserted, "insert");
   throw new HttpError("Unable to create Google Wallet pass", 502);
 }
 
@@ -255,8 +308,8 @@ function createSaveUrl(
 }
 
 export async function createGoogleWalletSaveUrl(student: WalletStudent) {
-  const { issuerId, classId, credentials, origin } = getWalletConfig();
-  const object = buildGenericObject(issuerId, classId, student);
+  const { classId, credentials, origin } = getWalletConfig();
+  const object = buildGenericObject(classId, student);
   const accessToken = await getAccessToken(credentials);
 
   await syncGenericObject(object, accessToken);

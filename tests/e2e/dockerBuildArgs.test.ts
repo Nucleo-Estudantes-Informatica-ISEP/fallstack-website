@@ -35,6 +35,21 @@ function readClientEnvVarNames(): string[] {
   return [...new Set([...matches].map((match) => match[1]))];
 }
 
+function readServerEnvVarNames(): string[] {
+  const source = readFileSync(
+    path.join(ROOT, "src/config/env.server.ts"),
+    "utf-8"
+  );
+  const schemaStart = source.indexOf("const serverEnvSchema = z.object({");
+  if (schemaStart === -1)
+    throw new Error("Couldn't find the server environment schema");
+  const schemaEnd = source.indexOf("});", schemaStart);
+  const schemaBody = source.slice(schemaStart, schemaEnd);
+  return [...schemaBody.matchAll(/^\s*([A-Z][A-Z0-9_]+):/gm)].map(
+    (match) => match[1]
+  );
+}
+
 function extractDockerfileAppBuilderStage(): string {
   const dockerfile = readFileSync(path.join(ROOT, "Dockerfile"), "utf-8");
   const start = dockerfile.indexOf("FROM builder AS app-builder");
@@ -145,6 +160,29 @@ test("every NEXT_PUBLIC_* var declared in env.client.ts is passed as a build arg
       webBuildArgs,
       `docker-compose.app.yml's web.build.args is missing "${name}"`
     ).toMatch(new RegExp(`^\\s*${name}:`, "m"));
+  }
+});
+
+test("every server environment variable is available to the runtime web service", () => {
+  const declaredVars = readServerEnvVarNames().filter(
+    (name) => name !== "NODE_ENV" // Set by the Dockerfile's runtime stage.
+  );
+  expect(declaredVars.length).toBeGreaterThan(0);
+
+  const webEnvironment = extractComposeServiceEnvironment("web");
+  for (const name of declaredVars) {
+    expect(
+      webEnvironment,
+      `docker-compose.app.yml's web.environment is missing ${name}`
+    ).toMatch(new RegExp(`^\\s*${name}:`, "m"));
+  }
+
+  const webBuildArgs = extractComposeWebBuildArgs();
+  for (const name of declaredVars.filter((name) =>
+    name.startsWith("GOOGLE_WALLET_")
+  )) {
+    expectComposeVariable(webEnvironment, name, "${" + name + ":-}");
+    expect(webBuildArgs).not.toMatch(new RegExp(`^\\s*${name}:`, "m"));
   }
 });
 

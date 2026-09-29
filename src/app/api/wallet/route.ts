@@ -1,7 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { createGoogleWalletSaveUrl } from "@/application/services/googleWalletService";
+import {
+  createGoogleWalletSaveUrl,
+  isGoogleWalletConfigured,
+} from "@/application/services/googleWalletService";
+
+export const GET = defineHandler({
+  auth: "student",
+  handler: async () =>
+    NextResponse.json({ enabled: isGoogleWalletConfigured() }),
+});
 
 export const POST = defineHandler({
   auth: "student",
