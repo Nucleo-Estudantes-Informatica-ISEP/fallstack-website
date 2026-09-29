@@ -1,22 +1,16 @@
 # Google Wallet infrastructure
 
-This document covers the infrastructure/onboarding work tracked by issue #340.
-The attendee-facing Wallet integration tracked by #3 is implemented separately
-in PR #364.
-
-PR #363 (this infrastructure guide) must merge before PR #364. This keeps the
-operational prerequisites and secret-handling contract in `dev` before the
-application starts consuming them. The two work streams were developed in
-parallel; the order describes how they land, not whether implementation has
-started.
+This guide covers the Google Wallet issuer, credentials, Generic Class, and
+publishing setup. The application contract lives in `src/config/env.server.ts`,
+`src/application/services/googleWalletService.ts`, and `POST /api/wallet`.
 
 The Fallstack Wallet pass is a **Generic Pass** used as another presentation
 surface for the existing attendee identifier. It is not an event ticket and the
 Fallstack application remains the source of truth.
 
-## What #340 must deliver
+## Prerequisites
 
-Before PR #364 is deployed, the project needs:
+Before enabling Google Wallet for attendees, the project needs:
 
 - a Google Wallet API Issuer account owned by NEI-ISEP;
 - a Google Cloud project for the Wallet integration;
@@ -57,9 +51,13 @@ https://developers.google.com/wallet/generic/getting-started/issuer-onboarding
 
 1. Create a service account in the chosen GCP project.
 2. Create a JSON key for it for the initial server-side integration.
+   If the `iam.disableServiceAccountKeyCreation` organization policy blocks this
+   step, ask the GCP organization administrator to approve the credential plan.
 3. Copy the service account email.
 4. In the Google Pay & Wallet console, open **Users** and invite that service
    account email with the **Developer** role.
+   Do not grant the service account GCP project IAM roles just for Wallet access;
+   the Wallet issuer invitation grants the required access.
 5. Store the JSON key only in the relevant secret store (local untracked `.env`
    for development, Coolify environment/secret configuration for hosted
    environments). Never commit the JSON key or private key material.
@@ -67,7 +65,7 @@ https://developers.google.com/wallet/generic/getting-started/issuer-onboarding
 Official credential documentation:
 https://developers.google.com/wallet/generic/getting-started/auth/rest
 
-PR #364 uses this server-only configuration contract:
+The application uses this server-only configuration contract:
 
 | Variable                                 | Secret  | Purpose                                                          |
 | ---------------------------------------- | ------- | ---------------------------------------------------------------- |
@@ -75,14 +73,32 @@ PR #364 uses this server-only configuration contract:
 | `GOOGLE_WALLET_CLASS_ID`                 | No      | Full Generic Class ID (`issuerId.suffix`) for that environment.  |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64` | **Yes** | Base64-encoded service-account JSON, decoded only on the server. |
 
-PR #364 adds these variables to the application's validated runtime schema. They
-must be configured in each environment before that application change is
-deployed. Base64 is only a transport format; it does not make the credential
-non-secret.
+All three variables are optional at process startup so environments without
+Wallet can still boot. Configure all three before exposing the Wallet action in
+an environment; otherwise `POST /api/wallet` returns 503. Base64 is only a
+transport format; it does not make the credential non-secret.
+
+Encode the **complete** JSON key file as a single line of standard base64 with
+padding. The decoded JSON must contain `client_email` and `private_key`.
+
+```sh
+base64 -w0 key.json # Linux (GNU coreutils)
+base64 -i key.json  # macOS
+```
+
+On Windows PowerShell:
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes((Resolve-Path ./key.json)))
+```
+
+Paste the resulting single line into `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64`
+in the secret store. Do not paste the JSON key or encoded value into a ticket,
+PR, log, or chat.
 
 ## 4. Create the Fallstack Generic Class
 
-Create a **Generic** pass class in the Google Wallet Business Console.
+Create a **Generic** pass class in the Google Pay & Wallet console.
 
 Use a separate class per hosted environment so staging changes cannot alter the
 production pass presentation. Suggested suffixes:
@@ -92,19 +108,23 @@ production pass presentation. Suggested suffixes:
 - `fallstack-2026`
 
 A class ID has the form `ISSUER_ID.SUFFIX`.
+Keep object IDs isolated by environment too. The application now derives each
+object ID from the configured class ID and student ID, so use a distinct class ID
+for every environment. A separate issuer for non-production adds another layer
+of isolation when staging data is cloned from production.
 
 The class should contain only shared Fallstack 2026 presentation data (brand,
 logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by the #3 implementation in PR #364.
+Generic Object created by the application.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create
 
 ## 5. Create a demo Generic Object
 
-To validate the infrastructure independently of PR #364, create one demo object
-using Google's Generic Pass sample/codelab or REST API. Use a disposable object
-suffix, for example `fallstack-2026-demo-<timestamp>`.
+To validate the infrastructure before enabling the application flow, create one
+demo object using Google's Generic Pass sample/codelab or REST API. Use a
+disposable object suffix, for example `fallstack-2026-demo-<timestamp>`.
 
 Minimum useful shape:
 
@@ -142,7 +162,7 @@ containing the student's code with a 30-minute expiry. The existing company scan
 flow sends that scanned JWT to `/api/saved`, where it is verified before the
 student is saved.
 
-For the #340 demo only:
+For an infrastructure demo only:
 
 1. Sign in to a non-production Fallstack environment as a test student.
 2. Obtain a fresh `GET /api/qrcode` response (the profile QR UI already calls
@@ -155,8 +175,9 @@ For the #340 demo only:
    QR.
 
 Do **not** treat that short-lived JWT as the application design. A Wallet pass is
-persistent, so PR #364 uses the existing attendee code and extends the scanner
-to recognize it instead of embedding a JWT that expires after 30 minutes.
+persistent, so the application uses the existing attendee code and the scanner
+recognizes it instead of embedding a JWT that expires after 30 minutes. See
+`src/application/services/googleWalletService.ts` and the QR scanner component.
 
 ## 6. Add Wallet test users
 
@@ -186,8 +207,8 @@ Wallet users. Before requesting it:
 Official publishing documentation:
 https://developers.google.com/wallet/generic/test-and-go-live/request-publishing-access
 
-Do this early: approval is external to the Fallstack deployment process and PR
-#364 must not be deployed while basic issuer setup is incomplete.
+Do this early: approval is external to the Fallstack deployment process. Do not
+expose the Wallet action to attendees while basic issuer setup is incomplete.
 
 ## 8. Environment and secret placement
 
@@ -202,13 +223,22 @@ possible. Revoke/rotate keys that are no longer needed. Service-account material
 must remain server-side; no Wallet private key or service-account JSON may be
 exposed through `NEXT_PUBLIC_*` variables or sent to the browser.
 
-## Handoff to #3 / PR #364
+In Coolify, set the three `GOOGLE_WALLET_*` values as **runtime** variables for
+the `web` service, not Docker build arguments. The `web.environment` mapping in
+`docker-compose.app.yml` must pass them into the container. Confirm this before
+deployment; a value present in Coolify but absent from that mapping is invisible
+to `src/config/env.server.ts`. Keep the service-account value secret and out of
+image layers. `NEXT_PUBLIC_BASE_URL` must point at the actual public host for
+each environment because the Save-to-Wallet JWT derives its allowed origin from
+that URL.
+
+## Operational handoff
 
 Issue #340 is complete when the external issuer/project/API/service-account
 setup exists, the demo Generic Pass works end-to-end, publishing access has been
 requested, and the concrete environment values/secret locations are recorded.
 
-Issue #3 and PR #364 own the application work:
+The application flow must provide:
 
 - authenticated endpoint/service for a student's Wallet object;
 - ownership enforcement;
