@@ -3,6 +3,53 @@
 Browser smoke and staging event-flow tests. Existing unit tests stay colocated
 with the code they cover (`*.test.ts`/`*.test.tsx`, auto-discovered by Vitest).
 
+## PostgreSQL integration tests (normal PRs)
+
+`pnpm test:integration` runs the database invariants/concurrency suite and the
+existing company-interest and interest-deletion suites against real PostgreSQL.
+These tests are also auto-discovered by `pnpm test` and the normal PR CI job,
+which already starts PostgreSQL 16 and applies `prisma migrate deploy`.
+They do not need the app server, browser sessions, MinIO, or staging credentials.
+
+Use a dedicated disposable local database, never a shared or production one:
+
+```bash
+docker run -d --name fallstack-test-postgres \
+  -p 127.0.0.1:54329:5432 \
+  -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=fallstack_test postgres:16
+export DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54329/fallstack_test
+export DIRECT_URL="$DATABASE_URL"
+pnpm exec prisma migrate deploy
+pnpm test:integration
+```
+
+Wait until `docker exec fallstack-test-postgres pg_isready -U postgres` succeeds
+before applying migrations. No application seed is needed. The fixture helper
+creates the required relationships with fixed values and unique identifiers,
+and deletes only rows owned by each test, including after a failed assertion.
+The ordering tests reserve day slots 339/340 and FAQ positions 339000–339003 in
+this disposable database; do not run two copies of this suite against the same
+database simultaneously.
+
+Concurrency tests open two real transactions on separate connections and use a
+barrier before writing, without sleeps or retries. They assert the number of
+successful commits and the persisted state, without assuming which writer
+wins. Deferred ordering constraints can reject one concurrent commit through
+either a uniqueness conflict or PostgreSQL deadlock detection; both outcomes
+must preserve the invariant. Separate swap and rollback cases verify that the
+constraints are deferred and that an invalid final state cannot partially commit.
+
+Coverage includes ActionCompletion inserts and idempotent upserts, company-wide
+SavedStudent deduplication, booth completion through the save service,
+Schedule/FAQ ordering collisions and swaps, transaction rollback after real
+constraint errors, and company-interest persistence through the user service.
+The existing interest suites additionally cover company isolation and cascades.
+
+For a fast run without any PostgreSQL connection, use `pnpm test:unit`. It excludes
+the three DB-backed files while retaining the existing unit and non-database
+integration checks. `pnpm test` still runs everything and fails if the database
+is missing; CI does not silently skip the database tests.
+
 ## Playwright
 
 Install Chromium and WebKit once per machine. The default test run includes both
