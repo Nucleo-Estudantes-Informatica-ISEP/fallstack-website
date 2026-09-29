@@ -10,6 +10,10 @@ import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHi
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { getStudentPreviewToken } from "@/client/api/studentToken";
+import {
+  isStudentCode,
+  normalizeStudentCode,
+} from "@/domain/student/studentCode";
 
 interface CompanySavedProfilesSectionProps {
   history: SavedStudentDto[];
@@ -60,10 +64,20 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
+      const token = isStudentCode(data)
+        ? await getStudentPreviewToken(normalizeStudentCode(data))
+        : data;
+
+      if (!token) {
+        toast.error("O código de estudante deste passe é inválido.");
+        setProcessing(false);
+        return;
+      }
+
       try {
-        await httpClient.post("/saved", { token: data });
+        await httpClient.post("/saved", { token });
         router.refresh();
-        router.push(`/student/${data}/preview`);
+        router.push(`/student/${token}/preview`);
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
           toast.warning("Este estudante já foi guardado anteriormente.");
