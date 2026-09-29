@@ -10,6 +10,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/tests/e2e/postgresInvariants.test.ts' --exclude '**/tests/e2e/companyInterests.test.ts' --exclude '**/tests/e2e/interestDeletionCascade.test.ts'",
+    "test:integration": "vitest run tests/e2e/postgresInvariants.test.ts tests/e2e/companyInterests.test.ts tests/e2e/interestDeletionCascade.test.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:load": "k6 run tests/load/event-readiness.js",
