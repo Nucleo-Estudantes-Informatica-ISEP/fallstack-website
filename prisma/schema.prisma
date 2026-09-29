@@ -279,6 +279,9 @@ model FaqEntry {
 }
 
 model SavedStudent {
+  // Employee attribution is the primary-key grain, but a student may be saved
+  // only once per company. Keep the separate company unique key below: it
+  // closes races between employees of the same company.
   studentId  String   @db.Uuid
   employeeId String   @db.Uuid
   companyId  String   @db.Uuid
