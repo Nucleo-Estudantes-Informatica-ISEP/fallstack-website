@@ -124,13 +124,14 @@ https://developers.google.com/wallet/generic/use-cases/create
 
 To validate the infrastructure before enabling the application flow, create one
 demo object using Google's Generic Pass sample/codelab or REST API. Use a
-disposable object suffix, for example `fallstack-2026-demo-<timestamp>`.
+disposable, environment-scoped object suffix, for example
+`fallstack-2026-staging-demo-<timestamp>`.
 
 Minimum useful shape:
 
 ```json
 {
-  "id": "ISSUER_ID.fallstack-2026-demo-123",
+  "id": "ISSUER_ID.fallstack-2026-staging-demo-123",
   "classId": "ISSUER_ID.fallstack-2026-staging",
   "state": "ACTIVE",
   "cardTitle": {
@@ -238,7 +239,9 @@ Issue #340 is complete when the external issuer/project/API/service-account
 setup exists, the demo Generic Pass works end-to-end, publishing access has been
 requested, and the concrete environment values/secret locations are recorded.
 
-The application flow must provide:
+PR #364 implements the application flow listed below and follows this merged
+infrastructure guide (#363). The external setup and real-device validation in
+#340 remain separate operational steps:
 
 - authenticated endpoint/service for a student's Wallet object;
 - ownership enforcement;
@@ -246,4 +249,4 @@ The application flow must provide:
 - safe handling of repeated Add-to-Wallet requests;
 - the persistent Wallet QR/identifier design;
 - the user-facing **Add to Google Wallet** action;
-- unit/integration/UI tests and staging validation.
+- unit/integration/UI tests.
