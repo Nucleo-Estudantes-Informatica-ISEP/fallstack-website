@@ -15,6 +15,9 @@ export const branding = {
     description:
       "Website do evento Fallstack 2026. O evento decorrerá nos dias 17 e 18 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
   },
+  wallet: {
+    cardTitle: "Fallstack 2026",
+  },
   storage: {
     authCookie: "@Fallstack26:auth",
     hideInstallPrompt: "@Fallstack26:hidePrompt",

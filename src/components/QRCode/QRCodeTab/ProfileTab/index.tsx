@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 
 import { httpClient } from "@/lib/http/client";
 import type { SessionDto } from "@/application/dto/sessionDto";
+import GoogleWalletButton from "@/components/GoogleWalletButton";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
@@ -108,6 +109,7 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
           {isCopied && (
             <p className="mt-2 font-bold text-green-500">Copiado!</p>
           )}
+          <GoogleWalletButton />
           <p className="mt-6 text-sm text-black sm:mr-6 md:mr-4 md:text-sm lg:mr-0 lg:text-base">
             Partilha o teu <b>código</b> com as empresas de forma a poderem{" "}
             <b>guardar</b> o teu perfil!
