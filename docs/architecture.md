@@ -72,7 +72,8 @@ student. A student's duplicate completion of the same action is rejected.
 ## Data ownership
 
 `prisma/schema.prisma` is the source of truth for models and relationships.
-Use it for the current data model; a copied model list or diagram goes stale.
+Use it for the current data model; the [database architecture](database.md)
+diagram and notes should be updated with schema changes.
 
 `SavedStudent` stores both an employee attribution and a company. Its primary
 key is `(studentId, employeeId)` and a separate unique constraint on

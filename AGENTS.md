@@ -14,6 +14,7 @@ for procedure and rationale.
   their history.
 - [Database workflow](docs/database-workflow.md): Prisma migrations and local
   data operations.
+- [Database architecture](docs/database.md): ER diagram and schema design notes.
 - [Shared data](docs/SHARED_DATA.md): PostgreSQL, MinIO, and deployment setup.
 - [Observability](docs/observability.md) and [security](docs/SECURITY.md).
 
