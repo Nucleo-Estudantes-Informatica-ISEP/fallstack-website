@@ -1,9 +1,16 @@
 import { check, sleep } from "k6";
 import http from "k6/http";
 
+import { assertStagingTarget } from "../stagingTarget.js";
+
 import { Trend } from "k6/metrics";
 
-const baseUrl = (__ENV.E2E_BASE_URL || "").replace(/\/$/, "");
+const baseUrl = assertStagingTarget(
+  __ENV.E2E_BASE_URL,
+  __ENV.STAGING_BASE_URL,
+  __ENV.CONFIRM_NON_PRODUCTION
+);
+const profile = __ENV.K6_PROFILE || "smoke";
 const scenario = __ENV.K6_SCENARIO || "health";
 const actionId = __ENV.ACTION_ID;
 const vus = Number(__ENV.VUS || 50);
@@ -24,11 +31,12 @@ const supportedScenarios = [
   "upload-tickets-boundary",
 ];
 
-if (__ENV.CONFIRM_NON_PRODUCTION !== "yes")
+if (!["smoke", "peak"].includes(profile))
+  throw new Error("K6_PROFILE must be smoke or peak.");
+if (profile === "smoke" && !["health", "qr"].includes(scenario))
   throw new Error(
-    "Set CONFIRM_NON_PRODUCTION=yes; never load-test production."
+    "Smoke profile only supports read-only health and qr checks."
   );
-if (!baseUrl) throw new Error("Set E2E_BASE_URL to the staging environment.");
 if (!supportedScenarios.includes(scenario))
   throw new Error(
     `Unknown K6_SCENARIO "${scenario}". Use health, qr, upload-tickets, or upload-tickets-boundary.`
@@ -65,22 +73,36 @@ const boundaryElapsedMs = new Trend("boundary_elapsed_ms", true);
 const isBoundaryScenario = scenario === "upload-tickets-boundary";
 
 export const options = {
+  // Never follow a staging redirect to production during any load scenario.
+  maxRedirects: 0,
   scenarios: {
-    [isBoundaryScenario ? "boundary_probe" : "event_peak"]: isBoundaryScenario
-      ? {
-          executor: "per-vu-iterations",
-          vus: studentCookies.length,
-          iterations: 1,
-          maxDuration: `${Math.ceil(rateLimitWindowMs / 1000 + 30)}s`,
-        }
-      : {
-          executor: "ramping-vus",
-          stages: [
-            { duration: "30s", target: vus },
-            { duration: "2m", target: vus },
-            { duration: "30s", target: 0 },
-          ],
-        },
+    [profile === "smoke"
+      ? "event_smoke"
+      : isBoundaryScenario
+        ? "boundary_probe"
+        : "event_peak"]:
+      profile === "smoke"
+        ? {
+            executor: "shared-iterations",
+            vus: 1,
+            iterations: 5,
+            maxDuration: "30s",
+          }
+        : isBoundaryScenario
+          ? {
+              executor: "per-vu-iterations",
+              vus: studentCookies.length,
+              iterations: 1,
+              maxDuration: `${Math.ceil(rateLimitWindowMs / 1000 + 30)}s`,
+            }
+          : {
+              executor: "ramping-vus",
+              stages: [
+                { duration: "30s", target: vus },
+                { duration: "2m", target: vus },
+                { duration: "30s", target: 0 },
+              ],
+            },
   },
   thresholds: isBoundaryScenario
     ? { checks: ["rate==1"] }
@@ -172,7 +194,9 @@ export default function runScenario() {
   }
 
   if (scenario === "qr") {
-    const response = http.get(`${baseUrl}/api/actions/${actionId}`);
+    const response = http.get(
+      `${baseUrl}/api/actions/${encodeURIComponent(actionId)}`
+    );
     check(response, {
       "QR generation returns 200": (res) => res.status === 200,
       "QR token is present": (res) => Boolean(res.json("qrCode")),
