@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
 
 import { e2eEnv } from "../env";
 import { createRoleContext, hasRoleStates } from "../roleTestUtils";
+import { expect, test } from "./fixtures";
 
 interface SessionBody {
   role: "STUDENT" | "EMPLOYEE" | null;

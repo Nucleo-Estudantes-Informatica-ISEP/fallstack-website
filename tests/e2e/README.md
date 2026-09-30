@@ -76,7 +76,18 @@ All readiness runs and direct k6 scenarios require `E2E_BASE_URL` to equal
 `staging`, `stage`, or `stg` hostname label; production URLs, URL credentials,
 paths, query strings, and fragments are rejected even with confirmation.
 Loopback origins are allowed for local harness checks. Keep staging DNS pointed
-at isolated staging services. Health and k6 refuse redirects.
+at isolated staging services. Health, Playwright API requests, and k6 refuse
+redirects. Browser traffic is restricted to the configured origin, with all
+redirects and service workers blocked. Use the shared Playwright fixtures and
+their `request` fixture for API calls; role contexts use the same guard.
+
+CI exercises this boundary against disposable HTTP servers that redirect
+authenticated POST/DELETE requests and browser navigation to another origin.
+Run the regression without an app server or staging credentials:
+
+```bash
+E2E_BASE_URL=http://127.0.0.1 pnpm test:e2e --project=chromium tests/e2e/playwright/staging-redirects.spec.ts
+```
 
 One exit code and GitHub job status provide pass/fail. `test-results/readiness/`
 contains `summary.md`, machine-readable `result.json`, per-layer logs, k6

@@ -80,6 +80,14 @@ jobs:
       - name: Test
         run: pnpm exec vitest run --maxWorkers=2
 
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Test staging redirect safety
+        env:
+          E2E_BASE_URL: http://127.0.0.1
+        run: pnpm test:e2e --project=chromium tests/e2e/playwright/staging-redirects.spec.ts
+
       - name: Typecheck
         run: pnpm typecheck
 
