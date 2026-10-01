@@ -1,0 +1,114 @@
+name: Staging event readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      mutations:
+        description: Exercise synthetic employee scan and admin FAQ writes
+        type: boolean
+        default: false
+      load:
+        description: Run representative 10-user health/QR peak load (3 minutes each)
+        type: boolean
+        default: false
+      rate_limit:
+        description: Run rate-limit boundary probe (creates synthetic CV objects)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# One run per staging deployment; never interrupt synthetic-data cleanup.
+concurrency:
+  group: staging-event-readiness
+  cancel-in-progress: false
+
+jobs:
+  readiness:
+    name: Staging readiness pass/fail
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    env:
+      STAGING_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+      E2E_BASE_URL: ${{ vars.STAGING_BASE_URL }}
+      ACTION_ID: ${{ vars.STAGING_ACTION_ID }}
+      CONFIRM_NON_PRODUCTION: "yes"
+      READINESS_MUTATIONS: ${{ inputs.mutations && 'yes' || 'no' }}
+      READINESS_LOAD: ${{ inputs.load && 'yes' || 'no' }}
+      READINESS_RATE_LIMIT: ${{ inputs.rate_limit && 'yes' || 'no' }}
+      E2E_STUDENT_STORAGE_STATE: tests/e2e/.staging-student.json
+      E2E_EMPLOYEE_STORAGE_STATE: tests/e2e/.staging-employee.json
+      E2E_ADMIN_STORAGE_STATE: tests/e2e/.staging-admin.json
+      E2E_SUPER_ADMIN_STORAGE_STATE: tests/e2e/.staging-super-admin.json
+    steps:
+      - name: Checkout selected revision
+        uses: actions/checkout@v7
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install k6
+        uses: grafana/setup-k6-action@v1
+        with:
+          k6-version: "2.3.0"
+
+      - name: Materialize synthetic sessions
+        env:
+          STUDENT_STATE: ${{ secrets.STAGING_STUDENT_STORAGE_STATE }}
+          EMPLOYEE_STATE: ${{ secrets.STAGING_EMPLOYEE_STORAGE_STATE }}
+          ADMIN_STATE: ${{ secrets.STAGING_ADMIN_STORAGE_STATE }}
+          SUPER_ADMIN_STATE: ${{ secrets.STAGING_SUPER_ADMIN_STORAGE_STATE }}
+          STUDENT_COOKIES: ${{ inputs.rate_limit && secrets.STAGING_STUDENT_COOKIES || '' }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { writeFileSync } from 'node:fs';
+          const mask = value => console.log(`::add-mask::${value.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')}`);
+          for (const [role, key] of [
+            ['student', 'STUDENT_STATE'], ['employee', 'EMPLOYEE_STATE'],
+            ['admin', 'ADMIN_STATE'], ['super-admin', 'SUPER_ADMIN_STATE'],
+          ]) {
+            try {
+              for (const cookie of JSON.parse(process.env[key] || '{}').cookies || []) {
+                if (typeof cookie.value === 'string' && cookie.value) mask(cookie.value);
+              }
+            } catch { /* The readiness configuration layer reports invalid state. */ }
+            writeFileSync(`tests/e2e/.staging-${role}.json`, process.env[key] || '{}', { mode: 0o600 });
+          }
+          for (const cookie of (process.env.STUDENT_COOKIES || '').split(/[;,]/)) {
+            const value = cookie.slice(cookie.indexOf('=') + 1).trim();
+            if (value) mask(value);
+          }
+          NODE
+
+      - name: Validate deployment (health → Playwright → k6)
+        env:
+          STUDENT_COOKIES: ${{ inputs.rate_limit && secrets.STAGING_STUDENT_COOKIES || '' }}
+        run: pnpm test:readiness
+
+      - name: Remove session files
+        if: always()
+        run: rm -f tests/e2e/.staging-*.json
+
+      - name: Retain readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: staging-readiness-${{ github.run_id }}-${{ github.run_attempt }}
+          # Created only after redaction; interruption cannot publish raw session logs.
+          path: test-results/readiness/evidence/
+          if-no-files-found: warn
+          retention-days: 3

@@ -50,6 +50,7 @@ throughput, or boundary timing under deployment load.
 
 With synthetic staging accounts and working S3 storage, run the k6 scenario
 from `tests/e2e/README.md` using `CONFIRM_NON_PRODUCTION=yes`,
+`STAGING_BASE_URL` equal to `E2E_BASE_URL`, `K6_PROFILE=peak`,
 `K6_SCENARIO=upload-tickets-boundary`, and one distinct `STUDENT_COOKIES` entry
 per student. Run `upload-tickets` and `qr` separately and then concurrently
 against the same staging instance. Record full commands (without cookies),

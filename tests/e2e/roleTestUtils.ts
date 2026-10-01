@@ -1,6 +1,7 @@
-import { request, type APIRequestContext } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
 
 import { e2eEnv } from "./env";
+import { createStagingRequestContext } from "./stagingSafety";
 
 export type AuthenticatedRole = "student" | "employee" | "admin" | "superAdmin";
 
@@ -21,5 +22,5 @@ export async function createRoleContext(
   const storageState = role ? storageStateByRole[role] : undefined;
   if (role && !storageState)
     throw new Error(`Storage state for ${role} is required`);
-  return request.newContext({ baseURL: e2eEnv.baseUrl, storageState });
+  return createStagingRequestContext({ baseURL: e2eEnv.baseUrl, storageState });
 }
