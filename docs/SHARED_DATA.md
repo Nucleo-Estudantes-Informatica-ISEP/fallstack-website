@@ -35,6 +35,8 @@ Use `pnpm exec prisma migrate deploy` as the migrator. Keep the source
 `_prisma_migrations` rows during app-only PostgreSQL restore. Do not import
 Supabase `auth` or `storage` schemas. Do not run legacy `supabase/*.sql` jobs
 against shared PostgreSQL: those reference Storage metadata, Vault, pg_net and
-old `public` schema paths. Reconcile orphan objects separately with the S3 API
-after reviewing candidates. Scheduled shared-service backups are a separate
+old `public` schema paths. The Compose `storage-cleanup` worker restores daily
+six-month CV retention and orphan deletion through S3; review dry-run candidates
+before enabling `apply`. See the [cleanup runbook](storage-cleanup.md) for rollout,
+permissions, retry queue, audit and recovery. Scheduled shared-service backups are a separate
 requirement; migration dumps are one-time recovery points.

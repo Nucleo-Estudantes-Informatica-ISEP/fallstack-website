@@ -75,6 +75,8 @@ as its callback. Use development credentials and data only.
   [`docker-compose.app.yml`](docker-compose.app.yml), not a local service profile.
 - [Google Wallet infrastructure](docs/GOOGLE_WALLET.md): issuer, service-account,
   Generic Pass, publishing access, and runtime configuration.
+- [MinIO cleanup](docs/storage-cleanup.md): six-month CV retention, orphan cleanup,
+  dry-run rollout, retries and operator audit.
 - [Observability](docs/observability.md), [security](docs/SECURITY.md), and
   [architecture decisions](docs/decisions/README.md).
 - [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file
