@@ -15,7 +15,10 @@ import {
   setAuthUserBanned,
   signUpEmployee,
 } from "./authApplicationService";
-import { revokeGoogleWalletPass } from "./googleWalletService";
+import {
+  revokeGoogleWalletPass,
+  withGoogleWalletOperation,
+} from "./googleWalletService";
 import { assignEmployeeRole, signAppSession } from "./zitadelAuthService";
 
 vi.mock("server-only", () => ({}));
@@ -38,7 +41,10 @@ vi.mock("../repositories/userRepository", () => ({
   provisionZitadelUser: vi.fn(),
   setUserRole: vi.fn(),
 }));
-vi.mock("./googleWalletService", () => ({ revokeGoogleWalletPass: vi.fn() }));
+vi.mock("./googleWalletService", () => ({
+  revokeGoogleWalletPass: vi.fn(),
+  withGoogleWalletOperation: vi.fn(async (_id, work) => work()),
+}));
 vi.mock("./zitadelAuthService", () => ({
   assignEmployeeRole: vi.fn(),
   signAppSession: vi.fn(() => "new-session"),
@@ -212,5 +218,20 @@ test("returns 404 when the account has already been deleted", async () => {
     status: 404,
   });
   expect(revokeGoogleWalletPass).not.toHaveBeenCalled();
+  expect(deleteUser).not.toHaveBeenCalled();
+});
+
+test("account deletion enters shared admission before taking a DB lock", async () => {
+  vi.mocked(withGoogleWalletOperation).mockRejectedValueOnce(
+    Object.assign(new Error("Busy"), { status: 429 })
+  );
+  await expect(deleteUserAccount("app-user-1")).rejects.toMatchObject({
+    status: 429,
+  });
+  expect(withGoogleWalletOperation).toHaveBeenCalledWith(
+    "app-user-1",
+    expect.any(Function)
+  );
+  expect(withLockedUser).not.toHaveBeenCalled();
   expect(deleteUser).not.toHaveBeenCalled();
 });

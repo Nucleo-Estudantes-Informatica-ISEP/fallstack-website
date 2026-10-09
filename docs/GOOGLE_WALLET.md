@@ -73,7 +73,12 @@ The application uses this server-only configuration contract:
 | `GOOGLE_WALLET_CLASS_ID`                 | No      | Full Generic Class ID (`issuerId.suffix`) for that environment.  |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64` | **Yes** | Base64-encoded service-account JSON, decoded only on the server. |
 
-All three variables are optional at process startup so environments without
+`GOOGLE_WALLET_NEVER_ENABLED` defaults to `false`. Set it to `true` only in an
+environment that has never issued any Wallet objects, with all three credentials
+unset. This permits student deletion without contacting Google. Clear this
+declaration before enabling Wallet; while it is true, issuance is disabled.
+
+All three credential variables are optional at process startup so environments without
 Wallet can still boot. Configure all three before exposing the Wallet action in
 an environment; otherwise `POST /api/wallet` returns 503. Base64 is only a
 transport format; it does not make the credential non-secret.
@@ -268,15 +273,22 @@ values. Google Generic Objects cannot be deleted through this API; expiry does
 not guarantee removal from a user's device or immediate synchronization.
 Issuance and deletion lock the same database user row and re-read the account,
 so an in-flight request cannot recreate or reactivate a deleted student's pass.
+One issuance or deletion operation per user is admitted in each application
+process before OAuth or database access; competing operations return 429 and
+can be retried immediately after the first finishes. Database locks still
+serialize operations across replicas. Each Google request has a ten-second
+timeout, and transport failures return 502 without logging sensitive details.
+The 60-second transaction limit also bounds lock waits across replicas.
 
 A missing object (404) is safe to treat as already revoked. Other Google failures,
 network timeouts, or incomplete/invalid Wallet configuration abort account
 deletion and retain the local account. Fix the upstream/configuration failure,
 then repeat the same admin delete action. Revocation is idempotent, including
 when Google accepted the first PATCH but its response or the database commit
-failed. Non-student accounts do not contact Wallet. Completely unset Wallet
-configuration skips revocation only for environments that never enabled Wallet;
-do not clear configuration in an environment with issued passes.
+failed. Non-student accounts do not contact Wallet. Completely unset credentials
+fail closed with 503 unless `GOOGLE_WALLET_NEVER_ENABLED=true` explicitly declares
+that the environment has never issued passes. Never set this opt-out in an
+environment with issued passes. Partial configuration still blocks deletion.
 
 Keep the issuer, class, and authorized credentials available while any issued
 objects need revocation. Revocation targets the currently configured class;
@@ -296,4 +308,10 @@ original class/credentials. This change does not bulk-update existing objects.
    Restore permission, repeat deletion, and confirm expiry plus account removal.
 4. Race issuance against deletion for a synthetic student: issuance either
    finishes before revocation or rejects the deleted account. The final Google
-   object must stay expired with the generic revoked-pass content.
+   object must stay expired with the generic revoked-pass content. Retry a
+   competing request that receives 429 after the admitted operation finishes.
+5. Remove all Wallet credentials without setting the never-enabled flag. Student
+   deletion must return 503 and retain the account. Restore credentials to retry.
+   In a separate environment that has never issued passes, explicitly set
+   `GOOGLE_WALLET_NEVER_ENABLED=true` with credentials unset; deletion succeeds,
+   while Wallet availability remains false and issuance returns 503.
