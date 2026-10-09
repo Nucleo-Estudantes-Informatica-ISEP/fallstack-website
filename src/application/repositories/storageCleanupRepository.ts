@@ -16,7 +16,7 @@ export async function planStorageCleanup(
     async (tx) => {
       if (apply) {
         await tx.$executeRaw`SET LOCAL lock_timeout = '5s'`;
-        // ponytail: short table locks suit event scale; use per-key registry locks
+        // shortcut: short table locks suit event scale; use per-key registry locks
         // if media-write contention grows. No S3 I/O inside this transaction.
         await tx.$executeRaw`LOCK TABLE "Student", "Company", "Sponsor" IN SHARE ROW EXCLUSIVE MODE`;
       }
@@ -24,11 +24,15 @@ export async function planStorageCleanup(
       const expired = await tx.$queryRaw<{ id: string; key: string | null }[]>`
       SELECT id, storage_object_key('cv', cv) AS key FROM "Student"
       WHERE cv IS NOT NULL AND "cvUploadedAt" < ${utcNow}::timestamp - interval '6 months'
+        AND storage_object_key('cv', cv) IS NOT NULL
       ORDER BY "cvUploadedAt", id LIMIT ${BATCH_SIZE}
     `;
       const unknownAge = await tx.student.count({
         where: { cv: { not: null }, cvUploadedAt: null },
       });
+      const [unknown] = await tx.$queryRaw<{ count: number }[]>`
+        SELECT count(*)::integer AS count FROM "Student"
+        WHERE cv IS NOT NULL AND storage_object_key('cv', cv) IS NULL`;
       if (apply && expired.length) {
         await tx.student.updateMany({
           where: { id: { in: expired.map(({ id }) => id) } },
@@ -55,7 +59,10 @@ export async function planStorageCleanup(
           .map(({ kind, key }) => `${kind}:${key}`)
       );
       const orphans = objects
-        .filter(({ kind, key }) => !referenced.has(`${kind}:${key}`))
+        // Compare UUIDs case-insensitively; queue/delete the exact S3 key.
+        .filter(
+          ({ kind, key }) => !referenced.has(`${kind}:${key.toLowerCase()}`)
+        )
         .slice(0, BATCH_SIZE);
       if (apply && orphans.length) {
         await tx.storageDeletion.createMany({
@@ -63,7 +70,7 @@ export async function planStorageCleanup(
           skipDuplicates: true,
         });
       }
-      return { expired, orphans, unknownAge };
+      return { expired, orphans, unknownAge, unknownReference: unknown.count };
     },
     {
       isolationLevel: apply

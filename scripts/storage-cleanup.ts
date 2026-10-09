@@ -14,11 +14,13 @@ const { values } = parseArgs({
 const apply = values.apply || (values.daemon && cleanupMode() === "apply");
 const heartbeat = "/tmp/storage-cleanup-success";
 let stopping = false;
+const controller = new AbortController();
 let timer: NodeJS.Timeout | undefined;
 let wake: (() => void) | undefined;
 for (const signal of ["SIGINT", "SIGTERM"] as const)
   process.on(signal, () => {
     stopping = true;
+    controller.abort();
     if (timer) clearTimeout(timer);
     wake?.();
   });
@@ -26,26 +28,30 @@ for (const signal of ["SIGINT", "SIGTERM"] as const)
 async function main() {
   do {
     const run = randomUUID();
+    // Dedicated worker audit: codes/counts/validated keys only, no raw errors or
+    // app logger/Sentry dependency. See docs/storage-cleanup.md for privacy.
     const audit = (event: Record<string, unknown>) =>
       console.log(
         JSON.stringify({ time: new Date().toISOString(), run, ...event })
       );
     try {
-      const result = await runStorageCleanup({ apply: Boolean(apply), audit });
+      const result = await runStorageCleanup({
+        apply: Boolean(apply),
+        audit,
+        signal: controller.signal,
+      });
       audit({ action: "summary", ...result });
       if (values.daemon) {
-        if (result.failed || result.unknownAge)
-          await rm(heartbeat, { force: true });
-        else await writeFile(heartbeat, JSON.stringify(result));
-      } else if (result.failed || result.unknownAge) process.exitCode = 1;
+        await writeFile(heartbeat, JSON.stringify(result));
+      } else if (result.failed) process.exitCode = 1;
     } catch (error) {
       audit({
         level: "error",
-        action: "run-failed",
+        action: stopping ? "run-stopped" : "run-failed",
         error: error instanceof Error ? error.name : "UnknownError",
       });
       if (values.daemon) await rm(heartbeat, { force: true });
-      else process.exitCode = 1;
+      else if (!stopping) process.exitCode = 1;
     }
     if (!values.daemon || stopping) break;
     // Initial pass at startup, then daily 03:00 UTC (independent of host TZ).

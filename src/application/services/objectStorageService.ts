@@ -36,9 +36,13 @@ function bucket(kind: StorageBucket) {
       : storageEnv.S3_BUCKET_CVS;
 }
 
-export async function assertUnversionedBucket(kind: StorageBucket) {
+export async function assertUnversionedBucket(
+  kind: StorageBucket,
+  signal?: AbortSignal
+) {
   const result = await storageClient().send(
-    new GetBucketVersioningCommand({ Bucket: bucket(kind) })
+    new GetBucketVersioningCommand({ Bucket: bucket(kind) }),
+    { abortSignal: signal }
   );
   // Simple DeleteObject would only add a delete marker on a versioned bucket.
   if (result.Status)
@@ -100,7 +104,11 @@ export async function getObject(kind: StorageBucket, key: string) {
   }
 }
 
-export async function listObjects(kind: StorageBucket, prefix: string) {
+export async function listObjects(
+  kind: StorageBucket,
+  prefix: string,
+  signal?: AbortSignal
+) {
   const objects: NonNullable<ListObjectsV2CommandOutput["Contents"]> = [];
   let cursor: string | undefined;
   do {
@@ -109,7 +117,8 @@ export async function listObjects(kind: StorageBucket, prefix: string) {
         Bucket: bucket(kind),
         Prefix: `${prefix}/`,
         ContinuationToken: cursor,
-      })
+      }),
+      { abortSignal: signal }
     );
     objects.push(...(response.Contents ?? []));
     cursor = response.NextContinuationToken;
@@ -117,9 +126,14 @@ export async function listObjects(kind: StorageBucket, prefix: string) {
   return objects;
 }
 
-export async function deleteObject(kind: StorageBucket, key: string) {
+export async function deleteObject(
+  kind: StorageBucket,
+  key: string,
+  signal?: AbortSignal
+) {
   await storageClient().send(
-    new DeleteObjectCommand({ Bucket: bucket(kind), Key: key })
+    new DeleteObjectCommand({ Bucket: bucket(kind), Key: key }),
+    { abortSignal: signal }
   );
 }
 

@@ -23,9 +23,76 @@ beforeEach(() => {
     expired: [],
     orphans: [],
     unknownAge: 0,
+    unknownReference: 0,
   });
   mocks.pendingStorageDeletions.mockResolvedValue([{ kind: "cv", key }]);
 });
+
+test("shutdown stops the batch after acknowledging the current deletion", async () => {
+  const controller = new AbortController();
+  mocks.pendingStorageDeletions.mockResolvedValue([
+    { kind: "cv", key },
+    { kind: "cv", key: key.replace("001.pdf", "002.pdf") },
+  ]);
+  mocks.deleteObject.mockImplementationOnce(async () => controller.abort());
+  await expect(
+    runStorageCleanup({ now, apply: true, signal: controller.signal })
+  ).rejects.toMatchObject({ name: "AbortError" });
+  expect(mocks.deleteObject).toHaveBeenCalledTimes(1);
+  expect(mocks.recordStorageDeletion).toHaveBeenCalledWith(
+    "cv",
+    key,
+    now,
+    null
+  );
+});
+
+test("an aborted S3 request leaves its durable claim pending without recording a failure", async () => {
+  const controller = new AbortController();
+  mocks.deleteObject.mockImplementationOnce(async () => {
+    controller.abort();
+    throw controller.signal.reason;
+  });
+  await expect(
+    runStorageCleanup({ now, apply: true, signal: controller.signal })
+  ).rejects.toMatchObject({ name: "AbortError" });
+  expect(mocks.deleteObject).toHaveBeenCalledWith("cv", key, controller.signal);
+  expect(mocks.recordStorageDeletion).not.toHaveBeenCalled();
+});
+
+test("unknown references are warned without exposing their raw value", async () => {
+  const audit = vi.fn();
+  mocks.planStorageCleanup.mockResolvedValue({
+    expired: [],
+    orphans: [],
+    unknownAge: 0,
+    unknownReference: 1,
+  });
+  await runStorageCleanup({ now, audit });
+  expect(audit).toHaveBeenCalledWith({
+    level: "warn",
+    action: "unknown-cv-reference",
+    count: 1,
+  });
+});
+
+test.each([false, true])(
+  "invalid queue entries fail safely even in dry run (apply=%s)",
+  async (apply) => {
+    const audit = vi.fn();
+    for (const row of [
+      { kind: "logo", key },
+      { kind: "cv", key: "https://private.invalid/file?token=secret" },
+    ]) {
+      mocks.pendingStorageDeletions.mockResolvedValue([row]);
+      await expect(runStorageCleanup({ now, apply, audit })).rejects.toThrow(
+        "Invalid cleanup queue"
+      );
+    }
+    expect(audit).not.toHaveBeenCalled();
+    expect(mocks.deleteObject).not.toHaveBeenCalled();
+  }
+);
 
 test("default dry run never deletes, queues, or records attempts", async () => {
   await runStorageCleanup({ now });

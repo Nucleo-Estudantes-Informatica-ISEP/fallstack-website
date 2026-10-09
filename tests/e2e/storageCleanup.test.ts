@@ -105,6 +105,55 @@ test("month-end cutoff clamps to valid calendar day rather than 180 days", async
   expect(plan.expired.map(({ id }) => id)).not.toContain(boundary.id);
 });
 
+test("UUID casing protects both literal S3 keys and blocks case-variant reattachment", async () => {
+  const avatar = newKey("avatar");
+  const cv = newKey("cv");
+  const student = await studentCv(cv.id.toUpperCase(), now);
+  await prisma.student.update({
+    where: { id: student.id },
+    data: { avatar: `/api/media/avatar/${avatar.id.toUpperCase()}` },
+  });
+  const uppercaseKey = avatar.key.replace(avatar.id, avatar.id.toUpperCase());
+  keys.push(uppercaseKey);
+  const objects: CleanupObject[] = [
+    { kind: "avatar", key: avatar.key },
+    { kind: "avatar", key: uppercaseKey },
+    { kind: "cv", key: cv.key },
+  ];
+  expect((await planStorageCleanup(now, objects, true)).orphans).toEqual([]);
+  await prisma.student.update({
+    where: { id: student.id },
+    data: { avatar: null },
+  });
+  await planStorageCleanup(now, objects, true);
+  for (const reference of [avatar.id, avatar.id.toUpperCase(), uppercaseKey])
+    await expect(
+      prisma.student.update({
+        where: { id: student.id },
+        data: { avatar: reference },
+      })
+    ).rejects.toThrow("queued for deletion");
+  const mapping = await prisma.$queryRaw<{ key: string | null }[]>`
+    SELECT storage_object_key('cv', ${`https://legacy.supabase.co/storage/v1/object/public/cvs/distribution/cv/${cv.id.toUpperCase()}.pdf?token=private`}) AS key
+    UNION ALL SELECT storage_object_key('logo', ${avatar.id})`;
+  expect(mapping).toEqual([{ key: cv.key }, { key: null }]);
+  await expect(
+    prisma.storageDeletion.create({
+      data: { kind: "logo", key: avatar.key },
+    })
+  ).rejects.toThrow();
+});
+
+test("unrecognized expired CV references remain visible for investigation", async () => {
+  const student = await studentCv("https://external.invalid/legacy-file", old);
+  const plan = await planStorageCleanup(now, [], true);
+  expect(plan.expired.map(({ id }) => id)).not.toContain(student.id);
+  expect(plan).toMatchObject({ unknownReference: 1 });
+  expect(
+    await prisma.student.findUniqueOrThrow({ where: { id: student.id } })
+  ).toMatchObject({ cv: student.cv, cvPurgedAt: null });
+});
+
 test("fresh shared CV and all supported avatar refs protect objects, including inactive company/sponsor", async () => {
   const cv = newKey("cv");
   await studentCv(cv.id, old);

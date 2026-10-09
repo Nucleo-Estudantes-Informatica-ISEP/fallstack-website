@@ -2,7 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
-// Shared with the web app; the worker needs no OIDC/JWT credentials.
+// Narrow Zod env boundary: serverEnv reuses this schema; the worker cannot load
+// serverEnv because it validates unrelated OIDC/JWT credentials. Raw reads stay here.
 export const storageEnvSchema = z.object({
   S3_ENDPOINT: z.url(),
   S3_ACCESS_KEY_ID: z.string().min(1),

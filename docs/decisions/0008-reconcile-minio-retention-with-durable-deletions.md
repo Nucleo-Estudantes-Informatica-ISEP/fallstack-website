@@ -26,7 +26,8 @@ removes bytes. Keep unknown upload ages and unrecognized objects for investigati
 ## Consequences
 
 No new scheduler dependency, public endpoint, or competing deployment pipeline is
-needed. Dry runs, structured logs, and container health expose operator failures.
+needed. Dry runs and structured logs expose operator failures; container health
+tracks completed passes independently of data warnings and individual failed deletes.
 Failed deletes leave inaccessible objects queued until retry succeeds. Completed
 claims remain as tombstones; restoration requires a new key.
 

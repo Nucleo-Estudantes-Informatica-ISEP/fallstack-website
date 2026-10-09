@@ -15,6 +15,8 @@ profile edits. Each pass detaches at most 1,000 expired references, keeps
 `cvUploadedAt`, and sets `cvPurgedAt` for the existing profile notice. Missing
 upload timestamps are preserved and reported as operator warnings; investigate
 provenance rather than guessing an upload date.
+Unrecognized CV references are also retained and counted as `unknown-cv-reference`
+warnings, even when their upload age would otherwise expire them.
 
 Only UUID objects under `distribution/avatar/` and `distribution/cv/` are eligible,
 and only when S3 `LastModified` is strictly older than **48 hours**. Unknown names,
@@ -24,6 +26,18 @@ including inactive records. Recognition covers bare UUIDs, object keys, current
 `/api/media/avatar/<uuid>` paths (relative or absolute), and migrated Supabase
 bucket URLs with query strings. A CV still referenced by another fresh student
 is retained after the expired student's reference is cleared.
+UUID comparison ignores case; queue rows and S3 deletes retain the exact listed
+key because S3 object keys are case-sensitive. Both case variants remain protected
+while referenced, and tombstones reject reattachment through either variant.
+
+The 48-hour grace begins at S3 `LastModified`, not DB attachment time. An upload
+whose attachment is delayed beyond that window can be claimed as orphaned; its
+attachment then fails and the user must upload again with a new key. This is an
+accepted limit; add explicit pending-upload tracking if delayed attachment becomes
+a supported flow. Current uploads use `distribution/logo/` in `S3_BUCKET_LOGOS`
+for company/sponsor logos, so that bucket is excluded from this task. Company
+avatar and legacy Sponsor logo references into the avatars bucket still protect
+those avatar keys. A logo key cannot collide with an eligible avatar/CV prefix.
 
 A short PostgreSQL transaction locks the three reference tables, rechecks refs,
 detaches expired CVs and records orphan keys in `StorageDeletion`. It commits
@@ -42,6 +56,10 @@ so repeated failures cannot starve new work. Up to 1,000 deletes are attempted
 per pass. Concurrent workers may repeat an idempotent deletion; no correctness
 assumption depends on only one worker running. Completed tombstones are kept to
 prevent late reattachment. Never delete queue rows as routine cleanup.
+SIGTERM/SIGINT abort active S3 requests and stop subsequent deletes. A completed
+delete is acknowledged before stopping; interrupted requests keep their claims
+pending for idempotent retry. An in-progress DB transaction may still reach its
+30-second timeout; forced container termination remains safely recoverable.
 
 Buckets must have **never-enabled versioning**: both `Enabled` and `Suspended`
 fail the preflight, because a plain [DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html)
@@ -108,13 +126,19 @@ stack's normal role management after migration if defaults do not cover new tabl
 Worker stdout is newline-delimited JSON with UTC timestamp and run UUID. Failures
 use error names/codes, never raw SDK messages, URLs, credentials, student codes,
 names or emails. Object keys are pseudonymous identifiers; restrict log access
-and retention. Inspect Coolify Runtime Logs for `storage-cleanup`, not web logs.
-Configure operators' existing container-health alerts: a failing run, failed
-deletions, unknown upload ages, or no successful pass within 26 hours makes the
-worker unhealthy. A dry-run success is healthy but its summary clearly says
+and retention. This CLI deliberately writes JSON directly instead of loading
+the application logger/Sentry: its audit schema contains only validated object
+keys, counts, run IDs and error names/codes, never raw exceptions or reference
+URLs. Inspect Coolify Runtime Logs for `storage-cleanup`, not web logs.
+The container heartbeat tracks completed passes, independently of data warnings
+or individual failed deletes. A failed run or no completed pass within 26 hours
+makes the worker unhealthy. Configure log alerts for `delete-failed`,
+`unknown-cv-upload-age`, and `unknown-cv-reference`, and inspect pending queue rows;
+container health alone does not establish deletion success. A dry run is healthy
+but its summary clearly says
 `mode=dry-run`; health alone does not prove deletion is enabled. Failure leaves
 the daemon alive to retry at the next daily pass. One-shot commands exit nonzero
-on failure or unknown CV age.
+on run failure or failed deletions; data warnings alone do not fail the command.
 
 In shared PostgreSQL, inspect the queue without student PII:
 
@@ -167,3 +191,11 @@ fresh CV/avatar. Disposable resources and credentials were removed afterwards.
 These checks do not enable retention on the live deployments. The reviewed
 `dev` rollout and subsequent `dev` → `main` promotion still need the per-environment
 audit and `apply` switch above.
+
+Review follow-up on 2026-10-09 verified case-variant references against real local
+PostgreSQL/MinIO: referenced avatar/CV objects survived, and an uppercase orphan
+was deleted using its literal S3 key. The actual S3 SDK aborted stalled versioning,
+listing, and deletion requests; the CLI daemon produced a heartbeat and exited
+with status zero on SIGTERM. PostgreSQL regression tests also cover uppercase
+legacy URL normalization, case-variant tombstone guards, unknown-kind rejection,
+and retention of unrecognized CV references.
