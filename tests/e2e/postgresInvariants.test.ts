@@ -12,6 +12,10 @@ import {
   bulkUpdateScheduleOrder,
   updateScheduleEvent,
 } from "@/application/repositories/scheduleRepository";
+import {
+  deleteUser,
+  withLockedUser,
+} from "@/application/repositories/userRepository";
 import { updateFaqOrder } from "@/application/services/faqService";
 import { saveStudent } from "@/application/services/savedStudentService";
 import { updateUserInterests } from "@/application/services/userService";
@@ -337,4 +341,34 @@ test("employee interest updates persist on the company without changing student 
   expect(
     (await findCompanyInterests(company.id)).map((interest) => interest.id)
   ).toEqual([second.id]);
+});
+
+test("Wallet issuance queued behind account deletion re-reads a missing account", async () => {
+  const student = await fixtures.student();
+  let queued: Promise<unknown> | undefined;
+  const reader = vi.fn();
+  await withLockedUser(student.id, async (user, tx) => {
+    expect(user?.student?.id).toBe(student.id);
+    queued = withLockedUser(student.id, async (current) => reader(current));
+    await deleteUser(student.id, tx);
+  });
+  await queued;
+  expect(reader).toHaveBeenCalledWith(null);
+});
+
+test("failed Wallet work rolls back deletion and allows the same account to retry", async () => {
+  const student = await fixtures.student();
+  await expect(
+    withLockedUser(student.id, async (_user, tx) => {
+      await deleteUser(student.id, tx);
+      throw new Error("Wallet failure");
+    })
+  ).rejects.toThrow("Wallet failure");
+  await withLockedUser(student.id, async (user, tx) => {
+    expect(user?.student?.id).toBe(student.id);
+    await deleteUser(student.id, tx);
+  });
+  expect(
+    await prisma.user.findUnique({ where: { id: student.id } })
+  ).toBeNull();
 });

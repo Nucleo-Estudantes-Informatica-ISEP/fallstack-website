@@ -1,16 +1,23 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-const { serverEnvMock, signMock, reportErrorMock } = vi.hoisted(() => ({
-  serverEnvMock: {
-    GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
-    GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
-    GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: undefined as string | undefined,
-  },
-  signMock: vi.fn(),
-  reportErrorMock: vi.fn(),
-}));
+const { serverEnvMock, signMock, reportErrorMock, lockedUserMock } = vi.hoisted(
+  () => ({
+    serverEnvMock: {
+      GOOGLE_WALLET_NEVER_ENABLED: false,
+      GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
+      GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
+      GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: undefined as string | undefined,
+    },
+    lockedUserMock: vi.fn(),
+    signMock: vi.fn(),
+    reportErrorMock: vi.fn(),
+  })
+);
 
 vi.mock("server-only", () => ({}));
+vi.mock("../repositories/userRepository", () => ({
+  withLockedUser: lockedUserMock,
+}));
 vi.mock("jsonwebtoken", () => ({ default: { sign: signMock } }));
 vi.mock("@/config/env.client", () => ({
   clientEnv: { NEXT_PUBLIC_BASE_URL: "https://staging.fallstack.pt/api" },
@@ -45,6 +52,10 @@ beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  lockedUserMock.mockImplementation(async (_id, callback) =>
+    callback({ active: true, student }, {})
+  );
+  serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
   serverEnvMock.GOOGLE_WALLET_CLASS_ID = "123456789.fallstack-2026-staging";
   serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = validCredentials;
@@ -152,6 +163,10 @@ test("creates a Generic Object whose barcode is the stable student code", async 
       defaultValue: { language: "pt-PT", value: "Fallstack 2026" },
     },
     barcode: { type: "QR_CODE", value: "AB12", alternateText: "AB12" },
+    validTimeInterval: {
+      start: { date: "2026-11-17T08:30:00+00:00" },
+      end: { date: "2026-11-18T17:30:00+00:00" },
+    },
   });
 
   expect(signMock).toHaveBeenLastCalledWith(
@@ -186,6 +201,12 @@ test("patches an existing object instead of creating a duplicate", async () => {
   const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
   await createGoogleWalletSaveUrl(student);
 
+  expect(JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body))).toMatchObject({
+    validTimeInterval: {
+      start: { date: "2026-11-17T08:30:00+00:00" },
+      end: { date: "2026-11-18T17:30:00+00:00" },
+    },
+  });
   expect(fetchMock).toHaveBeenCalledTimes(3);
   expect(fetchMock.mock.calls[2]?.[1]).toEqual(
     expect.objectContaining({ method: "PATCH" })
@@ -263,4 +284,269 @@ test("reports an upstream OAuth status without logging a sensitive response mess
   expect(JSON.stringify(reportErrorMock.mock.calls)).not.toContain(
     "token-secret"
   );
+});
+
+test("does not reactivate a pass from a session resolved before account deletion", async () => {
+  lockedUserMock.mockImplementation(async (_id, callback) =>
+    callback(null, {})
+  );
+  const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(oauthResponse());
+  vi.stubGlobal("fetch", fetchMock);
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 403,
+  });
+  expect(
+    fetchMock.mock.calls.some(([url]) => String(url).includes("/genericObject"))
+  ).toBe(false);
+});
+
+test("expires and anonymizes the deterministic object on account deletion", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(oauthResponse())
+    .mockResolvedValueOnce(new Response("{}", { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { revokeGoogleWalletPass, buildGoogleWalletObjectId } =
+    await import("./googleWalletService");
+  await revokeGoogleWalletPass(student.id);
+  expect(fetchMock.mock.calls[1]?.[0]).toBe(
+    `https://walletobjects.googleapis.com/walletobjects/v1/genericObject/${buildGoogleWalletObjectId("123456789.fallstack-2026-staging", student.id)}`
+  );
+  const init = fetchMock.mock.calls[1]?.[1];
+  expect(init).toMatchObject({ method: "PATCH" });
+  expect(JSON.parse(String(init?.body))).toEqual({
+    state: "EXPIRED",
+    header: { defaultValue: { language: "pt-PT", value: "Passe revogado" } },
+    subheader: {
+      defaultValue: { language: "pt-PT", value: "Conta eliminada" },
+    },
+    barcode: { type: "QR_CODE", value: "REVOKED", alternateText: "Revogado" },
+  });
+});
+
+test.each([200, 404])(
+  "revocation is safe to repeat when Google returns %s",
+  async (status) => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(oauthResponse())
+      .mockResolvedValue(new Response("{}", { status }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { revokeGoogleWalletPass } = await import("./googleWalletService");
+    await revokeGoogleWalletPass(student.id);
+    await revokeGoogleWalletPass(student.id);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  }
+);
+
+test("skips revocation only with an explicit never-enabled opt-out", async () => {
+  serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = true;
+  serverEnvMock.GOOGLE_WALLET_ISSUER_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_CLASS_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = undefined;
+  const fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+  const { revokeGoogleWalletPass } = await import("./googleWalletService");
+  await revokeGoogleWalletPass(student.id);
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test("rejects partial configuration rather than skipping revocation", async () => {
+  serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = undefined;
+  const { revokeGoogleWalletPass } = await import("./googleWalletService");
+  await expect(revokeGoogleWalletPass(student.id)).rejects.toMatchObject({
+    status: 503,
+  });
+});
+
+test("propagates a revocation failure for a safe account-deletion retry", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(oauthResponse())
+    .mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          error: { status: "UNAVAILABLE", message: student.code },
+        }),
+        { status: 503 }
+      )
+    );
+  vi.stubGlobal("fetch", fetchMock);
+  const { revokeGoogleWalletPass } = await import("./googleWalletService");
+  await expect(revokeGoogleWalletPass(student.id)).rejects.toMatchObject({
+    status: 502,
+  });
+  expect(JSON.stringify(reportErrorMock.mock.calls)).not.toContain(
+    student.code
+  );
+});
+
+test("rejects issuance for an account deactivated after session resolution", async () => {
+  lockedUserMock.mockImplementation(async (_id, callback) =>
+    callback({ active: false, student }, {})
+  );
+  vi.stubGlobal(
+    "fetch",
+    vi.fn<typeof fetch>().mockResolvedValue(oauthResponse())
+  );
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 403,
+  });
+});
+
+test("uses current profile data after acquiring the account lock", async () => {
+  lockedUserMock.mockImplementation(async (_id, callback) =>
+    callback(
+      { active: true, student: { ...student, name: "Updated Student" } },
+      {}
+    )
+  );
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(oauthResponse())
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(new Response("{}", { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  await createGoogleWalletSaveUrl(student);
+  expect(
+    JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body)).header.defaultValue
+      .value
+  ).toBe("Updated Student");
+});
+
+test("missing credentials block revocation by default", async () => {
+  serverEnvMock.GOOGLE_WALLET_ISSUER_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_CLASS_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = undefined;
+  const { revokeGoogleWalletPass } = await import("./googleWalletService");
+  await expect(revokeGoogleWalletPass(student.id)).rejects.toMatchObject({
+    status: 503,
+  });
+});
+
+test("never-enabled opt-out cannot hide partial configuration or enable issuance", async () => {
+  serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = true;
+  serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = undefined;
+  const {
+    revokeGoogleWalletPass,
+    createGoogleWalletSaveUrl,
+    isGoogleWalletConfigured,
+  } = await import("./googleWalletService");
+  await expect(revokeGoogleWalletPass(student.id)).rejects.toMatchObject({
+    status: 503,
+  });
+  serverEnvMock.GOOGLE_WALLET_ISSUER_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_CLASS_ID = undefined;
+  expect(isGoogleWalletConfigured()).toBe(false);
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 503,
+  });
+  expect(lockedUserMock).not.toHaveBeenCalled();
+});
+
+test("rejects repeated issuance and deletion before queuing another DB lock", async () => {
+  let finish!: (value: Response) => void;
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        })
+    )
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(new Response("{}", { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { createGoogleWalletSaveUrl, withGoogleWalletOperation } =
+    await import("./googleWalletService");
+  const pending = createGoogleWalletSaveUrl(student);
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 429,
+  });
+  const deletion = vi.fn();
+  await expect(
+    withGoogleWalletOperation(student.id, deletion)
+  ).rejects.toMatchObject({ status: 429 });
+  expect(deletion).not.toHaveBeenCalled();
+  expect(lockedUserMock).not.toHaveBeenCalled();
+  await expect(
+    withGoogleWalletOperation("another-user", async () => "allowed")
+  ).resolves.toBe("allowed");
+  finish(oauthResponse());
+  await pending;
+  await expect(
+    withGoogleWalletOperation(student.id, async () => "retry")
+  ).resolves.toBe("retry");
+});
+
+test("releases operation admission after failure for an immediate retry", async () => {
+  const { withGoogleWalletOperation } = await import("./googleWalletService");
+  await expect(
+    withGoogleWalletOperation(student.id, async () => {
+      throw new Error("failed");
+    })
+  ).rejects.toThrow("failed");
+  await expect(
+    withGoogleWalletOperation(student.id, async () => "retry")
+  ).resolves.toBe("retry");
+});
+
+for (const operation of [
+  "oauth",
+  "get",
+  "insert",
+  "patch",
+  "revoke",
+] as const) {
+  test.each(["network", "timeout"])(
+    `${operation} transport %s returns a sanitized 502`,
+    async (failure) => {
+      const fetchMock = vi.fn<typeof fetch>();
+      if (operation !== "oauth")
+        fetchMock.mockResolvedValueOnce(oauthResponse());
+      if (operation === "insert")
+        fetchMock.mockResolvedValueOnce(new Response(null, { status: 404 }));
+      if (operation === "patch")
+        fetchMock.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+      fetchMock.mockRejectedValueOnce(
+        failure === "timeout"
+          ? new DOMException("student@example.com token-secret", "TimeoutError")
+          : new TypeError("student@example.com token-secret")
+      );
+      vi.stubGlobal("fetch", fetchMock);
+      const { createGoogleWalletSaveUrl, revokeGoogleWalletPass } =
+        await import("./googleWalletService");
+      await expect(
+        operation === "revoke"
+          ? revokeGoogleWalletPass(student.id)
+          : createGoogleWalletSaveUrl(student)
+      ).rejects.toMatchObject({ status: 502 });
+      expect(reportErrorMock).toHaveBeenCalledWith(
+        expect.any(Error),
+        { operation: `google_wallet_${operation}` },
+        "Google Wallet upstream request failed"
+      );
+      expect(JSON.stringify(reportErrorMock.mock.calls)).not.toContain(
+        "student@example.com"
+      );
+      expect(JSON.stringify(reportErrorMock.mock.calls)).not.toContain(
+        "token-secret"
+      );
+      expect(fetchMock.mock.calls.at(-1)?.[1]?.signal).toBeDefined();
+    }
+  );
+}
+
+test("never-enabled declaration must be removed before any pass can be issued", async () => {
+  serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = true;
+  const { createGoogleWalletSaveUrl, isGoogleWalletConfigured } =
+    await import("./googleWalletService");
+  expect(isGoogleWalletConfigured()).toBe(false);
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 503,
+  });
+  expect(lockedUserMock).not.toHaveBeenCalled();
 });

@@ -35,3 +35,4 @@ implementation PR needs an ADR.
 | [0005](0005-separate-domain-services-and-repositories.md) | Separate domain, services, and repositories  | Accepted |
 | [0006](0006-store-editable-event-content-in-database.md)  | Store editable event content in the database | Accepted |
 | [0007](0007-run-csp-in-report-only-mode.md)               | Run CSP in report-only mode                  | Accepted |
+| [0008](0008-expire-and-revoke-wallet-passes.md)           | Expire and revoke Wallet passes              | Accepted |

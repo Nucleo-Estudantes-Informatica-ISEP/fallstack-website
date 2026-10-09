@@ -181,7 +181,12 @@ test("every server environment variable is available to the runtime web service"
   for (const name of declaredVars.filter((name) =>
     name.startsWith("GOOGLE_WALLET_")
   )) {
-    expectComposeVariable(webEnvironment, name, "${" + name + ":-}");
+    const defaultValue = name === "GOOGLE_WALLET_NEVER_ENABLED" ? "false" : "";
+    expectComposeVariable(
+      webEnvironment,
+      name,
+      "${" + name + ":-" + defaultValue + "}"
+    );
     expect(webBuildArgs).not.toMatch(new RegExp(`^\\s*${name}:`, "m"));
   }
 });

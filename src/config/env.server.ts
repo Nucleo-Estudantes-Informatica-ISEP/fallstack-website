@@ -39,6 +39,10 @@ const serverEnvSchema = z.object({
 
   // Optional at process level so non-Wallet environments still boot. The
   // Wallet endpoint requires all three together and responds 503 otherwise.
+  GOOGLE_WALLET_NEVER_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   GOOGLE_WALLET_ISSUER_ID: optionalNonEmptyString,
   GOOGLE_WALLET_CLASS_ID: optionalNonEmptyString,
   GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: optionalNonEmptyString,
