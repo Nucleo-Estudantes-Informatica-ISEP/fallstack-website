@@ -23,6 +23,7 @@
     "generate": "prisma generate",
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
+    "storage:cleanup": "node --conditions=react-server --import tsx scripts/storage-cleanup.ts",
     "postinstall": "prisma generate",
     "prepare": "husky"
   },

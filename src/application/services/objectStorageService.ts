@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   DeleteObjectCommand,
+  GetBucketVersioningCommand,
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
@@ -10,29 +11,42 @@ import {
   type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 
-import { serverEnv } from "@/config/env.server";
+import { storageEnv } from "@/config/env.storage";
 
 export type StorageBucket = "avatar" | "logo" | "cv";
 
 let client: S3Client;
 function storageClient() {
   return (client ??= new S3Client({
-    endpoint: serverEnv.S3_ENDPOINT,
+    endpoint: storageEnv.S3_ENDPOINT,
     region: "us-east-1",
     forcePathStyle: true,
     credentials: {
-      accessKeyId: serverEnv.S3_ACCESS_KEY_ID,
-      secretAccessKey: serverEnv.S3_SECRET_ACCESS_KEY,
+      accessKeyId: storageEnv.S3_ACCESS_KEY_ID,
+      secretAccessKey: storageEnv.S3_SECRET_ACCESS_KEY,
     },
   }));
 }
 
 function bucket(kind: StorageBucket) {
   return kind === "avatar"
-    ? serverEnv.S3_BUCKET_AVATARS
+    ? storageEnv.S3_BUCKET_AVATARS
     : kind === "logo"
-      ? serverEnv.S3_BUCKET_LOGOS
-      : serverEnv.S3_BUCKET_CVS;
+      ? storageEnv.S3_BUCKET_LOGOS
+      : storageEnv.S3_BUCKET_CVS;
+}
+
+export async function assertUnversionedBucket(
+  kind: StorageBucket,
+  signal?: AbortSignal
+) {
+  const result = await storageClient().send(
+    new GetBucketVersioningCommand({ Bucket: bucket(kind) }),
+    { abortSignal: signal }
+  );
+  // Simple DeleteObject would only add a delete marker on a versioned bucket.
+  if (result.Status)
+    throw new Error("Storage cleanup requires unversioned buckets");
 }
 
 export const avatarKey = (id: string) => `distribution/avatar/${id}`;
@@ -90,7 +104,11 @@ export async function getObject(kind: StorageBucket, key: string) {
   }
 }
 
-export async function listObjects(kind: StorageBucket, prefix: string) {
+export async function listObjects(
+  kind: StorageBucket,
+  prefix: string,
+  signal?: AbortSignal
+) {
   const objects: NonNullable<ListObjectsV2CommandOutput["Contents"]> = [];
   let cursor: string | undefined;
   do {
@@ -99,7 +117,8 @@ export async function listObjects(kind: StorageBucket, prefix: string) {
         Bucket: bucket(kind),
         Prefix: `${prefix}/`,
         ContinuationToken: cursor,
-      })
+      }),
+      { abortSignal: signal }
     );
     objects.push(...(response.Contents ?? []));
     cursor = response.NextContinuationToken;
@@ -107,9 +126,14 @@ export async function listObjects(kind: StorageBucket, prefix: string) {
   return objects;
 }
 
-export async function deleteObject(kind: StorageBucket, key: string) {
+export async function deleteObject(
+  kind: StorageBucket,
+  key: string,
+  signal?: AbortSignal
+) {
   await storageClient().send(
-    new DeleteObjectCommand({ Bucket: bucket(kind), Key: key })
+    new DeleteObjectCommand({ Bucket: bucket(kind), Key: key }),
+    { abortSignal: signal }
   );
 }
 

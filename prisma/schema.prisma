@@ -42,11 +42,10 @@ model Student {
   name         String
   bio          String?
   year         Year
-  // Avatar/CV object references have no DB-level integrity or cascade cleanup.
-  // Reconcile orphaned objects with a separately reviewed S3 cleanup process.
+  // Cleanup queues unreferenced objects; DB triggers reject tombstoned keys.
   cv           String?
   // Set on every successful CV upload - updatedAt isn't CV-specific (bumped
-  // by any profile edit), so the twice-yearly retention purge (#286) needs
+  // by any profile edit), so the daily retention purge (#389) needs
   // its own clock to tell which CVs are genuinely older than 6 months. Not
   // modified by the purge itself: it stays as the last-upload timestamp
   // even after `cv` is cleared (see cvPurgedAt below).
@@ -64,6 +63,21 @@ model Student {
   actionCompletions ActionCompletion[]
   savedByEmployees  SavedStudent[]
   interests         Interest[]
+}
+
+// Durable retry queue and deletion audit. Keep completed rows: triggers reject
+// reattaching their keys even after the S3 bytes have been deleted.
+model StorageDeletion {
+  kind          String
+  key           String
+  createdAt     DateTime  @default(now())
+  deletedAt     DateTime?
+  attempts      Int       @default(0)
+  lastAttemptAt DateTime?
+  lastError     String?
+
+  @@id([kind, key])
+  @@index([deletedAt, createdAt])
 }
 
 model Company {
