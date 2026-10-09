@@ -7,6 +7,7 @@ import {
   deleteUser,
   findUserSessionByZitadelUserId,
   provisionZitadelUser,
+  withLockedUser,
 } from "../repositories/userRepository";
 import {
   completeZitadelSignIn,
@@ -14,6 +15,7 @@ import {
   setAuthUserBanned,
   signUpEmployee,
 } from "./authApplicationService";
+import { revokeGoogleWalletPass } from "./googleWalletService";
 import { assignEmployeeRole, signAppSession } from "./zitadelAuthService";
 
 vi.mock("server-only", () => ({}));
@@ -28,11 +30,15 @@ vi.mock("../repositories/transaction", () => ({
 }));
 vi.mock("../repositories/userRepository", () => ({
   deleteUser: vi.fn(),
+  withLockedUser: vi.fn(async (_id, callback) =>
+    callback({ student: null }, {})
+  ),
   findUserByEmail: vi.fn(),
   findUserSessionByZitadelUserId: vi.fn(),
   provisionZitadelUser: vi.fn(),
   setUserRole: vi.fn(),
 }));
+vi.mock("./googleWalletService", () => ({ revokeGoogleWalletPass: vi.fn() }));
 vi.mock("./zitadelAuthService", () => ({
   assignEmployeeRole: vi.fn(),
   signAppSession: vi.fn(() => "new-session"),
@@ -49,6 +55,10 @@ const identity = {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(withLockedUser).mockImplementation(async (_id, callback) =>
+    callback({ student: null } as never, {} as never)
+  );
+  vi.mocked(revokeGoogleWalletPass).mockReset();
 });
 
 test("provisions a verified ZITADEL student and sends an incomplete profile to signup", async () => {
@@ -119,7 +129,8 @@ test("preserves a sanitized requested destination after AuthNEI", async () => {
 
 test("account deletion is app-local and does not touch the shared ZITADEL identity", async () => {
   await deleteUserAccount("app-user-1");
-  expect(deleteUser).toHaveBeenCalledWith("app-user-1");
+  expect(deleteUser).toHaveBeenCalledWith("app-user-1", {});
+  expect(revokeGoogleWalletPass).not.toHaveBeenCalled();
 });
 
 test("Fallstack deactivation does not ban the shared ZITADEL account", async () => {
@@ -165,4 +176,41 @@ test("employee onboarding assigns the project role and returns a refreshed app s
   expect(signAppSession).toHaveBeenCalledWith(
     expect.objectContaining({ isEmployee: true, sub: "zitadel-user-1" })
   );
+});
+
+test("revokes the student's pass before deleting the local account", async () => {
+  vi.mocked(withLockedUser).mockImplementation(async (_id, callback) =>
+    callback({ student: { id: "app-user-1" } } as never, {} as never)
+  );
+  await deleteUserAccount("app-user-1");
+  expect(revokeGoogleWalletPass).toHaveBeenCalledWith("app-user-1");
+  expect(
+    vi.mocked(revokeGoogleWalletPass).mock.invocationCallOrder[0]
+  ).toBeLessThan(vi.mocked(deleteUser).mock.invocationCallOrder[0]!);
+});
+
+test("retains the student account on revocation failure and permits retry", async () => {
+  vi.mocked(withLockedUser).mockImplementation(async (_id, callback) =>
+    callback({ student: { id: "app-user-1" } } as never, {} as never)
+  );
+  vi.mocked(revokeGoogleWalletPass).mockRejectedValueOnce(
+    new Error("Google unavailable")
+  );
+  await expect(deleteUserAccount("app-user-1")).rejects.toThrow(
+    "Google unavailable"
+  );
+  expect(deleteUser).not.toHaveBeenCalled();
+  await deleteUserAccount("app-user-1");
+  expect(deleteUser).toHaveBeenCalledOnce();
+});
+
+test("returns 404 when the account has already been deleted", async () => {
+  vi.mocked(withLockedUser).mockImplementation(async (_id, callback) =>
+    callback(null, {} as never)
+  );
+  await expect(deleteUserAccount("app-user-1")).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(revokeGoogleWalletPass).not.toHaveBeenCalled();
+  expect(deleteUser).not.toHaveBeenCalled();
 });

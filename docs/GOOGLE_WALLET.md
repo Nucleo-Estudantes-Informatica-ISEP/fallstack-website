@@ -250,3 +250,50 @@ infrastructure guide (#363). The external setup and real-device validation in
 - the persistent Wallet QR/identifier design;
 - the user-facing **Add to Google Wallet** action;
 - unit/integration/UI tests.
+
+## Pass validity and account deletion
+
+`src/edition/branding.ts` defines `event.startsAt` and `event.endsAt` as
+ISO 8601 timestamps with explicit Lisbon offsets. The 2026 interval is
+17 November at 08:30 through 18 November at 17:30 (UTC+00:00). Update both
+alongside the edition's display dates/times each year. Every insert or issuance
+update sends this interval as `validTimeInterval`, including passes created
+before this feature when their owner requests another Save-to-Wallet link.
+Google moves passes to its expired section up to 24 hours after the interval ends:
+https://developers.google.com/wallet/generic/use-cases/expired-passes
+
+Deleting a local student account first PATCHes its deterministic object to
+`EXPIRED`, replacing the name, code label, and barcode with generic revoked-pass
+values. Google Generic Objects cannot be deleted through this API; expiry does
+not guarantee removal from a user's device or immediate synchronization.
+Issuance and deletion lock the same database user row and re-read the account,
+so an in-flight request cannot recreate or reactivate a deleted student's pass.
+
+A missing object (404) is safe to treat as already revoked. Other Google failures,
+network timeouts, or incomplete/invalid Wallet configuration abort account
+deletion and retain the local account. Fix the upstream/configuration failure,
+then repeat the same admin delete action. Revocation is idempotent, including
+when Google accepted the first PATCH but its response or the database commit
+failed. Non-student accounts do not contact Wallet. Completely unset Wallet
+configuration skips revocation only for environments that never enabled Wallet;
+do not clear configuration in an environment with issued passes.
+
+Keep the issuer, class, and authorized credentials available while any issued
+objects need revocation. Revocation targets the currently configured class;
+before changing classes for another edition, reconcile old objects with their
+original class/credentials. This change does not bulk-update existing objects.
+
+### Staging verification
+
+1. Use a synthetic student in a staging class. Issue a pass through
+   `POST /api/wallet`; GET the Generic Object through the Wallet API and confirm
+   the edition validity interval. Add it to a test device.
+2. Delete the synthetic account through the admin UI. Confirm HTTP 204, local
+   account removal, Google state `EXPIRED`, and replacement name/code/barcode.
+   Refresh Wallet on the test device; allow for Google's synchronization delay.
+3. With another synthetic student, temporarily remove the service-account's
+   issuer permission. Deletion must fail and leave the local account present.
+   Restore permission, repeat deletion, and confirm expiry plus account removal.
+4. Race issuance against deletion for a synthetic student: issuance either
+   finishes before revocation or rejects the deleted account. The final Google
+   object must stay expired with the generic revoked-pass content.

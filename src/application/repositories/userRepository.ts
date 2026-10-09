@@ -34,6 +34,23 @@ export type SessionUserRecord = Prisma.UserGetPayload<{
 export const findUserSessionById = (id: string) =>
   prisma.user.findUnique({ where: { id }, select: sessionSelect });
 
+// Serialize Wallet issuance and deletion across instances, then re-read the account.
+export const withLockedUser = <T>(
+  id: string,
+  work: (user: SessionUserRecord | null, tx: DbClient) => Promise<T>
+) =>
+  prisma.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${id}::uuid FOR UPDATE`;
+      const user = await tx.user.findUnique({
+        where: { id },
+        select: sessionSelect,
+      });
+      return work(user, tx);
+    },
+    { timeout: 60_000 }
+  );
+
 export const findUserSessionByZitadelUserId = (zitadelUserId: string) =>
   prisma.user.findUnique({ where: { zitadelUserId }, select: sessionSelect });
 

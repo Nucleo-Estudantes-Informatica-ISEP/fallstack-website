@@ -15,7 +15,9 @@ import {
   findUserSessionByZitadelUserId,
   provisionZitadelUser,
   setUserRole,
+  withLockedUser,
 } from "../repositories/userRepository";
+import { revokeGoogleWalletPass } from "./googleWalletService";
 import {
   assignEmployeeRole,
   signAppSession,
@@ -25,7 +27,12 @@ import {
 export class AuthAccountDeletionError extends HttpError {}
 
 export async function deleteUserAccount(userId: string) {
-  await deleteUser(userId);
+  await withLockedUser(userId, async (user, tx) => {
+    if (!user) throw new HttpError("Account not found", 404);
+    // Keep the account on upstream failure so the same deletion can be retried.
+    if (user.student) await revokeGoogleWalletPass(user.student.id);
+    await deleteUser(userId, tx);
+  });
 }
 
 // User.active is the Fallstack-specific deactivation gate. ZITADEL identities

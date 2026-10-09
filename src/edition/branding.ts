@@ -2,6 +2,8 @@ export const branding = {
   name: "Fallstack",
   year: 2026,
   event: {
+    startsAt: "2026-11-17T08:30:00+00:00",
+    endsAt: "2026-11-18T17:30:00+00:00",
     days: [17, 18],
     month: "novembro",
     beginningTime: "8:30h",
