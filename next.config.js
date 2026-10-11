@@ -18,8 +18,8 @@ const securityHeaders = [
     value: "camera=(self), microphone=(), geolocation=()",
   },
   {
-    key: "Content-Security-Policy-Report-Only",
-    value: buildCsp(), //Generates the CSP header value from the directives defined in src/security/csp.js
+    key: "Content-Security-Policy",
+    value: buildCsp(), // Generates the CSP header value from the directives defined in src/security/csp.js
   },
 ];
 

@@ -29,7 +29,7 @@
 ## 2. Scope and Assumptions
 
 - This document centralizes the project's security practices, controls, and reporting processes.
-- The current CSP is intentionally restrictive and is always emitted as `Content-Security-Policy-Report-Only` so the app can surface violations without blocking the live experience during tuning.
+- The CSP is enforced in production via `Content-Security-Policy` to block unauthorized scripts, embeddings, and resource loads.
 - Authentication and session identity are provided by the institutional OIDC provider (ZITADEL / AuthNEI) and reconciled into the application session via the project's Zitadel/OIDC integration (`getServerSession` / `zitadelAuthService`). Shared PostgreSQL and MinIO provide application data and files.
 - The project uses a layered approach: Zod validation, Prisma query building, server-side session checks, strict cookies, and a narrow CSP. No single control replaces the others.
 
@@ -173,13 +173,14 @@ For example, a new source would be added in the `sources` object and then only w
 - Add the exact origin, not a broad wildcard, and explain why it is necessary.
 - Validate the changed behavior in staging after adding a new origin.
 
-#### Reporting mode
+#### Policy enforcement
 
-- The project uses `Content-Security-Policy-Report-Only` as the sole header mode.
-- This is deliberate: the app surfaces policy violations without blocking the live experience while the team tunes the allowlist.
+- The project enforces the policy using `Content-Security-Policy` as the production header.
+- The policy was tuned and validated in Report-Only mode (#343) before being promoted to enforced mode (#346).
+- SVG logo support (#282) is deferred beyond the 2026 edition; the enforced policy covers current raster logo formats only and carries no pre-emptive SVG exceptions.
 - There is no browser `report-uri` endpoint and no dedicated CSP report route in the app.
 
-This keeps the policy observable during development without introducing a local reporting endpoint or a production-only exception path.
+This keeps the policy strict and actionable without introducing a local reporting endpoint or a production-only exception path.
 
 Related file: `src/security/csp.js`
 Related config: `next.config.js`
@@ -204,7 +205,7 @@ The following headers are applied globally via `next.config.js`:
 - `X-Frame-Options: SAMEORIGIN`
 - `Referrer-Policy: strict-origin-when-cross-origin`
 - `Permissions-Policy: camera=(self), microphone=(), geolocation=()`
-- `Content-Security-Policy` or `Content-Security-Policy-Report-Only`
+- `Content-Security-Policy`
 
 These headers reduce the risk of MIME confusion, framing abuse, information leakage, and over-broad browser permissions.
 
