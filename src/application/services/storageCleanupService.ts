@@ -57,21 +57,40 @@ export async function runStorageCleanup({
       action: "unknown-cv-upload-age",
       count: plan.unknownAge,
     });
-  if (plan.unknownReference)
+  if (plan.unknownReference) {
     audit({
       level: "warn",
-      action: "unknown-cv-reference",
+      action: "unknown-storage-reference",
       count: plan.unknownReference,
     });
+    throw new Error("Unrecognized storage references prevent safe cleanup");
+  }
   const pending = await pendingStorageDeletions();
   let deleted = 0;
   let failed = 0;
   for (const row of pending) {
     signal?.throwIfAborted();
-    if (row.kind !== "avatar" && row.kind !== "cv")
-      throw new Error("Invalid cleanup queue kind");
-    if (!PATTERNS[row.kind].test(row.key))
-      throw new Error("Invalid cleanup queue key");
+    if (
+      (row.kind !== "avatar" && row.kind !== "cv") ||
+      !PATTERNS[row.kind].test(row.key)
+    ) {
+      if (apply)
+        await recordStorageDeletion(
+          row.kind,
+          row.key,
+          now,
+          "InvalidCleanupQueueEntry"
+        );
+      failed++;
+      // Corrupt rows may contain private URLs: audit only a count/code.
+      audit({
+        level: "error",
+        action: "invalid-queue-entry",
+        error: "InvalidCleanupQueueEntry",
+        count: 1,
+      });
+      continue;
+    }
     if (!apply) {
       audit({ action: "would-retry", kind: row.kind, key: row.key });
       continue;

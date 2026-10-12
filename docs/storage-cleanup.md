@@ -15,8 +15,13 @@ profile edits. Each pass detaches at most 1,000 expired references, keeps
 `cvUploadedAt`, and sets `cvPurgedAt` for the existing profile notice. Missing
 upload timestamps are preserved and reported as operator warnings; investigate
 provenance rather than guessing an upload date.
-Unrecognized CV references are also retained and counted as `unknown-cv-reference`
-warnings, even when their upload age would otherwise expire them.
+Any unrecognized CV/avatar reference in Student, Company or Sponsor stops the
+entire pass before reference changes, new claims or pending deletes. Both modes
+emit `unknown-storage-reference` with a count. One-shot runs exit nonzero; the
+daemon marks the pass failed. Investigate and
+normalize these references before retrying; an unmapped reference cannot prove
+that an object is orphaned. Known logo-bucket URLs and local `/assets/` paths are
+outside the eligible buckets and do not block cleanup.
 
 Only UUID objects under `distribution/avatar/` and `distribution/cv/` are eligible,
 and only when S3 `LastModified` is strictly older than **48 hours**. Unknown names,
@@ -43,9 +48,11 @@ A short PostgreSQL transaction locks the three reference tables, rechecks refs,
 detaches expired CVs and records orphan keys in `StorageDeletion`. It commits
 **before** any S3 deletion. Attachment triggers reject queued and completed keys,
 including uploads whose existence check raced cleanup. Reads continue during
-claiming; media writes can briefly wait. The lock wait is bounded at five seconds,
-and the transaction at 30 seconds. Do not bypass these triggers or reuse an
-object key. This is an event-scale full listing/reconciliation; paginate/stream
+claiming; **all writes** to Student, Company and Sponsor can wait, including
+profile updates unrelated to media. The lock wait is bounded at five seconds,
+and the transaction at 30 seconds. Keep the daily run outside peak event traffic;
+manual apply runs need the same scheduling care. Do not bypass these triggers
+or reuse an object key. This is an event-scale full listing/reconciliation; paginate/stream
 planning and use a per-key registry if bucket size or write contention grows.
 See PostgreSQL's [table lock rules](https://www.postgresql.org/docs/16/explicit-locking.html).
 
@@ -53,9 +60,15 @@ S3 failures retain the queue row; successful deletes set `deletedAt`. A crash
 between S3 deletion and DB acknowledgement leaves a pending row: the next run
 retries the idempotent delete. Pending rows with the oldest attempt run first,
 so repeated failures cannot starve new work. Up to 1,000 deletes are attempted
-per pass. Concurrent workers may repeat an idempotent deletion; no correctness
+per pass. Invalid queue entries report `invalid-queue-entry` without raw keys;
+apply records `InvalidCleanupQueueEntry` and continues with valid rows. Repair
+corrupt rows through an operator investigation, preserving their tombstones.
+Concurrent workers may repeat an idempotent deletion; no correctness
 assumption depends on only one worker running. Completed tombstones are kept to
-prevent late reattachment. Never delete queue rows as routine cleanup.
+prevent late reattachment. A `(kind, lower(key))` expression index keeps the
+case-insensitive guard indexed as tombstones grow. Audit `would-queue` records
+include only newly claimable keys; existing claims appear as retries. Never
+delete queue rows as routine cleanup.
 SIGTERM/SIGINT abort active S3 requests and stop subsequent deletes. A completed
 delete is acknowledged before stopping; interrupted requests keep their claims
 pending for idempotent retry. An in-progress DB transaction may still reach its
@@ -133,12 +146,13 @@ URLs. Inspect Coolify Runtime Logs for `storage-cleanup`, not web logs.
 The container heartbeat tracks completed passes, independently of data warnings
 or individual failed deletes. A failed run or no completed pass within 26 hours
 makes the worker unhealthy. Configure log alerts for `delete-failed`,
-`unknown-cv-upload-age`, and `unknown-cv-reference`, and inspect pending queue rows;
-container health alone does not establish deletion success. A dry run is healthy
+`invalid-queue-entry`, `unknown-cv-upload-age`, and `unknown-storage-reference`,
+and inspect pending queue rows; container health alone does not establish deletion success. A dry run is healthy
 but its summary clearly says
 `mode=dry-run`; health alone does not prove deletion is enabled. Failure leaves
 the daemon alive to retry at the next daily pass. One-shot commands exit nonzero
-on run failure or failed deletions; data warnings alone do not fail the command.
+on run failure or failed deletions. Missing upload ages alone are warnings;
+unrecognized references fail the pass and make daemon health unhealthy.
 
 In shared PostgreSQL, inspect the queue without student PII:
 
@@ -199,3 +213,11 @@ listing, and deletion requests; the CLI daemon produced a heartbeat and exited
 with status zero on SIGTERM. PostgreSQL regression tests also cover uppercase
 legacy URL normalization, case-variant tombstone guards, unknown-kind rejection,
 and retention of unrecognized CV references.
+
+Review follow-up on 2026-10-12 verified a fresh migration, the expression index,
+and all four unrecognized reference fields on PostgreSQL. An actual local
+PostgreSQL/MinIO check preserved references, claims and bytes in both modes with
+an unknown Sponsor reference; the CLI exited nonzero without logging its URL.
+Normalizing it to a known logo route allowed a dry run followed by three
+successful object deletes. Invalid queue rows also leave valid deletes runnable
+and report only their error code/count.

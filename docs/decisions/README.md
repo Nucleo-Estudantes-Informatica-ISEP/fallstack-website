@@ -35,4 +35,4 @@ implementation PR needs an ADR.
 | [0005](0005-separate-domain-services-and-repositories.md)        | Separate domain, services, and repositories      | Accepted |
 | [0006](0006-store-editable-event-content-in-database.md)         | Store editable event content in the database     | Accepted |
 | [0007](0007-run-csp-in-report-only-mode.md)                      | Run CSP in report-only mode                      | Accepted |
-| [0008](0008-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions | Accepted |
+| [0009](0009-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions | Accepted |

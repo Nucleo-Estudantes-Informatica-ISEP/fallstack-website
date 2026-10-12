@@ -135,7 +135,7 @@ test("UUID casing protects both literal S3 keys and blocks case-variant reattach
     ).rejects.toThrow("queued for deletion");
   const mapping = await prisma.$queryRaw<{ key: string | null }[]>`
     SELECT storage_object_key('cv', ${`https://legacy.supabase.co/storage/v1/object/public/cvs/distribution/cv/${cv.id.toUpperCase()}.pdf?token=private`}) AS key
-    UNION ALL SELECT storage_object_key('logo', ${avatar.id})`;
+    UNION ALL SELECT storage_object_key('unknown', ${avatar.id})`;
   expect(mapping).toEqual([{ key: cv.key }, { key: null }]);
   await expect(
     prisma.storageDeletion.create({
@@ -148,10 +148,109 @@ test("unrecognized expired CV references remain visible for investigation", asyn
   const student = await studentCv("https://external.invalid/legacy-file", old);
   const plan = await planStorageCleanup(now, [], true);
   expect(plan.expired.map(({ id }) => id)).not.toContain(student.id);
-  expect(plan).toMatchObject({ unknownReference: 1 });
+  expect(plan.unknownReference).toBeGreaterThanOrEqual(1);
   expect(
     await prisma.student.findUniqueOrThrow({ where: { id: student.id } })
   ).toMatchObject({ cv: student.cv, cvPurgedAt: null });
+});
+
+test.each(["cv", "studentAvatar", "companyAvatar", "sponsorLogo"])(
+  "unknown %s references block all object claims and pending deletes",
+  async (field) => {
+    const avatar = newKey("avatar");
+    const pending = newKey("cv");
+    const expiring = await studentCv(newKey("cv").id, old);
+    await prisma.storageDeletion.create({
+      data: { kind: "cv", key: pending.key },
+    });
+    if (field === "sponsorLogo") {
+      const sponsor = await prisma.sponsor.create({
+        data: {
+          name: randomUUID(),
+          logo: "https://unknown.invalid/reference",
+          order: 402,
+        },
+      });
+      sponsorIds.push(sponsor.id);
+    } else if (field === "companyAvatar") {
+      const company = await fixtures.company();
+      await prisma.company.update({
+        where: { id: company.id },
+        data: { avatar: "https://unknown.invalid/reference" },
+      });
+    } else {
+      const student = await fixtures.student();
+      await prisma.student.update({
+        where: { id: student.id },
+        data:
+          field === "cv"
+            ? { cv: "https://unknown.invalid/reference", cvUploadedAt: old }
+            : { avatar: "https://unknown.invalid/reference" },
+      });
+    }
+    const objects = [{ kind: "avatar" as const, key: avatar.key }];
+    for (const apply of [false, true]) {
+      const plan = await planStorageCleanup(now, objects, apply);
+      expect(plan.unknownReference).toBeGreaterThanOrEqual(1);
+      expect(plan.orphans).toEqual([]);
+      expect(
+        await prisma.storageDeletion.count({ where: { key: avatar.key } })
+      ).toBe(0);
+    }
+    storage.listObjects.mockResolvedValue([
+      { Key: avatar.key, LastModified: old },
+    ]);
+    await expect(runStorageCleanup({ now, apply: true })).rejects.toThrow(
+      "Unrecognized storage references"
+    );
+    expect(storage.deleteObject).not.toHaveBeenCalled();
+    expect(
+      await prisma.student.findUniqueOrThrow({ where: { id: expiring.id } })
+    ).toMatchObject({ cv: expiring.cv, cvPurgedAt: null });
+    expect(
+      (
+        await prisma.storageDeletion.findUniqueOrThrow({
+          where: { kind_key: { kind: "cv", key: pending.key } },
+        })
+      ).attempts
+    ).toBe(0);
+  }
+);
+
+test("known logo-bucket and local asset references do not block avatar cleanup", async () => {
+  const avatar = newKey("avatar");
+  const company = await fixtures.company();
+  await prisma.company.update({
+    where: { id: company.id },
+    data: { avatar: `/api/media/logo/${randomUUID()}` },
+  });
+  const sponsor = await prisma.sponsor.create({
+    data: {
+      name: randomUUID(),
+      logo: "/assets/images/sponsors/legacy.png",
+      order: 402,
+    },
+  });
+  sponsorIds.push(sponsor.id);
+  const plan = await planStorageCleanup(
+    now,
+    [{ kind: "avatar", key: avatar.key }],
+    true
+  );
+  expect(plan.orphans).toEqual([{ kind: "avatar", key: avatar.key }]);
+  expect(
+    (await planStorageCleanup(now, [{ kind: "avatar", key: avatar.key }], true))
+      .orphans
+  ).toEqual([]);
+});
+
+test("case-insensitive guard has an index matching its predicate", async () => {
+  const indexes = await prisma.$queryRaw<{ indexdef: string }[]>`
+    SELECT indexdef FROM pg_indexes WHERE schemaname = current_schema()
+    AND tablename = 'StorageDeletion'`;
+  expect(
+    indexes.some(({ indexdef }) => indexdef.includes("(kind, lower(key))"))
+  ).toBe(true);
 });
 
 test("fresh shared CV and all supported avatar refs protect objects, including inactive company/sponsor", async () => {
@@ -201,6 +300,36 @@ test("fresh shared CV and all supported avatar refs protect objects, including i
     { kind: "avatar", key: sponsorAvatar.key }
   );
   expect((await planStorageCleanup(now, objects, true)).orphans).toEqual([]);
+});
+
+test("invalid queue keys record failure without starving valid deletions", async () => {
+  const invalid = `https://private.invalid/${randomUUID()}?token=hidden`;
+  const cv = newKey("cv");
+  keys.push(invalid);
+  await prisma.storageDeletion.createMany({
+    data: [
+      { kind: "cv", key: invalid },
+      { kind: "cv", key: cv.key },
+    ],
+  });
+  const audit = vi.fn();
+  const result = await runStorageCleanup({ now, apply: true, audit });
+  expect(result).toMatchObject({ failed: 1, deleted: 1 });
+  expect(storage.deleteObject).toHaveBeenCalledExactlyOnceWith(
+    "cv",
+    cv.key,
+    undefined
+  );
+  expect(
+    await prisma.storageDeletion.findUniqueOrThrow({
+      where: { kind_key: { kind: "cv", key: invalid } },
+    })
+  ).toMatchObject({
+    attempts: 1,
+    lastError: "InvalidCleanupQueueEntry",
+    deletedAt: null,
+  });
+  expect(JSON.stringify(audit.mock.calls)).not.toContain("token=hidden");
 });
 
 test("failure leaves detached refs + durable retry; success blocks late reattachment", async () => {

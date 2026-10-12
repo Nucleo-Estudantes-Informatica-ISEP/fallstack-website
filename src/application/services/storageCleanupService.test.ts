@@ -68,29 +68,34 @@ test("unknown references are warned without exposing their raw value", async () 
     unknownAge: 0,
     unknownReference: 1,
   });
-  await runStorageCleanup({ now, audit });
+  await expect(runStorageCleanup({ now, audit })).rejects.toThrow(
+    "Unrecognized storage references"
+  );
   expect(audit).toHaveBeenCalledWith({
     level: "warn",
-    action: "unknown-cv-reference",
+    action: "unknown-storage-reference",
     count: 1,
   });
 });
 
 test.each([false, true])(
-  "invalid queue entries fail safely even in dry run (apply=%s)",
+  "invalid queue entries do not block valid deletes or expose raw keys (apply=%s)",
   async (apply) => {
     const audit = vi.fn();
     for (const row of [
       { kind: "logo", key },
       { kind: "cv", key: "https://private.invalid/file?token=secret" },
     ]) {
-      mocks.pendingStorageDeletions.mockResolvedValue([row]);
-      await expect(runStorageCleanup({ now, apply, audit })).rejects.toThrow(
-        "Invalid cleanup queue"
-      );
+      mocks.pendingStorageDeletions.mockResolvedValue([
+        row,
+        { kind: "cv", key },
+      ]);
+      expect((await runStorageCleanup({ now, apply, audit })).failed).toBe(1);
     }
-    expect(audit).not.toHaveBeenCalled();
-    expect(mocks.deleteObject).not.toHaveBeenCalled();
+    expect(
+      audit.mock.calls.map(([event]) => JSON.stringify(event)).join()
+    ).not.toContain("token=secret");
+    expect(mocks.deleteObject).toHaveBeenCalledTimes(apply ? 2 : 0);
   }
 );
 

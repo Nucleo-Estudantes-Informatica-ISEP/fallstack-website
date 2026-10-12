@@ -1,4 +1,4 @@
-# 0008: Reconcile MinIO retention with durable deletions
+# 0009: Reconcile MinIO retention with durable deletions
 
 Status: Accepted
 Date: 2026-10-08
@@ -22,6 +22,9 @@ Short table locks serialize claims with media writes; attachment triggers reject
 claimed keys permanently. Retry pending deletes through the existing S3 service,
 then record completion. Require never-versioned buckets so successful deletion
 removes bytes. Keep unknown upload ages and unrecognized objects for investigation.
+Fail the entire pass before DB changes or pending deletes when a stored media
+reference cannot be mapped safely; recognize separate logo-bucket and local asset
+references as outside scope.
 
 ## Consequences
 
@@ -31,7 +34,8 @@ tracks completed passes independently of data warnings and individual failed del
 Failed deletes leave inaccessible objects queued until retry succeeds. Completed
 claims remain as tombstones; restoration requires a new key.
 
-Full bucket listings and brief locks suit the current event scale. Larger buckets
+Full bucket listings and brief locks suit the current event scale. Locks can
+block all writes to reference tables, so schedule outside peak event traffic. Larger buckets
 or media-write contention require streaming reconciliation and a per-key registry.
 Each pass handles at most 1,000 expired references and 1,000 deletion attempts;
 operators can rerun to drain a backlog. See the [runbook](../storage-cleanup.md)

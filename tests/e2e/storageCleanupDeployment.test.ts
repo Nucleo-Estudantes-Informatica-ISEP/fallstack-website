@@ -24,3 +24,10 @@ test("cleanup deploys with migrator dependency, runtime credentials, dry-run def
   expect(stage).toContain('"--daemon"');
   expect(stage).toContain('"--conditions=react-server"');
 });
+
+test("web and cleanup share the overridable MinIO endpoint", () => {
+  expect(compose.match(/S3_ENDPOINT: \*minio_endpoint/g)).toHaveLength(2);
+  expect(compose).toContain(
+    "x-minio-endpoint: &minio_endpoint ${S3_ENDPOINT:-http://minio-gbheij1ljds8nrhfgdf9teeo:9000}"
+  );
+});

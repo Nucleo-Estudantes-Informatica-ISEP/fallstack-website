@@ -9,10 +9,12 @@ CREATE TABLE "StorageDeletion" (
     CONSTRAINT "StorageDeletion_pkey" PRIMARY KEY ("kind", "key")
 );
 CREATE INDEX "StorageDeletion_deletedAt_createdAt_idx" ON "StorageDeletion"("deletedAt", "createdAt");
+-- Permanent tombstones must stay indexed for case-insensitive attachment checks.
+CREATE INDEX "StorageDeletion_kind_lower_key_idx" ON "StorageDeletion"(kind, lower(key));
 
 -- One canonical mapping for both reconciliation and attachment guards. Recognize
 -- UUIDs, object keys, current same-origin routes and migrated Supabase URLs.
--- Do not infer arbitrary filenames or touch logos/other prefixes.
+-- Logo keys are recognized only to exclude their separate bucket from cleanup.
 CREATE FUNCTION storage_object_key(kind text, reference text) RETURNS text
 LANGUAGE plpgsql IMMUTABLE STRICT AS $$
 DECLARE
@@ -20,16 +22,18 @@ DECLARE
     uuid_pattern text := '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
     object_id text;
 BEGIN
-    IF kind NOT IN ('avatar', 'cv') THEN RETURN NULL; END IF;
+    IF kind NOT IN ('avatar', 'cv', 'logo') THEN RETURN NULL; END IF;
     IF value ~ ('^' || uuid_pattern || '$') THEN
         object_id := value;
     ELSIF kind = 'avatar' THEN
         object_id := substring(value FROM ('(?:^distribution/avatar/|/avatars/distribution/avatar/|/api/media/avatar/)(' || uuid_pattern || ')$'));
+    ELSIF kind = 'logo' THEN
+        object_id := substring(value FROM ('(?:^distribution/logo/|/logos/distribution/logo/|/api/media/logo/)(' || uuid_pattern || ')$'));
     ELSE
         object_id := substring(value FROM ('(?:^distribution/cv/|/cvs/distribution/cv/)(' || uuid_pattern || ')\.pdf$'));
     END IF;
     IF object_id IS NULL THEN RETURN NULL; END IF;
-    RETURN 'distribution/' || kind || '/' || object_id || CASE WHEN kind = 'cv' THEN '.pdf' ELSE '' END;
+    RETURN 'distribution/' || kind || '/' || lower(object_id) || CASE WHEN kind = 'cv' THEN '.pdf' ELSE '' END;
 END;
 $$;
 
@@ -43,7 +47,7 @@ BEGIN
     IF EXISTS (
         SELECT 1 FROM "StorageDeletion"
         WHERE kind = TG_ARGV[0]
-          AND key = storage_object_key(TG_ARGV[0], to_jsonb(NEW) ->> TG_ARGV[1])
+          AND lower(key) = storage_object_key(TG_ARGV[0], to_jsonb(NEW) ->> TG_ARGV[1])
     ) THEN
         RAISE EXCEPTION 'Storage object is queued for deletion; upload a new file'
             USING ERRCODE = '23514';

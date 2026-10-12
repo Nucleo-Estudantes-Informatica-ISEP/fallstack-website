@@ -31,8 +31,25 @@ export async function planStorageCleanup(
         where: { cv: { not: null }, cvUploadedAt: null },
       });
       const [unknown] = await tx.$queryRaw<{ count: number }[]>`
-        SELECT count(*)::integer AS count FROM "Student"
-        WHERE cv IS NOT NULL AND storage_object_key('cv', cv) IS NULL`;
+        SELECT count(*)::integer AS count FROM (
+          SELECT 'cv' AS kind, cv AS reference FROM "Student"
+          UNION ALL SELECT 'avatar', avatar FROM "Student"
+          UNION ALL SELECT 'avatar', avatar FROM "Company"
+          UNION ALL SELECT 'avatar', logo FROM "Sponsor"
+        ) refs WHERE reference IS NOT NULL
+        AND storage_object_key(kind, reference) IS NULL
+        AND NOT (kind = 'avatar' AND (
+          storage_object_key('logo', reference) IS NOT NULL
+          OR reference LIKE '/assets/%'
+        ))`;
+      // Fail closed before reference mutations/claims; service also stops retries.
+      if (unknown.count)
+        return {
+          expired: [],
+          orphans: [],
+          unknownAge,
+          unknownReference: unknown.count,
+        };
       if (apply && expired.length) {
         await tx.student.updateMany({
           where: { id: { in: expired.map(({ id }) => id) } },
@@ -58,10 +75,19 @@ export async function planStorageCleanup(
           .filter(({ key }) => key)
           .map(({ kind, key }) => `${kind}:${key}`)
       );
+      const existing = await tx.storageDeletion.findMany({
+        where: { key: { in: objects.map(({ key }) => key) } },
+        select: { kind: true, key: true },
+      });
+      const claimed = new Set(
+        existing.map(({ kind, key }) => `${kind}:${key}`)
+      );
       const orphans = objects
         // Compare UUIDs case-insensitively; queue/delete the exact S3 key.
         .filter(
-          ({ kind, key }) => !referenced.has(`${kind}:${key.toLowerCase()}`)
+          ({ kind, key }) =>
+            !referenced.has(`${kind}:${key.toLowerCase()}`) &&
+            !claimed.has(`${kind}:${key}`)
         )
         .slice(0, BATCH_SIZE);
       if (apply && orphans.length) {
