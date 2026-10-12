@@ -1,22 +1,28 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
-const { serverEnvMock, signMock, reportErrorMock, lockedUserMock } = vi.hoisted(
-  () => ({
-    serverEnvMock: {
-      GOOGLE_WALLET_NEVER_ENABLED: false,
-      GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
-      GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
-      GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: undefined as string | undefined,
-    },
-    lockedUserMock: vi.fn(),
-    signMock: vi.fn(),
-    reportErrorMock: vi.fn(),
-  })
-);
+const {
+  serverEnvMock,
+  signMock,
+  reportErrorMock,
+  lockedUserMock,
+  deleteUserMock,
+} = vi.hoisted(() => ({
+  serverEnvMock: {
+    GOOGLE_WALLET_NEVER_ENABLED: false,
+    GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
+    GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
+    GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: undefined as string | undefined,
+  },
+  lockedUserMock: vi.fn(),
+  deleteUserMock: vi.fn(),
+  signMock: vi.fn(),
+  reportErrorMock: vi.fn(),
+}));
 
 vi.mock("server-only", () => ({}));
 vi.mock("../repositories/userRepository", () => ({
   withLockedUser: lockedUserMock,
+  deleteUser: deleteUserMock,
 }));
 vi.mock("jsonwebtoken", () => ({ default: { sign: signMock } }));
 vi.mock("@/config/env.client", () => ({
@@ -52,6 +58,7 @@ beforeEach(() => {
   vi.resetModules();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
+  deleteUserMock.mockReset();
   lockedUserMock.mockImplementation(async (_id, callback) =>
     callback({ active: true, student }, {})
   );
@@ -207,6 +214,9 @@ test("patches an existing object instead of creating a duplicate", async () => {
       end: { date: "2026-11-18T17:30:00+00:00" },
     },
   });
+  const patchBody = JSON.parse(String(fetchMock.mock.calls[2]?.[1]?.body));
+  expect(patchBody).not.toHaveProperty("id");
+  expect(patchBody).not.toHaveProperty("classId");
   expect(fetchMock).toHaveBeenCalledTimes(3);
   expect(fetchMock.mock.calls[2]?.[1]).toEqual(
     expect.objectContaining({ method: "PATCH" })
@@ -549,4 +559,54 @@ test("never-enabled declaration must be removed before any pass can be issued", 
     status: 503,
   });
   expect(lockedUserMock).not.toHaveBeenCalled();
+});
+
+test("issuance restores a revoked pass when local deletion failed", async () => {
+  let object = {
+    state: "ACTIVE",
+    header: { defaultValue: { value: student.name } },
+    barcode: { value: student.code },
+  };
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockImplementation(async (url, init) => {
+      if (String(url).includes("oauth2")) return oauthResponse();
+      if (init?.method === "PATCH")
+        object = { ...object, ...JSON.parse(String(init.body)) };
+      return new Response(JSON.stringify(object), { status: 200 });
+    });
+  vi.stubGlobal("fetch", fetchMock);
+  deleteUserMock.mockRejectedValueOnce(new Error("Database deletion failed"));
+  const { deleteUserAccount } = await import("./authApplicationService");
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  await expect(deleteUserAccount(student.id)).rejects.toThrow(
+    "Database deletion failed"
+  );
+  expect(object.state).toBe("EXPIRED");
+  expect(object.barcode.value).toBe("REVOKED");
+  await createGoogleWalletSaveUrl(student);
+  expect(object.state).toBe("ACTIVE");
+  expect(object.header.defaultValue.value).toBe(student.name);
+  expect(object.barcode.value).toBe(student.code);
+  await expect(deleteUserAccount(student.id)).resolves.toBeUndefined();
+  expect(deleteUserMock).toHaveBeenCalledTimes(2);
+  expect(object.state).toBe("EXPIRED");
+  expect(object.barcode.value).toBe("REVOKED");
+});
+
+test("non-Wallet installations must explicitly opt out before student deletion", async () => {
+  serverEnvMock.GOOGLE_WALLET_ISSUER_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_CLASS_ID = undefined;
+  serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = undefined;
+  const fetchMock = vi.fn();
+  vi.stubGlobal("fetch", fetchMock);
+  const { deleteUserAccount } = await import("./authApplicationService");
+  await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+    status: 503,
+  });
+  expect(deleteUserMock).not.toHaveBeenCalled();
+  serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = true;
+  await expect(deleteUserAccount(student.id)).resolves.toBeUndefined();
+  expect(deleteUserMock).toHaveBeenCalledWith(student.id, {});
+  expect(fetchMock).not.toHaveBeenCalled();
 });

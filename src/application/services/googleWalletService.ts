@@ -285,8 +285,8 @@ function walletHeaders(accessToken: string) {
 }
 
 async function patchGenericObject(object: GenericObject, accessToken: string) {
-  const { id, classId, ...mutableFields } = object;
-  void classId;
+  const { id, ...mutableFields } = object;
+  Reflect.deleteProperty(mutableFields, "classId");
   const response = await googleFetch(
     `${WALLET_API_BASE}/genericObject/${encodeURIComponent(id)}`,
     {

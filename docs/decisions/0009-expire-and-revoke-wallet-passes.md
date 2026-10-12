@@ -1,4 +1,4 @@
-# 0008: Expire and revoke Wallet passes
+# 0009: Expire and revoke Wallet passes
 
 Status: Accepted
 Date: 2026-10-09
@@ -18,7 +18,9 @@ student deletion, expire and anonymize the deterministic object in the configure
 class. Treat upstream 404 as already revoked; other upstream failures return 502
 and retain the account. Missing or invalid configuration returns 503. Only an
 explicit `GOOGLE_WALLET_NEVER_ENABLED=true` declaration with all credentials unset
-allows deletion without revocation. The declaration also disables issuance.
+allows deletion without revocation. Every non-Wallet dev, staging, or CI
+installation must set that declaration explicitly; unset or empty defaults to
+`false`. The declaration also disables issuance.
 
 Serialize issuance and deletion with the same PostgreSQL user-row lock. Retain
 that lock during Google I/O to prevent reactivation after deletion. Admit only
@@ -28,6 +30,12 @@ Google calls have ten-second timeouts; interactive transactions have a sixty-sec
 limit. Translate network and timeout failures to sanitized 502 errors.
 
 ## Consequences
+
+Deactivation remains a reversible local access gate: it denies new sessions and
+issuance but does not revoke an existing pass. Account deletion performs the
+Wallet anonymization and revocation. If revocation succeeds but local deletion
+fails, issuance by the retained active account restores the pass, or the admin
+can retry deletion.
 
 Deletion depends on Google availability. Administrators can retry after fixing
 upstream or configuration failures. The process-local admission guard protects
@@ -40,4 +48,4 @@ classes or credentials, operations must expire and anonymize old objects using
 their original class and credentials. Automated cross-edition reconciliation and
 bulk backfill are outside this change. Removing configuration or setting the
 never-enabled declaration cannot replace that cleanup. Google synchronization
-and expired-pass display still require real-device verification.
+and pre-start/expired-pass display still require real-device verification.

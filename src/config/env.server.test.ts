@@ -10,7 +10,7 @@ afterEach(() => {
   process.env = { ...originalEnv };
 });
 
-test.each([undefined, "false", "true"])(
+test.each([undefined, "", "false", "true"])(
   "parses never-enabled declaration %s without truthy-string coercion",
   async (value) => {
     if (value === undefined) delete process.env.GOOGLE_WALLET_NEVER_ENABLED;
@@ -26,4 +26,11 @@ test("rejects an ambiguous never-enabled declaration", async () => {
   expect(() => serverEnv.GOOGLE_WALLET_NEVER_ENABLED).toThrow(
     "GOOGLE_WALLET_NEVER_ENABLED"
   );
+});
+
+test("an empty Wallet flag does not break unrelated server configuration", async () => {
+  process.env.GOOGLE_WALLET_NEVER_ENABLED = "";
+  const { serverEnv } = await import("./env.server");
+  expect(serverEnv.AUTH_SECRET).toBe(process.env.AUTH_SECRET);
+  expect(serverEnv.GOOGLE_WALLET_NEVER_ENABLED).toBe(false);
 });

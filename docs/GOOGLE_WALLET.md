@@ -287,8 +287,23 @@ then repeat the same admin delete action. Revocation is idempotent, including
 when Google accepted the first PATCH but its response or the database commit
 failed. Non-student accounts do not contact Wallet. Completely unset credentials
 fail closed with 503 unless `GOOGLE_WALLET_NEVER_ENABLED=true` explicitly declares
-that the environment has never issued passes. Never set this opt-out in an
+that the environment has never issued passes. Every non-Wallet dev, staging,
+or CI installation must set this declaration explicitly to support student
+deletion; the default (including an empty value) remains `false`. Never set this opt-out in an
 environment with issued passes. Partial configuration still blocks deletion.
+
+If Google revocation succeeds but the database deletion fails, the account
+remains and its pass is revoked. The still-active student can issue again to
+restore `ACTIVE`, their current name/code, and the edition interval; alternatively,
+an administrator can repeat deletion. Regression tests cover both recovery paths.
+
+Deactivation (`User.active=false`) is a reversible application access gate. It
+blocks sessions and new issuance but deliberately does not expire or anonymize
+an existing Wallet pass. The name/code remain on the pass; edition expiry changes validity, while
+account deletion anonymizes it. This pass is an attendee identifier, not an access
+credential. Deactivation does not invalidate the permanent code for existing
+identification flows.
+Use account deletion when the requested action is removal and revocation.
 
 Keep the issuer, class, and authorized credentials available while any issued
 objects need revocation. Revocation targets the currently configured class;
@@ -299,7 +314,13 @@ original class/credentials. This change does not bulk-update existing objects.
 
 1. Use a synthetic student in a staging class. Issue a pass through
    `POST /api/wallet`; GET the Generic Object through the Wallet API and confirm
-   the edition validity interval. Add it to a test device.
+   the edition validity interval. Add it to a test device **before** the event
+   starts and record whether the pass is visible, how its validity is displayed,
+   and whether its barcode is scannable. Repeat during the event and after expiry.
+   Google defines this interval as when the pass is usable; its reference does
+   not guarantee pre-start presentation:
+   https://developers.google.com/wallet/reference/rest/v1/genericobject#GenericObject
+   Real-device pre-start behavior has not been verified locally.
 2. Delete the synthetic account through the admin UI. Confirm HTTP 204, local
    account removal, Google state `EXPIRED`, and replacement name/code/barcode.
    Refresh Wallet on the test device; allow for Google's synchronization delay.
