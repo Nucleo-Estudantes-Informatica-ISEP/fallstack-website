@@ -39,6 +39,7 @@ function request(body: unknown) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.resetModules();
 });
 
 test("rejects a student session before minting a preview token", async () => {
@@ -112,4 +113,136 @@ test("normalizes a code and mints a token for an employee", async () => {
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { token: "preview-token" });
   assert.deepEqual(vi.mocked(jwtStudent).mock.calls[0], ["AB12"]);
+});
+
+test("rate limits repeated requests with unknown student codes", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+
+  vi.mocked(jwtStudent).mockResolvedValue(null);
+
+  const { POST } = await import("./route");
+
+  for (let i = 0; i < 5; i++) {
+    const response = await POST(request({ code: "ZZ99" }), {
+      params: Promise.resolve({}),
+    });
+
+    assert.equal(response.status, 404);
+  }
+
+  const response = await POST(request({ code: "ZZ99" }), {
+    params: Promise.resolve({}),
+  });
+
+  assert.equal(response.status, 429);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+});
+
+test("rate limits repeated requests with unknown student codes", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+
+  vi.mocked(jwtStudent).mockResolvedValue(null);
+
+  const { POST } = await import("./route");
+
+  for (let i = 0; i < 5; i++) {
+    const response = await POST(request({ code: "ZZ99" }), {
+      params: Promise.resolve({}),
+    });
+
+    assert.equal(response.status, 404);
+  }
+
+  const response = await POST(request({ code: "ZZ99" }), {
+    params: Promise.resolve({}),
+  });
+
+  assert.equal(response.status, 429);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+});
+
+test("does not rate limit valid student scans", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+
+  vi.mocked(jwtStudent).mockResolvedValue("preview-token");
+
+  const { POST } = await import("./route");
+
+  for (let i = 0; i < 10; i++) {
+    const response = await POST(request({ code: "AB12" }), {
+      params: Promise.resolve({}),
+    });
+
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      token: "preview-token",
+    });
+  }
+
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
+});
+
+test("scopes invalid-code rate limits to each employee", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+
+  vi.mocked(jwtStudent).mockResolvedValue(null);
+
+  const { POST } = await import("./route");
+
+  for (let i = 0; i < 5; i++) {
+    const response = await POST(request({ code: "ZZ99" }), {
+      params: Promise.resolve({}),
+    });
+
+    assert.equal(response.status, 404);
+  }
+
+  const limitedResponse = await POST(request({ code: "ZZ99" }), {
+    params: Promise.resolve({}),
+  });
+
+  assert.equal(limitedResponse.status, 429);
+
+  vi.mocked(getServerSession).mockResolvedValue({
+    ...employeeSession,
+    id: "employee-2",
+    employee: {
+      ...employeeSession.employee,
+      id: "employee-2",
+    },
+  } as never);
+
+  const otherEmployeeResponse = await POST(request({ code: "ZZ99" }), {
+    params: Promise.resolve({}),
+  });
+
+  assert.equal(otherEmployeeResponse.status, 404);
 });
