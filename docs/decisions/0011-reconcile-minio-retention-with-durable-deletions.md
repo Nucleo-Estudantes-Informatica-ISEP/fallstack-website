@@ -1,4 +1,4 @@
-# 0010: Reconcile MinIO retention with durable deletions
+# 0011: Reconcile MinIO retention with durable deletions
 
 Status: Accepted
 Date: 2026-10-08
