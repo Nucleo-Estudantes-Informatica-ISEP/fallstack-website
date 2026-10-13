@@ -40,7 +40,7 @@ export async function planStorageCleanup(
         AND storage_object_key(kind, reference) IS NULL
         AND NOT (kind = 'avatar' AND (
           storage_object_key('logo', reference) IS NOT NULL
-          OR reference LIKE '/assets/%'
+          OR (reference LIKE '/assets/%' AND NOT storage_reference_path_is_ambiguous(reference))
         ))`;
       // Fail closed before reference mutations/claims; service also stops retries.
       if (unknown.count)

@@ -12,17 +12,26 @@ CREATE INDEX "StorageDeletion_deletedAt_createdAt_idx" ON "StorageDeletion"("del
 -- Permanent tombstones must stay indexed for case-insensitive attachment checks.
 CREATE INDEX "StorageDeletion_kind_lower_key_idx" ON "StorageDeletion"(kind, lower(key));
 
+-- Browsers normalize dot segments, encoded paths, backslashes and controls.
+-- Reject aliases rather than infer their target before deleting stored objects.
+CREATE FUNCTION storage_reference_path_is_ambiguous(reference text) RETURNS boolean
+LANGUAGE sql IMMUTABLE STRICT AS $$
+    SELECT value ~ '(^|/)[.]{1,2}(/|$)'
+        OR value ~ '[[:cntrl:]%]' OR position(chr(92) in value) > 0
+    FROM (SELECT split_part(split_part(btrim(reference), '?', 1), '#', 1) AS value) path;
+$$;
+
 -- One canonical mapping for both reconciliation and attachment guards. Recognize
 -- UUIDs, object keys, current same-origin routes and migrated Supabase URLs.
 -- Logo keys are recognized only to exclude their separate bucket from cleanup.
 CREATE FUNCTION storage_object_key(kind text, reference text) RETURNS text
-LANGUAGE plpgsql IMMUTABLE STRICT AS $$
+LANGUAGE plpgsql IMMUTABLE STRICT SET search_path FROM CURRENT AS $$
 DECLARE
     value text := split_part(split_part(btrim(reference), '?', 1), '#', 1);
     uuid_pattern text := '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
     object_id text;
 BEGIN
-    IF kind NOT IN ('avatar', 'cv', 'logo') THEN RETURN NULL; END IF;
+    IF kind NOT IN ('avatar', 'cv', 'logo') OR storage_reference_path_is_ambiguous(reference) THEN RETURN NULL; END IF;
     IF value ~ ('^' || uuid_pattern || '$') THEN
         object_id := value;
     ELSIF kind = 'avatar' THEN
@@ -44,6 +53,10 @@ $$;
 CREATE FUNCTION reject_deleted_storage_reference() RETURNS trigger
 LANGUAGE plpgsql VOLATILE SET search_path FROM CURRENT AS $$
 BEGIN
+    IF storage_reference_path_is_ambiguous(to_jsonb(NEW) ->> TG_ARGV[1]) THEN
+        RAISE EXCEPTION 'Ambiguous storage reference path; use a canonical URL'
+            USING ERRCODE = '23514';
+    END IF;
     IF EXISTS (
         SELECT 1 FROM "StorageDeletion"
         WHERE kind = TG_ARGV[0]

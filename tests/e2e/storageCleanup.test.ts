@@ -227,7 +227,7 @@ test("known logo-bucket and local asset references do not block avatar cleanup",
   const sponsor = await prisma.sponsor.create({
     data: {
       name: randomUUID(),
-      logo: "/assets/images/sponsors/legacy.png",
+      logo: "/assets/images/sponsors/legacy.png?token=%2f#image",
       order: 402,
     },
   });
@@ -243,6 +243,64 @@ test("known logo-bucket and local asset references do not block avatar cleanup",
       .orphans
   ).toEqual([]);
 });
+
+test.each([
+  "/assets/../api/media/avatar/./",
+  "/assets/%2e%2e/api/media/avatar/./",
+  "/assets/..%2fapi/media/avatar/./",
+  "/assets/../api/media/avatar/%30",
+  "/assets/..\\api/media/avatar/./",
+  "/assets/..\t/api/media/avatar/./",
+])(
+  "ambiguous path %s stops cleanup and cannot bypass attachment guards",
+  async (prefix) => {
+    const avatar = newKey("avatar");
+    const alias = prefix + avatar.id;
+    const company = await fixtures.company();
+    // Model a legacy value, atomically restoring the guard before other writes.
+    await prisma.$transaction(async (tx) => {
+      await tx.$executeRaw`ALTER TABLE "Company" DISABLE TRIGGER company_avatar_storage_guard`;
+      await tx.company.update({
+        where: { id: company.id },
+        data: { avatar: alias },
+      });
+      await tx.$executeRaw`ALTER TABLE "Company" ENABLE TRIGGER company_avatar_storage_guard`;
+    });
+    for (const apply of [false, true]) {
+      const plan = await planStorageCleanup(
+        now,
+        [{ kind: "avatar", key: avatar.key }],
+        apply
+      );
+      expect(plan.unknownReference).toBeGreaterThanOrEqual(1);
+      expect(plan.orphans).toEqual([]);
+      expect(
+        await prisma.storageDeletion.count({ where: { key: avatar.key } })
+      ).toBe(0);
+    }
+    await prisma.company.update({
+      where: { id: company.id },
+      data: { avatar: null },
+    });
+    await planStorageCleanup(now, [{ kind: "avatar", key: avatar.key }], true);
+    const student = await fixtures.student();
+    for (const update of [
+      prisma.company.update({
+        where: { id: company.id },
+        data: { avatar: alias },
+      }),
+      prisma.student.update({
+        where: { id: student.id },
+        data: { avatar: alias },
+      }),
+      prisma.student.update({ where: { id: student.id }, data: { cv: alias } }),
+      prisma.sponsor.create({
+        data: { name: randomUUID(), logo: alias, order: 402 },
+      }),
+    ])
+      await expect(update).rejects.toThrow("Ambiguous storage reference path");
+  }
+);
 
 test("case-insensitive guard has an index matching its predicate", async () => {
   const indexes = await prisma.$queryRaw<{ indexdef: string }[]>`

@@ -1,4 +1,4 @@
-# 0009: Reconcile MinIO retention with durable deletions
+# 0010: Reconcile MinIO retention with durable deletions
 
 Status: Accepted
 Date: 2026-10-08
@@ -24,7 +24,9 @@ then record completion. Require never-versioned buckets so successful deletion
 removes bytes. Keep unknown upload ages and unrecognized objects for investigation.
 Fail the entire pass before DB changes or pending deletes when a stored media
 reference cannot be mapped safely; recognize separate logo-bucket and local asset
-references as outside scope.
+references as outside scope. Reject ambiguous dot/encoded/backslash/control
+paths in mapping and attachment guards; legacy aliases stop cleanup for
+operator normalization.
 
 ## Consequences
 

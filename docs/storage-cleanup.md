@@ -21,7 +21,11 @@ emit `unknown-storage-reference` with a count. One-shot runs exit nonzero; the
 daemon marks the pass failed. Investigate and
 normalize these references before retrying; an unmapped reference cannot prove
 that an object is orphaned. Known logo-bucket URLs and local `/assets/` paths are
-outside the eligible buckets and do not block cleanup.
+outside the eligible buckets and do not block cleanup only when their paths
+are unambiguous. Dot segments (`.`/`..`), percent-encoded paths, backslashes and
+control characters before the query/fragment are rejected by attachment guards
+and reference mapping. Existing aliases stop cleanup; operators must replace
+them with a canonical media/asset path. Query/fragment encodings remain allowed.
 
 Only UUID objects under `distribution/avatar/` and `distribution/cv/` are eligible,
 and only when S3 `LastModified` is strictly older than **48 hours**. Unknown names,
@@ -221,3 +225,13 @@ an unknown Sponsor reference; the CLI exited nonzero without logging its URL.
 Normalizing it to a known logo route allowed a dry run followed by three
 successful object deletes. Invalid queue rows also leave valid deletes runnable
 and report only their error code/count.
+
+Review follow-up on 2026-10-13 reproduced dot/encoded/backslash/control path
+aliases and CRLF deployment-test failures before fixes. Fresh PostgreSQL tests
+verify existing aliases stop both planning modes and cannot bypass any of the
+four attachment guards. Actual local PostgreSQL/MinIO preserved the referenced
+avatar and pending CV in both modes with a legacy alias; the CLI exited nonzero
+without logging the path. Canonicalizing the reference retained the avatar and
+allowed the pending CV delete to complete. Authenticated development API smoke
+rejected an alias with 400 and no mutation, accepted a canonical logo path with
+an encoded query with 200, and returned expected media 200/404 responses.
