@@ -1,4 +1,4 @@
-# 0009: Expire and revoke Wallet passes
+# 0010: Expire and revoke Wallet passes
 
 Status: Accepted
 Date: 2026-10-09
