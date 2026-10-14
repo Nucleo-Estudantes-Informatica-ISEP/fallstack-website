@@ -15,7 +15,7 @@ avatars/CVs, and recover safely from failed S3 deletes or interrupted runs.
 Run a separate worker through the existing Coolify Compose deployment, after the
 migrator succeeds. Audit at startup and daily at 03:00 UTC; deletion requires
 explicit `apply` configuration. Expire CV references after six calendar months
-and consider scoped UUID objects orphaned only after a 48-hour upload grace period.
+and consider scoped UUID objects orphaned only after a seven-day upload grace period.
 
 Commit reference changes and durable `StorageDeletion` claims before S3 deletion.
 Short table locks serialize claims with media writes; attachment triggers reject
@@ -32,7 +32,8 @@ operator normalization.
 
 No new scheduler dependency, public endpoint, or competing deployment pipeline is
 needed. Dry runs and structured logs expose operator failures; container health
-tracks completed passes independently of data warnings and individual failed deletes.
+refreshes only after passes without failed deletes; missing upload-age warnings
+do not fail health. Invalid queue rows are quarantined, retaining tombstones.
 Failed deletes leave inaccessible objects queued until retry succeeds. Completed
 claims remain as tombstones; restoration requires a new key.
 

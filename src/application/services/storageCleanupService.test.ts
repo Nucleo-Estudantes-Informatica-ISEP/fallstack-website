@@ -106,14 +106,14 @@ test("default dry run never deletes, queues, or records attempts", async () => {
   expect(mocks.recordStorageDeletion).not.toHaveBeenCalled();
 });
 
-test("only scoped UUID objects older than 48 hours become candidates", async () => {
+test("only scoped UUID objects older than seven days become candidates", async () => {
   mocks.listObjects.mockImplementation(async (kind: string) =>
     kind === "cv"
       ? [
-          { Key: key, LastModified: new Date("2026-10-06T02:59:59Z") },
+          { Key: key, LastModified: new Date("2026-10-01T02:59:59Z") },
           {
             Key: key.replace("001.pdf", "002.pdf"),
-            LastModified: new Date("2026-10-06T03:00:00Z"),
+            LastModified: new Date("2026-10-01T03:00:00Z"),
           },
           { Key: key.replace("001.pdf", "003.pdf") },
           { Key: "distribution/cv/manual.pdf", LastModified: new Date(0) },
@@ -170,4 +170,12 @@ test("partial listing failures abort before any DB writes or S3 deletes", async 
   );
   expect(mocks.planStorageCleanup).not.toHaveBeenCalled();
   expect(mocks.deleteObject).not.toHaveBeenCalled();
+});
+
+test("staged uploads older than 48h remain attachable for seven days", async () => {
+  mocks.listObjects.mockResolvedValue([
+    { Key: key, LastModified: new Date(now.getTime() - 49 * 60 * 60 * 1000) },
+  ]);
+  await runStorageCleanup({ now, apply: true });
+  expect(mocks.planStorageCleanup).toHaveBeenCalledWith(now, [], true);
 });

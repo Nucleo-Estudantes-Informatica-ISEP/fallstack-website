@@ -28,7 +28,7 @@ and reference mapping. Existing aliases stop cleanup; operators must replace
 them with a canonical media/asset path. Query/fragment encodings remain allowed.
 
 Only UUID objects under `distribution/avatar/` and `distribution/cv/` are eligible,
-and only when S3 `LastModified` is strictly older than **48 hours**. Unknown names,
+and only when S3 `LastModified` is strictly older than **seven days**. Unknown names,
 missing timestamps, recent uploads, other prefixes and logo buckets are excluded.
 Student CV/avatar, Company avatar, and Sponsor logo references all protect keys,
 including inactive records. Recognition covers bare UUIDs, object keys, current
@@ -39,10 +39,10 @@ UUID comparison ignores case; queue rows and S3 deletes retain the exact listed
 key because S3 object keys are case-sensitive. Both case variants remain protected
 while referenced, and tombstones reject reattachment through either variant.
 
-The 48-hour grace begins at S3 `LastModified`, not DB attachment time. An upload
+The seven-day grace begins at S3 `LastModified`, not DB attachment time. An upload
 whose attachment is delayed beyond that window can be claimed as orphaned; its
 attachment then fails and the user must upload again with a new key. This is an
-accepted limit; add explicit pending-upload tracking if delayed attachment becomes
+bounded staging window; add explicit pending-upload tracking if delayed attachment becomes
 a supported flow. Current uploads use `distribution/logo/` in `S3_BUCKET_LOGOS`
 for company/sponsor logos, so that bucket is excluded from this task. Company
 avatar and legacy Sponsor logo references into the avatars bucket still protect
@@ -65,8 +65,7 @@ between S3 deletion and DB acknowledgement leaves a pending row: the next run
 retries the idempotent delete. Pending rows with the oldest attempt run first,
 so repeated failures cannot starve new work. Up to 1,000 deletes are attempted
 per pass. Invalid queue entries report `invalid-queue-entry` without raw keys;
-apply records `InvalidCleanupQueueEntry` and continues with valid rows. Repair
-corrupt rows through an operator investigation, preserving their tombstones.
+apply records `InvalidCleanupQueueEntry`, stamps `quarantinedAt`, and continues with valid rows. Quarantined rows keep their tombstones but are excluded from later retry batches. Investigate them using the queue query below; never relabel a corrupt key as deleted or delete its tombstone.
 Concurrent workers may repeat an idempotent deletion; no correctness
 assumption depends on only one worker running. Completed tombstones are kept to
 prevent late reattachment. The shared HTTP error boundary maps the guard's
@@ -150,9 +149,7 @@ and retention. This CLI deliberately writes JSON directly instead of loading
 the application logger/Sentry: its audit schema contains only validated object
 keys, counts, run IDs and error names/codes, never raw exceptions or reference
 URLs. Inspect Coolify Runtime Logs for `storage-cleanup`, not web logs.
-The container heartbeat tracks completed passes, independently of data warnings
-or individual failed deletes. A failed run or no completed pass within 26 hours
-makes the worker unhealthy. Configure log alerts for `delete-failed`,
+The container heartbeat refreshes only after a pass with `failed === 0`. Failed deletes remove it immediately, so persistent AccessDenied makes the worker unhealthy. Missing upload ages alone remain warnings. No successful pass within 26 hours also makes the worker unhealthy. Configure log alerts for `delete-failed`,
 `invalid-queue-entry`, `unknown-cv-upload-age`, and `unknown-storage-reference`,
 and inspect pending queue rows; container health alone does not establish deletion success. A dry run is healthy
 but its summary clearly says
@@ -167,10 +164,10 @@ In shared PostgreSQL, inspect the queue without student PII:
 SELECT kind, count(*) AS pending, min("createdAt") AS oldest,
        max(attempts) AS max_attempts
 FROM fallstack."StorageDeletion"
-WHERE "deletedAt" IS NULL
+WHERE "deletedAt" IS NULL AND "quarantinedAt" IS NULL
 GROUP BY kind;
 
-SELECT kind, key, attempts, "lastAttemptAt", "lastError"
+SELECT kind, key, attempts, "lastAttemptAt", "lastError", "quarantinedAt"
 FROM fallstack."StorageDeletion"
 WHERE "deletedAt" IS NULL
 ORDER BY "lastAttemptAt" NULLS FIRST, "createdAt";
@@ -260,3 +257,64 @@ reported zero candidates; production reported six orphan candidates. Both report
 zero expired references, unknown references, failed operations and deletions.
 Snapshot reference rows and queues were unchanged. No live DB or S3 writes ran;
 candidates still require the documented deployment-time operator audit.
+
+## Review follow-up — 14 October
+
+Uploads remain eligible for attachment for seven days after S3 LastModified;
+this widens the previous 48-hour staging window. Beyond seven days the existing
+409/upload-again behavior remains intentional. CV retention stays six months.
+
+Planning now maps each non-null media reference once in a materialized CTE,
+rather than performing separate global scans for expiry, unknown refs and live
+keys. Global table locks remain necessary with the current reference model;
+never split claim/recheck into unprotected transactions. The five-second lock
+acquisition and thirty-second transaction bounds still apply. Benchmark a copy
+with at least each environment's current Student/Company/Sponsor row counts
+before apply; pause cleanup if its measured planning latency approaches the
+transaction limit. A per-key registry is the upgrade if event volume outgrows this.
+
+Unknown refs deliberately fail closed. Before deploy/apply, run this inside the
+migrated environment's schema (restrict output access; references can contain PII):
+
+```sql
+WITH refs AS (
+  SELECT 'Student.cv' AS field, id, 'cv' AS kind, cv AS reference FROM "Student"
+  UNION ALL SELECT 'Student.avatar', id, 'avatar', avatar FROM "Student"
+  UNION ALL SELECT 'Company.avatar', id, 'avatar', avatar FROM "Company"
+  UNION ALL SELECT 'Sponsor.logo', id, 'avatar', logo FROM "Sponsor"
+)
+SELECT field, id, reference FROM refs WHERE reference IS NOT NULL
+  AND storage_object_key(kind, reference) IS NULL
+  AND NOT (kind = 'avatar' AND (
+    storage_object_key('logo', reference) IS NOT NULL
+    OR (reference LIKE '/assets/%' AND NOT storage_reference_path_is_ambiguous(reference))
+  ));
+```
+
+For each row, verify the intended object through the normal media route/HEAD,
+replace its reference with the canonical route or upload under a fresh key using
+the normal authenticated admin/profile flow, then repeat this query and dry-run.
+Never clear an unknown reference just to let deletion proceed. Percent-encoded
+paths (including `%20`) are intentionally rejected: use canonical uploaded logo
+routes; encoded query parameters remain supported.
+
+`prisma/schema-extras.json` lists SQL-owned guards/index/CHECK and the existing
+Company FK drift. CI verifies their presence after replay and rejects other
+Prisma drift, including generated removal of the expression index. Prisma 6's
+current diff ignores that unsupported index; the regression also checks its real
+catalog entry. Preserve these objects when reviewing `prisma migrate dev` output.
+
+The worker's DATABASE_URL must be a direct PostgreSQL or session connection,
+never a transaction-mode pooler. Current Compose targets shared PostgreSQL
+directly; DIRECT_URL mirrors that connection for Prisma. Verify the deployment
+value before enabling apply. The existing dev/prod policies already grant
+GetBucketVersioning on both respective buckets (see dated evidence); recheck
+permissions with the deployed worker's dry run before apply.
+
+Local PostgreSQL 16 benchmark used synthetic rows only: 10,000 Students (CV and
+avatar), 10,000 Companies and 10,000 Sponsors, totaling 40,000 mapped references.
+Dry-run planning took 12.024 seconds; apply planning took 5.084 seconds under
+concurrent local build load, with no expired/orphan/unknown refs. All fixture rows
+were removed. This is an event-scale capacity sample, not a measurement of live
+production row counts; repeat with a current snapshot and production resources
+before enabling apply.

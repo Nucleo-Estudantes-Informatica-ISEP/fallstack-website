@@ -121,7 +121,10 @@ export async function listObjects(
       { abortSignal: signal }
     );
     objects.push(...(response.Contents ?? []));
-    cursor = response.NextContinuationToken;
+    const next = response.NextContinuationToken;
+    if (response.IsTruncated && (!next || next === cursor))
+      throw new Error("Incomplete storage listing");
+    cursor = response.IsTruncated ? next : undefined;
   } while (cursor);
   return objects;
 }

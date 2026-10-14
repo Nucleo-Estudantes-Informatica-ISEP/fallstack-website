@@ -38,7 +38,7 @@ afterEach(() => {
   process.exitCode = exitCode;
   vi.restoreAllMocks();
 });
-test("completed pass retains heartbeat despite data warnings and retryable failed deletes", async () => {
+test("failed deletes remove heartbeat", async () => {
   mocks.run.mockResolvedValue({
     failed: 1,
     unknownAge: 1,
@@ -46,8 +46,8 @@ test("completed pass retains heartbeat despite data warnings and retryable faile
   });
   await import("./storage-cleanup");
   await vi.waitFor(() => expect(mocks.disconnect).toHaveBeenCalled());
-  expect(mocks.write).toHaveBeenCalled();
-  expect(mocks.rm).not.toHaveBeenCalled();
+  expect(mocks.write).not.toHaveBeenCalled();
+  expect(mocks.rm).toHaveBeenCalled();
 });
 test("run failure removes heartbeat; SIGTERM reaches the active S3 signal", async () => {
   mocks.run.mockImplementation(async ({ signal }) => {
@@ -81,4 +81,12 @@ test("one-shot failed deletions still exit nonzero", async () => {
   await import("./storage-cleanup");
   await vi.waitFor(() => expect(mocks.disconnect).toHaveBeenCalled());
   expect(process.exitCode).toBe(1);
+});
+
+test("warnings without failed deletes refresh heartbeat", async () => {
+  mocks.run.mockResolvedValue({ failed: 0, unknownAge: 1 });
+  await import("./storage-cleanup");
+  await vi.waitFor(() => expect(mocks.disconnect).toHaveBeenCalled());
+  expect(mocks.write).toHaveBeenCalled();
+  expect(mocks.rm).not.toHaveBeenCalled();
 });

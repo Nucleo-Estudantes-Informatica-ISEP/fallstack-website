@@ -42,7 +42,9 @@ async function main() {
       });
       audit({ action: "summary", ...result });
       if (values.daemon) {
-        await writeFile(heartbeat, JSON.stringify(result));
+        if (result.failed === 0)
+          await writeFile(heartbeat, JSON.stringify(result));
+        else await rm(heartbeat, { force: true });
       } else if (result.failed) process.exitCode = 1;
     } catch (error) {
       audit({

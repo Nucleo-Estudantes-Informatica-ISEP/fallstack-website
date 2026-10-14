@@ -21,58 +21,55 @@ export async function planStorageCleanup(
         await tx.$executeRaw`LOCK TABLE "Student", "Company", "Sponsor" IN SHARE ROW EXCLUSIVE MODE`;
       }
       const utcNow = now.toISOString().slice(0, -1);
-      const expired = await tx.$queryRaw<{ id: string; key: string | null }[]>`
-      SELECT id, storage_object_key('cv', cv) AS key FROM "Student"
-      WHERE cv IS NOT NULL AND "cvUploadedAt" < ${utcNow}::timestamp - interval '6 months'
-        AND storage_object_key('cv', cv) IS NOT NULL
-      ORDER BY "cvUploadedAt", id LIMIT ${BATCH_SIZE}
-    `;
-      const unknownAge = await tx.student.count({
-        where: { cv: { not: null }, cvUploadedAt: null },
-      });
-      const [unknown] = await tx.$queryRaw<{ count: number }[]>`
-        SELECT count(*)::integer AS count FROM (
-          SELECT 'cv' AS kind, cv AS reference FROM "Student"
-          UNION ALL SELECT 'avatar', avatar FROM "Student"
-          UNION ALL SELECT 'avatar', avatar FROM "Company"
-          UNION ALL SELECT 'avatar', logo FROM "Sponsor"
-        ) refs WHERE reference IS NOT NULL
-        AND storage_object_key(kind, reference) IS NULL
-        AND NOT (kind = 'avatar' AND (
-          storage_object_key('logo', reference) IS NOT NULL
-          OR (reference LIKE '/assets/%' AND NOT storage_reference_path_is_ambiguous(reference))
-        ))`;
+      // Map each non-null reference once, rather than rescan all tables for
+      // expiry, unknown references and protected keys while holding locks.
+      const references = await tx.$queryRaw<
+        {
+          id: string;
+          kind: string;
+          key: string | null;
+          expired: boolean;
+          unknown: boolean;
+          unknownAge: boolean;
+        }[]
+      >`
+        WITH refs AS (
+          SELECT id, 'cv' AS kind, cv AS reference, "cvUploadedAt" AS uploaded FROM "Student" WHERE cv IS NOT NULL
+          UNION ALL SELECT id, 'avatar', avatar, NULL FROM "Student" WHERE avatar IS NOT NULL
+          UNION ALL SELECT id, 'avatar', avatar, NULL FROM "Company" WHERE avatar IS NOT NULL
+          UNION ALL SELECT id, 'avatar', logo, NULL FROM "Sponsor" WHERE logo IS NOT NULL
+        ), mapped AS MATERIALIZED (
+          SELECT *, storage_object_key(kind, reference) AS key FROM refs
+        )
+        SELECT id, kind, key,
+          coalesce(kind = 'cv' AND uploaded < ${utcNow}::timestamp - interval '6 months' AND key IS NOT NULL, false) AS expired,
+          kind = 'cv' AND uploaded IS NULL AS "unknownAge",
+          key IS NULL AND NOT (kind = 'avatar' AND (
+            storage_object_key('logo', reference) IS NOT NULL
+            OR (reference LIKE '/assets/%' AND NOT storage_reference_path_is_ambiguous(reference))
+          )) AS unknown
+        FROM mapped ORDER BY uploaded, id
+      `;
+      const unknownAge = references.filter((row) => row.unknownAge).length;
+      const unknownReference = references.filter((row) => row.unknown).length;
       // Fail closed before reference mutations/claims; service also stops retries.
-      if (unknown.count)
-        return {
-          expired: [],
-          orphans: [],
-          unknownAge,
-          unknownReference: unknown.count,
-        };
+      if (unknownReference)
+        return { expired: [], orphans: [], unknownAge, unknownReference };
+      const expired = references
+        .filter((row) => row.expired)
+        .slice(0, BATCH_SIZE);
+      const expiredIds = new Set(expired.map(({ id }) => id));
       if (apply && expired.length) {
         await tx.student.updateMany({
-          where: { id: { in: expired.map(({ id }) => id) } },
+          where: { id: { in: [...expiredIds] } },
           data: { cv: null, cvPurgedAt: now },
         });
       }
-      // Dry run projects the same detach step without writing anything. Retain
-      // keys shared by a fresh or not-yet-selected Student, Company or Sponsor.
-      const references = await tx.$queryRaw<
-        { kind: string; key: string | null }[]
-      >`
-      SELECT 'cv' AS kind, storage_object_key('cv', cv) AS key FROM "Student"
-      WHERE NOT (id = ANY(${expired.map(({ id }) => id)}::uuid[]))
-      UNION ALL
-      SELECT 'avatar', storage_object_key('avatar', avatar) FROM "Student"
-      UNION ALL
-      SELECT 'avatar', storage_object_key('avatar', avatar) FROM "Company"
-      UNION ALL
-      SELECT 'avatar', storage_object_key('avatar', logo) FROM "Sponsor"
-    `;
       const referenced = new Set(
         references
-          .filter(({ key }) => key)
+          .filter(
+            ({ id, kind, key }) => key && !(kind === "cv" && expiredIds.has(id))
+          )
           .map(({ kind, key }) => `${kind}:${key}`)
       );
       const claimed = new Set<string>();
@@ -103,7 +100,7 @@ export async function planStorageCleanup(
           skipDuplicates: true,
         });
       }
-      return { expired, orphans, unknownAge, unknownReference: unknown.count };
+      return { expired, orphans, unknownAge, unknownReference };
     },
     {
       isolationLevel: apply
@@ -116,7 +113,7 @@ export async function planStorageCleanup(
 
 export const pendingStorageDeletions = () =>
   prisma.storageDeletion.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, quarantinedAt: null },
     // Never-attempted rows first; repeated failures must not starve other keys.
     orderBy: [
       { lastAttemptAt: { sort: "asc", nulls: "first" } },
@@ -138,6 +135,7 @@ export const recordStorageDeletion = (
       attempts: { increment: 1 },
       lastAttemptAt: now,
       lastError: error,
+      ...(error === "InvalidCleanupQueueEntry" ? { quarantinedAt: now } : {}),
       ...(error === null ? { deletedAt: now } : {}),
     },
   });

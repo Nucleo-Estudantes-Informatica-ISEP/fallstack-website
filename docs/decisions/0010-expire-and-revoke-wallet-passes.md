@@ -14,17 +14,22 @@ local account from which revocation can be retried.
 ## Decision
 
 Send the edition's explicit validity timestamps on every issuance. Before local
-student deletion, expire and anonymize the deterministic object in the configured
-class. Treat an object 404 as already revoked only after an authenticated
-GET confirms the configured Generic Class exists and is accessible; a missing or
+student deletion, expire and anonymize the recorded object in its original class.
+Commit a WalletPass identity before Google issuance I/O so a failed external call
+or later DB rollback cannot lose the revocation target. Legacy unrecorded passes
+fall back to the configured deterministic object; inventory/backfill before cutover. Treat an object 404 as already revoked only after an authenticated
+GET confirms the targeted Generic Class exists and is accessible; a missing or
 inaccessible class retains the account with 502. Other upstream failures return 502
 and retain the account. Missing or invalid configuration returns 503. Only an
 explicit `GOOGLE_WALLET_NEVER_ENABLED=true` declaration with all credentials unset
-allows deletion without revocation. Every non-Wallet dev, staging, or CI
+allows deletion without revocation only when no issuance marker exists; emit a
+PII-free structured skip event. Every non-Wallet dev, staging, or CI
 installation must set that declaration explicitly; unset or empty defaults to
 `false`. The declaration also disables issuance.
 
-Serialize issuance and deletion with the same PostgreSQL user-row lock. Retain
+Serialize issuance and deletion with the same PostgreSQL transaction advisory
+admission lock and user-row lock. Competing instances fail fast with 429 before
+waiting for the row lock. Retain
 that lock during Google I/O to prevent reactivation after deletion. Admit only
 one issuance or deletion per user in each process before database access; return
 429 for competing requests. Always release admission on completion or failure.
@@ -42,11 +47,11 @@ can retry deletion.
 Deletion depends on Google availability. Administrators can retry after fixing
 upstream or configuration failures. The process-local admission guard protects
 each Prisma pool from repeated same-user requests; row locks preserve correctness
-across replicas. Different users can still occupy multiple connections, and slow
-Google calls keep their admitted transaction open. Admission's pool protection
-assumes one application process/replica; additional replicas can each admit the
-same user and occupy a connection while waiting for the row lock. Correctness
-still depends on the shared database lock, not on that deployment assumption.
+across replicas, with shared advisory admission rejecting a concurrent same-user
+operation. Different users can still occupy multiple connections, and slow
+Google calls keep their admitted transaction open. The in-memory Set is only an early rejection optimization. Advisory admission
+works across replicas after connection acquisition; it cannot prevent pool
+saturation from different users or connection acquisition itself.
 
 With a cold OAuth token, deletion can make three ten-second calls while locked
 (OAuth, object PATCH, and class GET after a 404); issuance can make three locked
@@ -62,9 +67,19 @@ high-volume Wallet traffic. A durable per-user operation protocol is required
 before moving Google I/O outside the lock; a DB-only recheck would permit a late
 issuance PATCH to reactivate a deleted account's pass.
 
-Revocation currently covers the configured class only. Before an edition changes
-classes or credentials, operations must expire and anonymize old objects using
-their original class and credentials. Automated cross-edition reconciliation and
-bulk backfill are outside this change. Removing configuration or setting the
-never-enabled declaration cannot replace that cleanup. Google synchronization
+Revocation uses the recorded class/object even if configuration rotates. Issuance
+refuses a different class while a marker exists. Before reclassifying an account,
+operations must revoke/anonymize the old object with its original credentials,
+then deliberately reconcile its marker. A different configured issuer fails
+closed. Backfill pre-marker historical passes from the issuer inventory before
+changing configuration; an empty marker table is not proof no legacy passes exist.
+Automated bulk cross-edition reconciliation is outside this change. Removing
+configuration or setting the never-enabled declaration cannot replace cleanup. Google synchronization
 and pre-start/expired-pass display still require real-device verification.
+
+The WalletPass migration must deploy before web health/traffic. Markers cascade
+only when account deletion commits after successful revocation. A failed issuance
+may leave a conservative marker without a Google object; normal 404 plus class
+verification permits deletion. The PostgreSQL integration suite calls the real
+admin route/services with mocked Google HTTP, including real FK deletion failure,
+class rotation, preserved markers and the actual 502/503 response contracts.

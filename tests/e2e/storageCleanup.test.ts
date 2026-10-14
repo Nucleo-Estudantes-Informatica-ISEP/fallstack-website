@@ -387,7 +387,9 @@ test("invalid queue keys record failure without starving valid deletions", async
     attempts: 1,
     lastError: "InvalidCleanupQueueEntry",
     deletedAt: null,
+    quarantinedAt: now,
   });
+  expect((await runStorageCleanup({ now, apply: true })).failed).toBe(0);
   expect(JSON.stringify(audit.mock.calls)).not.toContain("token=hidden");
 });
 
@@ -578,4 +580,42 @@ test("ambiguous attachment returns a sanitized 400", async () => {
   expect(await response.json()).toEqual({
     error: "Ambiguous storage reference path; use a canonical URL",
   });
+});
+
+test("five-second lock timeout leaves references and claims unchanged", async () => {
+  const cv = newKey("cv");
+  const student = await studentCv(cv.id, old);
+  let locked!: () => void;
+  let release!: () => void;
+  const ready = new Promise<void>((resolve) => {
+    locked = resolve;
+  });
+  const proceed = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const blocker = prisma.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`LOCK TABLE "Student" IN ROW EXCLUSIVE MODE`;
+      locked();
+      await proceed;
+    },
+    { timeout: 15_000 }
+  );
+  await ready;
+  const started = Date.now();
+  try {
+    await expect(
+      planStorageCleanup(now, [{ kind: "cv", key: cv.key }], true)
+    ).rejects.toThrow(/lock timeout/);
+    expect(Date.now() - started).toBeLessThan(9000);
+  } finally {
+    release();
+    await blocker;
+  }
+  expect(
+    (await prisma.student.findUniqueOrThrow({ where: { id: student.id } })).cv
+  ).toBe(cv.id);
+  expect(await prisma.storageDeletion.count({ where: { key: cv.key } })).toBe(
+    0
+  );
 });

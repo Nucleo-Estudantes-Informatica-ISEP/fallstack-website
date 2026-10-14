@@ -39,7 +39,7 @@ export async function runStorageCleanup({
         file.Key &&
         PATTERNS[kind].test(file.Key) &&
         file.LastModified &&
-        file.LastModified.getTime() < now.getTime() - 48 * 60 * 60 * 1000
+        file.LastModified.getTime() < now.getTime() - 7 * 24 * 60 * 60 * 1000
       ) {
         objects.push({ kind, key: file.Key });
       }

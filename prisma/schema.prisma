@@ -67,6 +67,9 @@ model Student {
 
 // Durable retry queue and deletion audit. Keep completed rows: triggers reject
 // reattaching their keys even after the S3 bytes have been deleted.
+// SQL-owned CHECK, expression index, functions and attachment triggers live in
+// 20261008120000_storage_cleanup_queue. Keep the CI SQL-object allowlist intact;
+// Prisma cannot express these objects. Review generated migrations before apply.
 model StorageDeletion {
   kind          String
   key           String
@@ -75,6 +78,7 @@ model StorageDeletion {
   attempts      Int       @default(0)
   lastAttemptAt DateTime?
   lastError     String?
+  quarantinedAt DateTime?
 
   @@id([kind, key])
   @@index([deletedAt, createdAt])

@@ -13,10 +13,7 @@ vi.mock("./database", () => ({
 }));
 
 test("bounded claim lookups preserve tombstones beyond the first batch", async () => {
-  tx.$queryRaw
-    .mockResolvedValueOnce([])
-    .mockResolvedValueOnce([{ count: 0 }])
-    .mockResolvedValueOnce([]);
+  tx.$queryRaw.mockResolvedValueOnce([]);
   tx.student.count.mockResolvedValue(0);
   const objects = Array.from({ length: 2001 }, (_, index) => ({
     kind: "avatar" as const,
