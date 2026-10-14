@@ -318,3 +318,20 @@ concurrent local build load, with no expired/orphan/unknown refs. All fixture ro
 were removed. This is an event-scale capacity sample, not a measurement of live
 production row counts; repeat with a current snapshot and production resources
 before enabling apply.
+
+A subsequent read-only audit observed development counts of 0 Students,
+15 Companies and 7 Sponsors, and production counts of 8 Students, 15 Companies
+and 7 Sponsors. A local fixture with those production row counts (synthetic
+student CV/avatar refs, migration-seeded companies/sponsors) planned in 19 ms
+for dry-run and 9 ms for apply. This measures matching row counts, not a live
+write-lock benchmark or identical production reference contents. Its student
+fixtures were removed. Both running apps' sanitized connection inspection
+confirmed direct shared PostgreSQL on port 5432, with no PgBouncer flag; no
+credentials or live rows were exposed or changed.
+
+The actual CLI against a disposable local S3 HTTP fixture confirmed the seven-day
+grace retains a 49-hour staged upload, invalid rows become quarantined,
+AccessDenied removes the daemon heartbeat, retry deletes the old orphan, and a
+successful pass restores heartbeat. SIGTERM exited zero and no raw private URL
+appeared in audit output. This exercises the real AWS SDK/worker; it does not
+replace the prior MinIO evidence or deployment-time permission audit.
