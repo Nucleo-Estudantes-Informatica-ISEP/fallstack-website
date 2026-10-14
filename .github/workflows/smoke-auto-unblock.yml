@@ -1,0 +1,51 @@
+name: Smoke test real auto-unblock processing
+
+# A one-time push test. Re-runs only when this specific workflow file changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/smoke-auto-unblock.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-unblock-github-projects
+  cancel-in-progress: false
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+      ENABLED: ${{ vars.PROJECT_AUTO_UNBLOCK_ENABLED }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check schedule switch and token presence
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo "PROJECT_AUTOMATION_TOKEN is missing" >&2
+            exit 1
+          fi
+          if [[ "$ENABLED" == "true" ]]; then
+            echo "PROJECT_AUTO_UNBLOCK_ENABLED: TRUE (scheduled jobs can run)"
+          else
+            echo "PROJECT_AUTO_UNBLOCK_ENABLED: NOT TRUE (scheduled jobs will skip)"
+          fi
+      - name: Run the exact production unblocking script
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/auto_unblock_projects.py \
+            --project Nucleo-Estudantes-Informatica-ISEP/11 \
+            --project Nucleo-Estudantes-Informatica-ISEP/13 \
+            --project Nucleo-Estudantes-Informatica-ISEP/10 \
+            --project Departamento-de-Engenharia-Informatica/2305
+      - name: Assert all four dummy tasks moved to Todo
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/e2e_auto_unblock.py verify
