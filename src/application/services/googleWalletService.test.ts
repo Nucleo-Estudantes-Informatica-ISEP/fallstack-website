@@ -341,12 +341,15 @@ test.each([200, 404])(
     const fetchMock = vi
       .fn<typeof fetch>()
       .mockResolvedValueOnce(oauthResponse())
-      .mockResolvedValue(new Response("{}", { status }));
+      .mockResolvedValueOnce(new Response("{}", { status }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }))
+      .mockResolvedValueOnce(new Response("{}", { status }))
+      .mockResolvedValueOnce(new Response("{}", { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     const { revokeGoogleWalletPass } = await import("./googleWalletService");
     await revokeGoogleWalletPass(student.id);
     await revokeGoogleWalletPass(student.id);
-    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenCalledTimes(status === 404 ? 5 : 3);
   }
 );
 
@@ -609,4 +612,51 @@ test("non-Wallet installations must explicitly opt out before student deletion",
   await expect(deleteUserAccount(student.id)).resolves.toBeUndefined();
   expect(deleteUserMock).toHaveBeenCalledWith(student.id, {});
   expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test.each([404, 403, 500])(
+  "missing object with class lookup %s retains the account",
+  async (status) => {
+    const fetchMock = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(oauthResponse())
+      .mockResolvedValueOnce(new Response(null, { status: 404 }))
+      .mockResolvedValueOnce(new Response(null, { status }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { deleteUserAccount } = await import("./authApplicationService");
+    await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+      status: 502,
+    });
+    expect(deleteUserMock).not.toHaveBeenCalled();
+    expect(fetchMock.mock.calls[2]?.[0]).toBe(
+      "https://walletobjects.googleapis.com/walletobjects/v1/genericClass/123456789.fallstack-2026-staging"
+    );
+  }
+);
+
+test("missing object is already revoked only when the class is accessible", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(oauthResponse())
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockResolvedValueOnce(new Response("{}", { status: 200 }));
+  vi.stubGlobal("fetch", fetchMock);
+  const { deleteUserAccount } = await import("./authApplicationService");
+  await deleteUserAccount(student.id);
+  expect(deleteUserMock).toHaveBeenCalledWith(student.id, {});
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+});
+
+test("class verification transport failure preserves the account", async () => {
+  const fetchMock = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(oauthResponse())
+    .mockResolvedValueOnce(new Response(null, { status: 404 }))
+    .mockRejectedValueOnce(new TypeError("network failure"));
+  vi.stubGlobal("fetch", fetchMock);
+  const { deleteUserAccount } = await import("./authApplicationService");
+  await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+    status: 502,
+  });
+  expect(deleteUserMock).not.toHaveBeenCalled();
 });

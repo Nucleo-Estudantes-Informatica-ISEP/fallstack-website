@@ -285,8 +285,8 @@ function walletHeaders(accessToken: string) {
 }
 
 async function patchGenericObject(object: GenericObject, accessToken: string) {
-  const { id, ...mutableFields } = object;
-  Reflect.deleteProperty(mutableFields, "classId");
+  const { id, classId: _classId, ...mutableFields } = object;
+  void _classId;
   const response = await googleFetch(
     `${WALLET_API_BASE}/genericObject/${encodeURIComponent(id)}`,
     {
@@ -419,7 +419,22 @@ export async function revokeGoogleWalletPass(studentId: string) {
     "Unable to revoke Google Wallet pass. Retry account deletion."
   );
 
-  if (response.ok || response.status === 404) return;
+  if (response.ok) return;
+  if (response.status === 404) {
+    // A mistyped/missing class also yields an object 404; retain the account.
+    const walletClass = await googleFetch(
+      `${WALLET_API_BASE}/genericClass/${encodeURIComponent(classId)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+      "verify_class",
+      "Unable to verify Google Wallet class. Retry account deletion."
+    );
+    if (walletClass.ok) return;
+    await reportGoogleApiError(walletClass, "verify_class");
+    throw new HttpError(
+      "Unable to verify Google Wallet class. Retry account deletion.",
+      502
+    );
+  }
   await reportGoogleApiError(response, "revoke");
   throw new HttpError(
     "Unable to revoke Google Wallet pass. Retry account deletion.",
