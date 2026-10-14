@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 
 import config from "@/config";
@@ -10,6 +11,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 
 const CookieConsent: React.FC = () => {
   const isMobile = useIsMobile();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
   const { isInstallable, handleConfirm } = useContext(InstallableContext);
 
@@ -27,7 +29,7 @@ const CookieConsent: React.FC = () => {
 
   return (
     <AnimatePresence>
-      {visible && (
+      {visible && pathname !== "/" && (
         <motion.div
           className="fixed -bottom-40 left-0 z-20 flex w-full flex-col items-center justify-between gap-4 border-t-gray-100 bg-background px-8 py-4 shadow-lg shadow-black md:-bottom-20 md:flex-row"
           animate={{ y: [0, position] }}

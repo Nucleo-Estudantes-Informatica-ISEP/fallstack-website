@@ -2,6 +2,7 @@ export const branding = {
   name: "Fallstack",
   year: 2026,
   event: {
+    startsAt: "2026-11-17T08:30:00+00:00",
     days: [17, 18],
     month: "novembro",
     beginningTime: "8:30h",
@@ -13,7 +14,7 @@ export const branding = {
     applicationName: "Fallstack 2026",
     title: "Fallstack 2026",
     description:
-      "Website do evento Fallstack 2026. O evento decorrerá nos dias 17 e 18 de novembro no Instituto Superior de Engenharia do Porto. O evento é organizado pelo Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
+      "O Fallstack 2026 está a chegar ao ISEP a 17 de novembro. Estamos a preparar a próxima edição; o programa, as empresas e mais novidades serão anunciados em breve. Organização do Núcleo de Estudantes de Informática do ISEP (NEI-ISEP).",
   },
   storage: {
     authCookie: "@Fallstack26:auth",
