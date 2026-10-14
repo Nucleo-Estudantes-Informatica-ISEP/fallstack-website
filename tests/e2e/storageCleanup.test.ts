@@ -2,6 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, afterEach, beforeEach, expect, test, vi } from "vitest";
 
+import { httpErrorResponse } from "@/lib/http/server";
 import prisma from "@/application/repositories/database";
 import * as cleanupRepository from "@/application/repositories/storageCleanupRepository";
 import {
@@ -528,4 +529,53 @@ test("a concurrent writer waiting behind claim cannot attach a tombstoned avatar
     (await prisma.student.findUniqueOrThrow({ where: { id: student.id } }))
       .avatar
   ).toBeNull();
+});
+
+test.each(["cv", "avatar"] as const)(
+  "tombstoned %s attachment returns a sanitized 409",
+  async (kind) => {
+    const object = newKey(kind);
+    const student = await fixtures.student();
+    await prisma.storageDeletion.create({ data: { kind, key: object.key } });
+    let error: unknown;
+    try {
+      await prisma.student.update({
+        where: { id: student.id },
+        data: { [kind]: object.id },
+      });
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeDefined();
+    const response = httpErrorResponse(error);
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: "Storage object is queued for deletion; upload a new file",
+    });
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: student.id } }))[
+        kind
+      ]
+    ).toBeNull();
+  }
+);
+
+test("ambiguous attachment returns a sanitized 400", async () => {
+  const avatar = newKey("avatar");
+  const student = await fixtures.student();
+  let error: unknown;
+  try {
+    await prisma.student.update({
+      where: { id: student.id },
+      data: { avatar: `/api/media/avatar/../avatar/${avatar.id}` },
+    });
+  } catch (caught) {
+    error = caught;
+  }
+  expect(error).toBeDefined();
+  const response = httpErrorResponse(error);
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
+    error: "Ambiguous storage reference path; use a canonical URL",
+  });
 });
