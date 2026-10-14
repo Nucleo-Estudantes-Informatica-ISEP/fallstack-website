@@ -20,6 +20,8 @@ concurrency:
 
 jobs:
   auto-unblock:
+    # Scheduled writes are disabled until explicitly enabled after a dry run.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.PROJECT_AUTO_UNBLOCK_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
