@@ -76,7 +76,7 @@ def mutation(query, **vars):
     return gql(query, vars)
 
 def project_item(issue, project_id):
-    query = 'query($id:ID!){node(id:$id){... on Issue{projectItems(first:100){nodes{id project{id} fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}}'
+    query = 'query($id:ID!){node(id:$id){... on Issue{projectItems(first:100){nodes{id project{id} fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}'
     items = ((gql(query, {"id": issue["node_id"]}).get("node") or {}).get("projectItems") or {}).get("nodes", [])
     matches = [i for i in items if i["project"]["id"] == project_id]
     if len(matches) != 1:
@@ -100,7 +100,16 @@ def get_pair(issues):
 
 def setup(owner, repo, number, issues):
     if any(i["state"] == "open" for i in issues["task"]):
-        raise RuntimeError("An active test task already exists. Run cleanup before setting up again.")
+        # Resume partial setup instead of creating duplicate issues.
+        task, blocker = get_pair(issues)
+        p, _ = project(owner, number)
+        item = project_item(task, p["id"])
+        deps = api(base(owner,repo) + f"/{task['number']}/dependencies/blocked_by")
+        status = (item.get("fieldValueByName") or {}).get("name")
+        if status != "Blocked" or blocker["id"] not in [d["id"] for d in deps]:
+            raise RuntimeError(f"Existing test needs repair: status={status}, native blocker={blocker['id'] in [d['id'] for d in deps]}")
+        print("  READY (existing):", task["html_url"], "| blocker:", blocker["html_url"], flush=True)
+        return
     p, opts = project(owner, number)
     blocker = create(owner, repo, number, "blocker", stamp(owner, repo, number) + "\nTemporary blocker.")
     task = create(owner, repo, number, "task", stamp(owner, repo, number) + f"\nTemporary blocked task. Blocker: {blocker['html_url']}")
