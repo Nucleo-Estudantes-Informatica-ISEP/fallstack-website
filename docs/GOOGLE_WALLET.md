@@ -261,7 +261,9 @@ infrastructure guide (#363). The external setup and real-device validation in
 `src/edition/branding.ts` defines `event.startsAt` and `event.endsAt` as
 ISO 8601 timestamps with explicit Lisbon offsets. The 2026 interval is
 17 November at 08:30 through 18 November at 17:30 (UTC+00:00). Update both
-alongside the edition's display dates/times each year. Every insert or issuance
+alongside the edition's display dates/times each year. Choose the offset for each
+actual date in `Europe/Lisbon`: November uses `+00:00`, summer uses `+01:00`.
+The edition regression checks the ISO dates/times against that IANA zone. Every insert or issuance
 update sends this interval as `validTimeInterval`, including passes created
 before this feature when their owner requests another Save-to-Wallet link.
 Google moves passes to its expired section up to 24 hours after the interval ends:
@@ -280,7 +282,11 @@ serialize operations across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.
 The 60-second transaction limit also bounds lock waits across replicas.
 
-A missing object (404) is safe to treat as already revoked. Other Google failures,
+An object 404 counts as already revoked only after an authenticated Generic Class
+GET succeeds. A missing/inaccessible class or failed lookup retains the account
+with 502. An existing but incorrectly selected class still requires the operator
+cutover checks below; class existence cannot identify previously issued classes.
+Other Google failures,
 network timeouts, or incomplete/invalid Wallet configuration abort account
 deletion and retain the local account. Fix the upstream/configuration failure,
 then repeat the same admin delete action. Revocation is idempotent, including
@@ -336,3 +342,16 @@ original class/credentials. This change does not bulk-update existing objects.
    In a separate environment that has never issued passes, explicitly set
    `GOOGLE_WALLET_NEVER_ENABLED=true` with credentials unset; deletion succeeds,
    while Wallet availability remains false and issuance returns 503.
+
+### Non-Wallet rollout preparation — 2026-10-14
+
+Dinis confirmed that neither hosted environment has ever issued Wallet passes.
+`GOOGLE_WALLET_NEVER_ENABLED=true` is saved and verified in Coolify for
+`fallstack-web:dev` (development/staging) and `fallstack-web:main` (production),
+with runtime availability and no build-time availability. The running containers
+have no Wallet credentials. These saved settings take effect through the normal
+reviewed deployment; no deployment or account deletion ran on either live app.
+CI and Vitest's synthetic non-Wallet environment also set the explicit flag.
+Local developers using the credential-free `.env.example` must set it to `true`
+before testing student deletion. Clear the declaration when adding Wallet
+credentials; once any pass has been issued, preserve revocation credentials.
