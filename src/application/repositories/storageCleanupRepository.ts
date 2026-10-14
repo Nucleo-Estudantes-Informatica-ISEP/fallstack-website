@@ -75,13 +75,20 @@ export async function planStorageCleanup(
           .filter(({ key }) => key)
           .map(({ kind, key }) => `${kind}:${key}`)
       );
-      const existing = await tx.storageDeletion.findMany({
-        where: { key: { in: objects.map(({ key }) => key) } },
-        select: { kind: true, key: true },
-      });
-      const claimed = new Set(
-        existing.map(({ kind, key }) => `${kind}:${key}`)
-      );
+      const claimed = new Set<string>();
+      for (let offset = 0; offset < objects.length; offset += BATCH_SIZE) {
+        const existing = await tx.storageDeletion.findMany({
+          where: {
+            key: {
+              in: objects
+                .slice(offset, offset + BATCH_SIZE)
+                .map(({ key }) => key),
+            },
+          },
+          select: { kind: true, key: true },
+        });
+        for (const { kind, key } of existing) claimed.add(`${kind}:${key}`);
+      }
       const orphans = objects
         // Compare UUIDs case-insensitively; queue/delete the exact S3 key.
         .filter(
