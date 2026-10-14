@@ -2,26 +2,22 @@ import "server-only";
 
 import { z } from "zod";
 
+import { storageEnvSchema } from "./env.storage";
+
 const optionalNonEmptyString = z.preprocess(
   (value) => (value === "" ? undefined : value),
   z.string().min(1).optional()
 );
 
-// Secrets and server-only config. Supabase remains the Storage/Postgres
-// provider, but authentication is owned directly by ZITADEL/AuthNEI.
+// Secrets and server-only config for PostgreSQL/MinIO and AuthNEI.
 const serverEnvSchema = z.object({
+  ...storageEnvSchema.shape,
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
   JWT_SECRET: z
     .string()
     .min(32, "JWT_SECRET must be at least 32 characters long"),
-  S3_ENDPOINT: z.url(),
-  S3_ACCESS_KEY_ID: z.string().min(1),
-  S3_SECRET_ACCESS_KEY: z.string().min(1),
-  S3_BUCKET_AVATARS: z.string().min(1),
-  S3_BUCKET_LOGOS: z.string().min(1),
-  S3_BUCKET_CVS: z.string().min(1),
 
   AUTH_ISSUER_URL: z.string().url(),
   AUTH_PROJECT_ID: z.string().min(1),

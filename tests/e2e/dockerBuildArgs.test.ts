@@ -45,9 +45,13 @@ function readServerEnvVarNames(): string[] {
     throw new Error("Couldn't find the server environment schema");
   const schemaEnd = source.indexOf("});", schemaStart);
   const schemaBody = source.slice(schemaStart, schemaEnd);
-  return [...schemaBody.matchAll(/^\s*([A-Z][A-Z0-9_]+):/gm)].map(
-    (match) => match[1]
+  const storageSchema = readFileSync(
+    path.join(ROOT, "src/config/env.storage.ts"),
+    "utf-8"
   );
+  return [
+    ...(schemaBody + storageSchema).matchAll(/^\s*([A-Z][A-Z0-9_]+):/gm),
+  ].map((match) => match[1]);
 }
 
 function extractDockerfileAppBuilderStage(): string {
@@ -148,6 +152,19 @@ test("every NEXT_PUBLIC_* var declared in env.client.ts is wired through the Doc
       `Dockerfile's app-builder stage is missing "ENV ${name}=$${name}"`
     ).toMatch(new RegExp(`ENV ${name}=\\$${name}\\b`));
   }
+});
+
+test("runtime variable discovery includes the shared storage schema", () => {
+  expect(readServerEnvVarNames()).toEqual(
+    expect.arrayContaining([
+      "S3_ENDPOINT",
+      "S3_ACCESS_KEY_ID",
+      "S3_SECRET_ACCESS_KEY",
+      "S3_BUCKET_AVATARS",
+      "S3_BUCKET_LOGOS",
+      "S3_BUCKET_CVS",
+    ])
+  );
 });
 
 test("every NEXT_PUBLIC_* var declared in env.client.ts is passed as a build arg in docker-compose.app.yml's web service", () => {

@@ -2,12 +2,12 @@
 
 These runbooks preserve the pre-MinIO procedures. They apply only to a source
 Supabase project that still uses the `supabase/` SQL jobs. **Do not run them
-against shared PostgreSQL or MinIO.** Current shared storage cleanup needs a
-separately reviewed S3 process; see [shared data](SHARED_DATA.md).
+against shared PostgreSQL or MinIO.** See the current
+[MinIO cleanup runbook](storage-cleanup.md).
 
-**Current stack status:** Shared PostgreSQL/MinIO has no scheduled CV retention
-purge or orphaned-object cleanup. Upload timestamps remain in the app, but the
-six-month purge does not currently run. Track replacement work in [#389](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/389).
+**Current stack:** The Compose worker replaces both jobs with daily six-month CV
+retention, an S3 deletion retry queue, and a default dry-run rollout. Operators
+must enable `STORAGE_CLEANUP_MODE=apply` after reviewing each environment's audit.
 
 ## Orphaned-file garbage collection
 

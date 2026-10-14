@@ -1,6 +1,7 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { ZodError, ZodType } from "zod";
 
 import { HttpError } from "@/types/HttpError";
@@ -16,6 +17,21 @@ export const httpErrorResponse = (error: unknown) => {
     );
   if (error instanceof ZodError)
     return NextResponse.json({ error: error.issues }, { status: 400 });
+
+  // Prisma 6 wraps trigger SQLSTATEs in UnknownRequestError; match only our guards.
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    for (const [message, status] of [
+      ["Storage object is queued for deletion; upload a new file", 409],
+      ["Ambiguous storage reference path; use a canonical URL", 400],
+    ] as const) {
+      if (
+        error.message.includes(
+          `PostgresError { code: "23514", message: "${message}"`
+        )
+      )
+        return NextResponse.json({ error: message }, { status });
+    }
+  }
 
   reportError(
     error,

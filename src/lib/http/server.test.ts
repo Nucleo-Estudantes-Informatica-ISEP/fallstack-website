@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { Prisma } from "@prisma/client";
 import { beforeEach, test, vi } from "vitest";
 import { z } from "zod";
 
@@ -47,4 +48,14 @@ test("does not report Zod validation errors", async () => {
   assert.equal(response.status, 400);
   assert.deepEqual(await response.json(), { error: error!.issues });
   assert.equal(vi.mocked(reportError).mock.calls.length, 0);
+});
+
+test("unrelated check constraints remain server errors", async () => {
+  const error = new Prisma.PrismaClientUnknownRequestError(
+    'PostgresError { code: "23514", message: "Unrelated constraint" }',
+    { clientVersion: "6.19.3" }
+  );
+  const response = httpErrorResponse(error);
+  assert.equal(response.status, 500);
+  assert.equal(vi.mocked(reportError).mock.calls.length, 1);
 });

@@ -115,6 +115,11 @@ jobs:
           user="$(docker run --rm --entrypoint whoami fallstack-migrator-check)"
           test "$user" = "nextjs"
 
+      - name: Build storage cleanup worker and verify non-root
+        run: |
+          docker build --target storage-cleanup -t fallstack-storage-cleanup-check .
+          test "$(docker inspect --format '{{.Config.User}}' fallstack-storage-cleanup-check)" = "nextjs"
+
       - name: Build production application image
         run: |
           docker build \
