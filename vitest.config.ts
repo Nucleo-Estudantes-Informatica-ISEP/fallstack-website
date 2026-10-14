@@ -24,6 +24,8 @@ export default defineConfig({
       ".claude/worktrees/**",
       "tests/e2e/playwright/**",
     ],
+    // Cleanup intentionally scans all media refs; DB fixture files must not overlap.
+    fileParallelism: false,
     maxWorkers: 4,
     testTimeout: 15_000,
     hookTimeout: 90_000,

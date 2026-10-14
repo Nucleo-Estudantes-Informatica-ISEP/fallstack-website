@@ -6,10 +6,15 @@ import { z } from "zod";
 import { HttpError } from "@/types/HttpError";
 import { clientEnv } from "@/config/env.client";
 import { serverEnv } from "@/config/env.server";
-import { reportError } from "@/lib/logger";
+import logger, { reportError } from "@/lib/logger";
 import { edition } from "@/edition";
 
+import { type DbClient } from "../repositories/transaction";
 import { withLockedUser } from "../repositories/userRepository";
+import {
+  findWalletPass,
+  recordWalletPass,
+} from "../repositories/walletPassRepository";
 
 const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
 const GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -375,6 +380,25 @@ function createSaveUrl(
 export async function createGoogleWalletSaveUrl(student: WalletStudent) {
   return withGoogleWalletOperation(student.id, async () => {
     const { classId, credentials, origin } = getWalletConfig();
+    // Commit identity before external writes: a crash must not lose a live pass.
+    await withLockedUser(student.id, async (user, tx) => {
+      if (!user?.active || !user.student)
+        throw new HttpError("Student account is no longer available", 403);
+      const recorded = await findWalletPass(student.id, tx);
+      if (recorded && recorded.classId !== classId)
+        throw new HttpError(
+          "Google Wallet class changed; reconcile recorded passes before issuance",
+          503
+        );
+      await recordWalletPass(
+        {
+          studentId: student.id,
+          classId,
+          objectId: buildGoogleWalletObjectId(classId, student.id),
+        },
+        tx
+      );
+    });
     const accessToken = await getAccessToken(credentials);
 
     return withLockedUser(student.id, async (user) => {
@@ -387,18 +411,37 @@ export async function createGoogleWalletSaveUrl(student: WalletStudent) {
   });
 }
 
-export async function revokeGoogleWalletPass(studentId: string) {
+export async function revokeGoogleWalletPass(studentId: string, db?: DbClient) {
+  const recorded = await findWalletPass(studentId, db);
   if (
     serverEnv.GOOGLE_WALLET_NEVER_ENABLED &&
     !serverEnv.GOOGLE_WALLET_ISSUER_ID &&
     !serverEnv.GOOGLE_WALLET_CLASS_ID &&
     !serverEnv.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64
-  )
+  ) {
+    if (recorded)
+      throw new HttpError(
+        "Google Wallet has recorded issuance; restore credentials before deleting this account",
+        503
+      );
+    logger.info(
+      { operation: "google_wallet_revoke_skipped", reason: "never_enabled" },
+      "Wallet revocation skipped for declared non-Wallet installation"
+    );
     return;
+  }
 
-  const { classId, credentials } = getWalletConfig();
+  const config = getWalletConfig();
+  const classId = recorded?.classId ?? config.classId;
+  if (!classId.startsWith(`${config.issuerId}.`))
+    throw new HttpError(
+      "Google Wallet recorded issuer does not match configured issuer",
+      503
+    );
+  const credentials = config.credentials;
   const accessToken = await getAccessToken(credentials);
-  const objectId = buildGoogleWalletObjectId(classId, studentId);
+  const objectId =
+    recorded?.objectId ?? buildGoogleWalletObjectId(classId, studentId);
   const response = await googleFetch(
     `${WALLET_API_BASE}/genericObject/${encodeURIComponent(objectId)}`,
     {

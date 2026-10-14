@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import { HttpError } from "@/types/HttpError";
 import { resolveStoredAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
@@ -41,6 +42,13 @@ export const withLockedUser = <T>(
 ) =>
   prisma.$transaction(
     async (tx) => {
+      const [admission] = await tx.$queryRaw<{ admitted: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${id}, 0)) AS admitted`;
+      if (!admission.admitted)
+        throw new HttpError(
+          "A Wallet operation is already in progress. Retry shortly.",
+          429
+        );
       await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${id}::uuid FOR UPDATE`;
       const user = await tx.user.findUnique({
         where: { id },

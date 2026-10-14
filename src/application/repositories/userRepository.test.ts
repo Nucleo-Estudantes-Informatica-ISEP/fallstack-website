@@ -13,6 +13,7 @@ vi.mock("./database", () => ({ default: { $transaction: transaction } }));
 
 beforeEach(() => {
   vi.clearAllMocks();
+  queryRaw.mockResolvedValue([{ admitted: true }]);
   transaction.mockImplementation(async (work) =>
     work({ $queryRaw: queryRaw, user: { findUnique } })
   );
@@ -25,10 +26,10 @@ test("locks the account before re-reading it and running Wallet work", async () 
 
   await expect(withLockedUser(user.id, work)).resolves.toBe("done");
 
-  expect(queryRaw.mock.calls[0]?.[0].join("?")).toBe(
+  expect(queryRaw.mock.calls[1]?.[0].join("?")).toBe(
     'SELECT id FROM "User" WHERE id = ?::uuid FOR UPDATE'
   );
-  expect(queryRaw.mock.calls[0]?.[1]).toBe(user.id);
+  expect(queryRaw.mock.calls[1]?.[1]).toBe(user.id);
   expect(queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
     findUnique.mock.invocationCallOrder[0]!
   );
@@ -46,4 +47,14 @@ test("passes a deleted account as null instead of stale session data", async () 
   const work = vi.fn().mockResolvedValue(undefined);
   await withLockedUser("11111111-2222-3333-4444-555555555555", work);
   expect(work).toHaveBeenCalledWith(null, expect.anything());
+});
+
+test("shared admission rejects competitors before acquiring a row lock", async () => {
+  queryRaw.mockResolvedValueOnce([{ admitted: false }]);
+  const work = vi.fn();
+  await expect(
+    withLockedUser("11111111-2222-3333-4444-555555555555", work)
+  ).rejects.toMatchObject({ status: 429 });
+  expect(findUnique).not.toHaveBeenCalled();
+  expect(work).not.toHaveBeenCalled();
 });

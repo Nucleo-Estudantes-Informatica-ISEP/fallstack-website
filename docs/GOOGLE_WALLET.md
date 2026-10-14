@@ -276,16 +276,17 @@ not guarantee removal from a user's device or immediate synchronization.
 Issuance and deletion lock the same database user row and re-read the account,
 so an in-flight request cannot recreate or reactivate a deleted student's pass.
 One issuance or deletion operation per user is admitted in each application
-process before OAuth or database access; competing operations return 429 and
-can be retried immediately after the first finishes. Database locks still
-serialize operations across replicas. Each Google request has a ten-second
+process before database access; PostgreSQL transaction advisory admission also
+rejects competitors across replicas before row-lock waits. Competing operations return 429 and
+can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.
 The 60-second transaction limit also bounds lock waits across replicas.
 
 An object 404 counts as already revoked only after an authenticated Generic Class
 GET succeeds. A missing/inaccessible class or failed lookup retains the account
-with 502. An existing but incorrectly selected class still requires the operator
-cutover checks below; class existence cannot identify previously issued classes.
+with 502. For recorded issuance, both object revocation and class verification
+use the original recorded identity even after the configured class changes.
+Legacy unrecorded passes need the inventory/backfill checks below.
 Other Google failures,
 network timeouts, or incomplete/invalid Wallet configuration abort account
 deletion and retain the local account. Fix the upstream/configuration failure,
@@ -312,9 +313,23 @@ identification flows.
 Use account deletion when the requested action is removal and revocation.
 
 Keep the issuer, class, and authorized credentials available while any issued
-objects need revocation. Revocation targets the currently configured class;
-before changing classes for another edition, reconcile old objects with their
-original class/credentials. This change does not bulk-update existing objects.
+objects need revocation. Issuance first commits a `WalletPass` row containing
+student ID, class ID and object ID, before any Google write. It remains after a
+failed request and rolls back only with successful account deletion. Revocation
+uses that identity after class configuration changes; issuance of a different
+class returns 503 until operators reconcile the old pass. Wrong-issuer credentials
+also fail closed. A mistaken never-enabled declaration cannot skip a recorded
+pass; legitimate skips emit `google_wallet_revoke_skipped` without identifiers.
+
+Before changing class/issuer, inventory historical Google objects and backfill
+markers for any passes issued before this migration, using their actual class
+and object IDs. Do not infer that an empty marker table means no legacy passes.
+The hosted environments declared never-issued need no historical backfill.
+For each cutover, revoke/anonymize the old object with its original identity and
+credentials, verify that result, then reconcile the marker deliberately before
+allowing new issuance. Do not delete markers just to bypass the check. This
+change does not bulk-update historical objects. The migrator must apply
+`20261014140000_record_wallet_issuance` before web traffic.
 
 ### Staging verification
 
@@ -355,3 +370,18 @@ CI and Vitest's synthetic non-Wallet environment also set the explicit flag.
 Local developers using the credential-free `.env.example` must set it to `true`
 before testing student deletion. Clear the declaration when adding Wallet
 credentials; once any pass has been issued, preserve revocation credentials.
+
+### Capacity and integration verification
+
+Keep the documented sixty-second transaction and pool budgets in ADR 0010.
+Shared advisory admission rejects simultaneous same-user work across replicas;
+different users can still exhaust the pool. Google I/O remains inside the user
+lock to prevent late reactivation. Moving it outside needs a durable operation
+protocol, not a final DB-only recheck.
+
+`tests/e2e/walletDeletion.test.ts` exercises the real admin route, services,
+PostgreSQL and durable marker with mocked Google HTTP. It verifies class rotation,
+Google failure account retention, actual 503 mapping, conservative markers after
+failed issuance, and a genuine FK deletion failure followed by reissue and retry.
+Real issuer permissions/device sync and deployment-scale pool load remain staging
+checks.

@@ -189,7 +189,7 @@ test("revokes the student's pass before deleting the local account", async () =>
     callback({ student: { id: "app-user-1" } } as never, {} as never)
   );
   await deleteUserAccount("app-user-1");
-  expect(revokeGoogleWalletPass).toHaveBeenCalledWith("app-user-1");
+  expect(revokeGoogleWalletPass).toHaveBeenCalledWith("app-user-1", {});
   expect(
     vi.mocked(revokeGoogleWalletPass).mock.invocationCallOrder[0]
   ).toBeLessThan(vi.mocked(deleteUser).mock.invocationCallOrder[0]!);

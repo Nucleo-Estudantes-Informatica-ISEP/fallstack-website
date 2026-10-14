@@ -343,16 +343,16 @@ test("employee interest updates persist on the company without changing student 
   ).toEqual([second.id]);
 });
 
-test("Wallet issuance queued behind account deletion re-reads a missing account", async () => {
+test("shared Wallet admission rejects a competing instance; deletion remains visible after release", async () => {
   const student = await fixtures.student();
-  let queued: Promise<unknown> | undefined;
-  const reader = vi.fn();
-  await withLockedUser(student.id, async (user, tx) => {
-    expect(user?.student?.id).toBe(student.id);
-    queued = withLockedUser(student.id, async (current) => reader(current));
+  await withLockedUser(student.id, async (_user, tx) => {
+    await expect(
+      withLockedUser(student.id, async () => {})
+    ).rejects.toMatchObject({ status: 429 });
     await deleteUser(student.id, tx);
   });
-  await queued;
+  const reader = vi.fn();
+  await withLockedUser(student.id, async (current) => reader(current));
   expect(reader).toHaveBeenCalledWith(null);
 });
 

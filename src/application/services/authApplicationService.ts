@@ -32,7 +32,7 @@ export async function deleteUserAccount(userId: string) {
     withLockedUser(userId, async (user, tx) => {
       if (!user) throw new HttpError("Account not found", 404);
       // Keep the account on upstream failure so the same deletion can be retried.
-      if (user.student) await revokeGoogleWalletPass(user.student.id);
+      if (user.student) await revokeGoogleWalletPass(user.student.id, tx);
       await deleteUser(userId, tx);
     })
   );
