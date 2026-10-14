@@ -1,0 +1,46 @@
+name: Backfill native GitHub issue dependencies
+
+# Runs once when this workflow is first merged. Safe to rerun manually:
+# existing native relationships are checked and skipped.
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/backfill-issue-dependencies.yml'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview relationships without changing issues'
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-dependency-backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirm automation credential
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo 'Missing PROJECT_AUTOMATION_TOKEN Actions secret.' >&2
+            exit 1
+          fi
+      - name: Create native issue dependencies from documented prerequisites
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=()
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python3 .github/scripts/backfill_issue_dependencies.py "${args[@]}"
