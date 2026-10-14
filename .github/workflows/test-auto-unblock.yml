@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/test-auto-unblock.yml'
+      - '.github/scripts/e2e_auto_unblock.py'
   workflow_dispatch:
     inputs:
       action:

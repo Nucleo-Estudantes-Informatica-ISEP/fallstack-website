@@ -77,7 +77,7 @@ def mutation(query, **vars):
 
 def project_item(issue, project_id):
     query = 'query($id:ID!){node(id:$id){... on Issue{projectItems(first:100){nodes{id project{id} fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}}'
-    items = ((gql(query, {"id": issue["node_id"]).get("node") or {}).get("projectItems") or {}).get("nodes", [])
+    items = ((gql(query, {"id": issue["node_id"]}).get("node") or {}).get("projectItems") or {}).get("nodes", [])
     matches = [i for i in items if i["project"]["id"] == project_id]
     if len(matches) != 1:
         raise RuntimeError(f"Expected one board item, found {len(matches)}")
