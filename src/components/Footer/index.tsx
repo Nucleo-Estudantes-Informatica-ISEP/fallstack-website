@@ -16,14 +16,20 @@ import InstallButton from "@/components/InstallButton";
 
 interface FooterProps {
   neiLogoSrc: StaticImageData;
+  landing?: boolean;
 }
 
-const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
+const Footer: FunctionComponent<FooterProps> = ({
+  neiLogoSrc,
+  landing = false,
+}) => {
   const currentYear = new Date().getFullYear();
   const NEI_WEBSITE_URL = "https://nei-isep.org";
 
   return (
-    <footer className="flex w-full flex-col items-center gap-10 bg-background px-6 pt-12 text-center">
+    <footer
+      className={`flex w-full flex-col items-center gap-10 bg-background px-6 text-center ${landing ? "pt-24" : "pt-12"}`}
+    >
       <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-around">
         <div className="max-h-50 max-w-55 transition-all duration-300 hover:scale-105 sm:max-w-[275px] lg:max-w-80">
           <a href={NEI_WEBSITE_URL} target="_blank" rel="noreferrer">
@@ -82,17 +88,19 @@ const Footer: FunctionComponent<FooterProps> = ({ neiLogoSrc }) => {
               <FaLink size={45} />
             </Link>
           </div>
-          <div className="flex flex-wrap items-center justify-center gap-5">
-            <InstallButton className="scale-180 text-xl drop-shadow-xl transition-all duration-300 hover:scale-190" />
+          {!landing && (
+            <div className="flex flex-wrap items-center justify-center gap-5">
+              <InstallButton className="scale-180 text-xl drop-shadow-xl transition-all duration-300 hover:scale-190" />
 
-            <Link
-              href="/privacy-policy"
-              title="Política de Privacidade"
-              className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
-            >
-              <MdOutlinePrivacyTip color="text" size={45} />
-            </Link>
-          </div>
+              <Link
+                href="/privacy-policy"
+                title="Política de Privacidade"
+                className="text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
+              >
+                <MdOutlinePrivacyTip color="text" size={45} />
+              </Link>
+            </div>
+          )}
         </div>
       </div>
 

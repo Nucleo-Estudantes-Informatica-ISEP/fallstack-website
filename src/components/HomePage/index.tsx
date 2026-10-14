@@ -1,7 +1,7 @@
 "use client";
 
 import { FunctionComponent, useEffect, useState } from "react";
-import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-white.png";
+import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import Footer from "@/components/Footer";
 import HeroContainer from "@/components/HeroContainer";
@@ -30,20 +30,19 @@ const HomePage: FunctionComponent<HomePageProps> = ({ language }) => {
   }, []);
 
   const units = [
-    { label: isEnglish ? "Days" : "Dias", seconds: 86400, modulo: Infinity },
-    { label: isEnglish ? "Hours" : "Horas", seconds: 3600, modulo: 24 },
-    { label: isEnglish ? "Minutes" : "Minutos", seconds: 60, modulo: 60 },
-    { label: isEnglish ? "Seconds" : "Segundos", seconds: 1, modulo: 60 },
+    { label: isEnglish ? "days" : "dias", seconds: 86400, modulo: Infinity },
+    { label: isEnglish ? "hours" : "horas", seconds: 3600, modulo: 24 },
   ];
 
   return (
     <HeroContainer>
-      <section className="flex min-h-svh flex-col items-center justify-center gap-8 bg-background bg-[url('/assets/images/bgHero.svg')] bg-cover bg-center px-4 pt-24 pb-12 text-center">
-        <div className="space-y-3">
-          <h1 className="text-5xl sm:text-7xl">
+      {/* shortcut: artwork includes the 2026 logo; export a fresh frame for a later edition. */}
+      <section className="relative h-svh min-h-160 w-full bg-background bg-[url('/assets/images/landing-2026.png')] bg-cover bg-center">
+        <div className="sr-only">
+          <h1>
             {branding.name} {branding.year}
           </h1>
-          <p className="text-lg text-primary sm:text-xl">
+          <p>
             <time dateTime={branding.event.startsAt}>
               {new Intl.DateTimeFormat(isEnglish ? "en-GB" : "pt-PT", {
                 dateStyle: "long",
@@ -54,38 +53,46 @@ const HomePage: FunctionComponent<HomePageProps> = ({ language }) => {
             {branding.event.venue}
           </p>
         </div>
-        <div
+        <dl
           role="timer"
           aria-label={
             isEnglish ? "Time until Fallstack" : "Tempo até ao Fallstack"
           }
+          className="absolute inset-x-4 bottom-[13.85%] flex flex-wrap justify-center gap-3 font-title text-[clamp(1.5rem,4.3vw,4rem)] leading-none text-white sm:gap-x-6"
         >
-          <dl className="grid grid-cols-4 gap-2 sm:gap-4">
-            {units.map(({ label, seconds, modulo }) => (
-              <div
-                key={label}
-                className="flex min-w-16 flex-col-reverse gap-2 rounded-xl border border-white/20 bg-background/80 px-2 py-5 sm:min-w-28 sm:px-5"
-              >
-                <dt className="text-xs text-white/80 sm:text-sm">{label}</dt>
-                <dd className="text-3xl font-semibold text-primary tabular-nums sm:text-5xl">
-                  {remaining === null
-                    ? "--"
-                    : String(Math.floor(remaining / seconds) % modulo).padStart(
-                        2,
-                        "0"
-                      )}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-        <p className="max-w-lg text-base leading-relaxed text-balance text-white/80 sm:text-lg">
+          {units.map(({ label, seconds, modulo }) => (
+            <div key={label} className="flex gap-1.5 sm:gap-2">
+              <dt className="order-last flex h-[clamp(3rem,6.3vw,5.9375rem)] items-center rounded-xl bg-background px-[clamp(0.5rem,1.3vw,1.25rem)] sm:rounded-3xl">
+                {label}
+              </dt>
+              <dd className="flex gap-1.5 tabular-nums sm:gap-2">
+                {(remaining === null
+                  ? "--"
+                  : String(Math.floor(remaining / seconds) % modulo).padStart(
+                      2,
+                      "0"
+                    )
+                )
+                  .split("")
+                  .map((digit, index) => (
+                    <span
+                      key={index}
+                      className="flex h-[clamp(3rem,6.3vw,5.9375rem)] w-[clamp(2rem,7.2vw,6.75rem)] items-center justify-center rounded-xl bg-background sm:rounded-3xl"
+                    >
+                      {digit}
+                    </span>
+                  ))}
+              </dd>
+            </div>
+          ))}
+        </dl>
+        <p className="sr-only">
           {isEnglish
             ? "We're preparing the next edition. The programme, companies and more details will be announced soon."
             : "Estamos a preparar a próxima edição. O programa, as empresas e mais novidades serão anunciados em breve."}
         </p>
       </section>
-      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
+      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} landing />
     </HeroContainer>
   );
 };
