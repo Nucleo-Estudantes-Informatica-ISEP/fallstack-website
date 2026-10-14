@@ -69,7 +69,10 @@ apply records `InvalidCleanupQueueEntry` and continues with valid rows. Repair
 corrupt rows through an operator investigation, preserving their tombstones.
 Concurrent workers may repeat an idempotent deletion; no correctness
 assumption depends on only one worker running. Completed tombstones are kept to
-prevent late reattachment. A `(kind, lower(key))` expression index keeps the
+prevent late reattachment. The shared HTTP error boundary maps the guard's
+queued/deleted-key rejection to 409 with a request to upload a new file, and its
+ambiguous-path rejection to 400. Multipart upload still returns a fresh key (201);
+attachment endpoints perform the guarded DB write. Unrelated DB errors remain 500. A `(kind, lower(key))` expression index keeps the
 case-insensitive guard indexed as tombstones grow. Audit `would-queue` records
 include only newly claimable keys; existing claims appear as retries. Never
 delete queue rows as routine cleanup.
@@ -235,3 +238,25 @@ without logging the path. Canonicalizing the reference retained the avatar and
 allowed the pending CV delete to complete. Authenticated development API smoke
 rejected an alias with 400 and no mutation, accepted a canonical logo path with
 an encoded query with 200, and returned expected media 200/404 responses.
+
+Review audit on 2026-10-14 ran the migration's exact reference mapping and
+unknown-reference query on both live `fallstack_dev` and `fallstack_prod` databases,
+using connection-local functions rolled back after the read. Both reported
+`unknownReference: 0`, and Company/Sponsor logos had zero ambiguous paths
+(including percent encodings and dot segments). No live rows, claims or objects
+changed. This is current reference-audit evidence; repeat the full worker dry run
+at deployment because new rows can arrive afterwards. Unrecognized external
+logos still fail closed; an allowed render host alone cannot prove storage
+ownership. Existing external logos can be replaced with canonical paths.
+
+Claim lookups use batches of at most 1,000 keys. The worker intentionally retains
+the builder stage's source/dev dependencies to run its TypeScript entrypoint;
+image slimming is optional packaging work, not required for cleanup correctness.
+
+The same day's full CLI dry runs used fresh media-only snapshots of live DB
+references/ages (synthetic identities), migrated isolated PostgreSQL databases,
+and each environment's real MinIO identity/buckets over an SSH tunnel. Development
+reported zero candidates; production reported six orphan candidates. Both reported
+zero expired references, unknown references, failed operations and deletions.
+Snapshot reference rows and queues were unchanged. No live DB or S3 writes ran;
+candidates still require the documented deployment-time operator audit.
