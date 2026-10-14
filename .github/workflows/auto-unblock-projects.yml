@@ -1,0 +1,50 @@
+name: Auto-unblock GitHub Projects tasks
+
+on:
+  schedule:
+    - cron: '3,13,23,33,43,53 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview changes without updating any project statuses'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-unblock-github-projects
+  cancel-in-progress: false
+
+jobs:
+  auto-unblock:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+    steps:
+      - name: Check out automation
+        uses: actions/checkout@v4
+
+      - name: Verify automation credentials
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo 'Set repository secret PROJECT_AUTOMATION_TOKEN with Projects write and Issues read access.' >&2
+            exit 1
+          fi
+
+      - name: Check dependencies and update board statuses
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --project Nucleo-Estudantes-Informatica-ISEP/11
+            --project Nucleo-Estudantes-Informatica-ISEP/13
+            --project Nucleo-Estudantes-Informatica-ISEP/10
+            --project Departamento-de-Engenharia-Informatica/2305
+          )
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.dry_run }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          python3 .github/scripts/auto_unblock_projects.py "${args[@]}"
