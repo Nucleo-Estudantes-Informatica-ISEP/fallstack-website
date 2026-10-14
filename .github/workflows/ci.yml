@@ -36,6 +36,7 @@ env:
   AUTH_POST_LOGOUT_REDIRECT_URI: https://ci.invalid
   ZITADEL_ORG_ID: ci-nei-org
   ZITADEL_ROLE_ASSIGNER_TOKEN: ${{ github.sha }}
+  GOOGLE_WALLET_NEVER_ENABLED: "true"
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
