@@ -60,6 +60,7 @@ model Student {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  walletPass        WalletPass?
   actionCompletions ActionCompletion[]
   savedByEmployees  SavedStudent[]
   interests         Interest[]
@@ -337,4 +338,14 @@ enum Year {
   LICENCIATURA_3 @map("3º Ano Licenciatura")
   MESTRADO_1     @map("1º Ano Mestrado")
   MESTRADO_2     @map("2º Ano Mestrado")
+}
+
+// Committed before Google I/O, so retries/config changes cannot lose the object
+// identity even if external issuance succeeds and its local transaction fails.
+model WalletPass {
+  studentId String   @id @db.Uuid
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classId   String
+  objectId  String   @unique
+  createdAt DateTime @default(now())
 }

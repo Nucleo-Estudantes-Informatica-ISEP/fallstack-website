@@ -6,6 +6,7 @@ import { afterEach, vi } from "vitest";
 // Test-only values for lazy server environment validation. Individual tests
 // can override these; no test connects to this S3 endpoint by default.
 const testEnv = {
+  GOOGLE_WALLET_NEVER_ENABLED: "true",
   JWT_SECRET: "test-only-secret-at-least-32-characters-long",
   S3_ENDPOINT: "http://127.0.0.1:9000",
   S3_ACCESS_KEY_ID: "test-access-key",
