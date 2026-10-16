@@ -65,4 +65,17 @@ describe("Content Security Policy (CSP)", () => {
     expect(csp).toContain("font-src 'self' https://rsms.me");
     expect(csp).not.toMatch(/script-src[^;]*rsms/);
   });
+
+  it("confines 'unsafe-inline' to style-src only and never to script-src", () => {
+    const csp = buildCsp();
+    // 'unsafe-inline' is accepted in style-src for Next.js CSS-in-JS and
+    // Framer Motion, but must never reach script-src.
+    expect(csp).toMatch(/style-src[^;]*'unsafe-inline'/);
+    expect(csp).not.toMatch(/script-src[^;]*'unsafe-inline'/);
+  });
+
+  it("does not contain 'unsafe-eval' in any directive", () => {
+    const csp = buildCsp();
+    expect(csp).not.toContain("'unsafe-eval'");
+  });
 });
