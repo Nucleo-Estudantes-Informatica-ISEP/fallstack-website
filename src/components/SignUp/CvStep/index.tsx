@@ -9,7 +9,7 @@ import { FaFilePdf } from "react-icons/fa";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import FileInput from "@/components/ui/FileInput";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import { uploadCv as uploadCvToSupabase } from "@/client/api/upload";
+import { uploadCv } from "@/client/api/upload";
 
 interface CvStepProps {
   currentStep: number;
@@ -38,7 +38,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 
       if (error) setError(null);
 
-      const uploaded = await uploadCvToSupabase(file);
+      const uploaded = await uploadCv(file);
       if (!uploaded) {
         setError("Ocorreu um erro ao dar upload.");
         return setLoading(false);

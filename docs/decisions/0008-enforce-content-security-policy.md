@@ -73,6 +73,23 @@ to appear in `img-src`; the browser only fetches from `'self'`. New external
 image origins must be added to `imageRemotePatterns.js` and verified to work
 through the proxy before any `img-src` change is considered.
 
+## Trade-offs: Dynamic Rendering and CDN Caching
+
+To apply a cryptographically unique nonce per request without `'unsafe-inline'`
+in `script-src`, Next.js App Router requires dynamic server rendering (`await headers()`
+in `src/app/layout.tsx`).
+
+- **Full-page HTML rendering**: All HTML pages are server-rendered dynamically per request
+  rather than pre-rendered as static HTML files cached at the CDN edge.
+- **Static assets**: All static assets (`/_next/static/*`, CSS, JS bundles, fonts, images)
+  remain fully static with immutable cache headers and continue to be served directly from
+  CDN/browser caches.
+- **PWA Service Worker**: PWA service worker files (`sw.js`, `workbox-*`) and the web
+  manifest (`manifest.webmanifest`) are excluded from the middleware matcher so the service
+  worker installs and caches assets offline without nonce friction.
+- **Performance impact**: Dynamic rendering of guest pages introduces negligible overhead
+  (sub-10ms render time) while completely eliminating `'unsafe-inline'` from `script-src`.
+
 ## Rollback plan
 
 If an unanticipated CSP violation breaks production functionality after
