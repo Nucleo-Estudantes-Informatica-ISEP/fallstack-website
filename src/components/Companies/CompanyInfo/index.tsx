@@ -44,22 +44,27 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
         </CompanyDescription>
       )}
       {facts && facts.length > 0 && <FactSection facts={facts} />}
-      {showsPromoVideo && (
-        <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
-          <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
-            {videoTitle || "Vídeo"}
-          </h1>
-          <div className="flex w-full items-center justify-center">
-            <iframe
-              className="my-2.5 aspect-video w-full max-w-full rounded-lg"
-              src={normalizeYouTubeEmbedUrl(videoHref) ?? videoHref}
-              title={videoTitle}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </div>
-      )}
+      {showsPromoVideo &&
+        (() => {
+          const embedUrl = normalizeYouTubeEmbedUrl(videoHref);
+          if (!embedUrl) return null;
+          return (
+            <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
+              <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+                {videoTitle || "Vídeo"}
+              </h1>
+              <div className="flex w-full items-center justify-center">
+                <iframe
+                  className="my-2.5 aspect-video w-full max-w-full rounded-lg"
+                  src={embedUrl}
+                  title={videoTitle}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          );
+        })()}
       <div className="px-10">
         <h1 className="mt-8 mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
           Interesses

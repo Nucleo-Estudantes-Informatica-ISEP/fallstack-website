@@ -55,4 +55,17 @@ describe("YouTube URL parsing and normalization", () => {
 
     expect(normalizeYouTubeEmbedUrl("https://vimeo.com/12345678")).toBeNull();
   });
+
+  it("rejects 'videoseries' which is 11 chars but not a video ID", () => {
+    expect(
+      parseYouTubeVideoId(
+        "https://www.youtube.com/embed/videoseries?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf"
+      )
+    ).toBeNull();
+    expect(
+      normalizeYouTubeEmbedUrl(
+        "https://www.youtube.com/embed/videoseries?list=PLrAXtmErZgOeiKm4sgNOknGvNjby9efdf"
+      )
+    ).toBeNull();
+  });
 });

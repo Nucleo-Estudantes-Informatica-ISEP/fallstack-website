@@ -73,6 +73,38 @@ to appear in `img-src`; the browser only fetches from `'self'`. New external
 image origins must be added to `imageRemotePatterns.js` and verified to work
 through the proxy before any `img-src` change is considered.
 
+## Rollback plan
+
+If an unanticipated CSP violation breaks production functionality after
+deployment:
+
+1. Immediate mitigation: Revert `src/middleware.ts` to disable the middleware,
+   or switch the header back to `Content-Security-Policy-Report-Only` via a hotfix
+   PR. This immediately restores pre-enforcement behavior without requiring database
+   migrations or service restarts.
+2. Root-cause analysis: Inspect Sentry error events and browser devtools console logs
+   for blocked URIs and directives, adjust `src/security/csp.js` accordingly, and
+   verify locally with `pnpm build && pnpm start`.
+
+## Deployment and migration notes
+
+- **Existing `videoHref` records**: Any existing `Company` records containing
+  non-YouTube or malformed video URLs will fail schema validation if an organizer
+  or company attempts to save the profile again without updating or clearing the field.
+- **Rendering behavior**: Legacy or invalid URLs are safely handled at render time:
+  `normalizeYouTubeEmbedUrl` returns `null` and `CompanyInfo` renders no iframe,
+  preventing arbitrary or `javascript:` URLs from being embedded.
+- **Pre-deployment audit**: Operators can run a quick check against the database:
+  ```sql
+  SELECT id, name, "videoHref"
+  FROM "Company"
+  WHERE "videoHref" IS NOT NULL
+    AND "videoHref" NOT LIKE '%youtube.com%'
+    AND "videoHref" NOT LIKE '%youtu.be%';
+  ```
+  Any matching records can be cleared (`SET "videoHref" = NULL`) or updated to canonical
+  YouTube URLs before saving.
+
 ## Consequences
 
 - The browser blocks any resource load not covered by the policy. A misconfigured

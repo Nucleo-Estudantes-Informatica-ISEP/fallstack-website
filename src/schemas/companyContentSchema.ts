@@ -16,20 +16,19 @@ export const youtubeEmbedUrlSchema = z
   .nullable()
   .optional()
   .or(z.literal(""))
-  .transform((val) => {
+  .transform((val, ctx) => {
     if (val === undefined) return undefined;
     if (!val) return null;
-    return normalizeYouTubeEmbedUrl(val) ?? val;
-  })
-  .refine(
-    (val) =>
-      val === null ||
-      val === undefined ||
-      normalizeYouTubeEmbedUrl(val) !== null,
-    {
-      message: "O URL do vídeo deve ser um link válido do YouTube",
+    const normalized = normalizeYouTubeEmbedUrl(val);
+    if (!normalized) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "O URL do vídeo deve ser um link válido do YouTube",
+      });
+      return z.NEVER;
     }
-  );
+    return normalized;
+  });
 
 export const socialLinksSchema = z.object({
   twitter: optionalLink,

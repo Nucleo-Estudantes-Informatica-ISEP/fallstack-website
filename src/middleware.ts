@@ -35,7 +35,7 @@ export const config = {
      */
     {
       source:
-        "/((?!api|_next/static|_next/image|favicon.ico|sw.js|workbox-|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf)$).*)",
+        "/((?!api/|api$|_next/static|_next/image|favicon.ico|sw.js|workbox-|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf)$).*)",
       missing: [
         { type: "header", key: "next-router-prefetch" },
         { type: "header", key: "purpose", value: "prefetch" },

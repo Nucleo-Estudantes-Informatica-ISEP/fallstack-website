@@ -8,6 +8,10 @@
 // YouTube video IDs are 11 characters long, consisting of alphanumeric chars, underscores, and dashes.
 const YOUTUBE_ID_REGEX = /^[a-zA-Z0-9_-]{11}$/;
 
+// "videoseries" is exactly 11 characters and passes the regex, but it is a
+// playlist path segment (youtube.com/embed/videoseries?list=...), not a video ID.
+const RESERVED_PATH_SEGMENTS = new Set(["videoseries"]);
+
 /**
  * Extracts the 11-character video ID from various YouTube URL formats:
  * - https://www.youtube.com/watch?v=VIDEO_ID
@@ -36,8 +40,10 @@ export function parseYouTubeVideoId(
 
     // youtu.be/VIDEO_ID
     if (hostname === "youtu.be") {
-      const id = parsed.pathname.slice(1).split("/")[0]?.split("?")[0];
-      return id && YOUTUBE_ID_REGEX.test(id) ? id : null;
+      const id = parsed.pathname.slice(1).split("/")[0];
+      return id && YOUTUBE_ID_REGEX.test(id) && !RESERVED_PATH_SEGMENTS.has(id)
+        ? id
+        : null;
     }
 
     // Standard YouTube domains
@@ -55,6 +61,7 @@ export function parseYouTubeVideoId(
     // /watch?v=VIDEO_ID
     if (parsed.pathname === "/watch") {
       const id = parsed.searchParams.get("v");
+      if (id && RESERVED_PATH_SEGMENTS.has(id)) return null;
       return id && YOUTUBE_ID_REGEX.test(id) ? id : null;
     }
 
@@ -67,7 +74,9 @@ export function parseYouTubeVideoId(
         pathParts[0] === "shorts")
     ) {
       const id = pathParts[1];
-      return id && YOUTUBE_ID_REGEX.test(id) ? id : null;
+      return id && YOUTUBE_ID_REGEX.test(id) && !RESERVED_PATH_SEGMENTS.has(id)
+        ? id
+        : null;
     }
 
     return null;
