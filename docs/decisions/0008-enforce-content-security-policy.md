@@ -2,7 +2,7 @@
 
 Status: Accepted
 Date: 2026-10-11
-Source: [Enforce CSP PR](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/346)
+Source: [Enforce CSP PR](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/pull/436)
 Supersedes: [0007](0007-run-csp-in-report-only-mode.md)
 
 ## Context
@@ -13,28 +13,51 @@ blocking users. After validating the violation evidence from the report-only
 phase (#343), no critical functional flows were broken by the policy. The
 project is ready to promote the policy to full enforcement.
 
+During the storage migration to shared services (commit `ac686aab`), legacy
+Supabase storage and auth origins (`sources.supabase`) were decommissioned and
+removed from all directives.
+
+Next.js App Router emits inline scripts (`self.__next_f.push(...)` RSC payloads
+and bootstrap code). Under strict CSP enforcement, `script-src 'self'` without a
+nonce blocks these scripts and breaks client-side hydration.
+
 ## Decision
 
-Emit the policy through `next.config.js` as `Content-Security-Policy` (not
-`Content-Security-Policy-Report-Only`). The policy is built by `src/security/csp.js`
-and is identical to the validated report-only policy, with no new exceptions added.
-
-`X-Frame-Options` is set to `DENY` to be consistent with `frame-ancestors 'none'`
-in the CSP, so both legacy and modern browsers refuse framing.
+1. Enforce the policy through `src/middleware.ts` as `Content-Security-Policy` (not
+   `Content-Security-Policy-Report-Only`), built by `src/security/csp.js`.
+2. Generate a cryptographically secure per-request nonce (`crypto.randomUUID()` in
+   base64) in middleware, attaching `'nonce-<token>'` and `'strict-dynamic'` to
+   `script-src`. Next.js App Router consumes the request nonce and attaches it
+   to all internal hydration `<script>` tags. Under no circumstances is
+   `'unsafe-inline'` permitted in `script-src`.
+3. In development mode (`NODE_ENV === "development"`), conditionally append
+   `'unsafe-eval'` to `script-src` to allow Webpack HMR and React Refresh. In
+   production and test environments, `'unsafe-eval'` is omitted entirely.
+4. Set `X-Frame-Options` to `DENY` in `next.config.js` to be consistent with
+   `frame-ancestors 'none'` in the CSP, so both legacy and modern browsers refuse
+   framing.
+5. In `frame-src`, permit only `https://www.youtube.com`. Redundant `'self'` is
+   dropped since `frame-ancestors 'none'` denies framing of the app itself.
+   Company video links are validated and normalized to `https://www.youtube.com/embed/<id>`
+   on save and render.
 
 ## Accepted exceptions and rationale
 
-| Exception                 | Directive               | Reason                                                                                                                                                         |
-| ------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `'unsafe-inline'`         | `style-src` only        | Required for Next.js CSS-in-JS runtime and Framer Motion inline styles. No nonce mechanism is implemented; scope is strictly limited to styles, never scripts. |
-| `data:`                   | `img-src`               | Needed for inline data-URI images (e.g., QR code rendering). Does not permit script execution.                                                                 |
-| `blob:`                   | `img-src`               | Needed for in-browser generated blob image previews. Does not permit script execution.                                                                         |
-| `https://rsms.me`         | `style-src`, `font-src` | Inter font stylesheet and font files. Restricted to typography only; no script execution allowed from this host.                                               |
-| `https://www.youtube.com` | `frame-src`             | Embedded YouTube videos in company profiles. No other directive is widened for this host.                                                                      |
-| Sentry DSN origin         | `connect-src`           | Browser crash and telemetry reporting. Resolved at build time from `NEXT_PUBLIC_SENTRY_DSN`; omitted if the variable is unset.                                 |
+| Exception                  | Directive               | Reason                                                                                                                                                 |
+| -------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Per-request nonce          | `script-src`            | Cryptographic nonce attached to Next.js App Router RSC payload and hydration scripts, paired with `'strict-dynamic'`. Blocks untrusted inline scripts. |
+| `'unsafe-eval'` (dev only) | `script-src`            | Restricted strictly to `NODE_ENV === "development"` for React Refresh and fast dev source maps; absent in production.                                  |
+| `'unsafe-inline'`          | `style-src` only        | Required for Next.js CSS-in-JS runtime and Framer Motion inline styles. Scope is strictly limited to styles, never scripts.                            |
+| `data:`                    | `img-src`               | Needed for inline data-URI images (e.g., QR code rendering). Does not permit script execution.                                                         |
+| `blob:`                    | `img-src`               | Needed for in-browser generated blob image previews. Does not permit script execution.                                                                 |
+| `https://rsms.me`          | `style-src`, `font-src` | Inter font stylesheet and font files. Restricted to typography only; no script execution allowed from this host.                                       |
+| `https://www.youtube.com`  | `frame-src`             | Embedded YouTube videos in company profiles. No other directive is widened for this host.                                                              |
+| Sentry DSN origin          | `connect-src`           | Browser crash and telemetry reporting. Resolved from `NEXT_PUBLIC_SENTRY_DSN`; omitted if the variable is unset.                                       |
 
 ## Out of scope
 
+- Supabase is completely decommissioned; no Supabase origin is permitted or
+  present in the policy.
 - SVG logo support (#282) is explicitly deferred beyond the 2026 edition. No
   pre-emptive SVG exception is added to the enforced policy.
 - A dedicated CSP `report-uri` endpoint is not added. Violations in production
@@ -54,8 +77,8 @@ through the proxy before any `img-src` change is considered.
 
 - The browser blocks any resource load not covered by the policy. A misconfigured
   new integration will be visible immediately rather than silently permitted.
-- `'unsafe-inline'` in `style-src` is accepted as a documented exception.
-  Future work may replace it with a nonce or hash if Next.js supports it stably.
+- Next.js App Router hydration scripts execute safely with cryptographic nonces.
+- `'unsafe-inline'` in `style-src` remains an accepted documented exception.
 - The report-only header is removed; violation evidence requires Sentry or
   browser dev-tools inspection.
 - Adding any new external origin requires an explicit directive update,

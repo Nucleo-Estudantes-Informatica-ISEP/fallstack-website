@@ -30,51 +30,72 @@ function getOriginFromDsn(dsn) {
   }
 }
 
-const sources = {
-  // Client-side error reporting endpoint.
-  sentry: getOriginFromDsn(process.env.NEXT_PUBLIC_SENTRY_DSN),
+function getSources() {
+  return {
+    // Client-side error reporting endpoint.
+    sentry: getOriginFromDsn(process.env.NEXT_PUBLIC_SENTRY_DSN),
 
-  // External Inter font stylesheet and font files.
-  rsms: "https://rsms.me",
+    // External Inter font stylesheet and font files.
+    rsms: "https://rsms.me",
 
-  // YouTube embeds used by company profiles.
-  youtube: "https://www.youtube.com",
-};
-
-const directives = {
-  "default-src": ["'self'"],
-
-  "script-src": ["'self'"],
-
-  "style-src": ["'self'", "'unsafe-inline'", sources.rsms],
-
-  "img-src": ["'self'", "data:", "blob:"],
-
-  "font-src": ["'self'", sources.rsms],
-
-  "connect-src": ["'self'", sources.sentry],
-
-  "worker-src": ["'self'"],
-
-  "object-src": ["'none'"],
-
-  "base-uri": ["'self'"],
-
-  "form-action": ["'self'"],
-
-  "frame-src": ["'self'", sources.youtube],
-
-  "frame-ancestors": ["'none'"],
-};
+    // YouTube embeds used by company profiles.
+    youtube: "https://www.youtube.com",
+  };
+}
 
 function filterDirectiveValues(values) {
   return values.filter((value) => Boolean(value));
 }
 
 /**
- * Builds the CSP header value from the directive configuration.
+ * @typedef {Object} BuildCspOptions
+ * @property {string} [nonce] Cryptographic nonce for inline scripts.
+ * @property {boolean} [isDev] Whether in development mode.
  */
-export function buildCsp() {
+
+/**
+ * Builds the CSP header value from the directive configuration.
+ *
+ * @param {BuildCspOptions} [options]
+ */
+export function buildCsp(options = {}) {
+  const sources = getSources();
+  const { nonce, isDev = false } = options;
+
+  const scriptSrc = ["'self'"];
+  if (nonce) {
+    scriptSrc.push(`'nonce-${nonce}'`, "'strict-dynamic'");
+  }
+  if (isDev) {
+    scriptSrc.push("'unsafe-eval'");
+  }
+
+  const directives = {
+    "default-src": ["'self'"],
+
+    "script-src": scriptSrc,
+
+    "style-src": ["'self'", "'unsafe-inline'", sources.rsms],
+
+    "img-src": ["'self'", "data:", "blob:"],
+
+    "font-src": ["'self'", sources.rsms],
+
+    "connect-src": ["'self'", sources.sentry],
+
+    "worker-src": ["'self'"],
+
+    "object-src": ["'none'"],
+
+    "base-uri": ["'self'"],
+
+    "form-action": ["'self'"],
+
+    "frame-src": [sources.youtube],
+
+    "frame-ancestors": ["'none'"],
+  };
+
   return Object.entries(directives)
     .map(([directive, values]) => ({
       directive,

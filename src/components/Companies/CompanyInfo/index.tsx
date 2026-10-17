@@ -5,6 +5,7 @@ import React from "react";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
 import { Fact } from "@/domain/company/companyProfileContent";
+import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 
 interface CompanyInfoProps {
   bodyText: string;
@@ -51,7 +52,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           <div className="flex w-full items-center justify-center">
             <iframe
               className="my-2.5 aspect-video w-full max-w-full rounded-lg"
-              src={videoHref}
+              src={normalizeYouTubeEmbedUrl(videoHref) ?? videoHref}
               title={videoTitle}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen

@@ -2,7 +2,18 @@ import { expect, test } from "./fixtures";
 
 const HOME_PATH = "/";
 
-test("home page emits an enforced CSP header and removes report-only mode", async ({
+function parseDirectives(csp: string): Map<string, string[]> {
+  const map = new Map<string, string[]>();
+  for (const part of csp.split(";")) {
+    const trimmed = part.trim();
+    if (!trimmed) continue;
+    const [name, ...values] = trimmed.split(/\s+/);
+    map.set(name, values);
+  }
+  return map;
+}
+
+test("home page emits an enforced CSP header with per-request nonce and removes report-only mode", async ({
   page,
 }) => {
   const response = await page.goto(HOME_PATH);
@@ -16,13 +27,27 @@ test("home page emits an enforced CSP header and removes report-only mode", asyn
   expect(headers["content-security-policy-report-only"]).toBeUndefined();
 
   const csp = headers["content-security-policy"];
+  const directives = parseDirectives(csp);
 
-  expect(csp).toContain("default-src 'self'");
-  expect(csp).toContain("script-src 'self'");
-  expect(csp).toContain("object-src 'none'");
-  expect(csp).toContain("frame-ancestors 'none'");
+  expect(directives.get("default-src")).toEqual(["'self'"]);
+
+  const scriptSrc = directives.get("script-src") ?? [];
+  expect(scriptSrc).toContain("'self'");
+  expect(scriptSrc.some((val) => /^'nonce-[A-Za-z0-9+/=]+'$/.test(val))).toBe(
+    true
+  );
+  expect(scriptSrc).toContain("'strict-dynamic'");
+  expect(scriptSrc).not.toContain("'unsafe-inline'");
+
+  expect(directives.get("object-src")).toEqual(["'none'"]);
+  expect(directives.get("frame-ancestors")).toEqual(["'none'"]);
+  expect(directives.get("frame-src")).toEqual(["https://www.youtube.com"]);
+  expect(directives.get("img-src")).toEqual(["'self'", "data:", "blob:"]);
+
+  const imgSrcValues = directives.get("img-src") ?? [];
+  expect(imgSrcValues.some((v) => v.toLowerCase().includes("svg"))).toBe(false);
+
   expect(csp).not.toContain("report-uri");
-  expect(csp).not.toMatch(/svg/i);
 });
 
 test("X-Frame-Options is DENY, consistent with frame-ancestors 'none'", async ({
@@ -38,46 +63,73 @@ test("X-Frame-Options is DENY, consistent with frame-ancestors 'none'", async ({
   expect(headers["x-frame-options"]).toBe("DENY");
 });
 
-test("critical public pages load without CSP violations under enforcement", async ({
+test("critical public and guest routes load without CSP violations under enforcement", async ({
   page,
 }) => {
-  const violations: string[] = [];
+  interface CspViolation {
+    blockedURI: string;
+    effectiveDirective: string;
+    violatedDirective: string;
+  }
 
-  // Capture any CSP violation reports that reach the console as errors.
-  page.on("console", (msg) => {
-    if (
-      msg.type() === "error" &&
-      msg.text().toLowerCase().includes("content security policy")
-    ) {
-      violations.push(msg.text());
-    }
+  const violations: CspViolation[] = [];
+
+  // Expose clean callback to avoid console parsing overhead and false positives
+  await page.exposeFunction("__onCspViolation", (violation: CspViolation) => {
+    violations.push(violation);
   });
 
-  // Capture network-level CSP violation events (securitypolicyviolation).
+  // Capture document-level CSP violation events via SecurityPolicyViolationEvent
   await page.addInitScript(() => {
     document.addEventListener("securitypolicyviolation", (e) => {
-      console.error(
-        `[CSP] blocked-uri=${e.blockedURI} directive=${e.effectiveDirective}`
-      );
+      const globalViolationHandler = (
+        window as unknown as {
+          __onCspViolation?: (v: {
+            blockedURI: string;
+            effectiveDirective: string;
+            violatedDirective: string;
+          }) => void;
+        }
+      ).__onCspViolation;
+
+      if (globalViolationHandler) {
+        globalViolationHandler({
+          blockedURI: e.blockedURI,
+          effectiveDirective: e.effectiveDirective,
+          violatedDirective: e.violatedDirective,
+        });
+      }
     });
   });
 
-  const criticalPaths = [
-    "/", // home / landing
-    "/companies", // company listings (loads logos, YouTube embeds)
-    "/schedule", // schedule page
-    "/faq", // FAQ page
+  const guestRoutes = [
+    { path: "/", waitSelector: "#main-content" },
+    { path: "/about", waitSelector: "#main-content" },
+    { path: "/privacy-policy", waitSelector: "#main-content" },
+    {
+      path: "/login",
+      waitSelector: "input[type='email'], form, #main-content",
+    },
+    {
+      path: "/company/armis",
+      waitSelector: "#main-content, [data-testid='not-found']",
+    },
   ];
 
-  for (const path of criticalPaths) {
+  for (const { path, waitSelector } of guestRoutes) {
     violations.length = 0;
-    await page.goto(path);
-    // Allow any deferred resources to settle.
-    await page.waitForLoadState("networkidle");
+    const response = await page.goto(path);
+    expect(response).not.toBeNull();
+
+    // Wait on a concrete UI element instead of flaky networkidle
+    await page
+      .locator(waitSelector)
+      .first()
+      .waitFor({ state: "visible", timeout: 10_000 });
 
     expect(
       violations,
-      `CSP violations on ${path}: ${violations.join("; ")}`
+      `CSP violations on ${path}: ${violations.map((v) => `${v.effectiveDirective}: ${v.blockedURI}`).join("; ")}`
     ).toHaveLength(0);
   }
 });
