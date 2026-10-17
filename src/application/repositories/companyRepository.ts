@@ -240,6 +240,9 @@ export const upsertCompanyProfile = (
     update: data,
   });
 
+export const findCompanyProfileById = (companyId: string) =>
+  prisma.companyProfile.findUnique({ where: { companyId } });
+
 export const deleteCompanyProfile = (companyId: string) =>
   prisma.companyProfile.deleteMany({ where: { companyId } });
 

@@ -19,10 +19,7 @@ import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/client/api/upload";
+import { uploadAvatar, uploadCv } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface ProfileSectionProps {
@@ -75,7 +72,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     const image = await getCroppedImg(imageSrc, croppedAreaPixels);
     if (!image) return setIsAvatarLoading(false);
 
-    const uploaded = await uploadAvatarToSupabase(image);
+    const uploaded = await uploadAvatar(image);
     if (!uploaded) {
       toast.error("Não foi possível dar upload à imagem.");
       return setIsAvatarLoading(false);
@@ -126,7 +123,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     mutateSave(async () => {
       if (cvRef.current?.files?.length) {
         const cvFile = cvRef.current.files[0]!;
-        const uploaded = await uploadCvToSupabase(cvFile);
+        const uploaded = await uploadCv(cvFile);
         if (uploaded) {
           try {
             await httpClient.post(`/students/${student.code}/cv`, {

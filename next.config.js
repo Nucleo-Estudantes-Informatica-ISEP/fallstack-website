@@ -1,25 +1,20 @@
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
-const { buildCsp } = require("./src/security/csp");
 
 // Baseline security headers (securityheaders.com "easy wins").
-// Full Content-Security-Policy is deferred — it needs tuning against Next's
-// inline scripts and the PWA service worker (see plan #29).
 const securityHeaders = [
   {
     key: "Strict-Transport-Security",
     value: "max-age=31536000; includeSubDomains",
   },
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  // DENY aligns with frame-ancestors 'none' in the CSP; both must be
+  // consistent so legacy and modern browsers receive the same restriction.
+  { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
     value: "camera=(self), microphone=(), geolocation=()",
-  },
-  {
-    key: "Content-Security-Policy-Report-Only",
-    value: buildCsp(), //Generates the CSP header value from the directives defined in src/security/csp.js
   },
 ];
 
