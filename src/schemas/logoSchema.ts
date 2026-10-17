@@ -74,6 +74,12 @@ export const logoSchema = z
   .string()
   .max(2048)
   .refine(
+    // Match the DB guard: reject browser path aliases, preserve query encodings.
+    (value) =>
+      !/(^|\/)[.]{1,2}(\/|$)|[%\\\p{Cc}]/u.test(value.split(/[?#]/, 1)[0]),
+    { message: "Use a canonical path without dot segments or path encodings" }
+  )
+  .refine(
     (value) =>
       (value.startsWith("/") &&
         !value.startsWith("//") &&

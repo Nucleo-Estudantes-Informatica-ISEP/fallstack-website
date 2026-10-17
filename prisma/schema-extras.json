@@ -1,0 +1,19 @@
+{
+  "indexes": ["StorageDeletion_kind_lower_key_idx"],
+  "constraints": ["StorageDeletion_kind_check"],
+  "functions": [
+    "storage_object_key",
+    "storage_reference_path_is_ambiguous",
+    "reject_deleted_storage_reference"
+  ],
+  "triggers": [
+    "student_cv_storage_guard",
+    "student_avatar_storage_guard",
+    "company_avatar_storage_guard",
+    "sponsor_avatar_storage_guard"
+  ],
+  "allowedDrift": [
+    "ALTER TABLE \"Company\" DROP CONSTRAINT \"Company_rankId_fkey\";",
+    "ALTER TABLE \"Company\" ADD CONSTRAINT \"Company_rankId_fkey\" FOREIGN KEY (\"rankId\") REFERENCES \"CompanyRank\"(\"id\") ON DELETE RESTRICT ON UPDATE CASCADE;"
+  ]
+}

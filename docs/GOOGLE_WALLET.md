@@ -73,7 +73,12 @@ The application uses this server-only configuration contract:
 | `GOOGLE_WALLET_CLASS_ID`                 | No      | Full Generic Class ID (`issuerId.suffix`) for that environment.  |
 | `GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64` | **Yes** | Base64-encoded service-account JSON, decoded only on the server. |
 
-All three variables are optional at process startup so environments without
+`GOOGLE_WALLET_NEVER_ENABLED` defaults to `false`. Set it to `true` only in an
+environment that has never issued any Wallet objects, with all three credentials
+unset. This permits student deletion without contacting Google. Clear this
+declaration before enabling Wallet; while it is true, issuance is disabled.
+
+All three credential variables are optional at process startup so environments without
 Wallet can still boot. Configure all three before exposing the Wallet action in
 an environment; otherwise `POST /api/wallet` returns 503. Base64 is only a
 transport format; it does not make the credential non-secret.
@@ -250,3 +255,133 @@ infrastructure guide (#363). The external setup and real-device validation in
 - the persistent Wallet QR/identifier design;
 - the user-facing **Add to Google Wallet** action;
 - unit/integration/UI tests.
+
+## Pass validity and account deletion
+
+`src/edition/branding.ts` defines `event.startsAt` and `event.endsAt` as
+ISO 8601 timestamps with explicit Lisbon offsets. The 2026 interval is
+17 November at 08:30 through 18 November at 17:30 (UTC+00:00). Update both
+alongside the edition's display dates/times each year. Choose the offset for each
+actual date in `Europe/Lisbon`: November uses `+00:00`, summer uses `+01:00`.
+The edition regression checks the ISO dates/times against that IANA zone. Every insert or issuance
+update sends this interval as `validTimeInterval`, including passes created
+before this feature when their owner requests another Save-to-Wallet link.
+Google moves passes to its expired section up to 24 hours after the interval ends:
+https://developers.google.com/wallet/generic/use-cases/expired-passes
+
+Deleting a local student account first PATCHes its deterministic object to
+`EXPIRED`, replacing the name, code label, and barcode with generic revoked-pass
+values. Google Generic Objects cannot be deleted through this API; expiry does
+not guarantee removal from a user's device or immediate synchronization.
+Issuance and deletion lock the same database user row and re-read the account,
+so an in-flight request cannot recreate or reactivate a deleted student's pass.
+One issuance or deletion operation per user is admitted in each application
+process before database access; PostgreSQL transaction advisory admission also
+rejects competitors across replicas before row-lock waits. Competing operations return 429 and
+can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
+timeout, and transport failures return 502 without logging sensitive details.
+The 60-second transaction limit also bounds lock waits across replicas.
+
+An object 404 counts as already revoked only after an authenticated Generic Class
+GET succeeds. A missing/inaccessible class or failed lookup retains the account
+with 502. For recorded issuance, both object revocation and class verification
+use the original recorded identity even after the configured class changes.
+Legacy unrecorded passes need the inventory/backfill checks below.
+Other Google failures,
+network timeouts, or incomplete/invalid Wallet configuration abort account
+deletion and retain the local account. Fix the upstream/configuration failure,
+then repeat the same admin delete action. Revocation is idempotent, including
+when Google accepted the first PATCH but its response or the database commit
+failed. Non-student accounts do not contact Wallet. Completely unset credentials
+fail closed with 503 unless `GOOGLE_WALLET_NEVER_ENABLED=true` explicitly declares
+that the environment has never issued passes. Every non-Wallet dev, staging,
+or CI installation must set this declaration explicitly to support student
+deletion; the default (including an empty value) remains `false`. Never set this opt-out in an
+environment with issued passes. Partial configuration still blocks deletion.
+
+If Google revocation succeeds but the database deletion fails, the account
+remains and its pass is revoked. The still-active student can issue again to
+restore `ACTIVE`, their current name/code, and the edition interval; alternatively,
+an administrator can repeat deletion. Regression tests cover both recovery paths.
+
+Deactivation (`User.active=false`) is a reversible application access gate. It
+blocks sessions and new issuance but deliberately does not expire or anonymize
+an existing Wallet pass. The name/code remain on the pass; edition expiry changes validity, while
+account deletion anonymizes it. This pass is an attendee identifier, not an access
+credential. Deactivation does not invalidate the permanent code for existing
+identification flows.
+Use account deletion when the requested action is removal and revocation.
+
+Keep the issuer, class, and authorized credentials available while any issued
+objects need revocation. Issuance first commits a `WalletPass` row containing
+student ID, class ID and object ID, before any Google write. It remains after a
+failed request and rolls back only with successful account deletion. Revocation
+uses that identity after class configuration changes; issuance of a different
+class returns 503 until operators reconcile the old pass. Wrong-issuer credentials
+also fail closed. A mistaken never-enabled declaration cannot skip a recorded
+pass; legitimate skips emit `google_wallet_revoke_skipped` without identifiers.
+
+Before changing class/issuer, inventory historical Google objects and backfill
+markers for any passes issued before this migration, using their actual class
+and object IDs. Do not infer that an empty marker table means no legacy passes.
+The hosted environments declared never-issued need no historical backfill.
+For each cutover, revoke/anonymize the old object with its original identity and
+credentials, verify that result, then reconcile the marker deliberately before
+allowing new issuance. Do not delete markers just to bypass the check. This
+change does not bulk-update historical objects. The migrator must apply
+`20261014140000_record_wallet_issuance` before web traffic.
+
+### Staging verification
+
+1. Use a synthetic student in a staging class. Issue a pass through
+   `POST /api/wallet`; GET the Generic Object through the Wallet API and confirm
+   the edition validity interval. Add it to a test device **before** the event
+   starts and record whether the pass is visible, how its validity is displayed,
+   and whether its barcode is scannable. Repeat during the event and after expiry.
+   Google defines this interval as when the pass is usable; its reference does
+   not guarantee pre-start presentation:
+   https://developers.google.com/wallet/reference/rest/v1/genericobject#GenericObject
+   Real-device pre-start behavior has not been verified locally.
+2. Delete the synthetic account through the admin UI. Confirm HTTP 204, local
+   account removal, Google state `EXPIRED`, and replacement name/code/barcode.
+   Refresh Wallet on the test device; allow for Google's synchronization delay.
+3. With another synthetic student, temporarily remove the service-account's
+   issuer permission. Deletion must fail and leave the local account present.
+   Restore permission, repeat deletion, and confirm expiry plus account removal.
+4. Race issuance against deletion for a synthetic student: issuance either
+   finishes before revocation or rejects the deleted account. The final Google
+   object must stay expired with the generic revoked-pass content. Retry a
+   competing request that receives 429 after the admitted operation finishes.
+5. Remove all Wallet credentials without setting the never-enabled flag. Student
+   deletion must return 503 and retain the account. Restore credentials to retry.
+   In a separate environment that has never issued passes, explicitly set
+   `GOOGLE_WALLET_NEVER_ENABLED=true` with credentials unset; deletion succeeds,
+   while Wallet availability remains false and issuance returns 503.
+
+### Non-Wallet rollout preparation — 2026-10-14
+
+Dinis confirmed that neither hosted environment has ever issued Wallet passes.
+`GOOGLE_WALLET_NEVER_ENABLED=true` is saved and verified in Coolify for
+`fallstack-web:dev` (development/staging) and `fallstack-web:main` (production),
+with runtime availability and no build-time availability. The running containers
+have no Wallet credentials. These saved settings take effect through the normal
+reviewed deployment; no deployment or account deletion ran on either live app.
+CI and Vitest's synthetic non-Wallet environment also set the explicit flag.
+Local developers using the credential-free `.env.example` must set it to `true`
+before testing student deletion. Clear the declaration when adding Wallet
+credentials; once any pass has been issued, preserve revocation credentials.
+
+### Capacity and integration verification
+
+Keep the documented sixty-second transaction and pool budgets in ADR 0010.
+Shared advisory admission rejects simultaneous same-user work across replicas;
+different users can still exhaust the pool. Google I/O remains inside the user
+lock to prevent late reactivation. Moving it outside needs a durable operation
+protocol, not a final DB-only recheck.
+
+`tests/e2e/walletDeletion.test.ts` exercises the real admin route, services,
+PostgreSQL and durable marker with mocked Google HTTP. It verifies class rotation,
+Google failure account retention, actual 503 mapping, conservative markers after
+failed issuance, and a genuine FK deletion failure followed by reissue and retry.
+Real issuer permissions/device sync and deployment-scale pool load remain staging
+checks.

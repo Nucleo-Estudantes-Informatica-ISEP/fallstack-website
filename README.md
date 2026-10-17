@@ -53,6 +53,13 @@ as its callback. Use development credentials and data only.
    `http://localhost:3000/api` for this setup. `.env.example` lists all keys.
    Do not use production credentials locally.
 
+   For a local, staging, or CI installation that has **never issued Wallet
+   passes**, set `GOOGLE_WALLET_NEVER_ENABLED=true` and leave all three Wallet
+   credentials unset. Without that explicit declaration, missing credentials
+   block student deletion with 503. Clear the declaration before enabling
+   Wallet. Environments that have issued passes must keep valid credentials;
+   see [Wallet setup](docs/GOOGLE_WALLET.md#pass-validity-and-account-deletion).
+
 4. Apply migrations, then start the app:
 
    ```bash
@@ -75,6 +82,8 @@ as its callback. Use development credentials and data only.
   [`docker-compose.app.yml`](docker-compose.app.yml), not a local service profile.
 - [Google Wallet infrastructure](docs/GOOGLE_WALLET.md): issuer, service-account,
   Generic Pass, publishing access, and runtime configuration.
+- [MinIO cleanup](docs/storage-cleanup.md): six-month CV retention, orphan cleanup,
+  dry-run rollout, retries and operator audit.
 - [Observability](docs/observability.md), [security](docs/SECURITY.md), and
   [architecture decisions](docs/decisions/README.md).
 - [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file
