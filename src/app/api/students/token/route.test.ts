@@ -1,13 +1,23 @@
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
-import { beforeEach, test, vi } from "vitest";
+import { afterEach, beforeEach, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+
 vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));
+
 vi.mock("@/application/services/studentTokenService", () => ({
   jwtStudent: vi.fn(),
+}));
+
+vi.mock("@/lib/logger", () => ({
+  default: {
+    warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 const employeeSession = {
@@ -37,26 +47,35 @@ function request(body: unknown) {
   });
 }
 
-beforeEach(() => {
-  vi.clearAllMocks();
+async function post(body: unknown) {
+  const { POST } = await import("./route");
 
-  // The route's rate limiter is module-scoped; reset modules so each test
-  // gets a fresh limiter and cannot inherit another test's rate-limit state.
+  return POST(request(body), {
+    params: Promise.resolve({}),
+  });
+}
+
+beforeEach(() => {
+  // The rate limiter is module-scoped, so isolate its state between tests.
   vi.resetModules();
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 test("rejects a student session before minting a preview token", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(studentSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
-  const { POST } = await import("./route");
-  const response = await POST(request({ code: "AB12" }), {
-    params: Promise.resolve({}),
-  });
+
+  const response = await post({ code: "AB12" });
 
   assert.equal(response.status, 403);
   assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
@@ -66,14 +85,13 @@ test("rejects an invalid code before minting a preview token", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
-  const { POST } = await import("./route");
-  const response = await POST(request({ code: "invalid" }), {
-    params: Promise.resolve({}),
-  });
+
+  const response = await post({ code: "invalid" });
 
   assert.equal(response.status, 400);
   assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
@@ -83,38 +101,40 @@ test("returns 404 when an employee submits an unknown code", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
+
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-  const response = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
+  const response = await post({ code: "ZZ99" });
 
   assert.equal(response.status, 404);
-  assert.deepEqual(await response.json(), { error: "Student not found" });
+  assert.deepEqual(await response.json(), {
+    error: "Student not found",
+  });
 });
 
 test("normalizes a code and mints a token for an employee", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
+
   vi.mocked(jwtStudent).mockResolvedValue("preview-token");
 
-  const { POST } = await import("./route");
-  const response = await POST(request({ code: " ab12 " }), {
-    params: Promise.resolve({}),
-  });
+  const response = await post({ code: " ab12 " });
 
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { token: "preview-token" });
+  assert.deepEqual(await response.json(), {
+    token: "preview-token",
+  });
   assert.deepEqual(vi.mocked(jwtStudent).mock.calls[0], ["AB12"]);
 });
 
@@ -130,22 +150,17 @@ test("rate limits repeated requests with unknown student codes", async () => {
 
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-
   for (let i = 0; i < 5; i++) {
-    const response = await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
-
+    const response = await post({ code: "ZZ99" });
     assert.equal(response.status, 404);
   }
 
-  const response = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
+  const response = await post({ code: "ZZ99" });
 
   assert.equal(response.status, 429);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+
+  // The route calls jwtStudent before checking the invalid-code limit.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("does not rate limit valid student scans", async () => {
@@ -160,12 +175,8 @@ test("does not rate limit valid student scans", async () => {
 
   vi.mocked(jwtStudent).mockResolvedValue("preview-token");
 
-  const { POST } = await import("./route");
-
   for (let i = 0; i < 10; i++) {
-    const response = await POST(request({ code: "AB12" }), {
-      params: Promise.resolve({}),
-    });
+    const response = await post({ code: "AB12" });
 
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
@@ -188,21 +199,11 @@ test("scopes invalid-code rate limits to each employee", async () => {
 
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-
   for (let i = 0; i < 5; i++) {
-    const response = await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
-
-    assert.equal(response.status, 404);
+    assert.equal((await post({ code: "ZZ99" })).status, 404);
   }
 
-  const limitedResponse = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
-
-  assert.equal(limitedResponse.status, 429);
+  assert.equal((await post({ code: "ZZ99" })).status, 429);
 
   vi.mocked(getServerSession).mockResolvedValue({
     ...employeeSession,
@@ -213,11 +214,9 @@ test("scopes invalid-code rate limits to each employee", async () => {
     },
   } as never);
 
-  const otherEmployeeResponse = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
-
-  assert.equal(otherEmployeeResponse.status, 404);
+  // A different employee has an independent rate-limit counter.
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
 });
 
 test("returns 403 when the employee session has no employee ID", async () => {
@@ -235,11 +234,8 @@ test("returns 403 when the employee session has no employee ID", async () => {
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
-  const { POST } = await import("./route");
 
-  const response = await POST(request({ code: "AB12" }), {
-    params: Promise.resolve({}),
-  });
+  const response = await post({ code: "AB12" });
 
   assert.equal(response.status, 403);
   assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
@@ -252,34 +248,24 @@ test("resets the invalid-code limit after the window expires", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
+
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-
   for (let i = 0; i < 5; i++) {
-    const response = await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
-    assert.equal(response.status, 404);
+    assert.equal((await post({ code: "ZZ99" })).status, 404);
   }
 
-  const blockedResponse = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
-  assert.equal(blockedResponse.status, 429);
+  assert.equal((await post({ code: "ZZ99" })).status, 429);
 
   vi.advanceTimersByTime(60_001);
 
-  const responseAfterExpiry = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
-
-  assert.equal(responseAfterExpiry.status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
 });
 
 test("returns the expected Retry-After header when rate limited", async () => {
@@ -289,27 +275,23 @@ test("returns the expected Retry-After header when rate limited", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
+
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
+
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-
   for (let i = 0; i < 5; i++) {
-    await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
+    await post({ code: "ZZ99" });
   }
 
-  const response = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
+  const response = await post({ code: "ZZ99" });
 
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("Retry-After"), "60");
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("successful scans do not reset the invalid-code count", async () => {
@@ -330,33 +312,19 @@ test("successful scans do not reset the invalid-code count", async () => {
     .mockResolvedValueOnce(null)
     .mockResolvedValueOnce(null);
 
-  const { POST } = await import("./route");
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
 
-  for (let i = 0; i < 2; i++) {
-    const response = await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
-    assert.equal(response.status, 404);
-  }
-
-  const successfulResponse = await POST(request({ code: "AB12" }), {
-    params: Promise.resolve({}),
-  });
-  assert.equal(successfulResponse.status, 200);
+  assert.equal((await post({ code: "AB12" })).status, 200);
 
   for (let i = 0; i < 3; i++) {
-    const response = await POST(request({ code: "ZZ99" }), {
-      params: Promise.resolve({}),
-    });
-    assert.equal(response.status, 404);
+    assert.equal((await post({ code: "ZZ99" })).status, 404);
   }
 
-  const limitedResponse = await POST(request({ code: "ZZ99" }), {
-    params: Promise.resolve({}),
-  });
+  assert.equal((await post({ code: "ZZ99" })).status, 429);
 
-  assert.equal(limitedResponse.status, 429);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  // Two initial failures + one success + four subsequent failures.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
 });
 
 test("allows only the permitted number of concurrent invalid-code requests", async () => {
@@ -371,14 +339,8 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
 
   vi.mocked(jwtStudent).mockResolvedValue(null);
 
-  const { POST } = await import("./route");
-
   const responses = await Promise.all(
-    Array.from({ length: 6 }, () =>
-      POST(request({ code: "ZZ99" }), {
-        params: Promise.resolve({}),
-      })
-    )
+    Array.from({ length: 6 }, () => post({ code: "ZZ99" }))
   );
 
   assert.equal(
@@ -389,5 +351,7 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
     responses.filter((response) => response.status === 429).length,
     1
   );
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+
+  // All six requests call jwtStudent before the limiter is checked.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });

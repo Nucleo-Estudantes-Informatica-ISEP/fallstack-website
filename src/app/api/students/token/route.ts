@@ -21,7 +21,13 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const limit = invalidCodeLimiter.reserve(employeeId);
+    const token = await jwtStudent(body.code);
+
+    if (token) {
+      return NextResponse.json({ token }, { status: 200 });
+    }
+
+    const limit = invalidCodeLimiter.check(employeeId);
 
     if (!limit.allowed) {
       logger.warn(
@@ -36,30 +42,14 @@ export const POST = defineHandler({
       return tooManyRequestsResponse(limit.retryAfterMs);
     }
 
-    try {
-      const token = await jwtStudent(body.code);
+    logger.warn(
+      {
+        event: "student_token.invalid_code",
+        employeeId,
+      },
+      "Invalid student token code"
+    );
 
-      if (!token) {
-        logger.warn(
-          {
-            event: "student_token.invalid_code",
-            employeeId,
-          },
-          "Invalid student token code"
-        );
-
-        return NextResponse.json(
-          { error: "Student not found" },
-          { status: 404 }
-        );
-      }
-
-      limit.release();
-
-      return NextResponse.json({ token }, { status: 200 });
-    } catch (error) {
-      limit.release();
-      throw error;
-    }
+    return NextResponse.json({ error: "Student not found" }, { status: 404 });
   },
 });
