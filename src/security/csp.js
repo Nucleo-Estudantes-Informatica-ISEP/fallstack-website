@@ -35,6 +35,9 @@ function getSources() {
     // Client-side error reporting endpoint.
     sentry: getOriginFromDsn(process.env.NEXT_PUBLIC_SENTRY_DSN),
 
+    // Supabase project origin.
+    supabase: getOriginFromDsn(process.env.NEXT_PUBLIC_SUPABASE_URL),
+
     // External Inter font stylesheet and font files.
     rsms: "https://rsms.me",
 
@@ -81,7 +84,7 @@ export function buildCsp(options = {}) {
 
     "font-src": ["'self'", sources.rsms],
 
-    "connect-src": ["'self'", sources.sentry],
+    "connect-src": ["'self'", sources.sentry, sources.supabase],
 
     "worker-src": ["'self'"],
 

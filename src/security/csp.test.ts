@@ -128,14 +128,20 @@ describe("Content Security Policy (CSP)", () => {
       "https://public@sentry.example.com/42"
     );
     const directives = parseDirectives(buildCsp());
-    expect(directives.get("connect-src")).toEqual([
-      "'self'",
-      "https://sentry.example.com",
-    ]);
+    expect(directives.get("connect-src")).toContain(
+      "https://sentry.example.com"
+    );
   });
 
-  it("restricts connect-src to 'self' only when NEXT_PUBLIC_SENTRY_DSN is unset", () => {
+  it("configures connect-src with Supabase origin when NEXT_PUBLIC_SUPABASE_URL is set", () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://demo.supabase.co");
+    const directives = parseDirectives(buildCsp());
+    expect(directives.get("connect-src")).toContain("https://demo.supabase.co");
+  });
+
+  it("restricts connect-src to 'self' only when both NEXT_PUBLIC_SENTRY_DSN and NEXT_PUBLIC_SUPABASE_URL are unset", () => {
     vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", "");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
     const directives = parseDirectives(buildCsp());
     expect(directives.get("connect-src")).toEqual(["'self'"]);
   });

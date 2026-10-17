@@ -142,16 +142,17 @@ Current policy is intentionally minimal and explicit:
 
 The following table reflects the current explicit origins defined in `src/security/csp.js` and the reason they are enabled.
 
-| Origin / source                 | Used in directive(s)    | Why it is allowed                                                   | Why this is safe                                                                   |
-| ------------------------------- | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `'self'`                        | all relevant directives | Same-origin app assets and endpoints                                | Keeps the application within its own domain unless explicitly approved             |
-| Per-request nonce               | `script-src`            | RSC payloads and hydration bootstrap in Next.js App Router          | Cryptographic nonce paired with `'strict-dynamic'`; blocks untrusted scripts       |
-| `NEXT_PUBLIC_SENTRY_DSN` origin | `connect-src`           | Browser crash/telemetry reporting to Sentry/GlitchTip               | Only the exact DSN origin is allowed; omitted entirely if the variable is unset    |
-| `https://rsms.me`               | `style-src`, `font-src` | Inter font stylesheet and font files                                | Required only for typography; no script execution is allowed from this host        |
-| `https://www.youtube.com`       | `frame-src`             | Embedded YouTube videos in public/company content                   | The application allows a specific embed target instead of arbitrary iframe content |
-| `data:`                         | `img-src`               | Inline images/data-URI resources (e.g. QR codes)                    | Needed only for image rendering; it does not permit script execution               |
-| `blob:`                         | `img-src`               | In-browser generated blobs (e.g. temporary images or file previews) | Restricts blob usage to image resources and not to script or plugin execution      |
-| `'unsafe-inline'`               | `style-src` only        | Next.js CSS-in-JS runtime and Framer Motion inline styles           | Scope is strictly limited to styles; `script-src` has no `'unsafe-inline'`         |
+| Origin / source                   | Used in directive(s)    | Why it is allowed                                                   | Why this is safe                                                                   |
+| --------------------------------- | ----------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `'self'`                          | all relevant directives | Same-origin app assets and endpoints                                | Keeps the application within its own domain unless explicitly approved             |
+| Per-request nonce                 | `script-src`            | RSC payloads and hydration bootstrap in Next.js App Router          | Cryptographic nonce paired with `'strict-dynamic'`; blocks untrusted scripts       |
+| `NEXT_PUBLIC_SENTRY_DSN` origin   | `connect-src`           | Browser crash/telemetry reporting to Sentry/GlitchTip               | Only the exact DSN origin is allowed; omitted entirely if the variable is unset    |
+| `NEXT_PUBLIC_SUPABASE_URL` origin | `connect-src`           | Configured Supabase backend origin for environments utilizing it    | Only the exact URL origin is allowed; omitted entirely if the variable is unset    |
+| `https://rsms.me`                 | `style-src`, `font-src` | Inter font stylesheet and font files                                | Required only for typography; no script execution is allowed from this host        |
+| `https://www.youtube.com`         | `frame-src`             | Embedded YouTube videos in public/company content                   | The application allows a specific embed target instead of arbitrary iframe content |
+| `data:`                           | `img-src`               | Inline images/data-URI resources (e.g. QR codes)                    | Needed only for image rendering; it does not permit script execution               |
+| `blob:`                           | `img-src`               | In-browser generated blobs (e.g. temporary images or file previews) | Restricts blob usage to image resources and not to script or plugin execution      |
+| `'unsafe-inline'`                 | `style-src` only        | Next.js CSS-in-JS runtime and Framer Motion inline styles           | Scope is strictly limited to styles; `script-src` has no `'unsafe-inline'`         |
 
 This is intentionally stricter than a permissive `*` policy. A wildcard would allow any host to become a script, stylesheet, image, or frame source, which would undermine the browser's ability to protect the app.
 

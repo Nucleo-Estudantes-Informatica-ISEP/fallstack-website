@@ -53,11 +53,10 @@ nonce blocks these scripts and breaks client-side hydration.
 | `https://rsms.me`          | `style-src`, `font-src` | Inter font stylesheet and font files. Restricted to typography only; no script execution allowed from this host.                                       |
 | `https://www.youtube.com`  | `frame-src`             | Embedded YouTube videos in company profiles. No other directive is widened for this host.                                                              |
 | Sentry DSN origin          | `connect-src`           | Browser crash and telemetry reporting. Resolved from `NEXT_PUBLIC_SENTRY_DSN`; omitted if the variable is unset.                                       |
+| Supabase URL origin        | `connect-src`           | Browser API / storage integration. Resolved from `NEXT_PUBLIC_SUPABASE_URL`; omitted if the variable is unset.                                         |
 
 ## Out of scope
 
-- Supabase is completely decommissioned; no Supabase origin is permitted or
-  present in the policy.
 - SVG logo support (#282) is explicitly deferred beyond the 2026 edition. No
   pre-emptive SVG exception is added to the enforced policy.
 - A dedicated CSP `report-uri` endpoint is not added. Violations in production
