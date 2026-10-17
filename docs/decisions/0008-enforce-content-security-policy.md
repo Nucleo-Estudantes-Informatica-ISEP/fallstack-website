@@ -88,22 +88,24 @@ deployment:
 
 ## Deployment and migration notes
 
-- **Existing `videoHref` records**: Any existing `Company` records containing
-  non-YouTube or malformed video URLs will fail schema validation if an organizer
-  or company attempts to save the profile again without updating or clearing the field.
+- **Existing `videoHref` records**: Any existing `CompanyProfile` records containing
+  non-YouTube or malformed video URLs are accepted unchanged on save if only other profile
+  fields (such as body text or social links) are modified. If an operator or company changes
+  the video URL, the new value is validated against canonical YouTube formats and normalized.
 - **Rendering behavior**: Legacy or invalid URLs are safely handled at render time:
   `normalizeYouTubeEmbedUrl` returns `null` and `CompanyInfo` renders no iframe,
   preventing arbitrary or `javascript:` URLs from being embedded.
 - **Pre-deployment audit**: Operators can run a quick check against the database:
   ```sql
-  SELECT id, name, "videoHref"
-  FROM "Company"
-  WHERE "videoHref" IS NOT NULL
-    AND "videoHref" NOT LIKE '%youtube.com%'
-    AND "videoHref" NOT LIKE '%youtu.be%';
+  SELECT cp.id, c.name, cp."videoHref"
+  FROM "CompanyProfile" cp
+  JOIN "Company" c ON c.id = cp."companyId"
+  WHERE cp."videoHref" IS NOT NULL
+    AND cp."videoHref" NOT LIKE '%youtube.com%'
+    AND cp."videoHref" NOT LIKE '%youtu.be%';
   ```
-  Any matching records can be cleared (`SET "videoHref" = NULL`) or updated to canonical
-  YouTube URLs before saving.
+  Any matching records can optionally be cleared (`UPDATE "CompanyProfile" SET "videoHref" = NULL`)
+  or updated to canonical YouTube URLs before saving.
 
 ## Consequences
 

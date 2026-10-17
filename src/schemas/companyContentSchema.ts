@@ -44,12 +44,25 @@ export const factSchema = z.object({
   className: z.string().max(100).optional(),
 });
 
+export const updateCompanyProfileVideoHrefSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .nullable()
+  .optional()
+  .or(z.literal(""))
+  .transform((val) => {
+    if (val === undefined) return undefined;
+    if (!val) return null;
+    return normalizeYouTubeEmbedUrl(val) ?? val;
+  });
+
 // bodyText empty ("") means "no profile" - companyService deletes the
 // CompanyProfile row instead of writing one with an empty required field.
 export const updateCompanyProfileSchema = z.object({
   bodyText: z.string().max(10000),
   videoTitle: z.string().max(200).nullable().optional(),
-  videoHref: youtubeEmbedUrlSchema.nullable().optional(),
+  videoHref: updateCompanyProfileVideoHrefSchema,
   socialLinks: socialLinksSchema.optional(),
   facts: z.array(factSchema).max(20).optional(),
 });

@@ -54,4 +54,12 @@ describe("updateCompanyProfileSchema", () => {
     });
     expect(result.videoHref).toBeNull();
   });
+
+  it("preserves non-YouTube videoHref on parse for service-level comparison", () => {
+    const result = updateCompanyProfileSchema.parse({
+      bodyText: "About us",
+      videoHref: "https://vimeo.com/123456",
+    });
+    expect(result.videoHref).toBe("https://vimeo.com/123456");
+  });
 });
