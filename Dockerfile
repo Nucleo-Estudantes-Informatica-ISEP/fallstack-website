@@ -57,6 +57,18 @@ FROM builder AS migrator
 USER nextjs
 CMD ["npx", "prisma", "migrate", "deploy"]
 
+# Scheduled retention/orphan worker: reuse installed SDK, Prisma and tsx.
+FROM builder AS storage-cleanup
+COPY tsconfig.json ./
+COPY src/config/env.storage.ts ./src/config/env.storage.ts
+COPY src/application/repositories/database.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
+COPY src/application/services/objectStorageService.ts src/application/services/storageCleanupService.ts ./src/application/services/
+COPY scripts/storage-cleanup.ts ./scripts/storage-cleanup.ts
+ENV NODE_ENV=production
+USER nextjs
+HEALTHCHECK --interval=5m --timeout=3s --start-period=5m CMD node -e "const s=require('node:fs').statSync('/tmp/storage-cleanup-success'); process.exit(Date.now()-s.mtimeMs < 26*60*60*1000 ? 0 : 1)"
+CMD ["node", "--conditions=react-server", "--import", "tsx", "scripts/storage-cleanup.ts", "--daemon"]
+
 FROM builder AS app-builder
 ARG NODE_OPTIONS="--max-old-space-size=4096"
 ENV NODE_OPTIONS=$NODE_OPTIONS

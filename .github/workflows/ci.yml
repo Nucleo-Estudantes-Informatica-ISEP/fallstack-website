@@ -36,6 +36,7 @@ env:
   AUTH_POST_LOGOUT_REDIRECT_URI: https://ci.invalid
   ZITADEL_ORG_ID: ci-nei-org
   ZITADEL_ROLE_ASSIGNER_TOKEN: ${{ github.sha }}
+  GOOGLE_WALLET_NEVER_ENABLED: "true"
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
@@ -114,6 +115,11 @@ jobs:
         run: |
           user="$(docker run --rm --entrypoint whoami fallstack-migrator-check)"
           test "$user" = "nextjs"
+
+      - name: Build storage cleanup worker and verify non-root
+        run: |
+          docker build --target storage-cleanup -t fallstack-storage-cleanup-check .
+          test "$(docker inspect --format '{{.Config.User}}' fallstack-storage-cleanup-check)" = "nextjs"
 
       - name: Build production application image
         run: |
