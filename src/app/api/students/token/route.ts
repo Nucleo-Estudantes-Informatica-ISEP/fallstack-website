@@ -21,6 +21,12 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    const token = await jwtStudent(body.code);
+
+    if (token) {
+      return NextResponse.json({ token }, { status: 200 });
+    }
+
     const reservation = invalidCodeLimiter.reserve(employeeId);
 
     if (!reservation.allowed) {
@@ -34,13 +40,6 @@ export const POST = defineHandler({
       );
 
       return tooManyRequestsResponse(reservation.retryAfterMs);
-    }
-
-    const token = await jwtStudent(body.code);
-
-    if (token) {
-      reservation.release();
-      return NextResponse.json({ token }, { status: 200 });
     }
 
     logger.warn(

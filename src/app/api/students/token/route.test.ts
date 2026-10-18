@@ -159,11 +159,11 @@ test("rate limits repeated requests with unknown student codes", async () => {
 
   assert.equal(response.status, 429);
 
-  // The limiter rejects the request before minting another token.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  // Verification runs before the limiter rejects the sixth invalid request.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
-test("rejects a valid code when the employee is over budget", async () => {
+test("allows a valid code when the employee is over budget", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -183,8 +183,11 @@ test("rejects a valid code when the employee is over budget", async () => {
 
   const response = await post({ code: "AB12" });
 
-  assert.equal(response.status, 429);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), {
+    token: "preview-token",
+  });
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("does not rate limit valid student scans", async () => {
@@ -240,7 +243,7 @@ test("scopes invalid-code rate limits to each employee", async () => {
 
   // A different employee has an independent rate-limit counter.
   assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
 });
 
 test("returns 403 when the employee session has no employee ID", async () => {
@@ -289,7 +292,7 @@ test("resets the invalid-code limit after the window expires", async () => {
   vi.advanceTimersByTime(60_001);
 
   assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
 });
 
 test("returns the expected Retry-After header when rate limited", async () => {
@@ -315,7 +318,7 @@ test("returns the expected Retry-After header when rate limited", async () => {
 
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("Retry-After"), "60");
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("successful scans do not reset the invalid-code count", async () => {
@@ -333,21 +336,23 @@ test("successful scans do not reset the invalid-code count", async () => {
     .mockResolvedValueOnce(null)
     .mockResolvedValueOnce("preview-token")
     .mockResolvedValueOnce(null)
+    .mockResolvedValueOnce(null)
     .mockResolvedValueOnce(null);
 
   assert.equal((await post({ code: "ZZ99" })).status, 404);
   assert.equal((await post({ code: "ZZ99" })).status, 404);
 
+  // A successful scan must not count as an invalid attempt.
   assert.equal((await post({ code: "AB12" })).status, 200);
 
-  for (let i = 0; i < 3; i++) {
-    assert.equal((await post({ code: "ZZ99" })).status, 404);
-  }
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
 
+  // The fifth invalid attempt should still be allowed.
+  assert.equal((await post({ code: "ZZ99" })).status, 404);
+
+  // The sixth invalid attempt should be rate-limited.
   assert.equal((await post({ code: "ZZ99" })).status, 429);
-
-  // Two initial failures + one success + two subsequent failures.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("allows only the permitted number of concurrent invalid-code requests", async () => {
@@ -375,11 +380,11 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
     1
   );
 
-  // The sixth request is rejected before minting another token.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  // All requests reach verification before invalid-code limiting.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
-test("rejects a valid code when the employee is over budget", async () => {
+test("allows concurrent valid student scans beyond the invalid-code limit", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -389,16 +394,25 @@ test("rejects a valid code when the employee is over budget", async () => {
   const { jwtStudent } =
     await import("@/application/services/studentTokenService");
 
-  vi.mocked(jwtStudent).mockResolvedValue(null);
+  vi.mocked(jwtStudent).mockImplementation(
+    async () =>
+      new Promise((resolve) => {
+        setTimeout(() => resolve("preview-token"), 10);
+      })
+  );
 
-  for (let i = 0; i < 5; i++) {
-    assert.equal((await post({ code: "ZZ99" })).status, 404);
+  const responses = await Promise.all(
+    Array.from({ length: 10 }, () => post({ code: "AB12" }))
+  );
+
+  assert.equal(responses.length, 10);
+
+  for (const response of responses) {
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), {
+      token: "preview-token",
+    });
   }
 
-  vi.mocked(jwtStudent).mockResolvedValue("preview-token");
-
-  const response = await post({ code: "AB12" });
-
-  assert.equal(response.status, 429);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
 });
