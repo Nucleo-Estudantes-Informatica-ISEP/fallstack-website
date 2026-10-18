@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
+import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 import { Language } from "@/domain/i18n/translations";
 
 import {
@@ -19,6 +20,7 @@ import {
   findCompanyByName,
   findCompanyDisplayByName,
   findCompanyInterests,
+  findCompanyProfileById,
   findCompanyWithContent,
   setCompanyInterests,
   updateCompanyAvatar,
@@ -135,6 +137,24 @@ export async function updateCompanyProfileForAdmin(
     return;
   }
 
+  const existingProfile = await findCompanyProfileById(companyId);
+
+  let videoHref: string | null = null;
+  if (input.videoHref) {
+    const normalized = normalizeYouTubeEmbedUrl(input.videoHref);
+    if (normalized) {
+      videoHref = normalized;
+    } else if (existingProfile?.videoHref === input.videoHref) {
+      // Accept an unchanged legacy value on save and only enforce the YouTube rule when changed
+      videoHref = input.videoHref;
+    } else {
+      throw new HttpError(
+        "O URL do vídeo deve ser um link válido do YouTube",
+        400
+      );
+    }
+  }
+
   const socialLinks = input.socialLinks
     ? Object.fromEntries(
         Object.entries(input.socialLinks).filter(([, value]) => value)
@@ -144,7 +164,7 @@ export async function updateCompanyProfileForAdmin(
   await upsertCompanyProfile(companyId, {
     bodyText: input.bodyText,
     videoTitle: input.videoTitle ?? null,
-    videoHref: input.videoHref ?? null,
+    videoHref,
     socialLinks:
       socialLinks && Object.keys(socialLinks).length > 0
         ? socialLinks

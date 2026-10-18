@@ -60,6 +60,9 @@ for procedure and rationale.
 - `src/config/` holds config, `src/utils/` generic helpers, `src/edition/`
   current event constants, and `src/hooks/` and `src/contexts/` React state.
 - Check PWA or service-worker changes on a real device or installed PWA.
+- Content Security Policy is enforced in production via `src/security/csp.js`
+  and `src/middleware.ts` with per-request nonces (`script-src 'self' 'nonce-...' 'strict-dynamic'`).
+  `X-Frame-Options` is `DENY`, aligned with `frame-ancestors 'none'`.
 
 Common commands: `pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm lint`,
 `pnpm typecheck`, `pnpm build`, `pnpm generate`. See the contribution and

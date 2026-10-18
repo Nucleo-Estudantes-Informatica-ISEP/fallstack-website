@@ -2,12 +2,33 @@ import { z } from "zod";
 
 import { FACT_ICON_NAMES } from "@/domain/company/factIcons";
 import { LOGO_WIDTH_CLASSES } from "@/domain/company/logoDisplayClasses";
+import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
 const optionalLink = websiteUrlSchema
   .optional()
   .or(z.literal(""))
   .transform((value) => (value === "" ? undefined : value));
+
+export const youtubeEmbedUrlSchema = z
+  .string()
+  .trim()
+  .nullable()
+  .optional()
+  .or(z.literal(""))
+  .transform((val, ctx) => {
+    if (val === undefined) return undefined;
+    if (!val) return null;
+    const normalized = normalizeYouTubeEmbedUrl(val);
+    if (!normalized) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "O URL do vídeo deve ser um link válido do YouTube",
+      });
+      return z.NEVER;
+    }
+    return normalized;
+  });
 
 export const socialLinksSchema = z.object({
   twitter: optionalLink,
@@ -23,12 +44,25 @@ export const factSchema = z.object({
   className: z.string().max(100).optional(),
 });
 
+export const updateCompanyProfileVideoHrefSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .nullable()
+  .optional()
+  .or(z.literal(""))
+  .transform((val) => {
+    if (val === undefined) return undefined;
+    if (!val) return null;
+    return normalizeYouTubeEmbedUrl(val) ?? val;
+  });
+
 // bodyText empty ("") means "no profile" - companyService deletes the
 // CompanyProfile row instead of writing one with an empty required field.
 export const updateCompanyProfileSchema = z.object({
   bodyText: z.string().max(10000),
   videoTitle: z.string().max(200).nullable().optional(),
-  videoHref: optionalLink.nullable(),
+  videoHref: updateCompanyProfileVideoHrefSchema,
   socialLinks: socialLinksSchema.optional(),
   facts: z.array(factSchema).max(20).optional(),
 });

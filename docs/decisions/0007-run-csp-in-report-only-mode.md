@@ -1,6 +1,6 @@
 # 0007: Run CSP in report-only mode
 
-Status: Accepted
+Status: Superseded by [0008](0008-enforce-content-security-policy.md)
 Date: 2026-08-31
 Source: [Report-only CSP PR](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/pull/352)
 
@@ -17,3 +17,5 @@ Build an explicit policy in `src/security/csp.js` and emit it through `next.conf
 - Browsers surface violations without blocking the live site; this policy does not yet enforce resource restrictions.
 - The team must review violations and test allowed resources before deciding to enforce the policy.
 - The application has no dedicated CSP report endpoint; see [`SECURITY.md`](../SECURITY.md) for the current policy.
+
+> This decision was superseded by [0008](0008-enforce-content-security-policy.md) once the report-only validation phase completed and the policy was promoted to full enforcement.
