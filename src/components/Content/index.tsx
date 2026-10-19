@@ -4,15 +4,15 @@ import FaqSection from "@/components/Faq/FaqSection";
 import InfoText from "@/components/InfoText";
 import ScheduleSection from "@/components/ScheduleSection";
 import SponsorsSection from "@/components/SponsorsSection";
-import type { Language } from "@/domain/i18n/translations";
+import type { HomepageDto } from "@/application/dto/homepageDto";
 import { edition } from "@/edition";
 
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
-  language: Language;
+  data: HomepageDto;
 }
 
-const Content: React.FC<ContentProps> = ({ contentRef, language }) => {
+const Content: React.FC<ContentProps> = ({ contentRef, data }) => {
   const { branding } = edition;
 
   return (
@@ -36,7 +36,7 @@ const Content: React.FC<ContentProps> = ({ contentRef, language }) => {
         <ScheduleSection
           firstDayTitle={branding.event.scheduleDayTitles[0]}
           secondDayTitle={branding.event.scheduleDayTitles[1]}
-          language={language}
+          events={data.schedule}
         />
       </section>
 
@@ -53,12 +53,12 @@ const Content: React.FC<ContentProps> = ({ contentRef, language }) => {
       </section>*/}
 
       <section className="w-full bg-background px-0!">
-        <CompaniesSection language={language} />
+        <CompaniesSection companies={data.companies} />
       </section>
 
-      <SponsorsSection />
+      <SponsorsSection sponsors={data.sponsors} />
 
-      <FaqSection language={language} />
+      <FaqSection faqs={data.faqs} />
     </>
   );
 };

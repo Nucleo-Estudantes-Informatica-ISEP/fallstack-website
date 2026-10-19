@@ -10,14 +10,14 @@ import GenericContainer from "@/components/GenericContainer";
 import HeadsUp from "@/components/HeadsUp";
 import Hero from "@/components/Hero";
 import HeroContainer from "@/components/HeroContainer";
-import type { Language } from "@/domain/i18n/translations";
+import type { HomepageDto } from "@/application/dto/homepageDto";
 import { branding } from "@/edition/branding";
 
 interface HomePageProps {
-  language: Language;
+  data: HomepageDto;
 }
 
-const HomePage: FunctionComponent<HomePageProps> = ({ language }) => {
+const HomePage: FunctionComponent<HomePageProps> = ({ data }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
   return (
@@ -28,7 +28,7 @@ const HomePage: FunctionComponent<HomePageProps> = ({ language }) => {
           logoAlt={branding.heroLogoAlt}
           contentRef={contentRef}
         />
-        <Content contentRef={contentRef} language={language} />
+        <Content contentRef={contentRef} data={data} />
         <HeadsUp />
         <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
       </GenericContainer>

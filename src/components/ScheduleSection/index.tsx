@@ -1,16 +1,14 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import Schedule, { type ScheduleDay } from "@/components/Schedule";
 import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
-import type { Language } from "@/domain/i18n/translations";
 
 interface ScheduleSectionProps {
   firstDayTitle: string;
   secondDayTitle: string;
-  language: Language;
+  events: ScheduleEventDto[];
 }
 
 // "09:45" -> "09.45h", matching the site's existing time notation (Schedule
@@ -36,19 +34,8 @@ function groupByDay(events: ScheduleEventDto[]): ScheduleDay[][] {
 const ScheduleSection: FunctionComponent<ScheduleSectionProps> = ({
   firstDayTitle,
   secondDayTitle,
-  language,
+  events,
 }) => {
-  const [events, setEvents] = useState<ScheduleEventDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<ScheduleEventDto[]>(`/schedule?lang=${language}`)
-      .then(setEvents)
-      .catch(() => setEvents([]));
-  }, [language]);
-
-  if (!events) return null;
-
   return (
     <Schedule
       firstDayTitle={firstDayTitle}

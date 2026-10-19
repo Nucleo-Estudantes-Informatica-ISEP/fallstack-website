@@ -1,15 +1,13 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import CompaniesContainer from "@/components/Companies/CompaniesContainer";
 import { CompanyProps } from "@/components/Companies/Company";
 import type {
   CompanyRankDto,
   CompanyRosterDto,
 } from "@/application/dto/companyDto";
-import type { Language } from "@/domain/i18n/translations";
 
 function toCompanyProps(company: CompanyRosterDto): CompanyProps {
   return {
@@ -45,23 +43,12 @@ function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
 }
 
 interface CompaniesSectionProps {
-  language: Language;
+  companies: CompanyRosterDto[];
 }
 
 const CompaniesSection: FunctionComponent<CompaniesSectionProps> = ({
-  language,
+  companies,
 }) => {
-  const [companies, setCompanies] = useState<CompanyRosterDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<CompanyRosterDto[]>(`/companies/roster?lang=${language}`)
-      .then(setCompanies)
-      .catch(() => setCompanies([]));
-  }, [language]);
-
-  if (!companies) return null;
-
   return (
     <section className="flex flex-col items-center text-center">
       {groupByRank(companies).map(({ rank, companies }) => (

@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 
 import HomePage from "@/components/HomePage";
+import { getHomepageData } from "@/application/services/publicEditionService";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
@@ -13,7 +14,8 @@ const App = async ({ searchParams }: AppProps) => {
     lang,
     (await headers()).get("accept-language")
   );
-  return <HomePage language={language} />;
+  const data = await getHomepageData(language);
+  return <HomePage data={data} />;
 };
 
 export default App;
