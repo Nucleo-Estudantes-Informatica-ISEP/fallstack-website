@@ -30,6 +30,27 @@ const nextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      ...["/assets/:path*", "/icons/:path*", "/google-wallet/:path*"].map(
+        (source) => ({
+          source,
+          headers: [
+            {
+              key: "Cache-Control",
+              value: "public, max-age=3600, must-revalidate",
+            },
+          ],
+        })
+      ),
+      // Only content-hashed files belong here; new bytes require a new URL.
+      {
+        source: "/assets/optimized/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
     ];
   },
 };

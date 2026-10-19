@@ -4,7 +4,7 @@ export default function Custom404() {
   return (
     <section
       data-testid="not-found"
-      className="flex h-screen w-screen flex-col items-center justify-center bg-[url('/assets/images/bgHero.svg')] bg-cover bg-center bg-no-repeat px-12"
+      className="flex h-screen w-screen flex-col items-center justify-center bg-[url('/assets/optimized/bgHero.900094f51c2f.webp')] bg-cover bg-center bg-no-repeat px-12"
     >
       <h1 className="text-center text-3xl font-semibold sm:text-4xl md:text-6xl">
         Não encontramos a página que estás à procura...
