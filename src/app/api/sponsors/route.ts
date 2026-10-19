@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { toSponsorDto } from "@/application/dto/sponsorDto";
-import { getActiveSponsors } from "@/application/services/sponsorService";
+import { getPublicSponsors } from "@/application/services/publicEditionService";
 
 export const GET = defineHandler({
-  auth: "public",
+  auth: "none",
   handler: async () => {
-    const sponsors = await getActiveSponsors();
-    return NextResponse.json(sponsors.map(toSponsorDto));
+    const data = await getPublicSponsors();
+    return NextResponse.json(data, {
+      status: 200,
+      headers: { "Cache-Control": "no-store" },
+    });
   },
 });

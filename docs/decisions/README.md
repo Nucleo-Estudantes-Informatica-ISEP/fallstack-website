@@ -38,3 +38,4 @@ implementation PR needs an ADR.
 | [0008](0008-enforce-content-security-policy.md)                  | Enforce Content Security Policy in production    | Accepted   |
 | [0010](0010-expire-and-revoke-wallet-passes.md)                  | Expire and revoke Wallet passes                  | Accepted   |
 | [0011](0011-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions | Accepted   |
+| [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                       | Accepted   |

@@ -1,3 +1,6 @@
+const {
+  publicDataRuntimeCaching,
+} = require("./src/config/publicDataRuntimeCaching");
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
 
@@ -36,6 +39,8 @@ const nextConfig = {
 
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: { runtimeCaching: publicDataRuntimeCaching },
 });
 
 module.exports = withSentryConfig(withPWA(nextConfig), {

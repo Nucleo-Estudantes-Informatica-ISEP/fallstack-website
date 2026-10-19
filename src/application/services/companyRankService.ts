@@ -19,6 +19,7 @@ import {
   type CompanyRankStyleInput,
 } from "../repositories/companyRankRepository";
 import { withTransaction } from "../repositories/transaction";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getCompanyRanks = () => findAllCompanyRanks();
 export const getCompanyRank = (id: string) => findCompanyRankById(id);
@@ -37,10 +38,13 @@ export async function createCompanyRankForAdmin(input: {
   style: CompanyRankStyleInput;
 }) {
   try {
-    return await withTransaction(async (tx) => {
-      const order = input.order ?? (await findMaxCompanyRankOrder(tx)) + 1;
-      return createCompanyRank({ ...input, order }, tx);
-    });
+    return await afterPublicDataWrite(
+      "companies",
+      withTransaction(async (tx) => {
+        const order = input.order ?? (await findMaxCompanyRankOrder(tx)) + 1;
+        return createCompanyRank({ ...input, order }, tx);
+      })
+    );
   } catch (error) {
     if (isUniqueConstraintError(error))
       throw new HttpError("Já existe um rank com este nome.", 409);
@@ -58,7 +62,10 @@ export async function updateCompanyRankForAdmin(
 ) {
   if (!(await findCompanyRankById(id))) throw new HttpError("Not found", 404);
   try {
-    return await updateCompanyRank(id, input);
+    return await afterPublicDataWrite(
+      "companies",
+      updateCompanyRank(id, input)
+    );
   } catch (error) {
     if (isUniqueConstraintError(error))
       throw new HttpError("Já existe um rank com este nome.", 409);
@@ -74,7 +81,7 @@ export async function deleteCompanyRankForAdmin(id: string) {
       "Não é possível eliminar um rank com empresas associadas.",
       409
     );
-  await deleteCompanyRank(id);
+  await afterPublicDataWrite("companies", deleteCompanyRank(id));
 }
 
 export async function updateCompanyRankOrder(
@@ -88,5 +95,5 @@ export async function updateCompanyRankOrder(
     if (!existingIds.has(update.id)) throw new HttpError("Not found", 404);
   }
 
-  await bulkUpdateCompanyRankOrder(updates);
+  await afterPublicDataWrite("companies", bulkUpdateCompanyRankOrder(updates));
 }
