@@ -62,11 +62,14 @@ the existing CSP. This change does not enable static HTML export or Cloudflare.
 ## Evidence and limits
 
 `tests/e2e/publicEdition.test.ts` repeats uncached service reads and cached
-homepage reads against the same PostgreSQL fixtures, counting Prisma SELECTs.
-On the local PG16 instance, 30 uncached reads issued 300 SELECTs (p50 1.610ms,
-p95 2.901ms); 30 warm cached reads issued zero (p50 0.060ms, p95 0.087ms).
-A 100-reader cold burst used no more SELECTs than one cold homepage load (10).
-These are local data-loading timings, not hosted capacity, HTTP latency or LCP.
+homepage reads against the same PostgreSQL fixtures. A Prisma query extension
+counts model operations before I/O, avoiding asynchronous SQL-log delivery races.
+On the local PG16 instance, 30 uncached reads issued 120 Prisma read operations
+(p50 1.857ms, p95 3.760ms); 30 warm cached reads issued zero (p50 0.066ms,
+p95 0.113ms). A 100-reader cold burst used exactly the same four operations as
+one cold homepage load. Relation loading can emit multiple SQL statements per
+Prisma operation; these counters are not SQL statement counts. These are local
+data-loading timings, not hosted capacity, HTTP latency or LCP.
 Unit tests also cover failure recovery, both languages, independent replica TTLs,
 identity-cookie independence, invalidation races and public-field filtering.
 

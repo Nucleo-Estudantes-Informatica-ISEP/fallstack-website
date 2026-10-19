@@ -6,13 +6,20 @@ import { Language } from "@/domain/i18n/translations";
 
 import { databaseFixtures } from "./support/databaseFixtures";
 
-const measurement = vi.hoisted(() => ({ queries: 0 }));
+const measurement = vi.hoisted(() => ({ operations: 0 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/application/repositories/database", async () => {
   const { PrismaClient } = await import("@prisma/client");
-  const db = new PrismaClient({ log: [{ emit: "event", level: "query" }] });
-  db.$on("query", (event) => {
-    if (/^SELECT .*"public"\./s.test(event.query)) measurement.queries++;
+  const db = new PrismaClient().$extends({
+    query: {
+      $allModels: {
+        $allOperations({ args, query }) {
+          // Query log events can arrive after completion; this hook counts before I/O.
+          measurement.operations++;
+          return query(args);
+        },
+      },
+    },
   });
   return {
     default: db,
@@ -70,7 +77,7 @@ afterAll(async () => {
 
 async function measure(read: () => Promise<unknown>, count = 30) {
   const samples: number[] = [];
-  measurement.queries = 0;
+  measurement.operations = 0;
   for (let i = 0; i < count; i++) {
     const start = performance.now();
     await read();
@@ -79,13 +86,13 @@ async function measure(read: () => Promise<unknown>, count = 30) {
   samples.sort((a, b) => a - b);
   return {
     reads: count,
-    queries: measurement.queries,
+    operations: measurement.operations,
     p50ms: +samples[Math.floor(count * 0.5)].toFixed(3),
     p95ms: +samples[Math.floor(count * 0.95)].toFixed(3),
   };
 }
 
-test("real DB: warm public homepage reads issue zero SQL; concurrent misses share each dataset", async () => {
+test("real DB: warm public homepage reads issue zero DB operations; concurrent misses share each dataset", async () => {
   const uncached = () =>
     Promise.all([
       faqService.getFaqEntries(),
@@ -96,21 +103,21 @@ test("real DB: warm public homepage reads issue zero SQL; concurrent misses shar
   await uncached();
   const before = await measure(uncached);
   publicDataCache.invalidate();
-  measurement.queries = 0;
+  measurement.operations = 0;
   await getHomepageData(Language.PT);
-  const coldQueries = measurement.queries;
+  const coldOperations = measurement.operations;
+  expect(coldOperations).toBe(4);
   const after = await measure(() => getHomepageData(Language.PT));
-  expect(before.queries).toBeGreaterThan(0);
-  expect(after.queries).toBe(0);
+  expect(before.operations).toBe(120);
+  expect(after.operations).toBe(0);
   publicDataCache.invalidate();
-  measurement.queries = 0;
+  measurement.operations = 0;
   await Promise.all(
     Array.from({ length: 100 }, () => getHomepageData(Language.PT))
   );
-  expect(measurement.queries).toBeGreaterThan(0);
-  expect(measurement.queries).toBeLessThanOrEqual(coldQueries);
+  expect(measurement.operations).toBe(coldOperations);
   process.stdout.write(
-    `public-edition benchmark ${JSON.stringify({ before, after, coldQueries, concurrentReaders: 100 })}\n`
+    `public-edition benchmark ${JSON.stringify({ before, after, coldOperations, concurrentReaders: 100 })}\n`
   );
 });
 
