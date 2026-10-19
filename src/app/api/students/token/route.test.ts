@@ -160,10 +160,10 @@ test("rate limits repeated requests with unknown student codes", async () => {
   assert.equal(response.status, 429);
 
   // Verification runs before the limiter rejects the sixth invalid request.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
-test("allows a valid code when the employee is over budget", async () => {
+test("rate limits a valid code when the employee is over budget", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -183,11 +183,8 @@ test("allows a valid code when the employee is over budget", async () => {
 
   const response = await post({ code: "AB12" });
 
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    token: "preview-token",
-  });
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(response.status, 429);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
 test("does not rate limit valid student scans", async () => {
@@ -243,7 +240,7 @@ test("scopes invalid-code rate limits to each employee", async () => {
 
   // A different employee has an independent rate-limit counter.
   assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("returns 403 when the employee session has no employee ID", async () => {
@@ -292,7 +289,7 @@ test("resets the invalid-code limit after the window expires", async () => {
   vi.advanceTimersByTime(60_001);
 
   assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 7);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
 test("returns the expected Retry-After header when rate limited", async () => {
@@ -318,7 +315,7 @@ test("returns the expected Retry-After header when rate limited", async () => {
 
   assert.equal(response.status, 429);
   assert.equal(response.headers.get("Retry-After"), "60");
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
 test("successful scans do not reset the invalid-code count", async () => {
@@ -381,10 +378,10 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
   );
 
   // All requests reach verification before invalid-code limiting.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
-test("allows concurrent valid student scans beyond the invalid-code limit", async () => {
+test("limits concurrent valid scans while reservations are pending", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -405,14 +402,14 @@ test("allows concurrent valid student scans beyond the invalid-code limit", asyn
     Array.from({ length: 10 }, () => post({ code: "AB12" }))
   );
 
-  assert.equal(responses.length, 10);
+  assert.equal(
+    responses.filter((response) => response.status === 200).length,
+    5
+  );
+  assert.equal(
+    responses.filter((response) => response.status === 429).length,
+    5
+  );
 
-  for (const response of responses) {
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), {
-      token: "preview-token",
-    });
-  }
-
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
