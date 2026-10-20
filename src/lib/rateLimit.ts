@@ -12,10 +12,17 @@ type RateLimitResult = {
   retryAfterMs: number;
 };
 
-type ReservationResult = RateLimitResult & {
-  release: () => void;
-};
-
+/**
+ * In-memory rate limiter scoped to a single process.
+ *
+ * With N application replicas, the effective limit may reach
+ * max × N requests per key per window, since each replica maintains
+ * an independent counter.
+ *
+ * This provides traffic shaping, not a hard brute-force protection
+ * boundary. Use shared state with atomic updates (e.g. Redis) if
+ * cross-replica enforcement is required.
+ */
 export function createRateLimiter({
   windowMs,
   max,
@@ -61,31 +68,25 @@ export function createRateLimiter({
     },
 
     /**
-     * Reserves capacity immediately. Call release() if the operation should
-     * not count against the limit. The reservation is counted otherwise.
+     * Checks whether capacity is available without consuming it.
+     * The result may become stale if concurrent requests update the bucket.
      */
-    reserve(key: string): ReservationResult {
-      const result = increment(key);
+    peek(key: string): RateLimitResult {
+      const now = Date.now();
+      const bucket = buckets.get(key);
 
-      if (!result.allowed) {
-        return { ...result, release: () => {} };
+      if (!bucket || bucket.resetAt <= now) {
+        return { allowed: true, retryAfterMs: 0 };
       }
 
-      const bucket = buckets.get(key);
-      let released = false;
+      if (bucket.count >= max) {
+        return {
+          allowed: false,
+          retryAfterMs: bucket.resetAt - now,
+        };
+      }
 
-      return {
-        ...result,
-        release: () => {
-          if (released) return;
-          released = true;
-
-          // Do not decrement a replacement bucket after the window expires.
-          if (bucket && buckets.get(key) === bucket) {
-            bucket.count = Math.max(0, bucket.count - 1);
-          }
-        },
-      };
+      return { allowed: true, retryAfterMs: 0 };
     },
   };
 }

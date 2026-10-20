@@ -21,26 +21,40 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const rateLimitReservation = invalidCodeLimiter.reserve(employeeId);
+    const rateLimitCheck = invalidCodeLimiter.peek(employeeId);
 
-    if (!rateLimitReservation.allowed) {
+    if (!rateLimitCheck.allowed) {
       logger.warn(
         {
           event: "student_token.rate_limited",
           employeeId,
-          retryAfterMs: rateLimitReservation.retryAfterMs,
+          retryAfterMs: rateLimitCheck.retryAfterMs,
         },
         "Student token requests rate limited"
       );
 
-      return tooManyRequestsResponse(rateLimitReservation.retryAfterMs);
+      return tooManyRequestsResponse(rateLimitCheck.retryAfterMs);
     }
 
     const token = await jwtStudent(body.code);
 
     if (token) {
-      rateLimitReservation.release();
       return NextResponse.json({ token }, { status: 200 });
+    }
+
+    const result = invalidCodeLimiter.check(employeeId);
+
+    if (!result.allowed) {
+      logger.warn(
+        {
+          event: "student_token.rate_limited",
+          employeeId,
+          retryAfterMs: result.retryAfterMs,
+        },
+        "Student token requests rate limited"
+      );
+
+      return tooManyRequestsResponse(result.retryAfterMs);
     }
 
     logger.warn(

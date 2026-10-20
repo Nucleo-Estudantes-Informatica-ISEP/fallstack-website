@@ -377,11 +377,11 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
     1
   );
 
-  // All requests reach verification before invalid-code limiting.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  // All six requests may pass peek() before any invalid results are counted.
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
 });
 
-test("limits concurrent valid scans while reservations are pending", async () => {
+test("allows concurrent valid student scans beyond the invalid-code limit", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -404,12 +404,12 @@ test("limits concurrent valid scans while reservations are pending", async () =>
 
   assert.equal(
     responses.filter((response) => response.status === 200).length,
-    5
+    10
   );
   assert.equal(
     responses.filter((response) => response.status === 429).length,
-    5
+    0
   );
 
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
 });

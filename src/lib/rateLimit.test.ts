@@ -41,61 +41,35 @@ test("resets once the window elapses", () => {
   assert.equal(limiter.check("ip-1").allowed, true);
 });
 
-test("reserve blocks once the limit is reached", () => {
-  const limiter = createRateLimiter({ windowMs: 1000, max: 2 });
-
-  const first = limiter.reserve("employee-1");
-  const second = limiter.reserve("employee-1");
-
-  assert.equal(first.allowed, true);
-  assert.equal(second.allowed, true);
-  assert.equal(limiter.reserve("employee-1").allowed, false);
-});
-
-test("release frees a reservation", () => {
+test("peek checks capacity without consuming it", () => {
   const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
 
-  const reservation = limiter.reserve("employee-1");
-  assert.equal(reservation.allowed, true);
-  assert.equal(limiter.reserve("employee-1").allowed, false);
+  assert.equal(limiter.peek("employee-1").allowed, true);
+  assert.equal(limiter.peek("employee-1").allowed, true);
 
-  reservation.release();
-
-  assert.equal(limiter.reserve("employee-1").allowed, true);
+  assert.equal(limiter.check("employee-1").allowed, true);
+  assert.equal(limiter.peek("employee-1").allowed, false);
 });
 
-test("release is idempotent", () => {
-  const limiter = createRateLimiter({ windowMs: 1000, max: 2 });
-
-  const reservation = limiter.reserve("employee-1");
-  reservation.release();
-  reservation.release();
-
-  assert.equal(limiter.reserve("employee-1").allowed, true);
-  assert.equal(limiter.reserve("employee-1").allowed, true);
-  assert.equal(limiter.reserve("employee-1").allowed, false);
-});
-
-test("release does not decrement a bucket from a newer window", () => {
+test("peek reports the remaining window when the limit is reached", () => {
   const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
 
-  const oldReservation = limiter.reserve("employee-1");
-  assert.equal(oldReservation.allowed, true);
+  limiter.check("employee-1");
+  vi.advanceTimersByTime(400);
+
+  const result = limiter.peek("employee-1");
+
+  assert.equal(result.allowed, false);
+  assert.equal(result.retryAfterMs, 600);
+});
+
+test("peek allows requests after the window expires", () => {
+  const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
+
+  limiter.check("employee-1");
+  assert.equal(limiter.peek("employee-1").allowed, false);
 
   vi.advanceTimersByTime(1001);
 
-  const newReservation = limiter.reserve("employee-1");
-  assert.equal(newReservation.allowed, true);
-
-  oldReservation.release();
-
-  assert.equal(limiter.reserve("employee-1").allowed, false);
-});
-
-test("reserve tracks separate employees independently", () => {
-  const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
-
-  assert.equal(limiter.reserve("employee-1").allowed, true);
-  assert.equal(limiter.reserve("employee-2").allowed, true);
-  assert.equal(limiter.reserve("employee-1").allowed, false);
+  assert.equal(limiter.peek("employee-1").allowed, true);
 });
