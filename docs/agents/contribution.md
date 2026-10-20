@@ -53,8 +53,9 @@ boundary. If a pre-fix test is impractical, explain why and give a repeatable
 staging check.
 
 Before requesting review, run `pnpm lint`, `pnpm test`, `pnpm typecheck`,
-`pnpm build`, and `pnpm exec prisma validate`. For deployment-sensitive changes,
-build the affected Docker target. Start `pnpm dev` and exercise the changed
+`pnpm build`, and `pnpm exec prisma validate`. Docker builds and container
+checks are not required locally, including for deployment-sensitive changes;
+CI performs them. Start `pnpm dev` and exercise the changed
 route or page; for API routes check body and status. Report any part that
 could not be exercised. CI also runs frozen install, production and migrator
 Docker builds, non-root assertions, and applies migrations to a PostgreSQL

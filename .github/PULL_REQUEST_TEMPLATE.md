@@ -17,7 +17,8 @@ Closes #
 - [ ] `pnpm typecheck`
 - [ ] `pnpm build`
 - [ ] `pnpm exec prisma validate`
-- [ ] Docker target built (deployment-sensitive changes only)
+
+Docker builds and container checks run in CI and are not required locally.
 
 ## Manual testing steps
 
