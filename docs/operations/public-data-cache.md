@@ -56,7 +56,11 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
   DB; a DB failure gives API 500 and a logged, empty homepage section. Concurrent
   failures share a one-second retry cooldown. Each load has a two-second deadline,
   bounding the homepage data wait even if a DB query hangs. Timeout does not
-  cancel underlying database work; investigate stuck queries and pool health.
+  cancel underlying database work: no additional load for that key starts until
+  the original work settles, including after invalidation. Investigate stuck
+  queries and pool health. A cold-start timeout renders empty sections in SSR
+  HTML, with no client retry; this is not data loss. A later request can recover
+  after the one-second cooldown and once the underlying load has settled.
   Late results cannot overwrite a newer cache entry. Restore DB connectivity; the next
   retry recovers. A cache restart is unnecessary for ordinary edits.
 - To purge all entries operationally, restart each application replica through

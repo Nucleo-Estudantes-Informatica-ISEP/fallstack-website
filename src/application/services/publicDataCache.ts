@@ -37,9 +37,14 @@ type Section = "faqs" | "schedule" | "sponsors" | "companies";
 export function createPublicDataCache() {
   const entries = new Map<
     string,
-    { expiresAt: number; value: Promise<unknown> }
+    {
+      expiresAt: number;
+      value: Promise<unknown>;
+      loading: boolean;
+      invalidated: boolean;
+    }
   >();
-  return {
+  const cache = {
     async read<T>(
       section: Section,
       language: Language,
@@ -48,19 +53,29 @@ export function createPublicDataCache() {
     ): Promise<T> {
       const key = `${branding.year}:${section}:${language}`;
       let entry = entries.get(key);
-      if (!entry || entry.expiresAt <= Date.now()) {
+      if (!entry || (!entry.loading && entry.expiresAt <= Date.now())) {
         entry = {
           // Pending loads share a bounded promise, including its timeout.
           expiresAt: Infinity,
-          // Detach from any references retained by the loader before freezing.
-          value: boundedLoad(async () =>
-            freezeDto(structuredClone(await load()))
-          ),
+          value: Promise.resolve(undefined),
+          loading: true,
+          invalidated: false,
         };
         const pending = entry;
-        pending.value = pending.value.then(
+        // Track the actual work, which can outlive the response deadline.
+        // Invalidation must retain this guard until the underlying load settles.
+        pending.value = boundedLoad(async () => {
+          try {
+            // Detach from references retained by the loader before freezing.
+            return freezeDto(structuredClone(await load()));
+          } finally {
+            pending.loading = false;
+          }
+        }).then(
           (value) => {
-            pending.expiresAt = Date.now() + PUBLIC_DATA_TTL_MS;
+            pending.expiresAt = pending.invalidated
+              ? 0
+              : Date.now() + PUBLIC_DATA_TTL_MS;
             return value;
           },
           (error) => {
@@ -73,15 +88,24 @@ export function createPublicDataCache() {
         entries.set(key, entry);
       }
       // The shared DTO snapshot is deeply frozen; callers must not mutate it.
-      return (await entry.value) as T;
+      const invalidated = entry.invalidated;
+      const value = await entry.value;
+      // A write during a load requires a fresh read after that work settles.
+      if (invalidated) return cache.read(section, language, load, onLoadError);
+      return value as T;
     },
     invalidate(section?: Section) {
-      for (const key of entries.keys()) {
-        if (!section || key.startsWith(`${branding.year}:${section}:`))
-          entries.delete(key);
+      for (const [key, entry] of entries) {
+        if (!section || key.startsWith(`${branding.year}:${section}:`)) {
+          if (entry.loading) {
+            entry.invalidated = true;
+            entry.expiresAt = 0;
+          } else entries.delete(key);
+        }
       }
     },
   };
+  return cache;
 }
 
 // Next route bundles share this process cache. No identity or raw DB rows enter it.

@@ -186,9 +186,15 @@ test.each(["faqs", "schedule", "sponsors", "companies"] as const)(
 
 afterEach(() => vi.useRealTimers());
 
-test("a hung section bounds homepage latency, reports once, and recovers after cooldown", async () => {
+test("a hung section bounds homepage latency, reports once, and recovers after cooldown and settlement", async () => {
   vi.useFakeTimers();
-  reads.faqs.mockImplementationOnce(() => new Promise(() => {}));
+  let rejectLoad!: (error: Error) => void;
+  reads.faqs.mockImplementationOnce(
+    () =>
+      new Promise((_, reject) => {
+        rejectLoad = reject;
+      })
+  );
   const visitors = Promise.all(
     Array.from({ length: 100 }, () => getHomepageData(Language.PT))
   );
@@ -204,6 +210,12 @@ test("a hung section bounds homepage latency, reports once, and recovers after c
   expect((await getHomepageData(Language.PT)).faqs).toEqual([]);
   expect(Sentry.captureException).toHaveBeenCalledOnce();
   await vi.advanceTimersByTimeAsync(1000);
+  expect((await getHomepageData(Language.PT)).faqs).toEqual([]);
+  expect(reads.faqs).toHaveBeenCalledOnce();
+  expect(Sentry.captureException).toHaveBeenCalledOnce();
+  rejectLoad(new Error("late DB failure"));
+  await vi.advanceTimersByTimeAsync(0);
   expect((await getHomepageData(Language.PT)).faqs).toHaveLength(1);
   expect(reads.faqs).toHaveBeenCalledTimes(2);
+  expect(Sentry.captureException).toHaveBeenCalledOnce();
 });

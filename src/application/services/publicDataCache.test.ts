@@ -89,9 +89,12 @@ test("a read started before invalidation cannot repopulate the new cache generat
   await Promise.resolve();
   cache.invalidate("schedule");
   const fresh = vi.fn().mockResolvedValue(["new"]);
-  expect(await cache.read("schedule", Language.PT, fresh)).toEqual(["new"]);
+  const freshRead = cache.read("schedule", Language.PT, fresh);
+  await Promise.resolve();
+  expect(fresh).not.toHaveBeenCalled();
   finish(["old"]);
   await oldRead;
+  expect(await freshRead).toEqual(["new"]);
   expect(await cache.read("schedule", Language.PT, fresh)).toEqual(["new"]);
   expect(fresh).toHaveBeenCalledOnce();
 });
@@ -203,14 +206,22 @@ test.each([false, true])(
       /timed out/
     );
     expect(load).toHaveBeenCalledOnce();
-    await vi.advanceTimersByTimeAsync(1000);
+    for (let period = 0; period < 5; period++) {
+      await vi.advanceTimersByTimeAsync(1000);
+      await expect(
+        cache.read("faqs", Language.PT, load, report)
+      ).rejects.toThrow(/timed out/);
+      cache.invalidate("faqs");
+      await expect(
+        cache.read("faqs", Language.PT, load, report)
+      ).rejects.toThrow(/timed out/);
+      expect(load).toHaveBeenCalledOnce();
+      expect(report).toHaveBeenCalledOnce();
+    }
     const fresh = vi.fn().mockResolvedValue(["fresh"]);
-    expect(await cache.read("faqs", Language.PT, fresh, report)).toEqual([
-      "fresh",
-    ]);
     if (rejectLate) reject(new Error("late"));
     else resolve(["old"]);
-    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(0);
     expect(await cache.read("faqs", Language.PT, fresh, report)).toEqual([
       "fresh",
     ]);
