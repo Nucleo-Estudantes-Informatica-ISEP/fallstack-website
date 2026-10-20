@@ -133,7 +133,7 @@ const CompanyProfileSectionContainer: React.FC<
     <div
       className="flex min-h-screen w-screen flex-col"
       style={{
-        backgroundImage: "url(/assets/images/bgHero.svg)",
+        backgroundImage: "url(/assets/optimized/bgHero.900094f51c2f.webp)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
@@ -172,7 +172,7 @@ const CompanyProfileSectionContainer: React.FC<
           paddingRight: horizontalPadding,
         }}
       >
-        <div className="w-full flex-shrink-0 md:w-96">
+        <div className="w-full shrink-0 md:w-96">
           <nav className="overflow-hidden bg-black shadow-xl">
             <div className="divide-y divide-gray-800">
               {sidebarItems.map((item) => renderButton(item))}

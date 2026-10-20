@@ -68,7 +68,7 @@ const PreviewProfileSectionContainer: React.FC<
     <div
       className="flex min-h-screen w-screen flex-col"
       style={{
-        backgroundImage: "url(/assets/images/bgHero.svg)",
+        backgroundImage: "url(/assets/optimized/bgHero.900094f51c2f.webp)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
