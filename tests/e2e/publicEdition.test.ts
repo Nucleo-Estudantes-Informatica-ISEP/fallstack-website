@@ -171,3 +171,23 @@ test("real DB: edits, reorder, activation, rank, profile and interest changes in
     false
   );
 });
+
+test("real DB: employee role changes and account deletion leave the public company intact", async () => {
+  const { deleteUser, setUserRole } =
+    await import("@/application/repositories/userRepository");
+  const company = await fixtures.company();
+  const employee = await fixtures.employee(company.id);
+  await companyService.updateCompanyForAdmin(company.id, { active: true });
+  const before = await companyService.getActiveCompanies();
+  expect(before.some((entry) => entry.id === company.id)).toBe(true);
+  await setUserRole(employee.id, "STUDENT");
+  expect(await companyService.getActiveCompanies()).toEqual(before);
+  await deleteUser(employee.id);
+  expect(
+    await db.employee.findUnique({ where: { id: employee.id } })
+  ).toBeNull();
+  expect(
+    await db.company.findUnique({ where: { id: company.id } })
+  ).not.toBeNull();
+  expect(await companyService.getActiveCompanies()).toEqual(before);
+});

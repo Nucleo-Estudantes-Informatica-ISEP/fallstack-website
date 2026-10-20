@@ -19,17 +19,17 @@ resolved PT/EN language. Sponsors use one language-independent entry. There are
 seven possible entries; each process/environment owns its own cache and a restart
 clears it. No Redis, new service, environment variable or migration is required.
 
-Entries have a hard 60-second TTL, measured from the start of the DB load. Expired
+Entries have a hard 60-second TTL, measured from completion of the DB load. Expired
 reads wait for a fresh load; errors do not extend stale data. Concurrent misses
 share a promise. Failed loads share the same rejection for one second before
 retrying. Callers receive cloned DTOs. Invalidation deletes pending entries too,
 so a pre-edit read cannot repopulate a newer cache generation.
 
-Successful service writes invalidate the relevant dataset after the write or
-transaction commits, in both languages. This includes reorder, activation,
+Service write attempts invalidate the relevant dataset after the write or
+transaction settles, even on rejection because the commit outcome may be unknown, in both languages. This includes reorder, activation,
 company rank/style/profile and translated interest changes. Admin reads remain
 uncached. Local edits become visible on the next read; other processes/replicas
-and direct SQL edits converge within 60 seconds, plus the fresh DB request time.
+and direct SQL edits converge within 60 seconds, plus any in-flight and fresh DB request time.
 Already-running responses may finish with the pre-edit snapshot. This is bounded
 freshness, not distributed immediate invalidation.
 

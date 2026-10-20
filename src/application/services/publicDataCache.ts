@@ -21,17 +21,25 @@ export function createPublicDataCache() {
       let entry = entries.get(key);
       if (!entry || entry.expiresAt <= Date.now()) {
         entry = {
-          expiresAt: Date.now() + PUBLIC_DATA_TTL_MS,
+          // Pending loads stay shared until they settle.
+          expiresAt: Infinity,
           value: Promise.resolve().then(load),
         };
         const pending = entry;
-        pending.value = pending.value.catch((error) => {
-          // Share failures briefly to bound retry storms; never serve stale data.
-          pending.expiresAt = Date.now() + 1000;
-          throw error;
-        });
+        pending.value = pending.value.then(
+          (value) => {
+            pending.expiresAt = Date.now() + PUBLIC_DATA_TTL_MS;
+            return value;
+          },
+          (error) => {
+            // Share failures briefly to bound retry storms; never serve stale data.
+            pending.expiresAt = Date.now() + 1000;
+            throw error;
+          }
+        );
         entries.set(key, entry);
       }
+      // Isolate cached DTOs from caller mutation.
       return structuredClone(await entry.value) as T;
     },
     invalidate(section?: Section) {
@@ -55,7 +63,10 @@ export async function afterPublicDataWrite<T>(
   section: Section,
   write: Promise<T>
 ): Promise<T> {
-  const result = await write;
-  publicDataCache.invalidate(section);
-  return result;
+  try {
+    return await write;
+  } finally {
+    // A rejected call may still have committed (for example, a lost DB reply).
+    publicDataCache.invalidate(section);
+  }
 }

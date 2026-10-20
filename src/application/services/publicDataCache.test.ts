@@ -3,7 +3,12 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { Language } from "@/domain/i18n/translations";
 
-import { createPublicDataCache, PUBLIC_DATA_TTL_MS } from "./publicDataCache";
+import {
+  afterPublicDataWrite,
+  createPublicDataCache,
+  PUBLIC_DATA_TTL_MS,
+  publicDataCache,
+} from "./publicDataCache";
 
 vi.mock("server-only", () => ({}));
 beforeEach(() => {
@@ -107,3 +112,57 @@ test("expired data is never returned when its fresh load fails", async () => {
     "unavailable"
   );
 });
+
+test("slow pending loads stay shared and receive a full TTL after completion", async () => {
+  const cache = createPublicDataCache();
+  let finish!: (value: string[]) => void;
+  const load = vi.fn(
+    () =>
+      new Promise<string[]>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const first = cache.read("faqs", Language.PT, load);
+  await Promise.resolve();
+  vi.advanceTimersByTime(PUBLIC_DATA_TTL_MS * 2);
+  const second = cache.read("faqs", Language.PT, load);
+  await Promise.resolve();
+  expect(load).toHaveBeenCalledOnce();
+  finish(["loaded"]);
+  await Promise.all([first, second]);
+  vi.advanceTimersByTime(PUBLIC_DATA_TTL_MS - 1);
+  expect(await cache.read("faqs", Language.PT, load)).toEqual(["loaded"]);
+  expect(load).toHaveBeenCalledOnce();
+  vi.advanceTimersByTime(1);
+  load.mockResolvedValue(["fresh"]);
+  expect(await cache.read("faqs", Language.PT, load)).toEqual(["fresh"]);
+  expect(load).toHaveBeenCalledTimes(2);
+});
+
+test.each([false, true])(
+  "write rejection=%s invalidates both languages and preserves the outcome",
+  async (reject) => {
+    publicDataCache.invalidate();
+    const load = vi.fn().mockResolvedValue(["old"]);
+    for (const language of [Language.PT, Language.EN])
+      await publicDataCache.read("companies", language, load);
+    await publicDataCache.read("sponsors", Language.PT, load);
+    const error = new Error("reply lost after commit");
+    load.mockResolvedValue(["committed"]);
+    const write = afterPublicDataWrite(
+      "companies",
+      reject ? Promise.reject(error) : Promise.resolve("result")
+    );
+    if (reject) await expect(write).rejects.toBe(error);
+    else await expect(write).resolves.toBe("result");
+    for (const language of [Language.PT, Language.EN])
+      expect(await publicDataCache.read("companies", language, load)).toEqual([
+        "committed",
+      ]);
+    expect(await publicDataCache.read("sponsors", Language.PT, load)).toEqual([
+      "old",
+    ]);
+    expect(load).toHaveBeenCalledTimes(5);
+    publicDataCache.invalidate();
+  }
+);

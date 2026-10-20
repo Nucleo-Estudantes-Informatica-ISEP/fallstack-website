@@ -76,6 +76,7 @@ export function defineHandler<
   Params = Record<string, never>,
   Schema extends ZodType | undefined = undefined,
 >(config: DefineHandlerConfig<Params, Schema>) {
+  // Skipping session resolution requires explicit auth: "none".
   const auth = config.auth ?? "session";
   if (auth === "none" && config.authorize)
     throw new Error("auth:none cannot use authorize");

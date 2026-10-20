@@ -11,10 +11,10 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
    Body must be identical for the same language, status 200, `Cache-Control: no-store`, no private fields or `Set-Cookie` from these handlers.
 2. Edit a FAQ/schedule translation, reorder entries, activate/deactivate a sponsor
    or company, or change a company's rank/style/interests/profile. The writer's
-   process must show the edit on its next read in both languages. Failed writes
-   must leave the previous data visible.
+   process must show the edit on its next read in both languages. Rejected writes also invalidate: a lost DB reply can hide a successful commit.
+   The next read must reflect the actual committed DB state.
 3. With multiple replicas, direct requests to each replica after an edit. All
-   must show the edit within 60 seconds plus DB latency. Repeat after a direct
+   must show the edit within 60 seconds plus in-flight and fresh DB latency. Repeat after a direct
    SQL edit. Normal load-balancer requests alone cannot prove every replica.
 4. Repeat public API checks with the updated service worker controlling the page
    (including an installed PWA). These paths must use NetworkOnly and fail
@@ -61,3 +61,11 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
 Use shared invalidation/storage only if replica count or a requirement for
 immediate cross-replica edits makes the documented 60-second bound unacceptable.
 No Redis or Cloudflare configuration is required by this change.
+
+## Release handoff
+
+Carry the unchecked rollout items into the dev-to-main release PR: real AuthNEI
+login and role flows, an installed-device PWA with the updated worker, requests
+to each hosted replica after edits, and matched browser LCP/client-JS measurements.
+Production alert delivery remains TBD as described above. Record human evidence
+there before rollout; automated checks do not complete author verification.

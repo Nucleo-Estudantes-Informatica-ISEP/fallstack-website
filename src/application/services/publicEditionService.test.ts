@@ -112,18 +112,18 @@ test.each([undefined, "invalid", "valid"])(
   }
 );
 
-test("only successful writes invalidate both languages after completion", async () => {
+test("write attempts invalidate both languages after settlement", async () => {
   await getPublicFaqs(Language.PT);
   await getPublicFaqs(Language.EN);
   await expect(
     afterPublicDataWrite("faqs", Promise.reject(new Error("rollback")))
   ).rejects.toThrow("rollback");
   await getPublicFaqs(Language.EN);
-  expect(reads.faqs).toHaveBeenCalledTimes(2);
+  expect(reads.faqs).toHaveBeenCalledTimes(3);
   await afterPublicDataWrite("faqs", Promise.resolve());
   await getPublicFaqs(Language.PT);
   await getPublicFaqs(Language.EN);
-  expect(reads.faqs).toHaveBeenCalledTimes(4);
+  expect(reads.faqs).toHaveBeenCalledTimes(5);
 });
 
 test("homepage isolates failed sections; API preserves failure status instead of caching empty success", async () => {
