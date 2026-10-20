@@ -26,6 +26,18 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
 
 ## Diagnose and recover
 
+- Production alert delivery: **TBD — human confirmation required before rollout.**
+  Each failed homepage section calls `reportError`, which logs at error level
+  and calls Sentry `captureException` with `extra.operation` set to
+  `homepage_faqs`, `homepage_schedule`, `homepage_sponsors` or
+  `homepage_companies`, including failures served from the one-second cooldown.
+  SDK capture alone does not confirm ingestion or notifications: monitoring is
+  disabled without a DSN. Follow the [observability runbook](../observability.md#8-sentry-operations-and-alerts)
+  to configure new/regressed issue alerts and volume alerts for ongoing outages.
+  In a non-production environment, exercise each section's failure path and
+  confirm the operation in the received event's additional data and delivery to
+  the maintained incident destination. Record the alert owner, destination and
+  delivery evidence before rollout; automated tests only verify SDK capture.
 - Check existing structured logs/Sentry for `homepage_faqs`, `homepage_schedule`,
   `homepage_sponsors`, `homepage_companies` or `unhandled_route_error`. An empty
   section can indicate a DB error; check the public API's status/body too.

@@ -8,6 +8,8 @@ import { afterPublicDataWrite, publicDataCache } from "./publicDataCache";
 import { getHomepageData, getPublicFaqs } from "./publicEditionService";
 import getServerSession from "./sessionService";
 
+import * as Sentry from "@sentry/nextjs";
+
 const reads = vi.hoisted(() => ({
   faqs: vi.fn(),
   schedule: vi.fn(),
@@ -20,7 +22,7 @@ vi.mock("./faqService", () => ({ getFaqEntries: reads.faqs }));
 vi.mock("./scheduleService", () => ({ getScheduleEvents: reads.schedule }));
 vi.mock("./sponsorService", () => ({ getActiveSponsors: reads.sponsors }));
 vi.mock("./companyService", () => ({ getActiveCompanies: reads.companies }));
-vi.mock("@/lib/logger", () => ({ reportError: vi.fn() }));
+vi.mock("@sentry/nextjs", () => ({ captureException: vi.fn() }));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -136,3 +138,25 @@ test("homepage isolates failed sections; API preserves failure status instead of
   expect(response.status).toBe(500);
   expect(await response.json()).toEqual({ error: "Something went wrong" });
 });
+
+test.each(["faqs", "schedule", "sponsors", "companies"] as const)(
+  "homepage %s failures reach Sentry with their operation during the cooldown and recover",
+  async (section) => {
+    const error = new Error("unavailable");
+    reads[section].mockRejectedValueOnce(error);
+
+    for (let visitor = 0; visitor < 2; visitor++) {
+      expect((await getHomepageData(Language.PT))[section]).toEqual([]);
+      expect(Sentry.captureException).toHaveBeenLastCalledWith(error, {
+        extra: { operation: `homepage_${section}` },
+      });
+    }
+    expect(reads[section]).toHaveBeenCalledOnce();
+    expect(Sentry.captureException).toHaveBeenCalledTimes(2);
+
+    // Simulate operational cache reset without waiting for the retry cooldown.
+    publicDataCache.invalidate();
+    expect((await getHomepageData(Language.PT))[section]).toHaveLength(1);
+    expect(Sentry.captureException).toHaveBeenCalledTimes(2);
+  }
+);
