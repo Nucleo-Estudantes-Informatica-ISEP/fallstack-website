@@ -20,14 +20,21 @@ afterEach(() => vi.useRealTimers());
 
 test("concurrent misses share one load, hits avoid I/O, callers cannot mutate cached data", async () => {
   const cache = createPublicDataCache();
+  const source = [{ name: "Public" }];
   const load = vi
     .fn<() => Promise<{ name: string }[]>>()
-    .mockResolvedValue([{ name: "Public" }]);
+    .mockResolvedValue(source);
   const results = await Promise.all(
     Array.from({ length: 100 }, () => cache.read("faqs", Language.PT, load))
   );
   expect(load).toHaveBeenCalledOnce();
-  results[0][0].name = "mutated";
+  expect(results.every((result) => result === results[0])).toBe(true);
+  expect(() => {
+    results[0][0].name = "mutated";
+  }).toThrow(TypeError);
+  expect(() => results[0].push({ name: "extra" })).toThrow(TypeError);
+  // The loader still owns its input, independently of the frozen cache snapshot.
+  source[0].name = "changed by loader";
   expect(await cache.read("faqs", Language.PT, load)).toEqual([
     { name: "Public" },
   ]);

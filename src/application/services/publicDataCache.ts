@@ -6,6 +6,16 @@ import { branding } from "@/edition/branding";
 export const PUBLIC_DATA_TTL_MS = 60_000;
 export const PUBLIC_DATA_LOAD_TIMEOUT_MS = 2_000;
 
+// Public DTOs contain only JSON objects, arrays and primitives. Freeze the
+// owned snapshot once so readers can share it without copying on every hit.
+function freezeDto<T>(value: T): T {
+  if (value !== null && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) freezeDto(child);
+  }
+  return value;
+}
+
 async function boundedLoad<T>(load: () => Promise<T>): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
@@ -42,7 +52,10 @@ export function createPublicDataCache() {
         entry = {
           // Pending loads share a bounded promise, including its timeout.
           expiresAt: Infinity,
-          value: boundedLoad(load),
+          // Detach from any references retained by the loader before freezing.
+          value: boundedLoad(async () =>
+            freezeDto(structuredClone(await load()))
+          ),
         };
         const pending = entry;
         pending.value = pending.value.then(
@@ -59,8 +72,8 @@ export function createPublicDataCache() {
         );
         entries.set(key, entry);
       }
-      // Isolate cached DTOs from caller mutation.
-      return structuredClone(await entry.value) as T;
+      // The shared DTO snapshot is deeply frozen; callers must not mutate it.
+      return (await entry.value) as T;
     },
     invalidate(section?: Section) {
       for (const key of entries.keys()) {

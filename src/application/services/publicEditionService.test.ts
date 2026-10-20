@@ -130,6 +130,25 @@ test("write attempts invalidate both languages after settlement", async () => {
   expect(reads.faqs).toHaveBeenCalledTimes(5);
 });
 
+test("warm homepage reads share frozen datasets without cloning and still serialize", async () => {
+  const first = await getHomepageData(Language.EN);
+  const second = await getHomepageData(Language.EN);
+  for (const section of [
+    "faqs",
+    "schedule",
+    "sponsors",
+    "companies",
+  ] as const) {
+    expect(second[section]).toBe(first[section]);
+    expect(Object.isFrozen(first[section])).toBe(true);
+  }
+  expect(() => {
+    first.companies[0].rank.name = "mutated";
+  }).toThrow(TypeError);
+  expect(() => first.companies[0].interests.push("mutated")).toThrow(TypeError);
+  expect(JSON.parse(JSON.stringify(second))).toEqual(first);
+});
+
 test("homepage isolates failed sections; API preserves failure status instead of caching empty success", async () => {
   reads.faqs.mockRejectedValue(new Error("unavailable"));
   const data = await getHomepageData(Language.PT);

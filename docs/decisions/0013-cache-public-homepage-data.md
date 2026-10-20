@@ -27,7 +27,9 @@ share a promise bounded by a two-second deadline. A timeout rejects all waiting
 readers and counts as a failure; late DB results cannot replace newer entries.
 This bounds the SSR data wait but does not cancel the underlying database query.
 Failed loads share the same rejection for one second before
-retrying. Callers receive cloned DTOs. Invalidation deletes pending entries too,
+retrying. Each successful load clones its DTOs once into an owned, deeply frozen
+snapshot, shared by homepage and API readers without further cloning. Callers
+must not mutate these DTOs. Invalidation deletes pending entries too,
 so a pre-edit read cannot repopulate a newer cache generation.
 
 Service write attempts invalidate the relevant dataset after the write or
