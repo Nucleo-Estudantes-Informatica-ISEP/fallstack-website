@@ -18,7 +18,11 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
    SQL edit. Normal load-balancer requests alone cannot prove every replica.
 4. Repeat public API checks with the updated service worker controlling the page
    (including an installed PWA). These paths must use NetworkOnly and fail
-   offline instead of serving old JSON; wait for the new worker to activate.
+   offline instead of serving old JSON. Also check `/`, `/?lang=PT`,
+   `/?lang=EN` and homepage RSC requests: these must use NetworkOnly and fail
+   offline even when old `start-url`, `pages` or `pages-rsc` entries exist.
+   Wait for the new worker to activate; a previously installed worker retains
+   its old behavior until then. Other pages keep their existing offline rules.
 5. Open `/?lang=PT` and `/?lang=EN` in a clean browser session. Initial response
    HTML must contain public content. Day tabs and FAQ accordion must work after
    hydration. Network must show no initial requests to the four content APIs;
@@ -27,10 +31,11 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
 ## Diagnose and recover
 
 - Production alert delivery: **TBD — human confirmation required before rollout.**
-  Each failed homepage section calls `reportError`, which logs at error level
+  Each failed public dataset load calls `reportError` once, which logs at error level
   and calls Sentry `captureException` with `extra.operation` set to
   `homepage_faqs`, `homepage_schedule`, `homepage_sponsors` or
-  `homepage_companies`, including failures served from the one-second cooldown.
+  `homepage_companies`. Concurrent readers and the one-second failure cooldown
+  do not repeat these events; the next failed load reports again.
   SDK capture alone does not confirm ingestion or notifications: monitoring is
   disabled without a DSN. Follow the [observability runbook](../observability.md#8-sentry-operations-and-alerts)
   to configure new/regressed issue alerts and volume alerts for ongoing outages.
@@ -49,7 +54,10 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
   It creates and removes its own fixtures; never point tests at production.
 - There is no cache backend to become unavailable. A cold/expired entry reads the
   DB; a DB failure gives API 500 and a logged, empty homepage section. Concurrent
-  failures share a one-second retry cooldown. Restore DB connectivity; the next
+  failures share a one-second retry cooldown. Each load has a two-second deadline,
+  bounding the homepage data wait even if a DB query hangs. Timeout does not
+  cancel underlying database work; investigate stuck queries and pool health.
+  Late results cannot overwrite a newer cache entry. Restore DB connectivity; the next
   retry recovers. A cache restart is unnecessary for ordinary edits.
 - To purge all entries operationally, restart each application replica through
   the existing Coolify deployment controls. This clears only process memory.

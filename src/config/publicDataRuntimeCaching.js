@@ -3,9 +3,10 @@ const publicDataRuntimeCaching = [
   {
     urlPattern: ({ url, sameOrigin }) =>
       sameOrigin &&
-      /^\/api\/(?:faqs|schedule|sponsors|companies\/roster)\/?$/.test(
-        url.pathname
-      ),
+      (url.pathname === "/" ||
+        /^\/api\/(?:faqs|schedule|sponsors|companies\/roster)\/?$/.test(
+          url.pathname
+        )),
     handler: "NetworkOnly",
     method: "GET",
   },

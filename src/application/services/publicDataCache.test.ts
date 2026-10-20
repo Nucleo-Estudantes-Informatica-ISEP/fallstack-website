@@ -6,6 +6,7 @@ import { Language } from "@/domain/i18n/translations";
 import {
   afterPublicDataWrite,
   createPublicDataCache,
+  PUBLIC_DATA_LOAD_TIMEOUT_MS,
   PUBLIC_DATA_TTL_MS,
   publicDataCache,
 } from "./publicDataCache";
@@ -124,7 +125,7 @@ test("slow pending loads stay shared and receive a full TTL after completion", a
   );
   const first = cache.read("faqs", Language.PT, load);
   await Promise.resolve();
-  vi.advanceTimersByTime(PUBLIC_DATA_TTL_MS * 2);
+  vi.advanceTimersByTime(PUBLIC_DATA_LOAD_TIMEOUT_MS - 1);
   const second = cache.read("faqs", Language.PT, load);
   await Promise.resolve();
   expect(load).toHaveBeenCalledOnce();
@@ -164,5 +165,49 @@ test.each([false, true])(
     ]);
     expect(load).toHaveBeenCalledTimes(5);
     publicDataCache.invalidate();
+  }
+);
+
+test.each([false, true])(
+  "timed-out loads recover and late rejection=%s cannot replace fresh data",
+  async (rejectLate) => {
+    const cache = createPublicDataCache();
+    let resolve!: (value: string[]) => void;
+    let reject!: (error: Error) => void;
+    const load = vi.fn(
+      () =>
+        new Promise<string[]>((yes, no) => {
+          resolve = yes;
+          reject = no;
+        })
+    );
+    const report = vi.fn();
+    const first = cache.read("faqs", Language.PT, load, report);
+    const second = cache.read("faqs", Language.PT, load, report);
+    const results = Promise.allSettled([first, second]);
+    await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+    for (const result of await results) {
+      expect(result.status).toBe("rejected");
+      if (result.status === "rejected")
+        expect(result.reason.message).toMatch(/timed out/);
+    }
+    expect(report).toHaveBeenCalledOnce();
+    await expect(cache.read("faqs", Language.PT, load, report)).rejects.toThrow(
+      /timed out/
+    );
+    expect(load).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1000);
+    const fresh = vi.fn().mockResolvedValue(["fresh"]);
+    expect(await cache.read("faqs", Language.PT, fresh, report)).toEqual([
+      "fresh",
+    ]);
+    if (rejectLate) reject(new Error("late"));
+    else resolve(["old"]);
+    await Promise.resolve();
+    expect(await cache.read("faqs", Language.PT, fresh, report)).toEqual([
+      "fresh",
+    ]);
+    expect(fresh).toHaveBeenCalledOnce();
+    expect(report).toHaveBeenCalledOnce();
   }
 );

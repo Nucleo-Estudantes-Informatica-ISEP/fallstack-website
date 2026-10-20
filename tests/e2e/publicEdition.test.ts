@@ -100,15 +100,18 @@ test("real DB: warm public homepage reads issue zero DB operations; concurrent m
       sponsorService.getActiveSponsors(),
       companyService.getActiveCompanies(),
     ]);
+  measurement.operations = 0;
   await uncached();
+  const uncachedOperations = measurement.operations;
+  expect(uncachedOperations).toBeGreaterThan(0);
   const before = await measure(uncached);
   publicDataCache.invalidate();
   measurement.operations = 0;
   await getHomepageData(Language.PT);
   const coldOperations = measurement.operations;
-  expect(coldOperations).toBe(4);
+  expect(coldOperations).toBe(uncachedOperations);
   const after = await measure(() => getHomepageData(Language.PT));
-  expect(before.operations).toBe(120);
+  expect(before.operations).toBe(before.reads * uncachedOperations);
   expect(after.operations).toBe(0);
   publicDataCache.invalidate();
   measurement.operations = 0;

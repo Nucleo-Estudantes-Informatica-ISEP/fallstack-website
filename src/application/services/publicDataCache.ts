@@ -4,6 +4,24 @@ import type { Language } from "@/domain/i18n/translations";
 import { branding } from "@/edition/branding";
 
 export const PUBLIC_DATA_TTL_MS = 60_000;
+export const PUBLIC_DATA_LOAD_TIMEOUT_MS = 2_000;
+
+async function boundedLoad<T>(load: () => Promise<T>): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      Promise.resolve().then(load),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error("Public data load timed out")),
+          PUBLIC_DATA_LOAD_TIMEOUT_MS
+        );
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 type Section = "faqs" | "schedule" | "sponsors" | "companies";
 
 export function createPublicDataCache() {
@@ -15,15 +33,16 @@ export function createPublicDataCache() {
     async read<T>(
       section: Section,
       language: Language,
-      load: () => Promise<T>
+      load: () => Promise<T>,
+      onLoadError?: (error: unknown) => void
     ): Promise<T> {
       const key = `${branding.year}:${section}:${language}`;
       let entry = entries.get(key);
       if (!entry || entry.expiresAt <= Date.now()) {
         entry = {
-          // Pending loads stay shared until they settle.
+          // Pending loads share a bounded promise, including its timeout.
           expiresAt: Infinity,
-          value: Promise.resolve().then(load),
+          value: boundedLoad(load),
         };
         const pending = entry;
         pending.value = pending.value.then(
@@ -34,6 +53,7 @@ export function createPublicDataCache() {
           (error) => {
             // Share failures briefly to bound retry storms; never serve stale data.
             pending.expiresAt = Date.now() + 1000;
+            onLoadError?.(error);
             throw error;
           }
         );

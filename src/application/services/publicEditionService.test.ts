@@ -1,10 +1,14 @@
 // @vitest-environment node
 import { NextRequest } from "next/server";
-import { beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { Language } from "@/domain/i18n/translations";
 
-import { afterPublicDataWrite, publicDataCache } from "./publicDataCache";
+import {
+  afterPublicDataWrite,
+  PUBLIC_DATA_LOAD_TIMEOUT_MS,
+  publicDataCache,
+} from "./publicDataCache";
 import { getHomepageData, getPublicFaqs } from "./publicEditionService";
 import getServerSession from "./sessionService";
 
@@ -140,7 +144,7 @@ test("homepage isolates failed sections; API preserves failure status instead of
 });
 
 test.each(["faqs", "schedule", "sponsors", "companies"] as const)(
-  "homepage %s failures reach Sentry with their operation during the cooldown and recover",
+  "homepage %s failures reach Sentry once per load during the cooldown and recover",
   async (section) => {
     const error = new Error("unavailable");
     reads[section].mockRejectedValueOnce(error);
@@ -152,11 +156,35 @@ test.each(["faqs", "schedule", "sponsors", "companies"] as const)(
       });
     }
     expect(reads[section]).toHaveBeenCalledOnce();
-    expect(Sentry.captureException).toHaveBeenCalledTimes(2);
+    expect(Sentry.captureException).toHaveBeenCalledTimes(1);
 
     // Simulate operational cache reset without waiting for the retry cooldown.
     publicDataCache.invalidate();
     expect((await getHomepageData(Language.PT))[section]).toHaveLength(1);
-    expect(Sentry.captureException).toHaveBeenCalledTimes(2);
+    expect(Sentry.captureException).toHaveBeenCalledTimes(1);
   }
 );
+
+afterEach(() => vi.useRealTimers());
+
+test("a hung section bounds homepage latency, reports once, and recovers after cooldown", async () => {
+  vi.useFakeTimers();
+  reads.faqs.mockImplementationOnce(() => new Promise(() => {}));
+  const visitors = Promise.all(
+    Array.from({ length: 100 }, () => getHomepageData(Language.PT))
+  );
+  await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+  for (const data of await visitors) {
+    expect(data.faqs).toEqual([]);
+    expect(data.schedule).toHaveLength(1);
+    expect(data.sponsors).toHaveLength(1);
+    expect(data.companies).toHaveLength(1);
+  }
+  expect(reads.faqs).toHaveBeenCalledOnce();
+  expect(Sentry.captureException).toHaveBeenCalledOnce();
+  expect((await getHomepageData(Language.PT)).faqs).toEqual([]);
+  expect(Sentry.captureException).toHaveBeenCalledOnce();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect((await getHomepageData(Language.PT)).faqs).toHaveLength(1);
+  expect(reads.faqs).toHaveBeenCalledTimes(2);
+});

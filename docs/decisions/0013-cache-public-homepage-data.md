@@ -17,11 +17,16 @@ Use a small process-local cache of **mapped public DTOs**, shared by the homepag
 server loader and four public GET routes. Keys contain edition year, dataset and
 resolved PT/EN language. Sponsors use one language-independent entry. There are
 seven possible entries; each process/environment owns its own cache and a restart
-clears it. No Redis, new service, environment variable or migration is required.
+clears it. The four existing GET routes are deliberately retained as a public API
+for external consumers, independent of the homepage UI. They use the same DTO
+loaders as SSR; no external client adoption is assumed. No Redis, new service, environment variable or migration is required.
 
 Entries have a hard 60-second TTL, measured from completion of the DB load. Expired
 reads wait for a fresh load; errors do not extend stale data. Concurrent misses
-share a promise. Failed loads share the same rejection for one second before
+share a promise bounded by a two-second deadline. A timeout rejects all waiting
+readers and counts as a failure; late DB results cannot replace newer entries.
+This bounds the SSR data wait but does not cancel the underlying database query.
+Failed loads share the same rejection for one second before
 retrying. Callers receive cloned DTOs. Invalidation deletes pending entries too,
 so a pre-edit read cannot repopulate a newer cache generation.
 
@@ -36,15 +41,18 @@ freshness, not distributed immediate invalidation.
 The homepage resolves language on the server and loads all four services in
 parallel, without fetching its own API. Interactive components receive DTO props;
 day tabs, FAQ accordions and animations remain client-side. A failed section logs
-an error and renders empty, preserving the previous per-section fallback; this
+an error once per failed cache load and renders empty, preserving the previous per-section fallback; this
 fallback is never cached as a successful empty dataset. Optional login state
 continues separately through the existing AuthContext request.
 
 Public JSON responses use `Cache-Control: no-store`. This prevents a second
 browser/CDN cache from hiding edits. Workbox uses `NetworkOnly` for these four
-JSON paths before its default rules, so installed PWAs cannot serve stale JSON
-from an earlier worker cache. Existing offline HTML behavior is unchanged; the
-60-second freshness bound applies to online origin reads. The nonce-bearing HTML remains dynamic under
+JSON paths and the homepage document/RSC path (`/`, including language and RSC
+query parameters) before its default rules. Start-URL caching and precaching are
+disabled so they cannot take precedence. After the updated worker activates,
+installed PWAs fail offline for these requests rather than serving an old
+homepage snapshot. Other pages retain their default caching. The 60-second
+freshness bound applies to online origin reads. The nonce-bearing HTML remains dynamic under
 the existing CSP. This change does not enable static HTML export or Cloudflare.
 
 ### Alternatives
