@@ -8,7 +8,7 @@ import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
 interface ScheduleSectionProps {
   firstDayTitle: string;
   secondDayTitle: string;
-  events: ScheduleEventDto[];
+  events: readonly ScheduleEventDto[];
 }
 
 // "09:45" -> "09.45h", matching the site's existing time notation (Schedule
@@ -19,7 +19,7 @@ const formatHour = (time: string) => `${time.replace(":", ".")}h`;
 // (firstDayTitle/secondDayTitle), so always return exactly two arrays -
 // even if a day currently has no events - rather than however many
 // distinct `day` values happen to be present in the data.
-function groupByDay(events: ScheduleEventDto[]): ScheduleDay[][] {
+function groupByDay(events: readonly ScheduleEventDto[]): ScheduleDay[][] {
   return [1, 2].map((day) =>
     events
       .filter((event) => event.day === day)

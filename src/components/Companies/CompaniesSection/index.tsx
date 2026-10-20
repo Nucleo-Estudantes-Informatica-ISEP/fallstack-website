@@ -4,12 +4,12 @@ import { FunctionComponent } from "react";
 
 import CompaniesContainer from "@/components/Companies/CompaniesContainer";
 import { CompanyProps } from "@/components/Companies/Company";
-import type {
-  CompanyRankDto,
-  CompanyRosterDto,
-} from "@/application/dto/companyDto";
+import type { CompanyRankDto } from "@/application/dto/companyDto";
+import type { HomepageDto } from "@/application/dto/homepageDto";
 
-function toCompanyProps(company: CompanyRosterDto): CompanyProps {
+function toCompanyProps(
+  company: HomepageDto["companies"][number]
+): CompanyProps {
   return {
     name: company.name,
     logoHref: company.avatar ?? undefined,
@@ -30,7 +30,7 @@ interface RankGroup {
 // Ranks are now data (CompanyRank), not a fixed 4-value enum - grouping and
 // ordering companies here (rather than iterating a hardcoded tier list) is
 // the whole point of #280: a new rank shows up with zero code changes.
-function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
+function groupByRank(companies: HomepageDto["companies"]): RankGroup[] {
   const groups = new Map<string, RankGroup>();
   for (const company of companies) {
     const props = toCompanyProps(company);
@@ -43,7 +43,7 @@ function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
 }
 
 interface CompaniesSectionProps {
-  companies: CompanyRosterDto[];
+  companies: HomepageDto["companies"];
 }
 
 const CompaniesSection: FunctionComponent<CompaniesSectionProps> = ({

@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { DeepReadonly } from "@/types/DeepReadonly";
+import { runtimeNodeEnv } from "@/config/env.server";
 import type { Language } from "@/domain/i18n/translations";
 import { branding } from "@/edition/branding";
 
@@ -35,72 +37,87 @@ async function boundedLoad<T>(load: () => Promise<T>): Promise<T> {
 type Section = "faqs" | "schedule" | "sponsors" | "companies";
 
 export function createPublicDataCache() {
-  const entries = new Map<
-    string,
-    {
-      expiresAt: number;
-      value: Promise<unknown>;
-      loading: boolean;
-      invalidated: boolean;
-    }
-  >();
+  type Entry = {
+    state: "pending" | "ready" | "failed";
+    revision: number;
+    expiresAt: number;
+    value: Promise<unknown>;
+    settled: Promise<void>;
+  };
+  const entries = new Map<string, Entry>();
+  const revisions = new Map<string, number>();
   const cache = {
     async read<T>(
       section: Section,
       language: Language,
       load: () => Promise<T>,
       onLoadError?: (error: unknown) => void
-    ): Promise<T> {
+    ): Promise<DeepReadonly<T>> {
       const key = `${branding.year}:${section}:${language}`;
+      const revision = revisions.get(key) ?? 0;
       let entry = entries.get(key);
-      if (!entry || (!entry.loading && entry.expiresAt <= Date.now())) {
-        entry = {
-          // Pending loads share a bounded promise, including its timeout.
-          expiresAt: Infinity,
+      if (
+        !entry ||
+        (entry.state !== "pending" && entry.expiresAt <= Date.now())
+      ) {
+        const pending: Entry = {
+          state: "pending",
+          revision,
+          expiresAt: 0,
           value: Promise.resolve(undefined),
-          loading: true,
-          invalidated: false,
+          settled: Promise.resolve(),
         };
-        const pending = entry;
-        // Track the actual work, which can outlive the response deadline.
-        // Invalidation must retain this guard until the underlying load settles.
-        pending.value = boundedLoad(async () => {
-          try {
-            // Detach from references retained by the loader before freezing.
-            return freezeDto(structuredClone(await load()));
-          } finally {
-            pending.loading = false;
-          }
-        }).then(
+        const work = Promise.resolve()
+          .then(load)
+          .then((value) => freezeDto(structuredClone(value)));
+        pending.settled = work.then(
           (value) => {
-            pending.expiresAt = pending.invalidated
-              ? 0
-              : Date.now() + PUBLIC_DATA_TTL_MS;
-            return value;
+            if (pending.revision !== (revisions.get(key) ?? 0)) {
+              pending.state = "failed";
+              pending.expiresAt = 0;
+              return;
+            }
+            // A slow success can warm the cache after its first readers timed out.
+            pending.state = "ready";
+            pending.expiresAt = Date.now() + PUBLIC_DATA_TTL_MS;
+            pending.value = Promise.resolve(value);
           },
-          (error) => {
-            // Share failures briefly to bound retry storms; never serve stale data.
-            pending.expiresAt = Date.now() + 1000;
-            onLoadError?.(error);
-            throw error;
+          () => {
+            pending.state = "failed";
+            pending.expiresAt =
+              pending.revision !== (revisions.get(key) ?? 0)
+                ? 0
+                : pending.expiresAt || Date.now() + 1000;
           }
         );
-        entries.set(key, entry);
+        pending.value = boundedLoad(() => work).catch((error) => {
+          if (pending.revision === (revisions.get(key) ?? 0))
+            pending.expiresAt = Date.now() + 1000;
+          onLoadError?.(error);
+          throw error;
+        });
+        entries.set(key, pending);
+        entry = pending;
       }
-      // The shared DTO snapshot is deeply frozen; callers must not mutate it.
-      const invalidated = entry.invalidated;
-      const value = await entry.value;
-      // A write during a load requires a fresh read after that work settles.
-      if (invalidated) return cache.read(section, language, load, onLoadError);
-      return value as T;
+      if (entry.revision !== revision) {
+        // shortcut: uncancellable work holds the key; bound the wait and retry after settlement.
+        const previous = entry;
+        let cancelled = false;
+        return (await boundedLoad(async () => {
+          await previous.settled;
+          if (cancelled) return;
+          return cache.read(section, language, load, onLoadError);
+        }).finally(() => {
+          cancelled = true;
+        })) as DeepReadonly<T>;
+      }
+      return (await entry.value) as DeepReadonly<T>;
     },
     invalidate(section?: Section) {
       for (const [key, entry] of entries) {
         if (!section || key.startsWith(`${branding.year}:${section}:`)) {
-          if (entry.loading) {
-            entry.invalidated = true;
-            entry.expiresAt = 0;
-          } else entries.delete(key);
+          revisions.set(key, (revisions.get(key) ?? 0) + 1);
+          if (entry.state !== "pending") entries.delete(key);
         }
       }
     },
@@ -113,8 +130,10 @@ export function createPublicDataCache() {
 const cacheGlobal = globalThis as typeof globalThis & {
   fallstackPublicDataCacheV1?: ReturnType<typeof createPublicDataCache>;
 };
-export const publicDataCache = (cacheGlobal.fallstackPublicDataCacheV1 ??=
-  createPublicDataCache());
+export const publicDataCache =
+  runtimeNodeEnv === "development"
+    ? createPublicDataCache()
+    : (cacheGlobal.fallstackPublicDataCacheV1 ??= createPublicDataCache());
 
 export async function afterPublicDataWrite<T>(
   section: Section,

@@ -7,7 +7,7 @@ import FaqContainer from "@/components/Faq/FaqContainer";
 import type { FaqDto } from "@/application/dto/faqDto";
 
 interface FaqSectionProps {
-  faqs: FaqDto[];
+  faqs: readonly FaqDto[];
 }
 
 const FaqSection: FunctionComponent<FaqSectionProps> = ({ faqs }) => {

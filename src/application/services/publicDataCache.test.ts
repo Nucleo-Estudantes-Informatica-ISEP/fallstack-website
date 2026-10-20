@@ -30,8 +30,10 @@ test("concurrent misses share one load, hits avoid I/O, callers cannot mutate ca
   expect(load).toHaveBeenCalledOnce();
   expect(results.every((result) => result === results[0])).toBe(true);
   expect(() => {
+    // @ts-expect-error Cached DTOs are deeply readonly.
     results[0][0].name = "mutated";
   }).toThrow(TypeError);
+  // @ts-expect-error Cached arrays are readonly.
   expect(() => results[0].push({ name: "extra" })).toThrow(TypeError);
   // The loader still owns its input, independently of the frozen cache snapshot.
   source[0].name = "changed by loader";
@@ -208,13 +210,17 @@ test.each([false, true])(
     expect(load).toHaveBeenCalledOnce();
     for (let period = 0; period < 5; period++) {
       await vi.advanceTimersByTimeAsync(1000);
-      await expect(
+      const firstWait = expect(
         cache.read("faqs", Language.PT, load, report)
       ).rejects.toThrow(/timed out/);
+      await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+      await firstWait;
       cache.invalidate("faqs");
-      await expect(
+      const invalidatedWait = expect(
         cache.read("faqs", Language.PT, load, report)
       ).rejects.toThrow(/timed out/);
+      await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+      await invalidatedWait;
       expect(load).toHaveBeenCalledOnce();
       expect(report).toHaveBeenCalledOnce();
     }
@@ -229,3 +235,45 @@ test.each([false, true])(
     expect(report).toHaveBeenCalledOnce();
   }
 );
+
+test("a late successful load warms the cache without starting overlapping work", async () => {
+  const cache = createPublicDataCache();
+  let finish!: (value: string[]) => void;
+  const load = vi.fn(
+    () =>
+      new Promise<string[]>((resolve) => {
+        finish = resolve;
+      })
+  );
+  const first = cache.read("faqs", Language.PT, load);
+  const timedOut = expect(first).rejects.toThrow(/timed out/);
+  await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+  await timedOut;
+  finish(["slow success"]);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(await cache.read("faqs", Language.PT, load)).toEqual(["slow success"]);
+  expect(load).toHaveBeenCalledOnce();
+});
+
+test("an invalidated reader recovers from a pre-edit failure after settlement", async () => {
+  const cache = createPublicDataCache();
+  let fail!: (error: Error) => void;
+  const previous = cache.read(
+    "faqs",
+    Language.PT,
+    () =>
+      new Promise<string[]>((_, reject) => {
+        fail = reject;
+      })
+  );
+  const handled = expect(previous).rejects.toThrow("pre-edit failure");
+  await Promise.resolve();
+  cache.invalidate("faqs");
+  const fresh = vi.fn().mockResolvedValue(["edited"]);
+  const next = cache.read("faqs", Language.PT, fresh);
+  expect(fresh).not.toHaveBeenCalled();
+  fail(new Error("pre-edit failure"));
+  await handled;
+  expect(await next).toEqual(["edited"]);
+  expect(fresh).toHaveBeenCalledOnce();
+});

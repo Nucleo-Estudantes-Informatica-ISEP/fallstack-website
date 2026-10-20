@@ -57,3 +57,13 @@ test("homepage navigation, language variants and RSC bypass old document caches"
     ).toBe(false);
   }
 });
+
+test("production PWA precaches a script-free document fallback without caching homepage data", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const config = await readFile("next.config.js", "utf8");
+  expect(config).toContain('fallbacks: { document: "/offline.html" }');
+  const offline = await readFile("public/offline.html", "utf8");
+  expect(offline).toContain('href="/"');
+  expect(offline).toContain("You are offline");
+  expect(offline).not.toMatch(/<script|<iframe|\bon\w+=/i);
+});

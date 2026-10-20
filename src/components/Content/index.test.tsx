@@ -4,6 +4,10 @@ import { renderToString } from "react-dom/server";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 import { httpClient } from "@/lib/http/client";
+import CompaniesSection from "@/components/Companies/CompaniesSection";
+import FaqSection from "@/components/Faq/FaqSection";
+import ScheduleSection from "@/components/ScheduleSection";
+import SponsorsSection from "@/components/SponsorsSection";
 import type { HomepageDto } from "@/application/dto/homepageDto";
 
 import Content from ".";
@@ -72,9 +76,25 @@ const data: HomepageDto = {
   })),
 };
 
+const sections = (data: HomepageDto) => ({
+  faqs: <FaqSection faqs={data.faqs} />,
+  schedule: (
+    <ScheduleSection
+      firstDayTitle="17 de Novembro"
+      secondDayTitle="18 de Novembro"
+      events={data.schedule}
+    />
+  ),
+  sponsors: <SponsorsSection sponsors={data.sponsors} />,
+  companies: <CompaniesSection companies={data.companies} />,
+});
+
 test("server HTML contains initial public data in schedule/rank order without API effects", () => {
   const html = renderToString(
-    <Content contentRef={createRef<HTMLDivElement>()} data={data} />
+    <Content
+      contentRef={createRef<HTMLDivElement>()}
+      sections={sections(data)}
+    />
   );
   for (const content of [
     "Where?",
@@ -92,7 +112,10 @@ test("server HTML contains initial public data in schedule/rank order without AP
 
 test("hydrated sections retain day tabs, FAQ interaction and updated localized props without fetching", () => {
   const { rerender } = render(
-    <Content contentRef={createRef<HTMLDivElement>()} data={data} />
+    <Content
+      contentRef={createRef<HTMLDivElement>()}
+      sections={sections(data)}
+    />
   );
   fireEvent.click(screen.getByRole("button", { name: "18 de Novembro" }));
   expect(screen.getByText("Second day")).toBeInTheDocument();
@@ -103,10 +126,10 @@ test("hydrated sections retain day tabs, FAQ interaction and updated localized p
   rerender(
     <Content
       contentRef={createRef<HTMLDivElement>()}
-      data={{
+      sections={sections({
         ...data,
         faqs: [{ ...data.faqs[0], question: "Onde?", answer: "No ISEP" }],
-      }}
+      })}
     />
   );
   expect(screen.getByRole("button", { name: "Onde?" })).toBeInTheDocument();

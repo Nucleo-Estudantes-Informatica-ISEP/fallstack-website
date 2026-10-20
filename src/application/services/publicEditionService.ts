@@ -1,5 +1,6 @@
 import "server-only";
 
+import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 import { toCompanyRosterDto } from "@/application/dto/companyDto";
 import { toFaqDto } from "@/application/dto/faqDto";
@@ -22,45 +23,63 @@ const reportLoadError = (section: string) => (error: unknown) =>
     "Public homepage data unavailable"
   );
 
+async function readPublicData<T>(read: Promise<T>): Promise<T> {
+  try {
+    return await read;
+  } catch {
+    throw new HttpError("Something went wrong", 500);
+  }
+}
+
 export const getPublicFaqs = (language: Language) =>
-  publicDataCache.read(
-    "faqs",
-    language,
-    async () => (await getFaqEntries()).map((faq) => toFaqDto(faq, language)),
-    reportLoadError("faqs")
+  readPublicData(
+    publicDataCache.read(
+      "faqs",
+      language,
+      async () => (await getFaqEntries()).map((faq) => toFaqDto(faq, language)),
+      reportLoadError("faqs")
+    )
   );
 
 export const getPublicSchedule = (language: Language) =>
-  publicDataCache.read(
-    "schedule",
-    language,
-    async () =>
-      (await getScheduleEvents()).map((event) =>
-        toScheduleEventDto(event, language)
-      ),
-    reportLoadError("schedule")
+  readPublicData(
+    publicDataCache.read(
+      "schedule",
+      language,
+      async () =>
+        (await getScheduleEvents()).map((event) =>
+          toScheduleEventDto(event, language)
+        ),
+      reportLoadError("schedule")
+    )
   );
 
 export const getPublicSponsors = () =>
-  publicDataCache.read(
-    "sponsors",
-    Language.PT,
-    async () => (await getActiveSponsors()).map(toSponsorDto),
-    reportLoadError("sponsors")
+  readPublicData(
+    publicDataCache.read(
+      "sponsors",
+      Language.PT,
+      async () => (await getActiveSponsors()).map(toSponsorDto),
+      reportLoadError("sponsors")
+    )
   );
 
 export const getPublicCompanyRoster = (language: Language) =>
-  publicDataCache.read(
-    "companies",
-    language,
-    async () =>
-      (await getActiveCompanies()).map((company) =>
-        toCompanyRosterDto(company, language)
-      ),
-    reportLoadError("companies")
+  readPublicData(
+    publicDataCache.read(
+      "companies",
+      language,
+      async () =>
+        (await getActiveCompanies()).map((company) =>
+          toCompanyRosterDto(company, language)
+        ),
+      reportLoadError("companies")
+    )
   );
 
-async function homepageSection<T>(read: Promise<T[]>): Promise<T[]> {
+export async function readHomepageSection<T>(
+  read: Promise<readonly T[]>
+): Promise<readonly T[]> {
   try {
     return await read;
   } catch {
@@ -72,10 +91,10 @@ export async function getHomepageData(
   language: Language
 ): Promise<HomepageDto> {
   const [faqs, schedule, sponsors, companies] = await Promise.all([
-    homepageSection(getPublicFaqs(language)),
-    homepageSection(getPublicSchedule(language)),
-    homepageSection(getPublicSponsors()),
-    homepageSection(getPublicCompanyRoster(language)),
+    readHomepageSection(getPublicFaqs(language)),
+    readHomepageSection(getPublicSchedule(language)),
+    readHomepageSection(getPublicSponsors()),
+    readHomepageSection(getPublicCompanyRoster(language)),
   ]);
   return { faqs, schedule, sponsors, companies };
 }

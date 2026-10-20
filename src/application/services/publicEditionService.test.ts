@@ -143,8 +143,10 @@ test("warm homepage reads share frozen datasets without cloning and still serial
     expect(Object.isFrozen(first[section])).toBe(true);
   }
   expect(() => {
+    // @ts-expect-error Nested cached DTOs are readonly.
     first.companies[0].rank.name = "mutated";
   }).toThrow(TypeError);
+  // @ts-expect-error Nested cached arrays are readonly.
   expect(() => first.companies[0].interests.push("mutated")).toThrow(TypeError);
   expect(JSON.parse(JSON.stringify(second))).toEqual(first);
 });
@@ -217,5 +219,21 @@ test("a hung section bounds homepage latency, reports once, and recovers after c
   await vi.advanceTimersByTimeAsync(0);
   expect((await getHomepageData(Language.PT)).faqs).toHaveLength(1);
   expect(reads.faqs).toHaveBeenCalledTimes(2);
+  expect(Sentry.captureException).toHaveBeenCalledOnce();
+});
+
+test("concurrent API and homepage failures produce one Sentry event per load", async () => {
+  reads.faqs.mockRejectedValue(new Error("shared outage"));
+  const { GET } = await import("@/app/api/faqs/route");
+  const responses = await Promise.all(
+    Array.from({ length: 10 }, () =>
+      GET(new NextRequest("http://localhost/api/faqs"), {
+        params: Promise.resolve({}),
+      })
+    )
+  );
+  expect(responses.every((response) => response.status === 500)).toBe(true);
+  expect((await getHomepageData(Language.PT)).faqs).toEqual([]);
+  expect(reads.faqs).toHaveBeenCalledOnce();
   expect(Sentry.captureException).toHaveBeenCalledOnce();
 });

@@ -1,18 +1,18 @@
+import type { ReactNode } from "react";
+
 import HeadingText from "@/components/ui/HeadingText";
-import CompaniesSection from "@/components/Companies/CompaniesSection";
-import FaqSection from "@/components/Faq/FaqSection";
 import InfoText from "@/components/InfoText";
-import ScheduleSection from "@/components/ScheduleSection";
-import SponsorsSection from "@/components/SponsorsSection";
 import type { HomepageDto } from "@/application/dto/homepageDto";
 import { edition } from "@/edition";
 
+export type HomepageSections = Record<keyof HomepageDto, ReactNode>;
+
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
-  data: HomepageDto;
+  sections: HomepageSections;
 }
 
-const Content: React.FC<ContentProps> = ({ contentRef, data }) => {
+const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
   const { branding } = edition;
 
   return (
@@ -33,11 +33,7 @@ const Content: React.FC<ContentProps> = ({ contentRef, data }) => {
         ref={contentRef}
         className="flex flex-col items-center bg-background pb-20"
       >
-        <ScheduleSection
-          firstDayTitle={branding.event.scheduleDayTitles[0]}
-          secondDayTitle={branding.event.scheduleDayTitles[1]}
-          events={data.schedule}
-        />
+        {sections.schedule}
       </section>
 
       <section className="flex w-full flex-col items-center bg-[url('/assets/optimized/bgInterview.af72997ee427.webp')] bg-cover bg-center bg-no-repeat pb-12 text-center">
@@ -53,12 +49,12 @@ const Content: React.FC<ContentProps> = ({ contentRef, data }) => {
       </section>*/}
 
       <section className="w-full bg-background px-0!">
-        <CompaniesSection companies={data.companies} />
+        {sections.companies}
       </section>
 
-      <SponsorsSection sponsors={data.sponsors} />
+      {sections.sponsors}
 
-      <FaqSection faqs={data.faqs} />
+      {sections.faqs}
     </>
   );
 };

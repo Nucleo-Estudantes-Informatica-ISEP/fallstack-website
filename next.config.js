@@ -63,6 +63,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   // Homepage data lives in HTML/RSC; do not prepend the start-url cache rule.
   cacheStartUrl: false,
   dynamicStartUrl: false,
+  fallbacks: { document: "/offline.html" },
   extendDefaultRuntimeCaching: true,
   workboxOptions: { runtimeCaching: publicDataRuntimeCaching },
 });
