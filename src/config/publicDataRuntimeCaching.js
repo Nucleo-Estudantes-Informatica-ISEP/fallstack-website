@@ -9,6 +9,8 @@ const publicDataRuntimeCaching = [
         )),
     handler: "NetworkOnly",
     method: "GET",
+    // next-pwa only injects its offline fallback when options exists.
+    options: {},
   },
 ];
 
