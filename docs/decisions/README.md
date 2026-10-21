@@ -40,3 +40,4 @@ implementation PR needs an ADR.
 | [0011](0011-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions | Accepted   |
 | [0012](0012-cache-and-optimize-public-assets.md)                 | Cache and optimize public assets                 | Accepted   |
 | [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                       | Accepted   |
+| [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee    | Accepted   |
