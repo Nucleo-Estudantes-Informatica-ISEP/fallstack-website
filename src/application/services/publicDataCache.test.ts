@@ -7,6 +7,7 @@ import {
   afterPublicDataWrite,
   createPublicDataCache,
   PUBLIC_DATA_LOAD_TIMEOUT_MS,
+  PUBLIC_DATA_PENDING_MAX_AGE_MS,
   PUBLIC_DATA_TTL_MS,
   publicDataCache,
 } from "./publicDataCache";
@@ -254,6 +255,72 @@ test("a late successful load warms the cache without starting overlapping work",
   expect(await cache.read("faqs", Language.PT, load)).toEqual(["slow success"]);
   expect(load).toHaveBeenCalledOnce();
 });
+
+test.each([false, true])(
+  "a never-settling load can be replaced at the hard limit after invalidation=%s",
+  async (invalidate) => {
+    const cache = createPublicDataCache();
+    const hung = vi.fn(() => new Promise<string[]>(() => {}));
+    const first = expect(cache.read("faqs", Language.PT, hung)).rejects.toThrow(
+      /timed out/
+    );
+    await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+    await first;
+    if (invalidate) cache.invalidate("faqs");
+    vi.setSystemTime(PUBLIC_DATA_PENDING_MAX_AGE_MS);
+    const fresh = vi.fn().mockResolvedValue(["recovered"]);
+    expect(
+      await Promise.all(
+        Array.from({ length: 100 }, () =>
+          cache.read("faqs", Language.PT, fresh)
+        )
+      )
+    ).toEqual(Array.from({ length: 100 }, () => ["recovered"]));
+    expect(hung).toHaveBeenCalledOnce();
+    expect(fresh).toHaveBeenCalledOnce();
+  }
+);
+
+test.each([false, true])(
+  "an abandoned load's late rejection=%s cannot replace its successor",
+  async (rejectLate) => {
+    const cache = createPublicDataCache();
+    let finish!: (value: string[]) => void;
+    let fail!: (error: Error) => void;
+    const first = expect(
+      cache.read(
+        "faqs",
+        Language.PT,
+        () =>
+          new Promise<string[]>((resolve, reject) => {
+            finish = resolve;
+            fail = reject;
+          })
+      )
+    ).rejects.toThrow(/timed out/);
+    await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
+    await first;
+    vi.setSystemTime(PUBLIC_DATA_PENDING_MAX_AGE_MS);
+    let finishFresh!: (value: string[]) => void;
+    const fresh = vi.fn(
+      () =>
+        new Promise<string[]>((resolve) => {
+          finishFresh = resolve;
+        })
+    );
+    const next = cache.read("faqs", Language.PT, fresh);
+    await Promise.resolve();
+    if (rejectLate) fail(new Error("abandoned"));
+    else finish(["obsolete"]);
+    await vi.advanceTimersByTimeAsync(0);
+    const joined = cache.read("faqs", Language.PT, fresh);
+    finishFresh(["fresh"]);
+    expect(await next).toEqual(["fresh"]);
+    expect(await joined).toEqual(["fresh"]);
+    expect(await cache.read("faqs", Language.PT, fresh)).toEqual(["fresh"]);
+    expect(fresh).toHaveBeenCalledOnce();
+  }
+);
 
 test("an invalidated reader recovers from a pre-edit failure after settlement", async () => {
   const cache = createPublicDataCache();

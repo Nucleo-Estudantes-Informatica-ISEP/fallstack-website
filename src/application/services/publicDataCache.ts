@@ -7,6 +7,7 @@ import { branding } from "@/edition/branding";
 
 export const PUBLIC_DATA_TTL_MS = 60_000;
 export const PUBLIC_DATA_LOAD_TIMEOUT_MS = 2_000;
+export const PUBLIC_DATA_PENDING_MAX_AGE_MS = 30_000;
 
 // Public DTOs contain only JSON objects, arrays and primitives. Freeze the
 // owned snapshot once so readers can share it without copying on every hit.
@@ -40,6 +41,7 @@ export function createPublicDataCache() {
   type Entry = {
     state: "pending" | "ready" | "failed";
     revision: number;
+    startedAt: number;
     expiresAt: number;
     value: Promise<unknown>;
     settled: Promise<void>;
@@ -58,11 +60,14 @@ export function createPublicDataCache() {
       let entry = entries.get(key);
       if (
         !entry ||
+        (entry.state === "pending" &&
+          entry.startedAt + PUBLIC_DATA_PENDING_MAX_AGE_MS <= Date.now()) ||
         (entry.state !== "pending" && entry.expiresAt <= Date.now())
       ) {
         const pending: Entry = {
           state: "pending",
           revision,
+          startedAt: Date.now(),
           expiresAt: 0,
           value: Promise.resolve(undefined),
           settled: Promise.resolve(),
@@ -72,6 +77,7 @@ export function createPublicDataCache() {
           .then((value) => freezeDto(structuredClone(value)));
         pending.settled = work.then(
           (value) => {
+            if (entries.get(key) !== pending) return;
             if (pending.revision !== (revisions.get(key) ?? 0)) {
               pending.state = "failed";
               pending.expiresAt = 0;
@@ -83,6 +89,7 @@ export function createPublicDataCache() {
             pending.value = Promise.resolve(value);
           },
           () => {
+            if (entries.get(key) !== pending) return;
             pending.state = "failed";
             pending.expiresAt =
               pending.revision !== (revisions.get(key) ?? 0)
@@ -125,7 +132,9 @@ export function createPublicDataCache() {
   return cache;
 }
 
-// Next route bundles share this process cache. No identity or raw DB rows enter it.
+// Outside development, Next route bundles share this process cache. Development
+// instances reset for HMR; edits in another bundle may stay stale until the TTL.
+// No identity or raw DB rows enter it.
 // shortcut: other replicas refresh within 60s; use shared invalidation if stricter freshness is needed.
 const cacheGlobal = globalThis as typeof globalThis & {
   fallstackPublicDataCacheV1?: ReturnType<typeof createPublicDataCache>;
