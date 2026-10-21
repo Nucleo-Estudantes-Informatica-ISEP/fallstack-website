@@ -37,8 +37,9 @@ seconds during a prolonged hang; investigate DB timeouts and pool health.
 Failed loads share the same rejection for one second before
 retrying. Each successful load clones its DTOs once into an owned, deeply frozen
 snapshot, shared by homepage and API readers without further cloning. Callers
-must not mutate these DTOs. Invalidation deletes pending entries too,
-so a pre-edit read cannot repopulate a newer cache generation.
+must not mutate these DTOs. Invalidation advances the cache generation and deletes
+settled entries. Pending work remains shared until settlement or the 30-second
+limit; its old generation cannot repopulate the cache after an edit.
 
 Service write attempts invalidate the relevant dataset after the write or
 transaction settles, even on rejection because the commit outcome may be unknown, in both languages. This includes reorder, activation,
