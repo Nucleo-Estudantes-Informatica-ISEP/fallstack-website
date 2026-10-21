@@ -1,16 +1,14 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import Schedule, { type ScheduleDay } from "@/components/Schedule";
 import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
-import type { Language } from "@/domain/i18n/translations";
 
 interface ScheduleSectionProps {
   firstDayTitle: string;
   secondDayTitle: string;
-  language: Language;
+  events: readonly ScheduleEventDto[];
 }
 
 // "09:45" -> "09.45h", matching the site's existing time notation (Schedule
@@ -21,7 +19,7 @@ const formatHour = (time: string) => `${time.replace(":", ".")}h`;
 // (firstDayTitle/secondDayTitle), so always return exactly two arrays -
 // even if a day currently has no events - rather than however many
 // distinct `day` values happen to be present in the data.
-function groupByDay(events: ScheduleEventDto[]): ScheduleDay[][] {
+function groupByDay(events: readonly ScheduleEventDto[]): ScheduleDay[][] {
   return [1, 2].map((day) =>
     events
       .filter((event) => event.day === day)
@@ -36,19 +34,8 @@ function groupByDay(events: ScheduleEventDto[]): ScheduleDay[][] {
 const ScheduleSection: FunctionComponent<ScheduleSectionProps> = ({
   firstDayTitle,
   secondDayTitle,
-  language,
+  events,
 }) => {
-  const [events, setEvents] = useState<ScheduleEventDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<ScheduleEventDto[]>(`/schedule?lang=${language}`)
-      .then(setEvents)
-      .catch(() => setEvents([]));
-  }, [language]);
-
-  if (!events) return null;
-
   return (
     <Schedule
       firstDayTitle={firstDayTitle}

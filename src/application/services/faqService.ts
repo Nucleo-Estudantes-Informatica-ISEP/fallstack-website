@@ -18,6 +18,7 @@ import {
   type AdminFaqQuery,
 } from "../repositories/faqRepository";
 import { withTransaction } from "../repositories/transaction";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getFaqEntries = () => findAllFaqEntries();
 export const getFaqEntry = (id: string) => findFaqEntryById(id);
@@ -42,10 +43,13 @@ export async function createFaqEntryForAdmin(input: {
   order?: number;
 }) {
   try {
-    return await withTransaction(async (tx) => {
-      const order = input.order ?? (await findMaxFaqOrder(tx)) + 1;
-      return createFaqEntry({ ...input, order }, tx);
-    });
+    return await afterPublicDataWrite(
+      "faqs",
+      withTransaction(async (tx) => {
+        const order = input.order ?? (await findMaxFaqOrder(tx)) + 1;
+        return createFaqEntry({ ...input, order }, tx);
+      })
+    );
   } catch (error) {
     if (isUniqueConstraintError(error)) throw faqConflict();
     throw error;
@@ -62,7 +66,7 @@ export async function updateFaqEntryForAdmin(
 ) {
   if (!(await findFaqEntryById(id))) throw new HttpError("Not found", 404);
   try {
-    return await updateFaqEntry(id, input);
+    return await afterPublicDataWrite("faqs", updateFaqEntry(id, input));
   } catch (error) {
     if (isUniqueConstraintError(error)) throw faqConflict();
     throw error;
@@ -71,7 +75,7 @@ export async function updateFaqEntryForAdmin(
 
 export async function deleteFaqEntryForAdmin(id: string) {
   if (!(await findFaqEntryById(id))) throw new HttpError("Not found", 404);
-  await deleteFaqEntry(id);
+  await afterPublicDataWrite("faqs", deleteFaqEntry(id));
 }
 
 export async function updateFaqOrder(updates: { id: string; order: number }[]) {
@@ -88,7 +92,7 @@ export async function updateFaqOrder(updates: { id: string; order: number }[]) {
   // A deferred unique constraint permits swaps in this transaction but
   // converts a stale concurrent reorder into a visible retry response.
   try {
-    await bulkUpdateFaqOrder(updates);
+    await afterPublicDataWrite("faqs", bulkUpdateFaqOrder(updates));
   } catch (error) {
     if (isUniqueConstraintError(error)) throw faqConflict();
     throw error;

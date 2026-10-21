@@ -47,6 +47,11 @@ const serverEnvSchema = z.object({
   GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: optionalNonEmptyString,
 });
 
+// Safe at build/import time without validating unrelated secrets.
+export const runtimeNodeEnv = serverEnvSchema.shape.NODE_ENV.parse(
+  process.env.NODE_ENV
+);
+
 type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 let cachedServerEnv: ServerEnv | undefined;

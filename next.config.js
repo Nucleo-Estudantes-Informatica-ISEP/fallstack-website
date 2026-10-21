@@ -1,3 +1,6 @@
+const {
+  publicDataRuntimeCaching,
+} = require("./src/config/publicDataRuntimeCaching");
 const { withSentryConfig } = require("@sentry/nextjs");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
 
@@ -57,6 +60,12 @@ const nextConfig = {
 
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
+  // Homepage data lives in HTML/RSC; do not prepend the start-url cache rule.
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
+  fallbacks: { document: "/offline.html" },
+  extendDefaultRuntimeCaching: true,
+  workboxOptions: { runtimeCaching: publicDataRuntimeCaching },
 });
 
 module.exports = withSentryConfig(withPWA(nextConfig), {

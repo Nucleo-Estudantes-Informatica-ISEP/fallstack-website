@@ -17,6 +17,7 @@ import {
   type AdminScheduleQuery,
 } from "../repositories/scheduleRepository";
 import { withTransaction } from "../repositories/transaction";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getScheduleEvents = () => findAllScheduleEvents();
 export const getScheduleEvent = (id: string) => findScheduleEventById(id);
@@ -56,7 +57,7 @@ const schedulePositionConflict = () =>
 
 async function handleSchedulePositionConflict<T>(operation: () => Promise<T>) {
   try {
-    return await operation();
+    return await afterPublicDataWrite("schedule", operation());
   } catch (error) {
     if (isUniqueSchedulePositionError(error)) throw schedulePositionConflict();
     throw error;
@@ -208,7 +209,7 @@ export async function updateScheduleEventForAdmin(
 
 export async function deleteScheduleEventForAdmin(id: string) {
   if (!(await findScheduleEventById(id))) throw new HttpError("Not found", 404);
-  await deleteScheduleEvent(id);
+  await afterPublicDataWrite("schedule", deleteScheduleEvent(id));
 }
 
 // The admin board already disables "Guardar" while any row is
