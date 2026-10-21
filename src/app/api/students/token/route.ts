@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
@@ -11,6 +12,9 @@ const invalidCodeLimiter = createRateLimiter({
   max: 5,
 });
 
+// Serialize each employee so in-flight valid scans never exhaust the budget.
+const pendingLookups = new Map<string, Promise<void>>();
+
 export const POST = defineHandler({
   auth: "employee",
   schema: studentTokenSchema,
@@ -21,50 +25,50 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const rateLimitCheck = invalidCodeLimiter.peek(employeeId);
+    const employeeRef = createHash("sha256").update(employeeId).digest("hex");
+    const previous = pendingLookups.get(employeeId);
+    let unlock!: () => void;
+    const pending = new Promise<void>((resolve) => {
+      unlock = resolve;
+    });
+    pendingLookups.set(employeeId, pending);
+    await previous;
 
-    if (!rateLimitCheck.allowed) {
+    try {
+      const reservation = invalidCodeLimiter.reserve(employeeId);
+      if (!reservation.allowed) {
+        logger.warn(
+          {
+            event: "student_token.rate_limited",
+            employeeRef,
+            retryAfterMs: reservation.retryAfterMs,
+          },
+          "Student token requests rate limited"
+        );
+        return tooManyRequestsResponse(reservation.retryAfterMs);
+      }
+
+      let token: string | null;
+      try {
+        token = await jwtStudent(body.code);
+      } catch (error) {
+        reservation.release();
+        throw error;
+      }
+      if (token) {
+        reservation.release();
+        return NextResponse.json({ token }, { status: 200 });
+      }
+
       logger.warn(
-        {
-          event: "student_token.rate_limited",
-          employeeId,
-          retryAfterMs: rateLimitCheck.retryAfterMs,
-        },
-        "Student token requests rate limited"
+        { event: "student_token.invalid_code", employeeRef },
+        "Invalid student token code"
       );
-
-      return tooManyRequestsResponse(rateLimitCheck.retryAfterMs);
+      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+    } finally {
+      unlock();
+      if (pendingLookups.get(employeeId) === pending)
+        pendingLookups.delete(employeeId);
     }
-
-    const token = await jwtStudent(body.code);
-
-    if (token) {
-      return NextResponse.json({ token }, { status: 200 });
-    }
-
-    const result = invalidCodeLimiter.check(employeeId);
-
-    if (!result.allowed) {
-      logger.warn(
-        {
-          event: "student_token.rate_limited",
-          employeeId,
-          retryAfterMs: result.retryAfterMs,
-        },
-        "Student token requests rate limited"
-      );
-
-      return tooManyRequestsResponse(result.retryAfterMs);
-    }
-
-    logger.warn(
-      {
-        event: "student_token.invalid_code",
-        employeeId,
-      },
-      "Invalid student token code"
-    );
-
-    return NextResponse.json({ error: "Student not found" }, { status: 404 });
   },
 });

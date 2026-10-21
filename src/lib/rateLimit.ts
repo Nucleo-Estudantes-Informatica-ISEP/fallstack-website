@@ -67,26 +67,24 @@ export function createRateLimiter({
       return increment(key);
     },
 
-    /**
-     * Checks whether capacity is available without consuming it.
-     * The result may become stale if concurrent requests update the bucket.
-     */
-    peek(key: string): RateLimitResult {
-      const now = Date.now();
+    /** Reserves capacity atomically; release once for a valid result or error. */
+    reserve(key: string) {
+      const result = increment(key);
       const bucket = buckets.get(key);
-
-      if (!bucket || bucket.resetAt <= now) {
-        return { allowed: true, retryAfterMs: 0 };
-      }
-
-      if (bucket.count >= max) {
-        return {
-          allowed: false,
-          retryAfterMs: bucket.resetAt - now,
-        };
-      }
-
-      return { allowed: true, retryAfterMs: 0 };
+      let released = false;
+      return {
+        ...result,
+        release() {
+          if (!result.allowed || released) return;
+          released = true;
+          if (
+            bucket &&
+            buckets.get(key) === bucket &&
+            bucket.resetAt > Date.now()
+          )
+            bucket.count = Math.max(0, bucket.count - 1);
+        },
+      };
     },
   };
 }

@@ -41,35 +41,34 @@ test("resets once the window elapses", () => {
   assert.equal(limiter.check("ip-1").allowed, true);
 });
 
-test("peek checks capacity without consuming it", () => {
-  const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
-
-  assert.equal(limiter.peek("employee-1").allowed, true);
-  assert.equal(limiter.peek("employee-1").allowed, true);
-
+test("reservations block atomically and release only their own count once", () => {
+  const limiter = createRateLimiter({ windowMs: 1000, max: 2 });
+  const first = limiter.reserve("employee-1");
+  const second = limiter.reserve("employee-1");
+  const blocked = limiter.reserve("employee-1");
+  assert.equal(first.allowed, true);
+  assert.equal(second.allowed, true);
+  assert.equal(blocked.allowed, false);
+  blocked.release();
+  assert.equal(limiter.check("employee-1").allowed, false);
+  first.release();
+  first.release();
   assert.equal(limiter.check("employee-1").allowed, true);
-  assert.equal(limiter.peek("employee-1").allowed, false);
+  assert.equal(limiter.check("employee-1").allowed, false);
 });
 
-test("peek reports the remaining window when the limit is reached", () => {
+test("old reservations cannot refund a new window", () => {
   const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
-
-  limiter.check("employee-1");
-  vi.advanceTimersByTime(400);
-
-  const result = limiter.peek("employee-1");
-
-  assert.equal(result.allowed, false);
-  assert.equal(result.retryAfterMs, 600);
-});
-
-test("peek allows requests after the window expires", () => {
-  const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
-
-  limiter.check("employee-1");
-  assert.equal(limiter.peek("employee-1").allowed, false);
-
+  const old = limiter.reserve("employee-1");
   vi.advanceTimersByTime(1001);
+  assert.equal(limiter.check("employee-1").allowed, true);
+  old.release();
+  assert.equal(limiter.check("employee-1").allowed, false);
+});
 
-  assert.equal(limiter.peek("employee-1").allowed, true);
+test("blocked reservations report the remaining window", () => {
+  const limiter = createRateLimiter({ windowMs: 1000, max: 1 });
+  limiter.reserve("employee-1");
+  vi.advanceTimersByTime(400);
+  assert.equal(limiter.reserve("employee-1").retryAfterMs, 600);
 });

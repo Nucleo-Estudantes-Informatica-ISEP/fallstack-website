@@ -1,18 +1,18 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-
 vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));
-
 vi.mock("@/application/services/studentTokenService", () => ({
   jwtStudent: vi.fn(),
 }));
 
 vi.mock("@/lib/logger", () => ({
+  reportError: vi.fn(),
   default: {
     warn: vi.fn(),
     info: vi.fn(),
@@ -69,7 +69,6 @@ test("rejects a student session before minting a preview token", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(studentSession as never);
 
   const { jwtStudent } =
@@ -85,7 +84,6 @@ test("rejects an invalid code before minting a preview token", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -101,7 +99,6 @@ test("returns 404 when an employee submits an unknown code", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -112,16 +109,13 @@ test("returns 404 when an employee submits an unknown code", async () => {
   const response = await post({ code: "ZZ99" });
 
   assert.equal(response.status, 404);
-  assert.deepEqual(await response.json(), {
-    error: "Student not found",
-  });
+  assert.deepEqual(await response.json(), { error: "Student not found" });
 });
 
 test("normalizes a code and mints a token for an employee", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -132,9 +126,7 @@ test("normalizes a code and mints a token for an employee", async () => {
   const response = await post({ code: " ab12 " });
 
   assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), {
-    token: "preview-token",
-  });
+  assert.deepEqual(await response.json(), { token: "preview-token" });
   assert.deepEqual(vi.mocked(jwtStudent).mock.calls[0], ["AB12"]);
 });
 
@@ -142,7 +134,6 @@ test("rate limits repeated requests with unknown student codes", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -159,7 +150,6 @@ test("rate limits repeated requests with unknown student codes", async () => {
 
   assert.equal(response.status, 429);
 
-  // Verification runs before the limiter rejects the sixth invalid request.
   assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
@@ -167,7 +157,6 @@ test("rate limits a valid code when the employee is over budget", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -191,7 +180,6 @@ test("does not rate limit valid student scans", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -215,7 +203,6 @@ test("scopes invalid-code rate limits to each employee", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -247,7 +234,6 @@ test("returns 403 when the employee session has no employee ID", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue({
     ...employeeSession,
     employee: {
@@ -272,7 +258,6 @@ test("resets the invalid-code limit after the window expires", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -299,7 +284,6 @@ test("returns the expected Retry-After header when rate limited", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -322,7 +306,6 @@ test("successful scans do not reset the invalid-code count", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -356,7 +339,6 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -377,15 +359,13 @@ test("allows only the permitted number of concurrent invalid-code requests", asy
     1
   );
 
-  // All six requests may pass peek() before any invalid results are counted.
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
 });
 
 test("allows concurrent valid student scans beyond the invalid-code limit", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
-
   vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
 
   const { jwtStudent } =
@@ -412,4 +392,117 @@ test("allows concurrent valid student scans beyond the invalid-code limit", asyn
   );
 
   assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
+});
+
+test("audits invalid and limited attempts without codes or tokens", async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-10-21T10:00:00Z"));
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+  const logger = (await import("@/lib/logger")).default;
+  const { createLogger } =
+    await vi.importActual<typeof import("@/lib/logger")>("@/lib/logger");
+  const lines: string[] = [];
+  const auditLogger = createLogger(
+    { base: undefined, timestamp: false },
+    {
+      write(chunk: string) {
+        lines.push(chunk);
+      },
+    }
+  );
+  vi.mocked(logger.warn).mockImplementation((record, message) =>
+    auditLogger.warn(record, message)
+  );
+  const employeeRef = createHash("sha256").update("employee-1").digest("hex");
+  vi.mocked(jwtStudent)
+    .mockResolvedValueOnce("secret-preview-token")
+    .mockResolvedValue(null);
+
+  assert.equal((await post({ code: "AB12" })).status, 200);
+  for (let i = 0; i < 5; i++) await post({ code: "ZZ99" });
+  const limited = await post({ code: "AB12" });
+  assert.equal(limited.status, 429);
+  assert.deepEqual(await limited.json(), { error: "Too many requests" });
+  assert.deepEqual(vi.mocked(logger.warn).mock.calls, [
+    ...Array.from({ length: 5 }, () => [
+      { event: "student_token.invalid_code", employeeRef },
+      "Invalid student token code",
+    ]),
+    [
+      {
+        event: "student_token.rate_limited",
+        employeeRef,
+        retryAfterMs: 60_000,
+      },
+      "Student token requests rate limited",
+    ],
+  ]);
+  assert.equal(lines.length, 6);
+  for (const line of lines) {
+    assert.equal(JSON.parse(line).employeeRef, employeeRef);
+    assert.doesNotMatch(line, /AB12|ZZ99|secret-preview-token|employee-1/);
+  }
+});
+
+test("lookup errors release the employee gate without consuming invalid budget", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+  vi.mocked(jwtStudent)
+    .mockRejectedValueOnce(new Error("Database unavailable"))
+    .mockResolvedValue(null);
+
+  const responses = await Promise.all(
+    Array.from({ length: 7 }, () => post({ code: "ZZ99" }))
+  );
+  assert.deepEqual(
+    responses.map((response) => response.status),
+    [500, 404, 404, 404, 404, 404, 429]
+  );
+  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
+  assert.deepEqual(await responses[0].json(), {
+    error: "Something went wrong",
+  });
+});
+
+test("a pending lookup does not block another employee", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+  let finish!: (value: string) => void;
+  let entered!: () => void;
+  const started = new Promise<void>((resolve) => {
+    entered = resolve;
+  });
+  vi.mocked(jwtStudent)
+    .mockImplementationOnce(() => {
+      entered();
+      return new Promise((resolve) => {
+        finish = resolve;
+      });
+    })
+    .mockResolvedValue("second-token");
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+  const first = post({ code: "AB12" });
+  await started;
+  vi.mocked(getServerSession).mockResolvedValue({
+    ...employeeSession,
+    employee: { ...employeeSession.employee, id: "employee-2" },
+  } as never);
+  try {
+    assert.equal((await post({ code: "AB12" })).status, 200);
+  } finally {
+    finish("first-token");
+    assert.equal((await first).status, 200);
+  }
 });
