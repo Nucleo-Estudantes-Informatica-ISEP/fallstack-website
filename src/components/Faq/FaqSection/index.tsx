@@ -1,29 +1,16 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import HeadingText from "@/components/ui/HeadingText";
 import FaqContainer from "@/components/Faq/FaqContainer";
 import type { FaqDto } from "@/application/dto/faqDto";
-import type { Language } from "@/domain/i18n/translations";
 
 interface FaqSectionProps {
-  language: Language;
+  faqs: readonly FaqDto[];
 }
 
-const FaqSection: FunctionComponent<FaqSectionProps> = ({ language }) => {
-  const [faqs, setFaqs] = useState<FaqDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<FaqDto[]>(`/faqs?lang=${language}`)
-      .then(setFaqs)
-      .catch(() => setFaqs([]));
-  }, [language]);
-
-  if (!faqs) return null;
-
+const FaqSection: FunctionComponent<FaqSectionProps> = ({ faqs }) => {
   return (
     <section className="w-full bg-background pb-16">
       <div className="mx-auto flex w-full flex-col gap-10">

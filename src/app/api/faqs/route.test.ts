@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
-import { afterAll, beforeAll, beforeEach, test, vi } from "vitest";
+import { beforeEach, test, vi } from "vitest";
+
+import { publicDataCache } from "@/application/services/publicDataCache";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
@@ -11,18 +13,9 @@ vi.mock("@/application/services/faqService", () => ({
   getFaqEntries: vi.fn(),
 }));
 
-beforeAll(() => {
-  vi.stubEnv("SUPABASE_SECRET_KEY", "test-secret-key");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
-  vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-anon-key");
-});
-
-afterAll(() => {
-  vi.unstubAllEnvs();
-});
-
 beforeEach(() => {
   vi.clearAllMocks();
+  publicDataCache.invalidate();
 });
 
 test("GET returns the FAQ list without requiring a session", async () => {
@@ -51,6 +44,7 @@ test("GET returns the FAQ list without requiring a session", async () => {
   const body = await res.json();
 
   assert.equal(res.status, 200);
+  assert.equal(vi.mocked(getServerSession).mock.calls.length, 0);
   assert.equal(body.length, 1);
   assert.equal(body[0].question, "Question?");
 });

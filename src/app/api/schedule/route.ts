@@ -1,20 +1,16 @@
-import { NextResponse } from "next/server";
-
+import { publicJson } from "@/lib/http/publicJson";
 import { defineHandler } from "@/lib/http/server";
-import { toScheduleEventDto } from "@/application/dto/scheduleDto";
-import { getScheduleEvents } from "@/application/services/scheduleService";
+import { getPublicSchedule } from "@/application/services/publicEditionService";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 export const GET = defineHandler({
-  auth: "public",
+  auth: "none",
   handler: async ({ req }) => {
-    const events = await getScheduleEvents();
     const language = resolveRequestLanguage(
       req.nextUrl.searchParams.get("lang"),
       req.headers.get("accept-language")
     );
-    return NextResponse.json(
-      events.map((event) => toScheduleEventDto(event, language))
-    );
+    const data = await getPublicSchedule(language);
+    return publicJson(data);
   },
 });

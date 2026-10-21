@@ -1,5 +1,6 @@
 /**
- * "public"     - no session required
+ * "none"       - no session lookup; handler always receives null
+ * "public"     - optional session (lookup still runs)
  * "session"    - any logged-in user
  * "student"    - logged-in user with a Student profile
  * "employee"   - logged-in user with an Employee profile and a Company
@@ -7,7 +8,13 @@
  * "superadmin" - logged-in user with session.adminRole === "SUPER_ADMIN"
  */
 export type AuthPolicy =
-  "public" | "session" | "student" | "employee" | "admin" | "superadmin";
+  | "none"
+  | "public"
+  | "session"
+  | "student"
+  | "employee"
+  | "admin"
+  | "superadmin";
 
 export interface AuthPolicySession {
   // Null for an admin-only account - it isn't a STUDENT or EMPLOYEE.
@@ -37,7 +44,7 @@ export function passesAuthPolicy(
   policy: AuthPolicy,
   session: AuthPolicySession | null
 ): boolean {
-  if (policy === "public") return true;
+  if (policy === "none" || policy === "public") return true;
   if (!session) return false;
   if (policy === "session") return true;
   if (policy === "student")

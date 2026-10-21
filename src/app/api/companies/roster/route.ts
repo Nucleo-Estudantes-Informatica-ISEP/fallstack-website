@@ -1,20 +1,16 @@
-import { NextResponse } from "next/server";
-
+import { publicJson } from "@/lib/http/publicJson";
 import { defineHandler } from "@/lib/http/server";
-import { toCompanyRosterDto } from "@/application/dto/companyDto";
-import { getActiveCompanies } from "@/application/services/companyService";
+import { getPublicCompanyRoster } from "@/application/services/publicEditionService";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 export const GET = defineHandler({
-  auth: "public",
+  auth: "none",
   handler: async ({ req }) => {
-    const companies = await getActiveCompanies();
     const language = resolveRequestLanguage(
       req.nextUrl.searchParams.get("lang"),
       req.headers.get("accept-language")
     );
-    return NextResponse.json(
-      companies.map((company) => toCompanyRosterDto(company, language))
-    );
+    const data = await getPublicCompanyRoster(language);
+    return publicJson(data);
   },
 });

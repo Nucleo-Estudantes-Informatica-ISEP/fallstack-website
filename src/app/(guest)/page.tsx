@@ -1,6 +1,9 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 
+import type { HomepageSections } from "@/components/Content";
 import HomePage from "@/components/HomePage";
+import HomepageSection from "@/components/HomepageSection";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
@@ -13,7 +16,18 @@ const App = async ({ searchParams }: AppProps) => {
     lang,
     (await headers()).get("accept-language")
   );
-  return <HomePage language={language} />;
+  const sections = Object.fromEntries(
+    (["schedule", "companies", "sponsors", "faqs"] as const).map((section) => [
+      section,
+      <Suspense
+        key={section}
+        fallback={<p role="status">A carregar / Loading…</p>}
+      >
+        <HomepageSection section={section} language={language} />
+      </Suspense>,
+    ])
+  ) as HomepageSections;
+  return <HomePage sections={sections} />;
 };
 
 export default App;

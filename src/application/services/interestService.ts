@@ -13,6 +13,7 @@ import {
   updateInterestName,
   type AdminInterestQuery,
 } from "../repositories/interestRepository";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getInterests = () => findInterests();
 export const getInterest = (id: string) => findInterestById(id);
@@ -42,7 +43,10 @@ export async function updateInterestForAdmin(
 ) {
   if (!(await findInterestById(id))) throw new HttpError("Not found", 404);
   try {
-    return await updateInterestName(id, name);
+    return await afterPublicDataWrite(
+      "companies",
+      updateInterestName(id, name)
+    );
   } catch (error) {
     if (isUniqueInterestNameError(error))
       throw new HttpError("Já existe um interesse com este nome.", 409);
@@ -52,5 +56,5 @@ export async function updateInterestForAdmin(
 
 export async function deleteInterestForAdmin(id: string) {
   if (!(await findInterestById(id))) throw new HttpError("Not found", 404);
-  await deleteInterest(id);
+  await afterPublicDataWrite("companies", deleteInterest(id));
 }

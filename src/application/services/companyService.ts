@@ -31,6 +31,7 @@ import {
 } from "../repositories/companyRepository";
 import { findInterestsForCompany } from "../repositories/interestRepository";
 import { withTransaction } from "../repositories/transaction";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getCompanies = () => findCompanies();
 export const getCompany = (id: string) => findCompanyById(id);
@@ -58,7 +59,7 @@ export async function createCompanyForAdmin(input: {
   active?: boolean;
   order?: number;
 }) {
-  return createCompanyDisplay(input);
+  return afterPublicDataWrite("companies", createCompanyDisplay(input));
 }
 
 export async function updateCompanyForAdmin(
@@ -73,7 +74,7 @@ export async function updateCompanyForAdmin(
   }
 ) {
   if (!(await findCompanyById(id))) throw new HttpError("Not found", 404);
-  return updateCompanyDisplay(id, input);
+  return afterPublicDataWrite("companies", updateCompanyDisplay(id, input));
 }
 
 export const getCompaniesForRankBoard = () => findAllCompaniesForRankBoard();
@@ -82,7 +83,7 @@ export async function updateCompanyRankBoard(
   updates: { id: string; rankId: string; order: number }[]
 ) {
   if (updates.length === 0) return;
-  await bulkUpdateCompanyRankBoard(updates);
+  await afterPublicDataWrite("companies", bulkUpdateCompanyRankBoard(updates));
 }
 
 export async function registerCompany(input: {
@@ -93,14 +94,17 @@ export async function registerCompany(input: {
 }) {
   if (await findCompanyById(input.userId))
     throw new HttpError("Company already exists", 401);
-  return withTransaction(async (tx) => {
-    const company = await createCompany(
-      { id: input.userId, name: input.name, rankId: input.rankId },
-      tx
-    );
-    await updateCompanyAvatar(company.id, input.avatarUrl ?? null, tx);
-    return company;
-  });
+  return afterPublicDataWrite(
+    "companies",
+    withTransaction(async (tx) => {
+      const company = await createCompany(
+        { id: input.userId, name: input.name, rankId: input.rankId },
+        tx
+      );
+      await updateCompanyAvatar(company.id, input.avatarUrl ?? null, tx);
+      return company;
+    })
+  );
 }
 
 export async function getInterestsByCompanyName(
@@ -133,7 +137,7 @@ export async function updateCompanyProfileForAdmin(
     throw new HttpError("Not found", 404);
 
   if (!input.bodyText) {
-    await deleteCompanyProfile(companyId);
+    await afterPublicDataWrite("companies", deleteCompanyProfile(companyId));
     return;
   }
 
@@ -161,17 +165,20 @@ export async function updateCompanyProfileForAdmin(
       )
     : undefined;
 
-  await upsertCompanyProfile(companyId, {
-    bodyText: input.bodyText,
-    videoTitle: input.videoTitle ?? null,
-    videoHref,
-    socialLinks:
-      socialLinks && Object.keys(socialLinks).length > 0
-        ? socialLinks
-        : Prisma.JsonNull,
-    facts:
-      input.facts && input.facts.length > 0 ? input.facts : Prisma.JsonNull,
-  });
+  await afterPublicDataWrite(
+    "companies",
+    upsertCompanyProfile(companyId, {
+      bodyText: input.bodyText,
+      videoTitle: input.videoTitle ?? null,
+      videoHref,
+      socialLinks:
+        socialLinks && Object.keys(socialLinks).length > 0
+          ? socialLinks
+          : Prisma.JsonNull,
+      facts:
+        input.facts && input.facts.length > 0 ? input.facts : Prisma.JsonNull,
+    })
+  );
 }
 
 export async function updateCompanyDisplayStyleForAdmin(
@@ -184,7 +191,10 @@ export async function updateCompanyDisplayStyleForAdmin(
 ) {
   if (!(await findCompanyById(companyId)))
     throw new HttpError("Not found", 404);
-  await upsertCompanyDisplayStyle(companyId, input);
+  await afterPublicDataWrite(
+    "companies",
+    upsertCompanyDisplayStyle(companyId, input)
+  );
 }
 
 export async function updateCompanyInterestsForAdmin(
@@ -193,5 +203,8 @@ export async function updateCompanyInterestsForAdmin(
 ) {
   if (!(await findCompanyById(companyId)))
     throw new HttpError("Not found", 404);
-  await setCompanyInterests(companyId, interestIds);
+  await afterPublicDataWrite(
+    "companies",
+    setCompanyInterests(companyId, interestIds)
+  );
 }

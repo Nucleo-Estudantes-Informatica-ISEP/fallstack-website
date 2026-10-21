@@ -12,6 +12,7 @@ import {
   updateSponsor,
   type AdminSponsorQuery,
 } from "../repositories/sponsorRepository";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getActiveSponsors = () => findActiveSponsors();
 export const getSponsor = (id: string) => findSponsorById(id);
@@ -31,7 +32,7 @@ export async function createSponsorForAdmin(input: {
   active?: boolean;
   order?: number;
 }) {
-  return createSponsor(input);
+  return afterPublicDataWrite("sponsors", createSponsor(input));
 }
 
 export async function updateSponsorForAdmin(
@@ -48,5 +49,5 @@ export async function updateSponsorForAdmin(
   if (!sponsor) throw new HttpError("Not found", 404);
   if (input.active && !logoSchema.safeParse(input.logo ?? sponsor.logo).success)
     throw new HttpError("Upload a valid logo before activation", 400);
-  return updateSponsor(id, input);
+  return afterPublicDataWrite("sponsors", updateSponsor(id, input));
 }

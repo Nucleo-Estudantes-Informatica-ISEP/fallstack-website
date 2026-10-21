@@ -12,6 +12,17 @@ Routes repeated session checks, request parsing, response creation, and error ma
 
 Use `defineHandler` in `src/lib/http/server.ts` for normal JSON routes: apply an auth strategy, optional ownership check and Zod schema, then call a thin route handler. Use `httpClient` in `src/lib/http/client.ts` for browser JSON requests, with typed status errors and a `raw()` path for non-JSON responses.
 
+### Session resolution policies
+
+`auth: "none"` skips session resolution entirely and always passes `session: null`.
+Use it only for identity-independent data. `authorize` is prohibited by the config
+type and rejected at runtime with this policy. The four public edition GET routes
+use it. `auth: "public"` retains optional session resolution for handlers that
+inspect identity (session, logout and action-token routes); password-reset's
+existing optional policy is unchanged. Protected policies retain 401 for no
+session, 403 for role/ownership denial. Schema parsing/error mapping is shared
+with both public policies. Do not use `none` to bypass identity requirements.
+
 ## Consequences
 
 - HTTP policy and error behavior have shared entry points; route-specific business rules remain in services and domain code.
