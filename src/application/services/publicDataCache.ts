@@ -72,6 +72,7 @@ export function createPublicDataCache() {
           value: Promise.resolve(undefined),
           settled: Promise.resolve(),
         };
+        // Clone once to detach loader-owned references before freezing the snapshot.
         const work = Promise.resolve()
           .then(load)
           .then((value) => freezeDto(structuredClone(value)));

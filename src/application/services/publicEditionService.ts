@@ -4,7 +4,6 @@ import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 import { toCompanyRosterDto } from "@/application/dto/companyDto";
 import { toFaqDto } from "@/application/dto/faqDto";
-import type { HomepageDto } from "@/application/dto/homepageDto";
 import { toScheduleEventDto } from "@/application/dto/scheduleDto";
 import { toSponsorDto } from "@/application/dto/sponsorDto";
 import { Language } from "@/domain/i18n/translations";
@@ -85,16 +84,4 @@ export async function readHomepageSection<T>(
   } catch {
     return [];
   }
-}
-
-export async function getHomepageData(
-  language: Language
-): Promise<HomepageDto> {
-  const [faqs, schedule, sponsors, companies] = await Promise.all([
-    readHomepageSection(getPublicFaqs(language)),
-    readHomepageSection(getPublicSchedule(language)),
-    readHomepageSection(getPublicSponsors()),
-    readHomepageSection(getPublicCompanyRoster(language)),
-  ]);
-  return { faqs, schedule, sponsors, companies };
 }

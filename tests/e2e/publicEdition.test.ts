@@ -31,8 +31,7 @@ vi.mock("@/application/repositories/database", async () => {
 const { default: db } = await import("@/application/repositories/database");
 const { publicDataCache } =
   await import("@/application/services/publicDataCache");
-const { getHomepageData } =
-  await import("@/application/services/publicEditionService");
+const { readHomepageDatasets } = await import("./support/publicHomepage");
 const faqService = await import("@/application/services/faqService");
 const scheduleService = await import("@/application/services/scheduleService");
 const companyService = await import("@/application/services/companyService");
@@ -107,16 +106,16 @@ test("real DB: warm public homepage reads issue zero DB operations; concurrent m
   const before = await measure(uncached);
   publicDataCache.invalidate();
   measurement.operations = 0;
-  await getHomepageData(Language.PT);
+  await readHomepageDatasets(Language.PT);
   const coldOperations = measurement.operations;
   expect(coldOperations).toBe(uncachedOperations);
-  const after = await measure(() => getHomepageData(Language.PT));
+  const after = await measure(() => readHomepageDatasets(Language.PT));
   expect(before.operations).toBe(before.reads * uncachedOperations);
   expect(after.operations).toBe(0);
   publicDataCache.invalidate();
   measurement.operations = 0;
   await Promise.all(
-    Array.from({ length: 100 }, () => getHomepageData(Language.PT))
+    Array.from({ length: 100 }, () => readHomepageDatasets(Language.PT))
   );
   expect(measurement.operations).toBe(coldOperations);
   process.stdout.write(
@@ -126,7 +125,10 @@ test("real DB: warm public homepage reads issue zero DB operations; concurrent m
 
 test("real DB: edits, reorder, activation, rank, profile and interest changes invalidate public data in both languages", async () => {
   const read = () =>
-    Promise.all([getHomepageData(Language.PT), getHomepageData(Language.EN)]);
+    Promise.all([
+      readHomepageDatasets(Language.PT),
+      readHomepageDatasets(Language.EN),
+    ]);
   await read();
   await faqService.updateFaqEntryForAdmin(faqId, {
     question: { PT: "Editado?", EN: "Edited?" },

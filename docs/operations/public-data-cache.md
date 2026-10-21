@@ -35,8 +35,8 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
   Each failed public dataset load calls `reportError` once, which logs at error level
   and calls Sentry `captureException` with `extra.operation` set to
   `homepage_faqs`, `homepage_schedule`, `homepage_sponsors` or
-  `homepage_companies`. Concurrent readers and the one-second failure cooldown
-  do not repeat these events; the next failed load reports again.
+  `homepage_companies`. Concurrent readers, the one-second settled-failure cooldown,
+  and retained timed-out work do not repeat these events; the next failed load reports again.
   SDK capture alone does not confirm ingestion or notifications: monitoring is
   disabled without a DSN. Follow the [observability runbook](../observability.md#8-sentry-operations-and-alerts)
   to configure new/regressed issue alerts and volume alerts for ongoing outages.
@@ -54,14 +54,20 @@ Private/admin reads and login state are excluded. See [ADR 0013](../decisions/00
   migrated test DB with DATABASE_URL/DIRECT_URL set.
   It creates and removes its own fixtures; never point tests at production.
 - There is no cache backend to become unavailable. A cold/expired entry reads the
-  DB; a DB failure gives API 500 and a logged, empty homepage section. Concurrent
-  failures share a one-second retry cooldown. Each load has a two-second deadline,
+  DB; a DB failure gives API 500 and a logged, empty homepage section. Settled
+  failures share a one-second retry cooldown. Timed-out work that remains pending
+  continues returning the timeout rejection until settlement or the 30-second
+  pending limit; it does not retry after just one second. Each load has a two-second deadline,
   bounding the homepage data wait even if a DB query hangs. Timeout does not
   cancel underlying database work: a key shares pending work for at most 30
   seconds from its start, including after invalidation. The next read at that
   limit replaces it even if it never settles. This allows another uncancellable
-  query per key every 30 seconds during a hang. Investigate stuck
-  queries and pool health. A cold-start timeout renders empty sections in SSR
+  query per key every 30 seconds during a hang. No DB-side statement timeout
+  is configured by this application, so abandoned queries can accumulate. Before
+  enabling a deployment-specific PostgreSQL `statement_timeout` below 30 seconds,
+  assess its impact on migrations, transactions and other application queries;
+  the two-second reader deadline is not a database cancellation mechanism.
+  Investigate stuck queries and pool health. A cold-start timeout renders empty sections in SSR
   HTML, with no client retry; this is not data loss. A later request can recover
   after the one-second cooldown once the underlying load has settled, or after
   the 30-second pending limit.

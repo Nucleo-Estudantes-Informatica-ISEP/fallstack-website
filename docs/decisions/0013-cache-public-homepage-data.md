@@ -34,8 +34,11 @@ invalidation. At that limit the next read replaces it, so a permanently hung
 query cannot pin a key forever. Late settlement of abandoned work cannot affect
 the replacement. This permits one new uncancellable query per key every 30
 seconds during a prolonged hang; investigate DB timeouts and pool health.
-Failed loads share the same rejection for one second before
-retrying. Each successful load clones its DTOs once into an owned, deeply frozen
+Settled failures share the same rejection for one second before retrying.
+A timed-out load that is still pending continues returning its timeout rejection
+until the underlying work settles or reaches the 30-second limit. The one-second
+cooldown alone does not release pending work; a late success can warm the cache
+immediately if its generation is still current. Each successful load clones its DTOs once into an owned, deeply frozen
 snapshot, shared by homepage and API readers without further cloning. Callers
 must not mutate these DTOs. Invalidation advances the cache generation and deletes
 settled entries. Pending work remains shared until settlement or the 30-second

@@ -2,15 +2,12 @@
 import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import {
-  defaultConfig,
-  type NextConfigComplete,
-} from "next/dist/server/config-shared";
+import type { NextConfig } from "next";
 import withPWA, { type PluginOptions } from "@ducanh2912/next-pwa";
 import { expect, test } from "vitest";
 import webpack from "webpack";
 
-import { publicDataRuntimeCaching } from "./publicDataRuntimeCaching";
+import { publicDataRuntimeCaching } from "@/config/publicDataRuntimeCaching";
 
 test("installed PWA plugin generates the offline fallback before default routes", async () => {
   const dest = await mkdtemp(path.join(tmpdir(), "fallstack-pwa-"));
@@ -42,7 +39,11 @@ test("installed PWA plugin generates the offline fallback before default routes"
         dev: false,
         isServer: false,
         buildId: "offline-regression",
-        config: defaultConfig as unknown as NextConfigComplete,
+        // Supply only the plugin inputs; avoid importing private Next defaults.
+        config: {
+          basePath: "",
+          typescript: { tsconfigPath: "tsconfig.json" },
+        } as Parameters<NonNullable<NextConfig["webpack"]>>[1]["config"],
         defaultLoaders: { babel: {} },
         totalPages: 0,
         webpack,
@@ -92,4 +93,4 @@ test("installed PWA plugin generates the offline fallback before default routes"
   } finally {
     await rm(dest, { recursive: true, force: true });
   }
-});
+}, 60_000);
