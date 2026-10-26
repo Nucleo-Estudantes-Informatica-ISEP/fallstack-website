@@ -73,12 +73,12 @@
     "@types/bcrypt": "^6.0.0",
     "@types/downloadjs": "^1.4.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/lodash": "^4.17.26",
+    "@types/lodash": "^4.17.27",
     "@types/node": "^24.19.2",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
-    "@typescript-eslint/eslint-plugin": "^8.71.2",
-    "@typescript-eslint/parser": "^8.71.2",
+    "@typescript-eslint/eslint-plugin": "^8.72.0",
+    "@typescript-eslint/parser": "^8.72.0",
     "autoprefixer": "^10.6.1",
     "dotenv": "^17.4.2",
     "downloadjs": "^1.4.7",
@@ -93,7 +93,7 @@
     "jsdom": "^29.1.1",
     "lint-staged": "^15.5.2",
     "lodash": "^4.18.1",
-    "postcss": "^8.5.30",
+    "postcss": "^8.5.31",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "prisma": "^6.19.3",
@@ -105,7 +105,7 @@
     "typescript": "^5.9.3",
     "uuid": "^13.0.2",
     "vitest": "^4.1.12",
-    "webpack": "^5.112.0"
+    "webpack": "^5.112.1"
   },
   "packageManager": "pnpm@10.23.0+sha512.21c4e5698002ade97e4efe8b8b4a89a8de3c85a37919f957e7a0f30f38fbc5bbdd05980ffe29179b2fb6e6e691242e098d945d1601772cad0fef5fb6411e2a4b"
 }
