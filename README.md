@@ -73,6 +73,8 @@ as its callback. Use development credentials and data only.
 
 ## More documentation
 
+- [Team work tutorial (Português)](docs/tutorial-trabalho.md): first contribution,
+  project map, PR walkthrough, and review checklist; suitable for sharing on Drive.
 - [Contribution workflow](docs/agents/contribution.md): issues, branches, PRs,
   and checks.
 - [Database workflow](docs/database-workflow.md): migrations, seed, and local
