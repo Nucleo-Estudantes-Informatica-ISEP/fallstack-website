@@ -13,7 +13,7 @@ interface HistorySectionProps {
 const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
   return (
     <div className="mt-12 mb-8 flex w-full flex-col items-center justify-center">
-      <div className="grid w-full grid-cols-4 border-b-2 px-1 py-3 text-center font-bold text-white/35">
+      <div className="grid w-full grid-cols-4 border-b-2 px-1 py-3 text-center font-bold text-white/70">
         <div className="col-span-2 px-1">Nome</div>
         <div className="px-1">Data</div>
         <div className="px-1">Ação</div>
