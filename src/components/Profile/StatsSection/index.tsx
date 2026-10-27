@@ -25,19 +25,19 @@ const StatsSection: React.FC<StatsProps> = ({
       <div className="mb-6 grid w-full grid-cols-1 items-center justify-center gap-y-4 md:my-6 md:grid-cols-3">
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
           <p className="mt-4 text-4xl font-bold">{totalScans}</p>
-          <h2 className="text-center leading-6 font-medium text-white/35 md:text-xl">
+          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
             {totalScans === 1 ? "Scan" : "Scans"}
           </h2>
         </div>
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4 md:border-x-4">
           <p className="mt-4 text-4xl font-bold">{totalSaves}</p>
-          <h2 className="text-center leading-6 font-medium text-white/35 md:text-xl">
+          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
             {totalSaves === 1 ? "Gravação de Perfil" : "Gravações de Perfil"}
           </h2>
         </div>
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
           <p className="mt-4 text-4xl font-bold">{companiesLeft}</p>
-          <h2 className="text-center leading-6 font-medium text-white/35 md:text-xl">
+          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
             Empresas restantes
           </h2>
         </div>

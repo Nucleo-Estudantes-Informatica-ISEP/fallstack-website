@@ -26,3 +26,15 @@ test("shows the selected file name in parentheses after selecting a file", () =>
 
   expect(screen.getByText("(resume.pdf)")).toBeInTheDocument();
 });
+
+test("labels the file input", () => {
+  const inputRef = createRef<HTMLInputElement>();
+  render(
+    <ImportCvSection
+      text="Importar CV"
+      inputRef={inputRef}
+      className="text-gray-100"
+    />
+  );
+  expect(screen.getByLabelText("Curriculum Vitae")).toBe(inputRef.current);
+});

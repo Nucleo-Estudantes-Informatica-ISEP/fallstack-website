@@ -36,7 +36,7 @@ const Input: React.FC<InputProps> = ({
         placeholder={placeholder}
         defaultValue={defaultValue ?? undefined}
         ref={inputRef}
-        className={`rounded-md border border-gray-300 bg-slate-200 px-4 py-2 text-black placeholder:text-gray-400 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-800 ${className}`}
+        className={`w-full min-w-0 rounded-md border border-gray-300 bg-slate-200 px-4 py-2 text-black placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-100 ${className ?? ""}`}
       />
     </div>
   );

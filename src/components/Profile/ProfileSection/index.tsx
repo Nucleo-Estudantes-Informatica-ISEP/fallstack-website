@@ -160,7 +160,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   return (
     <section
-      className="w-full rounded bg-[#111111] p-6 antialiased shadow-2xl md:p-8"
+      className="w-full rounded bg-[#111111] p-4 antialiased shadow-2xl sm:p-6 xl:p-8"
       style={{
         textRendering: "optimizeLegibility",
       }}
@@ -259,7 +259,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               defaultValue={profile.linkedin}
               placeholder="https://www.linkedin.com/in/nome"
               inputRef={linkedinRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-500 focus:ring-0"
+              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
             />
           </div>
         </div>
@@ -279,30 +279,33 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               defaultValue={profile.github}
               placeholder="https://github.com/example"
               inputRef={githubRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-500 focus:ring-0"
+              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
             />
           </div>
         </div>
 
         {/* CV - Importar CV */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-100">CV</label>
           <div className="flex items-center border border-white bg-transparent p-2 text-gray-100">
-            {/* Forçamos a cor branca aqui dentro para o texto do botão */}
-            <div className="w-full text-white [&>button]:text-white [&>div]:text-white">
-              <ImportCvSection
-                inputRef={cvRef}
-                text={student.cv ? "Alterar CV" : "Importar CV"}
-              />
-            </div>
+            <ImportCvSection
+              inputRef={cvRef}
+              text={student.cv ? "Alterar CV" : "Importar CV"}
+              className="text-gray-100"
+            />
           </div>
         </div>
 
         {/* BIOGRAFIA */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-100">Biografia</label>
+          <label
+            className="text-xs font-medium text-gray-100"
+            htmlFor="profile-bio"
+          >
+            Biografia
+          </label>
           <div className="border border-white bg-transparent p-2">
             <UserBioTextArea
+              id="profile-bio"
               name=""
               rows={5}
               placeholder="Escreve algo sobre ti..."
@@ -310,10 +313,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               value={profile.bio ? profile.bio : ""}
               limit={LIMIT}
               warningLimit={LIMIT - 30}
-              className="w-full resize-none border-none bg-transparent text-gray-100 placeholder:text-gray-500 focus:outline-none"
+              className="w-full resize-none border-none bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none"
             />
           </div>
-          <span className="text-xs text-gray-400">0 / {LIMIT} caracteres</span>
         </div>
 
         {/* INTERESSES */}

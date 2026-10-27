@@ -136,7 +136,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     );
   };
 
-  const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
+  const horizontalPadding = "px-4 sm:px-8 xl:px-[11.11vw] 2xl:px-[168px]";
 
   const renderContent = () => {
     if (selectedMenu === "passe") return <PassMenuContent student={student} />;
@@ -191,28 +191,22 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
 
   return (
     <div
-      className="flex min-h-screen w-screen flex-col"
+      className="flex min-h-screen w-full flex-col"
       style={{
         backgroundImage: "url(/assets/optimized/bgHero.900094f51c2f.webp)",
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundAttachment: "fixed",
-        marginLeft: "calc(50% - 50vw)",
-        marginRight: "calc(50% - 50vw)",
       }}
     >
       <div
-        className="flex flex-col items-center pt-12 pb-8"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
+        className={`flex flex-col items-center pt-12 pb-8 ${horizontalPadding}`}
       >
         <div className="relative mb-6 flex items-center justify-center">
           <UserImage imageSrc={student.avatar} className="size-52" />
         </div>
         <h1
-          className="mb-2 text-center text-white"
+          className="mb-2 max-w-full text-center wrap-break-word text-white"
           style={{
             fontFamily: '"Coolvetica", sans-serif',
             fontWeight: 400,
@@ -224,7 +218,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           {student.name}
         </h1>
         <p
-          className="text-gray-100"
+          className="max-w-full text-center break-all text-gray-100"
           style={{
             fontFamily: '"Inter", sans-serif',
             fontWeight: 400,
@@ -277,13 +271,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       </div>
 
       <div
-        className="flex flex-1 flex-col gap-6 pb-20 md:flex-row md:gap-2"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
+        className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-2 ${horizontalPadding}`}
       >
-        <div className="w-full shrink-0 md:w-96">
+        <div className="w-full shrink-0 lg:w-64 xl:w-96">
           <nav className="overflow-hidden bg-black shadow-xl">
             <div className="divide-y divide-gray-800">
               {sidebarItems.map((item) => renderButton(item))}
@@ -298,7 +288,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         </div>
 
         <div
-          className="flex flex-1 flex-col bg-[rgba(20,20,20,1)] p-8 shadow-xl"
+          className="flex min-w-0 flex-1 flex-col bg-[rgba(20,20,20,1)] p-4 shadow-xl sm:p-6 xl:p-8"
           style={{
             marginLeft: "clamp(0px, 0.26vw, 0px)",
             border: "1px solid #484848",
