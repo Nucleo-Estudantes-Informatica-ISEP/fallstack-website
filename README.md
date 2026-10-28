@@ -80,6 +80,8 @@ as its callback. Use development credentials and data only.
 - [Shared data and deployment](docs/SHARED_DATA.md): shared PostgreSQL,
   MinIO, and Coolify Compose. Current deployment uses
   [`docker-compose.app.yml`](docker-compose.app.yml), not a local service profile.
+- [ZITADEL role claims](docs/operations/zitadel-roles.md): project settings,
+  cross-project admin roles, and login verification.
 - [Google Wallet infrastructure](docs/GOOGLE_WALLET.md): issuer, service-account,
   Generic Pass, publishing access, and runtime configuration.
 - [MinIO cleanup](docs/storage-cleanup.md): six-month CV retention, orphan cleanup,
