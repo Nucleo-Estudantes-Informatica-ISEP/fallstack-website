@@ -157,6 +157,11 @@ Check the timer/latest success during operations and keep host monitoring active
 
 ## Recovery
 
+Browse/download archives through the private
+[R2 bucket](https://dash.cloudflare.com/20602e5f96f2ffb928dbaa44fe90b0d9/r2/eu/buckets/nei-fallstack-backups).
+Archive names contain their UTC creation timestamp; each `.verified.json` receipt
+contains the archive's SHA-256 and byte count. The bucket has no public URL.
+
 Retrieve the selected archive from private R2 using authorized account access,
 independently of the VPS. Compare its recorded SHA-256, then decrypt with the
 off-VPS key:
@@ -180,3 +185,39 @@ not silently reattach deleted/expired CVs or reset tombstones. Never restore ove
 live shared services or import Supabase `auth`/`storage` schemas. This isolated
 rehearsal does not replace #464's coordinated recovery exercise, accepted RPO/RTO,
 or post-restore authenticated application checks.
+
+### Recover one record or file
+
+For one database record, first restore the appropriate environment's dump into
+an isolated database as above, then select that record there. For example, in
+the restored production copy:
+
+```sql
+SELECT id, code, cv
+FROM fallstack."Student"
+WHERE code = 'REPLACE_WITH_STUDENT_CODE';
+```
+
+Export only the needed fields/related rows from that isolated copy. Review
+foreign keys and current data before applying a narrowly scoped correction;
+do not replay an entire table or database over production to recover one row.
+
+For one avatar/logo/CV, find its original bucket and object key in the decrypted
+manifest. This example runs inside the extracted archive directory:
+
+```python
+import json
+
+manifest = json.load(open("data/manifest.json"))
+bucket = "fallstack-prod-cvs"
+key = "REPLACE_WITH_ORIGINAL_OBJECT_KEY"
+for item in manifest["objects"]:
+    if item["bucket"] == bucket and item["key"] == key:
+        print(item["file"], item["sha256"], item["metadata"])
+```
+
+The actual file is `data/<file>` from that result. Verify its SHA-256 before
+opening/exporting it. To return it to the application, use the normal authorized
+upload flow with a new key and follow cleanup/privacy rules. A record/object
+can only be recovered if it existed in a retained snapshot. Protect and remove
+decrypted working copies when recovery finishes.
