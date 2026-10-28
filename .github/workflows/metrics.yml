@@ -1,0 +1,66 @@
+name: Metrics configuration
+
+on:
+  pull_request:
+    branches: [dev, main]
+    paths:
+      - monitoring/**
+      - .github/workflows/metrics.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  configuration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Validate metrics Compose and TOML
+        run: |
+          cp monitoring/.env.example monitoring/.env
+          docker compose --env-file monitoring/.env -f monitoring/compose.yml config --quiet
+          python3 -c 'import tomllib; tomllib.load(open("monitoring/telegraf.conf", "rb"))'
+      - name: Validate Prometheus configuration and rules
+        run: |
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/monitoring:/etc/prometheus:ro" -w /etc/prometheus \
+            prom/prometheus:v3.5.0 check config prometheus.yml
+          docker run --rm --entrypoint promtool \
+            -v "$PWD/monitoring:/etc/prometheus:ro" -w /etc/prometheus \
+            prom/prometheus:v3.5.0 test rules rules.test.yml
+      - name: Exercise readiness collection without external services
+        run: |
+          python3 -m http.server 18448 --bind 127.0.0.1 >/tmp/metrics-http.log 2>&1 &
+          probe_pid=$!
+          trap 'kill "$probe_pid"' EXIT
+          curl --retry 5 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:18448/ >/dev/null
+          docker run --rm --network host --entrypoint telegraf \
+            --env-file monitoring/.env \
+            -e METRICS_MINIO_HEALTH_URL=http://127.0.0.1:18448/ \
+            -e METRICS_AUTH_HEALTH_URL=http://127.0.0.1:18448/missing \
+            -v "$PWD/monitoring/telegraf.conf:/etc/telegraf/telegraf.conf:ro" \
+            telegraf:1.36.3-alpine --config /etc/telegraf/telegraf.conf \
+            --test --input-filter http_response > /tmp/metrics-probes.txt
+          cat /tmp/metrics-probes.txt
+          rg 'service=minio .*response_status_code_match=1i' /tmp/metrics-probes.txt
+          rg 'service=authnei .*response_status_code_match=0i' /tmp/metrics-probes.txt
+          if rg 'server=|method=|fake-private|http://|https://' /tmp/metrics-probes.txt; then exit 1; fi
+      - name: Exercise Docker collection and label privacy
+        run: |
+          trap 'docker rm -f metrics-valid metrics-env-only metrics-service-only' EXIT
+          docker run -d --name metrics-valid --label metrics_environment=dev \
+            --label metrics_service=web --label unsafe_token=FAKE_PRIVATE_TOKEN \
+            -e SECRET_TOKEN=FAKE_PRIVATE_TOKEN alpine:3.22 sleep 120
+          docker run -d --name metrics-env-only --label metrics_environment=dev alpine:3.22 sleep 120
+          docker run -d --name metrics-service-only --label metrics_service=web alpine:3.22 sleep 120
+          docker run --rm --entrypoint telegraf --env-file monitoring/.env \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            -v "$PWD/monitoring/telegraf.conf:/etc/telegraf/telegraf.conf:ro" \
+            telegraf:1.36.3-alpine --config /etc/telegraf/telegraf.conf \
+            --test --input-filter docker > /tmp/metrics-docker.txt
+          cat /tmp/metrics-docker.txt
+          rg 'docker_container_cpu,.*copy=metrics-valid.*usage_percent=' /tmp/metrics-docker.txt
+          rg 'docker_container_mem,.*copy=metrics-valid.*usage=' /tmp/metrics-docker.txt
+          rg 'docker_container_status,.*copy=metrics-valid.*restart_count=' /tmp/metrics-docker.txt
+          if rg 'metrics-env-only|metrics-service-only|FAKE_PRIVATE_TOKEN|unsafe_token|SECRET_TOKEN' /tmp/metrics-docker.txt; then exit 1; fi

@@ -125,7 +125,7 @@ COPY --from=app-builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=app-builder /app/prisma ./prisma
 
 USER nextjs
-EXPOSE 4000
+EXPOSE 4000 9464
 ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
 
