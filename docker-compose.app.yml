@@ -44,6 +44,8 @@ services:
           - redis-private
 
   migrate:
+    deploy:
+      replicas: 1
     build:
       context: .
       dockerfile: Dockerfile
@@ -58,6 +60,8 @@ services:
       - shared_data
 
   storage-cleanup:
+    deploy:
+      replicas: 1
     build:
       context: .
       dockerfile: Dockerfile
@@ -82,6 +86,9 @@ services:
       - shared_data
 
   web:
+    # Scale only web inside this environment's existing Coolify resource.
+    deploy:
+      replicas: ${WEB_REPLICAS:-1}
     build:
       context: .
       dockerfile: Dockerfile
