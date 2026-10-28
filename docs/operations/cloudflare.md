@@ -66,8 +66,6 @@ Check with `curl -sI <url>` and the `cf-cache-status` header. Last checked: 28 O
    default. Proxy a record only when it needs the CDN.
 3. Record the change in the issue, and add it to the tables above if it is a
    proxied record or a setting.
-4. cPanel may create DNS entries: **TBD (decision)**. Since cPanel no longer
-   manages this DNS, the default is **no**.
 
 ## Rollback
 
@@ -79,8 +77,6 @@ To stop using the CDN for a record, set it back to DNS only:
    `dig +short fallstack.nei-isep.org`: it must return the origin address, not a
    Cloudflare one.
 
-Rehearsed on the test subdomain on: **TBD (date)**.
-
 ## Test through the CDN
 
 Before the event, test these on the proxied site with at least two web copies,
@@ -89,5 +85,3 @@ after the multi-copy checks:
 - Login
 - QR scanning
 - CV upload
-
-Result and date: **TBD**.
