@@ -35,15 +35,24 @@ test("each Coolify resource requires its own runtime URL, credentials and key pr
   expect(compose.volumes.redis_data?.name).toBeUndefined();
 });
 
-test("Redis has persistent storage, memory headroom and health-gated web startup", () => {
+test("Redis pins a patch release and digest for reproducible persisted state", () => {
+  expect(redis.image).toMatch(/^redis:7\.4\.\d+-alpine@sha256:[a-f0-9]{64}$/);
+});
+
+test("Redis has persistent storage and memory headroom without gating unused web startup", () => {
   expect(redis).toMatchObject({
-    image: "redis:7.4-alpine",
     restart: "unless-stopped",
     stop_grace_period: "30s",
     mem_limit: "256m",
     volumes: ["redis_data:/data"],
   });
-  expect(web.depends_on.redis.condition).toBe("service_healthy");
+  expect(redis.healthcheck.test).toContain(
+    'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -qx PONG'
+  );
+  expect(web.depends_on).not.toHaveProperty("redis");
+  expect(web.depends_on.migrate.condition).toBe(
+    "service_completed_successfully"
+  );
 });
 
 test("Redis deployment smoke gates the existing required quality check", () => {

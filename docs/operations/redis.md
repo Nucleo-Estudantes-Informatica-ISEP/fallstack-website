@@ -7,6 +7,22 @@ names or share these resources between environments.
 
 ## Configuration and rollout
 
+**Merge/deploy gate — SAD:** do not merge this change into `dev`, promote it to
+`main`, or trigger either deployment until all checks below are recorded on
+[#455](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/455):
+
+- [ ] Both Coolify resources have saved, distinct URL-safe `REDIS_PASSWORD`
+      values and their correct `REDIS_KEY_PREFIX`, with **Available at Buildtime**
+      disabled for both variables.
+- [ ] Coolify successfully renders/validates the Compose configuration using
+      each resource's saved runtime variables, without printing secrets.
+
+Missing either variable makes Compose interpolation fail for the **whole
+stack**, including migrations and web, before containers start. Redis's
+healthcheck and web's independent startup do not bypass this gate. If either
+resource is unprepared, keep the change unmerged and leave its current
+deployment running; provision the variables first.
+
 Set these **runtime-only** values separately in each Coolify resource before
 deploying this Compose change. Clear **Available at Buildtime** for both;
 Coolify can otherwise inject environment values as build arguments:
@@ -29,9 +45,11 @@ must receive identical values. Redis reads its password from an owner-only
 avoids Linux sticky-directory protections blocking the root startup shell from
 rewriting a Redis-owned file on restart. Docker administrators and Redis
 administrators with `CONFIG GET` access remain trusted.
-The future #413 client must validate these through `serverEnv` and prepend the
+The future #413 client must validate the URL/prefix through `serverEnv` and prepend the
 prefix to every key; this infrastructure change does not yet use Redis in app
 requests or change the existing per-process limiter.
+The temporary env-schema exception and Compose-only password boundary are
+recorded in [ADR 0015](../decisions/0015-private-redis-per-environment.md).
 
 Only `web` and `redis` join `redis_private`, which has `internal: true`.
 Redis binds to loopback and the `redis-private` alias defined **only** on that
@@ -48,9 +66,37 @@ Docker-host administrators remain trusted: network isolation does not prevent
 root/Docker administrators from inspecting containers or credentials.
 
 Deploy `dev` first, run the checks below, then promote the reviewed change to
-`main` and repeat. Web startup waits for Redis's authenticated `PONG` health
-check and for successful DB migrations. A later Redis failure does not
-automatically stop/restart web; #413 owns bounded timeouts and outage policy.
+`main` and repeat. Web startup waits only for successful DB migrations;
+it has no Redis caller yet, so Redis health does not gate web startup or
+redeploys. Redis retains its own authenticated `PONG` healthcheck. #413 must
+settle startup readiness, bounded timeouts and outage policy when adding the
+client. A later Redis failure does not automatically stop/restart web.
+
+## Image support and upgrades
+
+Redis is pinned to `7.4.12-alpine` and the multi-platform manifest digest in
+Compose, so redeploys cannot silently change the server or Alpine contents.
+As checked on 2026-10-28, Redis lists 7.4 as an Extended GA release, supported
+through December 1, 2029; see the
+[upstream lifecycle](https://redis.io/docs/latest/operate/oss_and_stack/install/version-mgmt/).
+
+SAD owns updates; digest pinning requires explicit security/patch refreshes:
+
+1. Review upstream release notes and support status. Update both patch tag and
+   manifest digest in a PR, rerun the Redis smoke and deploy to `dev` first.
+2. Before replacing an existing Redis image, stop dependent web flows and Redis
+   gracefully, then back up the entire stopped `/data` volume, including
+   `appendonlydir` and its manifest. Preserve that backup separately from the
+   live volume. Follow the
+   [upstream backup guidance](https://redis.io/docs/latest/operate/oss_and_stack/install/upgrade/standalone/).
+3. Start the new image against the retained volume; verify authentication,
+   isolation, AOF status and unexpired key/TTL survival before resuming flows.
+   Repeat the backup and verification in `main` after reviewing `dev`.
+4. If rollback is needed, stop flows/Redis and restore the pre-upgrade backup
+   before starting the previous digest. Do not assume older Redis can read
+   files rewritten by newer versions. Writes after the backup are lost on
+   restore. Minor/major upgrades need a separate compatibility review and
+   restore rehearsal; never flush coordination keys to bypass an upgrade issue.
 
 ## Restart, persistence and capacity
 
@@ -120,8 +166,8 @@ generated project name and environment, not a fresh local Compose project.
    per-copy authenticated connections and bounded outage/recovery behavior;
    SAD executes those acceptance checks during #413 rollout. See
    [#413 acceptance criteria](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/413).
-   The startup health gate stays mandatory until that failure policy has been
-   reviewed; a later Redis failure does not automatically restart web.
+   #413 must decide any Redis startup gate alongside its reviewed failure
+   policy; this infrastructure PR does not couple web startup to Redis health.
 
 Do not print passwords, full connection URLs or container environments in tickets.
 

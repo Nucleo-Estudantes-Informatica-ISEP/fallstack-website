@@ -2,7 +2,7 @@ x-minio-endpoint: &minio_endpoint ${S3_ENDPOINT:-http://minio-gbheij1ljds8nrhfgd
 
 services:
   redis:
-    image: redis:7.4-alpine
+    image: redis:7.4.12-alpine@sha256:338fbfc036dc5517ac0b04d6de21521085935336e565f223406180e9d84166e2
     restart: unless-stopped
     mem_limit: 256m
     stop_grace_period: 30s
@@ -96,8 +96,6 @@ services:
         - sentry_auth_token
     restart: unless-stopped
     depends_on:
-      redis:
-        condition: service_healthy
       migrate:
         condition: service_completed_successfully
     environment:
