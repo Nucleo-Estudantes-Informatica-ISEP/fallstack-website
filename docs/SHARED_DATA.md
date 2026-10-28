@@ -47,6 +47,6 @@ before enabling `apply`. See the [cleanup runbook](storage-cleanup.md) for rollo
 permissions, retry queue, audit and recovery. Scheduled shared-service backups are a separate
 requirement; migration dumps are one-time recovery points.
 
-See the [backup coverage audit](operations/backups.md) for the named platform
-contact, PostgreSQL/MinIO coverage inventory, observed scheduling and notification
-gaps, and the evidence still required for off-VPS backups.
+See the [backup runbook](operations/backups.md) for the named platform contact,
+daily schedule, PostgreSQL/MinIO inventory, encrypted off-VPS copies, usage
+guards, recovery and verified failure notifications.

@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Fallstack backup at 02:15 Portugal time
+
+[Timer]
+OnCalendar=*-*-* 02:15:00 Europe/Lisbon
+Persistent=true
+Unit=fallstack-backup.service
+
+[Install]
+WantedBy=timers.target
