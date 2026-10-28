@@ -52,6 +52,22 @@ class BackupTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             backup.inventory(api, Mock(), "bucket")
 
+    def test_low_disk_space_stops_before_reading_source_data(self):
+        with tempfile.TemporaryDirectory() as work:
+            path = Path(work)
+            (path / "requests.json").write_text("{}")
+            config = path / "config.json"
+            config.write_text(json.dumps({"state_dir": work, "endpoint": "unused",
+                "access_key_id": "unused", "secret_access_key": "unused", "bucket": "test"}))
+            with patch.object(backup, "client"), patch.object(
+                backup, "inventory", return_value=[]
+            ), patch.object(backup.shutil, "disk_usage", return_value=Mock(free=1_500_000_000)), patch.object(
+                backup, "snapshot"
+            ) as source:
+                with self.assertRaisesRegex(backup.SafetyLimit, "2 GB"):
+                    backup.main(config)
+                source.assert_not_called()
+
     def test_changed_source_object_fails_without_creating_database_dumps(self):
         source = Mock()
         source.get_paginator.return_value.paginate.return_value = [

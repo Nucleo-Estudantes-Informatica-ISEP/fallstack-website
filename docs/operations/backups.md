@@ -54,7 +54,8 @@ reserves headroom for its maximum archive. Before upload it checks actual bytes.
   objects as well as backup archives, **including** the proposed upload.
 - Maximum **250,000,000 bytes** per encrypted archive, using a single PUT.
 - Maximum **200,000,000 bytes / 10,000 source objects** per snapshot, bounded
-  dump outputs, and at least 1 GB of staging space before starting.
+  dump outputs, and at least 2 GB of staging space before starting (covering
+  plaintext, packed and encrypted files at their configured maximum sizes).
 - Maximum **1,000 Class A / 1,000 Class B requests per UTC month** from this
   job. Each request is counted and persisted before the SDK call, even on
   failure. SDK retries are disabled. Corrupt/missing counters or truncated
@@ -146,8 +147,8 @@ Check the timer/latest success during operations and keep host monitoring active
   Coolify SMTP authentication failed; the final alert uses independently
   verified working NEI SMTP settings, with failures surfaced as nonzero exits.
 - Updated alert formatting to Portugal time and sent a format-verification alert
-  at **19:02:10 WET**. Six regression tests pass locally and on-host, including
-  DST changes, budgets, malformed/missing ledger, source changes and retention.
+  at **19:02:10 WET**. Seven regression tests pass locally and on-host, including
+  DST changes, budgets, malformed/missing ledger, low disk space, source changes and retention.
 - Timer is enabled and active; next run observed as **29/10/2026 02:15 WET**.
   No unattended scheduled run after installation is claimed yet.
 - A subsequent run at **19:08:44 WET** also exited 0, verified its archive and

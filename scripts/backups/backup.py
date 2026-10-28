@@ -233,8 +233,8 @@ def main(config_path):
         objects = inventory(s3, budget, config["bucket"])
         # Leave enough headroom for the maximum accepted upload before reading source data.
         check_size(objects, MAX_ARCHIVE_BYTES)
-        if shutil.disk_usage(state).free < 1_000_000_000:
-            raise SafetyLimit("Less than 1 GB staging space available")
+        if shutil.disk_usage(state).free < 2_000_000_000:
+            raise SafetyLimit("Less than 2 GB staging space available")
         with tempfile.TemporaryDirectory(prefix="snapshot-", dir=state) as work:
             work = Path(work)
             data = work / "data"
