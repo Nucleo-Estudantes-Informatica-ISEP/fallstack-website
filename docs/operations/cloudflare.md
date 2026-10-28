@@ -7,19 +7,23 @@ cPanel server no longer manages this DNS.
 
 ## Owners
 
-- Owner: **TBD**
-- Second administrator: **TBD**
-- Both use individual accounts with the Super Administrator role and
+- Owner: Dinis Correia (`@dinisjcorreia`)
+- Second administrators: David Valente (`@david-fs-valente`) and Hugo Almeida
+  (`@hugo2006alm`)
+- The owner and the second administrators are the repository codeowners. All
+  three use individual accounts with the Super Administrator role and
   two-factor authentication.
 
 ### Break-glass account
 
-The shared general account is for emergencies only.
+The shared general account is for emergencies only. Only the three
+administrators above know it.
 
-1. Use it only when both administrators cannot log in, or to roll back (below)
-   when they are unreachable.
+1. Use it only when none of the three administrators can log in, or to roll
+   back (below) when they are unreachable.
 2. Keep the password and the two-factor secret in the team password manager,
-   never in the repository, issues or chat. Only coordinators can open the entry.
+   never in the repository, issues or chat. Only the three administrators can
+   open the entry.
 3. The account email is a team mailbox. Recovery codes are stored with the password.
 4. After each use, comment on the infrastructure issue with the date, the reason
    and what changed. Then change the password.
@@ -31,13 +35,13 @@ The shared general account is for emergencies only.
 
 Last checked: **TBD (date)**. Keep this table in sync with the dashboard.
 
-| Setting | Value | Where |
-|---|---|---|
-| SSL/TLS mode | Full (strict) | SSL/TLS → Overview |
-| Rocket Loader | Off | Speed → Optimization |
-| Email Address Obfuscation | Off | Scrape Shield |
-| Web Analytics automatic setup | Off | Analytics & Logs → Web Analytics |
-| Cache Rules and Page Rules | None. Default caching only | Caching → Cache Rules |
+| Setting                       | Value                      | Where                            |
+| ----------------------------- | -------------------------- | -------------------------------- |
+| SSL/TLS mode                  | Full (strict)              | SSL/TLS → Overview               |
+| Rocket Loader                 | Off                        | Speed → Optimization             |
+| Email Address Obfuscation     | Off                        | Scrape Shield                    |
+| Web Analytics automatic setup | Off                        | Analytics & Logs → Web Analytics |
+| Cache Rules and Page Rules    | None. Default caching only | Caching → Cache Rules            |
 
 Script injection stays off because the Content Security Policy only allows
 scripts with the per-request nonce (`script-src 'self' 'nonce-…' 'strict-dynamic'`).
@@ -47,27 +51,27 @@ Never add a rule that caches the HTML either: its nonce changes on every request
 
 Proxy only what the site needs. Everything else stays DNS only.
 
-| Record | Mode |
-|---|---|
-| `fallstack.nei-isep.org` | Proxied |
-| Test name: **TBD** | Proxied |
-| `nei-isep.org`, `www.nei-isep.org` | DNS only |
+| Record                               | Mode     |
+| ------------------------------------ | -------- |
+| `fallstack.nei-isep.org`             | Proxied  |
+| Test name: **TBD**                   | Proxied  |
+| `nei-isep.org`, `www.nei-isep.org`   | DNS only |
 | Login (AuthNEI), mail and MX records | DNS only |
 
 ### Expected cache behavior
 
 Check with `curl -sI <url>` and the `cf-cache-status` header. Last checked: **TBD (date)**.
 
-| Request | Expected |
-|---|---|
-| `https://fallstack.nei-isep.org/` | `DYNAMIC`, with a different CSP nonce on each request |
-| `/_next/static/…` and `/assets/optimized/…` | `MISS` on the first request, then `HIT` |
+| Request                                     | Expected                                              |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `https://fallstack.nei-isep.org/`           | `DYNAMIC`, with a different CSP nonce on each request |
+| `/_next/static/…` and `/assets/optimized/…` | `MISS` on the first request, then `HIT`               |
 
 ## Change process
 
 1. Request a new subdomain or a change in an issue, with the name, the target and
    whether it needs the proxy.
-2. A coordinator makes the change in Cloudflare. New records are **DNS only** by
+2. One of the three administrators makes the change in Cloudflare. New records are **DNS only** by
    default. Proxy a record only when it needs the CDN.
 3. Record the change in the issue, and add it to the tables above if it is a
    proxied record or a setting.
