@@ -16,8 +16,11 @@ the web service becomes healthy. PostgreSQL hostname is
 `http://minio-gbheij1ljds8nrhfgdf9teeo:9000`. Neither service has a public
 host port. Never expose S3 credentials to the browser.
 
-Keep one resource per environment. `WEB_REPLICAS` scales only web inside it;
-migration and cleanup remain singletons. See the [release worker runbook](operations/release-workers.md)
+Keep one resource per environment. Stock Compose verifies `WEB_REPLICAS`
+scaling only web; `WEB_REPLICAS>1` is unverified on Coolify. Keep it at one
+until #419 verifies Coolify's generated configuration and staging container
+counts. Migration and cleanup remain singletons within the resource.
+See the [release worker runbook](operations/release-workers.md)
 for rollout ordering, duplicate-resource restrictions and verification.
 
 Each Coolify app resource also defines a separate private Redis service for

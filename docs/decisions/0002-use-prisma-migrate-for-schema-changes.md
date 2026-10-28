@@ -13,8 +13,12 @@ The project previously used `prisma db push`, which left no versioned migration 
 Track schema changes in committed Prisma migrations. Generate changes with `prisma migrate dev` locally. The Compose `migrate` service uses the `migrator` Docker target to run `prisma migrate deploy`; `web` waits for its `service_completed_successfully` result before starting. Resolve the baseline as already applied on databases whose tables predate it.
 
 Release ownership clarification (2026-10-28, #459): one Compose resource per
-environment owns one migration job and one cleanup daemon. `WEB_REPLICAS`
-scales only web, and all copies plus cleanup wait for that same migration job.
+environment owns one migration job and one cleanup daemon. Stock Compose
+verification shows `WEB_REPLICAS` scales only web, and all copies plus cleanup
+wait for that same migration job. `WEB_REPLICAS>1` is unverified on Coolify:
+generated per-service `container_name` values may prevent scaling. Keep it at
+one until #419 records a staging Coolify deployment with two web containers,
+one migration and one cleanup daemon, including generated container names.
 See the [release worker runbook](../operations/release-workers.md). Counts are
 project-scoped; independent concurrent stacks are not coordinated.
 

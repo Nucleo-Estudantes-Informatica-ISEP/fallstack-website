@@ -92,7 +92,7 @@ services:
       - shared_data
 
   web:
-    # Scale only web inside this environment's existing Coolify resource.
+    # Stock Compose web scaling; keep 1 on Coolify until #419 verifies rewriting.
     deploy:
       replicas: ${WEB_REPLICAS:-1}
     labels:
