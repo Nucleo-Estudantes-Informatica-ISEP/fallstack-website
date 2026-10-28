@@ -17,6 +17,7 @@ test("metrics require explicit deployment identity and stay off the public appli
     expect(read("src/config/env.metrics.ts")).toContain(name);
   }
   expect(compose).toContain("metrics_enabled: ${METRICS_ENABLED:-false}");
+  expect(compose).toContain("metrics_service: redis");
   expect(compose).not.toMatch(/ports:.*9464/);
   expect(read("Dockerfile")).toContain("EXPOSE 4000 9464");
   const prometheus = read("monitoring/prometheus.yml");
@@ -39,11 +40,13 @@ test("host collector retains operational allowlists, not Docker labels, env or r
   expect(config).toContain("has(tags.metrics_service) &&");
   expect(config).not.toContain("[inputs.docker.tagpass]");
   expect(config).toContain("string_as_label = false");
+  expect(config).toContain('dest = "healthy"');
+  expect(config).not.toContain("[[inputs.redis]]");
   expect(config).toContain('listen = "127.0.0.1:9273"');
   for (const field of [
     "restart_count",
     "numbackends",
-    "used_memory",
+    "health_status",
     "response_status_code_match",
   ]) {
     expect(config).toContain(`"${field}"`);

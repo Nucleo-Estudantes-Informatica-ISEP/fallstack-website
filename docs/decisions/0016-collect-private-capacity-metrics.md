@@ -19,7 +19,7 @@ Use the maintained Prometheus Node client for histograms/process metrics.
 
 Run one optional Prometheus/Telegraf pair per Linux Docker host. Discover web
 copies from Docker labels; collect allowlisted container resources, aggregate
-DB connections, Redis INFO and MinIO/AuthNEI readiness. Require explicit
+DB connections, per-environment Redis authenticated Docker healthchecks and MinIO/AuthNEI readiness. Require explicit
 `dev`/`main` identity; shared services use `shared`. Keep collectors on loopback,
 store seven days/1 GB of history, and do not collect request data or arbitrary
 Docker labels. Details: [operations runbook](../operations/capacity-metrics.md).

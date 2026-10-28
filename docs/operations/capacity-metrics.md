@@ -17,14 +17,15 @@ or Pino/Sentry. No application database migration is needed.
 | HTTP count, duration histogram, status, aborted responses             | Each Next.js process on private `:9464/metrics` | environment, service, copy, method, status_code |
 | Process CPU/RSS, heap, GC, event loop                                 | Standard Prometheus Node collector              | environment, service, copy                      |
 | DB connections, commits/rollbacks, deadlocks                          | Aggregate `pg_stat_database` via Telegraf       | dev/main/shared, database, service              |
-| Redis uptime, clients, blocked clients, RAM, evictions/rejections     | Redis `INFO`                                    | shared, service                                 |
+| Redis authenticated PONG health, RAM and restarts                     | Docker healthcheck/stats via Telegraf           | dev/main, service, copy                         |
 | MinIO readiness, AuthNEI readiness, status and probe latency          | HTTP readiness probes                           | shared, service, probe                          |
 
 `copy` is the Docker container name, automatically refreshed every 15 seconds;
 new/replaced replicas need no target edits. Docker restart counts reset when a
 container is replaced. They are gauges, not monotonic Prometheus counters.
 For shared services use `environment=shared`; do not duplicate their resource
-usage under both dev and main. Label every replica of AuthNEI and the proxy too.
+usage under both dev and main. Label every replica of AuthNEI and the proxy too. Each Fallstack resource has
+its own private Redis; its dev/main labels are wired in app Compose.
 
 HTTP timing runs at Node's server boundary, including SSR/pages, APIs,
 static responses, health checks, streaming until finish, and disconnected
@@ -48,19 +49,21 @@ label is recorded, so this aggregate cannot prove homepage-only p95.
    Both deployed branches run `NODE_ENV=production`, so it cannot identify them.
 3. Add persistent Docker labels to shared containers in their owning Coolify
    Compose resources: `metrics_environment=shared` and `metrics_service` equal to
-   `proxy`, `authnei`, `postgresql`, `redis`, or `minio`. Every AuthNEI/proxy copy
-   needs labels. Fallstack web and storage-cleanup labels are already wired.
+   `proxy`, `authnei`, `postgresql`, or `minio`. Every AuthNEI/proxy copy
+   needs labels. Fallstack web, Redis and storage-cleanup labels are already wired.
    Include other co-hosted services in the `inputs.docker.metricpass` service
    allowlist and label them with a fixed, non-personal service name. Reconcile
    inventory against collected copies; unlabeled containers are intentionally
    not stored. Do not edit or restart unrelated services during a capacity run.
 4. Create a dedicated PostgreSQL monitoring login with `CONNECT` and
-   `pg_read_all_stats` only, no application table grants. Create a Redis ACL login
-   with `+info +ping` and no key access. In `monitoring/`, copy `.env.example` to
-   `.env` (ignored), set `DOCKER_GID` from `stat -c '%g' /var/run/docker.sock`,
-   scoped connection credentials, actual dev/main/AuthNEI database names, and
-   host-reachable dependency endpoints. If AuthNEI uses a separate DB host,
-   change only its `inputs.postgresql.address` to a separate monitoring DSN.
+   `pg_read_all_stats` only, no application table grants. Redis health reuses the
+   authenticated PONG check from [its owning Compose resource](redis.md), so
+   the collector needs neither Redis credentials nor access to its private
+   network. In `monitoring/`, copy `.env.example` to `.env` (ignored), set
+   `DOCKER_GID` from `stat -c '%g' /var/run/docker.sock`, scoped PostgreSQL
+   credentials, actual dev/main/AuthNEI database names and host-reachable HTTP
+   dependency endpoints. If AuthNEI uses a separate DB host, change only its
+   `inputs.postgresql.address` to a separate monitoring DSN.
    Probe `/minio/health/ready` and ZITADEL `/debug/ready`, not a login page that
    could return 200 while authentication is broken. This probe does not test a
    complete OIDC login. No tokens in probe URLs.
@@ -107,12 +110,12 @@ five-minute rates; idle p95 with no requests is undefined, not zero.
 | `fallstack:copy_http_error_ratio`                                                                              | Fraction of 4xx/5xx/aborts; 429 excluded from numerator and denominator       |
 | `sum by (environment, copy, status_code) (rate(fallstack_http_request_duration_seconds_count{status_code=~"429 | 5..                                                                           | aborted"}[5m]))` | Separate throttling, server failures and disconnects |
 | `postgresql_numbackends`                                                                                       | Current connections for each configured database, including monitors          |
-| `redis_clients` / `redis_used_memory` / `redis_evicted_keys`                                                   | Shared Redis health/resource use                                              |
+| `docker_container_health_healthy{service="redis"}`                                                             | 1 = authenticated PONG healthcheck healthy; 0 = starting/unhealthy            |
 | `http_response_response_status_code_match`                                                                     | 1 = expected readiness HTTP 200; 0 = mismatch                                 |
 | `http_response_result_code` / `http_response_response_time`                                                    | Probe result (0 = success) / seconds                                          |
 | `up` / `ALERTS`                                                                                                | Scrape failures, missing metrics, readiness failures, restarts                |
 
-Telegraf expires samples after 45 seconds: failed DB/Redis collection becomes
+Telegraf expires samples after 45 seconds: failed DB/Docker collection becomes
 missing data and then `FallstackDependencyMetricsMissing`, never stale green.
 The first minute is startup grace. `up{job="dependencies"}=1` alone proves only
 that Telegraf can be scraped; check dependency series and alerts too.
@@ -132,7 +135,8 @@ Only numeric operational fields and fixed labels enter storage. Request URLs,
 paths, query strings, bodies, headers, cookies, session/user/student identifiers,
 trace IDs, exception text, Docker environment values and arbitrary Docker labels
 are never emitted by this setup. SQL collects aggregate statistics, not query
-text or rows; Redis does not fetch keys/values; HTTP response bodies are not
+text or rows; Redis exposes only numeric Docker health/resource fields, not
+keys/values or healthcheck output; HTTP response bodies are not
 stored. DB names and container names must remain infrastructure names without
 personal data. Prometheus has a second label allowlist before ingestion.
 
