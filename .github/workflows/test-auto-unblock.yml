@@ -1,0 +1,50 @@
+name: Test auto-unblock on all four boards
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/test-auto-unblock.yml"
+      - ".github/scripts/e2e_auto_unblock.py"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "setup = create dummy issues; complete = close blockers; verify = assert Todo; cleanup = delete or close dummies"
+        type: choice
+        required: true
+        default: verify
+        options:
+          - setup
+          - complete
+          - verify
+          - cleanup
+
+permissions:
+  contents: read
+
+concurrency:
+  group: auto-unblock-e2e-test
+  cancel-in-progress: false
+
+jobs:
+  test-boards:
+    name: Temporary board issues (${{ github.event_name == 'push' && 'setup' || inputs.action }})
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require configured project automation token
+        shell: bash
+        run: |
+          if [[ -z "$GH_TOKEN" ]]; then
+            echo 'Missing PROJECT_AUTOMATION_TOKEN repository secret' >&2
+            exit 1
+          fi
+      - name: Create / complete / verify / clean up test issues
+        shell: bash
+        env:
+          TEST_ACTION: ${{ github.event_name == 'push' && 'setup' || inputs.action }}
+        run: |
+          set -euo pipefail
+          python3 .github/scripts/e2e_auto_unblock.py "$TEST_ACTION"
