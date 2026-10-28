@@ -1,5 +1,9 @@
 # PostgreSQL and MinIO backups
 
+This project contains the operational instructions and recovery procedure below;
+the [backup source directory](../../scripts/backups/README.md) provides a quick
+operator entry point and an index of scripts, unit files and safe examples.
+
 Owner: **Tech User — tech.user@nei-isep.org**, identified by the requester on
 2026-10-28. Fallstack implementation/audit: Dinis Correia (`dinisjcorreia`),
 assignee of [Task05-A1 #465](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/465).
@@ -24,6 +28,10 @@ Backups run independently of web/cleanup services and must remain enabled
 off-season. Nothing stops or redeploys shared PostgreSQL/MinIO services.
 These are Fallstack backups, not backups of every shared-platform application.
 See [ADR 0018](../decisions/0018-back-up-fallstack-data-outside-the-vps.md).
+
+The host timer is already enabled; merging this PR requires no activation step.
+Future Git merges do not deploy changed host scripts automatically. Install and
+verify reviewed host updates as described below, preserving private state.
 
 ## Data covered
 
