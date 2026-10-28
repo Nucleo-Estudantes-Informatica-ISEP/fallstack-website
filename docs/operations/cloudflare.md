@@ -1,7 +1,7 @@
 # Cloudflare account and CDN
 
 The whole `nei-isep.org` domain uses Cloudflare DNS since 24 Oct 2026, so a change
-here affects every NEI service. Only `fallstack.nei-isep.org` and the test name
+here affects every NEI service. Only `fallstack.nei-isep.org` and one test subdomain
 go through the CDN. Everything else, including login and mail, is DNS only. The
 cPanel server no longer manages this DNS.
 
@@ -14,26 +14,17 @@ cPanel server no longer manages this DNS.
   three use individual accounts with the Super Administrator role and
   two-factor authentication.
 
-### Break-glass account
+### Emergency access
 
-The shared general account is for emergencies only. Only the three
-administrators above know it.
-
-1. Use it only when none of the three administrators can log in, or to roll
-   back (below) when they are unreachable.
-2. Keep the password and the two-factor secret in the team password manager,
-   never in the repository, issues or chat. Only the three administrators can
-   open the entry.
-3. The account email is a team mailbox. Recovery codes are stored with the password.
-4. After each use, comment on the infrastructure issue with the date, the reason
-   and what changed. Then change the password.
-5. Create no API tokens under this account. A token belongs to a named administrator.
-6. Test the login once, and record the date: **TBD**.
-7. Review who can open the entry every 6 months and at each new edition.
+A shared emergency login exists. Only the three administrators know it. Its
+credentials and procedure are kept in the team password manager, not in this
+repository. Use it only when none of the administrators can log in. After each
+use, comment on the infrastructure issue with the date and the reason, and never
+include credentials.
 
 ## Settings
 
-Last checked: **TBD (date)**. Keep this table in sync with the dashboard.
+Last checked: 28 Oct 2026. Keep this table in sync with the dashboard.
 
 | Setting                       | Value                      | Where                            |
 | ----------------------------- | -------------------------- | -------------------------------- |
@@ -54,13 +45,13 @@ Proxy only what the site needs. Everything else stays DNS only.
 | Record                               | Mode     |
 | ------------------------------------ | -------- |
 | `fallstack.nei-isep.org`             | Proxied  |
-| Test name: **TBD**                   | Proxied  |
+| Test subdomain                       | Proxied  |
 | `nei-isep.org`, `www.nei-isep.org`   | DNS only |
 | Login (AuthNEI), mail and MX records | DNS only |
 
 ### Expected cache behavior
 
-Check with `curl -sI <url>` and the `cf-cache-status` header. Last checked: **TBD (date)**.
+Check with `curl -sI <url>` and the `cf-cache-status` header. Last checked: 28 Oct 2026.
 
 | Request                                     | Expected                                              |
 | ------------------------------------------- | ----------------------------------------------------- |
@@ -88,7 +79,7 @@ To stop using the CDN for a record, set it back to DNS only:
    `dig +short fallstack.nei-isep.org`: it must return the origin address, not a
    Cloudflare one.
 
-Rehearsed on the test name on: **TBD (date)**.
+Rehearsed on the test subdomain on: **TBD (date)**.
 
 ## Test through the CDN
 
