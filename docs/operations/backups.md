@@ -23,7 +23,7 @@ Team acceptance of maximum data loss/restore time remains
 Backups run independently of web/cleanup services and must remain enabled
 off-season. Nothing stops or redeploys shared PostgreSQL/MinIO services.
 These are Fallstack backups, not backups of every shared-platform application.
-See [ADR 0017](../decisions/0017-back-up-fallstack-data-outside-the-vps.md).
+See [ADR 0018](../decisions/0018-back-up-fallstack-data-outside-the-vps.md).
 
 ## Data covered
 
