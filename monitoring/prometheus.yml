@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+rule_files:
+  - rules.yml
+scrape_configs:
+  - job_name: web
+    scrape_timeout: 5s
+    sample_limit: 10000
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 15s
+        match_first_network: true
+        filters:
+          - name: label
+            values: [metrics_enabled=true, metrics_service=web]
+    relabel_configs:
+      - source_labels: [__meta_docker_port_private]
+        regex: "9464"
+        action: keep
+      - source_labels: [__meta_docker_container_label_metrics_environment]
+        regex: dev|main
+        action: keep
+      - source_labels: [__meta_docker_container_label_metrics_environment]
+        target_label: environment
+      - source_labels: [__meta_docker_container_label_metrics_service]
+        target_label: service
+      - source_labels: [__meta_docker_container_name]
+        regex: "/(.*)"
+        replacement: "$1"
+        target_label: copy
+      - source_labels: [copy]
+        target_label: instance
+    metric_relabel_configs:
+      - action: labelkeep
+        regex: __name__|job|instance|environment|service|copy|method|status_code|le|quantile|kind|space|type|version|major|minor|patch
+  - job_name: dependencies
+    static_configs:
+      - targets: ["127.0.0.1:9273"]
+    metric_relabel_configs:
+      - action: labelkeep
+        regex: __name__|job|instance|environment|service|copy|db|probe|container_status|cpu
