@@ -147,8 +147,8 @@ Check the timer/latest success during operations and keep host monitoring active
   Coolify SMTP authentication failed; the final alert uses independently
   verified working NEI SMTP settings, with failures surfaced as nonzero exits.
 - Updated alert formatting to Portugal time and sent a format-verification alert
-  at **19:02:10 WET**. Seven regression tests pass locally and on-host, including
-  DST changes, budgets, malformed/missing ledger, low disk space, source changes and retention.
+  at **19:02:10 WET**. Nine regression tests pass locally and on-host, including
+  DST changes, budgets, malformed/missing ledger, low disk space, source changes, retention and directory-sync durability.
 - Timer is enabled and active; next run observed as **29/10/2026 02:15 WET**.
   No unattended scheduled run after installation is claimed yet.
 - A subsequent run at **19:08:44 WET** also exited 0, verified its archive and
@@ -221,3 +221,8 @@ opening/exporting it. To return it to the application, use the normal authorized
 upload flow with a new key and follow cleanup/privacy rules. A record/object
 can only be recovered if it existed in a retained snapshot. Protect and remove
 decrypted working copies when recovery finishes.
+
+The request ledger now syncs both its file and parent directory before any R2
+request. Two focused tests failed without the directory sync and passed after
+the correction; a directory-sync failure prevents the S3 call entirely. The
+corrected script was installed and passed a live backup on `nei`.

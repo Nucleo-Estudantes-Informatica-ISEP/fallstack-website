@@ -1,7 +1,9 @@
 import datetime as dt
 import io
 import json
+import os
 from pathlib import Path
+import stat
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
@@ -10,6 +12,48 @@ import backup
 
 
 class BackupTests(unittest.TestCase):
+    def test_request_waits_for_file_rename_and_directory_sync(self):
+        with tempfile.TemporaryDirectory() as work:
+            ledger = Path(work) / "ledger.json"
+            ledger.write_text("{}")
+            budget = backup.Budget(ledger)
+            events = []
+            real_sync, real_replace = os.fsync, os.replace
+
+            def sync(fd):
+                events.append("directory" if stat.S_ISDIR(os.fstat(fd).st_mode) else "file")
+                return real_sync(fd)
+
+            def replace(source, target):
+                events.append("rename")
+                return real_replace(source, target)
+
+            api = Mock()
+            api.list_objects_v2.side_effect = lambda: events.append("request")
+            with patch.object(backup.os, "fsync", side_effect=sync), patch.object(
+                backup.os, "replace", side_effect=replace
+            ):
+                backup.r2_call(api, budget, "A", "list_objects_v2")
+            self.assertEqual(events, ["file", "rename", "directory", "request"])
+
+    def test_directory_sync_failure_prevents_request(self):
+        with tempfile.TemporaryDirectory() as work:
+            ledger = Path(work) / "ledger.json"
+            ledger.write_text("{}")
+            budget = backup.Budget(ledger)
+            real_sync = os.fsync
+
+            def sync(fd):
+                if stat.S_ISDIR(os.fstat(fd).st_mode):
+                    raise OSError("directory sync failed")
+                return real_sync(fd)
+
+            api = Mock()
+            with patch.object(backup.os, "fsync", side_effect=sync):
+                with self.assertRaises(OSError):
+                    backup.r2_call(api, budget, "A", "list_objects_v2")
+            api.list_objects_v2.assert_not_called()
+
     def test_portugal_alert_time_follows_both_daylight_saving_transitions(self):
         cases = (
             ("2026-03-29T00:30:00+00:00", "29/03/2026 00:30:00 WET"),
