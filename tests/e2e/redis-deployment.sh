@@ -4,8 +4,12 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 scratch="$(mktemp -d)"
 cleanup() {
+  exit_status=$?
   for stage in dev main; do
     if [ -f "$scratch/$stage.json" ]; then
+      if [ "$exit_status" -ne 0 ]; then
+        docker compose -f "$scratch/$stage.json" logs --tail 30 redis || true
+      fi
       docker compose -f "$scratch/$stage.json" down --volumes --remove-orphans || true
     fi
   done
@@ -76,7 +80,9 @@ for stage in dev main; do
   test -z "$("${cli[@]}" config get save | tail -n 1)"
   "${compose[@]}" exec -T redis sh -ec '
     ! tr "\000" " " < /proc/1/cmdline | grep -q -- --requirepass
-    test "$(stat -c %a /tmp/redis.conf)" = 600
+    test "$(stat -c %a /run/redis-private/redis.conf)" = 600
+    test "$(stat -c %a /run/redis-private)" = 700
+    test "$(stat -c %U /run/redis-private/redis.conf)" = redis
   '
   test "$("${compose[@]}" exec -T redis redis-cli ping)" = 'NOAUTH Authentication required.'
   other=main

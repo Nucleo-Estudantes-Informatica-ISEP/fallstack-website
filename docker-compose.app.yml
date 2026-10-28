@@ -16,9 +16,11 @@ services:
           *[!A-Za-z0-9_-]*) echo 'REDIS_PASSWORD must contain only URL-safe letters, digits, underscore or hyphen' >&2; exit 1 ;;
         esac
         umask 077
-        printf 'requirepass "%s"\n' "$$REDIS_PASSWORD" > /tmp/redis.conf
-        chown redis:redis /tmp/redis.conf
-        exec docker-entrypoint.sh redis-server /tmp/redis.conf \
+        # A private non-sticky directory permits root to rewrite the Redis-owned file on restart.
+        mkdir -p /run/redis-private
+        printf 'requirepass "%s"\n' "$$REDIS_PASSWORD" > /run/redis-private/redis.conf
+        chown -R redis:redis /run/redis-private
+        exec docker-entrypoint.sh redis-server /run/redis-private/redis.conf \
           --bind 127.0.0.1 redis-private \
           --protected-mode yes \
           --appendonly yes --appendfsync everysec --save "" \

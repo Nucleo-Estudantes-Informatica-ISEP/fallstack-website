@@ -25,7 +25,9 @@ both settings. Compose derives `REDIS_URL=redis://:<password>@redis-private:6379
 and passes it with the required prefix at runtime. Do not configure a separate
 URL override pointing at another instance. All web copies within one resource
 must receive identical values. Redis reads its password from an owner-only
-`/tmp/redis.conf`, not process arguments; Docker administrators and Redis
+`/run/redis-private/redis.conf`, not process arguments. Its mode-0700 directory
+avoids Linux sticky-directory protections blocking the root startup shell from
+rewriting a Redis-owned file on restart. Docker administrators and Redis
 administrators with `CONFIG GET` access remain trusted.
 The future #413 client must validate these through `serverEnv` and prepend the
 prefix to every key; this infrastructure change does not yet use Redis in app
