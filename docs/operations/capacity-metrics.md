@@ -43,7 +43,8 @@ label is recorded, so this aggregate cannot prove homepage-only p95.
    overhead during capacity runs. WAL/head chunks can exceed the retention size.
 2. On each Fallstack Coolify resource set `METRICS_ENABLED=true`,
    `METRICS_ENVIRONMENT=dev` or `main`, and `METRICS_HOST=0.0.0.0`, then redeploy.
-   Keep the **public service port explicitly set to 4000**. Port 9464 is exposed
+   Set Coolify's **Ports Exposes** explicitly to **4000** and record that setting
+   in rollout evidence. Port 9464 is exposed
    for Docker discovery only: no host port publication, proxy route, Cloudflare
    route, or public firewall access. Native development defaults to loopback.
    Both deployed branches run `NODE_ENV=production`, so it cannot identify them.
@@ -93,6 +94,11 @@ label is recorded, so this aggregate cannot prove homepage-only p95.
 when the mount says `:ro`; only trusted operators should control this stack.
 Keep its config and private listeners inaccessible to application users.
 Do not expose either socket or exporters through the public proxy.
+With `METRICS_HOST=0.0.0.0`, every container on web's `default` and `shared_data`
+networks can reach 9464, including containers other than Prometheus. These
+networks are part of the trusted operator boundary; no request data or tokens
+are emitted. Loopback remains the default when metrics are not explicitly
+enabled for private Docker scraping.
 
 ## During tests and the event
 
@@ -154,7 +160,8 @@ Before accepting the live setup:
 - Point an isolated probe at a controlled 503 and stop a staging Redis/DB
   collector: verify failed/missing alerts, then restore. Do not stop shared
   production dependencies.
-- Verify public origin/CDN cannot reach 9464, 9273 or 9090. Inspect stored label
+- Before rollout acceptance, record Coolify **Ports Exposes=4000** and verify
+  public origin/CDN cannot reach 9464, 9273 or 9090. Inspect stored label
   names and sample values. No credentials, PII or complete request URLs.
 
 Local tests cover real Node HTTP responses/aborts/privacy plus configuration

@@ -26,8 +26,9 @@ Docker labels. Details: [operations runbook](../operations/capacity-metrics.md).
 
 ## Consequences
 
-No session, database schema or public API changes. Monitoring startup failure
-leaves the app available and makes the scrape target fail. Operators must deploy
+No session, database schema or public API changes. Invalid metrics configuration
+or listener startup failure logs a fixed diagnostic, leaves the app available
+and makes the scrape target fail. Operators must deploy
 the separate stack, label shared services, supply scoped monitoring credentials
 and verify live inventory/privacy before accepting the setup.
 
