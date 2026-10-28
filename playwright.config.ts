@@ -12,6 +12,7 @@ export default defineConfig({
   reporter: e2eEnv.ci ? "github" : "list",
   use: {
     baseURL,
+    serviceWorkers: "block",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

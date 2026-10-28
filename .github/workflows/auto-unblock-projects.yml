@@ -2,11 +2,11 @@ name: Auto-unblock GitHub Projects tasks
 
 on:
   schedule:
-    - cron: '3,13,23,33,43,53 * * * *'
+    - cron: "3,13,23,33,43,53 * * * *"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Preview changes without updating any project statuses'
+        description: "Preview changes without updating any project statuses"
         required: false
         type: boolean
         default: true

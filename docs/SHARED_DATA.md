@@ -4,10 +4,10 @@ Fallstack uses NEI shared PostgreSQL 16 and MinIO after each environment's
 cutover. During migration, source Supabase remains live until verified retired.
 See the private Fallstack cutover runbook for current environment status.
 
-| Environment | Database / schema | MinIO buckets |
-| --- | --- | --- |
-| Development | `fallstack_dev` / `fallstack` | `fallstack-dev-avatars`, `fallstack-dev-logos`, `fallstack-dev-cvs` |
-| Production | `fallstack_prod` / `fallstack` | `fallstack-prod-avatars`, `fallstack-prod-logos`, `fallstack-prod-cvs` |
+| Environment | Database / schema              | MinIO buckets                                                          |
+| ----------- | ------------------------------ | ---------------------------------------------------------------------- |
+| Development | `fallstack_dev` / `fallstack`  | `fallstack-dev-avatars`, `fallstack-dev-logos`, `fallstack-dev-cvs`    |
+| Production  | `fallstack_prod` / `fallstack` | `fallstack-prod-avatars`, `fallstack-prod-logos`, `fallstack-prod-cvs` |
 
 Coolify Compose path: `/docker-compose.app.yml`. Both app and migrator join
 external Docker network `gbheij1ljds8nrhfgdf9teeo`. The migrator runs before
@@ -15,6 +15,12 @@ the web service becomes healthy. PostgreSQL hostname is
 `postgres-gbheij1ljds8nrhfgdf9teeo:5432`; MinIO endpoint is
 `http://minio-gbheij1ljds8nrhfgdf9teeo:9000`. Neither service has a public
 host port. Never expose S3 credentials to the browser.
+
+Each Coolify app resource also defines a separate private Redis service for
+shared web state. Redis does **not** join the shared-data network. Configure
+its per-environment password and key prefix before deploying; see the
+[Redis runbook](operations/redis.md) for persistence, verification and SAD's
+off-season stop/resume procedure.
 
 Set `DATABASE_URL` to the environment's **runtime** identity and `DIRECT_URL`
 to its **migration** identity, with `?schema=fallstack` on both. Compose passes
@@ -35,6 +41,8 @@ Use `pnpm exec prisma migrate deploy` as the migrator. Keep the source
 `_prisma_migrations` rows during app-only PostgreSQL restore. Do not import
 Supabase `auth` or `storage` schemas. Do not run legacy `supabase/*.sql` jobs
 against shared PostgreSQL: those reference Storage metadata, Vault, pg_net and
-old `public` schema paths. Reconcile orphan objects separately with the S3 API
-after reviewing candidates. Scheduled shared-service backups are a separate
+old `public` schema paths. The Compose `storage-cleanup` worker restores daily
+six-month CV retention and orphan deletion through S3; review dry-run candidates
+before enabling `apply`. See the [cleanup runbook](storage-cleanup.md) for rollout,
+permissions, retry queue, audit and recovery. Scheduled shared-service backups are a separate
 requirement; migration dumps are one-time recovery points.

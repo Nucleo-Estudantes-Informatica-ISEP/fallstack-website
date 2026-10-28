@@ -1,0 +1,486 @@
+import "server-only";
+
+import jwt from "jsonwebtoken";
+import { z } from "zod";
+
+import { HttpError } from "@/types/HttpError";
+import { clientEnv } from "@/config/env.client";
+import { serverEnv } from "@/config/env.server";
+import logger, { reportError } from "@/lib/logger";
+import { edition } from "@/edition";
+
+import { type DbClient } from "../repositories/transaction";
+import { withLockedUser } from "../repositories/userRepository";
+import {
+  findWalletPass,
+  recordWalletPass,
+} from "../repositories/walletPassRepository";
+
+const WALLET_API_BASE = "https://walletobjects.googleapis.com/walletobjects/v1";
+const GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const WALLET_SCOPE = "https://www.googleapis.com/auth/wallet_object.issuer";
+const ACCESS_TOKEN_REFRESH_SKEW_MS = 60 * 1000;
+
+const serviceAccountSchema = z.object({
+  client_email: z.string().email(),
+  private_key: z.string().min(1),
+});
+
+const oauthTokenSchema = z.object({
+  access_token: z.string().min(1),
+  expires_in: z.number().positive(),
+});
+
+type WalletStudent = {
+  id: string;
+  code: string;
+  name: string;
+};
+
+type WalletCredentials = z.infer<typeof serviceAccountSchema>;
+
+type GenericObject = ReturnType<typeof buildGenericObject>;
+
+type CachedAccessToken = {
+  clientEmail: string;
+  value: string;
+  expiresAt: number;
+};
+
+let cachedAccessToken: CachedAccessToken | undefined;
+let accessTokenRequest:
+  { clientEmail: string; promise: Promise<string> } | undefined;
+
+// shortcut: process-local admission; use shared admission if replicas share a pool.
+const activeWalletOperations = new Set<string>();
+
+export async function withGoogleWalletOperation<T>(
+  userId: string,
+  work: () => Promise<T>
+): Promise<T> {
+  if (activeWalletOperations.has(userId))
+    throw new HttpError(
+      "A Wallet operation is already in progress. Retry shortly.",
+      429
+    );
+  activeWalletOperations.add(userId);
+  try {
+    return await work();
+  } finally {
+    activeWalletOperations.delete(userId);
+  }
+}
+
+async function googleFetch(
+  url: string,
+  init: RequestInit,
+  operation: string,
+  failureMessage: string
+) {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(10_000) });
+  } catch {
+    // Transport errors can include URLs, object IDs, and credentials.
+    reportError(
+      new Error(`Google Wallet ${operation} transport failed`),
+      { operation: `google_wallet_${operation}` },
+      "Google Wallet upstream request failed"
+    );
+    throw new HttpError(failureMessage, 502);
+  }
+}
+
+function localized(value: string) {
+  return {
+    defaultValue: {
+      language: "pt-PT",
+      value,
+    },
+  };
+}
+
+function getWalletConfig() {
+  if (serverEnv.GOOGLE_WALLET_NEVER_ENABLED)
+    throw new HttpError("Google Wallet is marked as never enabled", 503);
+  const issuerId = serverEnv.GOOGLE_WALLET_ISSUER_ID;
+  const classId = serverEnv.GOOGLE_WALLET_CLASS_ID;
+  const encodedCredentials = serverEnv.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64;
+
+  if (!issuerId || !classId || !encodedCredentials)
+    throw new HttpError("Google Wallet is not configured", 503);
+
+  if (!classId.startsWith(`${issuerId}.`))
+    throw new HttpError(
+      "Google Wallet class does not belong to this issuer",
+      503
+    );
+
+  let credentials: WalletCredentials;
+  try {
+    const encoded = encodedCredentials.replace(/\s+/g, "");
+    const decodedBuffer = Buffer.from(encoded, "base64");
+    if (decodedBuffer.toString("base64") !== encoded) throw new Error();
+    const decoded = decodedBuffer.toString("utf8");
+    credentials = serviceAccountSchema.parse(JSON.parse(decoded));
+  } catch {
+    throw new HttpError("Google Wallet credentials are invalid", 503);
+  }
+
+  return {
+    issuerId,
+    classId,
+    credentials,
+    origin: new URL(clientEnv.NEXT_PUBLIC_BASE_URL).origin,
+  };
+}
+
+export function isGoogleWalletConfigured() {
+  try {
+    getWalletConfig();
+    return true;
+  } catch (error) {
+    if (error instanceof HttpError && error.status === 503) return false;
+    throw error;
+  }
+}
+
+export function buildGoogleWalletObjectId(classId: string, studentId: string) {
+  return `${classId}-${studentId}`;
+}
+
+function buildGenericObject(classId: string, student: WalletStudent) {
+  return {
+    id: buildGoogleWalletObjectId(classId, student.id),
+    classId,
+    state: "ACTIVE" as const,
+    validTimeInterval: {
+      start: { date: edition.branding.event.startsAt },
+      end: { date: edition.branding.event.endsAt },
+    },
+    cardTitle: localized(edition.branding.wallet.cardTitle),
+    subheader: localized(`Código ${student.code}`),
+    header: localized(student.name),
+    barcode: {
+      type: "QR_CODE" as const,
+      value: student.code,
+      alternateText: student.code,
+    },
+  };
+}
+
+// Google error messages can contain object IDs or account data. Log only
+// machine-readable fields with a restricted character set.
+async function reportGoogleApiError(response: Response, operation: string) {
+  const body: unknown = await response.json().catch(() => undefined);
+  const envelope =
+    body && typeof body === "object" && "error" in body
+      ? body.error
+      : undefined;
+  const error = envelope && typeof envelope === "object" ? envelope : undefined;
+  const safeCode = (value: unknown) =>
+    typeof value === "string" && /^[A-Za-z_]{1,64}$/.test(value)
+      ? value
+      : undefined;
+
+  reportError(
+    new Error(`Google Wallet ${operation} failed`),
+    {
+      operation: `google_wallet_${operation}`,
+      upstreamStatus: response.status,
+      upstreamErrorCode:
+        error && "code" in error && typeof error.code === "number"
+          ? error.code
+          : undefined,
+      upstreamErrorStatus:
+        error && "status" in error ? safeCode(error.status) : undefined,
+      upstreamOAuthError: safeCode(envelope),
+    },
+    "Google Wallet upstream request failed"
+  );
+}
+
+async function requestAccessToken(credentials: WalletCredentials) {
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const assertion = jwt.sign(
+    {
+      iss: credentials.client_email,
+      scope: WALLET_SCOPE,
+      aud: GOOGLE_OAUTH_TOKEN_URL,
+      iat: issuedAt,
+      exp: issuedAt + 60 * 60,
+    },
+    credentials.private_key,
+    { algorithm: "RS256" }
+  );
+
+  const response = await googleFetch(
+    GOOGLE_OAUTH_TOKEN_URL,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
+    },
+    "oauth",
+    "Unable to authenticate with Google Wallet"
+  );
+
+  if (!response.ok) {
+    await reportGoogleApiError(response, "oauth");
+    throw new HttpError("Unable to authenticate with Google Wallet", 502);
+  }
+
+  const parsed = oauthTokenSchema.safeParse(
+    await response.json().catch(() => undefined)
+  );
+  if (!parsed.success) {
+    reportError(
+      new Error("Invalid Google Wallet OAuth response"),
+      { operation: "google_wallet_oauth", upstreamStatus: response.status },
+      "Google Wallet returned an invalid OAuth response"
+    );
+    throw new HttpError(
+      "Google Wallet returned an invalid OAuth response",
+      502
+    );
+  }
+
+  return parsed.data;
+}
+
+async function getAccessToken(credentials: WalletCredentials) {
+  const now = Date.now();
+  if (
+    cachedAccessToken?.clientEmail === credentials.client_email &&
+    cachedAccessToken.expiresAt - ACCESS_TOKEN_REFRESH_SKEW_MS > now
+  )
+    return cachedAccessToken.value;
+
+  if (accessTokenRequest?.clientEmail === credentials.client_email)
+    return accessTokenRequest.promise;
+
+  const promise = requestAccessToken(credentials)
+    .then(({ access_token, expires_in }) => {
+      cachedAccessToken = {
+        clientEmail: credentials.client_email,
+        value: access_token,
+        expiresAt: Date.now() + expires_in * 1000,
+      };
+      return access_token;
+    })
+    .finally(() => {
+      if (accessTokenRequest?.promise === promise)
+        accessTokenRequest = undefined;
+    });
+
+  accessTokenRequest = {
+    clientEmail: credentials.client_email,
+    promise,
+  };
+  return promise;
+}
+
+function walletHeaders(accessToken: string) {
+  return {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+  };
+}
+
+async function patchGenericObject(object: GenericObject, accessToken: string) {
+  const { id, classId: _classId, ...mutableFields } = object;
+  void _classId;
+  const response = await googleFetch(
+    `${WALLET_API_BASE}/genericObject/${encodeURIComponent(id)}`,
+    {
+      method: "PATCH",
+      headers: walletHeaders(accessToken),
+      body: JSON.stringify(mutableFields),
+    },
+    "patch",
+    "Unable to update Google Wallet pass"
+  );
+
+  if (!response.ok) {
+    await reportGoogleApiError(response, "patch");
+    throw new HttpError("Unable to update Google Wallet pass", 502);
+  }
+}
+
+async function syncGenericObject(object: GenericObject, accessToken: string) {
+  const objectUrl = `${WALLET_API_BASE}/genericObject/${encodeURIComponent(object.id)}`;
+  const existing = await googleFetch(
+    objectUrl,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+    "get",
+    "Unable to read Google Wallet pass"
+  );
+
+  if (existing.ok) {
+    await patchGenericObject(object, accessToken);
+    return;
+  }
+
+  if (existing.status !== 404) {
+    await reportGoogleApiError(existing, "get");
+    throw new HttpError("Unable to read Google Wallet pass", 502);
+  }
+
+  const inserted = await googleFetch(
+    `${WALLET_API_BASE}/genericObject`,
+    {
+      method: "POST",
+      headers: walletHeaders(accessToken),
+      body: JSON.stringify(object),
+    },
+    "insert",
+    "Unable to create Google Wallet pass"
+  );
+
+  if (inserted.ok) return;
+
+  // A simultaneous retry may have created the deterministic object after our
+  // GET but before our POST. Reconcile it instead of creating another object.
+  if (inserted.status === 409) {
+    await patchGenericObject(object, accessToken);
+    return;
+  }
+
+  await reportGoogleApiError(inserted, "insert");
+  throw new HttpError("Unable to create Google Wallet pass", 502);
+}
+
+function createSaveUrl(
+  objectId: string,
+  credentials: WalletCredentials,
+  origin: string
+) {
+  const signedJwt = jwt.sign(
+    {
+      iss: credentials.client_email,
+      aud: "google",
+      typ: "savetowallet",
+      iat: Math.floor(Date.now() / 1000),
+      origins: [origin],
+      payload: {
+        genericObjects: [{ id: objectId }],
+      },
+    },
+    credentials.private_key,
+    { algorithm: "RS256" }
+  );
+
+  return `https://pay.google.com/gp/v/save/${signedJwt}`;
+}
+
+export async function createGoogleWalletSaveUrl(student: WalletStudent) {
+  return withGoogleWalletOperation(student.id, async () => {
+    const { classId, credentials, origin } = getWalletConfig();
+    // Commit identity before external writes: a crash must not lose a live pass.
+    await withLockedUser(student.id, async (user, tx) => {
+      if (!user?.active || !user.student)
+        throw new HttpError("Student account is no longer available", 403);
+      const recorded = await findWalletPass(student.id, tx);
+      if (recorded && recorded.classId !== classId)
+        throw new HttpError(
+          "Google Wallet class changed; reconcile recorded passes before issuance",
+          503
+        );
+      await recordWalletPass(
+        {
+          studentId: student.id,
+          classId,
+          objectId: buildGoogleWalletObjectId(classId, student.id),
+        },
+        tx
+      );
+    });
+    const accessToken = await getAccessToken(credentials);
+
+    return withLockedUser(student.id, async (user) => {
+      if (!user?.active || !user.student)
+        throw new HttpError("Student account is no longer available", 403);
+      const object = buildGenericObject(classId, user.student);
+      await syncGenericObject(object, accessToken);
+      return createSaveUrl(object.id, credentials, origin);
+    });
+  });
+}
+
+export async function revokeGoogleWalletPass(studentId: string, db?: DbClient) {
+  const recorded = await findWalletPass(studentId, db);
+  if (
+    serverEnv.GOOGLE_WALLET_NEVER_ENABLED &&
+    !serverEnv.GOOGLE_WALLET_ISSUER_ID &&
+    !serverEnv.GOOGLE_WALLET_CLASS_ID &&
+    !serverEnv.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64
+  ) {
+    if (recorded)
+      throw new HttpError(
+        "Google Wallet has recorded issuance; restore credentials before deleting this account",
+        503
+      );
+    logger.info(
+      { operation: "google_wallet_revoke_skipped", reason: "never_enabled" },
+      "Wallet revocation skipped for declared non-Wallet installation"
+    );
+    return;
+  }
+
+  const config = getWalletConfig();
+  const classId = recorded?.classId ?? config.classId;
+  if (!classId.startsWith(`${config.issuerId}.`))
+    throw new HttpError(
+      "Google Wallet recorded issuer does not match configured issuer",
+      503
+    );
+  const credentials = config.credentials;
+  const accessToken = await getAccessToken(credentials);
+  const objectId =
+    recorded?.objectId ?? buildGoogleWalletObjectId(classId, studentId);
+  const response = await googleFetch(
+    `${WALLET_API_BASE}/genericObject/${encodeURIComponent(objectId)}`,
+    {
+      method: "PATCH",
+      headers: walletHeaders(accessToken),
+      body: JSON.stringify({
+        state: "EXPIRED",
+        header: localized("Passe revogado"),
+        subheader: localized("Conta eliminada"),
+        barcode: {
+          type: "QR_CODE",
+          value: "REVOKED",
+          alternateText: "Revogado",
+        },
+      }),
+    },
+    "revoke",
+    "Unable to revoke Google Wallet pass. Retry account deletion."
+  );
+
+  if (response.ok) return;
+  if (response.status === 404) {
+    // A mistyped/missing class also yields an object 404; retain the account.
+    const walletClass = await googleFetch(
+      `${WALLET_API_BASE}/genericClass/${encodeURIComponent(classId)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+      "verify_class",
+      "Unable to verify Google Wallet class. Retry account deletion."
+    );
+    if (walletClass.ok) return;
+    await reportGoogleApiError(walletClass, "verify_class");
+    throw new HttpError(
+      "Unable to verify Google Wallet class. Retry account deletion.",
+      502
+    );
+  }
+  await reportGoogleApiError(response, "revoke");
+  throw new HttpError(
+    "Unable to revoke Google Wallet pass. Retry account deletion.",
+    502
+  );
+}

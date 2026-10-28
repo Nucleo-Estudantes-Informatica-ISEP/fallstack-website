@@ -24,7 +24,7 @@ const Hero: FunctionComponent<HeaderProps> = ({
     <>
       <section
         ref={contentRef}
-        className="relative flex size-full min-h-screen flex-col items-center justify-center bg-[url('/assets/images/bgHero.svg')] bg-cover bg-center bg-no-repeat text-center"
+        className="relative flex size-full min-h-screen flex-col items-center justify-center bg-[url('/assets/optimized/bgHero.900094f51c2f.webp')] bg-cover bg-center bg-no-repeat text-center"
       >
         <motion.div
           initial={{

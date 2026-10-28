@@ -70,7 +70,7 @@ Baseline cutover for the 2026 edition, closing out the backlog opened by the Jul
 - Prisma Migrate adopted for schema changes (replacing `db push`), with a baseline migration and `migrate deploy` wired into the Docker build.
 - Zod-validated environment configuration (`env.server.ts` / `env.client.ts`), replacing raw `process.env` reads.
 - A Vitest test suite and a CI workflow (typecheck + lint + test) gating every PR; `next build` now fails on type/lint errors instead of ignoring them.
-- Structured logging (Pino) and privacy-safe Sentry error monitoring (see `OBSERVABILITY.md`).
+- Structured logging (Pino) and privacy-safe Sentry error monitoring (see `docs/observability.md`).
 - A `Sponsor` table and an extended `Company` table with an admin management UI — sponsor and company rosters are now DB-editable instead of hardcoded per edition.
 - An `edition/` config layer centralizing per-event content (sponsors, tiers, schedule, FAQ, booth actions).
 - An orphaned storage-file GC job (dry-run gated) reconciling uploads against the database.

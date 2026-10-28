@@ -7,6 +7,22 @@ import { NextResponse } from "next/server";
 // or staging load tests show that the boundary burst is material (see #287).
 type Bucket = { count: number; resetAt: number };
 
+type RateLimitResult = {
+  allowed: boolean;
+  retryAfterMs: number;
+};
+
+/**
+ * In-memory rate limiter scoped to a single process.
+ *
+ * With N application replicas, the effective limit may reach
+ * max × N requests per key per window, since each replica maintains
+ * an independent counter.
+ *
+ * This provides traffic shaping, not a hard brute-force protection
+ * boundary. Use shared state with atomic updates (e.g. Redis) if
+ * cross-replica enforcement is required.
+ */
 export function createRateLimiter({
   windowMs,
   max,
@@ -17,7 +33,7 @@ export function createRateLimiter({
   const buckets = new Map<string, Bucket>();
 
   // Sweep expired buckets periodically so long-running processes don't
-  // accumulate one entry per distinct key (IP) forever.
+  // accumulate one entry per distinct key forever.
   const sweep = setInterval(() => {
     const now = Date.now();
     for (const [key, bucket] of buckets)
@@ -25,22 +41,50 @@ export function createRateLimiter({
   }, windowMs);
   sweep.unref?.();
 
-  return {
-    /** Returns whether `key` is still within its request budget for the current window. */
-    check(key: string): { allowed: boolean; retryAfterMs: number } {
-      const now = Date.now();
-      const bucket = buckets.get(key);
+  function increment(key: string): RateLimitResult {
+    const now = Date.now();
+    const bucket = buckets.get(key);
 
-      if (!bucket || bucket.resetAt <= now) {
-        buckets.set(key, { count: 1, resetAt: now + windowMs });
-        return { allowed: true, retryAfterMs: 0 };
-      }
-
-      if (bucket.count >= max)
-        return { allowed: false, retryAfterMs: bucket.resetAt - now };
-
-      bucket.count += 1;
+    if (!bucket || bucket.resetAt <= now) {
+      buckets.set(key, { count: 1, resetAt: now + windowMs });
       return { allowed: true, retryAfterMs: 0 };
+    }
+
+    if (bucket.count >= max) {
+      return {
+        allowed: false,
+        retryAfterMs: bucket.resetAt - now,
+      };
+    }
+
+    bucket.count += 1;
+    return { allowed: true, retryAfterMs: 0 };
+  }
+
+  return {
+    /** Counts every accepted request against the current window. */
+    check(key: string): RateLimitResult {
+      return increment(key);
+    },
+
+    /** Reserves capacity atomically; release once for a valid result or error. */
+    reserve(key: string) {
+      const result = increment(key);
+      const bucket = buckets.get(key);
+      let released = false;
+      return {
+        ...result,
+        release() {
+          if (!result.allowed || released) return;
+          released = true;
+          if (
+            bucket &&
+            buckets.get(key) === bucket &&
+            bucket.resetAt > Date.now()
+          )
+            bucket.count = Math.max(0, bucket.count - 1);
+        },
+      };
     },
   };
 }
@@ -51,7 +95,9 @@ export function tooManyRequestsResponse(retryAfterMs: number): NextResponse {
     { error: "Too many requests" },
     {
       status: 429,
-      headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) },
+      headers: {
+        "Retry-After": String(Math.ceil(retryAfterMs / 1000)),
+      },
     }
   );
 }

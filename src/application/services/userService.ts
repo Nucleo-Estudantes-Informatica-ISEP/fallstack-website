@@ -2,6 +2,7 @@ import "server-only";
 
 import { setCompanyInterests } from "../repositories/companyRepository";
 import { setStudentInterests } from "../repositories/studentRepository";
+import { afterPublicDataWrite } from "./publicDataCache";
 
 export async function updateUserInterests(input: {
   userId: string;
@@ -9,7 +10,10 @@ export async function updateUserInterests(input: {
   interests: string[];
 }) {
   if (input.companyId) {
-    await setCompanyInterests(input.companyId, input.interests);
+    await afterPublicDataWrite(
+      "companies",
+      setCompanyInterests(input.companyId, input.interests)
+    );
   } else {
     await setStudentInterests(input.userId, input.interests);
   }

@@ -6,11 +6,11 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/backfill-issue-dependencies.yml'
+      - ".github/workflows/backfill-issue-dependencies.yml"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Preview relationships without changing issues'
+        description: "Preview relationships without changing issues"
         type: boolean
         required: false
         default: true

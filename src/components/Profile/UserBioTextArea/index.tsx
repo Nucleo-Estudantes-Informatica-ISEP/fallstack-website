@@ -13,6 +13,7 @@ interface UserBioTextAreaProps {
   limit: number;
   warningLimit: number;
   name: string;
+  id?: string;
   autoFocus?: boolean;
 }
 
@@ -27,19 +28,22 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
   value,
   className,
   name,
+  id = name,
   autoFocus,
 }) => {
   return (
     <div className="flex w-full flex-col">
-      <label
-        className="mb-1 text-left text-sm font-normal text-white"
-        htmlFor={name}
-      >
-        {name}
-      </label>
+      {name && (
+        <label
+          className="mb-1 text-left text-sm font-normal text-white"
+          htmlFor={id}
+        >
+          {name}
+        </label>
+      )}
 
       <textarea
-        id={name}
+        id={id}
         name={name}
         ref={ref}
         disabled={disabled}
@@ -54,13 +58,13 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
           minHeight: "200px",
           maxHeight: "400px",
         }}
-        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-600 ${className}`}
+        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:text-gray-400 ${className ?? ""}`}
       />
 
       <p
         className={`text-right ${
           value.length > limit - 10
-            ? "text-red-600"
+            ? "text-red-400"
             : value.length > warningLimit
               ? "text-yellow-500"
               : "text-white/70"

@@ -3,6 +3,7 @@ import "server-only";
 import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
+import { HttpError } from "@/types/HttpError";
 import { resolveStoredAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
@@ -33,6 +34,30 @@ export type SessionUserRecord = Prisma.UserGetPayload<{
 
 export const findUserSessionById = (id: string) =>
   prisma.user.findUnique({ where: { id }, select: sessionSelect });
+
+// Serialize Wallet issuance and deletion across instances, then re-read the account.
+export const withLockedUser = <T>(
+  id: string,
+  work: (user: SessionUserRecord | null, tx: DbClient) => Promise<T>
+) =>
+  prisma.$transaction(
+    async (tx) => {
+      const [admission] = await tx.$queryRaw<{ admitted: boolean }[]>`
+        SELECT pg_try_advisory_xact_lock(hashtextextended(${id}, 0)) AS admitted`;
+      if (!admission.admitted)
+        throw new HttpError(
+          "A Wallet operation is already in progress. Retry shortly.",
+          429
+        );
+      await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${id}::uuid FOR UPDATE`;
+      const user = await tx.user.findUnique({
+        where: { id },
+        select: sessionSelect,
+      });
+      return work(user, tx);
+    },
+    { timeout: 60_000 }
+  );
 
 export const findUserSessionByZitadelUserId = (zitadelUserId: string) =>
   prisma.user.findUnique({ where: { zitadelUserId }, select: sessionSelect });

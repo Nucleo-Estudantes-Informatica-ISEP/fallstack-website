@@ -22,10 +22,7 @@ import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
-import {
-  uploadAvatar as uploadAvatarToSupabase,
-  uploadCv as uploadCvToSupabase,
-} from "@/client/api/upload";
+import { uploadAvatar, uploadCv } from "@/client/api/upload";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -75,7 +72,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return null;
       }
 
-      const uploaded = await uploadAvatarToSupabase(image);
+      const uploaded = await uploadAvatar(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
         setLoading(false);
@@ -130,7 +127,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       let cvId: string | undefined;
       if (data.cv) {
-        const uploaded = await uploadCvToSupabase(data.cv.file);
+        const uploaded = await uploadCv(data.cv.file);
         if (!uploaded) {
           toast.error("Não foi possível dar upload ao CV.");
         } else {

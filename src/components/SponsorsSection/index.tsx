@@ -1,23 +1,13 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import SponsorsContainer from "@/components/SponsorsContainer";
 import type { SponsorDto } from "@/application/dto/sponsorDto";
 
-const SponsorsSection: FunctionComponent = () => {
-  const [sponsors, setSponsors] = useState<SponsorDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<SponsorDto[]>("/sponsors")
-      .then(setSponsors)
-      .catch(() => setSponsors([]));
-  }, []);
-
-  if (!sponsors) return null;
-
+const SponsorsSection: FunctionComponent<{
+  sponsors: readonly SponsorDto[];
+}> = ({ sponsors }) => {
   return (
     <section className="flex flex-col items-center gap-y-10 border-b border-b-secondary bg-background text-center">
       <SponsorsContainer

@@ -1,22 +1,18 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent } from "react";
 
-import { httpClient } from "@/lib/http/client";
 import CompaniesContainer from "@/components/Companies/CompaniesContainer";
 import { CompanyProps } from "@/components/Companies/Company";
-import type {
-  CompanyRankDto,
-  CompanyRosterDto,
-} from "@/application/dto/companyDto";
-import type { Language } from "@/domain/i18n/translations";
+import type { CompanyRankDto } from "@/application/dto/companyDto";
+import type { HomepageDto } from "@/application/dto/homepageDto";
 
-function toCompanyProps(company: CompanyRosterDto): CompanyProps | null {
-  if (!company.avatar) return null;
-
+function toCompanyProps(
+  company: HomepageDto["companies"][number]
+): CompanyProps {
   return {
     name: company.name,
-    logoHref: company.avatar,
+    logoHref: company.avatar ?? undefined,
     websiteUrl: company.website ?? undefined,
     hasContent: company.hasContent,
     rankStyle: company.rank.style,
@@ -34,11 +30,10 @@ interface RankGroup {
 // Ranks are now data (CompanyRank), not a fixed 4-value enum - grouping and
 // ordering companies here (rather than iterating a hardcoded tier list) is
 // the whole point of #280: a new rank shows up with zero code changes.
-function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
+function groupByRank(companies: HomepageDto["companies"]): RankGroup[] {
   const groups = new Map<string, RankGroup>();
   for (const company of companies) {
     const props = toCompanyProps(company);
-    if (!props) continue;
     const group = groups.get(company.rank.id);
     if (group) group.companies.push(props);
     else
@@ -48,23 +43,12 @@ function groupByRank(companies: CompanyRosterDto[]): RankGroup[] {
 }
 
 interface CompaniesSectionProps {
-  language: Language;
+  companies: HomepageDto["companies"];
 }
 
 const CompaniesSection: FunctionComponent<CompaniesSectionProps> = ({
-  language,
+  companies,
 }) => {
-  const [companies, setCompanies] = useState<CompanyRosterDto[] | null>(null);
-
-  useEffect(() => {
-    httpClient
-      .get<CompanyRosterDto[]>(`/companies/roster?lang=${language}`)
-      .then(setCompanies)
-      .catch(() => setCompanies([]));
-  }, [language]);
-
-  if (!companies) return null;
-
   return (
     <section className="flex flex-col items-center text-center">
       {groupByRank(companies).map(({ rank, companies }) => (

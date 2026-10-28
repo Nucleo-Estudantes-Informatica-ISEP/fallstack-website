@@ -1,6 +1,7 @@
 import "server-only";
 
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { ZodError, ZodType } from "zod";
 
 import { HttpError } from "@/types/HttpError";
@@ -16,6 +17,21 @@ export const httpErrorResponse = (error: unknown) => {
     );
   if (error instanceof ZodError)
     return NextResponse.json({ error: error.issues }, { status: 400 });
+
+  // Prisma 6 wraps trigger SQLSTATEs in UnknownRequestError; match only our guards.
+  if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+    for (const [message, status] of [
+      ["Storage object is queued for deletion; upload a new file", 409],
+      ["Ambiguous storage reference path; use a canonical URL", 400],
+    ] as const) {
+      if (
+        error.message.includes(
+          `PostgresError { code: "23514", message: "${message}"`
+        )
+      )
+        return NextResponse.json({ error: message }, { status });
+    }
+  }
 
   reportError(
     error,
@@ -37,29 +53,39 @@ type HandlerArgs<Params, Body> = {
   body: Body;
 };
 
-interface DefineHandlerConfig<
+type DefineHandlerConfig<
   Params,
   Schema extends ZodType | undefined,
   Body = Schema extends ZodType ? import("zod").infer<Schema> : undefined,
-> {
-  auth?: AuthPolicy;
+> = {
   schema?: Schema;
-  /** Runs after the auth policy passes; return false to respond 403. Only called when a session exists. */
-  authorize?: (session: Session, params: Params) => boolean | Promise<boolean>;
   handler: (args: HandlerArgs<Params, Body>) => Promise<Response> | Response;
-}
+} & (
+  | { auth: "none"; authorize?: never }
+  | {
+      auth?: Exclude<AuthPolicy, "none">;
+      /** Runs after auth passes, only when a session exists. */
+      authorize?: (
+        session: Session,
+        params: Params
+      ) => boolean | Promise<boolean>;
+    }
+);
 
 export function defineHandler<
   Params = Record<string, never>,
   Schema extends ZodType | undefined = undefined,
 >(config: DefineHandlerConfig<Params, Schema>) {
+  // Skipping session resolution requires explicit auth: "none".
   const auth = config.auth ?? "session";
+  if (auth === "none" && config.authorize)
+    throw new Error("auth:none cannot use authorize");
 
   return async (req: NextRequest, routeContext: RouteContext<Params>) => {
     try {
-      const session = await getServerSession();
+      const session = auth === "none" ? null : await getServerSession();
 
-      if (auth !== "public" && !session)
+      if (auth !== "none" && auth !== "public" && !session)
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       if (!passesAuthPolicy(auth, session))

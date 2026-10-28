@@ -1,5 +1,3 @@
-"use server";
-
 import "server-only";
 
 import { signJwt } from "@/application/services/authService";
