@@ -43,9 +43,9 @@ jobs:
             telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter http_response > /tmp/metrics-probes.txt
           cat /tmp/metrics-probes.txt
-          rg 'service=minio .*response_status_code_match=1i' /tmp/metrics-probes.txt
-          rg 'service=authnei .*response_status_code_match=0i' /tmp/metrics-probes.txt
-          if rg 'server=|method=|fake-private|http://|https://' /tmp/metrics-probes.txt; then exit 1; fi
+          grep -E 'service=minio .*response_status_code_match=1i' /tmp/metrics-probes.txt
+          grep -E 'service=authnei .*response_status_code_match=0i' /tmp/metrics-probes.txt
+          if grep -E 'server=|method=|fake-private|http://|https://' /tmp/metrics-probes.txt; then exit 1; fi
       - name: Exercise Docker collection and label privacy
         run: |
           trap 'docker rm -f metrics-valid metrics-env-only metrics-service-only' EXIT
@@ -63,8 +63,8 @@ jobs:
             telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter docker > /tmp/metrics-docker.txt
           cat /tmp/metrics-docker.txt
-          rg 'docker_container_cpu,.*copy=metrics-valid.*usage_percent=' /tmp/metrics-docker.txt
-          rg 'docker_container_mem,.*copy=metrics-valid.*usage=' /tmp/metrics-docker.txt
-          rg 'docker_container_status,.*copy=metrics-valid.*restart_count=' /tmp/metrics-docker.txt
-          rg 'docker_container_health,.*copy=metrics-valid.*healthy=1i' /tmp/metrics-docker.txt
-          if rg 'metrics-env-only|metrics-service-only|FAKE_PRIVATE_TOKEN|unsafe_token|SECRET_TOKEN' /tmp/metrics-docker.txt; then exit 1; fi
+          grep -E 'docker_container_cpu,.*copy=metrics-valid.*usage_percent=' /tmp/metrics-docker.txt
+          grep -E 'docker_container_mem,.*copy=metrics-valid.*usage=' /tmp/metrics-docker.txt
+          grep -E 'docker_container_status,.*copy=metrics-valid.*restart_count=' /tmp/metrics-docker.txt
+          grep -E 'docker_container_health,.*copy=metrics-valid.*healthy=1i' /tmp/metrics-docker.txt
+          if grep -E 'metrics-env-only|metrics-service-only|FAKE_PRIVATE_TOKEN|unsafe_token|SECRET_TOKEN' /tmp/metrics-docker.txt; then exit 1; fi
