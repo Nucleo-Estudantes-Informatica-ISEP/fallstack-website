@@ -91,7 +91,6 @@ ENV SENTRY_ORG=$SENTRY_ORG
 ENV SENTRY_PROJECT=$SENTRY_PROJECT
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 ENV NEXT_PUBLIC_LOGS_DASHBOARD_URL=$NEXT_PUBLIC_LOGS_DASHBOARD_URL
-ENV NODE_OPTIONS="--max-old-space-size=4096"
 
 # Selective copy (smaller context) - package.json/lockfiles and prisma/
 # already present from `builder`
@@ -103,7 +102,8 @@ COPY README.md ./README.md
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN --mount=type=secret,id=sentry_auth_token,required=false \
+RUN --mount=type=cache,id=fallstack-next,target=/app/.next/cache,sharing=locked \
+  --mount=type=secret,id=sentry_auth_token,required=false \
   if [ -f /run/secrets/sentry_auth_token ]; then \
     export SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token)"; \
   fi; \

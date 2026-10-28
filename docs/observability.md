@@ -39,6 +39,11 @@ Source maps make minified production stack traces readable. Upload occurs during
 4. Save the integration and copy its organization token.
 5. Store it as `SENTRY_AUTH_TOKEN` in the CI secret store or pass it to Docker as a BuildKit secret.
 
+For GlitchTip, create an API token in that instance with `project:read`,
+`project:releases`, and `org:read` scopes. Sentry's `org:ci` token is not a
+GlitchTip API token. Copy the actual project **slug** and DSN from the same
+instance; a project display name or a DSN from another installation will not work.
+
 Never place this token in Git, `.env.example`, a Docker build argument, an image environment variable, or application runtime logs. Rotate it immediately if exposed. This applies the same way whether the token comes from sentry.io or a self-hosted instance.
 
 ## 3. Environment variables
@@ -94,7 +99,16 @@ SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN" \
 pnpm build
 ```
 
-Only `SENTRY_AUTH_TOKEN` is secret. The Sentry build plugin uploads source maps and removes uploaded maps from the generated output. Leave `SENTRY_URL` unset when using sentry.io.
+Only `SENTRY_AUTH_TOKEN` is secret. The Sentry build plugin uploads source maps
+once after the compiler workers finish, then removes browser maps from public build output. Server maps stay private
+in the server build, following the SDK default. Leave `SENTRY_URL` unset when using sentry.io. Builds without
+all three upload credentials (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and
+`SENTRY_PROJECT`) skip source-map generation and uploads. Runtime error
+reporting remains independent and uses `NEXT_PUBLIC_SENTRY_DSN`.
+
+When upload credentials are configured, an upload failure fails the build.
+Correct the URL, token, permissions, and project rather than accepting a
+successful deployment with broken source maps.
 
 ### Docker without source maps
 
@@ -111,7 +125,10 @@ The application builds and runs when all Sentry values are absent.
 
 BuildKit passes the auth token through a temporary secret mount. It is unavailable after the build step and is not stored in image history:
 
-Allocate at least 4 GB of memory to the Docker builder. The Next.js builder uses a 2 GB Node heap to compile the application reliably.
+The Docker heap ceiling is configurable through the `NODE_OPTIONS` build
+argument. The ceiling applies to each Node process; leave room for native
+allocations, worker processes, and other services. Docker reuses Next's build
+cache and the pnpm store through separate locked BuildKit cache mounts.
 
 ```bash
 export NEXT_PUBLIC_SENTRY_DSN="https://public-key@o0.ingest.sentry.io/project-id"

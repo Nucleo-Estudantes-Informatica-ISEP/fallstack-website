@@ -71,6 +71,23 @@ as its callback. Use development credentials and data only.
    Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
    before applying migrations. Login requires the configured OIDC client.
 
+## Production builds on limited RAM
+
+Run one build at a time. To use a 1.5 GiB JavaScript heap ceiling:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=1536 pnpm build
+```
+
+Next isolates compiler workers, optimizes the icon barrel import, and enables
+its memory optimizations. Docker preserves `.next/cache` between builds.
+Builds without complete Sentry upload credentials skip source maps; configured
+builds upload once after compilation and fail if that upload fails. Runtime
+error reporting only needs the DSN. See [observability](docs/observability.md).
+The heap ceiling is per Node process, not a limit on total build RAM.
+Full source-map builds need more memory than credential-free local builds;
+verify those in CI or on the deployment builder when the local ceiling is too low.
+
 ## More documentation
 
 - [Contribution workflow](docs/agents/contribution.md): issues, branches, PRs,
