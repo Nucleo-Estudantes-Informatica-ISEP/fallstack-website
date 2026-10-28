@@ -74,8 +74,9 @@ To stop using the CDN for a record, set it back to DNS only:
 1. In Cloudflare, open **DNS → Records**.
 2. For the record, change **Proxied** to **DNS only** and save.
 3. Wait for DNS to propagate (a few minutes). Confirm with
-   `dig +short fallstack.nei-isep.org`: it must return the origin address, not a
-   Cloudflare one.
+   `dig +short <record-name>`, where `<record-name>` is the record you changed in
+   step 2 (for example `fallstack.nei-isep.org` or the test subdomain). It must
+   return that record's configured origin address, not a Cloudflare one.
 
 ## Test through the CDN
 
