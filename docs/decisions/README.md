@@ -42,3 +42,4 @@ implementation PR needs an ADR.
 | [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                       | Accepted   |
 | [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee    | Accepted   |
 | [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Accepted   |
+| [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                 | Accepted   |
