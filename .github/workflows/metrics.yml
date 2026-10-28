@@ -58,8 +58,8 @@ jobs:
             if [ "$(docker inspect --format '{{.State.Health.Status}}' metrics-valid)" = healthy ]; then break; fi
             sleep 1
           done
-          docker run --rm --entrypoint telegraf --env-file monitoring/.env \
-            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+          docker compose --env-file monitoring/.env -f monitoring/compose.yml run \
+            --rm --no-deps --entrypoint telegraf \
             telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter docker > /tmp/metrics-docker.txt
           cat /tmp/metrics-docker.txt
