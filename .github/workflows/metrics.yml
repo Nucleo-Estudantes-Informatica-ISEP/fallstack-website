@@ -19,6 +19,7 @@ jobs:
       - name: Validate metrics Compose and TOML
         run: |
           cp monitoring/.env.example monitoring/.env
+          printf '\nDOCKER_GID=%s\n' "$(stat -c '%g' /var/run/docker.sock)" >> monitoring/.env
           docker compose --env-file monitoring/.env -f monitoring/compose.yml config --quiet
           python3 -c 'import tomllib; tomllib.load(open("monitoring/telegraf.conf", "rb"))'
       - name: Validate Prometheus configuration and rules
@@ -35,12 +36,11 @@ jobs:
           probe_pid=$!
           trap 'kill "$probe_pid"' EXIT
           curl --retry 5 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:18448/ >/dev/null
-          docker run --rm --network host --entrypoint telegraf \
-            --env-file monitoring/.env \
+          docker compose --env-file monitoring/.env -f monitoring/compose.yml run \
+            --rm --no-deps --entrypoint telegraf \
             -e METRICS_MINIO_HEALTH_URL=http://127.0.0.1:18448/ \
             -e METRICS_AUTH_HEALTH_URL=http://127.0.0.1:18448/missing \
-            -v "$PWD/monitoring/telegraf.conf:/etc/telegraf/telegraf.conf:ro" \
-            telegraf:1.36.3-alpine --config /etc/telegraf/telegraf.conf \
+            telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter http_response > /tmp/metrics-probes.txt
           cat /tmp/metrics-probes.txt
           rg 'service=minio .*response_status_code_match=1i' /tmp/metrics-probes.txt
@@ -60,8 +60,7 @@ jobs:
           done
           docker run --rm --entrypoint telegraf --env-file monitoring/.env \
             -v /var/run/docker.sock:/var/run/docker.sock:ro \
-            -v "$PWD/monitoring/telegraf.conf:/etc/telegraf/telegraf.conf:ro" \
-            telegraf:1.36.3-alpine --config /etc/telegraf/telegraf.conf \
+            telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter docker > /tmp/metrics-docker.txt
           cat /tmp/metrics-docker.txt
           rg 'docker_container_cpu,.*copy=metrics-valid.*usage_percent=' /tmp/metrics-docker.txt
