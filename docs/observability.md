@@ -2,6 +2,9 @@
 
 Fallstack uses Pino for structured server logs and Sentry for error monitoring and centralized log search. Monitoring is optional: the application still starts when Sentry variables are absent. The Sentry SDK also works unmodified against a self-hosted Sentry-compatible backend (e.g. GlitchTip) — set `NEXT_PUBLIC_SENTRY_DSN` to that instance's DSN and `SENTRY_URL` to its base URL (see below); no SDK code changes are needed either way.
 
+For per-copy CPU/RAM/restarts, HTTP latency/errors and shared dependency health,
+see the [capacity metrics runbook](operations/capacity-metrics.md).
+
 ## Architecture
 
 ```text
