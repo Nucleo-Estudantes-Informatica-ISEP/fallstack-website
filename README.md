@@ -31,6 +31,9 @@ its own signed session and `User` rows. PostgreSQL and MinIO do not provide
 login sessions. Delete accounts through the admin backoffice to preserve app
 relationships and permissions.
 
+See [ZITADEL role claims](docs/operations/zitadel-roles.md) for the required
+project settings, cross-project admin roles, and login verification.
+
 ---
 
 # Getting Started
