@@ -75,6 +75,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify Redis isolation, authentication and persistence
+        run: bash tests/e2e/redis-deployment.sh
+
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
 
