@@ -16,6 +16,12 @@ the web service becomes healthy. PostgreSQL hostname is
 `http://minio-gbheij1ljds8nrhfgdf9teeo:9000`. Neither service has a public
 host port. Never expose S3 credentials to the browser.
 
+Each Coolify app resource also defines a separate private Redis service for
+shared web state. Redis does **not** join the shared-data network. Configure
+its per-environment password and key prefix before deploying; see the
+[Redis runbook](operations/redis.md) for persistence, verification and SAD's
+off-season stop/resume procedure.
+
 Set `DATABASE_URL` to the environment's **runtime** identity and `DIRECT_URL`
 to its **migration** identity, with `?schema=fallstack` on both. Compose passes
 `DIRECT_URL` only to the migrator. Set `S3_ACCESS_KEY_ID`,

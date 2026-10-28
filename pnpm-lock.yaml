@@ -259,6 +259,9 @@ importers:
       webpack:
         specifier: ^5.112.1
         version: 5.112.1(esbuild@0.28.2)(postcss@8.5.31)(sharp@0.35.5(@types/node@24.19.2))
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
 
 packages:
 
