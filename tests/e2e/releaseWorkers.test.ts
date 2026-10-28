@@ -4,11 +4,14 @@ import { parse } from "yaml";
 
 const { services } = parse(readFileSync("docker-compose.app.yml", "utf8"));
 
-test("only web replica count is configurable; release jobs stay singleton", () => {
-  expect(services.web.deploy.replicas).toBe("${WEB_REPLICAS:-1}");
-  for (const name of ["migrate", "storage-cleanup"]) {
+test("Coolify configuration pins web and release jobs to one without env overrides", () => {
+  for (const name of ["web", "migrate", "storage-cleanup"]) {
     expect(services[name].deploy.replicas).toBe(1);
   }
+  expect(readFileSync("docker-compose.app.yml", "utf8")).not.toContain(
+    "${WEB_REPLICAS"
+  );
+  expect(readFileSync(".env.example", "utf8")).not.toMatch(/^WEB_REPLICAS=/m);
 });
 
 test("every web copy and cleanup wait for the same successful migration", () => {

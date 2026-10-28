@@ -16,10 +16,11 @@ the web service becomes healthy. PostgreSQL hostname is
 `http://minio-gbheij1ljds8nrhfgdf9teeo:9000`. Neither service has a public
 host port. Never expose S3 credentials to the browser.
 
-Keep one resource per environment. Stock Compose verifies `WEB_REPLICAS`
-scaling only web; `WEB_REPLICAS>1` is unverified on Coolify. Keep it at one
-until #419 verifies Coolify's generated configuration and staging container
-counts. Migration and cleanup remain singletons within the resource.
+Keep one resource per environment. Web, migration and cleanup replica counts
+are literal `1`; there is no `WEB_REPLICAS` environment setting. Multiple web
+copies are unverified on Coolify and require #419's staging/configuration and
+shared-state checks before a reviewed configuration change. Singleton ownership
+is operator-enforced; CLI scaling overrides and duplicate resources bypass it.
 See the [release worker runbook](operations/release-workers.md)
 for rollout ordering, duplicate-resource restrictions and verification.
 

@@ -92,9 +92,9 @@ services:
       - shared_data
 
   web:
-    # Stock Compose web scaling; keep 1 on Coolify until #419 verifies rewriting.
+    # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
-      replicas: ${WEB_REPLICAS:-1}
+      replicas: 1
     labels:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}

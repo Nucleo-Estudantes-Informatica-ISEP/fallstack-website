@@ -17,6 +17,7 @@ trap cleanup EXIT
 
 # Stock Compose rejects this Coolify-only extension.
 sed '/^[[:space:]]*exclude_from_hc:/d' docker-compose.app.yml > "$scratch/source.yml"
+# A stale/mistaken environment knob must not change the Coolify-facing counts.
 WEB_REPLICAS=3 REDIS_PASSWORD=release-check REDIS_KEY_PREFIX=fallstack:check: \
   docker compose --env-file .env.example -p "$project" \
   -f "$scratch/source.yml" config --format json > "$scratch/rendered.json"
@@ -32,7 +33,7 @@ const commands = {
 const services = {};
 for (const [name, command] of Object.entries(commands)) {
   const service = config.services[name];
-  assert.equal(service.deploy.replicas, name === 'web' ? 3 : 1);
+  assert.equal(service.deploy.replicas, 1);
   services[name] = {
     image: 'alpine:3.23',
     command: ['sh', '-ec', command],
@@ -63,7 +64,8 @@ for (const [name, count] of [['web', 3], ['storage-cleanup', 1], ['migrate', 1]]
 NODE
 }
 
-"${compose[@]}" up -d --wait
+# Scaling is an explicit stock-Compose test override, never production env config.
+"${compose[@]}" up -d --scale web=3 --wait
 assert_counts
 events="$("${compose[@]}" exec -T --index 1 web cat /audit/events)"
 test "$(head -n 1 <<< "$events")" = migrated
@@ -76,7 +78,7 @@ events="$("${compose[@]}" exec -T --index 1 web cat /audit/events)"
 test "$(grep -cx migrated <<< "$events")" = 1
 test "$(grep -cx cleanup <<< "$events")" = 1
 
-"${compose[@]}" up -d --force-recreate --wait
+"${compose[@]}" up -d --scale web=3 --force-recreate --wait
 assert_counts
 events="$("${compose[@]}" exec -T --index 1 web cat /audit/events)"
 test "$(grep -cx migrated <<< "$events")" = 2
@@ -91,7 +93,7 @@ const config = JSON.parse(fs.readFileSync(file, 'utf8'));
 config.services.migrate.command = ['sh', '-ec', 'exit 42'];
 fs.writeFileSync(file, JSON.stringify(config));
 NODE
-if "${compose[@]}" up -d --wait; then
+if "${compose[@]}" up -d --scale web=3 --wait; then
   echo 'Failed migration unexpectedly permitted startup' >&2
   exit 1
 fi
