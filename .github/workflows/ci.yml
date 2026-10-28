@@ -40,19 +40,6 @@ env:
   NODE_OPTIONS: --max-old-space-size=4096
 
 jobs:
-  redis:
-    name: Private Redis deployment
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-      - name: Verify Redis isolation, authentication and persistence
-        run: bash tests/e2e/redis-deployment.sh
-
   quality:
     name: Test, typecheck, lint & build
     runs-on: ubuntu-latest
@@ -87,6 +74,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Verify Redis isolation, authentication and persistence
+        run: bash tests/e2e/redis-deployment.sh
 
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy

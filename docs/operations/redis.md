@@ -16,11 +16,17 @@ Coolify can otherwise inject environment values as build arguments:
 | `REDIS_PASSWORD`   | Unique random secret | Different random secret |
 | `REDIS_KEY_PREFIX` | `fallstack:dev:`     | `fallstack:main:`       |
 
-Generate each password with `openssl rand -hex 32`, store it in that resource's
+Generate each password with `openssl rand -hex 32` (URL-safe hex). Redis rejects
+characters outside letters, digits, underscore and hyphen, so the derived
+connection URL and config file cannot be misparsed. Store it in that resource's
 secret environment configuration, and keep it out of Git, build arguments,
 logs and public `NEXT_PUBLIC_*` variables. Compose refuses to deploy without
-both settings. Web receives `REDIS_HOST=redis-private`, `REDIS_PORT=6379`, the
-password and prefix. All web copies within one resource must receive identical values.
+both settings. Compose derives `REDIS_URL=redis://:<password>@redis-private:6379`
+and passes it with the required prefix at runtime. Do not configure a separate
+URL override pointing at another instance. All web copies within one resource
+must receive identical values. Redis reads its password from an owner-only
+`/tmp/redis.conf`, not process arguments; Docker administrators and Redis
+administrators with `CONFIG GET` access remain trusted.
 The future #413 client must validate these through `serverEnv` and prepend the
 prefix to every key; this infrastructure change does not yet use Redis in app
 requests or change the existing per-process limiter.
@@ -57,8 +63,10 @@ automatically stop/restart web; #413 owns bounded timeouts and outage policy.
   short-lived coordination state, never the source of truth for student,
   account or Wallet data. This is one Redis per resource, not HA; volume/host
   loss loses coordination state. Do not delete the volume during redeploy.
-- Dataset limit is 128 MiB with `noeviction`; container limit is 256 MiB to
-  leave headroom for AOF buffers/rewrite. At capacity writes fail instead of
+- Dataset limit is 96 MiB with `noeviction`; container limit is 256 MiB to
+  leave additional headroom for AOF buffers and rewrite copy-on-write. This
+  is a conservative starting budget, not a proof that every write load fits.
+  At capacity writes fail instead of
   silently evicting limiter keys. SAD monitors memory, AOF disk space,
   persistence errors and health; adjust limits from observed event load.
   #413 must handle write errors and define the acceptable crash/outage budget.
@@ -71,6 +79,9 @@ Local/CI disposable deployment smoke test (Docker and Node required):
 bash tests/e2e/redis-deployment.sh
 ```
 
+This smoke test runs inside the required **Test, typecheck, lint & build** CI
+job, so an isolation failure blocks that existing merge gate.
+
 It renders the production Redis definition into temporary `dev`/`main`
 projects, checks authenticated network access, rejection of missing/wrong
 credentials, separate state, no published ports, isolation even with Coolify's
@@ -79,27 +90,38 @@ container recreation.
 It removes only its own test containers, networks and volumes on exit.
 It does not deploy either Coolify resource or build the app.
 
-After deployment, SAD runs from the selected Coolify resource's Compose
-directory (use Coolify's generated project name and environment, not a fresh
-local project). In Redis's container terminal:
+SAD owns the following deployment checks in each environment. Use Coolify's
+generated project name and environment, not a fresh local Compose project.
 
-```sh
-redis-cli ping
-# Expected: NOAUTH Authentication required.
-REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping
-# Expected: PONG
-REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli INFO persistence
-```
+1. In Redis's container terminal, run:
 
-Confirm `aof_enabled:1`, `aof_last_write_status:ok` and
-`aof_last_bgrewrite_status:ok`. Inspect the actual Redis container with
-`docker inspect`: the resource-scoped private network and Coolify's injected
-resource network, no port bindings, a persistent `/data` mount, and
-`unless-stopped`. Redis must listen only on loopback and its private address.
-Test access from **each** web copy using its deployed credentials once #413
-provides the client; confirm a
-container on the shared-data/proxy network cannot reach Redis. Do not print
-passwords or full container environment/configuration in tickets.
+   ```sh
+   redis-cli ping
+   # Expected: NOAUTH Authentication required.
+   REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping
+   # Expected: PONG
+   REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli INFO persistence
+   ```
+
+2. Confirm `aof_enabled:1`, `aof_last_write_status:ok` and
+   `aof_last_bgrewrite_status:ok`. Inspect the actual Redis container with
+   `docker inspect`: the private network and Coolify's resource network, no
+   port bindings, persistent `/data`, and `unless-stopped`. The listener must
+   bind only loopback and the private address. Failed private-alias resolution
+   must fail startup; making that bind optional could leave a loopback-only
+   service reporting healthy while every web connection fails.
+3. SAD verifies TCP access from **each** web copy using its deployed
+   `REDIS_URL`; a container on the resource/shared-data/proxy network must not
+   reach either Redis address. Record restart/recreation persistence and
+   dev/main credential isolation evidence on #455 before closing rollout.
+4. The #413 implementer owns client-level validation of the required URL/prefix,
+   per-copy authenticated connections and bounded outage/recovery behavior;
+   SAD executes those acceptance checks during #413 rollout. See
+   [#413 acceptance criteria](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/413).
+   The startup health gate stays mandatory until that failure policy has been
+   reviewed; a later Redis failure does not automatically restart web.
+
+Do not print passwords, full connection URLs or container environments in tickets.
 
 ## Off-season lifecycle (SAD)
 

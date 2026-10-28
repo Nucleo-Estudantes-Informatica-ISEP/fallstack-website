@@ -12,12 +12,17 @@ services:
       - /bin/sh
       - -ec
       - |
-        exec docker-entrypoint.sh redis-server \
+        case "$$REDIS_PASSWORD" in
+          *[!A-Za-z0-9_-]*) echo 'REDIS_PASSWORD must contain only URL-safe letters, digits, underscore or hyphen' >&2; exit 1 ;;
+        esac
+        umask 077
+        printf 'requirepass "%s"\n' "$$REDIS_PASSWORD" > /tmp/redis.conf
+        chown redis:redis /tmp/redis.conf
+        exec docker-entrypoint.sh redis-server /tmp/redis.conf \
           --bind 127.0.0.1 redis-private \
-          --requirepass "$$REDIS_PASSWORD" \
           --protected-mode yes \
           --appendonly yes --appendfsync everysec --save "" \
-          --maxmemory 128mb --maxmemory-policy noeviction
+          --maxmemory 96mb --maxmemory-policy noeviction
     healthcheck:
       test:
         [
@@ -95,9 +100,7 @@ services:
         condition: service_completed_successfully
     environment:
       # Runtime-only connection contract for #413; never pass these as build args.
-      REDIS_HOST: redis-private
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure a unique REDIS_PASSWORD per Coolify environment}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?Configure a unique REDIS_PASSWORD per Coolify environment}@redis-private:6379
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       # Coolify injects its runtime .env into every service. Keep migrator credentials out of web.

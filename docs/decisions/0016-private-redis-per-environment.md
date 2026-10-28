@@ -1,4 +1,4 @@
-# 0015: Private Redis per Coolify environment
+# 0016: Private Redis per Coolify environment
 
 Status: Accepted
 Date: 2026-10-28
@@ -20,9 +20,11 @@ DNS alias so Coolify's injected resource network cannot expose the listener to
 the migrator, cleanup worker or proxy. Keep predefined-network attachment off.
 Require separate passwords and explicit
 `fallstack:dev:` / `fallstack:main:` key prefixes. The #413 client will validate
-and enforce the runtime connection/key contract; no client is added here.
+and enforce the `REDIS_URL` / required `REDIS_KEY_PREFIX` contract; no client is
+added here. Passwords use URL-safe letters, digits, underscore or hyphen and
+are read from an owner-only config file instead of process arguments.
 
-Use a persistent named volume with AOF/every-second fsync, a 128 MiB
+Use a persistent named volume with AOF/every-second fsync, a 96 MiB
 `noeviction` dataset limit and a 256 MiB container budget. Restart failed
 containers with `unless-stopped`, allowing SAD's intentional off-season stop
 to persist across Docker restarts. SAD disables dependent flows and deployment
