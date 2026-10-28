@@ -78,6 +78,9 @@ jobs:
       - name: Verify Redis isolation, authentication and persistence
         run: bash tests/e2e/redis-deployment.sh
 
+      - name: Verify singleton release jobs and web-only scaling
+        run: bash tests/e2e/release-workers.sh
+
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
 
