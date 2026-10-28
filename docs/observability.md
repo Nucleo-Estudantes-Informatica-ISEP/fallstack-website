@@ -2,6 +2,9 @@
 
 Fallstack uses Pino for structured server logs and Sentry for error monitoring and centralized log search. Monitoring is optional: the application still starts when Sentry variables are absent. The Sentry SDK also works unmodified against a self-hosted Sentry-compatible backend (e.g. GlitchTip) — set `NEXT_PUBLIC_SENTRY_DSN` to that instance's DSN and `SENTRY_URL` to its base URL (see below); no SDK code changes are needed either way.
 
+For per-copy CPU/RAM/restarts, HTTP latency/errors and shared dependency health,
+see the [capacity metrics runbook](operations/capacity-metrics.md).
+
 ## Architecture
 
 ```text
@@ -40,14 +43,14 @@ Never place this token in Git, `.env.example`, a Docker build argument, an image
 
 ## 3. Environment variables
 
-| Variable                 | Secret  | Phase           | Required         | Purpose                                                                                   |
-| ------------------------ | ------- | --------------- | ---------------- | ----------------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SENTRY_DSN` | No      | Build + runtime | No               | Enables browser, server, and edge event delivery. Browser value is embedded during build. |
+| Variable                 | Secret  | Phase           | Required         | Purpose                                                                                                                         |
+| ------------------------ | ------- | --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SENTRY_DSN` | No      | Build + runtime | No               | Enables browser, server, and edge event delivery. Browser value is embedded during build.                                       |
 | `SENTRY_URL`             | No      | Build           | Self-hosted only | Base URL of a self-hosted Sentry-compatible backend (e.g. GlitchTip). Unset uploads source maps to sentry.io regardless of DSN. |
-| `SENTRY_ORG`             | No      | Build           | Source maps only | Sentry (or GlitchTip) organization slug.                                                  |
-| `SENTRY_PROJECT`         | No      | Build           | Source maps only | Sentry (or GlitchTip) project slug.                                                       |
-| `SENTRY_AUTH_TOKEN`      | **Yes** | Build only      | Source maps only | Authenticates release/source-map upload.                                                  |
-| `LOG_LEVEL`              | No      | Runtime         | No               | Pino threshold: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `silent`.          |
+| `SENTRY_ORG`             | No      | Build           | Source maps only | Sentry (or GlitchTip) organization slug.                                                                                        |
+| `SENTRY_PROJECT`         | No      | Build           | Source maps only | Sentry (or GlitchTip) project slug.                                                                                             |
+| `SENTRY_AUTH_TOKEN`      | **Yes** | Build only      | Source maps only | Authenticates release/source-map upload.                                                                                        |
+| `LOG_LEVEL`              | No      | Runtime         | No               | Pino threshold: `trace`, `debug`, `info`, `warn`, `error`, `fatal`, or `silent`.                                                |
 
 Defaults: `LOG_LEVEL=debug` outside production and `LOG_LEVEL=info` in production. Sentry stays disabled when `NEXT_PUBLIC_SENTRY_DSN` is empty.
 
