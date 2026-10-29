@@ -1,4 +1,5 @@
 // @vitest-environment node
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test, vi } from "vitest";
 
@@ -8,8 +9,22 @@ vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "accept-language": "en-GB" }),
 }));
 vi.mock("@/components/CountdownLanding", () => ({
+  default: ({
+    language,
+    children,
+  }: {
+    language: string;
+    children: ReactNode;
+  }) => (
+    <div>
+      Countdown {language}
+      {children}
+    </div>
+  ),
+}));
+vi.mock("@/components/FeaturedCompanies", () => ({
   default: ({ language }: { language: string }) => (
-    <div>Countdown {language}</div>
+    <span>Partners {language}</span>
   ),
 }));
 vi.mock("@/components/HomepageSection", () => {
@@ -23,6 +38,8 @@ test.each([
   "serves countdown with resolved language %j",
   async (searchParams, language) => {
     const page = await Page({ searchParams: Promise.resolve(searchParams) });
-    expect(renderToStaticMarkup(page)).toBe(`<div>Countdown ${language}</div>`);
+    const html = renderToStaticMarkup(page);
+    expect(html).toContain(`Countdown ${language}`);
+    expect(html).toContain(`<span>Partners ${language}</span>`);
   }
 );

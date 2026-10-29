@@ -13,6 +13,7 @@ export interface CompanyRankStyleDto {
   gradientToStop: string;
   hasInternalPage: boolean;
   showsPromoVideo: boolean;
+  isFeatured: boolean;
 }
 
 export interface CompanyRankDto {
@@ -39,6 +40,7 @@ const toCompanyRankDto = (rank: {
         gradientToStop: rank.style.gradientToStop,
         hasInternalPage: rank.style.hasInternalPage,
         showsPromoVideo: rank.style.showsPromoVideo,
+        isFeatured: rank.style.isFeatured,
       }
     : null,
 });

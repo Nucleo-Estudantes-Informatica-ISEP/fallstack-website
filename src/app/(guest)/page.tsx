@@ -1,6 +1,8 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 
 import CountdownLanding from "@/components/CountdownLanding";
+import FeaturedCompanies from "@/components/FeaturedCompanies";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
@@ -13,7 +15,13 @@ const App = async ({ searchParams }: AppProps) => {
     lang,
     (await headers()).get("accept-language")
   );
-  return <CountdownLanding language={language} />;
+  return (
+    <CountdownLanding language={language}>
+      <Suspense fallback={null}>
+        <FeaturedCompanies language={language} />
+      </Suspense>
+    </CountdownLanding>
+  );
 };
 
 export default App;
