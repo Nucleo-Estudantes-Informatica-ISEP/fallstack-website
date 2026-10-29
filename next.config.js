@@ -27,7 +27,6 @@ const nextConfig = {
   experimental: {
     // PWA/Sentry add webpack hooks, disabling Next's default build worker.
     webpackBuildWorker: true,
-    webpackMemoryOptimizations: true,
     optimizePackageImports: ["@mynaui/icons-react"],
   },
   images: {

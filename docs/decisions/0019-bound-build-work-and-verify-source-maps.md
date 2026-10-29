@@ -12,10 +12,16 @@ failures but still deployed with broken monitoring configuration.
 
 ## Decision
 
-Explicitly enable the webpack build worker and Next's memory optimizations.
+Explicitly enable the webpack build worker. Retain Next's default webpack memory
+mode after a bounded comparison: the experimental mode took longer, with a small
+total-memory reduction and similar anonymous-memory peaks. The requester selected
+the faster default mode; the heap ceiling is unchanged.
 Optimize the `@mynaui/icons-react` barrel import rather than loading its
 entire export graph. Reuse Next's on-disk cache across Docker builds and honor
-the existing heap build argument.
+the existing heap build argument. Reuse the dependency stage and its generated
+Prisma client instead of copying dependencies and generating the client again.
+Remove unreferenced HeroUI, MDI, and tsParticles
+dependencies rather than installing their unused dependency graphs.
 
 Generate source maps only when all upload credentials are present. Use Sentry's
 supported post-compilation hook to upload once after compiler workers finish,
@@ -25,8 +31,7 @@ error reporting and its privacy filters enabled independently through the DSN.
 ## Consequences
 
 No lint, type, test, minification, PWA, or monitoring checks are disabled.
-Memory optimizations can slightly increase compilation time; import and cache
-optimizations remove work. Heap ceilings apply per process, so total build RAM
-must still be monitored. Source-map uploads require a reachable backend and
+Import, dependency, and cache optimizations remove work. Heap ceilings apply per
+process, so total build RAM must still be monitored. Source-map uploads require a reachable backend and
 valid credentials during deployment. Post-compilation debug-ID injection is
 incompatible with integrity hashes; revisit this choice if SRI is introduced.
