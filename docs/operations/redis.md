@@ -19,6 +19,21 @@ Missing any of them makes Compose interpolation fail for the whole stack. Use a
 different password and network for each environment. Keep passwords out of
 Git, build arguments, logs, tickets and `NEXT_PUBLIC_*` variables.
 
+### Pre-merge rollout gate
+
+A merge can trigger a deployment, and a deployment without these values fails
+for the whole stack, including migrations and `web`. For each environment,
+complete all of these **before** merging or triggering a deployment:
+
+1. The standalone Redis resource exists, is running and passes the
+   [verification](#verification) below.
+2. `REDIS_URL`, `REDIS_NETWORK_NAME` and `REDIS_KEY_PREFIX` are set on the web
+   resource, runtime-only.
+3. `docker compose config --quiet` renders the web Compose file with those
+   values.
+4. Record the evidence on the rollout issue. Merge to `dev` first and verify
+   `dev` before promoting to `main`.
+
 Configure the Redis resource:
 
 - Do not enable "Make it publicly available". Publish no port or domain.
@@ -26,13 +41,11 @@ Configure the Redis resource:
   that destination.
 - Pin the image to a Redis 7.4 patch tag.
 - Set a 256 MiB memory limit and a persistent volume mounted at `/data`.
-- Set Custom Docker Options so Telegraf collects it
-  (`main` on the production Redis):
-
-  ```
-  --label metrics_environment=dev --label metrics_service=redis
-  ```
-
+- Do not set `--label` or `--health-cmd` in Custom Docker Options. Coolify
+  v4.5.0 silently drops both, and its generated healthcheck is
+  `redis-cli ping` without authentication, which exits 0 on `NOAUTH`. The
+  Coolify environment must be named `development` for `dev` and `production`
+  for `main`; Telegraf and the probe read that label.
 - Use this `redis.conf`:
 
   ```
@@ -46,6 +59,34 @@ Configure the Redis resource:
 Only `web` joins the external `redis_shared` network. Do not use "Connect to
 Predefined Network" on the web resource for this.
 
+## Health probe
+
+Authenticated health comes from a host-side timer, not from Coolify. Install it
+once on the Docker host that runs the Redis resources:
+
+```bash
+sudo mkdir -p /opt/fallstack/monitoring /var/lib/fallstack-probes
+sudo install -m 755 monitoring/redis-probe.sh /opt/fallstack/monitoring/
+sudo install -m 644 monitoring/redis-probe.service monitoring/redis-probe.timer \
+  /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now redis-probe.timer
+```
+
+Every 15 seconds it runs `PING` with each container's own `REDIS_PASSWORD`
+inside the container and writes `/var/lib/fallstack-probes/redis.influx`. The
+password never leaves Redis. Telegraf mounts that directory read-only.
+`FallstackRedisUnhealthy` fires on `healthy=0`, and `FallstackRedisProbeStale`
+fires if the timer stops.
+
+Negative check on `dev`, after any change to the probe:
+
+```bash
+docker exec <redis-container> sh -c \
+  'REDISCLI_AUTH=wrong redis-cli ping | grep -q PONG; echo $?'
+# Expected: 1
+```
+
 ## Verification
 
 Run on the Docker host for each environment. Type the password into
@@ -57,7 +98,9 @@ docker ps --format '{{.Names}}\t{{.Ports}}' | grep <redis-container>
 docker inspect <redis-container> --format '{{json .Mounts}}'
 # Expected: a volume mounted at /data
 docker inspect <redis-container> --format '{{json .Config.Labels}}'
-# Expected: metrics_environment and metrics_service=redis
+# Expected: coolify.database.subType=standalone-redis and coolify.environmentName
+cat /var/lib/fallstack-probes/redis.influx
+# Expected: a line with environment=<dev|main> and healthy=1i
 docker run --rm -it --network <redis-network> \
   redis:7.4-alpine redis-cli -h <redis-container>
 # Type: AUTH <password>   then: PING   Expected: OK, PONG

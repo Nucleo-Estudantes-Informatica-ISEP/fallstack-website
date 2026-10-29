@@ -27,9 +27,11 @@ Redis settings that Compose used to enforce move into the resource's
 `redis.conf`: password, `maxmemory 96mb`, `maxmemory-policy noeviction`,
 `appendonly yes`, `appendfsync everysec` and `save ""`.
 
-The monitoring labels `metrics_environment` and `metrics_service=redis` move to
-the resource's Custom Docker Options, so the existing Telegraf filter and Redis
-alerts keep working.
+Coolify v4.5.0 ignores `--label` and `--health-cmd` in Custom Docker Options,
+and its default Redis healthcheck passes without authentication. Monitoring
+therefore matches the labels Coolify sets itself (`coolify.environmentName`,
+`coolify.database.subType`) and takes health from a host-side timer that runs an
+authenticated `PING` inside the container and feeds Telegraf through a file.
 
 The temporary `serverEnv` exception from ADR 0015 remains: #413 adds URL and
 prefix validation with the first application client. `REDIS_NETWORK_NAME` is
@@ -43,6 +45,7 @@ Compose-only and never reaches the application.
 - Network isolation depends on a dedicated destination per environment and on
   the resource staying non-public. Reachability is limited to containers on that
   network, plus the password.
-- The monitoring labels are no longer in version control. If a Redis redeploy
-  drops them, `FallstackDependencyMetricsMissing` fires.
+- The probe script and timer live in version control but are installed by hand
+  on the Docker host. If the timer stops, `FallstackRedisProbeStale` fires.
+- The Coolify environments must stay named `development` and `production`.
 - Dev and prod require different `REDIS_NETWORK_NAME` values.
