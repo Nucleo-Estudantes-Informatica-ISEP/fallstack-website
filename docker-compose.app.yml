@@ -47,6 +47,8 @@ services:
           - redis-private
 
   migrate:
+    deploy:
+      replicas: 1
     build:
       context: .
       dockerfile: Dockerfile
@@ -61,6 +63,8 @@ services:
       - shared_data
 
   storage-cleanup:
+    deploy:
+      replicas: 1
     labels:
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
       metrics_service: storage-cleanup
@@ -88,6 +92,9 @@ services:
       - shared_data
 
   web:
+    # No env scaling knob until #419 verifies Coolify and shared-state safety.
+    deploy:
+      replicas: 1
     labels:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}

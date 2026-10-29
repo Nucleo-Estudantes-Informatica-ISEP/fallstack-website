@@ -43,3 +43,5 @@ implementation PR needs an ADR.
 | [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee    | Accepted   |
 | [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Accepted   |
 | [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                 | Accepted   |
+| [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs            | Accepted   |
+| [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted   |

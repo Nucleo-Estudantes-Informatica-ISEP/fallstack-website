@@ -3,7 +3,9 @@
 The `storage-cleanup` service in `docker-compose.app.yml` replaces the retired
 Supabase jobs. It uses the same environment-specific PostgreSQL runtime identity
 and MinIO buckets as the web app. It requires no OIDC/JWT credentials or public port.
-The migrator must finish before the worker starts. No `pg_cron`, Vault,
+The migrator must finish before the worker starts. Keep exactly one daemon per
+environment; scale only web in the existing resource, following the
+[release worker runbook](operations/release-workers.md). No `pg_cron`, Vault,
 `storage.objects`, or SQL-only object deletion is involved.
 
 ## Policy and consistency
