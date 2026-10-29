@@ -25,6 +25,7 @@ const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
         gradientToStop: values.gradientToStop,
         hasInternalPage: values.hasInternalPage,
         showsPromoVideo: values.showsPromoVideo,
+        isFeatured: values.isFeatured,
       },
     };
 
@@ -89,6 +90,11 @@ const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
             },
             {
               kind: "checkbox",
+              name: "isFeatured",
+              label: "Destaque (empresas abaixo do banner da página inicial)",
+            },
+            {
+              kind: "checkbox",
               name: "hasInternalPage",
               label: "Tem página interna (/company/[nome])",
             },
@@ -111,8 +117,14 @@ const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
               gradientToStop: rank.style?.gradientToStop ?? "",
               hasInternalPage: rank.style?.hasInternalPage ?? false,
               showsPromoVideo: rank.style?.showsPromoVideo ?? false,
+              isFeatured: rank.style?.isFeatured ?? false,
             }
-          : { order: 0, hasInternalPage: false, showsPromoVideo: false }
+          : {
+              order: 0,
+              hasInternalPage: false,
+              showsPromoVideo: false,
+              isFeatured: false,
+            }
       }
       onSubmit={handleSubmit}
     />

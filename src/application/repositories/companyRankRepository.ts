@@ -11,6 +11,7 @@ export interface CompanyRankStyleInput {
   gradientToStop: string;
   hasInternalPage?: boolean;
   showsPromoVideo?: boolean;
+  isFeatured?: boolean;
 }
 
 export const findAllCompanyRanks = () =>

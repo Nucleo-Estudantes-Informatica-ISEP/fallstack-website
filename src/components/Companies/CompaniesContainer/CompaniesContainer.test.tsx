@@ -19,6 +19,7 @@ test("CompaniesContainer routes to the internal page when the rank has one and t
           gradientToStop: "89%",
           hasInternalPage: true,
           showsPromoVideo: true,
+          isFeatured: false,
         },
       }}
       companies={[

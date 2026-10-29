@@ -13,6 +13,7 @@ const rankStyleSchema = z.object({
   gradientToStop: colorStopSchema,
   hasInternalPage: z.boolean().optional(),
   showsPromoVideo: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
 });
 
 export const createAdminCompanyRankSchema = z.object({

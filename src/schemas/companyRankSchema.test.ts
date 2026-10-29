@@ -1,6 +1,35 @@
 import { describe, expect, it } from "vitest";
 
-import { updateAdminCompanyRankSchema } from "@/schemas/companyRankSchema";
+import {
+  createAdminCompanyRankSchema,
+  updateAdminCompanyRankSchema,
+} from "@/schemas/companyRankSchema";
+
+it.each([true, false])(
+  "preserves Destaque=%s on create and update",
+  (isFeatured) => {
+    const style = {
+      gradientFromColor: "#fff",
+      gradientFromStop: "0%",
+      gradientToColor: "#fff",
+      gradientToStop: "100%",
+      isFeatured,
+    };
+    expect(
+      createAdminCompanyRankSchema.parse({ name: "Main", style }).style
+    ).toHaveProperty("isFeatured", isFeatured);
+    expect(
+      updateAdminCompanyRankSchema.parse({ style: { isFeatured } }).style
+    ).toEqual({ isFeatured });
+  }
+);
+
+it("rejects non-boolean Destaque values", () => {
+  expect(
+    updateAdminCompanyRankSchema.safeParse({ style: { isFeatured: "true" } })
+      .success
+  ).toBe(false);
+});
 
 describe("updateAdminCompanyRankSchema", () => {
   it("accepts a name-only update", () => {

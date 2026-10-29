@@ -25,6 +25,11 @@ const columns: DataTableColumn<AdminCompanyRankDto>[] = [
     sortable: true,
   },
   {
+    key: "isFeatured",
+    header: "Destaque",
+    render: (rank) => (rank.style?.isFeatured ? "Sim" : "Não"),
+  },
+  {
     key: "hasInternalPage",
     header: "Página interna",
     render: (rank) => (rank.style?.hasInternalPage ? "Sim" : "Não"),
