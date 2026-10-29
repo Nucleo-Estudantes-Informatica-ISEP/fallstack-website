@@ -107,6 +107,8 @@ verify those in CI or on the deployment builder when the local ceiling is too lo
   Generic Pass, publishing access, and runtime configuration.
 - [MinIO cleanup](docs/storage-cleanup.md): six-month CV retention, orphan cleanup,
   dry-run rollout, retries and operator audit.
+- [Backups](docs/operations/backups.md): PostgreSQL/MinIO ownership, schedule,
+  encrypted off-VPS copies, usage guards, recovery and alert evidence.
 - [Observability](docs/observability.md), [security](docs/SECURITY.md), and
   [architecture decisions](docs/decisions/README.md).
 - [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file

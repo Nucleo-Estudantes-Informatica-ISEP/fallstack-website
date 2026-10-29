@@ -1,0 +1,7 @@
+{
+  "host": "mail.nei-isep.org",
+  "port": 465,
+  "username": "no-reply@nei-isep.org",
+  "password": "REPLACE_WITH_SMTP_PASSWORD",
+  "from": "Fallstack Backup <no-reply@nei-isep.org>"
+}

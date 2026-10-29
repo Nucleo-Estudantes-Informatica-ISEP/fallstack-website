@@ -1,0 +1,14 @@
+[Unit]
+Description=Fallstack PostgreSQL and MinIO encrypted off-VPS backup
+After=docker.service network-online.target
+Wants=network-online.target
+OnFailure=fallstack-backup-alert.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/fallstack-backup/backup.py
+UMask=0077
+Nice=15
+IOSchedulingClass=idle
+MemoryMax=256M
+TimeoutStartSec=30min

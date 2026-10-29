@@ -44,4 +44,5 @@ implementation PR needs an ADR.
 | [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Accepted   |
 | [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                 | Accepted   |
 | [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs            | Accepted   |
+| [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted   |
 | [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps          | Accepted   |
