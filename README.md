@@ -6,7 +6,7 @@ companies. Editions share this repository and are tagged `<year>-edition`; see
 
 ## Stack
 
-Next.js 15, React 18, TypeScript, Tailwind CSS 4, HeroUI, PostgreSQL 16 with
+Next.js 15, React 18, TypeScript, Tailwind CSS 4, PostgreSQL 16 with
 Prisma 6, MinIO, and AuthNEI/ZITADEL OIDC. See the
 [architecture guide](docs/architecture.md) for application boundaries.
 
@@ -70,6 +70,27 @@ as its callback. Use development credentials and data only.
    Open `http://localhost:3000`. Existing databases created before Prisma
    Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
    before applying migrations. Login requires the configured OIDC client.
+
+## Production builds on limited RAM
+
+Run one build at a time. To use a 1.5 GiB JavaScript heap ceiling:
+
+```bash
+NODE_OPTIONS=--max-old-space-size=1536 pnpm build
+```
+
+Next isolates compiler workers and optimizes the icon barrel import. Docker
+reuses its dependency stage and preserves `.next/cache` between builds, avoiding
+a second dependency copy and Prisma generation. Unused legacy UI dependencies are removed
+from the install graph. The experimental webpack memory mode stays disabled:
+bounded comparison favored the faster default mode at a similar anonymous-memory
+peak, with a slightly higher total peak including filesystem cache.
+Builds without complete Sentry upload credentials skip source maps; configured
+builds upload once after compilation and fail if that upload fails. Runtime
+error reporting only needs the DSN. See [observability](docs/observability.md).
+The heap ceiling is per Node process, not a limit on total build RAM.
+Full source-map builds need more memory than credential-free local builds;
+verify those in CI or on the deployment builder when the local ceiling is too low.
 
 ## More documentation
 

@@ -1,7 +1,7 @@
 const {
   publicDataRuntimeCaching,
 } = require("./src/config/publicDataRuntimeCaching");
-const { withSentryConfig } = require("@sentry/nextjs");
+const { withSentryConfig } = require("@sentry/nextjs/config");
 const { getImageRemotePatterns } = require("./src/config/imageRemotePatterns");
 
 // Baseline security headers (securityheaders.com "easy wins").
@@ -24,6 +24,11 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  experimental: {
+    // PWA/Sentry add webpack hooks, disabling Next's default build worker.
+    webpackBuildWorker: true,
+    optimizePackageImports: ["@mynaui/icons-react"],
+  },
   images: {
     remotePatterns: getImageRemotePatterns(),
   },
@@ -79,15 +84,16 @@ module.exports = withSentryConfig(withPWA(nextConfig), {
   project: process.env.SENTRY_PROJECT,
   authToken: process.env.SENTRY_AUTH_TOKEN,
   silent: !process.env.CI,
+  // Upload once after compiler workers exit, instead of inside each compiler.
+  useRunAfterProductionCompileHook: true,
+  telemetry: false,
   sourcemaps: {
+    // Local and credential-free CI builds have nowhere to upload maps.
+    disable: !(
+      process.env.SENTRY_AUTH_TOKEN &&
+      process.env.SENTRY_ORG &&
+      process.env.SENTRY_PROJECT
+    ),
     deleteSourcemapsAfterUpload: true,
-  },
-  // The plugin's default on a release/upload failure is to throw and fail
-  // the whole build — too strict for source maps, which are an
-  // observability nicety, not something that should block a deploy
-  // (especially against a self-hosted backend like GlitchTip, whose API
-  // doesn't fully mirror Sentry's release-management endpoints).
-  errorHandler: (err) => {
-    console.warn("Sentry release/source-map upload failed:", err);
   },
 });
