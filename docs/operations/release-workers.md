@@ -67,3 +67,7 @@ remain one even with `WEB_REPLICAS=3`. It then uses an explicit stock-Compose
 a second release and migration failure. Commands are replaced with markers;
 this checks stock Compose orchestration, not Prisma/S3, Coolify's Compose
 rewriting, generated container names or live proxy behavior.
+
+For failed rollout notifications, resource UUIDs and duplicate deployment
+triggers, use the [deployment triage runbook](deployment-triage.md). Its
+inventory distinguishes canonical releases from older whole-stack clones.
