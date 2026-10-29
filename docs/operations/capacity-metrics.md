@@ -25,7 +25,7 @@ new/replaced replicas need no target edits. Docker restart counts reset when a
 container is replaced. They are gauges, not monotonic Prometheus counters.
 For shared services use `environment=shared`; do not duplicate their resource
 usage under both dev and main. Label every replica of AuthNEI and the proxy too. Each Fallstack resource has
-its own private Redis; its dev/main labels are wired in app Compose.
+its own standalone Redis; set its dev/main labels on that Coolify resource.
 
 HTTP timing runs at Node's server boundary, including SSR/pages, APIs,
 static responses, health checks, streaming until finish, and disconnected
@@ -51,16 +51,15 @@ label is recorded, so this aggregate cannot prove homepage-only p95.
 3. Add persistent Docker labels to shared containers in their owning Coolify
    Compose resources: `metrics_environment=shared` and `metrics_service` equal to
    `proxy`, `authnei`, `postgresql`, or `minio`. Every AuthNEI/proxy copy
-   needs labels. Fallstack web, Redis and storage-cleanup labels are already wired.
+   needs labels. Fallstack web and storage-cleanup labels are wired in Compose; set the Redis labels on its Coolify resource.
    Include other co-hosted services in the `inputs.docker.metricpass` service
    allowlist and label them with a fixed, non-personal service name. Reconcile
    inventory against collected copies; unlabeled containers are intentionally
    not stored. Do not edit or restart unrelated services during a capacity run.
 4. Create a dedicated PostgreSQL monitoring login with `CONNECT` and
    `pg_read_all_stats` only, no application table grants. Redis health reuses the
-   authenticated PONG check from [its owning Compose resource](redis.md), so
-   the collector needs neither Redis credentials nor access to its private
-   network. In `monitoring/`, copy `.env.example` to `.env` (ignored), set
+   authenticated PONG check from [its Coolify resource](redis.md), so the
+   collector needs neither Redis credentials nor access to its network. In `monitoring/`, copy `.env.example` to `.env` (ignored), set
    `DOCKER_GID` from `stat -c '%g' /var/run/docker.sock`, scoped PostgreSQL
    credentials, actual dev/main/AuthNEI database names and host-reachable HTTP
    dependency endpoints. If AuthNEI uses a separate DB host, change only its

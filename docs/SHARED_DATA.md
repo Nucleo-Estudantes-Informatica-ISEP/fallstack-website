@@ -24,10 +24,11 @@ is operator-enforced; CLI scaling overrides and duplicate resources bypass it.
 See the [release worker runbook](operations/release-workers.md)
 for rollout ordering, duplicate-resource restrictions and verification.
 
-Each Coolify app resource also defines a separate private Redis service for
-shared web state. Redis does **not** join the shared-data network. Configure
-its per-environment password and key prefix before deploying; see the
-[Redis runbook](operations/redis.md) for persistence, verification and SAD's
+Each environment also has its own standalone Redis resource in a dedicated
+Coolify destination network for shared web state. Redis does **not** join the
+shared-data network. Only `web` joins the Redis network. Set `REDIS_URL`,
+`REDIS_NETWORK_NAME` and `REDIS_KEY_PREFIX` before deploying; see the
+[Redis runbook](operations/redis.md) for setup, verification and SAD's
 off-season stop/resume procedure.
 
 Set `DATABASE_URL` to the environment's **runtime** identity and `DIRECT_URL`
