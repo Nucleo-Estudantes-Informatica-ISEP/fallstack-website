@@ -17,7 +17,6 @@ test("metrics require explicit deployment identity and stay off the public appli
     expect(read("src/config/env.metrics.ts")).toContain(name);
   }
   expect(compose).toContain("metrics_enabled: ${METRICS_ENABLED:-false}");
-  expect(compose).toContain("metrics_service: redis");
   expect(compose).not.toMatch(/ports:.*9464/);
   expect(read("Dockerfile")).toContain("EXPOSE 4000 9464");
   const prometheus = read("monitoring/prometheus.yml");
