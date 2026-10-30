@@ -1,51 +1,6 @@
 x-minio-endpoint: &minio_endpoint ${S3_ENDPOINT:-http://minio-gbheij1ljds8nrhfgdf9teeo:9000}
 
 services:
-  redis:
-    labels:
-      metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
-      metrics_service: redis
-    image: redis:7.4.12-alpine@sha256:338fbfc036dc5517ac0b04d6de21521085935336e565f223406180e9d84166e2
-    restart: unless-stopped
-    mem_limit: 256m
-    stop_grace_period: 30s
-    environment:
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?Configure a unique REDIS_PASSWORD per Coolify environment}
-    command:
-      - /bin/sh
-      - -ec
-      - |
-        case "$$REDIS_PASSWORD" in
-          *[!A-Za-z0-9_-]*) echo 'REDIS_PASSWORD must contain only URL-safe letters, digits, underscore or hyphen' >&2; exit 1 ;;
-        esac
-        umask 077
-        # A private non-sticky directory permits root to rewrite the Redis-owned file on restart.
-        mkdir -p /run/redis-private
-        printf 'requirepass "%s"\n' "$$REDIS_PASSWORD" > /run/redis-private/redis.conf
-        chown -R redis:redis /run/redis-private
-        exec docker-entrypoint.sh redis-server /run/redis-private/redis.conf \
-          --bind 127.0.0.1 redis-private \
-          --protected-mode yes \
-          --appendonly yes --appendfsync everysec --save "" \
-          --maxmemory 96mb --maxmemory-policy noeviction
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep -qx PONG',
-        ]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-      start_period: 5s
-    volumes:
-      - redis_data:/data
-    networks:
-      redis_private:
-        # Bind only this interface, even when Coolify injects a resource network.
-        aliases:
-          - redis-private
-
   migrate:
     deploy:
       replicas: 1
@@ -117,7 +72,7 @@ services:
         condition: service_completed_successfully
     environment:
       # Runtime-only connection contract for #413; never pass these as build args.
-      REDIS_URL: redis://:${REDIS_PASSWORD:?Configure a unique REDIS_PASSWORD per Coolify environment}@redis-private:6379
+      REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       # Coolify injects its runtime .env into every service. Keep migrator credentials out of web.
@@ -165,18 +120,18 @@ services:
     networks:
       - default
       - shared_data
-      - redis_private
+      - redis_shared
 
 secrets:
   sentry_auth_token:
     environment: SENTRY_AUTH_TOKEN
 
 networks:
-  redis_private:
-    internal: true
+  # Per-environment destination network of the standalone Coolify Redis.
+  # Attach web only: migrate and storage-cleanup never need Redis.
+  redis_shared:
+    external: true
+    name: ${REDIS_NETWORK_NAME:?Set the Docker network name of this environment's Redis destination in Coolify}
   shared_data:
     external: true
     name: gbheij1ljds8nrhfgdf9teeo
-
-volumes:
-  redis_data:

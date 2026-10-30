@@ -18,7 +18,8 @@ trap cleanup EXIT
 # Stock Compose rejects this Coolify-only extension.
 sed '/^[[:space:]]*exclude_from_hc:/d' docker-compose.app.yml > "$scratch/source.yml"
 # A stale/mistaken environment knob must not change the Coolify-facing counts.
-WEB_REPLICAS=3 REDIS_PASSWORD=release-check REDIS_KEY_PREFIX=fallstack:check: \
+WEB_REPLICAS=3 REDIS_URL=redis://:release-check@redis:6379 REDIS_NETWORK_NAME=release-check \
+  REDIS_KEY_PREFIX=fallstack:check: \
   docker compose --env-file .env.example -p "$project" \
   -f "$scratch/source.yml" config --format json > "$scratch/rendered.json"
 node - "$scratch/rendered.json" "$scratch/check.json" <<'NODE'

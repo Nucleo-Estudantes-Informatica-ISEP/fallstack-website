@@ -1,0 +1,9 @@
+[Unit]
+Description=Fallstack authenticated Redis health probe
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/fallstack/redis-probe.env
+ExecStart=/opt/fallstack/monitoring/redis-probe.sh
