@@ -40,7 +40,7 @@ groups:
         annotations:
           summary: MinIO or AuthNEI readiness probe failed
       - alert: FallstackDependencyMetricsMissing
-        expr: absent(postgresql_numbackends{environment="dev"}) or absent(postgresql_numbackends{environment="main"}) or absent(postgresql_numbackends{environment="shared"}) or absent(docker_container_health_healthy{service="redis",environment="dev"}) or absent(docker_container_health_healthy{service="redis",environment="main"}) or absent(http_response_result_code{service="minio"}) or absent(http_response_result_code{service="authnei"})
+        expr: absent(postgresql_numbackends{environment="dev"}) or absent(postgresql_numbackends{environment="main"}) or absent(postgresql_numbackends{environment="shared"}) or absent(redis_probe_healthy{service="redis",environment="dev"}) or absent(redis_probe_healthy{service="redis",environment="main"}) or absent(http_response_result_code{service="minio"}) or absent(http_response_result_code{service="authnei"})
         for: 1m
         annotations:
           summary: Expected dependency metrics missing or expired
@@ -49,7 +49,17 @@ groups:
         annotations:
           summary: Container restarted during the last five minutes
       - alert: FallstackRedisUnhealthy
-        expr: docker_container_health_healthy{service="redis"} == 0 or docker_container_status_restart_count{service="redis",container_status!="running"}
+        expr: redis_probe_healthy{service="redis"} == 0 or docker_container_status_restart_count{service="redis",container_status!="running"}
         for: 1m
         annotations:
-          summary: Redis authenticated PONG healthcheck failed or container stopped
+          summary: Redis authenticated PONG probe failed or container stopped
+      - alert: FallstackRedisDockerMetricsMissing
+        expr: absent(docker_container_status_restart_count{service="redis",environment="dev"}) or absent(docker_container_status_restart_count{service="redis",environment="main"})
+        for: 1m
+        annotations:
+          summary: Redis Docker series missing for an environment
+      - alert: FallstackRedisProbeStale
+        expr: time() - redis_probe_timestamp_seconds{service="redis"} > 90
+        for: 1m
+        annotations:
+          summary: Redis probe timer stopped writing results
