@@ -14,7 +14,8 @@ The single `migrate` service runs
 `prisma migrate deploy` with no restart, and every new web copy and the single
 `storage-cleanup` daemon wait for its successful exit. A failed migration blocks
 both services. The web image starts only `node server.js`; it starts neither
-migrations nor cleanup. Redis stays in the same environment resource too.
+migrations nor cleanup. Redis is a separate standalone Coolify resource per environment; see the
+[Redis runbook](redis.md).
 
 Singleton ownership is **operator-enforced**. `deploy.replicas: 1` is a default
 count, not an upper limit: `docker compose up --scale` overrides it. Do not
@@ -53,7 +54,7 @@ independent deployments or provide a distributed scheduler.
    release containers using `--no-deps`. Confirm exactly one successful
    migration container before new web/cleanup containers start.
 3. In the same resource, confirm one running `storage-cleanup` daemon, one
-   Redis service and one web container. Inspect cleanup
+   web container. Inspect cleanup
    logs/health using the [cleanup runbook](../storage-cleanup.md); preserve its
    dry-run/apply setting. A web restart must not spawn another cleanup daemon.
 4. In staging, fail a migration deliberately against a disposable DB. Confirm

@@ -17,15 +17,21 @@ or Pino/Sentry. No application database migration is needed.
 | HTTP count, duration histogram, status, aborted responses             | Each Next.js process on private `:9464/metrics` | environment, service, copy, method, status_code |
 | Process CPU/RSS, heap, GC, event loop                                 | Standard Prometheus Node collector              | environment, service, copy                      |
 | DB connections, commits/rollbacks, deadlocks                          | Aggregate `pg_stat_database` via Telegraf       | dev/main/shared, database, service              |
-| Redis authenticated PONG health, RAM and restarts                     | Docker healthcheck/stats via Telegraf           | dev/main, service, copy                         |
+| Redis authenticated PONG health                                       | Host timer `redis-probe.sh` via Telegraf        | dev/main, service, copy                         |
+| Redis RAM and restarts                                                | Docker stats via Telegraf                       | dev/main, service, copy                         |
 | MinIO readiness, AuthNEI readiness, status and probe latency          | HTTP readiness probes                           | shared, service, probe                          |
 
 `copy` is the Docker container name, automatically refreshed every 15 seconds;
 new/replaced replicas need no target edits. Docker restart counts reset when a
 container is replaced. They are gauges, not monotonic Prometheus counters.
 For shared services use `environment=shared`; do not duplicate their resource
-usage under both dev and main. Label every replica of AuthNEI and the proxy too. Each Fallstack resource has
-its own private Redis; its dev/main labels are wired in app Compose.
+usage under both dev and main. Label every replica of AuthNEI and the proxy too. Standalone Redis
+cannot carry custom labels in Coolify, so Telegraf maps its own
+`coolify.environmentName` (`development`/`production`) and
+`coolify.database.subType=standalone-redis` to `dev`/`main` and `redis`.
+This applies only to the two containers named by `METRICS_REDIS_DEV_CONTAINER`
+and `METRICS_REDIS_MAIN_CONTAINER`. The mapper is scoped to standalone Redis, so
+shared services keep their own `environment` and `service` tags.
 
 HTTP timing runs at Node's server boundary, including SSR/pages, APIs,
 static responses, health checks, streaming until finish, and disconnected
@@ -51,16 +57,15 @@ label is recorded, so this aggregate cannot prove homepage-only p95.
 3. Add persistent Docker labels to shared containers in their owning Coolify
    Compose resources: `metrics_environment=shared` and `metrics_service` equal to
    `proxy`, `authnei`, `postgresql`, or `minio`. Every AuthNEI/proxy copy
-   needs labels. Fallstack web, Redis and storage-cleanup labels are already wired.
+   needs labels. Fallstack web and storage-cleanup labels are wired in Compose; Redis needs none.
    Include other co-hosted services in the `inputs.docker.metricpass` service
    allowlist and label them with a fixed, non-personal service name. Reconcile
    inventory against collected copies; unlabeled containers are intentionally
    not stored. Do not edit or restart unrelated services during a capacity run.
 4. Create a dedicated PostgreSQL monitoring login with `CONNECT` and
-   `pg_read_all_stats` only, no application table grants. Redis health reuses the
-   authenticated PONG check from [its owning Compose resource](redis.md), so
-   the collector needs neither Redis credentials nor access to its private
-   network. In `monitoring/`, copy `.env.example` to `.env` (ignored), set
+   `pg_read_all_stats` only, no application table grants. Install the Redis
+   health probe described in [the Redis runbook](redis.md#health-probe); the
+   collector needs neither Redis credentials nor access to its network. In `monitoring/`, copy `.env.example` to `.env` (ignored), set
    `DOCKER_GID` from `stat -c '%g' /var/run/docker.sock`, scoped PostgreSQL
    credentials, actual dev/main/AuthNEI database names and host-reachable HTTP
    dependency endpoints. If AuthNEI uses a separate DB host, change only its
@@ -116,7 +121,8 @@ five-minute rates; idle p95 with no requests is undefined, not zero.
 | `fallstack:copy_http_error_ratio`                                                                              | Fraction of 4xx/5xx/aborts; 429 excluded from numerator and denominator       |
 | `sum by (environment, copy, status_code) (rate(fallstack_http_request_duration_seconds_count{status_code=~"429 | 5..                                                                           | aborted"}[5m]))` | Separate throttling, server failures and disconnects |
 | `postgresql_numbackends`                                                                                       | Current connections for each configured database, including monitors          |
-| `docker_container_health_healthy{service="redis"}`                                                             | 1 = authenticated PONG healthcheck healthy; 0 = starting/unhealthy            |
+| `redis_probe_healthy{service="redis"}`                                                                         | 1 = authenticated PONG succeeded; 0 = failed or container stopped             |
+| `time() - redis_probe_timestamp_seconds`                                                                       | Seconds since the Redis probe last ran; stale results alert after 90          |
 | `http_response_response_status_code_match`                                                                     | 1 = expected readiness HTTP 200; 0 = mismatch                                 |
 | `http_response_result_code` / `http_response_response_time`                                                    | Probe result (0 = success) / seconds                                          |
 | `up` / `ALERTS`                                                                                                | Scrape failures, missing metrics, readiness failures, restarts                |
@@ -141,7 +147,7 @@ Only numeric operational fields and fixed labels enter storage. Request URLs,
 paths, query strings, bodies, headers, cookies, session/user/student identifiers,
 trace IDs, exception text, Docker environment values and arbitrary Docker labels
 are never emitted by this setup. SQL collects aggregate statistics, not query
-text or rows; Redis exposes only numeric Docker health/resource fields, not
+text or rows; Redis exposes only a numeric probe result and Docker resource fields, not
 keys/values or healthcheck output; HTTP response bodies are not
 stored. DB names and container names must remain infrastructure names without
 personal data. Prometheus has a second label allowlist before ingestion.

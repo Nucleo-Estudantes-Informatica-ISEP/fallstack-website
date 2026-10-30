@@ -48,18 +48,26 @@ jobs:
           if grep -E 'server=|method=|fake-private|http://|https://' /tmp/metrics-probes.txt; then exit 1; fi
       - name: Exercise Docker collection and label privacy
         run: |
-          trap 'docker rm -f metrics-valid metrics-env-only metrics-service-only' EXIT
+          trap 'docker rm -f metrics-valid metrics-env-only metrics-service-only metrics-redis-dev metrics-redis-other metrics-shared-coolify' EXIT
           docker run -d --name metrics-valid --label metrics_environment=dev \
             --label metrics_service=web --label unsafe_token=FAKE_PRIVATE_TOKEN \
             -e SECRET_TOKEN=FAKE_PRIVATE_TOKEN --health-cmd="exit 0" --health-interval=1s alpine:3.22 sleep 120
           docker run -d --name metrics-env-only --label metrics_environment=dev alpine:3.22 sleep 120
           docker run -d --name metrics-service-only --label metrics_service=web alpine:3.22 sleep 120
+          docker run -d --name metrics-redis-dev --label coolify.database.subType=standalone-redis \
+            --label coolify.environmentName=development alpine:3.22 sleep 120
+          docker run -d --name metrics-redis-other --label coolify.database.subType=standalone-redis \
+            --label coolify.environmentName=production alpine:3.22 sleep 120
+          docker run -d --name metrics-shared-coolify --label metrics_environment=shared \
+            --label metrics_service=postgresql --label coolify.environmentName=production alpine:3.22 sleep 120
           for attempt in $(seq 1 10); do
             if [ "$(docker inspect --format '{{.State.Health.Status}}' metrics-valid)" = healthy ]; then break; fi
             sleep 1
           done
           docker compose --env-file monitoring/.env -f monitoring/compose.yml run \
             --rm --no-deps --entrypoint telegraf \
+            -e METRICS_REDIS_DEV_CONTAINER=metrics-redis-dev \
+            -e METRICS_REDIS_MAIN_CONTAINER=metrics-redis-main \
             telegraf --config /etc/telegraf/telegraf.conf \
             --test --input-filter docker > /tmp/metrics-docker.txt
           cat /tmp/metrics-docker.txt
@@ -67,4 +75,7 @@ jobs:
           grep -E 'docker_container_mem,.*copy=metrics-valid.*usage=' /tmp/metrics-docker.txt
           grep -E 'docker_container_status,.*copy=metrics-valid.*restart_count=' /tmp/metrics-docker.txt
           grep -E 'docker_container_health,.*copy=metrics-valid.*healthy=1i' /tmp/metrics-docker.txt
+          grep -E 'docker_container_status,.*copy=metrics-redis-dev,environment=dev' /tmp/metrics-docker.txt
+          grep -E 'docker_container_status,.*copy=metrics-shared-coolify,environment=shared' /tmp/metrics-docker.txt
+          if grep -E 'metrics-redis-other' /tmp/metrics-docker.txt; then exit 1; fi
           if grep -E 'metrics-env-only|metrics-service-only|FAKE_PRIVATE_TOKEN|unsafe_token|SECRET_TOKEN' /tmp/metrics-docker.txt; then exit 1; fi
