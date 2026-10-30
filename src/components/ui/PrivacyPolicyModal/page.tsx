@@ -208,8 +208,10 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 ). Este reserva-se no direito de manter as informações
                 necessárias para fins administrativos, mas os CVs, perfis de
                 LinkedIn e GitHub serão removidos e não poderão ser recuperados.
-                Os CVs são ainda removidos automaticamente seis meses após o seu
-                carregamento.
+                Os CVs são ainda removidos por um processo automático de
+                limpeza, executado diariamente, depois de decorridos seis meses
+                desde o seu carregamento; a eliminação efetiva pode ocorrer
+                algum tempo depois desse prazo.
               </p>
               <p className="mt-4 leading-relaxed text-gray-300">
                 Os registos de presença são conservados apenas até serem
