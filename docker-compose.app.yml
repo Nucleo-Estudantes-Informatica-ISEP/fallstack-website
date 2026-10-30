@@ -129,9 +129,11 @@ secrets:
 networks:
   # Per-environment destination network of the standalone Coolify Redis.
   # Attach web only: migrate and storage-cleanup never need Redis.
+  # Coolify rejects `:?` in network names, so an unset variable falls back to a
+  # sentinel and the deploy fails because that external network does not exist.
   redis_shared:
     external: true
-    name: ${REDIS_NETWORK_NAME:?Set the Docker network name of this environment's Redis destination in Coolify}
+    name: ${REDIS_NETWORK_NAME:-redis_network_name_not_set}
   shared_data:
     external: true
     name: gbheij1ljds8nrhfgdf9teeo
