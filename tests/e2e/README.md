@@ -269,11 +269,14 @@ profile applies the staging target guard above, including direct `test:load`.
   visitors must receive a valid session. Expected guest 401s are excluded from
   HTTP failure counts. The scenario performs no writes.
 
-  Set `STUDENT_COOKIES` to a comma-separated pool of synthetic staging student
+  For mixed smoke and all peak runs, set `STUDENT_COOKIES` to a comma-separated pool of synthetic staging student
   cookie headers (for example, `session=<value>`); do not put real secrets in
   shell history, logs or reports. Odd VUs are guests and even VUs use the pool
-  round-robin; smoke alternates visitor types over its five iterations. Peak
-  requires at least two VUs. Check that the accounts remain valid for the run.
+  round-robin; smoke alternates visitor types when cookies are supplied and
+  otherwise uses guests only. Peak requires cookies and at least two VUs.
+  Check that the accounts remain valid for the run. Set `LANDING_ASSET` to
+  the current same-origin asset path if the CSS artwork changes; it defaults
+  to `/assets/images/landing-2026.png`.
   For example, after securely setting `STUDENT_COOKIES` in the environment:
 
   ```bash
@@ -285,7 +288,11 @@ profile applies the staging target guard above, including direct `test:load`.
 
   Use `K6_PROFILE=peak VUS=50` for the existing three-minute ramp. Record the
   topology, commit, VUs and interval with k6 output; its checks and existing
-  p95/error thresholds are harness gates, not a capacity recommendation. Avoid
+  separate core and asset error/check thresholds are provisional harness gates.
+  Latency p95 must be below 750 ms separately for the homepage, assets, each
+  public API and each exercised session type; guest-only smoke does not require
+  authenticated-session samples. Tune these limits against a staging baseline;
+  they are not a capacity recommendation. Avoid
   enabling HTTP debug or publishing raw authenticated request data.
 
 - `qr` — public action QR issuance; requires `ACTION_ID`.

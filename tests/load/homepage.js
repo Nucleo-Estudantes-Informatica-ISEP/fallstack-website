@@ -15,5 +15,14 @@ export function homepageAssets(references) {
 }
 
 export function visitorCookie(vu, cookies) {
-  return vu % 2 === 0 ? cookies[(vu / 2 - 1) % cookies.length] : undefined;
+  if (cookies.length === 0 || vu % 2 !== 0) return undefined;
+  return cookies[(vu / 2 - 1) % cookies.length];
+}
+
+export function hasSessionRole(response) {
+  try {
+    return Boolean(response.json("role") || response.json("adminRole"));
+  } catch {
+    return false;
+  }
 }

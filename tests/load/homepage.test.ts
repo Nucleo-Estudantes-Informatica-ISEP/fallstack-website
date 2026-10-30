@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import { homepageAssets, visitorCookie } from "./homepage";
+import { hasSessionRole, homepageAssets, visitorCookie } from "./homepage";
 
 test("loads unique local assets without following external references", () => {
   expect(
@@ -32,4 +32,23 @@ test("alternates guests and authenticated visitors across the cookie pool", () =
     undefined,
     "session=one",
   ]);
+});
+
+test("empty cookie pool produces guests", () => {
+  expect(visitorCookie(2, [])).toBeUndefined();
+});
+
+test("invalid session JSON fails the check without throwing", () => {
+  expect(
+    hasSessionRole({
+      json: () => {
+        throw new Error("invalid JSON");
+      },
+    })
+  ).toBe(false);
+  expect(
+    hasSessionRole({
+      json: (key: string) => (key === "role" ? "STUDENT" : null),
+    })
+  ).toBe(true);
 });

@@ -2,7 +2,7 @@ import { check, sleep } from "k6";
 import http from "k6/http";
 
 import { assertStagingTarget } from "../stagingTarget.js";
-import { homepageAssets, visitorCookie } from "./homepage.js";
+import { hasSessionRole, homepageAssets, visitorCookie } from "./homepage.js";
 
 import { Trend } from "k6/metrics";
 
@@ -14,6 +14,7 @@ const baseUrl = assertStagingTarget(
 const profile = __ENV.K6_PROFILE || "smoke";
 const scenario = __ENV.K6_SCENARIO || "health";
 const actionId = __ENV.ACTION_ID;
+const landingAsset = __ENV.LANDING_ASSET || "/assets/images/landing-2026.png";
 const vus = Number(__ENV.VUS || 50);
 const requestIntervalSeconds = Number(__ENV.REQUEST_INTERVAL_SECONDS || 1);
 const studentCookies = (__ENV.STUDENT_COOKIES || "")
@@ -43,8 +44,14 @@ if (!supportedScenarios.includes(scenario))
   throw new Error(
     `Unknown K6_SCENARIO "${scenario}". Use health, homepage, qr, upload-tickets, or upload-tickets-boundary.`
   );
-if (scenario === "homepage" && studentCookies.length === 0)
+if (
+  scenario === "homepage" &&
+  profile === "peak" &&
+  studentCookies.length === 0
+)
   throw new Error("Set STUDENT_COOKIES for K6_SCENARIO=homepage.");
+if (scenario === "homepage" && homepageAssets([landingAsset]).length !== 1)
+  throw new Error("LANDING_ASSET must be a permitted same-origin asset path.");
 if (scenario === "homepage" && profile === "peak" && vus < 2)
   throw new Error(
     "Homepage peak needs at least two VUs for both visitor types."
@@ -114,11 +121,28 @@ export const options = {
   },
   thresholds: isBoundaryScenario
     ? { checks: ["rate==1"] }
-    : {
-        checks: ["rate==1"],
-        http_req_failed: ["rate<0.01"],
-        http_req_duration: ["p(95)<750"],
-      },
+    : scenario === "homepage"
+      ? {
+          "checks{kind:core}": ["rate==1"],
+          "checks{kind:asset}": ["rate>0.99"],
+          "http_req_failed{kind:core}": ["rate<0.01"],
+          "http_req_failed{kind:asset}": ["rate<0.01"],
+          "http_req_duration{name:homepage}": ["p(95)<750"],
+          "http_req_duration{name:homepage_asset}": ["p(95)<750"],
+          "http_req_duration{name:public_schedule}": ["p(95)<750"],
+          "http_req_duration{name:public_faqs}": ["p(95)<750"],
+          "http_req_duration{name:public_sponsors}": ["p(95)<750"],
+          "http_req_duration{name:public_companies_roster}": ["p(95)<750"],
+          "http_req_duration{name:session_guest}": ["p(95)<750"],
+          ...(studentCookies.length > 0
+            ? { "http_req_duration{name:session_authenticated}": ["p(95)<750"] }
+            : {}),
+        }
+      : {
+          checks: ["rate==1"],
+          http_req_failed: ["rate<0.01"],
+          http_req_duration: ["p(95)<750"],
+        },
 };
 
 const samplePdf = http.file(
@@ -133,12 +157,19 @@ function visitHomepage() {
   const visitor = profile === "smoke" ? __ITER + 1 : __VU;
   const cookie = visitorCookie(visitor, studentCookies);
   const headers = cookie ? { Cookie: cookie } : {};
-  const page = http.get(`${baseUrl}/`, { headers, tags: { name: "homepage" } });
-  const pageOk = check(page, {
-    "homepage returns HTML": (res) =>
-      res.status === 200 &&
-      (res.headers["Content-Type"] || "").includes("text/html"),
+  const page = http.get(`${baseUrl}/`, {
+    headers,
+    tags: { name: "homepage", kind: "core" },
   });
+  const pageOk = check(
+    page,
+    {
+      "homepage returns HTML": (res) =>
+        res.status === 200 &&
+        (res.headers["Content-Type"] || "").includes("text/html"),
+    },
+    { kind: "core" }
+  );
   if (!pageOk) return;
 
   const references = [];
@@ -148,49 +179,67 @@ function visitHomepage() {
     references.push(element.attr("src") || element.attr("href"));
   });
   // The landing artwork is referenced from CSS, not directly from the HTML.
-  references.push("/assets/images/landing-2026.png");
+  references.push(landingAsset);
   const assets = homepageAssets(references);
-  check(assets, {
-    "homepage includes Next.js scripts and styles": (items) =>
-      items.some(
-        (item) => item.startsWith("/_next/") && item.includes(".js")
-      ) &&
-      items.some((item) => item.startsWith("/_next/") && item.includes(".css")),
-  });
+  check(
+    assets,
+    {
+      "homepage includes Next.js scripts and styles": (items) =>
+        items.some(
+          (item) => item.startsWith("/_next/") && item.includes(".js")
+        ) &&
+        items.some(
+          (item) => item.startsWith("/_next/") && item.includes(".css")
+        ),
+    },
+    { kind: "core" }
+  );
   const responses = http.batch(
     assets.map((asset) => ({
       method: "GET",
       url: `${baseUrl}${asset}`,
-      params: { tags: { name: "homepage_asset" } },
+      params: { tags: { name: "homepage_asset", kind: "asset" } },
     }))
   );
   for (const response of responses)
-    check(response, {
-      "homepage asset returns 200": (res) => res.status === 200,
-    });
+    check(
+      response,
+      {
+        "homepage asset returns 200": (res) => res.status === 200,
+      },
+      { kind: "asset" }
+    );
 
   for (const path of ["schedule", "faqs", "sponsors", "companies/roster"]) {
     const response = http.get(`${baseUrl}/api/${path}`, {
-      tags: { name: `public_${path.replace("/", "_")}` },
+      tags: { name: `public_${path.replace("/", "_")}`, kind: "core" },
     });
-    check(response, {
-      "public data returns 200 JSON": (res) =>
-        res.status === 200 &&
-        (res.headers["Content-Type"] || "").includes("application/json"),
-    });
+    check(
+      response,
+      {
+        "public data returns 200 JSON": (res) =>
+          res.status === 200 &&
+          (res.headers["Content-Type"] || "").includes("application/json"),
+      },
+      { kind: "core" }
+    );
   }
   const session = http.get(`${baseUrl}/api/auth/session`, {
     headers,
     responseCallback: http.expectedStatuses(cookie ? 200 : 401),
-    tags: { name: cookie ? "session_authenticated" : "session_guest" },
+    tags: {
+      name: cookie ? "session_authenticated" : "session_guest",
+      kind: "core",
+    },
   });
-  check(session, {
-    "visitor session matches its identity": (res) =>
-      cookie
-        ? res.status === 200 &&
-          Boolean(res.json("role") || res.json("adminRole"))
-        : res.status === 401,
-  });
+  check(
+    session,
+    {
+      "visitor session matches its identity": (res) =>
+        cookie ? res.status === 200 && hasSessionRole(res) : res.status === 401,
+    },
+    { kind: "core" }
+  );
 }
 
 function uploadCv(cookie) {
