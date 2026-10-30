@@ -29,6 +29,9 @@ usage under both dev and main. Label every replica of AuthNEI and the proxy too.
 cannot carry custom labels in Coolify, so Telegraf maps its own
 `coolify.environmentName` (`development`/`production`) and
 `coolify.database.subType=standalone-redis` to `dev`/`main` and `redis`.
+This applies only to the two containers named by `METRICS_REDIS_DEV_CONTAINER`
+and `METRICS_REDIS_MAIN_CONTAINER`. The mapper is scoped to standalone Redis, so
+shared services keep their own `environment` and `service` tags.
 
 HTTP timing runs at Node's server boundary, including SSR/pages, APIs,
 static responses, health checks, streaming until finish, and disconnected

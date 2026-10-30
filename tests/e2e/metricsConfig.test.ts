@@ -45,6 +45,12 @@ test("host collector retains operational allowlists, not Docker labels, env or r
   // its labels are mapped and its always-green Docker health is dropped.
   expect(config).toContain('name != "docker_container_health"');
   expect(config).toContain('standalone-redis = "redis"');
+  expect(config).toContain("${METRICS_REDIS_DEV_CONTAINER}");
+  expect(config).toContain("${METRICS_REDIS_MAIN_CONTAINER}");
+  expect(config).toContain("[processors.enum.tagpass]");
+  expect(config).toContain('"coolify.database.subType" = ["standalone-redis"]');
+  expect(config).toContain("order = 1");
+  expect(config).toContain("order = 2");
   expect(config).toContain('files = ["/probes/redis.influx"]');
   expect(config).toContain('listen = "127.0.0.1:9273"');
   for (const field of [
@@ -78,6 +84,11 @@ test("Redis health comes from the authenticated probe, not Coolify's default che
   const probe = read("monitoring/redis-probe.sh");
   expect(probe).toContain('REDISCLI_AUTH="$REDIS_PASSWORD"');
   expect(probe).toContain("grep -q PONG");
-  expect(probe).toContain("docker ps -a");
+  expect(probe).toContain("REDIS_DEV_CONTAINER:?");
+  expect(probe).toContain("REDIS_MAIN_CONTAINER:?");
+  expect(probe).not.toContain("docker ps");
+  expect(read("monitoring/redis-probe.service")).toContain(
+    "EnvironmentFile=/etc/fallstack/redis-probe.env"
+  );
   expect(probe).not.toMatch(/redis:\/\/|--requirepass/);
 });

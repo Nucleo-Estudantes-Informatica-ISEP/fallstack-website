@@ -65,13 +65,20 @@ Authenticated health comes from a host-side timer, not from Coolify. Install it
 once on the Docker host that runs the Redis resources:
 
 ```bash
-sudo mkdir -p /opt/fallstack/monitoring /var/lib/fallstack-probes
+sudo mkdir -p /opt/fallstack/monitoring /var/lib/fallstack-probes /etc/fallstack
 sudo install -m 755 monitoring/redis-probe.sh /opt/fallstack/monitoring/
 sudo install -m 644 monitoring/redis-probe.service monitoring/redis-probe.timer \
   /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now redis-probe.timer
 ```
+
+Create the root-owned `/etc/fallstack/redis-probe.env` (mode 600) with
+`REDIS_DEV_CONTAINER` and `REDIS_MAIN_CONTAINER` set to the Coolify resource
+UUIDs, which are the container names. Set the same UUIDs as
+`METRICS_REDIS_DEV_CONTAINER` and `METRICS_REDIS_MAIN_CONTAINER` in
+`monitoring/.env`, then restart Telegraf. Update both files whenever a Redis
+resource is recreated.
 
 Every 15 seconds it runs `PING` with each container's own `REDIS_PASSWORD`
 inside the container and writes `/var/lib/fallstack-probes/redis.influx`. The

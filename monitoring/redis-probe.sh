@@ -1,5 +1,6 @@
 #!/bin/sh
-# Authenticated Redis health probe for standalone Coolify Redis resources.
+# Authenticated Redis health probe for the two standalone Coolify Redis
+# resources, selected by container name (the Coolify resource UUID).
 # Coolify cannot set a custom healthcheck, so run PING with the container's own
 # REDIS_PASSWORD and write one influx line per Redis for Telegraf's inputs.file.
 # The password never leaves the Redis container.
@@ -11,13 +12,12 @@ tmp=$(mktemp "$out_dir/.redis.XXXXXX")
 trap 'rm -f "$tmp"' EXIT
 now=$(date +%s)
 
-docker ps -a --filter label=coolify.database.subType=standalone-redis \
-  --format '{{.Names}}' | while read -r name; do
-  case $(docker inspect "$name" --format '{{ index .Config.Labels "coolify.environmentName" }}') in
-    development) environment=dev ;;
-    production) environment=main ;;
-    *) continue ;;
-  esac
+: "${REDIS_DEV_CONTAINER:?Set the Coolify UUID of the dev Redis}"
+: "${REDIS_MAIN_CONTAINER:?Set the Coolify UUID of the main Redis}"
+
+for entry in "dev:$REDIS_DEV_CONTAINER" "main:$REDIS_MAIN_CONTAINER"; do
+  environment=${entry%%:*}
+  name=${entry#*:}
   # Stopped or unreachable Redis fails the exec and counts as unhealthy.
   if timeout 5 docker exec "$name" sh -c \
     'REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping | grep -q PONG' \
