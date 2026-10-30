@@ -84,7 +84,10 @@ Every 15 seconds it runs `PING` with each container's own `REDIS_PASSWORD`
 inside the container and writes `/var/lib/fallstack-probes/redis.influx`. The
 password never leaves Redis. Telegraf mounts that directory read-only.
 `FallstackRedisUnhealthy` fires on `healthy=0`, and `FallstackRedisProbeStale`
-fires if the timer stops.
+fires if the timer stops. The probe does not depend on Telegraf, so
+`FallstackRedisDockerMetricsMissing` fires when an environment has no Redis
+Docker series, for example after a wrong `METRICS_REDIS_*_CONTAINER` value or a
+changed Coolify label, even while the probe stays healthy.
 
 Negative check on `dev`, after any change to the probe:
 

@@ -81,3 +81,24 @@ tests:
               copy: redis-main
             exp_annotations:
               summary: Redis probe timer stopped writing results
+  - name: healthy Redis probe with missing Docker series alerts
+    interval: 1m
+    input_series:
+      - series: 'redis_probe_healthy{environment="dev",service="redis",copy="redis-dev"}'
+        values: "1 1 1 1 1"
+      - series: 'redis_probe_healthy{environment="main",service="redis",copy="redis-main"}'
+        values: "1 1 1 1 1"
+      - series: 'docker_container_status_restart_count{environment="dev",service="redis",copy="redis-dev",container_status="running"}'
+        values: "0 0 0 0 0"
+    alert_rule_test:
+      - alertname: FallstackRedisDockerMetricsMissing
+        eval_time: 4m
+        exp_alerts:
+          - exp_labels:
+              environment: main
+              service: redis
+            exp_annotations:
+              summary: Redis Docker series missing for an environment
+      - alertname: FallstackRedisUnhealthy
+        eval_time: 4m
+        exp_alerts: []

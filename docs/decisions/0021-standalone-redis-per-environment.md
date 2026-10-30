@@ -46,6 +46,8 @@ Compose-only and never reaches the application.
   the resource staying non-public. Reachability is limited to containers on that
   network, plus the password.
 - The probe script and timer live in version control but are installed by hand
-  on the Docker host. If the timer stops, `FallstackRedisProbeStale` fires.
+  on the Docker host. If the timer stops, `FallstackRedisProbeStale` fires. If
+  Telegraf stops reporting an environment's Redis Docker series while the probe
+  stays healthy, `FallstackRedisDockerMetricsMissing` fires.
 - The Coolify environments must stay named `development` and `production`.
 - Dev and prod require different `REDIS_NETWORK_NAME` values.
