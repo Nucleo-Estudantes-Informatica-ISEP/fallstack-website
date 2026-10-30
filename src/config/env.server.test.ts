@@ -34,3 +34,24 @@ test("an empty Wallet flag does not break unrelated server configuration", async
   expect(serverEnv.AUTH_SECRET).toBe(process.env.AUTH_SECRET);
   expect(serverEnv.GOOGLE_WALLET_NEVER_ENABLED).toBe(false);
 });
+
+test.each([
+  undefined,
+  "",
+  "redis://default:secret@redis:6379",
+  "rediss://default:secret@redis:6380",
+])("accepts optional Redis readiness URL %s", async (value) => {
+  if (value === undefined) delete process.env.REDIS_URL;
+  else process.env.REDIS_URL = value;
+  const { serverEnv } = await import("./env.server");
+  expect(serverEnv.REDIS_URL).toBe(value || undefined);
+});
+
+test.each(["http://redis:6379", "not-a-url"])(
+  "rejects invalid Redis URL %s",
+  async (value) => {
+    process.env.REDIS_URL = value;
+    const { serverEnv } = await import("./env.server");
+    expect(() => serverEnv.REDIS_URL).toThrow("REDIS_URL");
+  }
+);

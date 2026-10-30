@@ -46,7 +46,7 @@ Configure the Redis resource:
 - Pin the image to a Redis 7.4 patch tag.
 - Set a 256 MiB memory limit and a persistent volume mounted at `/data`.
 - Do not set `--label` or `--health-cmd` in Custom Docker Options. Coolify
-  v4.5.0 silently drops both, and its generated healthcheck is
+  v4.5.0 and v4.5.3 drop both, and its generated healthcheck is
   `redis-cli ping` without authentication, which exits 0 on `NOAUTH`. The
   Coolify environment must be named `development` for `dev` and `production`
   for `main`; Telegraf and the probe read that label.
@@ -85,7 +85,8 @@ UUIDs, which are the container names. Set the same UUIDs as
 resource is recreated.
 
 Every 15 seconds it runs `PING` with each container's own `REDIS_PASSWORD`
-inside the container and writes `/var/lib/fallstack-probes/redis.influx`. The
+inside the container, requires a successful command and exact `PONG`, and
+writes `/var/lib/fallstack-probes/redis.influx`. The
 password never leaves Redis. Telegraf mounts that directory read-only.
 `FallstackRedisUnhealthy` fires on `healthy=0`, and `FallstackRedisProbeStale`
 fires if the timer stops. The probe does not depend on Telegraf, so
@@ -97,9 +98,15 @@ Negative check on `dev`, after any change to the probe:
 
 ```bash
 docker exec <redis-container> sh -c \
-  'REDISCLI_AUTH=wrong redis-cli ping | grep -q PONG; echo $?'
+  'reply=$(REDISCLI_AUTH=wrong redis-cli --raw -e ping) && [ "$reply" = PONG ]; echo $?'
 # Expected: 1
 ```
+
+Replacing `monitoring/redis-probe.sh` at its installed path updates the next
+timer run without restarting Redis. Verify fresh timestamps and `healthy=1i`
+in the probe output after installation. `/api/ready` also probes authenticated
+access from each web copy; see [health checks](health-checks.md). This does not
+replace the host probe for Redis lifecycle and monitoring.
 
 ## Verification
 

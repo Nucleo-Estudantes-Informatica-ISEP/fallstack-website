@@ -111,6 +111,8 @@ verify those in CI or on the deployment builder when the local ceiling is too lo
   encrypted off-VPS copies, usage guards, recovery and alert evidence.
 - [Observability](docs/observability.md), [security](docs/SECURITY.md), and
   [architecture decisions](docs/decisions/README.md).
+- [Health checks](docs/operations/health-checks.md): process liveness,
+  dependency readiness, bounded probes and rollout verification.
 - [Legacy Supabase operations](docs/legacy-supabase-operations.md): orphaned-file
   GC and CV retention purge for source Supabase projects only.
 - [Legacy Supabase local setup](docs/legacy-supabase-local.md): CLI, Windows
