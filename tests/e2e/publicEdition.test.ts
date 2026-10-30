@@ -196,3 +196,36 @@ test("real DB: employee role changes and account deletion leave the public compa
   ).not.toBeNull();
   expect(await companyService.getActiveCompanies()).toEqual(before);
 });
+
+test("real DB: Destaque survives admin edits, invalidates cached roster and excludes inactive companies", async () => {
+  const company = await fixtures.company();
+  await db.companyRankStyle.create({
+    data: {
+      rankId: company.rankId,
+      gradientFromColor: "#fff",
+      gradientFromStop: "0%",
+      gradientToColor: "#fff",
+      gradientToStop: "100%",
+    },
+  });
+  await companyService.updateCompanyForAdmin(company.id, { active: true });
+  const readCompany = async () =>
+    (await readHomepageDatasets(Language.PT)).companies.find(
+      (c) => c.id === company.id
+    );
+  expect((await readCompany())?.rank.style?.isFeatured).toBe(false);
+  await rankService.updateCompanyRankForAdmin(company.rankId, {
+    style: { isFeatured: true },
+  });
+  expect(
+    (await rankService.getCompanyRank(company.rankId))?.style?.isFeatured
+  ).toBe(true);
+  expect((await readCompany())?.rank.style?.isFeatured).toBe(true);
+  await companyService.updateCompanyForAdmin(company.id, { active: false });
+  expect(await readCompany()).toBeUndefined();
+  await rankService.updateCompanyRankForAdmin(company.rankId, {
+    style: { isFeatured: false },
+  });
+  await companyService.updateCompanyForAdmin(company.id, { active: true });
+  expect((await readCompany())?.rank.style?.isFeatured).toBe(false);
+});

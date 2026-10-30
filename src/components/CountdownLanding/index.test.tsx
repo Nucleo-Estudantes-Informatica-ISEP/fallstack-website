@@ -76,3 +76,16 @@ test("cleans up the timer when leaving the homepage", () => {
   unmount();
   expect(vi.getTimerCount()).toBe(0);
 });
+
+test("places featured partners after the banner and before the footer", () => {
+  const { container } = render(
+    <CountdownLanding language={Language.PT}>
+      <section aria-label="Parceiros em destaque">Partner</section>
+    </CountdownLanding>
+  );
+  const row = screen.getByRole("region", { name: "Parceiros em destaque" });
+  expect(row.previousElementSibling).toContainElement(
+    screen.getByRole("timer")
+  );
+  expect(row.nextElementSibling).toBe(container.querySelector("footer"));
+});

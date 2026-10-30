@@ -1,6 +1,6 @@
 # 0015: Private Redis per Coolify environment
 
-Status: Superseded by [0020](0020-standalone-redis-per-environment.md)
+Status: Superseded by [0021](0021-standalone-redis-per-environment.md)
 Date: 2026-10-28
 Source: [Issue #455](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/455)
 

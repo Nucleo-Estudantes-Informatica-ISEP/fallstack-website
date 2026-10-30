@@ -1,6 +1,6 @@
 "use client";
 
-import { FunctionComponent, useEffect, useState } from "react";
+import { FunctionComponent, ReactNode, useEffect, useState } from "react";
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import Footer from "@/components/Footer";
@@ -10,10 +10,12 @@ import { branding } from "@/edition/branding";
 
 interface CountdownLandingProps {
   language: Language;
+  children?: ReactNode;
 }
 
 const CountdownLanding: FunctionComponent<CountdownLandingProps> = ({
   language,
+  children,
 }) => {
   const [remaining, setRemaining] = useState<number | null>(null);
   const isEnglish = language === Language.EN;
@@ -94,6 +96,7 @@ const CountdownLanding: FunctionComponent<CountdownLandingProps> = ({
             : "Estamos a preparar a próxima edição. O programa, as empresas e mais novidades serão anunciados em breve."}
         </p>
       </section>
+      {children}
       <Footer neiLogoSrc={NeiLogoSimplifiedWhite} landing />
     </HeroContainer>
   );

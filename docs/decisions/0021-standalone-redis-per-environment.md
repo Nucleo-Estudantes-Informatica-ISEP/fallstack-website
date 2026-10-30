@@ -1,4 +1,4 @@
-# 0020: Standalone Redis per environment
+# 0021: Standalone Redis per environment
 
 Status: Accepted
 Date: 2026-10-29

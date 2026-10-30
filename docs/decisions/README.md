@@ -46,4 +46,5 @@ implementation PR needs an ADR.
 | [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs            | Accepted   |
 | [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted   |
 | [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps          | Accepted   |
-| [0020](0020-standalone-redis-per-environment.md)                 | Standalone Redis per environment                 | Accepted   |
+| [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank               | Accepted   |
+| [0021](0021-standalone-redis-per-environment.md)                 | Standalone Redis per environment                 | Accepted   |

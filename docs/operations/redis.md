@@ -2,7 +2,7 @@
 
 Each environment (`dev`, `main`) has its own standalone Redis database resource
 in its own Coolify destination. The app Compose file does not define Redis. See
-[ADR 0020](../decisions/0020-standalone-redis-per-environment.md).
+[ADR 0021](../decisions/0021-standalone-redis-per-environment.md).
 
 ## Configuration
 
