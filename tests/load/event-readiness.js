@@ -2,6 +2,7 @@ import { check, sleep } from "k6";
 import http from "k6/http";
 
 import { assertStagingTarget } from "../stagingTarget.js";
+import { homepageAssets, visitorCookie } from "./homepage.js";
 
 import { Trend } from "k6/metrics";
 
@@ -26,6 +27,7 @@ const resetPollIntervalMs = 100;
 const resetDetectionSlackMs = 5000;
 const supportedScenarios = [
   "health",
+  "homepage",
   "qr",
   "upload-tickets",
   "upload-tickets-boundary",
@@ -33,13 +35,19 @@ const supportedScenarios = [
 
 if (!["smoke", "peak"].includes(profile))
   throw new Error("K6_PROFILE must be smoke or peak.");
-if (profile === "smoke" && !["health", "qr"].includes(scenario))
+if (profile === "smoke" && !["health", "homepage", "qr"].includes(scenario))
   throw new Error(
-    "Smoke profile only supports read-only health and qr checks."
+    "Smoke profile only supports read-only health, homepage and qr checks."
   );
 if (!supportedScenarios.includes(scenario))
   throw new Error(
-    `Unknown K6_SCENARIO "${scenario}". Use health, qr, upload-tickets, or upload-tickets-boundary.`
+    `Unknown K6_SCENARIO "${scenario}". Use health, homepage, qr, upload-tickets, or upload-tickets-boundary.`
+  );
+if (scenario === "homepage" && studentCookies.length === 0)
+  throw new Error("Set STUDENT_COOKIES for K6_SCENARIO=homepage.");
+if (scenario === "homepage" && profile === "peak" && vus < 2)
+  throw new Error(
+    "Homepage peak needs at least two VUs for both visitor types."
   );
 if (scenario === "qr" && !actionId)
   throw new Error("Set ACTION_ID for K6_SCENARIO=qr.");
@@ -55,8 +63,8 @@ if (
   throw new Error(
     "STUDENT_COOKIES must contain one distinct staging student session per entry."
   );
-if (!Number.isFinite(vus) || vus < 1)
-  throw new Error("VUS must be a positive number.");
+if (!Number.isInteger(vus) || vus < 1)
+  throw new Error("VUS must be a positive integer.");
 if (!Number.isFinite(requestIntervalSeconds) || requestIntervalSeconds <= 0)
   throw new Error("REQUEST_INTERVAL_SECONDS must be a positive number.");
 if (scenario === "upload-tickets") {
@@ -118,6 +126,72 @@ const samplePdf = http.file(
   "event-readiness.pdf",
   "application/pdf"
 );
+
+function visitHomepage() {
+  // Alternate VUs so each identity remains stable throughout the run. Smoke
+  // has one VU, so alternate iterations to exercise both visitor types.
+  const visitor = profile === "smoke" ? __ITER + 1 : __VU;
+  const cookie = visitorCookie(visitor, studentCookies);
+  const headers = cookie ? { Cookie: cookie } : {};
+  const page = http.get(`${baseUrl}/`, { headers, tags: { name: "homepage" } });
+  const pageOk = check(page, {
+    "homepage returns HTML": (res) =>
+      res.status === 200 &&
+      (res.headers["Content-Type"] || "").includes("text/html"),
+  });
+  if (!pageOk) return;
+
+  const references = [];
+  const elements = page.html().find("script[src], link[href], img[src]");
+  elements.each((index) => {
+    const element = elements.eq(index);
+    references.push(element.attr("src") || element.attr("href"));
+  });
+  // The landing artwork is referenced from CSS, not directly from the HTML.
+  references.push("/assets/images/landing-2026.png");
+  const assets = homepageAssets(references);
+  check(assets, {
+    "homepage includes Next.js scripts and styles": (items) =>
+      items.some(
+        (item) => item.startsWith("/_next/") && item.includes(".js")
+      ) &&
+      items.some((item) => item.startsWith("/_next/") && item.includes(".css")),
+  });
+  const responses = http.batch(
+    assets.map((asset) => ({
+      method: "GET",
+      url: `${baseUrl}${asset}`,
+      params: { tags: { name: "homepage_asset" } },
+    }))
+  );
+  for (const response of responses)
+    check(response, {
+      "homepage asset returns 200": (res) => res.status === 200,
+    });
+
+  for (const path of ["schedule", "faqs", "sponsors", "companies/roster"]) {
+    const response = http.get(`${baseUrl}/api/${path}`, {
+      tags: { name: `public_${path.replace("/", "_")}` },
+    });
+    check(response, {
+      "public data returns 200 JSON": (res) =>
+        res.status === 200 &&
+        (res.headers["Content-Type"] || "").includes("application/json"),
+    });
+  }
+  const session = http.get(`${baseUrl}/api/auth/session`, {
+    headers,
+    responseCallback: http.expectedStatuses(cookie ? 200 : 401),
+    tags: { name: cookie ? "session_authenticated" : "session_guest" },
+  });
+  check(session, {
+    "visitor session matches its identity": (res) =>
+      cookie
+        ? res.status === 200 &&
+          Boolean(res.json("role") || res.json("adminRole"))
+        : res.status === 401,
+  });
+}
 
 function uploadCv(cookie) {
   return http.post(
@@ -185,6 +259,7 @@ function probeWindowBoundary(cookie) {
 }
 
 export default function runScenario() {
+  if (scenario === "homepage") visitHomepage();
   if (scenario === "health") {
     const response = http.get(`${baseUrl}/api/health`);
     check(response, {

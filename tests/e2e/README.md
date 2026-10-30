@@ -253,11 +253,41 @@ pnpm test:load
 
 Available scenarios:
 
-Default `K6_PROFILE=smoke` bounds `health` and `qr` to one VU/five iterations.
+Default `K6_PROFILE=smoke` bounds `health`, `homepage` and `qr` to one VU/five iterations.
 Explicit `K6_PROFILE=peak` enables the existing ramping/boundary scenarios. Every
 profile applies the staging target guard above, including direct `test:load`.
 
 - `health` — safe liveness baseline.
+- `homepage` — GET the rendered homepage, its same-origin Next.js scripts,
+  styles, images and landing artwork, then the public schedule, FAQs, sponsors
+  and company roster APIs. The current landing page server-loads its featured
+  roster; the four API reads are additional representative public traffic,
+  not requests claimed to originate from the page. This is a k6 HTTP model,
+  not a browser: it does not execute JavaScript, discover CSS dependencies or
+  model client caching. External resources are excluded. Each iteration also
+  checks the session endpoint: guests must receive 401 and authenticated
+  visitors must receive a valid session. Expected guest 401s are excluded from
+  HTTP failure counts. The scenario performs no writes.
+
+  Set `STUDENT_COOKIES` to a comma-separated pool of synthetic staging student
+  cookie headers (for example, `session=<value>`); do not put real secrets in
+  shell history, logs or reports. Odd VUs are guests and even VUs use the pool
+  round-robin; smoke alternates visitor types over its five iterations. Peak
+  requires at least two VUs. Check that the accounts remain valid for the run.
+  For example, after securely setting `STUDENT_COOKIES` in the environment:
+
+  ```bash
+  CONFIRM_NON_PRODUCTION=yes \
+  STAGING_BASE_URL=https://staging.example.org \
+  E2E_BASE_URL=https://staging.example.org \
+  K6_PROFILE=smoke K6_SCENARIO=homepage pnpm test:load
+  ```
+
+  Use `K6_PROFILE=peak VUS=50` for the existing three-minute ramp. Record the
+  topology, commit, VUs and interval with k6 output; its checks and existing
+  p95/error thresholds are harness gates, not a capacity recommendation. Avoid
+  enabling HTTP debug or publishing raw authenticated request data.
+
 - `qr` — public action QR issuance; requires `ACTION_ID`.
 - `upload-tickets` — authenticated CV uploads at a normal, ramping pace;
   requires a comma-separated `STUDENT_COOKIES` pool from distinct student
