@@ -46,7 +46,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
 
             <div className="absolute inset-0 z-10 bg-black/50" />
 
-            <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-black to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-linear-to-t from-black to-transparent" />
 
             <div className="relative z-20">
               <Image
@@ -79,7 +79,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 Aplicação do Regulamento Geral sobre a Proteção de Dados
               </h2>
               <p className="mt-4 text-gray-300">
-                Em vigor a partir de 16 de novembro de 2023.
+                Em vigor a partir de 30 de outubro de 2026.
               </p>
               <p className="mt-4 leading-relaxed text-gray-300">
                 O Núcleo de Estudantes de Informática do Instituto Superior de
@@ -136,6 +136,14 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 prática está alinhada com as disposições legais do Regulamento
                 Geral sobre a Proteção de Dados (RGPD).
               </p>
+              <p className="mt-4 leading-relaxed text-gray-300">
+                Quando o utilizador comparece no evento, o NEI-ISEP regista
+                ainda a sua presença. Para isso são recolhidos o número de
+                estudante, a data, a sessão, a hora do registo de presença
+                (check-in) e o membro do NEI-ISEP que o efetuou. Estes dados são
+                tratados para justificar as faltas do utilizador às aulas junto
+                do Departamento de Engenharia Informática do ISEP.
+              </p>
             </article>
 
             {/* Artigo 4 */}
@@ -147,7 +155,9 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 Ao criar uma conta na aplicação Fallstack, o utilizador consente
                 explicitamente o tratamento dos seus dados para a participação
                 no evento e interação com as empresas, estando esta ação
-                fundamentada no consentimento do utilizador.
+                fundamentada no consentimento do utilizador. O registo de
+                presença só é efetuado se o utilizador comparecer no evento e
+                baseia-se igualmente no seu consentimento.
               </p>
             </article>
 
@@ -198,6 +208,14 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 ). Este reserva-se no direito de manter as informações
                 necessárias para fins administrativos, mas os CVs, perfis de
                 LinkedIn e GitHub serão removidos e não poderão ser recuperados.
+                Os CVs são ainda removidos automaticamente seis meses após o seu
+                carregamento.
+              </p>
+              <p className="mt-4 leading-relaxed text-gray-300">
+                Os registos de presença são conservados apenas até serem
+                entregues e rececionados pelo Departamento de Engenharia
+                Informática do ISEP. Após a receção, são eliminados no prazo
+                máximo de uma semana.
               </p>
             </article>
 
@@ -213,6 +231,12 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 com empresas participantes no evento Fallstack. Esta partilha
                 tem como objetivo facilitar oportunidades de emprego e
                 networking.
+              </p>
+              <p className="mt-4 leading-relaxed text-gray-300">
+                Os registos de presença (nome, email, número de estudante, data,
+                sessão e hora do registo) são partilhados com o Departamento de
+                Engenharia Informática do ISEP, através de um ficheiro Excel
+                exportado da aplicação, para efeitos de justificação de faltas.
               </p>
             </article>
 
@@ -250,7 +274,9 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
               <p className="mt-4 leading-relaxed text-gray-300">
                 Os utilizadores serão notificados em caso de alterações na
                 Política de Privacidade, e estas serão comunicadas de forma
-                clara na aplicação.
+                clara na aplicação. Quando a alteração o exigir, será pedido aos
+                utilizadores que aceitem novamente a Política de Privacidade
+                para continuarem a utilizar a aplicação.
               </p>
             </article>
 
