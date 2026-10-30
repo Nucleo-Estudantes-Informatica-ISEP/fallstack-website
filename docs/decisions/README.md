@@ -47,3 +47,4 @@ implementation PR needs an ADR.
 | [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted   |
 | [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps          | Accepted   |
 | [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank               | Accepted   |
+| [0022](0022-six-character-student-codes.md)                      | Issue six-character student codes                | Accepted   |
