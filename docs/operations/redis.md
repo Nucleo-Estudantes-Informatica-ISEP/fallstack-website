@@ -15,7 +15,10 @@ Buildtime** disabled:
 | `REDIS_NETWORK_NAME` | Docker network name of this environment's Redis network  |
 | `REDIS_KEY_PREFIX`   | `fallstack:dev:` for `dev`, `fallstack:main:` for `main` |
 
-Missing any of them makes Compose interpolation fail for the whole stack. Use a
+Missing `REDIS_URL` or `REDIS_KEY_PREFIX` makes Compose interpolation fail for
+the whole stack. Coolify rejects `:?` in network names, so a missing
+`REDIS_NETWORK_NAME` falls back to the sentinel `redis_network_name_not_set` and
+the deployment fails because that external network does not exist. Use a
 different password and network for each environment. Keep passwords out of
 Git, build arguments, logs, tickets and `NEXT_PUBLIC_*` variables.
 
@@ -30,7 +33,8 @@ complete all of these **before** merging or triggering a deployment:
 2. `REDIS_URL`, `REDIS_NETWORK_NAME` and `REDIS_KEY_PREFIX` are set on the web
    resource, runtime-only.
 3. `docker compose config --quiet` renders the web Compose file with those
-   values.
+   values, and `docker compose config` shows your network name, not
+   `redis_network_name_not_set`.
 4. Record the evidence on the rollout issue. Merge to `dev` first and verify
    `dev` before promoting to `main`.
 

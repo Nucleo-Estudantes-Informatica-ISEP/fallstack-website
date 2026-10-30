@@ -14,7 +14,7 @@ test("Redis is external to the app stack", () => {
 test("only web joins the Redis destination network", () => {
   expect(compose.networks.redis_shared).toMatchObject({ external: true });
   expect(compose.networks.redis_shared.name).toMatch(
-    /^\$\{REDIS_NETWORK_NAME:\?/
+    /^\$\{REDIS_NETWORK_NAME:-[A-Za-z0-9][A-Za-z0-9._-]*\}$/
   );
   expect(web.networks).toContain("redis_shared");
   for (const service of [migrate, cleanup]) {
