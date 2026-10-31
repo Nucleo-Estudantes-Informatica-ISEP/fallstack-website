@@ -7,8 +7,10 @@ import {
   upsertCompanyProfile,
 } from "../repositories/companyRepository";
 import { updateCompanyProfileForAdmin } from "./companyService";
+import { objectExists } from "./objectStorageService";
 
 vi.mock("server-only", () => ({}));
+vi.mock("./objectStorageService", () => ({ objectExists: vi.fn() }));
 vi.mock("../repositories/companyRepository", () => ({
   findCompanyById: vi.fn(),
   findCompanyProfileById: vi.fn(),
@@ -158,4 +160,28 @@ test("empty bodyText deletes the company profile", async () => {
 
   expect(deleteCompanyProfile).toHaveBeenCalledWith("company-1");
   expect(upsertCompanyProfile).not.toHaveBeenCalled();
+});
+
+test("accepts only an existing uploaded MP4 path", async () => {
+  const href = "/api/media/video/12345678-1234-1234-1234-123456789abc";
+  vi.mocked(objectExists).mockResolvedValue(false);
+  await expect(
+    updateCompanyProfileForAdmin("company-1", {
+      bodyText: "Profile",
+      videoHref: href,
+    })
+  ).rejects.toMatchObject({ status: 400 });
+  vi.mocked(objectExists).mockResolvedValue(true);
+  await updateCompanyProfileForAdmin("company-1", {
+    bodyText: "Profile",
+    videoHref: href,
+  });
+  expect(upsertCompanyProfile).toHaveBeenCalledWith(
+    "company-1",
+    expect.objectContaining({ videoHref: href })
+  );
+  expect(objectExists).toHaveBeenCalledWith(
+    "logo",
+    "distribution/video/12345678-1234-1234-1234-123456789abc.mp4"
+  );
 });

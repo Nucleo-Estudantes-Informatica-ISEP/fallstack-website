@@ -1,8 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import AdminForm from "@/components/AdminForm";
+import { uploadAdminVideo } from "@/client/api/adminVideoUpload";
 
+vi.mock("@/client/api/adminVideoUpload", () => ({ uploadAdminVideo: vi.fn() }));
 vi.mock("@/client/api/adminUpload", () => ({ uploadAdminImage: vi.fn() }));
 
 test("renders the create label and submits typed field values when no id is given", async () => {
@@ -143,4 +145,51 @@ test("rejects submission when the password confirmation doesn't match", () => {
   fireEvent.click(screen.getByRole("button", { name: "Criar" }));
 
   expect(onSubmit).not.toHaveBeenCalled();
+});
+
+test("uploads selected MP4 before saving and associates the returned URL", async () => {
+  vi.mocked(uploadAdminVideo).mockResolvedValue({
+    url: "/api/media/video/uploaded",
+  });
+  const onSubmit = vi.fn();
+  render(
+    <AdminForm
+      sections={[
+        {
+          kind: "fields",
+          title: "Profile",
+          fields: [
+            { kind: "textarea", name: "bodyText", label: "Profile body" },
+            { kind: "video", name: "videoHref", label: "Video" },
+          ],
+        },
+      ]}
+      defaultValues={{ bodyText: "Profile" }}
+      onSubmit={onSubmit}
+    />
+  );
+  const file = new File(["mp4"], "company.mp4", { type: "video/mp4" });
+  // JSDOM does not serialize FileList through FormData; supply the browser's form payload.
+  const original = globalThis.FormData;
+  vi.stubGlobal(
+    "FormData",
+    class extends original {
+      constructor(form?: HTMLFormElement) {
+        super(form);
+        this.set("videoHrefFile", file);
+      }
+    }
+  );
+  try {
+    fireEvent.click(screen.getByRole("button", { name: "Criar" }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith({
+        bodyText: "Profile",
+        videoHref: "/api/media/video/uploaded",
+      })
+    );
+    expect(uploadAdminVideo).toHaveBeenCalledWith(file);
+  } finally {
+    vi.stubGlobal("FormData", original);
+  }
 });

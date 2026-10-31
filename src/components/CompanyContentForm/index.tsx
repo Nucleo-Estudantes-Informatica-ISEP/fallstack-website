@@ -120,7 +120,7 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
               rows: 10,
             },
             { kind: "text", name: "videoTitle", label: "Título do vídeo" },
-            { kind: "text", name: "videoHref", label: "URL de embed do vídeo" },
+            { kind: "video", name: "videoHref", label: "Vídeo promocional" },
             { kind: "text", name: "socialTwitter", label: "Twitter" },
             { kind: "text", name: "socialFacebook", label: "Facebook" },
             { kind: "text", name: "socialInstagram", label: "Instagram" },

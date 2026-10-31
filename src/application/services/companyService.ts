@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
+import { companyVideoId, videoKey } from "@/domain/company/companyVideo";
 import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 import { Language } from "@/domain/i18n/translations";
 
@@ -31,6 +32,7 @@ import {
 } from "../repositories/companyRepository";
 import { findInterestsForCompany } from "../repositories/interestRepository";
 import { withTransaction } from "../repositories/transaction";
+import { objectExists } from "./objectStorageService";
 import { afterPublicDataWrite } from "./publicDataCache";
 
 export const getCompanies = () => findCompanies();
@@ -148,6 +150,15 @@ export async function updateCompanyProfileForAdmin(
     const normalized = normalizeYouTubeEmbedUrl(input.videoHref);
     if (normalized) {
       videoHref = normalized;
+    } else if (companyVideoId(input.videoHref)) {
+      if (
+        !(await objectExists(
+          "logo",
+          videoKey(companyVideoId(input.videoHref)!)
+        ))
+      )
+        throw new HttpError("Upload the video before saving", 400);
+      videoHref = input.videoHref;
     } else if (existingProfile?.videoHref === input.videoHref) {
       // Accept an unchanged legacy value on save and only enforce the YouTube rule when changed
       videoHref = input.videoHref;

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { httpErrorResponse } from "@/lib/http/server";
+import { companyVideoResponse } from "@/application/services/companyVideoService";
 import {
   avatarKey,
   getObject,
@@ -12,11 +13,13 @@ import {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function GET(
-  _req: Request,
+  req: Request,
   context: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
     const params = await context.params;
+    if (UUID.test(params.id) && params.type === "video")
+      return await companyVideoResponse(params.id, req, req.method === "HEAD");
     if (
       !UUID.test(params.id) ||
       (params.type !== "avatar" && params.type !== "logo")
@@ -47,3 +50,5 @@ export async function GET(
     return httpErrorResponse(error);
   }
 }
+
+export const HEAD = GET;
