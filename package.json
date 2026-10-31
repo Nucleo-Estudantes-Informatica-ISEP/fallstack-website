@@ -34,6 +34,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@mynaui/icons-react": "^0.4.11",
     "@prometheus-io/client": "0.16.1",
+    "@redis/client": "^6.3.1",
     "@rooks/use-window-size": "^4.11.2",
     "@sentry/nextjs": "^10.76.2",
     "bcrypt": "^6.0.0",

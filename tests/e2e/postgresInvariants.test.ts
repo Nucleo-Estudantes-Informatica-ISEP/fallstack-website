@@ -7,6 +7,7 @@ import { upsertActionCompletion } from "@/application/repositories/actionReposit
 import { findCompanyInterests } from "@/application/repositories/companyRepository";
 import prisma, { withTransaction } from "@/application/repositories/database";
 import { bulkUpdateFaqOrder } from "@/application/repositories/faqRepository";
+import { checkDatabaseReadiness } from "@/application/repositories/readinessRepository";
 import { createSavedStudent } from "@/application/repositories/savedStudentRepository";
 import {
   bulkUpdateScheduleOrder,
@@ -27,6 +28,10 @@ vi.mock("server-only", () => ({}));
 const fixtures = databaseFixtures(prisma);
 afterEach(() => fixtures.cleanup());
 afterAll(() => prisma.$disconnect());
+
+test("readiness can acquire the application pool and execute its bounded query", async () => {
+  await expect(checkDatabaseReadiness()).resolves.toBeUndefined();
+});
 
 function expectOneWinner(
   results: PromiseSettledResult<unknown>[],
