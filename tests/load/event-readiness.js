@@ -2,7 +2,12 @@ import { check, sleep } from "k6";
 import http from "k6/http";
 
 import { assertStagingTarget } from "../stagingTarget.js";
-import { hasSessionRole, homepageAssets, visitorCookie } from "./homepage.js";
+import {
+  hasPublicDataList,
+  hasSessionRole,
+  homepageAssets,
+  visitorCookie,
+} from "./homepage.js";
 
 import { Trend } from "k6/metrics";
 
@@ -225,9 +230,10 @@ function visitHomepage() {
     check(
       response,
       {
-        "public data returns 200 JSON": (res) =>
+        "public data returns a 200 JSON list": (res) =>
           res.status === 200 &&
-          (res.headers["Content-Type"] || "").includes("application/json"),
+          (res.headers["Content-Type"] || "").includes("application/json") &&
+          hasPublicDataList(res),
       },
       { kind: "core" }
     );

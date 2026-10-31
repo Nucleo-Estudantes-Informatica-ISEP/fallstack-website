@@ -26,3 +26,11 @@ export function hasSessionRole(response) {
     return false;
   }
 }
+
+export function hasPublicDataList(response) {
+  try {
+    return Array.isArray(response.json());
+  } catch {
+    return false;
+  }
+}

@@ -4,7 +4,12 @@ import { runInNewContext } from "node:vm";
 import { expect, test } from "vitest";
 
 import { assertStagingTarget } from "../stagingTarget";
-import { hasSessionRole, homepageAssets, visitorCookie } from "./homepage";
+import {
+  hasPublicDataList,
+  hasSessionRole,
+  homepageAssets,
+  visitorCookie,
+} from "./homepage";
 
 // Run the real scenario with HTTP replaced, so coverage follows emitted request
 // tags rather than a second list of endpoint names. k6 itself is not a Node module.
@@ -16,10 +21,66 @@ const scenarioSource = readFileSync(
 function nodeSource(source: string) {
   return source
     .replace(/\r\n/g, "\n")
-    .replace(/^import .*;\n/gm, "")
+    .replace(/^import[\s\S]*?;\n/gm, "")
     .replace("export const options", "const options")
     .replace("export default function", "function");
 }
+
+test.each([
+  { body: "[]", valid: true },
+  { body: '[{"id":"fixture"}]', valid: true },
+  { body: '{"error":"unavailable"}', valid: false },
+  { body: "null", valid: false },
+  { body: '"unexpected"', valid: false },
+  { body: "{invalid", valid: false },
+])("public data checks validate list bodies: $body", ({ body, valid }) => {
+  const results: boolean[] = [];
+  const response = {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+    json: () => JSON.parse(body),
+    html: () => ({ find: () => ({ each: () => {} }) }),
+  };
+  const { runScenario } = runInNewContext(
+    `${nodeSource(scenarioSource)}\n({ runScenario });`,
+    {
+      __ENV: {
+        E2E_BASE_URL: "https://staging.example.org",
+        STAGING_BASE_URL: "https://staging.example.org",
+        CONFIRM_NON_PRODUCTION: "yes",
+        K6_SCENARIO: "homepage",
+      },
+      __ITER: 0,
+      __VU: 1,
+      assertStagingTarget,
+      hasPublicDataList,
+      homepageAssets,
+      visitorCookie,
+      Trend: class {},
+      sleep: () => {},
+      check: (
+        value: typeof response,
+        checks: Record<string, (res: typeof response) => boolean>,
+        tags: { kind: string }
+      ) => {
+        for (const [name, predicate] of Object.entries(checks)) {
+          if (!name.startsWith("public data")) continue;
+          expect(tags.kind).toBe("core");
+          results.push(predicate(value));
+        }
+        return true;
+      },
+      http: {
+        file: () => null,
+        expectedStatuses: () => null,
+        get: () => response,
+        batch: () => [],
+      },
+    }
+  );
+  expect(() => runScenario()).not.toThrow();
+  expect(results).toEqual([valid, valid, valid, valid]);
+});
 
 test.each([
   { cookies: "", ending: "LF" },
