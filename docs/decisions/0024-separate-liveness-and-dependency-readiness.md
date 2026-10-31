@@ -31,7 +31,7 @@ more stuck transactions.
 Use the app's PostgreSQL pool for a bounded `SELECT 1`, an authenticated Redis
 PING with exact PONG, and lightweight MinIO/ZITADEL readiness endpoints. Redis
 probe sockets close after every attempt and do not retry. Add optional
-`REDIS_URL` validation to `serverEnv` now that readiness consumes it; the
+`REDIS_URL` validation for readiness, independent of other server configuration; the
 ADR 0021 exception continues only for the unconsumed key prefix and Compose-only
 network name. Native development can omit unused Redis; Compose requires its URL.
 

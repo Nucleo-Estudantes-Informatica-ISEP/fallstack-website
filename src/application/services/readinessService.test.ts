@@ -1,11 +1,9 @@
 // @vitest-environment node
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import {
-  checkRedisReadiness,
-  createReadinessCheck,
-  isReady,
-} from "./readinessService";
+import { checkRedisReadiness } from "@/application/repositories/redisReadinessRepository";
+
+import { createReadinessCheck, isReady } from "./readinessService";
 
 vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => {
@@ -27,6 +25,9 @@ const mocks = vi.hoisted(() => {
     },
   };
 });
+vi.mock("@/config/env.redis", () => ({
+  getRedisUrl: () => mocks.env.REDIS_URL,
+}));
 vi.mock("@redis/client", () => ({ createClient: mocks.createClient }));
 vi.mock("@/config/env.server", () => ({ serverEnv: mocks.env }));
 vi.mock("@/application/repositories/readinessRepository", () => ({

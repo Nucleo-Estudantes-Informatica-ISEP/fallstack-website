@@ -43,8 +43,8 @@ test.each([
 ])("accepts optional Redis readiness URL %s", async (value) => {
   if (value === undefined) delete process.env.REDIS_URL;
   else process.env.REDIS_URL = value;
-  const { serverEnv } = await import("./env.server");
-  expect(serverEnv.REDIS_URL).toBe(value || undefined);
+  const { getRedisUrl } = await import("./env.redis");
+  expect(getRedisUrl()).toBe(value || undefined);
 });
 
 test.each(["http://redis:6379", "not-a-url"])(
@@ -52,6 +52,8 @@ test.each(["http://redis:6379", "not-a-url"])(
   async (value) => {
     process.env.REDIS_URL = value;
     const { serverEnv } = await import("./env.server");
-    expect(() => serverEnv.REDIS_URL).toThrow("REDIS_URL");
+    const { getRedisUrl } = await import("./env.redis");
+    expect(serverEnv.AUTH_SECRET).toBe(process.env.AUTH_SECRET);
+    expect(() => getRedisUrl()).toThrow("REDIS_URL");
   }
 );

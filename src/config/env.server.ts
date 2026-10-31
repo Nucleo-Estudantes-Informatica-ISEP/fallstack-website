@@ -12,10 +12,6 @@ const optionalNonEmptyString = z.preprocess(
 // Secrets and server-only config for PostgreSQL/MinIO and AuthNEI.
 const serverEnvSchema = z.object({
   ...storageEnvSchema.shape,
-  REDIS_URL: z.preprocess(
-    (value) => (value === "" ? undefined : value),
-    z.url({ protocol: /^rediss?$/ }).optional()
-  ),
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

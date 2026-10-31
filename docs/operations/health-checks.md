@@ -38,8 +38,8 @@ Concurrent requests share probes; results are cached for five seconds per
 process. If a driver has not settled after the response deadline, new requests
 remain unready without accumulating more work until that attempt settles.
 
-`REDIS_URL` accepts `redis://` and `rediss://` URLs and is validated lazily by
-`serverEnv`. It is optional for native development while Redis is unused in
+`REDIS_URL` accepts `redis://` and `rediss://` URLs and is validated lazily and independently by
+the Redis readiness probe. It is optional for native development while Redis is unused in
 request flows. Compose already requires it, so deployed dev resources and clones
 probe their configured Redis. Readiness sends no writes or key commands.
 #413 still owns shared limiter behavior and key-prefix validation.

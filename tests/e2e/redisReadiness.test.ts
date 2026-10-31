@@ -2,11 +2,11 @@
 import { createServer, type Server, type Socket } from "node:net";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { checkRedisReadiness } from "@/application/services/readinessService";
+import { checkRedisReadiness } from "@/application/repositories/redisReadinessRepository";
 
 vi.mock("server-only", () => ({}));
 const env = vi.hoisted(() => ({ REDIS_URL: "" }));
-vi.mock("@/config/env.server", () => ({ serverEnv: env }));
+vi.mock("@/config/env.redis", () => ({ getRedisUrl: () => env.REDIS_URL }));
 vi.mock("@/application/repositories/readinessRepository", () => ({
   checkDatabaseReadiness: vi.fn(),
 }));
