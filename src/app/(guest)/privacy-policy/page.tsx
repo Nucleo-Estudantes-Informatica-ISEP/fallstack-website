@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-semibold">
             Aplicação do Regulamento Geral sobre a Proteção de Dados
           </h2>
-          <p className="mt-4">Em vigor a partir de 30 de outubro de 2026.</p>
+          <p className="mt-4">Em vigor a partir de 31 de outubro de 2026.</p>
           <p className="mt-4">
             O Núcleo de Estudantes de Informática do Instituto Superior de
             Engenharia do Porto (NEI- ISEP), em conformidade com o Regulamento
@@ -97,9 +97,8 @@ export default function PrivacyPolicyPage() {
             Quando o utilizador comparece no evento, o NEI-ISEP regista ainda a
             sua presença. Para isso são recolhidos o número de estudante, a
             data, a sessão, a hora do registo de presença (check-in) e o membro
-            do NEI-ISEP que o efetuou. Estes dados são tratados para justificar
-            as faltas do utilizador às aulas junto do Departamento de Engenharia
-            Informática do ISEP.
+            do NEI-ISEP que o efetuou. Estes dados permitem ao NEI-ISEP gerir e
+            comprovar a presença do utilizador no evento.
           </p>
         </article>
 
@@ -164,11 +163,6 @@ export default function PrivacyPolicyPage() {
             carregamento; a eliminação efetiva pode ocorrer algum tempo depois
             desse prazo.
           </p>
-          <p className="mt-4">
-            Os registos de presença são conservados apenas até serem entregues e
-            rececionados pelo Departamento de Engenharia Informática do ISEP.
-            Após a receção, são eliminados no prazo máximo de uma semana.
-          </p>
         </article>
 
         <article className="mt-12">
@@ -179,12 +173,6 @@ export default function PrivacyPolicyPage() {
             suas informações de perfil, podem ser partilhadas com empresas
             participantes no evento Fallstack. Esta partilha tem como objetivo
             facilitar oportunidades de emprego e networking.
-          </p>
-          <p className="mt-4">
-            Os registos de presença (nome, email, número de estudante, data,
-            sessão e hora do registo) são partilhados com o Departamento de
-            Engenharia Informática do ISEP, através de um ficheiro Excel
-            exportado da aplicação, para efeitos de justificação de faltas.
           </p>
         </article>
 
@@ -219,9 +207,7 @@ export default function PrivacyPolicyPage() {
           <p className="mt-4">
             Os utilizadores serão notificados em caso de alterações na Política
             de Privacidade, e estas serão comunicadas de forma clara na
-            aplicação. Quando a alteração o exigir, será pedido aos utilizadores
-            que aceitem novamente a Política de Privacidade para continuarem a
-            utilizar a aplicação.
+            aplicação.
           </p>
         </article>
 

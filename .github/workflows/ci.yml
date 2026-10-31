@@ -130,6 +130,12 @@ jobs:
           docker build --target storage-cleanup -t fallstack-storage-cleanup-check .
           test "$(docker inspect --format '{{.Config.User}}' fallstack-storage-cleanup-check)" = "nextjs"
 
+      - name: Verify storage cleanup runtime imports
+        run: >-
+          docker run --rm --entrypoint node fallstack-storage-cleanup-check
+          --conditions=react-server --import tsx
+          -e "import('./src/application/services/storageCleanupService.ts')"
+
       - name: Build production application image
         run: |
           docker build \
