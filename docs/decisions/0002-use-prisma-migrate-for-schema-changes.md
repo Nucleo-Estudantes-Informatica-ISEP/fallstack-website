@@ -12,6 +12,9 @@ The project previously used `prisma db push`, which left no versioned migration 
 
 Track schema changes in committed Prisma migrations. Generate changes with `prisma migrate dev` locally. The Compose `migrate` service uses the `migrator` Docker target to run `prisma migrate deploy`; `web` waits for its `service_completed_successfully` result before starting. Resolve the baseline as already applied on databases whose tables predate it.
 
+Release job ownership and prerequisites for scaling are recorded separately
+in [ADR 0017](0017-scale-web-with-singleton-release-jobs.md).
+
 ## Consequences
 
 - Schema changes have reviewable migration files alongside application code.

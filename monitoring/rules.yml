@@ -1,0 +1,65 @@
+groups:
+  - name: fallstack-capacity
+    rules:
+      - record: fallstack:copy_cpu_percent
+        expr: docker_container_cpu_usage_percent
+      - record: fallstack:copy_memory_bytes
+        expr: docker_container_mem_usage
+      - record: fallstack:copy_restarts
+        expr: max by (environment, service, copy) (docker_container_status_restart_count)
+      - record: fallstack:copy_http_p95_seconds
+        expr: histogram_quantile(0.95, sum by (environment, service, copy, le) (rate(fallstack_http_request_duration_seconds_bucket[5m])))
+      - record: fallstack:copy_http_requests_per_second
+        expr: sum by (environment, service, copy) (rate(fallstack_http_request_duration_seconds_count[5m]))
+      - record: fallstack:copy_http_error_ratio
+        expr: |
+          (
+            sum by (environment, service, copy) (rate(fallstack_http_request_duration_seconds_count{status_code=~"4..|5..|aborted",status_code!="429"}[5m]))
+            or on (environment, service, copy)
+            (0 * sum by (environment, service, copy) (rate(fallstack_http_request_duration_seconds_count[5m])))
+          )
+          / clamp_min(sum by (environment, service, copy) (rate(fallstack_http_request_duration_seconds_count{status_code!="429"}[5m])), 1e-9)
+      - alert: FallstackCopyMetricsDown
+        expr: up{job="web"} == 0
+        for: 1m
+        annotations:
+          summary: Web copy metrics unavailable
+      - alert: FallstackCopyMetricsMissing
+        expr: docker_container_status_restart_count{service="web"} unless on (environment, service, copy) up{job="web"}
+        for: 1m
+        annotations:
+          summary: Docker copy has no HTTP metrics target
+      - alert: FallstackDependencyCollectorDown
+        expr: up{job="dependencies"} == 0
+        for: 1m
+        annotations:
+          summary: Dependency metrics collector unavailable
+      - alert: FallstackDependencyProbeFailed
+        expr: http_response_response_status_code_match == 0 or http_response_result_code != 0
+        for: 1m
+        annotations:
+          summary: MinIO or AuthNEI readiness probe failed
+      - alert: FallstackDependencyMetricsMissing
+        expr: absent(postgresql_numbackends{environment="dev"}) or absent(postgresql_numbackends{environment="main"}) or absent(postgresql_numbackends{environment="shared"}) or absent(redis_probe_healthy{service="redis",environment="dev"}) or absent(redis_probe_healthy{service="redis",environment="main"}) or absent(http_response_result_code{service="minio"}) or absent(http_response_result_code{service="authnei"})
+        for: 1m
+        annotations:
+          summary: Expected dependency metrics missing or expired
+      - alert: FallstackCopyRestarted
+        expr: delta(fallstack:copy_restarts[5m]) > 0
+        annotations:
+          summary: Container restarted during the last five minutes
+      - alert: FallstackRedisUnhealthy
+        expr: redis_probe_healthy{service="redis"} == 0 or docker_container_status_restart_count{service="redis",container_status!="running"}
+        for: 1m
+        annotations:
+          summary: Redis authenticated PONG probe failed or container stopped
+      - alert: FallstackRedisDockerMetricsMissing
+        expr: absent(docker_container_status_restart_count{service="redis",environment="dev"}) or absent(docker_container_status_restart_count{service="redis",environment="main"})
+        for: 1m
+        annotations:
+          summary: Redis Docker series missing for an environment
+      - alert: FallstackRedisProbeStale
+        expr: time() - redis_probe_timestamp_seconds{service="redis"} > 90
+        for: 1m
+        annotations:
+          summary: Redis probe timer stopped writing results

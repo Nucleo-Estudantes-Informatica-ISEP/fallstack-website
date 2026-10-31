@@ -4,8 +4,7 @@ import { expect, test } from "vitest";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 
 test("renders the company logo URL without a static fallback", () => {
-  const logoUrl =
-    "https://demo.supabase.co/storage/v1/object/public/logos/company.png";
+  const logoUrl = "/api/media/logo/company.png";
 
   render(
     <CompanyImage

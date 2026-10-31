@@ -149,6 +149,8 @@ model CompanyRankStyle {
   // Whether the internal page's promo-video section renders (was
   // `tier === COMPANY_TIER.DIAMOND` hardcoded in CompanyInfo).
   showsPromoVideo   Boolean @default(false)
+  // Includes active companies from this rank below the homepage hero.
+  isFeatured        Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

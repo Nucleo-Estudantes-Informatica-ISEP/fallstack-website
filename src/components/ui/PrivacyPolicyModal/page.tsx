@@ -46,7 +46,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
 
             <div className="absolute inset-0 z-10 bg-black/50" />
 
-            <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-gradient-to-t from-black to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-linear-to-t from-black to-transparent" />
 
             <div className="relative z-20">
               <Image
@@ -79,7 +79,7 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 Aplicação do Regulamento Geral sobre a Proteção de Dados
               </h2>
               <p className="mt-4 text-gray-300">
-                Em vigor a partir de 16 de novembro de 2023.
+                Em vigor a partir de 31 de outubro de 2026.
               </p>
               <p className="mt-4 leading-relaxed text-gray-300">
                 O Núcleo de Estudantes de Informática do Instituto Superior de
@@ -136,6 +136,14 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 prática está alinhada com as disposições legais do Regulamento
                 Geral sobre a Proteção de Dados (RGPD).
               </p>
+              <p className="mt-4 leading-relaxed text-gray-300">
+                Quando o utilizador comparece no evento, o NEI-ISEP regista
+                ainda a sua presença. Para isso são recolhidos o número de
+                estudante, a data, a sessão, a hora do registo de presença
+                (check-in) e o membro do NEI-ISEP que o efetuou. Estes dados
+                permitem ao NEI-ISEP gerir e comprovar a presença do utilizador
+                no evento.
+              </p>
             </article>
 
             {/* Artigo 4 */}
@@ -147,7 +155,9 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 Ao criar uma conta na aplicação Fallstack, o utilizador consente
                 explicitamente o tratamento dos seus dados para a participação
                 no evento e interação com as empresas, estando esta ação
-                fundamentada no consentimento do utilizador.
+                fundamentada no consentimento do utilizador. O registo de
+                presença só é efetuado se o utilizador comparecer no evento e
+                baseia-se igualmente no seu consentimento.
               </p>
             </article>
 
@@ -198,6 +208,10 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 ). Este reserva-se no direito de manter as informações
                 necessárias para fins administrativos, mas os CVs, perfis de
                 LinkedIn e GitHub serão removidos e não poderão ser recuperados.
+                Os CVs são ainda removidos por um processo automático de
+                limpeza, executado diariamente, depois de decorridos seis meses
+                desde o seu carregamento; a eliminação efetiva pode ocorrer
+                algum tempo depois desse prazo.
               </p>
             </article>
 

@@ -1,0 +1,10 @@
+[Unit]
+Description=Notify Tech User when Fallstack backup fails or times out
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/fallstack-backup/backup.py --notify-failure
+UMask=0077
+MemoryMax=128M
+TimeoutStartSec=2min

@@ -16,10 +16,19 @@ the web service becomes healthy. PostgreSQL hostname is
 `http://minio-gbheij1ljds8nrhfgdf9teeo:9000`. Neither service has a public
 host port. Never expose S3 credentials to the browser.
 
-Each Coolify app resource also defines a separate private Redis service for
-shared web state. Redis does **not** join the shared-data network. Configure
-its per-environment password and key prefix before deploying; see the
-[Redis runbook](operations/redis.md) for persistence, verification and SAD's
+Keep one resource per environment. Web, migration and cleanup replica counts
+are literal `1`; there is no `WEB_REPLICAS` environment setting. Multiple web
+copies are unverified on Coolify and require #419's staging/configuration and
+shared-state checks before a reviewed configuration change. Singleton ownership
+is operator-enforced; CLI scaling overrides and duplicate resources bypass it.
+See the [release worker runbook](operations/release-workers.md)
+for rollout ordering, duplicate-resource restrictions and verification.
+
+Each environment also has its own standalone Redis resource in a dedicated
+Coolify destination network for shared web state. Redis does **not** join the
+shared-data network. Only `web` joins the Redis network. Set `REDIS_URL`,
+`REDIS_NETWORK_NAME` and `REDIS_KEY_PREFIX` before deploying; see the
+[Redis runbook](operations/redis.md) for setup, verification and SAD's
 off-season stop/resume procedure.
 
 Set `DATABASE_URL` to the environment's **runtime** identity and `DIRECT_URL`
@@ -46,3 +55,7 @@ six-month CV retention and orphan deletion through S3; review dry-run candidates
 before enabling `apply`. See the [cleanup runbook](storage-cleanup.md) for rollout,
 permissions, retry queue, audit and recovery. Scheduled shared-service backups are a separate
 requirement; migration dumps are one-time recovery points.
+
+See the [backup runbook](operations/backups.md) for the named platform contact,
+daily schedule, PostgreSQL/MinIO inventory, encrypted off-VPS copies, usage
+guards, recovery and verified failure notifications.

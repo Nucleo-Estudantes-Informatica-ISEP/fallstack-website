@@ -8,6 +8,7 @@ import {
   uploadAdminImage,
   type AdminUploadKind,
 } from "@/client/api/adminUpload";
+import { uploadAdminVideo } from "@/client/api/adminVideoUpload";
 
 export type AdminFormValue = string | number | boolean | string[];
 
@@ -42,7 +43,12 @@ export interface AdminFormMultiSelectField extends AdminFormFieldBase {
   options: { label: string; value: string }[];
 }
 
+export interface AdminFormVideoField extends AdminFormFieldBase {
+  kind: "video";
+}
+
 export type AdminFormField =
+  | AdminFormVideoField
   | AdminFormTextField
   | AdminFormTextareaField
   | AdminFormCheckboxField
@@ -148,6 +154,34 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
       </fieldset>
     );
   }
+
+  if (field.kind === "video")
+    return (
+      <fieldset className="flex flex-col gap-2 text-sm text-gray-700">
+        <legend>{field.label}</legend>
+        <label>
+          URL do YouTube ou vídeo carregado
+          <input
+            type="text"
+            name={field.name}
+            defaultValue={String(defaultValue ?? "")}
+            className={inputClassName}
+          />
+        </label>
+        <label>
+          Carregar MP4 (até 256 MiB; substitui o URL ao guardar)
+          <input
+            type="file"
+            name={`${field.name}File`}
+            accept="video/mp4,.mp4"
+          />
+        </label>
+        <p>
+          Vídeos MP4 com H.264/AAC. Usa Guardar para carregar e associar o
+          vídeo.
+        </p>
+      </fieldset>
+    );
 
   if (field.kind === "textarea") {
     return (
@@ -295,7 +329,25 @@ const AdminForm: React.FC<AdminFormProps> = ({
 
     setIsPending(true);
     try {
+      for (const section of sections) {
+        if (section.kind !== "fields") continue;
+        for (const field of section.fields) {
+          if (field.kind !== "video") continue;
+          const file = formData.get(`${field.name}File`);
+          if (file instanceof File && file.size) {
+            if (!String(values.bodyText ?? "").trim())
+              throw new Error("Preenche o perfil antes de carregar um vídeo.");
+            values[field.name] = (await uploadAdminVideo(file)).url;
+          }
+        }
+      }
       await onSubmit(values);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Não foi possível carregar o vídeo."
+      );
     } finally {
       setIsPending(false);
     }

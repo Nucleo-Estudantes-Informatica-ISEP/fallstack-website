@@ -41,4 +41,12 @@ implementation PR needs an ADR.
 | [0012](0012-cache-and-optimize-public-assets.md)                 | Cache and optimize public assets                 | Accepted   |
 | [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                       | Accepted   |
 | [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee    | Accepted   |
-| [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Accepted   |
+| [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Superseded |
+| [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                 | Accepted   |
+| [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs            | Accepted   |
+| [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted   |
+| [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps          | Accepted   |
+| [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank               | Accepted   |
+| [0021](0021-standalone-redis-per-environment.md)                 | Standalone Redis per environment                 | Accepted   |
+| [0022](0022-six-character-student-codes.md)                      | Issue six-character student codes                | Accepted   |
+| [0023](0023-upload-company-mp4-videos.md)                        | Upload company MP4 videos                        | Accepted   |

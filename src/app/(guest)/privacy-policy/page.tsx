@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-semibold">
             Aplicação do Regulamento Geral sobre a Proteção de Dados
           </h2>
-          <p className="mt-4">Em vigor a partir de 16 de novembro de 2023.</p>
+          <p className="mt-4">Em vigor a partir de 31 de outubro de 2026.</p>
           <p className="mt-4">
             O Núcleo de Estudantes de Informática do Instituto Superior de
             Engenharia do Porto (NEI- ISEP), em conformidade com o Regulamento
@@ -93,6 +93,13 @@ export default function PrivacyPolicyPage() {
             disposições legais do Regulamento Geral sobre a Proteção de Dados
             (RGPD).
           </p>
+          <p className="mt-4">
+            Quando o utilizador comparece no evento, o NEI-ISEP regista ainda a
+            sua presença. Para isso são recolhidos o número de estudante, a
+            data, a sessão, a hora do registo de presença (check-in) e o membro
+            do NEI-ISEP que o efetuou. Estes dados permitem ao NEI-ISEP gerir e
+            comprovar a presença do utilizador no evento.
+          </p>
         </article>
 
         <article className="mt-12">
@@ -103,7 +110,9 @@ export default function PrivacyPolicyPage() {
             Ao criar uma conta na aplicação Fallstack, o utilizador consente
             explicitamente o tratamento dos seus dados para a participação no
             evento e interação com as empresas, estando esta ação fundamentada
-            no consentimento do utilizador.
+            no consentimento do utilizador. O registo de presença só é efetuado
+            se o utilizador comparecer no evento e baseia-se igualmente no seu
+            consentimento.
           </p>
         </article>
 
@@ -148,7 +157,11 @@ export default function PrivacyPolicyPage() {
             </a>
             ). Este reserva-se no direito de manter as informações necessárias
             para fins administrativos, mas os CVs, perfis de LinkedIn e GitHub
-            serão removidos e não poderão ser recuperados.
+            serão removidos e não poderão ser recuperados. Os CVs são ainda
+            removidos por um processo automático de limpeza, executado
+            diariamente, depois de decorridos seis meses desde o seu
+            carregamento; a eliminação efetiva pode ocorrer algum tempo depois
+            desse prazo.
           </p>
         </article>
 

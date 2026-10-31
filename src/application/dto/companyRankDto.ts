@@ -9,6 +9,7 @@ export interface AdminCompanyRankDto {
     gradientToStop: string;
     hasInternalPage: boolean;
     showsPromoVideo: boolean;
+    isFeatured: boolean;
   } | null;
 }
 
@@ -26,6 +27,7 @@ export const toAdminCompanyRankDto = (
         gradientToStop: rank.style.gradientToStop,
         hasInternalPage: rank.style.hasInternalPage,
         showsPromoVideo: rank.style.showsPromoVideo,
+        isFeatured: rank.style.isFeatured,
       }
     : null,
 });

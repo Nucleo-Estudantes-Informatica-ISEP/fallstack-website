@@ -265,3 +265,15 @@ export const setCompanyInterests = (companyId: string, interestIds: string[]) =>
     where: { id: companyId },
     data: { interests: { set: interestIds.map((id) => ({ id })) } },
   });
+
+export const hasPublicCompanyVideo = async (videoHref: string) =>
+  Boolean(
+    await prisma.company.findFirst({
+      where: {
+        active: true,
+        profile: { videoHref },
+        rank: { style: { hasInternalPage: true, showsPromoVideo: true } },
+      },
+      select: { id: true },
+    })
+  );

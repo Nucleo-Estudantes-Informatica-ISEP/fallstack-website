@@ -75,8 +75,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify Redis isolation, authentication and persistence
-        run: bash tests/e2e/redis-deployment.sh
+      - name: Verify backup cost guards and retention safety
+        run: python3 -B -m unittest discover -s scripts/backups -v
+
+      - name: Verify singleton release jobs and web-only scaling
+        run: bash tests/e2e/release-workers.sh
 
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
@@ -123,6 +126,12 @@ jobs:
         run: |
           docker build --target storage-cleanup -t fallstack-storage-cleanup-check .
           test "$(docker inspect --format '{{.Config.User}}' fallstack-storage-cleanup-check)" = "nextjs"
+
+      - name: Verify storage cleanup runtime imports
+        run: >-
+          docker run --rm --entrypoint node fallstack-storage-cleanup-check
+          --conditions=react-server --import tsx
+          -e "import('./src/application/services/storageCleanupService.ts')"
 
       - name: Build production application image
         run: |

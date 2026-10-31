@@ -1,0 +1,104 @@
+rule_files:
+  - rules.yml
+evaluation_interval: 1m
+tests:
+  - name: zero errors remains zero and 429 is excluded
+    interval: 1m
+    input_series:
+      - series: 'fallstack_http_request_duration_seconds_count{environment="dev",service="web",copy="web-1",status_code="200"}'
+        values: "0+60x6"
+      - series: 'fallstack_http_request_duration_seconds_count{environment="dev",service="web",copy="web-1",status_code="429"}'
+        values: "0+600x6"
+    promql_expr_test:
+      - expr: fallstack:copy_http_error_ratio
+        eval_time: 5m
+        exp_samples:
+          - labels: 'fallstack:copy_http_error_ratio{environment="dev",service="web",copy="web-1"}'
+            value: 0
+  - name: errors include aborted and HTTP failures without mixing copies
+    interval: 1m
+    input_series:
+      - series: 'fallstack_http_request_duration_seconds_count{environment="main",service="web",copy="web-2",status_code="200"}'
+        values: "0+54x6"
+      - series: 'fallstack_http_request_duration_seconds_count{environment="main",service="web",copy="web-2",status_code="503"}'
+        values: "0+3x6"
+      - series: 'fallstack_http_request_duration_seconds_count{environment="main",service="web",copy="web-2",status_code="aborted"}'
+        values: "0+3x6"
+      - series: 'fallstack_http_request_duration_seconds_count{environment="dev",service="web",copy="web-1",status_code="200"}'
+        values: "0+60x6"
+    promql_expr_test:
+      - expr: fallstack:copy_http_error_ratio
+        eval_time: 5m
+        exp_samples:
+          - labels: 'fallstack:copy_http_error_ratio{environment="main",service="web",copy="web-2"}'
+            value: 0.1
+          - labels: 'fallstack:copy_http_error_ratio{environment="dev",service="web",copy="web-1"}'
+            value: 0
+  - name: non-200 dependency response alerts
+    interval: 1m
+    input_series:
+      - series: 'http_response_response_status_code_match{environment="shared",service="authnei",probe="ready"}'
+        values: "0+0x4"
+      - series: 'http_response_result_code{environment="shared",service="authnei",probe="ready"}'
+        values: "0+0x4"
+    alert_rule_test:
+      - alertname: FallstackDependencyProbeFailed
+        eval_time: 2m
+        exp_alerts:
+          - exp_labels:
+              environment: shared
+              service: authnei
+              probe: ready
+            exp_annotations:
+              summary: MinIO or AuthNEI readiness probe failed
+  - name: failed authenticated Redis probe alerts
+    interval: 1m
+    input_series:
+      - series: 'redis_probe_healthy{environment="dev",service="redis",copy="redis-dev"}'
+        values: "1 1 0 0 0"
+    alert_rule_test:
+      - alertname: FallstackRedisUnhealthy
+        eval_time: 4m
+        exp_alerts:
+          - exp_labels:
+              environment: dev
+              service: redis
+              copy: redis-dev
+            exp_annotations:
+              summary: Redis authenticated PONG probe failed or container stopped
+  - name: stale Redis probe results alert
+    interval: 1m
+    input_series:
+      - series: 'redis_probe_timestamp_seconds{environment="main",service="redis",copy="redis-main"}'
+        values: "0 60 120 120 120 120 120"
+    alert_rule_test:
+      - alertname: FallstackRedisProbeStale
+        eval_time: 6m
+        exp_alerts:
+          - exp_labels:
+              environment: main
+              service: redis
+              copy: redis-main
+            exp_annotations:
+              summary: Redis probe timer stopped writing results
+  - name: healthy Redis probe with missing Docker series alerts
+    interval: 1m
+    input_series:
+      - series: 'redis_probe_healthy{environment="dev",service="redis",copy="redis-dev"}'
+        values: "1 1 1 1 1"
+      - series: 'redis_probe_healthy{environment="main",service="redis",copy="redis-main"}'
+        values: "1 1 1 1 1"
+      - series: 'docker_container_status_restart_count{environment="dev",service="redis",copy="redis-dev",container_status="running"}'
+        values: "0 0 0 0 0"
+    alert_rule_test:
+      - alertname: FallstackRedisDockerMetricsMissing
+        eval_time: 4m
+        exp_alerts:
+          - exp_labels:
+              environment: main
+              service: redis
+            exp_annotations:
+              summary: Redis Docker series missing for an environment
+      - alertname: FallstackRedisUnhealthy
+        eval_time: 4m
+        exp_alerts: []
