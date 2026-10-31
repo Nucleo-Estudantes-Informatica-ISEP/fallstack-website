@@ -22,6 +22,20 @@ test("loads unique local assets without following external references", () => {
   ]);
 });
 
+test("rejects dot segments and encoded separators that escape the allowlist", () => {
+  expect(
+    homepageAssets([
+      "/assets/../api/auth/login",
+      "/assets/./x.png",
+      "/_next/../api/auth/login",
+      "/assets/%2e%2e/api/auth/login",
+      "/assets/..%2Fapi/auth/login",
+      "/assets/%2E%2E%5Capi",
+      "/assets/images/landing-2026.png",
+    ])
+  ).toEqual(["/assets/images/landing-2026.png"]);
+});
+
 test("alternates guests and authenticated visitors across the cookie pool", () => {
   const cookies = ["session=one", "session=two"];
   expect([1, 2, 3, 4, 5, 6].map((vu) => visitorCookie(vu, cookies))).toEqual([
