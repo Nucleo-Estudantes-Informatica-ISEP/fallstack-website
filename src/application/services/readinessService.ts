@@ -9,6 +9,14 @@ const TIMEOUT_MS = 2000;
 const CACHE_MS = 5000;
 type Probe = (signal: AbortSignal) => Promise<void>;
 
+function readinessUrl(base: string, path: string) {
+  const url = new URL(base);
+  url.pathname = `${url.pathname.replace(/\/+$/, "")}/`;
+  url.search = "";
+  url.hash = "";
+  return new URL(path, url);
+}
+
 async function checkHttpReadiness(url: URL, signal: AbortSignal) {
   const response = await fetch(url, {
     signal,
@@ -97,12 +105,12 @@ export const isReady = createReadinessCheck([
   checkRedisReadiness,
   (signal) =>
     checkHttpReadiness(
-      new URL("/minio/health/ready", serverEnv.S3_ENDPOINT),
+      readinessUrl(serverEnv.S3_ENDPOINT, "minio/health/ready"),
       signal
     ),
   (signal) =>
     checkHttpReadiness(
-      new URL("/debug/ready", serverEnv.AUTH_ISSUER_URL),
+      readinessUrl(serverEnv.AUTH_ISSUER_URL, "debug/ready"),
       signal
     ),
 ]);

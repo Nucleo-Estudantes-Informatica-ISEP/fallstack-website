@@ -16,11 +16,17 @@ probe because Coolify's generated bare `redis-cli ping` can exit zero on NOAUTH.
 
 Keep `/api/health` and Docker liveness unchanged. Add session-free `/api/ready`
 for PostgreSQL, configured Redis, MinIO and AuthNEI with a two-second response
-deadline, bounded I/O, shared concurrent work and five-second per-process cache.
+deadline, shared concurrent work and five-second per-process cache.
 An unsuccessful dependency produces a generic 503 with no sensitive diagnostics.
 Retain stalled driver work until settled so repeated probes do not accumulate
 queries or connections. Readiness is an observation, not a trigger to restart
 web during a dependency outage.
+
+The deadline aborts HTTP and Redis I/O, but does not cancel a Prisma transaction.
+The database probe relies on Prisma transaction and PostgreSQL statement timeouts.
+If the driver never settles, readiness remains false until it settles or the
+process restarts; retaining that work prevents repeated requests from creating
+more stuck transactions.
 
 Use the app's PostgreSQL pool for a bounded `SELECT 1`, an authenticated Redis
 PING with exact PONG, and lightweight MinIO/ZITADEL readiness endpoints. Redis
@@ -45,3 +51,6 @@ No proxy readiness wiring, shutdown draining or restart watchdog is introduced.
 Those parts of #458/#419 remain separate work. Main receives this behavior only
 after the normal release promotion. Host probe installation remains an operator
 step; changing the repository script does not update an installed timer.
+Before routing traffic based on readiness, #458 must decide which dependencies
+gate traffic and how to avoid removing every copy during a shared outage or
+application pool saturation.

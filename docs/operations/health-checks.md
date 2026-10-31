@@ -30,8 +30,10 @@ Probes run concurrently with a two-second response deadline:
 | AuthNEI/ZITADEL | HTTP 200 from `/debug/ready` on `AUTH_ISSUER_URL`                | Identity provider readiness                                     |
 
 PostgreSQL uses a 500 ms transaction-acquisition timeout, 1500 ms transaction
-timeout and 1000 ms local statement timeout. HTTP requests abort at the response
-deadline; Redis destroys its socket and disables reconnect/offline queues.
+timeout and 1000 ms local statement timeout. The outer deadline does not cancel
+the Prisma transaction; if the driver wedges beyond those limits, readiness stays
+false until it settles or the process restarts. HTTP requests abort at the
+response deadline; Redis destroys its socket and disables reconnect/offline queues.
 Concurrent requests share probes; results are cached for five seconds per
 process. If a driver has not settled after the response deadline, new requests
 remain unready without accumulating more work until that attempt settles.
@@ -47,6 +49,8 @@ application content, a complete login or end-to-end browser behavior. Keep
 staging smoke tests for those flows. Dependency readiness stays separate from
 Docker liveness; proxy removal of unready copies and shutdown draining remain
 under #458/#419. Do not claim automatic traffic removal from this endpoint alone.
+Before enabling proxy removal, #458 must decide dependency gates and pool budget
+to avoid removing every copy during a shared outage or saturation.
 
 ## Verify and roll out
 

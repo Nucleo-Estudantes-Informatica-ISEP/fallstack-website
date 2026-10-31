@@ -37,6 +37,8 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.resetAllMocks();
   mocks.env.REDIS_URL = "redis://default:secret@redis.test:6379";
+  mocks.env.S3_ENDPOINT = "http://minio.test:9000";
+  mocks.env.AUTH_ISSUER_URL = "https://auth.test";
   mocks.client.isOpen = false;
   mocks.client.connect.mockImplementation(async () => {
     mocks.client.isOpen = true;
@@ -173,6 +175,40 @@ test("HTTP checks use readiness paths, reject redirects, discard bodies and fail
   expect(cancel).toHaveBeenCalledTimes(2);
 
   await vi.advanceTimersByTimeAsync(5000);
+  mocks.env.S3_ENDPOINT = "http://minio.test:9000/storage";
+  mocks.env.AUTH_ISSUER_URL = "https://auth.test/identity/";
+  await expect(isReady()).resolves.toBe(true);
+  expect(fetch).toHaveBeenCalledWith(
+    new URL("http://minio.test:9000/storage/minio/health/ready"),
+    expect.any(Object)
+  );
+  expect(fetch).toHaveBeenCalledWith(
+    new URL("https://auth.test/identity/debug/ready"),
+    expect.any(Object)
+  );
+
+  await vi.advanceTimersByTimeAsync(5000);
   fetch.mockResolvedValue({ status: 503, body: { cancel } });
   await expect(isReady()).resolves.toBe(false);
+});
+
+test("a stalled database transaction keeps readiness false without creating more queries", async () => {
+  let settle!: () => void;
+  mocks.database.mockImplementation(
+    () =>
+      new Promise<void>((resolve) => {
+        settle = resolve;
+      })
+  );
+  const ready = createReadinessCheck([mocks.database]);
+  const first = ready();
+  await vi.advanceTimersByTimeAsync(2000);
+  await expect(first).resolves.toBe(false);
+  await vi.advanceTimersByTimeAsync(5000);
+  await expect(ready()).resolves.toBe(false);
+  expect(mocks.database).toHaveBeenCalledTimes(1);
+  settle();
+  await vi.advanceTimersByTimeAsync(0);
+  mocks.database.mockResolvedValue(undefined);
+  await expect(ready()).resolves.toBe(true);
 });
