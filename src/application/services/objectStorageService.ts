@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createReadStream } from "node:fs";
 import {
   DeleteObjectCommand,
   GetBucketVersioningCommand,
@@ -12,6 +13,7 @@ import {
 } from "@aws-sdk/client-s3";
 
 import { storageEnv } from "@/config/env.storage";
+import { videoKey } from "@/domain/company/companyVideo";
 
 export type StorageBucket = "avatar" | "logo" | "cv";
 
@@ -145,4 +147,42 @@ function isMissingObject(error: unknown) {
     error instanceof Error &&
     (error.name === "NotFound" || error.name === "NoSuchKey")
   );
+}
+
+// Videos share the edition's public-media bucket under a separate prefix.
+export async function putVideoObject(id: string, path: string, size: number) {
+  const stream = createReadStream(path);
+  try {
+    await storageClient().send(
+      new PutObjectCommand({
+        Bucket: bucket("logo"),
+        Key: videoKey(id),
+        Body: stream,
+        ContentLength: size,
+        ContentType: "video/mp4",
+      })
+    );
+  } finally {
+    stream.destroy();
+  }
+}
+
+export async function getVideoObject(
+  id: string,
+  range?: string,
+  signal?: AbortSignal
+) {
+  try {
+    return await storageClient().send(
+      new GetObjectCommand({
+        Bucket: bucket("logo"),
+        Key: videoKey(id),
+        Range: range,
+      }),
+      { abortSignal: signal }
+    );
+  } catch (error) {
+    if (isMissingObject(error)) return null;
+    throw error;
+  }
 }
