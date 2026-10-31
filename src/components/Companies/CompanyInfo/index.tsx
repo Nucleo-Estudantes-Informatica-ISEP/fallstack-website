@@ -5,6 +5,7 @@ import React from "react";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
 import { Fact } from "@/domain/company/companyProfileContent";
+import { companyVideoId } from "@/domain/company/companyVideo";
 import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 
 interface CompanyInfoProps {
@@ -47,20 +48,34 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
       {showsPromoVideo &&
         (() => {
           const embedUrl = normalizeYouTubeEmbedUrl(videoHref);
-          if (!embedUrl) return null;
+          const uploadedVideo = companyVideoId(videoHref);
+          if (!embedUrl && !uploadedVideo) return null;
           return (
             <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
               <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
                 {videoTitle || "Vídeo"}
               </h1>
               <div className="flex w-full items-center justify-center">
-                <iframe
-                  className="my-2.5 aspect-video w-full max-w-full rounded-lg"
-                  src={embedUrl}
-                  title={videoTitle}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                {uploadedVideo ? (
+                  <video
+                    controls
+                    playsInline
+                    preload="metadata"
+                    src={videoHref}
+                    aria-label={videoTitle || "Vídeo promocional"}
+                    className="my-2.5 aspect-video w-full max-w-full rounded-lg"
+                  >
+                    O teu navegador não suporta vídeo MP4.
+                  </video>
+                ) : (
+                  <iframe
+                    className="my-2.5 aspect-video w-full max-w-full rounded-lg"
+                    src={embedUrl ?? undefined}
+                    title={videoTitle}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  ></iframe>
+                )}
               </div>
             </div>
           );

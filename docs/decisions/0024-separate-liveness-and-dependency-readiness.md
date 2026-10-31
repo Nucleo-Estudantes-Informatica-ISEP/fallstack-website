@@ -1,4 +1,4 @@
-# 0023: Separate liveness and dependency readiness
+# 0024: Separate liveness and dependency readiness
 
 Status: Accepted
 Date: 2026-10-30

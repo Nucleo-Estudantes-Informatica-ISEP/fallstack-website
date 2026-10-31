@@ -49,4 +49,5 @@ implementation PR needs an ADR.
 | [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank               | Accepted   |
 | [0021](0021-standalone-redis-per-environment.md)                 | Standalone Redis per environment                 | Accepted   |
 | [0022](0022-six-character-student-codes.md)                      | Issue six-character student codes                | Accepted   |
-| [0023](0023-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness       | Accepted   |
+| [0023](0023-upload-company-mp4-videos.md)                        | Upload company MP4 videos                        | Accepted   |
+| [0024](0024-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness       | Accepted   |
