@@ -72,6 +72,14 @@ if (
   );
 if (!Number.isInteger(vus) || vus < 1)
   throw new Error("VUS must be a positive integer.");
+if (scenario === "homepage" && profile === "peak") {
+  if (new Set(studentCookies).size !== studentCookies.length)
+    throw new Error("Homepage peak requires distinct STUDENT_COOKIES entries.");
+  if (studentCookies.length < Math.ceil(vus / 2))
+    throw new Error(
+      "Homepage peak requires at least ceil(VUS/2) distinct student sessions. Add STUDENT_COOKIES or lower VUS."
+    );
+}
 if (!Number.isFinite(requestIntervalSeconds) || requestIntervalSeconds <= 0)
   throw new Error("REQUEST_INTERVAL_SECONDS must be a positive number.");
 if (scenario === "upload-tickets") {
