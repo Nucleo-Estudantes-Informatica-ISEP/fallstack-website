@@ -15,8 +15,7 @@ const scenarioSource = readFileSync(
 
 function nodeSource(source: string) {
   return source
-    .replace(/\r\n/g, "\n")
-    .replace(/^import .*;\n/gm, "")
+    .replace(/^import .*;\r?\n/gm, "")
     .replace("export const options", "const options")
     .replace("export default function", "function");
 }

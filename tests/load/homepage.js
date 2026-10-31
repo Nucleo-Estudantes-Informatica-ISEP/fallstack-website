@@ -1,3 +1,9 @@
+// Prefix match alone lets "/assets/../api/..." escape the allowlist, so reject
+// dot segments and encoded dots/separators in the path (queries may encode URLs).
+function isPlainPath(path) {
+  return !/(?:^|\/)\.{1,2}(?:\/|$)/.test(path) && !/%(?:2e|2f|5c)/i.test(path);
+}
+
 // Only request assets served by the approved origin. Never follow HTML to an
 // external host (including protocol-relative URLs) during a staging load run.
 export function homepageAssets(references) {
@@ -8,7 +14,8 @@ export function homepageAssets(references) {
           typeof value === "string" &&
           /^\/(?:_next\/|assets\/|api\/media\/)/.test(value) &&
           !value.includes("\\") &&
-          !value.includes("#")
+          !value.includes("#") &&
+          isPlainPath(value.split("?")[0])
       )
     ),
   ];
