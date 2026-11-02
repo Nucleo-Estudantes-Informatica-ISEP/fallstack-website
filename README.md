@@ -13,7 +13,7 @@ Prisma 6, MinIO, and AuthNEI/ZITADEL OIDC. See the
 ## Run locally
 
 Requires Node.js 24+, pnpm 10 (via Corepack or a local install), PostgreSQL 16,
-MinIO, and a development AuthNEI/ZITADEL OIDC client. Ask a maintainer for the
+MinIO, authenticated Redis 7.4, and a development AuthNEI/ZITADEL OIDC client. Ask a maintainer for the
 client credentials and register `http://localhost:3000/api/auth/callback/zitadel`
 as its callback. Use development credentials and data only.
 
@@ -32,6 +32,8 @@ as its callback. Use development credentials and data only.
    ```bash
    docker run -d --name fallstack-postgres -p 54322:5432 -e POSTGRES_PASSWORD=postgres postgres:16
    docker run -d --name fallstack-minio -p 9000:9000 -p 9001:9001 -e MINIO_ROOT_USER=fallstack_local -e MINIO_ROOT_PASSWORD=replace-with-local-minio-secret coollabsio/minio:RELEASE.2025-10-15T17-29-55Z server /data --console-address ':9001'
+   export REDIS_PASSWORD="$(openssl rand -hex 32)"
+   docker run -d --name fallstack-redis -p 127.0.0.1:6379:6379 redis:7.4.12-alpine redis-server --requirepass "$REDIS_PASSWORD" --maxmemory 96mb --maxmemory-policy noeviction
    ```
 
    Open the MinIO console at `http://localhost:9001` and create three buckets:
@@ -52,6 +54,12 @@ as its callback. Use development credentials and data only.
    `AUTH_SECRET` from example values. Keep `NEXT_PUBLIC_BASE_URL` at
    `http://localhost:3000/api` for this setup. `.env.example` lists all keys.
    Do not use production credentials locally.
+
+   Set `REDIS_URL` in `.env` to the local authenticated instance using the
+   generated `REDIS_PASSWORD` (do not print or commit it), and keep
+   `REDIS_KEY_PREFIX=fallstack:local:`. CV/avatar uploads return 503 if shared
+   limits cannot be checked. Local Redis above is disposable; deployed Redis
+   uses AOF and a persistent volume as described in the [runbook](docs/operations/redis.md).
 
    For a local, staging, or CI installation that has **never issued Wallet
    passes**, set `GOOGLE_WALLET_NEVER_ENABLED=true` and leave all three Wallet
