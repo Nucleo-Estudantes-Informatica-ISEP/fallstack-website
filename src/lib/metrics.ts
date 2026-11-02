@@ -12,6 +12,8 @@ import {
   Registry,
 } from "@prometheus-io/client";
 
+import { rateLimitRegistry } from "./rateLimitMetrics";
+
 const methods = new Set([
   "GET",
   "HEAD",
@@ -29,6 +31,10 @@ export async function startMetricsServer(options: {
 }) {
   const registry = new Registry();
   registry.setDefaultLabels({
+    environment: options.environment,
+    service: "web",
+  });
+  rateLimitRegistry.setDefaultLabels({
     environment: options.environment,
     service: "web",
   });
@@ -50,7 +56,9 @@ export async function startMetricsServer(options: {
         "Content-Type": registry.contentType,
         "Cache-Control": "no-store",
       });
-      res.end(await registry.metrics());
+      res.end(
+        (await registry.metrics()) + "\n" + (await rateLimitRegistry.metrics())
+      );
     } catch {
       res.destroy();
     }

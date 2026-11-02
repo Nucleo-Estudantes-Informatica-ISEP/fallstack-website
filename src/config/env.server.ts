@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { redisEnvSchema } from "./env.redis";
 import { storageEnvSchema } from "./env.storage";
 
 const optionalNonEmptyString = z.preprocess(
@@ -12,6 +13,7 @@ const optionalNonEmptyString = z.preprocess(
 // Secrets and server-only config for PostgreSQL/MinIO and AuthNEI.
 const serverEnvSchema = z.object({
   ...storageEnvSchema.shape,
+  ...redisEnvSchema.shape,
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),

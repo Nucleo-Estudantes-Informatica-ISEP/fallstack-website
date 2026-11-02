@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from "uuid";
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
-import { createRateLimiter } from "@/lib/rateLimit";
 
 import {
   avatarKey,
@@ -16,16 +15,17 @@ import {
   putObject,
   type StorageBucket,
 } from "./objectStorageService";
-
-const limiters = {
-  avatar: createRateLimiter(config.uploads.avatar.rateLimit),
-  cv: createRateLimiter(config.uploads.cv.rateLimit),
-};
+import { checkRateLimit } from "./rateLimitService";
 
 export const checkUploadRateLimit = (
   kind: "avatar" | "cv",
   studentId: string
-) => limiters[kind].check(studentId);
+) =>
+  checkRateLimit(
+    kind === "cv" ? "upload_cv" : "upload_avatar",
+    studentId,
+    config.uploads[kind].rateLimit
+  );
 
 export async function readUploadFile(request: Request, kind: StorageBucket) {
   const maxBodySize = config.uploads[kind].maxSize + 16 * 1024;
