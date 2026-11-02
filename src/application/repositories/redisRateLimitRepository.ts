@@ -1,7 +1,7 @@
 import "server-only";
 
 import { isIP } from "node:net";
-import { createClient } from "@redis/client";
+import { createClient, ErrorReply } from "@redis/client";
 
 import type { RateLimitStore } from "@/domain/rateLimit";
 
@@ -33,7 +33,7 @@ export const redisLimiterTiming = {
 export class LimiterStoreError extends Error {
   constructor(
     public readonly reason:
-      "timeout" | "redis" | "cooldown" | "saturated" | "configuration"
+      "timeout" | "redis" | "state" | "cooldown" | "saturated" | "configuration"
   ) {
     super("Shared rate limiter unavailable");
   }
@@ -53,11 +53,11 @@ export function createRedisRateLimitStore(
   let retryAt = 0;
   let pending = 0;
 
-  function discard(current: typeof client) {
+  function discard(current: typeof client, cooldown = true) {
     if (current !== client) return;
     client = undefined;
     connecting = undefined;
-    retryAt = performance.now() + timing.cooldownMs;
+    retryAt = cooldown ? performance.now() + timing.cooldownMs : 0;
     if (current?.isOpen) current.destroy();
   }
 
@@ -81,6 +81,10 @@ export function createRedisRateLimitStore(
         throw new LimiterStoreError("configuration");
       }
 
+      // Idle disconnects are not failed admissions. Refresh before sending any
+      // command, without making every endpoint wait for a needless cooldown.
+      if (client && !connecting && (!client.isOpen || !client.isReady))
+        discard(client, false);
       if (!client) {
         const address = new URL(config.url);
         client = createClient({
@@ -103,17 +107,22 @@ export function createRedisRateLimitStore(
         });
         // Never forward provider errors, which can include credentials or keys.
         client.on("error", () => {});
-        connecting = client.connect();
+        const created = client;
+        connecting = created.connect().then(() => {
+          if (client === created) connecting = undefined;
+        });
       }
       const current = client;
       pending++;
       let timer: ReturnType<typeof setTimeout> | undefined;
+      let commandSent = false;
       try {
         const result = await Promise.race([
           (async () => {
             await connecting;
             if (current !== client || !current.isReady)
               throw new LimiterStoreError("redis");
+            commandSent = true;
             return current.eval(script, {
               keys: [`${config.prefix}ratelimit:v1:${key}`],
               arguments: [String(policy.windowMs), String(policy.max)],
@@ -138,17 +147,25 @@ export function createRedisRateLimitStore(
           ? { status: "allowed" }
           : { status: "limited", retryAfterMs: result[1] };
       } catch (error) {
-        discard(current);
+        // A Redis command reply leaves the transport usable. In particular a
+        // corrupt subject key must not deny uploads for every other subject.
+        const commandError = commandSent && error instanceof ErrorReply;
+        if (!commandError) discard(current);
         throw error instanceof LimiterStoreError
           ? error
-          : new LimiterStoreError("redis");
+          : new LimiterStoreError(
+              commandError &&
+                /^(INVALID_LIMITER_STATE|WRONGTYPE)(?: |$)/.test(error.message)
+                ? "state"
+                : "redis"
+            );
       } finally {
         clearTimeout(timer);
         pending--;
       }
     },
     close() {
-      discard(client);
+      discard(client, false);
     },
   };
 }

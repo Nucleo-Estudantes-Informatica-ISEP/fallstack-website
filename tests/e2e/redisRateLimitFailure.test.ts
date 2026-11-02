@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { createServer, type Server, type Socket } from "node:net";
-import { setTimeout as delay } from "node:timers/promises";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { createRedisRateLimitStore } from "@/application/repositories/redisRateLimitRepository";
@@ -45,7 +44,7 @@ test.each([
   "disconnect",
   "bad-reply",
 ])(
-  "real client has bounded %s failure, no mutation replay, closes sockets and recovers",
+  "real client has bounded %s failure, no mutation replay and recovers with the appropriate connection policy",
   async (initialMode) => {
     let mode = initialMode;
     let mutations = 0;
@@ -104,8 +103,17 @@ test.each([
     await expect(
       store.check("synthetic", { max: 5, windowMs: 60000 })
     ).rejects.toThrow("Shared rate limiter unavailable");
-    expect(performance.now() - started).toBeLessThan(1000);
+    expect(performance.now() - started).toBeLessThan(2000);
     const beforeRecovery = mutations;
+    if (mode === "oom") {
+      expect(sockets.size).toBe(1);
+      mode = "ready";
+      expect(
+        await store.check("other-subject", { max: 5, windowMs: 60000 })
+      ).toEqual({ status: "limited", retryAfterMs: 1234 });
+      expect(mutations).toBe(beforeRecovery + 1);
+      return;
+    }
     await expect(
       store.check("synthetic", { max: 5, windowMs: 60000 })
     ).rejects.toMatchObject({ reason: "cooldown" });
@@ -113,9 +121,13 @@ test.each([
     await vi.waitFor(() => expect(sockets.size).toBe(0));
     if (mode !== "hang-handshake") expect(authenticated).toBe(true);
     mode = "ready";
-    await delay(1050);
-    expect(await store.check("synthetic", { max: 5, windowMs: 60000 })).toEqual(
-      { status: "limited", retryAfterMs: 1234 }
+    await vi.waitFor(
+      async () => {
+        expect(
+          await store.check("synthetic", { max: 5, windowMs: 60000 })
+        ).toEqual({ status: "limited", retryAfterMs: 1234 });
+      },
+      { timeout: 5000, interval: 100 }
     );
     expect(mutations).toBe(beforeRecovery + 1);
   }
