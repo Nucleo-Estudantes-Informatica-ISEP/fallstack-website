@@ -6,10 +6,7 @@ import type { Histogram } from "@prometheus-io/client";
 import { afterAll, expect, test, vi } from "vitest";
 
 import { startMetricsServer } from "./metrics";
-import {
-  observeRateLimit,
-  observeRateLimitTransition,
-} from "./rateLimitMetrics";
+import { observeRateLimit, observeRateLimitHealth } from "./rateLimitMetrics";
 
 vi.mock("server-only", () => ({}));
 
@@ -17,6 +14,7 @@ const metrics = await startMetricsServer({
   host: "127.0.0.1",
   port: 0,
   environment: "dev",
+  checkLimiterHealth: async () => {},
 });
 const app = createServer((req, res) => {
   if (req.url?.startsWith("/abort")) res.destroy();
@@ -103,7 +101,7 @@ test("private listener exposes only GET /metrics and excludes its own requests",
 test("private listener exposes limiter decisions, errors, latency and degraded transitions without subject labels", async () => {
   observeRateLimit("upload_cv", "limited", 0.002, "none");
   observeRateLimit("upload_avatar", "unavailable", 0.3, "timeout");
-  observeRateLimitTransition("degraded");
+  observeRateLimitHealth(false, "degraded");
   let text = await (await fetch(`${metricsUrl}/metrics`)).text();
   expect(text).toContain(
     'fallstack_rate_limit_requests_total{endpoint="upload_cv",outcome="limited",reason="none",environment="dev",service="web"} 1'
@@ -114,11 +112,14 @@ test("private listener exposes limiter decisions, errors, latency and degraded t
     'fallstack_rate_limit_degraded{environment="dev",service="web"} 1'
   );
   expect(text).toContain('state="degraded"');
-  observeRateLimitTransition("recovered");
+  observeRateLimitHealth(true, "recovered");
   text = await (await fetch(`${metricsUrl}/metrics`)).text();
   expect(text).toContain(
     'fallstack_rate_limit_degraded{environment="dev",service="web"} 0'
   );
   expect(text).toContain('state="recovered"');
+  expect(text).toContain(
+    "fallstack_rate_limit_last_observation_timestamp_seconds"
+  );
   expect(text).not.toMatch(/student|userId|cookie|token|subject|redis:\/\//);
 });

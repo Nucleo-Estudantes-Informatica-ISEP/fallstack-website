@@ -12,6 +12,9 @@ import {
   Registry,
 } from "@prometheus-io/client";
 
+import { startRateLimitHealthMonitor } from "@/application/services/rateLimitHealthService";
+import { checkRateLimitHealth } from "@/application/services/rateLimitService";
+
 import { rateLimitRegistry } from "./rateLimitMetrics";
 
 const methods = new Set([
@@ -28,6 +31,7 @@ export async function startMetricsServer(options: {
   host: string;
   port: number;
   environment: "dev" | "main";
+  checkLimiterHealth?: () => Promise<unknown>;
 }) {
   const registry = new Registry();
   registry.setDefaultLabels({
@@ -75,6 +79,10 @@ export async function startMetricsServer(options: {
   const address = server.address();
   const port =
     typeof address === "object" && address ? address.port : options.port;
+  const stopLimiterMonitor = startRateLimitHealthMonitor(
+    options.checkLimiterHealth ?? checkRateLimitHealth
+  );
+  server.once("close", stopLimiterMonitor);
 
   // Node's HTTP boundary includes pages and plain routes that bypass defineHandler.
   const observe = (message: unknown) => {

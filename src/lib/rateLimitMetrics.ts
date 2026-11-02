@@ -13,7 +13,7 @@ const degraded =
     Gauge<string> | undefined) ??
   new Gauge({
     name: "fallstack_rate_limit_degraded",
-    help: "Last shared limiter observation: 1 unavailable, 0 recovered; updated by limited requests.",
+    help: "Periodic synthetic limiter check: 1 unavailable, 0 healthy.",
     registers: [rateLimitRegistry],
   });
 const transitions =
@@ -27,9 +27,23 @@ const transitions =
     registers: [rateLimitRegistry],
   });
 
-export function observeRateLimitTransition(state: "degraded" | "recovered") {
-  degraded.set(state === "degraded" ? 1 : 0);
-  transitions.inc({ state });
+const lastObservation =
+  (rateLimitRegistry.getSingleMetric(
+    "fallstack_rate_limit_last_observation_timestamp_seconds"
+  ) as Gauge<string> | undefined) ??
+  new Gauge({
+    name: "fallstack_rate_limit_last_observation_timestamp_seconds",
+    help: "Unix timestamp of the last completed synthetic limiter check.",
+    registers: [rateLimitRegistry],
+  });
+
+export function observeRateLimitHealth(
+  healthy: boolean,
+  transition?: "degraded" | "recovered"
+) {
+  degraded.set(healthy ? 0 : 1);
+  lastObservation.set(Date.now() / 1000);
+  if (transition) transitions.inc({ state: transition });
 }
 const requests =
   (rateLimitRegistry.getSingleMetric("fallstack_rate_limit_requests_total") as

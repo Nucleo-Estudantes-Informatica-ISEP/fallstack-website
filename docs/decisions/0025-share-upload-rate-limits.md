@@ -40,11 +40,27 @@ without user/key/request labels.
 Bound TCP connection establishment to 200ms and the complete limiter operation,
 including authentication and command response, to 300ms. Disable automatic
 reconnect, command retries and offline queuing. At most 128 checks can be pending
-per process. A failed/timed-out check closes that connection, rejects pending
+per process. A failed connection or timed-out check closes that connection, rejects pending
 checks and suppresses reconnect attempts for one second. After cooldown the
 next request starts one shared connection attempt. Never replay ambiguous EVALs:
 they may already have consumed capacity. Saturation rejects new checks without
 discarding a healthy connection.
+
+Replace an already closed/unready idle connection before sending a command,
+without imposing cooldown. Redis command error replies leave the transport
+usable and fail only the affected check; corrupt/wrong-type/no-TTL keys are not
+reset automatically, because that could grant fresh capacity. Authentication
+failures during connection establishment still discard the connection and
+impose cooldown. Never retry or refund an ambiguous mutation.
+
+With private metrics enabled, run the same limiter script/client every 15
+seconds on a per-runtime synthetic key (one-second TTL), independently of
+uploads. Only this probe controls the degraded gauge and transition logs;
+per-subject failures remain visible in request counters. Probes never overlap
+and stop when the metrics listener closes. Export the observation timestamp;
+gate degradation alerts on fresh observations and alert separately when the
+probe is stale for over 45 seconds. This does not change readiness/liveness or
+consume real user allowances.
 
 Fail closed with `{ error: "Rate limiter unavailable" }`, status 503 and
 `Retry-After: 1` on missing configuration, Redis errors, timeouts or admission

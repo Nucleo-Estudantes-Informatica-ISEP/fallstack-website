@@ -205,7 +205,12 @@ including authentication/command replies. There are no command retries,
 automatic reconnects or offline command queues. One connection attempt is shared
 by concurrent callers, with at most 128 pending checks per process. A failed
 connection is destroyed; the next connection attempt is allowed after a
-one-second cooldown. Saturation rejects excess requests. All these failures
+one-second cooldown. Idle disconnected clients are replaced before any command
+without cooldown. Server command replies (including OOM and corrupt key errors)
+fail only that check without destroying a healthy socket or imposing global
+cooldown. Corrupt keys remain fail-closed; repair them deliberately after the
+original window has elapsed, rather than resetting budgets automatically.
+Saturation rejects excess requests. All these failures
 return 503, `{ error: "Rate limiter unavailable" }`, and `Retry-After: 1` before
 reading/writing the upload. **No fallback upload capacity is granted**, regardless
 of replica count. Already admitted uploads may finish; a lost Redis reply can
@@ -220,16 +225,23 @@ labels are fixed endpoint/outcome/reason values only.
 - 429s: `sum by (environment, endpoint) (increase(fallstack_rate_limit_requests_total{outcome="limited"}[5m]))`.
 - Failure counts: `sum by (environment, reason) (increase(fallstack_rate_limit_requests_total{outcome="unavailable"}[5m]))`.
 - p95: `histogram_quantile(0.95, sum by (environment, le) (rate(fallstack_rate_limit_duration_seconds_bucket[5m])))`.
-- `fallstack_rate_limit_degraded` records the last observed unavailable/recovered
-  state; it updates on upload checks, not background probes.
+- `fallstack_rate_limit_degraded` records a synthetic check every 15 seconds,
+  using the same limiter client/script and a unique per-runtime key with a
+  one-second TTL. It detects outage/recovery even with no uploads. Only one
+  probe runs at a time; closing the private metrics listener stops scheduling.
+- `fallstack_rate_limit_last_observation_timestamp_seconds` records probe
+  freshness. Individual corrupt subject keys are reported as request failures
+  with `reason="state"`; they do not change the global health gauge.
 - `fallstack_rate_limit_transitions_total{state="degraded"|"recovered"}` and
   sanitized `rate_limit.degraded`/`rate_limit.recovered` log events show transitions.
   No keys, identities, hashes, cookies, connection URLs or tokens are logged.
 
-`FallstackSharedLimiterDegraded` alerts after one minute degraded;
+`FallstackSharedLimiterDegraded` alerts after one minute degraded with a probe
+observation less than 45 seconds old. `FallstackSharedLimiterProbeStale` alerts
+after observations are older than 45 seconds for one minute;
 `FallstackSharedLimiterSlow` alerts when p95 exceeds 200ms for five minutes.
-After repairing Redis, make a synthetic upload check to verify recovery and
-clear the last-observed gauge. PING readiness alone cannot prove write/script
+After repairing Redis, the periodic check updates the gauge within about 15
+seconds plus the 300ms operation deadline; no real upload is needed. PING readiness alone cannot prove write/script
 permissions or recovery of the actual limiter client.
 
 For 503s check private network attachment/DNS, saved credentials, TLS trust,

@@ -10,7 +10,6 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn(), info: vi.fn() } }));
 vi.mock("@/lib/rateLimitMetrics", () => ({
   observeRateLimit: vi.fn(),
-  observeRateLimitTransition: vi.fn(),
 }));
 test("isolates endpoints and hashes subjects without publishing them to observability", async () => {
   const check = vi.fn().mockResolvedValue({ status: "allowed" });
@@ -26,7 +25,7 @@ test("isolates endpoints and hashes subjects without publishing them to observab
     "private-subject"
   );
 });
-test("fails closed on ambiguous errors, logs transitions once and recovers without fallback", async () => {
+test("fails closed on ambiguous errors and recovers without fallback or misleading health transitions", async () => {
   vi.clearAllMocks();
   const check = vi
     .fn()
@@ -45,8 +44,8 @@ test("fails closed on ambiguous errors, logs transitions once and recovers witho
     status: "limited",
     retryAfterMs: 1234,
   });
-  expect(logger.warn).toHaveBeenCalledTimes(1);
-  expect(logger.info).toHaveBeenCalledTimes(1);
+  expect(logger.warn).not.toHaveBeenCalled();
+  expect(logger.info).not.toHaveBeenCalled();
   expect(observeRateLimit).toHaveBeenCalledWith(
     "upload_cv",
     "unavailable",

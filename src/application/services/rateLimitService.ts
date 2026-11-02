@@ -1,14 +1,10 @@
 import "server-only";
 
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import { requireRedisConfig } from "@/config/env.redis";
 import { serverEnv } from "@/config/env.server";
-import logger from "@/lib/logger";
-import {
-  observeRateLimit,
-  observeRateLimitTransition,
-} from "@/lib/rateLimitMetrics";
+import { observeRateLimit } from "@/lib/rateLimitMetrics";
 import {
   createRedisRateLimitStore,
   LimiterStoreError,
@@ -22,7 +18,6 @@ import type {
 export type LimitedEndpoint = "upload_cv" | "upload_avatar";
 
 export function createRateLimitService(store: RateLimitStore) {
-  let degraded = false;
   return async (
     endpoint: LimitedEndpoint,
     userId: string,
@@ -34,25 +29,9 @@ export function createRateLimitService(store: RateLimitStore) {
     try {
       const subject = createHash("sha256").update(userId).digest("hex");
       decision = await store.check(`${endpoint}:${subject}`, policy);
-      if (degraded) {
-        observeRateLimitTransition("recovered");
-        logger.info(
-          { event: "rate_limit.recovered" },
-          "Shared limiter recovered"
-        );
-        degraded = false;
-      }
     } catch (error) {
       reason = error instanceof LimiterStoreError ? error.reason : "redis";
       decision = { status: "unavailable" };
-      if (!degraded) {
-        observeRateLimitTransition("degraded");
-        logger.warn(
-          { event: "rate_limit.degraded", reason },
-          "Shared limiter unavailable; requests denied"
-        );
-        degraded = true;
-      }
     }
     observeRateLimit(
       endpoint,
@@ -66,8 +45,17 @@ export function createRateLimitService(store: RateLimitStore) {
 
 const state = globalThis as typeof globalThis & {
   fallstackRateLimitCheck?: ReturnType<typeof createRateLimitService>;
+  fallstackRateLimitStore?: ReturnType<typeof createRedisRateLimitStore>;
 };
+const store = (state.fallstackRateLimitStore ??= createRedisRateLimitStore(() =>
+  requireRedisConfig(serverEnv)
+));
 export const checkRateLimit = (state.fallstackRateLimitCheck ??=
-  createRateLimitService(
-    createRedisRateLimitStore(() => requireRedisConfig(serverEnv))
-  ));
+  createRateLimitService(store));
+
+// Unique per runtime, never a real subject's budget. Repeated probes exercise
+// the exact script/client/config used by uploads; the synthetic key expires.
+const healthKey = `health:${randomUUID()}`;
+export async function checkRateLimitHealth() {
+  await store.check(healthKey, { max: 1, windowMs: 1000 });
+}
