@@ -2,6 +2,24 @@ rule_files:
   - rules.yml
 evaluation_interval: 1m
 tests:
+  - name: shared limiter failure alerts and recovery clears the alert
+    interval: 1m
+    input_series:
+      - series: 'fallstack_rate_limit_degraded{environment="dev",service="web",copy="web-1"}'
+        values: "0 1 1 1 0 0"
+    alert_rule_test:
+      - alertname: FallstackSharedLimiterDegraded
+        eval_time: 3m
+        exp_alerts:
+          - exp_labels:
+              environment: dev
+              service: web
+              copy: web-1
+            exp_annotations:
+              summary: Shared upload limiter is denying requests because Redis is unavailable
+      - alertname: FallstackSharedLimiterDegraded
+        eval_time: 5m
+        exp_alerts: []
   - name: zero errors remains zero and 429 is excluded
     interval: 1m
     input_series:

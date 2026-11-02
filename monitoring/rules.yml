@@ -63,3 +63,13 @@ groups:
         for: 1m
         annotations:
           summary: Redis probe timer stopped writing results
+      - alert: FallstackSharedLimiterDegraded
+        expr: fallstack_rate_limit_degraded == 1
+        for: 1m
+        annotations:
+          summary: Shared upload limiter is denying requests because Redis is unavailable
+      - alert: FallstackSharedLimiterSlow
+        expr: histogram_quantile(0.95, sum by (environment, service, copy, le) (rate(fallstack_rate_limit_duration_seconds_bucket[5m]))) > 0.2
+        for: 5m
+        annotations:
+          summary: Shared limiter latency is approaching its 300ms deadline
