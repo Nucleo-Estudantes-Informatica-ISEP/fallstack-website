@@ -2,12 +2,16 @@
 import { createServer, type Server, type Socket } from "node:net";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { createRedisRateLimitStore } from "@/application/repositories/redisRateLimitRepository";
+import {
+  createRedisRateLimitStore,
+  LimiterStoreError,
+} from "@/application/repositories/redisRateLimitRepository";
 
 vi.mock("server-only", () => ({}));
 
 let server: Server;
 const sockets = new Set<Socket>();
+const socketErrors: NodeJS.ErrnoException[] = [];
 const stores: ReturnType<typeof createRedisRateLimitStore>[] = [];
 afterEach(async () => {
   stores.forEach((store) => store.close());
@@ -16,6 +20,11 @@ afterEach(async () => {
   if (server?.listening)
     await new Promise<void>((resolve) => server.close(() => resolve()));
   sockets.clear();
+  const unexpected = socketErrors.filter(
+    (error) => !["ECONNRESET", "EPIPE"].includes(error.code ?? "")
+  );
+  socketErrors.length = 0;
+  expect(unexpected).toEqual([]);
 });
 
 function command(
@@ -51,6 +60,10 @@ test.each([
     let authenticated = false;
     server = createServer((socket) => {
       sockets.add(socket);
+      // Aborting a real client may reset the fixture's peer socket.
+      socket.on("error", (error: NodeJS.ErrnoException) =>
+        socketErrors.push(error)
+      );
       socket.on("close", () => sockets.delete(socket));
       let input = "";
       socket.on("data", (bytes) => {
@@ -135,11 +148,20 @@ test.each([
 
 test("limits pending work and connection attempts during a hanging handshake", async () => {
   let connections = 0;
+  let handshakeReceived = false;
+  // The Redis client also queues AUTH/client metadata during its handshake.
+  // Keep that queue large enough to reach TCP while still saturating admission.
+  const maxPending = 16;
   server = createServer((socket) => {
     connections++;
     sockets.add(socket);
+    socket.on("error", (error: NodeJS.ErrnoException) =>
+      socketErrors.push(error)
+    );
     socket.on("close", () => sockets.delete(socket));
-    socket.resume();
+    socket.on("data", () => {
+      handshakeReceived = true;
+    });
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
@@ -150,19 +172,28 @@ test("limits pending work and connection attempts during a hanging handshake", a
       url: `redis://:test@127.0.0.1:${address.port}`,
       prefix: "fallstack:test:",
     }),
-    { deadlineMs: 100, connectTimeoutMs: 100, cooldownMs: 1000, maxPending: 2 }
+    { deadlineMs: 300, connectTimeoutMs: 200, cooldownMs: 1000, maxPending }
   );
   stores.push(store);
-  const work = Promise.allSettled([
-    store.check("a", { max: 5, windowMs: 60000 }),
-    store.check("b", { max: 5, windowMs: 60000 }),
-  ]);
+  const work = Promise.allSettled(
+    Array.from({ length: maxPending }, (_, index) =>
+      store.check(`pending-${index}`, { max: 5, windowMs: 60000 })
+    )
+  );
   await expect(
     store.check("c", { max: 5, windowMs: 60000 })
   ).rejects.toMatchObject({ reason: "saturated" });
-  expect((await work).every((result) => result.status === "rejected")).toBe(
-    true
-  );
+  const results = await work;
+  expect(results.every((result) => result.status === "rejected")).toBe(true);
+  expect(
+    results.some(
+      (result) =>
+        result.status === "rejected" &&
+        result.reason instanceof LimiterStoreError &&
+        result.reason.reason === "timeout"
+    )
+  ).toBe(true);
   expect(connections).toBe(1);
+  expect(handshakeReceived).toBe(true);
   await vi.waitFor(() => expect(sockets.size).toBe(0));
 });

@@ -12,12 +12,18 @@ vi.mock("@/application/repositories/readinessRepository", () => ({
 }));
 
 const sockets = new Set<Socket>();
+const socketErrors: NodeJS.ErrnoException[] = [];
 let server: Server;
 afterEach(async () => {
   for (const socket of sockets) socket.destroy();
   if (server?.listening)
     await new Promise<void>((resolve) => server.close(() => resolve()));
   sockets.clear();
+  const unexpected = socketErrors.filter(
+    (error) => !["ECONNRESET", "EPIPE"].includes(error.code ?? "")
+  );
+  socketErrors.length = 0;
+  expect(unexpected).toEqual([]);
 });
 
 // Minimal loopback RESP fixture, not a live Redis or an application-client mock.
@@ -47,6 +53,10 @@ test.each(["ready", "bad-auth", "hang-handshake", "hang-ping"])(
     let authenticated = false;
     server = createServer((socket) => {
       sockets.add(socket);
+      // Deadline cancellation can reset this deliberately incomplete peer.
+      socket.on("error", (error: NodeJS.ErrnoException) =>
+        socketErrors.push(error)
+      );
       socket.on("close", () => sockets.delete(socket));
       let input = "";
       socket.on("data", (bytes) => {
