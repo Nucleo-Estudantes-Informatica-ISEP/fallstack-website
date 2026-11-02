@@ -21,7 +21,7 @@ jobs:
       GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
       ENABLED: ${{ vars.PROJECT_AUTO_UNBLOCK_ENABLED }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check schedule switch and token presence
         shell: bash
         run: |

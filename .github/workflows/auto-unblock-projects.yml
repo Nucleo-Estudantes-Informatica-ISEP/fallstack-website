@@ -27,7 +27,7 @@ jobs:
       GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
     steps:
       - name: Check out automation
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Verify automation credentials
         run: |
