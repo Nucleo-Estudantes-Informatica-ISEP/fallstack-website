@@ -53,7 +53,7 @@ test.each(["http://redis:6379", "not-a-url"])(
     process.env.REDIS_URL = value;
     const { serverEnv } = await import("./env.server");
     const { getRedisUrl } = await import("./env.redis");
-    expect(serverEnv.AUTH_SECRET).toBe(process.env.AUTH_SECRET);
+    expect(() => serverEnv.AUTH_SECRET).toThrow("REDIS_URL");
     expect(() => getRedisUrl()).toThrow("REDIS_URL");
   }
 );

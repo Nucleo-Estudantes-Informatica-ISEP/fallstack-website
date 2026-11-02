@@ -49,9 +49,8 @@ describe.each([
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getServerSession).mockResolvedValue(student);
-    vi.mocked(checkUploadRateLimit).mockReturnValue({
-      allowed: true,
-      retryAfterMs: 0,
+    vi.mocked(checkUploadRateLimit).mockResolvedValue({
+      status: "allowed",
     });
     vi.mocked(readUploadFile).mockResolvedValue(
       new File(["bytes"], "file", { type: "image/png" })
@@ -84,8 +83,8 @@ describe.each([
   });
 
   test("returns retry delay on rate limit", async () => {
-    vi.mocked(checkUploadRateLimit).mockReturnValue({
-      allowed: false,
+    vi.mocked(checkUploadRateLimit).mockResolvedValue({
+      status: "limited",
       retryAfterMs: 1500,
     });
     const response = await send();

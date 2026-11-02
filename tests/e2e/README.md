@@ -328,8 +328,8 @@ profile applies the staging target guard above, including direct `test:load`.
   concurrent `pnpm test:load` invocations against the same target to get a
   realistic mixed-traffic picture rather than an isolated probe.
 
-For a repeatable local route check without staging services, run
-`pnpm exec vitest run tests/e2e/rateLimiterBoundary.test.ts`. It calls the real
-CV route and limiter with six synthetic student identities; session lookup and
-object storage are stubbed. This verifies route behavior, not k6 load or
-deployment latency.
+For local route/distributed checks and the staging mixed CV/avatar/employee
+preview-scan scenario, see [shared limiter validation](../../docs/rate-limiter-load-validation.md).
+The route check mocks limiter decisions; distributed checks run production limiter
+code in two independent HTTP processes against disposable Redis. Neither replaces
+SAD's authenticated per-copy Coolify rollout evidence.
