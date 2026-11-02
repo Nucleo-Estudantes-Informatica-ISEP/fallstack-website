@@ -93,12 +93,26 @@ jobs:
             redis:7.4.12-alpine redis-server --requirepass "$limiter_password" \
             --appendonly yes --appendfsync everysec --save '' \
             --maxmemory 96mb --maxmemory-policy noeviction
+          limiter_ready=false
+          for attempt in $(seq 1 15); do
+            if reply="$(timeout 2s docker exec -e REDISCLI_AUTH="$limiter_password" limiter-redis redis-cli --raw -e PING)" && [ "$reply" = PONG ]; then
+              limiter_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$limiter_ready" != true ]; then
+            echo "Authenticated CI Redis readiness failed" >&2
+            exit 1
+          fi
 
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
 
       - name: Test
-        run: pnpm exec vitest run --maxWorkers=2
+        run: |
+          : "${TEST_REDIS_URL:?Shared limiter integration tests require TEST_REDIS_URL in CI}"
+          pnpm exec vitest run --maxWorkers=2
 
       - name: Install Chromium
         run: pnpm exec playwright install --with-deps chromium

@@ -14,12 +14,17 @@ docker rm -fv limiter-check
 unset limiter_password
 ```
 
-CI always supplies TEST_REDIS_URL. Without it the Redis integration suite skips;
-the TCP failure fixtures still run. The suite starts two independent Node HTTP
+CI waits for an exact authenticated PONG with bounded attempts and requires
+TEST_REDIS_URL; missing configuration fails the suite instead of skipping it.
+Native runs without the URL skip explicitly with a warning; TCP fixtures still
+run. The suite starts two independent Node HTTP
 processes executing the production service/repository/response mapping. It
 checks alternating/concurrent admission, users/endpoints/prefix isolation,
 expiry, adjacent-window bursts, 429/Retry-After, corrupt state and a real Redis
-pause followed by recovery. The boundary fixture shortens only a synthetic
+pause followed by recovery, idle disconnect reconnection and isolation of
+corrupt/no-TTL/wrong-type keys. Recovery assertions poll up to five seconds
+rather than relying on a fixed cooldown sleep; timeout checks allow scheduling
+slack without changing the production 300ms deadline. The boundary fixture shortens only a synthetic
 key's TTL; it validates expiry semantics rather than a deployed 60-second load
 measurement. No Next session or object storage runs in those worker hosts.
 

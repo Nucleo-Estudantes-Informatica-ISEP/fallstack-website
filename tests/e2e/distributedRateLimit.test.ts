@@ -6,10 +6,18 @@ import { setTimeout as delay } from "node:timers/promises";
 import { createClient } from "@redis/client";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
+import { rateLimitRegistry } from "@/lib/rateLimitMetrics";
 import { createRedisRateLimitStore } from "@/application/repositories/redisRateLimitRepository";
+import { startRateLimitHealthMonitor } from "@/application/services/rateLimitHealthService";
+
+import { getRedisTestUrl } from "./support/redisTestConfig";
 
 vi.mock("server-only", () => ({}));
-const url = process.env.TEST_REDIS_URL;
+const url = getRedisTestUrl();
+if (!url)
+  console.warn(
+    "Distributed limiter tests skipped locally: set TEST_REDIS_URL to disposable loopback Redis."
+  );
 const processes: ChildProcess[] = [];
 const subjects = new Set<string>();
 const bases: string[] = [];
@@ -27,8 +35,6 @@ const key = (
   `${prefix}ratelimit:v1:${endpoint}:${createHash("sha256").update(subject).digest("hex")}`;
 beforeAll(async () => {
   if (!url) return;
-  if (!["127.0.0.1", "localhost"].includes(new URL(url).hostname))
-    throw new Error("TEST_REDIS_URL must target loopback disposable Redis");
   admin = createClient({ url, socket: { reconnectStrategy: false } });
   admin.on("error", () => {});
   await admin.connect();
@@ -101,16 +107,21 @@ test.skipIf(!url)(
       bases.map((base) => request(base, subject))
     );
     expect(responses.map((response) => response.status)).toEqual([503, 503]);
-    expect(performance.now() - started).toBeLessThan(1000);
-    await delay(1100);
+    expect(performance.now() - started).toBeLessThan(2000);
     // A timed-out EVAL may already have executed. Either zero or one allowance
     // remains; never replay a mutation or grant a new five-request budget.
-    const recovered = await Promise.all(
-      bases.map((base) => request(base, subject))
+    let recovered: Response[] = [];
+    await vi.waitFor(
+      async () => {
+        recovered = await Promise.all(
+          bases.map((base) => request(base, subject))
+        );
+        expect(
+          recovered.every((response) => [200, 429].includes(response.status))
+        ).toBe(true);
+      },
+      { timeout: 5000, interval: 100 }
     );
-    expect(
-      recovered.every((response) => [200, 429].includes(response.status))
-    ).toBe(true);
     expect(
       recovered.filter((response) => response.status === 200).length
     ).toBeLessThanOrEqual(1);
@@ -184,16 +195,88 @@ test.skipIf(!url)(
     expect(after.filter((response) => response.status === 429)).toHaveLength(1);
   }
 );
-test.skipIf(!url)(
-  "invalid Redis state fails closed, then recovers with the existing budget",
-  async () => {
+test.skipIf(!url).each(["invalid-value", "missing-ttl", "wrong-type"])(
+  "invalid Redis state %s fails closed for that key only, then recovers with the existing budget",
+  async (state) => {
     const subject = identity();
-    await admin.set(key(subject), "invalid-state", { PX: 60000 });
+    if (state === "wrong-type") await admin.hSet(key(subject), "count", "1");
+    else
+      await admin.set(
+        key(subject),
+        state === "invalid-value" ? "invalid-state" : "1",
+        state === "invalid-value" ? { PX: 60000 } : undefined
+      );
     expect((await request(bases[0], subject)).status).toBe(503);
     expect((await request(bases[0], subject)).status).toBe(503);
+    expect((await request(bases[0], identity())).status).toBe(200);
+    expect((await request(bases[0], subject, "avatar")).status).toBe(200);
     await admin.set(key(subject), "4", { PX: 60000 });
-    await delay(1100);
     expect((await request(bases[0], subject)).status).toBe(200);
     expect((await request(bases[1], subject)).status).toBe(429);
+  }
+);
+
+test.skipIf(!url)(
+  "idle Redis disconnects reconnect without 503 or a global cooldown",
+  async () => {
+    const subject = identity();
+    for (const base of bases)
+      expect((await request(base, subject)).status).toBe(200);
+    await admin.sendCommand([
+      "CLIENT",
+      "KILL",
+      "TYPE",
+      "normal",
+      "SKIPME",
+      "yes",
+    ]);
+    // Give the idle clients a turn to receive their TCP close events.
+    await delay(50);
+    for (const base of bases) {
+      expect((await request(base, subject)).status).toBe(200);
+      expect((await request(base, identity())).status).toBe(200);
+    }
+    expect((await request(bases[0], subject)).status).toBe(200);
+    expect((await request(bases[1], subject)).status).toBe(429);
+  }
+);
+
+test.skipIf(!url)(
+  "synthetic probes detect Redis outage and recover without any upload attempts",
+  async () => {
+    const healthKey = `health:${randomUUID()}`;
+    const store = createRedisRateLimitStore(() => ({
+      url: url!,
+      prefix: "fallstack:test:",
+    }));
+    const stop = startRateLimitHealthMonitor(
+      () => store.check(healthKey, { max: 1, windowMs: 1000 }),
+      50
+    );
+    const health = async () =>
+      (
+        await rateLimitRegistry
+          .getSingleMetric("fallstack_rate_limit_degraded")!
+          .get()
+      ).values[0]?.value;
+    try {
+      await vi.waitFor(async () => {
+        expect(
+          await admin.exists(`fallstack:test:ratelimit:v1:${healthKey}`)
+        ).toBe(1);
+        expect(await health()).toBe(0);
+      });
+      await admin.sendCommand(["CLIENT", "PAUSE", "650", "ALL"]);
+      await vi.waitFor(async () => expect(await health()).toBe(1), {
+        timeout: 3000,
+      });
+      await vi.waitFor(async () => expect(await health()).toBe(0), {
+        timeout: 5000,
+      });
+    } finally {
+      stop();
+      store.close();
+      await admin.del(`fallstack:test:ratelimit:v1:${healthKey}`);
+    }
   }
 );
