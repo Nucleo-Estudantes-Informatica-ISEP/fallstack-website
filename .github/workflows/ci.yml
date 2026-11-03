@@ -109,6 +109,14 @@ jobs:
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
 
+      - name: Verify bounded multi-process PostgreSQL pools and drain
+        env:
+          POOL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pool_test
+          CONFIRM_ISOLATED_POOL_TEST: "yes"
+        run: |
+          docker exec ${{ job.services.postgres.id }} createdb -U postgres pool_test
+          timeout 90s node scripts/check-postgres-pools.mjs
+
       - name: Test
         run: |
           : "${TEST_REDIS_URL:?Shared limiter integration tests require TEST_REDIS_URL in CI}"

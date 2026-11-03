@@ -52,3 +52,4 @@ implementation PR needs an ADR.
 | [0023](0023-upload-company-mp4-videos.md)                        | Upload company MP4 videos                        | Accepted   |
 | [0024](0024-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness       | Accepted   |
 | [0025](0025-share-upload-rate-limits.md)                         | Share upload rate limits across web copies       | Accepted   |
+| [0026](0026-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Accepted   |

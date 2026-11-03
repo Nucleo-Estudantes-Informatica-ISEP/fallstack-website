@@ -2,8 +2,11 @@ import "server-only";
 
 import { PrismaClient } from "@prisma/client";
 
+import { runtimeDatabaseUrl } from "@/config/env.database";
+
 const prismaClientSingleton = () =>
   new PrismaClient({
+    datasourceUrl: runtimeDatabaseUrl(),
     log: process.env.NODE_ENV !== "production" ? ["info", "warn", "error"] : [],
   });
 
