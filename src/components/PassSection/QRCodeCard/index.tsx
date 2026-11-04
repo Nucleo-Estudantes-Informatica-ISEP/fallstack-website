@@ -27,7 +27,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
 }) => {
   return (
     <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#121212] shadow-xl">
-      <div className="bg-gradient-to-br from-[#ED8326] to-[#FFB347] p-6 text-white">
+      <div className="bg-linear-to-br from-[#ED8326] to-[#FFB347] p-6 text-white">
         <h3
           className="text-2xl leading-tight font-bold"
           style={{ fontFamily: "Coolvetica, sans-serif" }}

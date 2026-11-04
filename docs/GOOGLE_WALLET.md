@@ -118,9 +118,14 @@ object ID from the configured class ID and student ID, so use a distinct class I
 for every environment. A separate issuer for non-production adds another layer
 of isolation when staging data is cloned from production.
 
-The class should contain only shared Fallstack 2026 presentation data (brand,
-logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by the application.
+The class can stay minimal: only its ID is required. For Generic passes, `logo`,
+`heroImage` and `hexBackgroundColor` are Generic **Object** fields, not class
+fields, so the console class form has no inputs for them. The application sets
+them on every object from `edition.branding.wallet`: images are served from
+`public/google-wallet/` (`logo.png`, square; `hero.png`, 1032×344) at
+`NEXT_PUBLIC_BASE_URL`, so Google must be able to fetch them over public HTTPS.
+Create a **Generic** class; an Event ticket class ID does not work with this
+integration.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create
@@ -276,7 +281,12 @@ not guarantee removal from a user's device or immediate synchronization.
 Issuance and deletion lock the same database user row and re-read the account,
 so an in-flight request cannot recreate or reactivate a deleted student's pass.
 One issuance or deletion operation per user is admitted in each application
-process before database access; PostgreSQL transaction advisory admission also
+process before database access. Combined issuance/deletion concurrency is also
+capped at `PRISMA_CONNECTION_LIMIT - 1` per process (two by default), leaving
+one request-pool slot for other traffic during Google I/O. Excess operations
+return 429 before DB access; retry after an admitted operation finishes. With a
+one-slot pool, Wallet operations are paused; configure at least two slots for
+issuance/deletion. PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.

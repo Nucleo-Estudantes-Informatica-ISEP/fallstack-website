@@ -11,6 +11,7 @@ const {
   infoMock,
 } = vi.hoisted(() => ({
   serverEnvMock: {
+    PRISMA_CONNECTION_LIMIT: 3,
     GOOGLE_WALLET_NEVER_ENABLED: false,
     GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
     GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
@@ -78,6 +79,7 @@ beforeEach(() => {
     callback({ active: true, student }, {})
   );
   serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 3;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
   serverEnvMock.GOOGLE_WALLET_CLASS_ID = "123456789.fallstack-2026-staging";
   serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = validCredentials;
@@ -183,6 +185,13 @@ test("creates a Generic Object whose barcode is the stable student code", async 
     classId: "123456789.fallstack-2026-staging",
     cardTitle: {
       defaultValue: { language: "pt-PT", value: "Fallstack 2026" },
+    },
+    hexBackgroundColor: "#641b04",
+    logo: {
+      sourceUri: { uri: "https://staging.fallstack.pt/google-wallet/logo.png" },
+    },
+    heroImage: {
+      sourceUri: { uri: "https://staging.fallstack.pt/google-wallet/hero.png" },
     },
     barcode: { type: "QR_CODE", value: "AB12", alternateText: "AB12" },
     validTimeInterval: {
@@ -513,6 +522,35 @@ test("rejects repeated issuance and deletion before queuing another DB lock", as
     withGoogleWalletOperation(student.id, async () => "retry")
   ).resolves.toBe("retry");
 });
+
+test.each([1, 2, 3])(
+  "pool size %s reserves one slot across different-user Wallet operations",
+  async (limit) => {
+    serverEnvMock.PRISMA_CONNECTION_LIMIT = limit;
+    const { withGoogleWalletOperation } = await import("./googleWalletService");
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const work = vi.fn(() => gate);
+    const admitted = Array.from({ length: limit - 1 }, (_, index) =>
+      withGoogleWalletOperation(`user-${index}`, work)
+    );
+    try {
+      await expect(
+        withGoogleWalletOperation("excess-user", work)
+      ).rejects.toMatchObject({ status: 429 });
+      expect(work).toHaveBeenCalledTimes(limit - 1);
+    } finally {
+      release();
+      await Promise.all(admitted);
+    }
+    if (limit > 1)
+      await expect(
+        withGoogleWalletOperation("retry-user", async () => "ok")
+      ).resolves.toBe("ok");
+  }
+);
 
 test("releases operation admission after failure for an immediate retry", async () => {
   const { withGoogleWalletOperation } = await import("./googleWalletService");

@@ -51,7 +51,9 @@ let cachedAccessToken: CachedAccessToken | undefined;
 let accessTokenRequest:
   { clientEmail: string; promise: Promise<string> } | undefined;
 
-// shortcut: process-local admission; use shared admission if replicas share a pool.
+// Each admitted issuance/deletion can hold one request-pool connection during
+// Google I/O. Reserve one slot for other requests before starting any DB work.
+// Admission is local because each Node process owns its own Prisma pool.
 const activeWalletOperations = new Set<string>();
 
 export async function withGoogleWalletOperation<T>(
@@ -63,6 +65,8 @@ export async function withGoogleWalletOperation<T>(
       "A Wallet operation is already in progress. Retry shortly.",
       429
     );
+  if (activeWalletOperations.size >= serverEnv.PRISMA_CONNECTION_LIMIT - 1)
+    throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
   activeWalletOperations.add(userId);
   try {
     return await work();
@@ -148,7 +152,13 @@ export function buildGoogleWalletObjectId(classId: string, studentId: string) {
   return `${classId}-${studentId}`;
 }
 
-function buildGenericObject(classId: string, student: WalletStudent) {
+function buildGenericObject(
+  classId: string,
+  student: WalletStudent,
+  origin: string
+) {
+  const { hexBackgroundColor, logoPath, heroImagePath } =
+    edition.branding.wallet;
   return {
     id: buildGoogleWalletObjectId(classId, student.id),
     classId,
@@ -160,6 +170,9 @@ function buildGenericObject(classId: string, student: WalletStudent) {
     cardTitle: localized(edition.branding.wallet.cardTitle),
     subheader: localized(`Código ${student.code}`),
     header: localized(student.name),
+    hexBackgroundColor,
+    logo: { sourceUri: { uri: new URL(logoPath, origin).href } },
+    heroImage: { sourceUri: { uri: new URL(heroImagePath, origin).href } },
     barcode: {
       type: "QR_CODE" as const,
       value: student.code,
@@ -404,7 +417,7 @@ export async function createGoogleWalletSaveUrl(student: WalletStudent) {
     return withLockedUser(student.id, async (user) => {
       if (!user?.active || !user.student)
         throw new HttpError("Student account is no longer available", 403);
-      const object = buildGenericObject(classId, user.student);
+      const object = buildGenericObject(classId, user.student, origin);
       await syncGenericObject(object, accessToken);
       return createSaveUrl(object.id, credentials, origin);
     });

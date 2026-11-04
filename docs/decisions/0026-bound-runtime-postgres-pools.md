@@ -46,9 +46,11 @@ migration validation and a new decision record.
 
 ## Consequences
 
-Slow different-user Wallet operations can occupy every request slot, causing
-process-wide DB request failures until a slot is released. Finite acquisition
-waits do not prevent this outage; monitor and measure the actual workload. Pool
+Wallet issuance and deletion share process-wide admission capped at the request
+pool size minus one (two operations with the default three-slot pool). Excess
+operations return 429 before DB access, preserving one slot for other requests
+during slow Google I/O. A one-slot configuration admits no Wallet operations;
+use at least two slots when Wallet issuance/deletion is needed. Pool
 limits protect shared capacity but do not establish acceptable event latency.
 Proxy removal/drain ordering still needs staging validation. No shared DB role
 quota, global PostgreSQL setting, production restart or new pooler is introduced.

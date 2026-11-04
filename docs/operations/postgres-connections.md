@@ -91,10 +91,12 @@ configuration must be verified separately before wiring readiness into routing.
   multiple sequential calls can occupy the connection until the transaction's
   **60s** deadline. Transaction admission has Prisma's separate default
   **2s maxWait**; URL `pool_timeout` does not replace that timeout. Same-user
-  advisory admission returns 429; different users can occupy all three slots.
-  Slow different-user Wallet calls can exhaust the request pool and cause
-  every DB-backed request on that process to fail until slots are released.
-  Finite waits bound queueing; they do not make that outage acceptable.
+  advisory admission returns 429. Process-wide admission also limits combined
+  issuance/deletion to request pool size minus one, returning 429 before DB
+  access when full. The default pool admits two operations and leaves one
+  connection for other requests even during slow Google I/O. A two-slot pool
+  admits one operation; a one-slot pool admits none. Configure at least two
+  slots for Wallet issuance/deletion. This reserves capacity, not a latency SLA.
 - Do not increase timeouts/pools to hide `P2024` or transaction-acquisition
   failures. Reduce admitted Wallet concurrency or use #411 workload evidence to
   review the budget. A three-slot pool is a bounded safety setting, not proof

@@ -22,6 +22,8 @@ test.each([
   "/assets/fonts/inter.ttf",
   "/icons/maskable_icon_x192.png",
   "/google-wallet/add-to-google-wallet-pt.svg",
+  "/google-wallet/logo.png",
+  "/google-wallet/hero.png",
 ])("stable public asset %s has bounded, revalidating caching", async (url) => {
   expect(await cacheControl(url)).toBe("public, max-age=3600, must-revalidate");
 });

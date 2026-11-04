@@ -53,3 +53,4 @@ implementation PR needs an ADR.
 | [0024](0024-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness       | Accepted   |
 | [0025](0025-share-upload-rate-limits.md)                         | Share upload rate limits across web copies       | Accepted   |
 | [0026](0026-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Accepted   |
+| [0026](0026-bound-upload-memory-streaming-transport.md)          | Bound upload memory with streaming multipart     | Accepted   |

@@ -5,7 +5,6 @@ import { HttpError } from "@/types/HttpError";
 import getServerSession from "@/application/services/sessionService";
 import {
   checkUploadRateLimit,
-  readUploadFile,
   uploadFile,
 } from "@/application/services/uploadService";
 
@@ -16,7 +15,6 @@ vi.mock("server-only", () => ({}));
 vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
 vi.mock("@/application/services/uploadService", () => ({
   checkUploadRateLimit: vi.fn(),
-  readUploadFile: vi.fn(),
   uploadFile: vi.fn(),
 }));
 
@@ -52,31 +50,44 @@ describe.each([
     vi.mocked(checkUploadRateLimit).mockResolvedValue({
       status: "allowed",
     });
-    vi.mocked(readUploadFile).mockResolvedValue(
-      new File(["bytes"], "file", { type: "image/png" })
-    );
     vi.mocked(uploadFile).mockResolvedValue({
       id: "file-id",
-      url: "/media/avatar/file-id",
+      url: name === "avatar" ? "/media/avatar/file-id" : undefined,
+      contentType: "image/png",
+      size: 5,
     });
   });
 
   test("rejects unauthenticated upload", async () => {
     vi.mocked(getServerSession).mockResolvedValue(null);
     expect((await send()).status).toBe(401);
+    expect(checkUploadRateLimit).not.toHaveBeenCalled();
+    expect(uploadFile).not.toHaveBeenCalled();
+  });
+
+  test("rejects an employee before rate limiting or reading the body", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      ...student!,
+      role: "EMPLOYEE",
+    } as Awaited<ReturnType<typeof getServerSession>>);
+    expect((await send()).status).toBe(403);
+    expect(checkUploadRateLimit).not.toHaveBeenCalled();
+    expect(uploadFile).not.toHaveBeenCalled();
   });
 
   test("accepts student account before profile exists", async () => {
     const response = await send();
     expect(response.status).toBe(201);
-    expect(uploadFile).toHaveBeenCalledWith(
-      name,
-      expect.objectContaining({ size: 5, type: "image/png" })
+    expect(await response.json()).toEqual(
+      name === "cv"
+        ? { id: "file-id" }
+        : { id: "file-id", url: "/media/avatar/file-id" }
     );
+    expect(uploadFile).toHaveBeenCalledWith(name, expect.any(NextRequest));
   });
 
   test("rejects missing file", async () => {
-    vi.mocked(readUploadFile).mockRejectedValue(
+    vi.mocked(uploadFile).mockRejectedValueOnce(
       new HttpError("Missing file", 400)
     );
     expect((await send(false)).status).toBe(400);
