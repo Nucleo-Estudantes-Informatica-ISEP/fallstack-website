@@ -20,6 +20,11 @@ export const branding = {
   },
   wallet: {
     cardTitle: "Fallstack 2026",
+    // Dark enough for the white logo and text; sampled from the hero image.
+    hexBackgroundColor: "#641b04",
+    // Public paths; Google fetches them, so they must resolve on the site origin.
+    logoPath: "/google-wallet/logo.png",
+    heroImagePath: "/google-wallet/hero.png",
   },
   storage: {
     authCookie: "@Fallstack26:auth",
