@@ -47,8 +47,11 @@ error handling in components.
 See `src/app/api/saved/route.ts` for strategies, `authorize`, and a schema in
 one route; see `src/client/api/session.ts` for expected `HttpClientError` handling.
 
-The wrapper is for JSON requests. Health probes that must avoid a session
-lookup and multipart upload routes use plain route exports. Keep their
+The wrapper is for JSON requests when `schema` is provided. Multipart upload
+routes omit `schema` so `defineHandler` performs session authentication and role
+authorization before the handler streams the multipart body with bounded memory
+([ADR 0026](decisions/0026-bound-upload-memory-streaming-transport.md)). Health
+probes that must avoid a session lookup use plain route exports. Keep their
 exceptions local and documented.
 
 ## Authentication and short-lived tokens

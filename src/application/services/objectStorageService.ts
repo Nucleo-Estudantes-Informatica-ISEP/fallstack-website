@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createReadStream } from "node:fs";
+import { type Readable } from "node:stream";
 import {
   DeleteObjectCommand,
   GetBucketVersioningCommand,
@@ -76,6 +77,27 @@ export async function putObject(
       Body: bytes,
       ContentType: contentType,
     })
+  );
+}
+
+/** Upload a validated staged file; the caller owns and closes the stream. */
+export async function putObjectStream(
+  kind: StorageBucket,
+  key: string,
+  body: Readable,
+  contentType: string,
+  contentLength: number,
+  signal?: AbortSignal
+) {
+  await storageClient().send(
+    new PutObjectCommand({
+      Bucket: bucket(kind),
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+      ContentLength: contentLength,
+    }),
+    { abortSignal: signal }
   );
 }
 
