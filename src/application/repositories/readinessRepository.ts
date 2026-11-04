@@ -13,3 +13,7 @@ export async function checkDatabaseReadiness() {
     { maxWait: 500, timeout: 1500 }
   );
 }
+
+export async function disconnectDatabase() {
+  await prisma.$disconnect();
+}

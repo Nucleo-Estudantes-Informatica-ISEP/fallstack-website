@@ -4,6 +4,8 @@ import { serverEnv } from "@/config/env.server";
 import { checkDatabaseReadiness } from "@/application/repositories/readinessRepository";
 import { checkRedisReadiness } from "@/application/repositories/redisReadinessRepository";
 
+import { isShuttingDown } from "./shutdownService";
+
 const TIMEOUT_MS = 2000;
 const CACHE_MS = 5000;
 type Probe = (signal: AbortSignal) => Promise<void>;
@@ -30,12 +32,17 @@ async function checkHttpReadiness(url: URL, signal: AbortSignal) {
 // Share probes across simultaneous requests and cache briefly to bound the cost
 // of an unauthenticated endpoint. Retain unfinished work after a deadline so a
 // stalled driver cannot accumulate more queries/connections on each request.
-export function createReadinessCheck(probes: Probe[]) {
+export function createReadinessCheck(
+  probes: Probe[],
+  options?: { isShuttingDown?: () => boolean }
+) {
   let active: Promise<boolean> | undefined;
   let response: Promise<boolean> | undefined;
   let cached: { ready: boolean; expires: number } | undefined;
+  const checkShutdown = options?.isShuttingDown ?? isShuttingDown;
 
   return function readiness(): Promise<boolean> {
+    if (checkShutdown()) return Promise.resolve(false);
     if (cached && Date.now() < cached.expires)
       return Promise.resolve(cached.ready);
     if (response) return response;
@@ -59,6 +66,7 @@ export function createReadinessCheck(probes: Probe[]) {
     });
     response = Promise.race([work, deadline])
       .then((ready) => {
+        if (checkShutdown()) return false;
         cached = { ready, expires: Date.now() + CACHE_MS };
         return ready;
       })

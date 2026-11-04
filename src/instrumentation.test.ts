@@ -2,10 +2,14 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 const startMetricsServer = vi.hoisted(() => vi.fn());
+const initGracefulShutdown = vi.hoisted(() => vi.fn());
 vi.mock("server-only", () => ({}));
 vi.mock("@sentry/nextjs", () => ({ captureRequestError: vi.fn() }));
 vi.mock("../sentry.server.config", () => ({}));
 vi.mock("./lib/metrics", () => ({ startMetricsServer }));
+vi.mock("./application/services/shutdownService", () => ({
+  initGracefulShutdown,
+}));
 
 beforeEach(() => {
   vi.stubEnv("NEXT_RUNTIME", "nodejs");
@@ -13,13 +17,17 @@ beforeEach(() => {
   vi.stubEnv("METRICS_ENVIRONMENT", "dev");
   vi.stubEnv("METRICS_HOST", "127.0.0.1");
   startMetricsServer.mockReset().mockResolvedValue({});
+  initGracefulShutdown.mockReset().mockReturnValue(() => {});
   vi.spyOn(console, "error").mockImplementation(() => undefined);
 });
 
 afterEach(() => {
-  delete (
-    globalThis as typeof globalThis & { fallstackMetrics?: Promise<unknown> }
-  ).fallstackMetrics;
+  const state = globalThis as typeof globalThis & {
+    fallstackMetrics?: Promise<unknown>;
+    fallstackShutdown?: boolean;
+  };
+  delete state.fallstackMetrics;
+  delete state.fallstackShutdown;
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
   vi.resetModules();
@@ -57,6 +65,7 @@ test("repeated registration starts only one listener", async () => {
     port: 9464,
     environment: "dev",
   });
+  expect(initGracefulShutdown).toHaveBeenCalledTimes(1);
   expect(console.error).not.toHaveBeenCalled();
 });
 
@@ -66,4 +75,11 @@ test("disabled metrics do not start a listener", async () => {
   await register();
   expect(startMetricsServer).not.toHaveBeenCalled();
   expect(console.error).not.toHaveBeenCalled();
+});
+
+test("does not initialize graceful shutdown handlers during next build phase", async () => {
+  vi.stubEnv("NEXT_PHASE", "phase-production-build");
+  const { register } = await import("./instrumentation");
+  await register();
+  expect(initGracefulShutdown).not.toHaveBeenCalled();
 });
