@@ -184,6 +184,13 @@ test("creates a Generic Object whose barcode is the stable student code", async 
     cardTitle: {
       defaultValue: { language: "pt-PT", value: "Fallstack 2026" },
     },
+    hexBackgroundColor: "#641b04",
+    logo: {
+      sourceUri: { uri: "https://staging.fallstack.pt/google-wallet/logo.png" },
+    },
+    heroImage: {
+      sourceUri: { uri: "https://staging.fallstack.pt/google-wallet/hero.png" },
+    },
     barcode: { type: "QR_CODE", value: "AB12", alternateText: "AB12" },
     validTimeInterval: {
       start: { date: "2026-11-17T08:30:00+00:00" },
