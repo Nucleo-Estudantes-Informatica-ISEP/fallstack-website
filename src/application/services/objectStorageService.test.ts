@@ -7,6 +7,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { storageEnv } from "@/config/env.storage";
+
 import {
   assertUnversionedBucket,
   listObjects,
@@ -118,7 +120,7 @@ test("putObjectStream sends PutObjectCommand with body stream and ContentLength"
   expect(send).toHaveBeenCalledWith(
     expect.objectContaining({
       input: expect.objectContaining({
-        Bucket: "test-cvs",
+        Bucket: storageEnv.S3_BUCKET_CVS,
         Key: "distribution/cv/test.pdf",
         Body: stream,
         ContentType: "application/pdf",
