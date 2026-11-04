@@ -5,78 +5,49 @@ Decision: [ADR 0026](../decisions/0026-bound-runtime-postgres-pools.md).
 This is a connection ceiling, not event-capacity approval (#411) or permission
 to scale Coolify (#419). No production PostgreSQL configuration was changed.
 
-## Measured baseline — 3 November 2026, 11:20–11:32 WET
+## Inventory and budget
 
-Read-only inventory on `nei`, shared PostgreSQL 16:
-
-| Item                                                      | Observation                                                                                  |
-| --------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `max_connections`                                         | 100                                                                                          |
-| `superuser_reserved_connections` / `reserved_connections` | 3 / 0                                                                                        |
-| Usable ordinary client slots                              | 97                                                                                           |
-| Other shared-cluster consumers                            | Orbit prod: 23 idle; Antirecurso prod: 2 idle; Antirecurso dev: 1 idle                       |
-| Fallstack current connections                             | Dev: 5 idle; prod: 2 idle                                                                    |
-| Administration                                            | One existing idle admin session; one active inventory session                                |
-| Background processes                                      | Five non-client backends; excluded from ordinary-client count                                |
-| Role limits                                               | All runtime/migration roles `rolconnlimit=-1`; runtime roles are not superusers              |
-| Actual Fallstack deployments                              | Three dev web/cleanup pairs, one prod web/cleanup pair                                       |
-| CPU/RAM allocation                                        | Each existing Fallstack container has no CPU quota, cpuset or memory limit; sees six CPUs    |
-| Prisma runtime                                            | 6.19.3, Rust library engine; isolated runner logs pool capacity **13**, even with `--cpus 1` |
-
-The default Rust-engine pool is physical CPUs × 2 + 1, per process; pools grow
-lazily. Seven observed Fallstack connections do not imply a seven-connection
-maximum. Eight existing processes could request **104** slots before other
-applications, jobs or rollout overlap. Inventory includes all resources, not
-just the production pair. Three dev resources must also be counted; do not
-start duplicate cleanup `apply` jobs against their common database.
-
-Repeat with [read-only inventory SQL](../../scripts/postgres-connections.sql)
-through the platform's authorized admin/monitoring `psql` session. Inspect
-container `HostConfig` CPU/memory settings and Prisma's startup pool log in an
-isolated copy. Do not print container environments or database URLs. Record
-`pg_stat_activity` active/idle counts repeatedly during representative traffic;
-this baseline is a point-in-time observation, not an upper bound on other apps.
-
-## Budget and supported envelope
+Keep per-consumer names, hostnames, observed connection counts and negotiated
+allowances in the private operator inventory, not this public repository.
+Repeat the [read-only inventory SQL](../../scripts/postgres-connections.sql)
+through an authorized monitoring session before each rollout; retain its output
+privately. Do not print database URLs or container environments. Observed idle
+counts are not pool maxima or agreements about peak use.
 
 For the **whole shared PostgreSQL cluster**, require:
 
 ```text
-sum(web processes per resource × web pool)
+sum(web processes per resource × (request pool + readiness pool))
 + sum(cleanup processes per resource × cleanup pool)
-+ additional web processes during rollout × web pool
++ additional rollout web processes × (request pool + readiness pool)
 + other transient jobs/probes
-+ other applications' connection allowance
++ other applications' privately agreed connection allowance
 + ordinary administration/migration reserve
 <= max_connections - superuser_reserved_connections - reserved_connections
 ```
 
-Selected allowance: web **3**, cleanup **1**, runtime acquisition timeout **5s**.
-Include every environment/resource/process and every manual job. An operator
-must re-inventory before rollout; another team's pool maximum is not bounded
-by our code. The following envelope is conditional on their aggregate staying
-at or below **40** (26 observed, 14 allowance); exceeding it blocks scaling and
-requires a revised cross-team budget. It is not a PostgreSQL role quota.
+Example capacity: 100 maximum slots minus 3 superuser-reserved slots and zero
+other reserved slots leaves 97 ordinary slots. Keep 6 ordinary slots for
+administration/migration, separate from emergency superuser access. These
+reserve numbers are not permission to consume another application's capacity.
 
-| Scenario                                        | Web   | Cleanup | Extra rollout web | Jobs/probes | Other apps | Admin/migration | Total / 97 |
-| ----------------------------------------------- | ----- | ------- | ----------------- | ----------- | ---------- | --------------- | ---------- |
-| Current four resources                          | 4 × 3 | 4 × 1   | 2 × 3             | 2           | 40         | 6               | **70**     |
-| Connection-budget envelope, conditional on #419 | 7 × 3 | 4 × 1   | 2 × 3             | 2           | 40         | 6               | **79**     |
+Selected per-process ceilings: web requests **3**, web readiness **1**, cleanup
+**1**, standalone seed/wipe/test fixture clients **1** each. A web copy therefore
+costs **4** slots, including every extra rollout copy. The readiness client is
+lazy but its full capacity must always be reserved. Inventory every environment,
+resource, job and rollout overlap; compare the formula with the private agreed
+allowances before deploying. No role quota enforces another team's allowance.
 
-The second row could be four production web copies plus one on each current
-dev resource. It is **not enabled**: checked-in web/migrate/cleanup replicas
-remain literal `1`. Maximum overlap across all concurrent rollouts is **two
-extra web processes**; serialize larger rollouts. Cleanup overlap is **zero**:
-stop/drain the old owner before replacement, as in the
-[release-worker runbook](release-workers.md). New cleanup owners/resources,
-ad-hoc scripts, parallel migrations or backup jobs require recalculation.
+Checked-in web/migrate/cleanup replicas remain literal `1`. Scaling is not
+enabled by this budget: #411 must establish workload capacity and #419 must
+verify rollout behavior. Serialize rollouts to stay within the private budget.
+Cleanup overlap is **zero**: stop/drain the old owner before replacement, as in
+the [release-worker runbook](release-workers.md). Do not run concurrent cleanup
+`apply` owners against the same database. New jobs/resources require recalculation.
 
-Two transient slots cover the sequential dump connection and one inventory/
-monitoring connection. Six ordinary reserve slots allow up to four migrators
-and two operator connections. The three superuser emergency slots remain
-outside this formula. Do not spend reserves on normal requests or benchmarks.
-No hard shared-cluster quota for other apps was introduced; an observed count
-below 40 must be paired with operator agreement about their peak/rollout pools.
+Prisma 6's default Rust-engine pool is physical CPUs × 2 + 1 per process and
+grows lazily. CPU quotas alone do not reliably size it. Inspect pool startup
+logs in isolation and use explicit ceilings rather than idle snapshots.
 
 ## Runtime and deployment settings
 
@@ -88,9 +59,10 @@ parameters. Old URL `connection_limit`/`pool_timeout` values are replaced,
 including duplicates. Never log the resulting URL.
 
 Compose pins cleanup to **1 / 5s**, web uses the validated settings above.
-Standalone/manual Node jobs importing the singleton otherwise default to the
-web pool: set `PRISMA_CONNECTION_LIMIT=1` for manual cleanup and include it in
-the budget. The cleanup image copies the narrow DB schema; it needs no OIDC
+Seed, wipe and direct test fixture clients use `singleConnectionDatabaseUrl`,
+which pins capacity to **1 / 5s** regardless of web settings or URL overrides.
+Standalone/manual cleanup importing the request singleton must still set
+`PRISMA_CONNECTION_LIMIT=1`; count every separate client in the budget. The cleanup image copies the narrow DB schema; it needs no OIDC
 secrets. The environment example and lazy server schema expose both settings.
 
 `DIRECT_URL` remains the migration identity and direct PostgreSQL endpoint.
@@ -98,18 +70,31 @@ The runtime helper never reads or rewrites it. Only the migrator receives its
 credentials; web/cleanup retain their runtime-identity override. No new grants,
 role limits, PostgreSQL settings, migration or pooler are required.
 
+Readiness uses a separate, one-connection runtime-identity client with the same
+bounded transaction/statement timeouts. Saturated request slots do not prevent
+its dependency query; this does not prove request capacity. Docker liveness
+continues to use `/api/health`, not `/api/ready`. This repository introduces no
+readiness-driven routing or restart rule (ADR 0024); the deployed platform's
+configuration must be verified separately before wiring readiness into routing.
+
 ## Workload, measurements and repeat checks
 
 - Cleanup (#389/#402) holds one connection for its transaction; S3 calls happen
   outside that transaction. Apply mode takes table locks with a **5s** lock
   timeout. Count daemon pools even when idle and budget manual jobs separately.
-- Wallet (#394/#403) holds one interactive transaction across external Google
+- In this revision, `createGoogleWalletSaveUrl` in `googleWalletService.ts`
+  calls `withLockedUser` around `syncGenericObject`; the helper in
+  `userRepository.ts` opens a Prisma transaction with a **60s** timeout.
+  This code is already present; no prerequisite Wallet branch is assumed.
+  Wallet (#394/#403) holds one interactive transaction across external Google
   I/O to preserve issuance/deletion ordering. Each fetch has a **10s** timeout;
   multiple sequential calls can occupy the connection until the transaction's
   **60s** deadline. Transaction admission has Prisma's separate default
   **2s maxWait**; URL `pool_timeout` does not replace that timeout. Same-user
   advisory admission returns 429; different users can occupy all three slots.
-  Slow Wallet traffic therefore produces backpressure before cluster exhaustion.
+  Slow different-user Wallet calls can exhaust the request pool and cause
+  every DB-backed request on that process to fail until slots are released.
+  Finite waits bound queueing; they do not make that outage acceptable.
 - Do not increase timeouts/pools to hide `P2024` or transaction-acquisition
   failures. Reduce admitted Wallet concurrency or use #411 workload evidence to
   review the budget. A three-slot pool is a bounded safety setting, not proof
@@ -117,8 +102,9 @@ role limits, PostgreSQL settings, migration or pooler are required.
 
 Use `scripts/check-postgres-pools.mjs` with installed/generated Prisma 6.19.3,
 only on an empty disposable database named `pool_test`. It fails closed unless
-`CONFIRM_ISOLATED_POOL_TEST=yes` and the host is loopback or the dedicated test
-container. It creates/drops one audit table; never use a restored/live database.
+`CONFIRM_ISOLATED_POOL_TEST=yes` and the host is loopback or an explicitly allowed disposable container hostname
+(`POOL_TEST_ALLOWED_HOST`). Set that variable to the exact task-owned hostname
+only when loopback is unavailable; it does not establish database isolation. It creates/drops one audit table; never use a restored/live database.
 For native testing, use the isolated PostgreSQL port:
 
 ```sh
@@ -192,7 +178,7 @@ requests/`after` work, then exits. Keep its default signal handling enabled;
 do not set `NEXT_MANUAL_SIG_HANDLE` or add an early Prisma-disconnect handler.
 Prisma connections close at process exit; the worker explicitly disconnects in
 `finally` after stopping/aborting cleanup work. Compose gives both services
-**90s** before SIGKILL, covering the 60s Wallet transaction plus drain margin.
+**90s** before SIGKILL, covering the existing 60s transaction deadline plus drain margin.
 Stop grace does not configure the proxy: verify Coolify/Traefik removal ordering,
 request timeout and rollout overlap in staging before #419 scaling. A forced
 kill/crash closes sockets and rolls back outstanding transactions; it cannot
@@ -211,7 +197,8 @@ Alert/stop conditions:
   transactions. Investigate queue overhead above **1s p95 for 60s**.
 - **80 ordinary client connections** for 60s: warn/reconcile budget. **90** or
   rising toward 97: stop rollout and new load immediately; preserve admin access.
-  Treat other-app consumption above 40 or overlap above two as a budget breach.
+  Treat consumption or rollout overlap above the private agreed budget as a
+  budget breach.
 - Any idle transaction **over 65s**, surviving connections after **90s** drain,
   forced-kill/OOM, sustained CPU **over 80% of allocated CPU** or memory
   **over 80% of allocation**: fail the run. Existing uncapped containers require

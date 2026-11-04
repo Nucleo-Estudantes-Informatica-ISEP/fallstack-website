@@ -1,6 +1,10 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+import { singleConnectionDatabaseUrl } from "@/config/env.database";
+
+const prisma = new PrismaClient({
+  datasourceUrl: singleConnectionDatabaseUrl(),
+});
 
 async function wipeDatabase(): Promise<void> {
   try {

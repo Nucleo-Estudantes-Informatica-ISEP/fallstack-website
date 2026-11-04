@@ -1,6 +1,6 @@
 import "server-only";
 
-import prisma from "./database";
+import prisma from "./readinessDatabase";
 
 export async function checkDatabaseReadiness() {
   // Prisma does not cancel this transaction through the outer AbortSignal.

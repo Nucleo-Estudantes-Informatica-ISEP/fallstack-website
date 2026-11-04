@@ -1,6 +1,10 @@
 import { expect, test, vi } from "vitest";
 
-import { databaseEnvSchema, runtimeDatabaseUrl } from "./env.database";
+import {
+  databaseEnvSchema,
+  runtimeDatabaseUrl,
+  singleConnectionDatabaseUrl,
+} from "./env.database";
 
 vi.mock("server-only", () => ({}));
 
@@ -58,4 +62,18 @@ test("build imports need no database; malformed URLs do not leak secrets", () =>
       DATABASE_URL: "https://runtime:secret@localhost/test",
     })
   ).toThrow("Invalid PostgreSQL runtime URL");
+});
+
+test("standalone jobs and readiness always use one finite-wait connection", () => {
+  const url = new URL(
+    singleConnectionDatabaseUrl({
+      DATABASE_URL: base + "&connection_limit=99&pool_timeout=0",
+      PRISMA_CONNECTION_LIMIT: "3",
+      PRISMA_POOL_TIMEOUT_SECONDS: "10",
+    })!
+  );
+  expect(url.searchParams.getAll("connection_limit")).toEqual(["1"]);
+  expect(url.searchParams.getAll("pool_timeout")).toEqual(["5"]);
+  expect(url.username).toBe("runtime");
+  expect(url.searchParams.get("schema")).toBe("fallstack");
 });

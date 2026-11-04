@@ -1,9 +1,12 @@
 import { AdminRole, PrismaClient, Role, Year } from "@prisma/client";
 
+import { singleConnectionDatabaseUrl } from "@/config/env.database";
 import { Language, Translations } from "@/domain/i18n/translations";
 import { actions } from "@/edition/actions";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: singleConnectionDatabaseUrl(),
+});
 
 const INTERESTS = [
   "Artificial Intelligence",

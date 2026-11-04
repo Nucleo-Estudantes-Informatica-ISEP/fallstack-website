@@ -11,12 +11,14 @@ const filename = fileURLToPath(import.meta.url);
 const url = new URL(process.env.POOL_TEST_DATABASE_URL);
 assert.equal(process.env.CONFIRM_ISOLATED_POOL_TEST, "yes");
 assert.equal(url.pathname, "/pool_test");
+// Non-loopback containers require an explicit task-owned hostname opt-in.
+const allowedHost = process.env.POOL_TEST_ALLOWED_HOST;
 assert.ok(
   [
     "localhost",
     "127.0.0.1",
     "[::1]",
-    "fallstack-validation-414-466-pg",
+    ...(allowedHost ? [allowedHost] : []),
   ].includes(url.hostname)
 );
 const prefix = `pool-check-${process.env.POOL_TEST_RUN || process.pid}`;

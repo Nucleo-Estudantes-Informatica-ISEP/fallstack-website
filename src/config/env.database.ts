@@ -1,8 +1,7 @@
-import "server-only";
-
 import { z } from "zod";
 
-// Runtime pools share a 100-slot cluster with other NEI applications; ADR 0026.
+// Shared by server repositories and standalone Node jobs; never import into UI.
+// Runtime pools share a cluster with other applications; ADR 0026.
 export const databaseEnvSchema = z.object({
   PRISMA_CONNECTION_LIMIT: z.coerce.number().int().min(1).max(3).default(3),
   PRISMA_POOL_TIMEOUT_SECONDS: z.coerce
@@ -36,4 +35,15 @@ export function runtimeDatabaseUrl(
     String(settings.PRISMA_POOL_TIMEOUT_SECONDS)
   );
   return url.toString();
+}
+
+// Probes and standalone jobs must not inherit the web pool's capacity or wait.
+export function singleConnectionDatabaseUrl(
+  env: Record<string, string | undefined> = process.env
+) {
+  return runtimeDatabaseUrl({
+    ...env,
+    PRISMA_CONNECTION_LIMIT: "1",
+    PRISMA_POOL_TIMEOUT_SECONDS: "5",
+  });
 }

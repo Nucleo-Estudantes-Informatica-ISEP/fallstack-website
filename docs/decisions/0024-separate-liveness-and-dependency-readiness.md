@@ -28,7 +28,8 @@ If the driver never settles, readiness remains false until it settles or the
 process restarts; retaining that work prevents repeated requests from creating
 more stuck transactions.
 
-Use the app's PostgreSQL pool for a bounded `SELECT 1`, an authenticated Redis
+Use a separately budgeted one-connection PostgreSQL probe pool (updated by
+[ADR 0026](0026-bound-runtime-postgres-pools.md)) for a bounded `SELECT 1`, an authenticated Redis
 PING with exact PONG, and lightweight MinIO/ZITADEL readiness endpoints. Redis
 probe sockets close after every attempt and do not retry. Add optional
 `REDIS_URL` validation for readiness, independent of other server configuration; the

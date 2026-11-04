@@ -33,7 +33,8 @@ off-season stop/resume procedure.
 
 See the [PostgreSQL connection budget](operations/postgres-connections.md) before
 changing process counts. Runtime pools default to three connections per web
-process and one per cleanup worker, with a finite five-second acquisition wait.
+process, plus one dedicated readiness connection per web process and one per
+cleanup worker, with a finite five-second acquisition wait.
 All resources and rollout overlap share this budget; CPU quotas alone do not
 size Prisma 6 pools.
 
