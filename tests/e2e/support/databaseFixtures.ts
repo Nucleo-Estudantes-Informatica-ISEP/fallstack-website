@@ -1,6 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { Prisma, PrismaClient, Role, Year } from "@prisma/client";
 
+process.env.DATABASE_URL ??=
+  process.env.DIRECT_URL ?? "postgresql://postgres:postgres@localhost:5432/ci";
+
 /** Tracks only this test's rows; cleanup never truncates shared tables. */
 export function databaseFixtures(db: PrismaClient) {
   const ids = {
@@ -109,16 +112,21 @@ export function databaseFixtures(db: PrismaClient) {
       });
     },
     async cleanup() {
-      await db.$transaction([
-        db.scheduleEvent.deleteMany({ where: { id: { in: ids.schedules } } }),
-        db.faqEntry.deleteMany({ where: { id: { in: ids.faqs } } }),
-        db.user.deleteMany({ where: { id: { in: ids.users } } }),
-        db.action.deleteMany({ where: { id: { in: ids.actions } } }),
-        db.company.deleteMany({ where: { id: { in: ids.companies } } }),
-        db.interest.deleteMany({ where: { id: { in: ids.interests } } }),
-        db.companyRank.deleteMany({ where: { id: { in: ids.ranks } } }),
-      ]);
-      for (const values of Object.values(ids)) values.length = 0;
+      const hasAny = Object.values(ids).some((arr) => arr.length > 0);
+      if (!hasAny) return;
+      try {
+        await db.$transaction([
+          db.scheduleEvent.deleteMany({ where: { id: { in: ids.schedules } } }),
+          db.faqEntry.deleteMany({ where: { id: { in: ids.faqs } } }),
+          db.user.deleteMany({ where: { id: { in: ids.users } } }),
+          db.action.deleteMany({ where: { id: { in: ids.actions } } }),
+          db.company.deleteMany({ where: { id: { in: ids.companies } } }),
+          db.interest.deleteMany({ where: { id: { in: ids.interests } } }),
+          db.companyRank.deleteMany({ where: { id: { in: ids.ranks } } }),
+        ]);
+      } finally {
+        for (const values of Object.values(ids)) values.length = 0;
+      }
     },
   };
 }
