@@ -113,8 +113,22 @@ async function main() {
     incoming.on("data", (chunk) => {
       bytes += chunk.length;
     });
+    const requestTarget = incoming.url ?? "/";
+    const parsedTarget = new URL(requestTarget, "http://local-proxy");
+    if (parsedTarget.origin !== "http://local-proxy") {
+      outgoing.writeHead(400).end();
+      return;
+    }
+    if (parsedTarget.pathname.split("/").includes("..")) {
+      outgoing.writeHead(400).end();
+      return;
+    }
+    const safeForwardUrl = new URL(
+      `${parsedTarget.pathname}${parsedTarget.search}`,
+      endpoint
+    );
     const forwarded = httpRequest(
-      new URL(incoming.url!, endpoint),
+      safeForwardUrl,
       { method: incoming.method, headers: incoming.headers },
       (response) => {
         outgoing.writeHead(response.statusCode!, response.headers);
