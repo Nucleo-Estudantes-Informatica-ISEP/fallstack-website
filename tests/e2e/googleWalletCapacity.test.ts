@@ -46,7 +46,7 @@ test("slow different-user Wallet saves leave request capacity and reject excess 
   });
   let holders = 0;
   const fetchMock = vi.fn<typeof fetch>(async (url, init) => {
-    if (String(url).includes("oauth2.googleapis.com"))
+    if (String(url) === "https://oauth2.googleapis.com/token")
       return Response.json({
         access_token: "synthetic-token",
         expires_in: 3600,
@@ -91,7 +91,7 @@ test("slow different-user Wallet saves leave request capacity and reject excess 
   if (limit > 1) {
     await expect(
       createGoogleWalletSaveUrl(students[limit - 1])
-    ).resolves.toMatch(/^https:\/\/pay.google.com\/gp\/v\/save\//);
+    ).resolves.toMatch(/^https:\/\/pay\.google\.com\/gp\/v\/save\//);
     await expect(
       deleteUserAccount(students[limit].id)
     ).resolves.toBeUndefined();
