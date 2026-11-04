@@ -119,14 +119,41 @@ async function main() {
       outgoing.writeHead(400).end();
       return;
     }
-    if (parsedTarget.pathname.split("/").includes("..")) {
+    const pathSegments = parsedTarget.pathname.split("/");
+    if (
+      pathSegments.includes(".") ||
+      pathSegments.includes("..") ||
+      !/^\/[A-Za-z0-9\-._~/%]*$/.test(parsedTarget.pathname)
+    ) {
       outgoing.writeHead(400).end();
       return;
     }
-    const safeForwardUrl = new URL(
-      `${parsedTarget.pathname}${parsedTarget.search}`,
-      endpoint
-    );
+    const allowedQueryKeys = new Set([
+      "partNumber",
+      "uploadId",
+      "x-id",
+    ]);
+    for (const [key, value] of parsedTarget.searchParams) {
+      if (!allowedQueryKeys.has(key) || value.length > 512) {
+        outgoing.writeHead(400).end();
+        return;
+      }
+    }
+    const canonicalSearch = new URLSearchParams();
+    for (const key of ["partNumber", "uploadId", "x-id"]) {
+      const values = parsedTarget.searchParams.getAll(key);
+      if (values.length > 1) {
+        outgoing.writeHead(400).end();
+        return;
+      }
+      if (values.length === 1) {
+        canonicalSearch.set(key, values[0]);
+      }
+    }
+    const safeRelativeTarget = `${parsedTarget.pathname}${
+      canonicalSearch.toString() ? `?${canonicalSearch.toString()}` : ""
+    }`;
+    const safeForwardUrl = new URL(safeRelativeTarget, endpoint);
     const forwarded = httpRequest(
       safeForwardUrl,
       { method: incoming.method, headers: incoming.headers },
