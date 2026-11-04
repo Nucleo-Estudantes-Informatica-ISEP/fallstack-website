@@ -91,9 +91,9 @@ test("existing and newly added employees share the same company interests", asyn
 
   await setCompanyInterests(firstEmployee.companyId, [ai.id]);
 
-  await expect(findCompanyInterests(firstEmployee.companyId)).resolves.toEqual(
-    [{ id: ai.id, name: ai.name }]
-  );
+  await expect(findCompanyInterests(firstEmployee.companyId)).resolves.toEqual([
+    { id: ai.id, name: ai.name },
+  ]);
 
   const secondUser = await prisma.user.create({
     data: {
@@ -117,9 +117,9 @@ test("existing and newly added employees share the same company interests", asyn
 
   await setCompanyInterests(secondEmployee.companyId, [web.id]);
 
-  await expect(findCompanyInterests(firstEmployee.companyId)).resolves.toEqual(
-    [{ id: web.id, name: web.name }]
-  );
+  await expect(findCompanyInterests(firstEmployee.companyId)).resolves.toEqual([
+    { id: web.id, name: web.name },
+  ]);
 
   const storedCompany = await prisma.company.findUniqueOrThrow({
     where: { id: company.id },
@@ -217,9 +217,9 @@ test("company interest updates are isolated by companyId", async () => {
 
   await setCompanyInterests(employeeA.companyId, [cloud.id]);
 
-  await expect(findCompanyInterests(employeeA.companyId)).resolves.toEqual(
-    [{ id: cloud.id, name: cloud.name }]
-  );
+  await expect(findCompanyInterests(employeeA.companyId)).resolves.toEqual([
+    { id: cloud.id, name: cloud.name },
+  ]);
 
   await expect(findCompanyInterests(employeeB.companyId)).resolves.toEqual([
     { id: web.id, name: web.name },
