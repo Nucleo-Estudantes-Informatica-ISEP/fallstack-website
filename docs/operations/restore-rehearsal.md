@@ -7,8 +7,15 @@ AuthNEI recovery, a production cutover, or team acceptance of RPO/RTO (#464).
 
 ## Isolation and repeat procedure
 
-Run on an authorized Docker host with Python/boto3, age and sufficient disk
-space. Keep decrypted data in a mode-0700 temporary directory; use `umask 077`.
+Run this rehearsal on the backup host (`nei`, the production VPS) with
+Python/boto3, age and sufficient disk space. Use the existing host recovery
+identity at `/etc/fallstack-backup/recovery.agekey` in place; do not copy the
+private key anywhere else for this rehearsal. Decryption exposes production
+personal data on that host. This does not prove off-VPS recovery or availability
+of the separately retained off-VPS identity described in the backup runbook.
+Keep decrypted data in a mode-0700 temporary directory; use `umask 077`.
+Register `finally`/a shell exit trap immediately after creating that directory,
+before decrypting, so plaintext is removed on success or failure (see step 7).
 Never run web, migrations, cleanup or email jobs against the restored copy.
 
 1. Read `last-success.json` and the selected archive's R2 `.verified.json`
@@ -16,8 +23,12 @@ Never run web, migrations, cleanup or email jobs against the restored copy.
    against the receipt before decrypting. When using the host R2 credentials,
    take `/var/lib/fallstack-backup/lock` with nonblocking exclusive `flock` and
    use `backup.Budget` / `backup.r2_call` for both GETs. Each attempt costs two
-   Class B requests; preserve the request ledger and release the lock afterward.
-2. Decrypt using the recovery identity and inspect/extract the archive safely
+   Class B requests. Hold the lock only for those two GETs and their ledger
+   updates; release it immediately after both downloads, before checksum
+   verification, decryption or restore. Release it on download failure too.
+   Preserve the request ledger. If the lock is busy, stop and retry later;
+   never hold it through the rehearsal or pause the scheduled backup.
+2. Decrypt using `/etc/fallstack-backup/recovery.agekey` and inspect/extract safely
    (`tarfile.extractall(..., filter="data")` with supported Python). Validate
    manifest scope against the two databases and six buckets in the backup
    runbook. Restrict manifest file paths to the extracted `data/` directory;
