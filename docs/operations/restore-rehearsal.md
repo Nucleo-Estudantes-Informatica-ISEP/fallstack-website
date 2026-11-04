@@ -59,6 +59,31 @@ keys, uniqueness constraints, cleanup triggers and migration history. Record
 finished, non-rolled-back migration counts and application table counts. Also
 require zero unvalidated constraints in the `fallstack` schema.
 
+Run these queries in each isolated database. Migration and application table
+counts must match the selected snapshot's recorded counts (26 and 20 for the
+3 November snapshot below), not a newer source checkout. Both failure counts
+must be zero; stop and investigate any mismatch before recording a pass.
+
+```sql
+SELECT count(*) AS completed_migrations
+FROM fallstack._prisma_migrations
+WHERE finished_at IS NOT NULL AND rolled_back_at IS NULL;
+
+SELECT count(*) AS unfinished_migrations
+FROM fallstack._prisma_migrations
+WHERE finished_at IS NULL AND rolled_back_at IS NULL;
+
+SELECT count(*) AS application_tables
+FROM information_schema.tables
+WHERE table_schema = 'fallstack' AND table_type = 'BASE TABLE'
+  AND table_name <> '_prisma_migrations';
+
+SELECT count(*) AS unvalidated_constraints
+FROM pg_constraint c
+JOIN pg_namespace n ON n.oid = c.connamespace
+WHERE n.nspname = 'fallstack' AND NOT c.convalidated;
+```
+
 Check profile ownership and role consistency (zero rows expected):
 
 ```sql
@@ -76,14 +101,20 @@ Normalize every non-null CV reference with the restored database's existing
 comparing their raw value with S3 keys gives false missing-file reports. Require
 non-null normalized keys and one matching manifest object in that environment's
 CV bucket. Every matching restored object must pass the byte/metadata check.
-Require zero references to deletion tombstones:
+Run both queries below and require both counts to be zero. The first catches
+unparseable references that cannot match the tombstone join; the second uses
+the same case-insensitive key comparison as the attachment guard trigger.
 
 ```sql
+SELECT count(*) AS unparseable_cv_references
+FROM fallstack."Student"
+WHERE cv IS NOT NULL AND fallstack.storage_object_key('cv', cv) IS NULL;
+
 SELECT count(*) AS tombstoned_cv_references
 FROM fallstack."Student" s
 JOIN fallstack."StorageDeletion" d
   ON d.kind = 'cv'
- AND d.key = fallstack.storage_object_key('cv', s.cv);
+ AND lower(d.key) = fallstack.storage_object_key('cv', s.cv);
 ```
 
 Retain existing `cvUploadedAt`, `cvPurgedAt` and deletion records. Do not clear
