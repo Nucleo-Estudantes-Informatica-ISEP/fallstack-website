@@ -6,72 +6,85 @@ Source: [Issue #417](https://github.com/Nucleo-Estudantes-Informatica-ISEP/falls
 
 ## Context
 
-CV uploads (PDF, up to 10 MiB) and avatar uploads (PNG/JPEG/WebP, up to 5 MiB)
-allow 16 KiB multipart envelope overhead and are rate-limited to 5 uploads per
-minute per authenticated student via [ADR 0025](0025-share-upload-rate-limits.md).
+CV uploads accept PDF up to 10 MiB; avatars accept PNG/JPEG up to 5 MiB;
+admin logos accept PNG/WebP up to 5 MiB. The multipart envelope allowance is
+16 KiB. Student uploads retain five requests/minute per account and kind through
+[ADR 0025](0025-share-upload-rate-limits.md).
 
-The previous upload path accumulated raw request chunks into an array, used
-`Buffer.concat` to build a single multipart buffer, passed it to `Request.formData()`
-for parsing, and then called `file.arrayBuffer()` before calling S3 `PutObjectCommand`.
-This caused up to 4x whole-file buffer allocations (~40 MiB heap per 10 MiB CV).
-Under concurrent event traffic, multiple parallel uploads produced severe peak RSS
-spikes and elevated process out-of-memory risk.
+The baseline (`cc10dd8`) retained incoming chunks, concatenated the multipart
+body, parsed it with `Request.formData()`, then copied the file through
+`arrayBuffer()` before S3 PUT. Replacing only the input with a TransformStream
+still leaves `formData()`'s full-file allocation. The baseline and replacement
+are measured in the [upload runbook](../operations/uploads.md); buffer-copy
+counts alone cannot establish peak RSS.
 
-Direct-to-MinIO presigned uploads were evaluated against bounded multipart streaming.
-As documented in [SHARED_DATA.md](../SHARED_DATA.md) and
-[ADR 0011](0011-reconcile-minio-retention-with-durable-deletions.md), MinIO runs
-strictly on an internal Coolify Docker network (`http://minio:9000`) without a public
-host port. Direct browser uploads to MinIO would require exposing MinIO publicly,
-managing external TLS and CORS, and increasing attack surface. Furthermore, CSP
-in production restricts storage communication to same-origin routes.
+Direct browser uploads would require a publicly reachable MinIO endpoint,
+TLS/CORS configuration and a separate scoped issuance/completion protocol.
+Current MinIO is internal to the shared Docker network. Retain the existing
+same-origin multipart endpoints and their response contracts.
 
 ## Decision
 
-Retain same-origin multipart uploads through the application routes, but replace
-whole-body buffer accumulation with **bounded multipart streaming directly to MinIO**:
+Use Busboy to stream exactly one `file` part to a private temporary directory,
+then stream that validated file to MinIO with an exact ContentLength.
+`multipartUploadService` owns parsing and staging lifetime; `uploadService`
+owns MIME/signature checks and storage orchestration; `objectStorageService`
+owns S3 commands. Routes authenticate and enforce rate limits before invoking
+this lifecycle.
 
-1. **Pre-processing authorization and rate limiting**:
-   Routes check session authentication and enforce the shared Redis rate limit
-   ([ADR 0025](0025-share-upload-rate-limits.md)) before reading or consuming any
-   request body bytes.
+- Count actual body bytes regardless of Content-Length. Reject invalid or
+  oversized declarations with 413 before consumption; reject a completed body
+  whose count differs from its declaration with 400. The envelope cap is
+  `maxFileSize + 16 KiB` (413); the file cap remains the existing 400 contract.
+- Reject extra files, text fields, wrong field names and incomplete multipart
+  framing with 400. Busboy and Node pipelines propagate disk backpressure;
+  no `formData()`, whole-file `arrayBuffer()` or concatenation runs in the app.
+- Preserve the allowed MIME types and existing leading-byte signature policy.
+  Capture only 16 signature bytes while writing. This checks file signatures,
+  not full PDF/image structure or malware. Reject invalid signatures before PUT.
+- Generate a fresh UUID/key only after staging and validation. Local paths and
+  filenames never derive from client input. Directories use `mkdtemp` isolation;
+  files use exclusive creation and mode 0600.
+- Bound parsing and PUT together to 60 seconds. Pass the request abort signal
+  through disk pipelines and the AWS SDK; client disconnects fail with 400
+  when a response can still be delivered, and deadline expiry returns 408.
+- A complete staged file allows one PUT with known size and bounded buffers.
+  Failures do not return an id. Destroy the file stream and await best-effort
+  deletion with a separate five-second deadline, including a lost PUT response.
+  Retry through a new authenticated HTTP upload with a fresh key; do not replay
+  an already-consumed stream. No resumable upload authorization is issued.
+- Always remove staging on success, validation failure, interruption, timeout
+  and storage failure. A process crash can leave temporary files; follow the
+  runbook's disk provision/restart guidance. Temporary files are never durable
+  storage and are not needed by other replicas.
 
-2. **In-flight byte limit enforcement**:
-   - `Content-Length` headers are checked upfront. Mismatched, non-numeric, or
-     declared values exceeding `maxSize + 16 KiB` are rejected immediately with 413.
-   - For missing or falsified `Content-Length` (e.g. chunked transfer), the incoming
-     request body is wrapped in a byte-counting `TransformStream`. If cumulative
-     bytes exceed the limit, the stream is aborted immediately with status 413.
+## Cleanup and attachment contract
 
-3. **Zero-copy magic byte validation**:
-   Magic byte verification reads only the leading 16 bytes via `file.slice(0, 16).arrayBuffer()`,
-   allocating negligible memory while verifying signatures for PDF, PNG, JPEG, and WebP.
+Successful objects live only in shared MinIO. Existing private CV download
+policies and profile-ownership authorization remain unchanged. Attachment checks
+object existence and uses the existing database guards against queued/deleted
+keys, including races. Do not bypass or remove durable deletion tombstones.
 
-4. **Streaming to object storage**:
-   `uploadFile` streams the file content directly into MinIO using `putObjectStream`
-   with `Readable.fromWeb(file.stream())` and the declared `ContentLength: file.size`.
-   No whole-file `arrayBuffer()` is created in application code; memory is bounded
-   to standard network chunk buffers (~64 KiB).
+The transport does not issue presigned URLs, expiring upload tokens or client-
+chosen keys. The existing attachment API treats a known UUID as a reference;
+it does not prove who originally uploaded that UUID. Cross-profile writes are
+forbidden, while existing shared references remain supported. This ADR does not
+introduce a per-uploader ownership registry or claim that one exists.
 
-5. **Failure and orphan cleanup coordination**:
-   - Keys are generated as random UUIDs (`distribution/cv/<uuid>.pdf` and
-     `distribution/avatar/<uuid>`).
-   - If an upload is aborted, disconnected, or fails during storage PUT, the stream
-     is destroyed and a best-effort `deleteObject` is issued immediately.
-   - If a failure cannot be deleted immediately (e.g. process crash), the object
-     remains unattached in PostgreSQL and is safely reclaimed by the daily
-     `storageCleanupService` ([ADR 0011](0011-reconcile-minio-retention-with-durable-deletions.md))
-     after the 7-day upload grace period.
-   - CV attachment (`POST /api/students/[code]/cv`) authorizes student profile ownership
-     (`session.student?.code === params.code`) and verifies that the object exists in
-     storage before attaching it to the student record. Cross-user attachments are rejected.
+If immediate object deletion fails, the unattached key follows
+[ADR 0011](0011-reconcile-minio-retention-with-durable-deletions.md)'s seven-day
+orphan grace and durable cleanup workflow. Only fully received, validated PUTs
+return usable ids. No schema, retention or public-storage permission changes.
 
 ## Consequences
 
-- Peak application RSS under concurrent upload traffic is reduced from ~40 MiB per
-  file to bounded stream chunk sizes plus undici's internal parser footprint.
-- MinIO remains private to the internal container network; no S3 credentials or
-  internal endpoints are exposed to the browser.
-- Multi-replica consistency is preserved: any web replica writes to shared MinIO and
-  reads via existing `/api/media/avatar/<id>` and `/api/students/<code>/cv/file` endpoints.
-- Integration with ADR 0011's durable deletion claims, attachment guards, and
-  retention workflow is maintained without schema migrations.
+Memory no longer scales with whole-file copies in the application upload path.
+RSS still includes framework, SDK, allocator and network buffers; temporary
+files also consume disk/page cache. Provision bounded temporary disk separately
+from the JavaScript heap. The extra disk write/read trades I/O for memory.
+
+Local real-MinIO evidence demonstrates reduced service-process RSS and shared
+object reads through independent processes. It does not establish production
+capacity or Coolify multi-replica readiness. Repeat authenticated Next.js load
+through the deployed proxy with production-equivalent resources before claiming
+that event concurrency is safe; see the runbook and #419.

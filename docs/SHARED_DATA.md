@@ -42,8 +42,10 @@ runtime variables and `SUPABASE_NETWORK_NAME` after cutover.
 The browser uploads through authenticated app routes using bounded multipart
 streaming ([ADR 0026](decisions/0026-bound-upload-memory-streaming-transport.md)).
 Server authorizes the session and enforces shared Redis rate limits before body
-parsing, validates in-flight byte limits and file magic bytes, and pipes the
-stream directly to S3 without full-body buffer copies. Avatar URLs are same-origin
+parsing, validates actual byte counts and file magic bytes, stages one bounded
+file on private temporary disk, and streams it to S3 without whole-file buffer
+copies. Provision temporary space and verify proxy limits using the
+[upload runbook](operations/uploads.md). Avatar URLs are same-origin
 `/api/media/avatar/<id>` and intentionally public. CVs are never public:
 `/api/students/<code>/cv/file` checks the existing student, company or admin
 policy on every request. Admin list and download routes require admin auth.

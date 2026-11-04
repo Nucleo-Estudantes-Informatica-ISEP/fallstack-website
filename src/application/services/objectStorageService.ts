@@ -80,22 +80,14 @@ export async function putObject(
   );
 }
 
-/**
- * Stream a bounded file directly to MinIO without buffering the full body in
- * the application process. The caller supplies a Node.js Readable that yields
- * only the file bytes (not the surrounding multipart envelope), and an exact
- * ContentLength so MinIO can reject mismatched sizes server-side.
- *
- * The AWS SDK pipes the Readable into the HTTP body; at most one network chunk
- * is held in memory at a time. If the upload is aborted or the stream errors
- * the SDK propagates the error; callers must clean up the orphaned key.
- */
+/** Upload a validated staged file; the caller owns and closes the stream. */
 export async function putObjectStream(
   kind: StorageBucket,
   key: string,
   body: Readable,
   contentType: string,
-  contentLength: number
+  contentLength: number,
+  signal?: AbortSignal
 ) {
   await storageClient().send(
     new PutObjectCommand({
@@ -104,7 +96,8 @@ export async function putObjectStream(
       Body: body,
       ContentType: contentType,
       ContentLength: contentLength,
-    })
+    }),
+    { abortSignal: signal }
   );
 }
 

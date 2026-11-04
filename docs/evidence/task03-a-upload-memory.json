@@ -1,0 +1,54 @@
+{
+  "baselineRef": "cc10dd8",
+  "node": "v24.11.0",
+  "platform": "linux",
+  "cvBytes": 10482266,
+  "avatarBytes": 5157965,
+  "crossProcessReads": 2,
+  "reports": [
+    {
+      "variant": "baseline",
+      "concurrency": 8,
+      "waves": 4,
+      "requests": 32,
+      "offeredWaveIntervalMs": 4000,
+      "durationMs": 13832,
+      "idleRssMiB": 238.203125,
+      "peakRssMiB": 489.7265625,
+      "p50ms": 1756.8325249999998,
+      "p95ms": 3236.7338369999998,
+      "p99ms": 3237.5340429999997,
+      "errors": 0,
+      "minio": {
+        "puts": 32,
+        "bytes": 250243696,
+        "errors": 0,
+        "milliseconds": 21250.359329000006,
+        "wireMiBPerSecond": 17.25298950539275
+      }
+    },
+    {
+      "variant": "changed",
+      "concurrency": 8,
+      "waves": 4,
+      "requests": 32,
+      "offeredWaveIntervalMs": 4000,
+      "durationMs": 13250,
+      "idleRssMiB": 166.6171875,
+      "peakRssMiB": 198.8515625,
+      "p50ms": 1317.0705770000022,
+      "p95ms": 2426.083526000002,
+      "p99ms": 2436.5780330000016,
+      "errors": 0,
+      "minio": {
+        "puts": 32,
+        "bytes": 250279232,
+        "errors": 0,
+        "milliseconds": 17127.563710999988,
+        "wireMiBPerSecond": 18.013698195492864
+      }
+    }
+  ],
+  "recordedDate": "2026-11-04",
+  "topology": "Local Linux x86_64 host; native Node service hosts sequentially; driver and streaming proxy in separate process; real pinned MinIO container on loopback; other local checks active. Not a production capacity benchmark."
+}

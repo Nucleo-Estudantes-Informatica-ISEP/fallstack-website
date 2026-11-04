@@ -106,12 +106,14 @@ test("never-enabled bucket passes; missing permission fails", async () => {
 test("putObjectStream sends PutObjectCommand with body stream and ContentLength", async () => {
   const stream = Readable.from([Buffer.from("test")]);
   send.mockResolvedValueOnce({});
+  const signal = new AbortController().signal;
   await putObjectStream(
     "cv",
     "distribution/cv/test.pdf",
     stream,
     "application/pdf",
-    4
+    4,
+    signal
   );
   expect(send).toHaveBeenCalledWith(
     expect.objectContaining({
@@ -122,7 +124,8 @@ test("putObjectStream sends PutObjectCommand with body stream and ContentLength"
         ContentType: "application/pdf",
         ContentLength: 4,
       }),
-    })
+    }),
+    { abortSignal: signal }
   );
   expect(send.mock.calls[0][0]).toBeInstanceOf(PutObjectCommand);
 });

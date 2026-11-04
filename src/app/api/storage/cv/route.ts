@@ -4,7 +4,6 @@ import { defineHandler } from "@/lib/http/server";
 import { rateLimitResponse } from "@/lib/rateLimit";
 import {
   checkUploadRateLimit,
-  readUploadFile,
   uploadFile,
 } from "@/application/services/uploadService";
 
@@ -17,9 +16,7 @@ export const POST = defineHandler({
       await checkUploadRateLimit("cv", session!.id)
     );
     if (blocked) return blocked;
-    const file = await readUploadFile(req, "cv");
-    return NextResponse.json(await uploadFile("cv", file), {
-      status: 201,
-    });
+    const { id } = await uploadFile("cv", req);
+    return NextResponse.json({ id }, { status: 201 });
   },
 });
