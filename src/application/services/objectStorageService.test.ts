@@ -1,11 +1,17 @@
 // @vitest-environment node
+import { Readable } from "node:stream";
 import {
   GetBucketVersioningCommand,
   ListObjectsV2Command,
+  PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { assertUnversionedBucket, listObjects } from "./objectStorageService";
+import {
+  assertUnversionedBucket,
+  listObjects,
+  putObjectStream,
+} from "./objectStorageService";
 
 const send = vi.hoisted(() => vi.fn());
 vi.mock("server-only", () => ({}));
@@ -95,4 +101,28 @@ test("never-enabled bucket passes; missing permission fails", async () => {
   const denied = Object.assign(new Error("denied"), { name: "AccessDenied" });
   send.mockRejectedValueOnce(denied);
   await expect(assertUnversionedBucket("avatar")).rejects.toBe(denied);
+});
+
+test("putObjectStream sends PutObjectCommand with body stream and ContentLength", async () => {
+  const stream = Readable.from([Buffer.from("test")]);
+  send.mockResolvedValueOnce({});
+  await putObjectStream(
+    "cv",
+    "distribution/cv/test.pdf",
+    stream,
+    "application/pdf",
+    4
+  );
+  expect(send).toHaveBeenCalledWith(
+    expect.objectContaining({
+      input: expect.objectContaining({
+        Bucket: "test-cvs",
+        Key: "distribution/cv/test.pdf",
+        Body: stream,
+        ContentType: "application/pdf",
+        ContentLength: 4,
+      }),
+    })
+  );
+  expect(send.mock.calls[0][0]).toBeInstanceOf(PutObjectCommand);
 });
