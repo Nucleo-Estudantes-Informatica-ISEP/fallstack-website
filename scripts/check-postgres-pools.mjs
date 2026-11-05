@@ -167,6 +167,8 @@ async function parent() {
       assert.equal(result.codes.filter((code) => code === "P2024").length, 2);
     await start("rollout-web", 3);
     const overlap = await phase("normal");
+    for (const result of overlap)
+      assert.ok(result.codes.every((code) => code === "ok"));
     const txStarted = children.map((child) =>
       message(child, "transaction-started")
     );

@@ -1,7 +1,7 @@
 # PostgreSQL connection budget
 
 Scope: [#414](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/414).
-Decision: [ADR 0026](../decisions/0026-bound-runtime-postgres-pools.md).
+Decision: [ADR 0027](../decisions/0027-bound-runtime-postgres-pools.md).
 This is a connection ceiling, not event-capacity approval (#411) or permission
 to scale Coolify (#419). No production PostgreSQL configuration was changed.
 
@@ -96,7 +96,10 @@ configuration must be verified separately before wiring readiness into routing.
   access when full. The default pool admits two operations and leaves one
   connection for other requests even during slow Google I/O. A two-slot pool
   admits one operation; a one-slot pool admits none. Configure at least two
-  slots for Wallet issuance/deletion. This reserves capacity, not a latency SLA.
+  slots for Wallet issuance/deletion. The cap does not reserve connections for
+  Wallet: ordinary queries can occupy all request slots, so an admitted Wallet
+  transaction can still exhaust the default **2s maxWait** and fail with P2028.
+  This limits Wallet occupancy; it does not guarantee transaction admission or latency.
 - Do not increase timeouts/pools to hide `P2024` or transaction-acquisition
   failures. Reduce admitted Wallet concurrency or use #411 workload evidence to
   review the budget. A three-slot pool is a bounded safety setting, not proof

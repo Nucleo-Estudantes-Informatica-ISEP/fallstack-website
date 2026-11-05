@@ -1,4 +1,4 @@
-# 0026: Bound runtime PostgreSQL pools
+# 0027: Bound runtime PostgreSQL pools
 
 Status: Accepted
 Date: 2026-11-03
@@ -49,7 +49,11 @@ migration validation and a new decision record.
 Wallet issuance and deletion share process-wide admission capped at the request
 pool size minus one (two operations with the default three-slot pool). Excess
 operations return 429 before DB access, preserving one slot for other requests
-during slow Google I/O. A one-slot configuration admits no Wallet operations;
+during slow Google I/O. This cap does not reserve connections for Wallet:
+ordinary queries can occupy every request slot, so an admitted Wallet operation
+can still exhaust Prisma's default two-second transaction `maxWait` and fail
+with P2028. URL `pool_timeout` does not change that deadline.
+A one-slot configuration admits no Wallet operations;
 use at least two slots when Wallet issuance/deletion is needed. Pool
 limits protect shared capacity but do not establish acceptable event latency.
 Proxy removal/drain ordering still needs staging validation. No shared DB role
