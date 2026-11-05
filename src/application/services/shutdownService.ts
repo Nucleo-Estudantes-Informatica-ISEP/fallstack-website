@@ -11,50 +11,71 @@ import type {
 import logger from "@/lib/logger";
 import { disconnectDatabase } from "@/application/repositories/readinessRepository";
 
-let shuttingDown = false;
-let activeRequests = 0;
-let isSubscribed = false;
-let drainResolvers: Array<() => void> = [];
+export interface FallstackShutdownState {
+  shuttingDown: boolean;
+  activeRequests: number;
+  isSubscribed: boolean;
+  drainResolvers: Array<() => void>;
+}
+
+// Next.js compiles src/instrumentation.ts and route handlers (e.g. /api/proxy-ready)
+// into separate server bundles. To ensure lifecycle state (shuttingDown, activeRequests)
+// is shared across entrypoints within the same Node.js process, state is stored on globalThis.
+const shutdownGlobal = globalThis as typeof globalThis & {
+  fallstackShutdownState?: FallstackShutdownState;
+};
+
+export function getShutdownState(): FallstackShutdownState {
+  return (shutdownGlobal.fallstackShutdownState ??= {
+    shuttingDown: false,
+    activeRequests: 0,
+    isSubscribed: false,
+    drainResolvers: [],
+  });
+}
 
 export function isShuttingDown(): boolean {
-  return shuttingDown;
+  return getShutdownState().shuttingDown;
 }
 
 export function setShuttingDown(value: boolean): void {
-  shuttingDown = value;
+  getShutdownState().shuttingDown = value;
 }
 
 export function getActiveRequestCount(): number {
-  return activeRequests;
+  return getShutdownState().activeRequests;
 }
 
 export function incrementActiveRequests(): number {
-  activeRequests += 1;
-  return activeRequests;
+  const state = getShutdownState();
+  state.activeRequests += 1;
+  return state.activeRequests;
 }
 
 export function decrementActiveRequests(): number {
-  if (activeRequests > 0) {
-    activeRequests -= 1;
+  const state = getShutdownState();
+  if (state.activeRequests > 0) {
+    state.activeRequests -= 1;
   }
-  if (activeRequests === 0) {
-    const resolvers = drainResolvers;
-    drainResolvers = [];
+  if (state.activeRequests === 0) {
+    const resolvers = state.drainResolvers;
+    state.drainResolvers = [];
     for (const resolve of resolvers) {
       resolve();
     }
   }
-  return activeRequests;
+  return state.activeRequests;
 }
 
 export const DEFAULT_DEREGISTRATION_DELAY_MS =
-  process.env.NODE_ENV === "test" ? 0 : 5000;
+  process.env.NODE_ENV === "test" ? 0 : 10000;
 export const DEFAULT_DRAIN_TIMEOUT_MS = 25000;
 
 export function resetShutdownState(): void {
-  shuttingDown = false;
-  activeRequests = 0;
-  drainResolvers = [];
+  const state = getShutdownState();
+  state.shuttingDown = false;
+  state.activeRequests = 0;
+  state.drainResolvers = [];
 }
 
 export function isHealthOrReadinessProbe(url?: string): boolean {
@@ -125,7 +146,7 @@ export function handleRequestStart(message: unknown): void {
       ...(string | OutgoingHttpHeaders | OutgoingHttpHeader[] | undefined)[],
     ]
   ) {
-    if (shuttingDown && !this.headersSent) {
+    if (getShutdownState().shuttingDown && !this.headersSent) {
       try {
         this.setHeader("Connection", "close");
       } catch {
@@ -167,27 +188,30 @@ export function handleRequestStart(message: unknown): void {
 }
 
 export function startTrackingRequests(): void {
-  if (isSubscribed) return;
+  const state = getShutdownState();
+  if (state.isSubscribed) return;
   subscribe("http.server.request.start", handleRequestStart);
-  isSubscribed = true;
+  state.isSubscribed = true;
 }
 
 export function stopTrackingRequests(): void {
-  if (!isSubscribed) return;
+  const state = getShutdownState();
+  if (!state.isSubscribed) return;
   unsubscribe("http.server.request.start", handleRequestStart);
-  isSubscribed = false;
+  state.isSubscribed = false;
 }
 
 export function waitForActiveRequests(timeoutMs = 25000): Promise<boolean> {
-  if (activeRequests === 0) {
+  const state = getShutdownState();
+  if (state.activeRequests === 0) {
     return Promise.resolve(true);
   }
 
   return new Promise<boolean>((resolve) => {
     const timer = setTimeout(() => {
-      const idx = drainResolvers.indexOf(onDrain);
+      const idx = state.drainResolvers.indexOf(onDrain);
       if (idx !== -1) {
-        drainResolvers.splice(idx, 1);
+        state.drainResolvers.splice(idx, 1);
       }
       resolve(false);
     }, timeoutMs);
@@ -197,7 +221,7 @@ export function waitForActiveRequests(timeoutMs = 25000): Promise<boolean> {
       resolve(true);
     };
 
-    drainResolvers.push(onDrain);
+    state.drainResolvers.push(onDrain);
   });
 }
 
@@ -207,11 +231,12 @@ export async function startGracefulShutdown(options?: {
   onCleanup?: () => Promise<void> | void;
   exit?: (code: number) => void;
 }): Promise<void> {
-  if (shuttingDown) return;
-  shuttingDown = true;
+  const state = getShutdownState();
+  if (state.shuttingDown) return;
+  state.shuttingDown = true;
 
   logger.info(
-    { activeRequests },
+    { activeRequests: state.activeRequests },
     "Graceful shutdown initiated. Unready copies get no traffic; finishing active requests first."
   );
 
@@ -226,7 +251,7 @@ export async function startGracefulShutdown(options?: {
   );
   if (!drained) {
     logger.warn(
-      { activeRequests },
+      { activeRequests: state.activeRequests },
       "Drain timeout reached while stopping; proceeding with cleanup."
     );
   } else {

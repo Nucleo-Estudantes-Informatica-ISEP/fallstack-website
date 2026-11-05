@@ -27,12 +27,14 @@ Furthermore, without graceful shutdown draining, stopping a web copy immediately
    - Docker container healthcheck continues to monitor `/api/health` (process liveness).
    - `/api/ready` remains the deep infrastructure dependency readiness endpoint for Telegraf, Prometheus, capacity metrics, and operators (checking PostgreSQL, Redis, MinIO, AuthNEI, and shutdown state).
    - Neither probe performs session lookup.
-4. **Shutdown Draining via Diagnostics Channel**:
+4. **Shutdown Draining via Diagnostics Channel & Shared Global Lifecycle State**:
+   - Next.js compiles `src/instrumentation.ts` and route handlers (e.g. `src/app/api/proxy-ready/route.ts`) into separate server bundles. To guarantee the shutdown lifecycle state is shared across all entrypoints in the Node.js process, state is anchored on `globalThis.fallstackShutdownState`.
    - Upon receiving `SIGTERM` or `SIGINT`, `shuttingDown` is set to `true`.
-   - `/api/proxy-ready` and `/api/ready` immediately return 503 so proxies and orchestrators detect unreadiness.
+   - `/api/proxy-ready` and `/api/ready` immediately observe `shuttingDown === true` and return 503 so proxies and orchestrators detect unreadiness.
    - Incoming and in-flight requests are not forcibly terminated in `diagnostics_channel`. Instead, `response.writeHead` is sanitized to ensure `Connection: close` is injected (overriding any keep-alive request args), instructing the client/proxy to close the connection after the response completes.
-   - Introduce a 5-second deregistration grace delay (`deregistrationDelayMs = 5000`, 0 in test environments) matching Traefik's 5-second polling interval, so Traefik has sufficient time to execute the probe, observe 503 and evict the instance from routing before the socket on port 4000 is closed, even when `activeRequests === 0`.
-   - Active in-flight requests are tracked and allowed to finish first, bounded by a 25-second drain timeout matching Docker's `stop_grace_period: 30s`.
+   - Introduce a 10-second deregistration grace delay (`deregistrationDelayMs = 10000`, 0 in test environments). Given Traefik's healthcheck interval of 5s and timeout of 2s, a worst-case probe cycle plus network and eviction jitter spans up to 7–10 seconds. This 10-second delay ensures Traefik successfully probes `/api/proxy-ready`, receives 503, and removes the copy from routing before the socket on port 4000 is closed, even when `activeRequests === 0`.
+   - Active in-flight requests are tracked and allowed to finish first, bounded by a 25-second drain timeout (`DEFAULT_DRAIN_TIMEOUT_MS = 25000`).
+   - To account for the 10-second deregistration delay, 25-second drain timeout, and 10-second cleanup/buffer margin (total budget 45s), Docker Compose `stop_grace_period` on `web` is set to `45s`.
    - After draining, resources (e.g. database client pool) disconnect cleanly and the process exits with code 0.
    - Guard signal handler registration with `process.env.NEXT_PHASE !== "phase-production-build"` to prevent interference during `next build`.
    - `NEXT_MANUAL_SIG_HANDLE=true` is enabled in the runtime environment.

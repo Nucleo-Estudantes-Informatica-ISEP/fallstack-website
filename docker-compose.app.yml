@@ -50,7 +50,7 @@ services:
     # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
       replicas: 1
-    stop_grace_period: 30s
+    stop_grace_period: 45s
     labels:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}

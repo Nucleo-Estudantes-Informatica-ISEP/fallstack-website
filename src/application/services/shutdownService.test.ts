@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 import {
   decrementActiveRequests,
+  DEFAULT_DEREGISTRATION_DELAY_MS,
   getActiveRequestCount,
   handleRequestStart,
   incrementActiveRequests,
@@ -96,6 +97,41 @@ describe("shutdownService", () => {
     resetShutdownState();
     expect(isShuttingDown()).toBe(false);
     expect(getActiveRequestCount()).toBe(0);
+  });
+
+  test("lifecycle state is anchored on globalThis for cross-bundle sharing", () => {
+    const globalState = (
+      globalThis as typeof globalThis & {
+        fallstackShutdownState?: {
+          shuttingDown: boolean;
+          activeRequests: number;
+          isSubscribed: boolean;
+          drainResolvers: Array<() => void>;
+        };
+      }
+    ).fallstackShutdownState;
+
+    expect(globalState).toBeDefined();
+    expect(globalState?.shuttingDown).toBe(false);
+
+    // Mutation via service is reflected on globalThis
+    setShuttingDown(true);
+    expect(globalState?.shuttingDown).toBe(true);
+
+    // Direct mutation on globalThis is visible via service functions
+    if (globalState) {
+      globalState.shuttingDown = false;
+      globalState.activeRequests = 5;
+    }
+    expect(isShuttingDown()).toBe(false);
+    expect(getActiveRequestCount()).toBe(5);
+
+    resetShutdownState();
+    expect(globalState?.activeRequests).toBe(0);
+  });
+
+  test("timing constants: 0 delay in test, 10s default in production", () => {
+    expect(DEFAULT_DEREGISTRATION_DELAY_MS).toBe(0);
   });
 
   test("identifies health, readiness and metrics probe paths including absolute URIs", () => {

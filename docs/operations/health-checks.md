@@ -55,8 +55,8 @@ single-replica environments from total blackouts during third-party dependency h
 Deep infrastructure readiness is exposed at `/api/ready` for metrics, dashboards,
 and operators. When a web copy receives SIGTERM/SIGINT, it marks itself unready
 immediately across both probes, injects `Connection: close` into response headers, and
-finishes active requests first before terminating cleanly within Docker's 30-second
-stop grace period.
+finishes active requests first before terminating cleanly within Docker's 45-second
+stop grace period (accounting for the 10-second deregistration grace delay, 25-second drain, and 10-second cleanup margin).
 
 ## Verify and roll out
 
