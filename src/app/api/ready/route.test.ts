@@ -28,3 +28,14 @@ test("dependency failures do not affect liveness or cause dependency/session wor
   expect(await response.json()).toEqual({ status: 200 });
   expect(isReady).not.toHaveBeenCalled();
 });
+
+test("stopping state returns 503 for readiness while liveness remains 200 without session lookup", async () => {
+  isReady.mockResolvedValue(false);
+  const readyResponse = await GET();
+  expect(readyResponse.status).toBe(503);
+  expect(await readyResponse.json()).toEqual({ error: "Service unavailable" });
+
+  const liveResponse = await liveness();
+  expect(liveResponse.status).toBe(200);
+  expect(await liveResponse.json()).toEqual({ status: 200 });
+});

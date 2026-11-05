@@ -50,10 +50,16 @@ services:
     # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
       replicas: 1
+    stop_grace_period: 45s
     labels:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
       metrics_service: web
+      traefik.enable: "true"
+      traefik.http.services.web.loadbalancer.server.port: 4000
+      traefik.http.services.web.loadbalancer.healthcheck.path: /api/proxy-ready
+      traefik.http.services.web.loadbalancer.healthcheck.interval: 5s
+      traefik.http.services.web.loadbalancer.healthcheck.timeout: 2s
     build:
       context: .
       dockerfile: Dockerfile
@@ -71,6 +77,7 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
+      NEXT_MANUAL_SIG_HANDLE: "true"
       # Runtime-only connection contract for #413; never pass these as build args.
       REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
