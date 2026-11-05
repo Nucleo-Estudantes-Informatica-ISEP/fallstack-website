@@ -7,16 +7,26 @@ AuthNEI recovery, a production cutover, or team acceptance of RPO/RTO (#464).
 
 ## Isolation and repeat procedure
 
-Run this rehearsal on the backup host (`nei`, the production VPS) with
-Python/boto3, age and sufficient disk space. Use the existing host recovery
-identity at `/etc/fallstack-backup/recovery.agekey` in place; do not copy the
-private key anywhere else for this rehearsal. Decryption exposes production
-personal data on that host. This does not prove off-VPS recovery or availability
-of the separately retained off-VPS identity described in the backup runbook.
-Keep decrypted data in a mode-0700 temporary directory; use `umask 077`.
-Register `finally`/a shell exit trap immediately after creating that directory,
-before decrypting, so plaintext is removed on success or failure (see step 7).
-Never run web, migrations, cleanup or email jobs against the restored copy.
+Future rehearsals must run on a non-production host with a separate Docker
+daemon, disk and kernel, Python/boto3, age and sufficient free space. Do not
+repeat the production-host placement recorded below: an internal Docker network
+does not isolate disk pressure, daemon access or a compromised host. See
+[ADR 0026](../decisions/0026-rehearse-restores-away-from-production.md).
+Use the separately retained off-VPS recovery identity through authorized recovery
+access; do not copy `/etc/fallstack-backup/recovery.agekey` from production.
+Protect plaintext production personal data with `umask 077` and a mode-0700
+working directory. Never run web, migrations, cleanup or email jobs against the
+restored copy.
+
+Before creating any resources, choose a unique rehearsal ID and write a durable,
+mode-0600 state file in a pre-existing restricted operator state directory. Record
+all intended container, network and **new named volume** names and the absolute
+plaintext working path before creating any of them. Use exclusively reserved
+names/paths; abort on any collision, never adopt or delete an existing resource.
+Register cleanup before `mkdir` or any Docker creation. Label every Docker
+resource with the rehearsal ID and mount only the planned new volumes at each
+image's data directory; do not allow implicit anonymous volumes. Keep credentials
+out of the state file. The state file must survive until cleanup is verified.
 
 1. Read `last-success.json` and the selected archive's R2 `.verified.json`
    receipt. Download the archive and match **both** SHA-256 and byte count
@@ -27,18 +37,26 @@ Never run web, migrations, cleanup or email jobs against the restored copy.
    updates; release it immediately after both downloads, before checksum
    verification, decryption or restore. Release it on download failure too.
    Preserve the request ledger. If the lock is busy, stop and retry later;
-   never hold it through the rehearsal or pause the scheduled backup.
-2. Decrypt using `/etc/fallstack-backup/recovery.agekey` and inspect/extract safely
+   never hold it through the rehearsal or pause the scheduled backup. Transfer
+   only the encrypted archive and receipt to the non-production host using an
+   authorized secure channel; keep host R2 credentials and the ledger on `nei`.
+   Check checksum and byte count again after transfer. No plaintext restore
+   work runs on the backup host.
+2. Decrypt on the non-production host using the off-VPS identity and inspect/extract safely
    (`tarfile.extractall(..., filter="data")` with supported Python). Validate
    manifest scope against the two databases and six buckets in the backup
    runbook. Restrict manifest file paths to the extracted `data/` directory;
    object keys are S3 keys, never filesystem paths.
-3. Create a uniquely named `docker network create --internal` network and two
-   **new** containers: PostgreSQL 16 and the source MinIO release. Use random
-   throwaway credentials, no host ports, no existing volumes and no shared-data
-   network. For the small current snapshot, each container used `--cpus 1
---memory 384m`. Check host pressure before starting. Wait for `pg_isready`
-   and authenticated MinIO readiness.
+3. Before starting containers, select PostgreSQL 16 and a compatible MinIO
+   release, resolve both to immutable `repository@sha256:...` image references
+   and record them with the platform/architecture and tool versions. Run those
+   exact references, never floating tags. Record resource limits and readiness
+   results for this run; the historical one-CPU/384-MiB observation below is
+   not a validated sizing recommendation for another image or snapshot.
+   Create the planned `docker network create --internal` network and two
+   **new** containers with random throwaway credentials, no host ports, only
+   the planned new volumes and no shared-data network. Check host pressure
+   before starting. Wait for `pg_isready` and authenticated MinIO readiness.
 4. Create `fallstack_dev` and `fallstack_prod` only inside the new PostgreSQL
    container. Restore their dumps through `docker exec -i <isolated-pg>
 pg_restore -U postgres --exit-on-error --no-owner --no-privileges -d <db>`.
@@ -53,15 +71,22 @@ pg_restore -U postgres --exit-on-error --no-owner --no-privileges -d <db>`.
    aggregate counts; never publish emails, subject IDs, student codes, object
    keys or decrypted files. A missing reference fails recovery consistency even
    if every archived object was restored correctly.
-7. In `finally`/a shell exit trap, remove only the recorded task-owned containers
-   with `docker rm -fv`, then their network and decrypted working directory.
-   Verify all names/paths are gone. Preserve the source services, original
-   archive, backup timer, credentials and request ledger.
+7. In `finally`/a shell exit trap, attempt removal of every planned task-owned
+   container with `docker rm -fv`, then every planned volume, network and the
+   plaintext working directory, even if creation/startup failed partway. Verify
+   resource ownership labels before removal. An already absent resource must
+   not prevent the remaining cleanup attempts. Verify all planned names/paths
+   and resources bearing this rehearsal ID are gone; only then remove the
+   state file. Preserve the encrypted archive, source services, backup timer,
+   credentials and request ledger. Traps cannot handle SIGKILL, host failure or
+   power loss: after interruption, use the retained state file and label sweep
+   to finish cleanup before starting another rehearsal. Surface cleanup
+   failures and retain state for operator recovery; do not report success.
 
 The internal network has no application or shared-service attachments. Neither
 restore command can address a shared PostgreSQL database or shared MinIO bucket.
-The host only reads R2 and updates the existing request ledger. The backup timer
-is not paused or reconfigured.
+Only the download step on the backup host reads R2 and updates its existing
+request ledger. The backup timer is not paused or reconfigured.
 
 ## Account and CV consistency checks
 
@@ -144,6 +169,16 @@ review them before any actual cutover. Do not start cleanup to hide mismatches.
   container startup, restore and verification took **9.82 seconds**, excluding
   final resource removal. This is an observed small-snapshot rehearsal time,
   not an accepted disaster-recovery RTO or proof of VPS-independent recovery.
+- Exact PostgreSQL and MinIO image tags/digests, platform and tool versions were
+  not recorded in the retained evidence. This historical run cannot be
+  reproduced exactly, including its resource-limit behavior. No image pin is
+  inferred from today's source configuration; future runs must record pins
+  before execution as required above.
+- This run shared the production VPS's daemon, disk and kernel. Network and
+  volume isolation did not cover host compromise, daemon access or disk
+  pressure. No owner acceptance of that residual risk is recorded. This is
+  historical evidence, not permission to repeat that placement; a new run on
+  a non-production host remains unperformed.
 - Fresh PostgreSQL 16 and source-release MinIO containers used a new internal
   network, random credentials, one CPU/384 MiB each and no published ports.
   No shared service was a restore target; no shared DB/S3 credential was used
