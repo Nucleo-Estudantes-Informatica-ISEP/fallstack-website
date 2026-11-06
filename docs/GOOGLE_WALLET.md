@@ -118,9 +118,14 @@ object ID from the configured class ID and student ID, so use a distinct class I
 for every environment. A separate issuer for non-production adds another layer
 of isolation when staging data is cloned from production.
 
-The class should contain only shared Fallstack 2026 presentation data (brand,
-logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by the application.
+The class can stay minimal: only its ID is required. For Generic passes, `logo`,
+`heroImage` and `hexBackgroundColor` are Generic **Object** fields, not class
+fields, so the console class form has no inputs for them. The application sets
+them on every object from `edition.branding.wallet`: images are served from
+`public/google-wallet/` (`logo.png`, square; `hero.png`, 1032×344) at
+`NEXT_PUBLIC_BASE_URL`, so Google must be able to fetch them over public HTTPS.
+Create a **Generic** class; an Event ticket class ID does not work with this
+integration.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create

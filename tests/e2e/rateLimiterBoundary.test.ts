@@ -2,7 +2,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, expect, test, vi } from "vitest";
 
-import { putObject } from "@/application/services/objectStorageService";
+import { putObjectStream } from "@/application/services/objectStorageService";
 import { checkRateLimit } from "@/application/services/rateLimitService";
 import getServerSession from "@/application/services/sessionService";
 
@@ -18,7 +18,12 @@ vi.mock("@/application/services/objectStorageService", () => ({
   cvKey: (id: string) => `distribution/cv/${id}.pdf`,
   avatarKey: (id: string) => `distribution/avatar/${id}`,
   publicAvatarUrl: (id: string) => `/api/media/avatar/${id}`,
-  putObject: vi.fn(),
+  putObjectStream: vi.fn(async (_kind, _key, body) => {
+    for await (const chunk of body) {
+      void chunk;
+    }
+  }),
+  deleteObject: vi.fn(),
 }));
 afterEach(() => vi.clearAllMocks());
 test.each([
@@ -57,7 +62,7 @@ test.each([
     expect(await unavailable.json()).toEqual({
       error: "Rate limiter unavailable",
     });
-    expect(putObject).not.toHaveBeenCalled();
+    expect(putObjectStream).not.toHaveBeenCalled();
     vi.mocked(checkRateLimit).mockResolvedValue({ status: "allowed" });
     const form = new FormData();
     form.append(
@@ -83,7 +88,7 @@ test.each([
       "student",
       { max: 5, windowMs: 60000 }
     );
-    expect(putObject).toHaveBeenCalledTimes(1);
+    expect(putObjectStream).toHaveBeenCalledTimes(1);
   }
 );
 test("unauthenticated requests never consume Redis capacity", async () => {

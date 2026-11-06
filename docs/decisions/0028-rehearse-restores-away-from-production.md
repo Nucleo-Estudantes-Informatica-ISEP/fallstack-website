@@ -1,4 +1,4 @@
-# 0026: Rehearse restores away from production
+# 0028: Rehearse restores away from production
 
 Status: Accepted
 

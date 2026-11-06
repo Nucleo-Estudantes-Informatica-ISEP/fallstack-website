@@ -110,6 +110,28 @@ test("synchronous probe/configuration errors also fail readiness", async () => {
   expect(vi.getTimerCount()).toBe(0);
 });
 
+test("stopping copies report unready immediately and bypass cache", async () => {
+  let shuttingDown = false;
+  const dependency = vi.fn().mockResolvedValue(undefined);
+  const ready = createReadinessCheck([dependency], {
+    isShuttingDown: () => shuttingDown,
+  });
+
+  await expect(ready()).resolves.toBe(true);
+  expect(dependency).toHaveBeenCalledTimes(1);
+
+  // Even though ready state is cached for 5s, shutting down overrides cache immediately
+  shuttingDown = true;
+  await expect(ready()).resolves.toBe(false);
+  // No new probe was executed
+  expect(dependency).toHaveBeenCalledTimes(1);
+
+  shuttingDown = false;
+  await vi.advanceTimersByTimeAsync(5000);
+  await expect(ready()).resolves.toBe(true);
+  expect(dependency).toHaveBeenCalledTimes(2);
+});
+
 test("Redis authenticates through the configured URL and closes its socket", async () => {
   await checkRedisReadiness(new AbortController().signal);
   expect(mocks.createClient).toHaveBeenCalledWith({

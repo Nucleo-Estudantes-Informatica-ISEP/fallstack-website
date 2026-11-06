@@ -122,6 +122,7 @@ USER nextjs
 EXPOSE 4000 9464
 ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_MANUAL_SIG_HANDLE=true
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD curl -f http://localhost:4000/api/health || exit 1
 

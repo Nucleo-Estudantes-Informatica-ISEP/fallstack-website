@@ -11,7 +11,7 @@ Future rehearsals must run on a non-production host with a separate Docker
 daemon, disk and kernel, Python/boto3, age and sufficient free space. Do not
 repeat the production-host placement recorded below: an internal Docker network
 does not isolate disk pressure, daemon access or a compromised host. See
-[ADR 0026](../decisions/0026-rehearse-restores-away-from-production.md).
+[ADR 0028](../decisions/0028-rehearse-restores-away-from-production.md).
 Use the separately retained off-VPS recovery identity through authorized recovery
 access; do not copy `/etc/fallstack-backup/recovery.agekey` from production.
 Protect plaintext production personal data with `umask 077` and a mode-0700
