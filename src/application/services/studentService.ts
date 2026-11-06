@@ -105,11 +105,13 @@ export async function updateStudent(
   code: string,
   body: StudentPatch
 ) {
+  const { interests, ...profile } = body;
+
   return withTransaction(async (tx) => {
-    const student = await updateStudentProfile(code, body, tx);
+    const student = await updateStudentProfile(code, profile, tx);
     if (student.linkedin)
       await completeAction(code, actionNames.updateLinkedin, tx);
-    if (body.interests) await setStudentInterests(userId, body.interests, tx);
+    if (interests) await setStudentInterests(userId, interests, tx);
     return student;
   });
 }
