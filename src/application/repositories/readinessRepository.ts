@@ -1,5 +1,6 @@
 import "server-only";
 
+import requestPrisma from "./database";
 import prisma from "./readinessDatabase";
 
 export async function checkDatabaseReadiness() {
@@ -12,4 +13,8 @@ export async function checkDatabaseReadiness() {
     },
     { maxWait: 500, timeout: 1500 }
   );
+}
+
+export async function disconnectDatabase() {
+  await Promise.all([prisma.$disconnect(), requestPrisma.$disconnect()]);
 }

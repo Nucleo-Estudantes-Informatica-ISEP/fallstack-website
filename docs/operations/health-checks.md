@@ -22,12 +22,12 @@ connection strings or dependency addresses.
 
 Probes run concurrently with a two-second response deadline:
 
-| Dependency      | Probe                                                            | Scope                                                           |
-| --------------- | ---------------------------------------------------------------- | --------------------------------------------------------------- |
-| PostgreSQL      | `SELECT 1` through the app's Prisma pool and credentials         | Connection acquisition and query execution; no application data |
-| Redis           | Authenticated `PING` through `REDIS_URL`, requiring exact `PONG` | Network and credentials from this web copy                      |
-| MinIO           | HTTP 200 from `/minio/health/ready`                              | Storage server readiness                                        |
-| AuthNEI/ZITADEL | HTTP 200 from `/debug/ready` on `AUTH_ISSUER_URL`                | Identity provider readiness                                     |
+| Dependency      | Probe                                                                        | Scope                                                           |
+| --------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| PostgreSQL      | `SELECT 1` through the dedicated one-slot probe pool and runtime credentials | Connection acquisition and query execution; no application data |
+| Redis           | Authenticated `PING` through `REDIS_URL`, requiring exact `PONG`             | Network and credentials from this web copy                      |
+| MinIO           | HTTP 200 from `/minio/health/ready`                                          | Storage server readiness                                        |
+| AuthNEI/ZITADEL | HTTP 200 from `/debug/ready` on `AUTH_ISSUER_URL`                            | Identity provider readiness                                     |
 
 PostgreSQL uses a 500 ms transaction-acquisition timeout, 1500 ms transaction
 timeout and 1000 ms local statement timeout. The outer deadline does not cancel
@@ -47,10 +47,16 @@ probe their configured Redis. Readiness sends no writes or key commands.
 These probes do not prove bucket permissions, database migrations, usable
 application content, a complete login or end-to-end browser behavior. Keep
 staging smoke tests for those flows. Dependency readiness stays separate from
-Docker liveness; proxy removal of unready copies and shutdown draining remain
-under #458/#419. Do not claim automatic traffic removal from this endpoint alone.
-Before enabling proxy removal, #458 must decide dependency gates and pool budget
-to avoid removing every copy during a shared outage or saturation.
+Docker liveness. Under #458 (ADR 0027), proxy removal of unready copies and
+shutdown draining are wired: Traefik's loadbalancer healthcheck monitors `/api/proxy-ready`
+on port 4000, which returns 200 during normal execution and 503 during graceful
+shutdown. This ensures stopping copies get no traffic from the proxy, while protecting
+single-replica environments from total blackouts during third-party dependency hiccups.
+Deep infrastructure readiness is exposed at `/api/ready` for metrics, dashboards,
+and operators. When a web copy receives SIGTERM/SIGINT, it marks itself unready
+immediately across both probes, injects `Connection: close` into response headers, and
+finishes active requests first before terminating cleanly within Docker's 90-second
+stop grace period (accounting for the 10-second deregistration grace delay, 65-second drain, and 10-second cleanup margin).
 
 ## Verify and roll out
 

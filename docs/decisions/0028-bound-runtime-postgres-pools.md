@@ -1,4 +1,4 @@
-# 0027: Bound runtime PostgreSQL pools
+# 0028: Bound runtime PostgreSQL pools
 
 Status: Accepted
 Date: 2026-11-03
@@ -25,7 +25,10 @@ cleanup and standalone seed/wipe/test fixture clients to one, with a five-second
 acquisition timeout. Validate overrides centrally (pool 1–3, timeout 1–10 seconds)
 and apply them only to the runtime datasource, preserving direct migration
 identity separation. Keep current literal single-replica deployment settings.
-Give web/cleanup a 90-second stop grace and retain existing Next.js/worker signal
+Give web/cleanup a 90-second stop grace. Integrate the web lifecycle handler
+from [ADR 0027](0027-readiness-checks-and-graceful-shutdown.md) with a 65-second
+drain timeout to cover the existing 60-second Wallet transaction deadline;
+disconnect both request and readiness pools after draining. Retain worker signal
 handling so work drains before process exit/disconnect.
 
 Budget every environment/resource, worker, transient job, overlapping rollout,

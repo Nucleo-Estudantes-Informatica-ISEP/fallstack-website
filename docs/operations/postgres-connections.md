@@ -1,7 +1,7 @@
 # PostgreSQL connection budget
 
 Scope: [#414](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/414).
-Decision: [ADR 0027](../decisions/0027-bound-runtime-postgres-pools.md).
+Decision: [ADR 0028](../decisions/0028-bound-runtime-postgres-pools.md).
 This is a connection ceiling, not event-capacity approval (#411) or permission
 to scale Coolify (#419). No production PostgreSQL configuration was changed.
 
@@ -73,9 +73,9 @@ role limits, PostgreSQL settings, migration or pooler are required.
 Readiness uses a separate, one-connection runtime-identity client with the same
 bounded transaction/statement timeouts. Saturated request slots do not prevent
 its dependency query; this does not prove request capacity. Docker liveness
-continues to use `/api/health`, not `/api/ready`. This repository introduces no
-readiness-driven routing or restart rule (ADR 0024); the deployed platform's
-configuration must be verified separately before wiring readiness into routing.
+continues to use `/api/health`, not `/api/ready`. The lifecycle-only `/api/proxy-ready` drives proxy routing under
+[ADR 0027](../decisions/0027-readiness-checks-and-graceful-shutdown.md);
+deployed routing and restart configuration still require separate verification.
 
 ## Workload, measurements and repeat checks
 
@@ -178,10 +178,12 @@ Event HTTP mix, sustained production peak and real Google latency remain
 
 Before replacing a web copy, remove it from proxy routing, allow routing updates
 to propagate and existing requests to finish, then send **SIGTERM to Node**.
-Next.js 15.5.28's production server closes its HTTP listener, awaits active
-requests/`after` work, then exits. Keep its default signal handling enabled;
-do not set `NEXT_MANUAL_SIG_HANDLE` or add an early Prisma-disconnect handler.
-Prisma connections close at process exit; the worker explicitly disconnects in
+The web lifecycle handler uses `NEXT_MANUAL_SIG_HANDLE=true`, marks both
+readiness probes unready, allows 10s for proxy deregistration and up to 65s for
+active requests (covering Wallet's 60s transaction deadline), then disconnects
+both Prisma pools and exits. This supersedes the earlier default Next.js signal
+handling measurement above; confirm deployed drain ordering separately. The
+worker explicitly disconnects in
 `finally` after stopping/aborting cleanup work. Compose gives both services
 **90s** before SIGKILL, covering the existing 60s transaction deadline plus drain margin.
 Stop grace does not configure the proxy: verify Coolify/Traefik removal ordering,
