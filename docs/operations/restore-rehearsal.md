@@ -11,12 +11,18 @@ Future rehearsals must run on a non-production host with a separate Docker
 daemon, disk and kernel, Python/boto3, age and sufficient free space. Do not
 repeat the production-host placement recorded below: an internal Docker network
 does not isolate disk pressure, daemon access or a compromised host. See
-[ADR 0028](../decisions/0028-rehearse-restores-away-from-production.md).
+[ADR 0029](../decisions/0029-rehearse-restores-away-from-production.md).
 Use the separately retained off-VPS recovery identity through authorized recovery
 access; do not copy `/etc/fallstack-backup/recovery.agekey` from production.
 Protect plaintext production personal data with `umask 077` and a mode-0700
-working directory. Never run web, migrations, cleanup or email jobs against the
-restored copy.
+working directory. Before transferring the archive, record the host and the
+named data owner who approved access and placement of production personal
+data. Restrict shell and Docker access to authorized operators. Use dedicated
+encrypted rehearsal storage for plaintext files, Docker data and both named
+volumes. Disable swap and crash dumps for the rehearsal or protect them with
+the same ephemeral encryption. Keep plaintext out of host backups and
+snapshots. Never run web, migrations, cleanup or email jobs against the restored
+copy.
 
 Before creating any resources, choose a unique rehearsal ID and write a durable,
 mode-0600 state file in a pre-existing restricted operator state directory. Record
@@ -27,6 +33,13 @@ Register cleanup before `mkdir` or any Docker creation. Label every Docker
 resource with the rehearsal ID and mount only the planned new volumes at each
 image's data directory; do not allow implicit anonymous volumes. Keep credentials
 out of the state file. The state file must survive until cleanup is verified.
+For the selected archive key, record expected completed migration and
+application table counts for each database and their source before restoring.
+Use counts from a contemporaneous source schema record tied to that snapshot,
+or derive them by applying the schema revision known to be deployed when that
+database was dumped to an empty reference database. If the baseline cannot be
+established independently of the dump, record the gate as unverified and stop
+before reporting a pass.
 
 1. Read `last-success.json` and the selected archive's R2 `.verified.json`
    receipt. Download the archive and match **both** SHA-256 and byte count
@@ -56,12 +69,27 @@ out of the state file. The state file must survive until cleanup is verified.
    Create the planned `docker network create --internal` network and two
    **new** containers with random throwaway credentials, no host ports, only
    the planned new volumes and no shared-data network. Check host pressure
-   before starting. Wait for `pg_isready` and authenticated MinIO readiness.
+   before starting. Pass initialization credentials via mode-0600
+   `docker run --env-file` files inside the plaintext working directory and
+   remove them in cleanup. Docker operators can still inspect container
+   environment variables. Wait for `pg_isready` and authenticated MinIO readiness.
 4. Create `fallstack_dev` and `fallstack_prod` only inside the new PostgreSQL
-   container. Restore their dumps through `docker exec -i <isolated-pg>
-pg_restore -U postgres --exit-on-error --no-owner --no-privileges -d <db>`.
-   A restore error fails the rehearsal. Do not use shared PostgreSQL credentials
-   or a configurable live database URL for this step.
+   container with `POSTGRES_USER=postgres`. Set `isolated_pg` to its verified
+   rehearsal container name and `plaintext_dir` to the planned working path.
+   Run this block and stop the rehearsal on a nonzero exit.
+
+   ```bash
+   (
+     set -e
+     for db in fallstack_dev fallstack_prod; do
+       docker exec -i "${isolated_pg:?}" pg_restore -U postgres --exit-on-error \
+         --no-owner --no-privileges -d "$db" < "${plaintext_dir:?}/data/$db.dump"
+     done
+   )
+   ```
+
+   Do not use shared PostgreSQL credentials or a configurable live database URL.
+
 5. Create all six original bucket names only inside the new MinIO container.
    Its endpoint comes from that container's IP on the isolated network. Use
    the throwaway credentials. For every manifest object, validate local size
@@ -73,7 +101,9 @@ pg_restore -U postgres --exit-on-error --no-owner --no-privileges -d <db>`.
    if every archived object was restored correctly.
 7. In `finally`/a shell exit trap, attempt removal of every planned task-owned
    container with `docker rm -fv`, then every planned volume, network and the
-   plaintext working directory, even if creation/startup failed partway. Verify
+   plaintext working directory, even if creation/startup failed partway. Destroy
+   the rehearsal storage encryption key and verify that the storage cannot be
+   reopened. Verify
    resource ownership labels before removal. An already absent resource must
    not prevent the remaining cleanup attempts. Verify all planned names/paths
    and resources bearing this rehearsal ID are gone; only then remove the
@@ -88,6 +118,61 @@ restore command can address a shared PostgreSQL database or shared MinIO bucket.
 Only the download step on the backup host reads R2 and updates its existing
 request ledger. The backup timer is not paused or reconfigured.
 
+### Budgeted download on the backup host
+
+Run as an authorized backup operator. Set `archive_key` to the selected
+`fallstack/…tar.gz.age` key from the private inventory or local
+`last-success.json`. Use a new, empty mode-0700 staging directory with space for
+the archive (up to 250 MB), and set `download_dir` to its absolute path. Transfer
+files only if this command succeeds. Remove partial downloads after failure and
+use a new directory on retry.
+
+```bash
+sudo python3 -B - "${archive_key:?}" "${download_dir:?}" <<'PY'
+import fcntl
+import json
+import os
+from pathlib import Path
+import shutil
+import sys
+
+sys.path.insert(0, "/opt/fallstack-backup")
+import backup
+
+key, destination = sys.argv[1:]
+if not backup.ARCHIVE_KEY.fullmatch(key):
+    raise SystemExit("Invalid Fallstack archive key")
+
+os.umask(0o077)
+output = Path(destination)
+config = json.loads(Path("/etc/fallstack-backup/config.json").read_text())
+state = Path(config["state_dir"])
+archive = output / Path(key).name
+receipt = archive.with_name(archive.name + ".verified.json")
+with (state / "lock").open("a") as lock:
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    budget = backup.Budget(state / "requests.json")
+    s3 = backup.client(config["endpoint"], config["access_key_id"],
+                       config["secret_access_key"])
+    for path, object_key, limit in (
+        (receipt, key + ".verified.json", backup.RECEIPT_HEADROOM),
+        (archive, key, backup.MAX_ARCHIVE_BYTES),
+    ):
+        with path.open("xb") as target:
+            response = backup.r2_call(s3, budget, "B", "get_object",
+                                      Bucket=config["bucket"], Key=object_key)
+            with response["Body"] as body:
+                if not 0 < response["ContentLength"] <= limit:
+                    raise SystemExit("Unexpected download size")
+                shutil.copyfileobj(body, target, 1024 * 1024)
+
+verified = json.loads(receipt.read_text())
+if (verified["key"] != key or verified["bytes"] != archive.stat().st_size
+        or verified["sha256"] != backup.digest(archive).hexdigest()):
+    raise SystemExit("Archive does not match the verification receipt")
+PY
+```
+
 ## Account and CV consistency checks
 
 Successful `pg_restore --exit-on-error` recreates and validates dumped foreign
@@ -96,8 +181,8 @@ finished, non-rolled-back migration counts and application table counts. Also
 require zero unvalidated constraints in the `fallstack` schema.
 
 Run these queries in each isolated database. Migration and application table
-counts must match the selected snapshot's recorded counts (26 and 20 for the
-3 November snapshot below), not a newer source checkout. Both failure counts
+counts must match each database's baseline recorded in the rehearsal state
+file (26 and 20 for the 3 November snapshot below). Both failure counts
 must be zero; stop and investigate any mismatch before recording a pass.
 
 ```sql

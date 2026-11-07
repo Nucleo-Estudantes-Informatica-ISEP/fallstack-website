@@ -1,4 +1,4 @@
-# 0028: Rehearse restores away from production
+# 0029: Rehearse restores away from production
 
 Status: Accepted
 
@@ -28,8 +28,12 @@ verified. Keep production personal data restricted even on the separate host.
 
 ## Consequences
 
-- A separate authorized host, recovery-key access and sufficient disk space are
-  prerequisites to a future rehearsal. None is claimed provisioned here.
+- Before each rehearsal, a named data owner must approve the host and the
+  placement of production personal data. Host access is limited to authorized
+  operators. Plaintext files, Docker data and restored volumes require
+  dedicated encrypted storage with a disposable key destroyed at cleanup.
+  Off-VPS key access and sufficient space are also required. Host selection and
+  owner approval remain open.
 - The historical snapshot results remain evidence of that run only. They do not
   demonstrate exact reproducibility, VPS-loss recovery or accepted RPO/RTO.
 - Abrupt interruption requires operator cleanup from the retained state and
