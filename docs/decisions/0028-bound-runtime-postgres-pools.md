@@ -51,7 +51,9 @@ migration validation and a new decision record.
 ## Consequences
 
 Wallet issuance and deletion share process-wide admission capped at the request
-pool size minus one (two operations with the default three-slot pool). Excess
+two operations, or the request pool size minus one when that is smaller (two with
+the default three-slot pool). The cap does not grow when the pool is raised, so a
+larger pool cannot let more slow Google calls pin request slots. Excess
 operations return 429 before DB access, preserving one slot for other requests
 during slow Google I/O. This cap does not reserve connections for Wallet:
 ordinary queries can occupy every request slot, so an admitted Wallet operation

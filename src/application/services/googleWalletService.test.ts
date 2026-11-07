@@ -523,9 +523,10 @@ test("rejects repeated issuance and deletion before queuing another DB lock", as
   ).resolves.toBe("retry");
 });
 
-test.each([1, 2, 3])(
-  "pool size %s reserves one slot across different-user Wallet operations",
+test.each([1, 2, 3, 5, 10])(
+  "pool size %s reserves one slot and admits at most two Wallet operations",
   async (limit) => {
+    const allowed = Math.min(2, limit - 1);
     serverEnvMock.PRISMA_CONNECTION_LIMIT = limit;
     const { withGoogleWalletOperation } = await import("./googleWalletService");
     let release!: () => void;
@@ -533,14 +534,14 @@ test.each([1, 2, 3])(
       release = resolve;
     });
     const work = vi.fn(() => gate);
-    const admitted = Array.from({ length: limit - 1 }, (_, index) =>
+    const admitted = Array.from({ length: allowed }, (_, index) =>
       withGoogleWalletOperation(`user-${index}`, work)
     );
     try {
       await expect(
         withGoogleWalletOperation("excess-user", work)
       ).rejects.toMatchObject({ status: 429 });
-      expect(work).toHaveBeenCalledTimes(limit - 1);
+      expect(work).toHaveBeenCalledTimes(allowed);
     } finally {
       release();
       await Promise.all(admitted);
