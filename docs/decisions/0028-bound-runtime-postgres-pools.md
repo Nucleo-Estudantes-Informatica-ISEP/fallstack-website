@@ -55,8 +55,10 @@ pool size minus one (two operations with the default three-slot pool). Excess
 operations return 429 before DB access, preserving one slot for other requests
 during slow Google I/O. This cap does not reserve connections for Wallet:
 ordinary queries can occupy every request slot, so an admitted Wallet operation
-can still exhaust Prisma's default two-second transaction `maxWait` and fail
-with P2028. URL `pool_timeout` does not change that deadline.
+can still exhaust the transaction `maxWait` and fail with P2028. `withLockedUser`
+sets that wait to `PRISMA_POOL_TIMEOUT_SECONDS` because URL `pool_timeout` does
+not change Prisma's two-second default. P2024 and P2028 are logged and returned
+as a retryable 503 rather than a generic 500.
 A one-slot configuration admits no Wallet operations;
 use at least two slots when Wallet issuance/deletion is needed. Pool
 limits protect shared capacity but do not establish acceptable event latency.

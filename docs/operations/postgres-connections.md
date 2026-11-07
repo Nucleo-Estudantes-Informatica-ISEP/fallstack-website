@@ -90,7 +90,9 @@ deployed routing and restart configuration still require separate verification.
   I/O to preserve issuance/deletion ordering. Each fetch has a **10s** timeout;
   multiple sequential calls can occupy the connection until the transaction's
   **60s** deadline. Transaction admission has Prisma's separate default
-  **2s maxWait**; URL `pool_timeout` does not replace that timeout. Same-user
+  **2s maxWait**, which `withLockedUser` now overrides with
+  `PRISMA_POOL_TIMEOUT_SECONDS` (5s by default) because URL `pool_timeout` does
+  not replace it. Same-user
   advisory admission returns 429. Process-wide admission also limits combined
   issuance/deletion to request pool size minus one, returning 429 before DB
   access when full. The default pool admits two operations and leaves one
@@ -98,8 +100,11 @@ deployed routing and restart configuration still require separate verification.
   admits one operation; a one-slot pool admits none. Configure at least two
   slots for Wallet issuance/deletion. The cap does not reserve connections for
   Wallet: ordinary queries can occupy all request slots, so an admitted Wallet
-  transaction can still exhaust the default **2s maxWait** and fail with P2028.
-  This limits Wallet occupancy; it does not guarantee transaction admission or latency.
+  transaction can still exhaust its `maxWait` and fail with P2028. Pool wait
+  (P2024) and P2028 are logged, then returned to clients as a retryable
+  `503 {"error":"Service busy, please retry shortly"}` with `Retry-After: 5`,
+  not a generic 500. This limits Wallet occupancy; it does not guarantee
+  transaction admission or latency.
 - Do not increase timeouts/pools to hide `P2024` or transaction-acquisition
   failures. Reduce admitted Wallet concurrency or use #411 workload evidence to
   review the budget. A three-slot pool is a bounded safety setting, not proof
