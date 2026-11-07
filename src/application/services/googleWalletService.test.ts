@@ -11,6 +11,7 @@ const {
   infoMock,
 } = vi.hoisted(() => ({
   serverEnvMock: {
+    PRISMA_CONNECTION_LIMIT: 3,
     GOOGLE_WALLET_NEVER_ENABLED: false,
     GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
     GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
@@ -78,6 +79,7 @@ beforeEach(() => {
     callback({ active: true, student }, {})
   );
   serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 3;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
   serverEnvMock.GOOGLE_WALLET_CLASS_ID = "123456789.fallstack-2026-staging";
   serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = validCredentials;
@@ -520,6 +522,36 @@ test("rejects repeated issuance and deletion before queuing another DB lock", as
     withGoogleWalletOperation(student.id, async () => "retry")
   ).resolves.toBe("retry");
 });
+
+test.each([1, 2, 3, 5, 10])(
+  "pool size %s reserves one slot and admits at most two Wallet operations",
+  async (limit) => {
+    const allowed = Math.min(2, limit - 1);
+    serverEnvMock.PRISMA_CONNECTION_LIMIT = limit;
+    const { withGoogleWalletOperation } = await import("./googleWalletService");
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const work = vi.fn(() => gate);
+    const admitted = Array.from({ length: allowed }, (_, index) =>
+      withGoogleWalletOperation(`user-${index}`, work)
+    );
+    try {
+      await expect(
+        withGoogleWalletOperation("excess-user", work)
+      ).rejects.toMatchObject({ status: 429 });
+      expect(work).toHaveBeenCalledTimes(allowed);
+    } finally {
+      release();
+      await Promise.all(admitted);
+    }
+    if (limit > 1)
+      await expect(
+        withGoogleWalletOperation("retry-user", async () => "ok")
+      ).resolves.toBe("ok");
+  }
+);
 
 test("releases operation admission after failure for an immediate retry", async () => {
   const { withGoogleWalletOperation } = await import("./googleWalletService");

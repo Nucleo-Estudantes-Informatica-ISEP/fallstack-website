@@ -1,6 +1,7 @@
 import "server-only";
 
-import prisma from "./database";
+import requestPrisma from "./database";
+import prisma from "./readinessDatabase";
 
 export async function checkDatabaseReadiness() {
   // Prisma does not cancel this transaction through the outer AbortSignal.
@@ -15,5 +16,5 @@ export async function checkDatabaseReadiness() {
 }
 
 export async function disconnectDatabase() {
-  await prisma.$disconnect();
+  await Promise.all([prisma.$disconnect(), requestPrisma.$disconnect()]);
 }

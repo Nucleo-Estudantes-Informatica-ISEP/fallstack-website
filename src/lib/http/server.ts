@@ -33,6 +33,23 @@ export const httpErrorResponse = (error: unknown) => {
     }
   }
 
+  // Pool wait (P2024) or transaction admission (P2028) timed out: the database is
+  // busy, not broken. Still logged so the documented pool alerts see the code.
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    (error.code === "P2024" || error.code === "P2028")
+  ) {
+    reportError(
+      error,
+      { operation: "database_busy" },
+      "Database connection pool busy"
+    );
+    return NextResponse.json(
+      { error: "Service busy, please retry shortly" },
+      { status: 503, headers: { "Retry-After": "5" } }
+    );
+  }
+
   reportError(
     error,
     { operation: "unhandled_route_error" },

@@ -2,9 +2,13 @@ import { randomUUID } from "node:crypto";
 import { PrismaClient, Role } from "@prisma/client";
 import { afterAll, afterEach, expect, test, vi } from "vitest";
 
+import { singleConnectionDatabaseUrl } from "@/config/env.database";
+
 vi.mock("server-only", () => ({}));
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: singleConnectionDatabaseUrl(),
+});
 
 const { findCompanyInterests, setCompanyInterests } =
   await import("../../src/application/repositories/companyRepository");

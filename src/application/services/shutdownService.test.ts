@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   decrementActiveRequests,
   DEFAULT_DEREGISTRATION_DELAY_MS,
+  DEFAULT_DRAIN_TIMEOUT_MS,
   getActiveRequestCount,
   handleRequestStart,
   incrementActiveRequests,
@@ -308,6 +309,25 @@ describe("shutdownService", () => {
     incrementActiveRequests();
     const result = await waitForActiveRequests(50);
     expect(result).toBe(false);
+  });
+
+  test("default drain covers the 60-second Wallet transaction deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      expect(DEFAULT_DRAIN_TIMEOUT_MS).toBe(65000);
+      incrementActiveRequests();
+      let completed = false;
+      const draining = waitForActiveRequests().then((result) => {
+        completed = true;
+        return result;
+      });
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(completed).toBe(false);
+      decrementActiveRequests();
+      await expect(draining).resolves.toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("startGracefulShutdown drains active requests, executes cleanup and exits 0", async () => {

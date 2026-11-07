@@ -51,7 +51,12 @@ let cachedAccessToken: CachedAccessToken | undefined;
 let accessTokenRequest:
   { clientEmail: string; promise: Promise<string> } | undefined;
 
-// shortcut: process-local admission; use shared admission if replicas share a pool.
+// Each admitted issuance/deletion can hold one request-pool connection during
+// Google I/O. Admit at most MAX_WALLET_OPERATIONS and always leave one slot for
+// other requests before starting any DB work. The cap does not grow with a larger
+// request pool: raising the pool must not let more slow Google calls pin slots.
+// Admission is local because each Node process owns its own Prisma pool.
+const MAX_WALLET_OPERATIONS = 2;
 const activeWalletOperations = new Set<string>();
 
 export async function withGoogleWalletOperation<T>(
@@ -63,6 +68,11 @@ export async function withGoogleWalletOperation<T>(
       "A Wallet operation is already in progress. Retry shortly.",
       429
     );
+  if (
+    activeWalletOperations.size >=
+    Math.min(MAX_WALLET_OPERATIONS, serverEnv.PRISMA_CONNECTION_LIMIT - 1)
+  )
+    throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
   activeWalletOperations.add(userId);
   try {
     return await work();

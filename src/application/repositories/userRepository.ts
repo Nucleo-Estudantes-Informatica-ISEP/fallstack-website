@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
+import { databaseEnvSchema } from "@/config/env.database";
 import { resolveStoredAdminRole } from "@/domain/auth/authPolicy";
 
 import prisma, { DbClient } from "./database";
@@ -56,7 +57,13 @@ export const withLockedUser = <T>(
       });
       return work(user, tx);
     },
-    { timeout: 60_000 }
+    {
+      timeout: 60_000,
+      // Prisma's 2s default is separate from pool_timeout; align it so an
+      // admitted Wallet operation queues as long as an ordinary query.
+      maxWait:
+        databaseEnvSchema.parse(process.env).PRISMA_POOL_TIMEOUT_SECONDS * 1000,
+    }
   );
 
 export const findUserSessionByZitadelUserId = (zitadelUserId: string) =>

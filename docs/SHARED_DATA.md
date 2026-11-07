@@ -31,6 +31,13 @@ shared-data network. Only `web` joins the Redis network. Set `REDIS_URL`,
 [Redis runbook](operations/redis.md) for setup, verification and SAD's
 off-season stop/resume procedure.
 
+See the [PostgreSQL connection budget](operations/postgres-connections.md) before
+changing process counts. Runtime pools default to three connections per web
+process, plus one dedicated readiness connection per web process and one per
+cleanup worker, with a finite five-second acquisition wait.
+All resources and rollout overlap share this budget; CPU quotas alone do not
+size Prisma 6 pools.
+
 Set `DATABASE_URL` to the environment's **runtime** identity and `DIRECT_URL`
 to its **migration** identity, with `?schema=fallstack` on both. Compose passes
 `DIRECT_URL` only to the migrator. Set `S3_ACCESS_KEY_ID`,

@@ -30,6 +30,25 @@ test("reports unexpected errors and returns a generic 500", async () => {
   ]);
 });
 
+test.each(["P2024", "P2028"])(
+  "maps Prisma %s pool contention to a retryable 503 and still logs it",
+  async (code) => {
+    const error = new Prisma.PrismaClientKnownRequestError("busy", {
+      code,
+      clientVersion: "test",
+    });
+
+    const response = httpErrorResponse(error);
+
+    assert.equal(response.status, 503);
+    assert.equal(response.headers.get("Retry-After"), "5");
+    assert.deepEqual(await response.json(), {
+      error: "Service busy, please retry shortly",
+    });
+    assert.equal(vi.mocked(reportError).mock.calls.length, 1);
+  }
+);
+
 test("does not report expected HttpError instances", async () => {
   const error = new HttpError("Not found", 404);
 

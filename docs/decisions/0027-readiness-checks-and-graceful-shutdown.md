@@ -1,6 +1,6 @@
 # 0027: Readiness checks and graceful shutdown
 
-Status: Accepted
+Status: Accepted (drain timeout and stop grace amended by [ADR 0028](0028-bound-runtime-postgres-pools.md))
 Date: 2026-11-04
 Source: [Task04-A #458](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/458)
 Supersedes: [ADR 0024](0024-separate-liveness-and-dependency-readiness.md) (in part regarding proxy wiring and shutdown draining)

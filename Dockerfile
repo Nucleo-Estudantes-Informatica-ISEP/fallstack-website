@@ -53,9 +53,9 @@ CMD ["npx", "prisma", "migrate", "deploy"]
 # Scheduled retention/orphan worker: reuse installed SDK, Prisma and tsx.
 FROM builder AS storage-cleanup
 COPY tsconfig.json ./
-COPY src/config/env.storage.ts ./src/config/env.storage.ts
+COPY src/config/env.storage.ts src/config/env.database.ts ./src/config/
 COPY src/domain/company/companyVideo.ts ./src/domain/company/companyVideo.ts
-COPY src/application/repositories/database.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
+COPY src/application/repositories/storageCleanupDatabase.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
 COPY src/application/services/objectStorageService.ts src/application/services/storageCleanupService.ts ./src/application/services/
 COPY scripts/storage-cleanup.ts ./scripts/storage-cleanup.ts
 ENV NODE_ENV=production

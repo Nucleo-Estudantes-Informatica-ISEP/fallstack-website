@@ -69,7 +69,7 @@ export function decrementActiveRequests(): number {
 
 export const DEFAULT_DEREGISTRATION_DELAY_MS =
   process.env.NODE_ENV === "test" ? 0 : 10000;
-export const DEFAULT_DRAIN_TIMEOUT_MS = 25000;
+export const DEFAULT_DRAIN_TIMEOUT_MS = 65000;
 
 export function resetShutdownState(): void {
   const state = getShutdownState();
@@ -201,7 +201,9 @@ export function stopTrackingRequests(): void {
   state.isSubscribed = false;
 }
 
-export function waitForActiveRequests(timeoutMs = 25000): Promise<boolean> {
+export function waitForActiveRequests(
+  timeoutMs = DEFAULT_DRAIN_TIMEOUT_MS
+): Promise<boolean> {
   const state = getShutdownState();
   if (state.activeRequests === 0) {
     return Promise.resolve(true);

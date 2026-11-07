@@ -1,6 +1,6 @@
 # 0024: Separate liveness and dependency readiness
 
-Status: Accepted
+Status: Accepted (readiness probe pool amended by [ADR 0028](0028-bound-runtime-postgres-pools.md))
 Date: 2026-10-30
 Source: [Dependency readiness and Redis probes #520](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/520), related to [#458](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/458)
 
