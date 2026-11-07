@@ -23,7 +23,7 @@ independent pools. A pooler cannot remove that transaction occupancy.
 
 Bound runtime request pools to three connections, readiness to a separate one,
 cleanup and standalone seed/wipe/test fixture clients to one, with a five-second
-acquisition timeout. Validate overrides centrally (pool 1–3, timeout 1–10 seconds)
+acquisition timeout. Validate overrides centrally (pool 1–10, default 3, timeout 1–10 seconds)
 and apply them only to the runtime datasource, preserving direct migration
 identity separation. Keep current literal single-replica deployment settings.
 Give web/cleanup a 90-second stop grace. Integrate the web lifecycle handler

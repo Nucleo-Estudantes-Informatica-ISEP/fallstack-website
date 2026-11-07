@@ -36,7 +36,7 @@ test("worker override replaces duplicate and stale URL pool settings", () => {
   expect(url.searchParams.getAll("pool_timeout")).toEqual(["2"]);
 });
 
-test.each(["0", "4", "1.5", "", "bad"])(
+test.each(["0", "11", "1.5", "", "bad"])(
   "rejects unsafe pool size %s",
   (value) => {
     expect(

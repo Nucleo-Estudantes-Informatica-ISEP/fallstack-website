@@ -51,7 +51,9 @@ logs in isolation and use explicit ceilings rather than idle snapshots.
 
 ## Runtime and deployment settings
 
-`PRISMA_CONNECTION_LIMIT` defaults to **3**, validated integer **1–3**.
+`PRISMA_CONNECTION_LIMIT` defaults to **3**, validated integer **1–10**. Raise it
+only with workload evidence (#411) and after recomputing the shared budget: every
+unit adds one connection per web process, including rollout overlap.
 `PRISMA_POOL_TIMEOUT_SECONDS` defaults to **5**, validated integer **1–10**;
 zero/infinite waits are rejected. `runtimeDatabaseUrl` sets these authoritative
 Prisma URL parameters while retaining runtime identity, schema, TLS and other
