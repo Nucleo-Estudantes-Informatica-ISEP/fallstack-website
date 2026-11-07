@@ -82,6 +82,7 @@ before reporting a pass.
    (
      set -e
      for db in fallstack_dev fallstack_prod; do
+       docker exec "${isolated_pg:?}" createdb -U postgres "$db"
        docker exec -i "${isolated_pg:?}" pg_restore -U postgres --exit-on-error \
          --no-owner --no-privileges -d "$db" < "${plaintext_dir:?}/data/$db.dump"
      done
