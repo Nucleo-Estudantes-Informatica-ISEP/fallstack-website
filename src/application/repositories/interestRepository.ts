@@ -54,6 +54,9 @@ export const findInterestsForAdmin = async ({
   return interests;
 };
 
+export const countInterestsByIds = (ids: string[]) =>
+  prisma.interest.count({ where: { id: { in: ids } } });
+
 export const findInterestById = (id: string) =>
   prisma.interest
     .findUnique({ where: { id } })

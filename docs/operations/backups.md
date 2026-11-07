@@ -163,6 +163,9 @@ Check the timer/latest success during operations and keep host monitoring active
   saved its receipt. Two archives plus receipts occupied **8,330,094 bytes**;
   recorded October job requests were **9 Class A / 4 Class B** at inspection.
 
+See the [isolated restore rehearsal](restore-rehearsal.md) for repeat steps,
+account/CV consistency checks and the latest recovery evidence.
+
 ## Recovery
 
 Browse/download archives through the private
