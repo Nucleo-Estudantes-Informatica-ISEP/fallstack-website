@@ -18,7 +18,8 @@ const globalForPrisma = globalThis as unknown as {
 
 const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+// Cache in production too: duplicated route bundles must share one pool.
+globalForPrisma.prisma = prisma;
 
 export default prisma;
 

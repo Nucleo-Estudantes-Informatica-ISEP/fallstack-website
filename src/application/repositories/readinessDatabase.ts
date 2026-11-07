@@ -13,7 +13,7 @@ const readinessPrisma =
   globalForReadiness.readinessPrisma ??
   new PrismaClient({ datasourceUrl: singleConnectionDatabaseUrl() });
 
-if (process.env.NODE_ENV !== "production")
-  globalForReadiness.readinessPrisma = readinessPrisma;
+// Cache in production too: duplicated route bundles must share one pool.
+globalForReadiness.readinessPrisma = readinessPrisma;
 
 export default readinessPrisma;

@@ -14,7 +14,7 @@ const storageCleanupPrisma =
   globalForCleanup.storageCleanupPrisma ??
   new PrismaClient({ datasourceUrl: singleConnectionDatabaseUrl() });
 
-if (process.env.NODE_ENV !== "production")
-  globalForCleanup.storageCleanupPrisma = storageCleanupPrisma;
+// Cache in production too: duplicated route bundles must share one pool.
+globalForCleanup.storageCleanupPrisma = storageCleanupPrisma;
 
 export default storageCleanupPrisma;
