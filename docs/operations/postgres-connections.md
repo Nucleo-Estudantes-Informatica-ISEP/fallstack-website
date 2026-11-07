@@ -59,10 +59,10 @@ parameters. Old URL `connection_limit`/`pool_timeout` values are replaced,
 including duplicates. Never log the resulting URL.
 
 Compose pins cleanup to **1 / 5s**, web uses the validated settings above.
-Seed, wipe and direct test fixture clients use `singleConnectionDatabaseUrl`,
-which pins capacity to **1 / 5s** regardless of web settings or URL overrides.
-Standalone/manual cleanup importing the request singleton must still set
-`PRISMA_CONNECTION_LIMIT=1`; count every separate client in the budget. The cleanup image copies the narrow DB schema; it needs no OIDC
+Seed, wipe, direct test fixture clients and the storage cleanup client
+(`storageCleanupDatabase.ts`) use `singleConnectionDatabaseUrl`, which pins
+capacity to **1 / 5s** regardless of web settings or URL overrides, including
+manual cleanup runs outside Compose. Count every separate client in the budget. The cleanup image copies the narrow DB schema; it needs no OIDC
 secrets. The environment example and lazy server schema expose both settings.
 
 `DIRECT_URL` remains the migration identity and direct PostgreSQL endpoint.
