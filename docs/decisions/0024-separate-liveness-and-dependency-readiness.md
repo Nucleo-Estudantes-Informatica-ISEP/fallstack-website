@@ -1,6 +1,6 @@
 # 0024: Separate liveness and dependency readiness
 
-Status: Accepted
+Status: Accepted (readiness probe pool amended by [ADR 0028](0028-bound-runtime-postgres-pools.md))
 Date: 2026-10-30
 Source: [Dependency readiness and Redis probes #520](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/520), related to [#458](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/458)
 
@@ -28,8 +28,7 @@ If the driver never settles, readiness remains false until it settles or the
 process restarts; retaining that work prevents repeated requests from creating
 more stuck transactions.
 
-Use a separately budgeted one-connection PostgreSQL probe pool (updated by
-[ADR 0028](0028-bound-runtime-postgres-pools.md)) for a bounded `SELECT 1`, an authenticated Redis
+Use the app's PostgreSQL pool for a bounded `SELECT 1`, an authenticated Redis
 PING with exact PONG, and lightweight MinIO/ZITADEL readiness endpoints. Redis
 probe sockets close after every attempt and do not retry. Add optional
 `REDIS_URL` validation for readiness, independent of other server configuration; the

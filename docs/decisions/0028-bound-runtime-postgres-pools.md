@@ -2,6 +2,7 @@
 
 Status: Accepted
 Date: 2026-11-03
+Amends: [ADR 0024](0024-separate-liveness-and-dependency-readiness.md) (the readiness `SELECT 1` runs on its own one-connection pool, not the request pool); [ADR 0027](0027-readiness-checks-and-graceful-shutdown.md) (drain timeout 25s to 65s, web stop grace 45s to 90s)
 Source: [Task02-A #414](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/414)
 
 ## Context

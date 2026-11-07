@@ -1,6 +1,6 @@
 # 0027: Readiness checks and graceful shutdown
 
-Status: Accepted
+Status: Accepted (drain timeout and stop grace amended by [ADR 0028](0028-bound-runtime-postgres-pools.md))
 Date: 2026-11-04
 Source: [Task04-A #458](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/458)
 Supersedes: [ADR 0024](0024-separate-liveness-and-dependency-readiness.md) (in part regarding proxy wiring and shutdown draining)
@@ -33,8 +33,8 @@ Furthermore, without graceful shutdown draining, stopping a web copy immediately
    - `/api/proxy-ready` and `/api/ready` immediately observe `shuttingDown === true` and return 503 so proxies and orchestrators detect unreadiness.
    - Incoming and in-flight requests are not forcibly terminated in `diagnostics_channel`. Instead, `response.writeHead` is sanitized to ensure `Connection: close` is injected (overriding any keep-alive request args), instructing the client/proxy to close the connection after the response completes.
    - Introduce a 10-second deregistration grace delay (`deregistrationDelayMs = 10000`, 0 in test environments). Given Traefik's healthcheck interval of 5s and timeout of 2s, a worst-case probe cycle plus network and eviction jitter spans up to 7–10 seconds. This 10-second delay ensures Traefik successfully probes `/api/proxy-ready`, receives 503, and removes the copy from routing before the socket on port 4000 is closed, even when `activeRequests === 0`.
-   - Active in-flight requests are tracked and allowed to finish first, bounded by a 65-second drain timeout (`DEFAULT_DRAIN_TIMEOUT_MS = 65000`).
-   - To account for the 10-second deregistration delay, 65-second drain timeout, and 10-second cleanup/buffer margin (total budget 85s), Docker Compose `stop_grace_period` on `web` is set to `90s`.
+   - Active in-flight requests are tracked and allowed to finish first, bounded by a 25-second drain timeout (`DEFAULT_DRAIN_TIMEOUT_MS = 25000`).
+   - To account for the 10-second deregistration delay, 25-second drain timeout, and 10-second cleanup/buffer margin (total budget 45s), Docker Compose `stop_grace_period` on `web` is set to `45s`.
    - After draining, resources (e.g. database client pool) disconnect cleanly and the process exits with code 0.
    - Guard signal handler registration with `process.env.NEXT_PHASE !== "phase-production-build"` to prevent interference during `next build`.
    - `NEXT_MANUAL_SIG_HANDLE=true` is enabled in the runtime environment.
