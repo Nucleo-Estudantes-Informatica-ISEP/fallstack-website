@@ -71,13 +71,7 @@ checks, stop thresholds and a rollback that preserves finite pool limits.
 
 ## Measured evidence (2026-11-07)
 
-Measured on the shared development deployment: three web copies built from
-the same commit, behind one Traefik load balancer, with one cleanup worker per
-copy. One k6 load generator ran from a single laptop. Uncapped runs used
-commit `10a3078`; capped runs used `5e6bf4a` (this ADR's change). Database
-connections were sampled once per second from `pg_stat_activity`; transaction
-rates come from `pg_stat_database` and are averaged over the whole sampling
-window, so they understate the peak. Development holds only synthetic data.
+Measured on the shared development deployment: three web copies built from the same commit, behind one Traefik load balancer, with one cleanup worker per copy. One k6 load generator ran from a single laptop. Uncapped runs used commit `10a3078`; capped runs used `5e6bf4a` (this ADR's change). Database connections were sampled once per second from `pg_stat_activity`; transaction rates come from `pg_stat_database` and are averaged over the whole sampling window, so they understate the peak. Development holds only synthetic data.
 
 | Run                                         | Config | Result                                                                                                                   |
 | ------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
@@ -87,32 +81,14 @@ window, so they understate the peak. Development holds only synthetic data.
 | QR scan rush, 25 users, 60 s                | cap 3  | 116 scans/s, p95 231 ms; 3 connections per copy; at most 2 busy at once; cluster peak 11 above baseline                  |
 | Mixed: homepage 10 users and scans 25 users | cap 3  | scans 54/s, p95 476 ms; homepage p95 653 ms; 0 errors, 0 `503`; 3 connections per copy; web copies at 43-90% of one core |
 
-A scan is one public `GET` for the QR token plus one authenticated `POST` that
-completes the action, about six statements per scan. The scenario used 200 live
-actions and 25 synthetic students.
+A scan is one public `GET` for the QR token plus one authenticated `POST` that completes the action, about six statements per scan. The scenario used 200 live actions and 25 synthetic students.
 
 What the runs show:
 
-- Without a cap, a copy opened as many connections as it had requests in flight
-  (4 at 10 users, 7-8 at 25). That tracks request concurrency, not database
-  work: at most two connections were busy at the same instant.
-- With the default cap of 3, a scan rush of about 39 scans/s per copy (116/s
-  across three copies) produced no pool wait errors, no `503`, and no slower
-  responses than the uncapped run.
-- In the mixed run, scan throughput halved and scan p95 doubled, while the
-  database-backed light requests (session lookup, cached public data) did not
-  slow down. Total request rate stayed near 200/s in both the scan-only and the
-  mixed runs. The web copies ran at 43-90% of one core. This points to
-  application CPU, not the connection pool, as the shared ceiling.
+- Without a cap, a copy opened as many connections as it had requests in flight (4 at 10 users, 7-8 at 25). That tracks request concurrency, not database work: at most two connections were busy at the same instant.
+- With the default cap of 3, a scan rush of about 39 scans/s per copy (116/s across three copies) produced no pool wait errors, no `503`, and no slower responses than the uncapped run.
+- In the mixed run, scan throughput halved and scan p95 doubled, while the database-backed light requests (session lookup, cached public data) did not slow down. Total request rate stayed near 200/s in both the scan-only and the mixed runs. The web copies ran at 43-90% of one core. This points to application CPU, not the connection pool, as the shared ceiling.
 
-Limits of this evidence: single runs, one load-generating laptop sharing a home
-connection, a development host, and no Google Wallet traffic or CV uploads. The
-cause of the throughput ceiling (application CPU, the load balancer or the load
-generator) is not proven. #411 and #419 still own the event capacity target,
-the number of copies and the per-copy CPU sizing.
+Limits of this evidence: single runs, one load-generating laptop sharing a home connection, a development host, and no Google Wallet traffic or CV uploads. The cause of the throughput ceiling (application CPU, the load balancer or the load generator) is not proven. #411 and #419 still own the event capacity target, the number of copies and the per-copy CPU sizing.
 
-Decision unchanged: keep the request pool default at 3, adjustable up to 10 with
-`PRISMA_CONNECTION_LIMIT`. Raise it only when a capped run shows pool wait
-errors or `503` responses. Wallet admission stays at two operations per process
-regardless of pool size, so a larger pool cannot let more slow Google calls pin
-request connections.
+Decision unchanged: keep the request pool default at 3, adjustable up to 10 with `PRISMA_CONNECTION_LIMIT`. Raise it only when a capped run shows pool wait errors or `503` responses. Wallet admission stays at two operations per process regardless of pool size, so a larger pool cannot let more slow Google calls pin request connections.
