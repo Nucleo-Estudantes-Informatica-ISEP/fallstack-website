@@ -100,10 +100,10 @@ deployed routing and restart configuration still require separate verification.
   that is smaller, returning 429 before DB access when full. The default
   three-slot pool admits two operations and leaves one connection for other
   requests even during slow Google I/O. A two-slot pool admits one operation; a
-  one-slot pool admits none; larger pools still admit two. Configure at least
-  two slots for Wallet issuance/deletion. The cap does not reserve connections for
-  Wallet: ordinary queries can occupy all request slots, so an admitted Wallet
-  transaction can still exhaust its `maxWait` and fail with P2028. Pool wait
+  one-slot pool pauses issuance and admits one account deletion, which can
+  occupy the sole slot. Larger pools still admit two operations. Ordinary queries
+  can occupy all request slots, so an admitted Wallet transaction can still
+  exhaust its `maxWait` and fail with P2028. Pool wait
   (P2024) and P2028 are logged, then returned to clients as a retryable
   `503 {"error":"Service busy, please retry shortly"}` with `Retry-After: 5`,
   not a generic 500. This limits Wallet occupancy; it does not guarantee

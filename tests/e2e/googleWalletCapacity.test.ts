@@ -33,9 +33,12 @@ test("slow different-user Wallet saves leave request capacity and reject excess 
     ).toString("base64")
   );
   const limit = Number(process.env.PRISMA_CONNECTION_LIMIT || 3);
+  const admitted = Math.min(2, limit - 1);
   const students = await Promise.all(
-    Array.from({ length: limit + 1 }, () => fixtures.student())
+    Array.from({ length: admitted + 2 }, () => fixtures.student())
   );
+  const excessSave = students[admitted];
+  const accountToDelete = students[admitted + 1];
   let release!: () => void;
   let started!: () => void;
   const gate = new Promise<void>((resolve) => {
@@ -52,48 +55,48 @@ test("slow different-user Wallet saves leave request capacity and reject excess 
         expires_in: 3600,
       });
     if (!init?.method) {
-      if (++holders === limit - 1) started();
+      if (++holders === admitted) started();
       await gate;
       return new Response(null, { status: 404 });
     }
     return Response.json({});
   });
   vi.stubGlobal("fetch", fetchMock);
-  const saves = students.slice(0, limit - 1).map(createGoogleWalletSaveUrl);
+  const saves = students.slice(0, admitted).map(createGoogleWalletSaveUrl);
   const settled = Promise.all(saves);
-  if (limit === 1) started();
   try {
-    await Promise.race([
-      allStarted,
-      settled.then(() => {
-        throw new Error("Wallet saves ended before Google gate");
-      }),
-    ]);
+    if (admitted)
+      await Promise.race([
+        allStarted,
+        settled.then(() => {
+          throw new Error("Wallet saves ended before Google gate");
+        }),
+      ]);
     const calls = fetchMock.mock.calls.length;
-    await expect(
-      createGoogleWalletSaveUrl(students[limit - 1])
-    ).rejects.toMatchObject({ status: 429 });
-    await expect(deleteUserAccount(students[limit].id)).rejects.toMatchObject({
+    await expect(createGoogleWalletSaveUrl(excessSave)).rejects.toMatchObject({
       status: 429,
     });
+    if (admitted)
+      await expect(deleteUserAccount(accountToDelete.id)).rejects.toMatchObject(
+        {
+          status: 429,
+        }
+      );
     expect(fetchMock).toHaveBeenCalledTimes(calls);
     // Same real request pool, while Google I/O keeps the admitted transactions open.
     await expect(
       prisma.user.count({ where: { id: { in: students.map((s) => s.id) } } })
-    ).resolves.toBe(limit + 1);
+    ).resolves.toBe(students.length);
     await expect(
-      prisma.walletPass.count({ where: { studentId: students[limit - 1].id } })
+      prisma.walletPass.count({ where: { studentId: excessSave.id } })
     ).resolves.toBe(0);
   } finally {
     release();
     await settled;
   }
-  if (limit > 1) {
-    await expect(
-      createGoogleWalletSaveUrl(students[limit - 1])
-    ).resolves.toMatch(/^https:\/\/pay\.google\.com\/gp\/v\/save\//);
-    await expect(
-      deleteUserAccount(students[limit].id)
-    ).resolves.toBeUndefined();
-  }
+  if (admitted)
+    await expect(createGoogleWalletSaveUrl(excessSave)).resolves.toMatch(
+      /^https:\/\/pay\.google\.com\/gp\/v\/save\//
+    );
+  await expect(deleteUserAccount(accountToDelete.id)).resolves.toBeUndefined();
 });

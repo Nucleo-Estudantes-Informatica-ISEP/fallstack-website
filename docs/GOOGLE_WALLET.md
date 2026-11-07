@@ -286,8 +286,8 @@ capped at two per process, or `PRISMA_CONNECTION_LIMIT - 1` when that is
 smaller, leaving one request-pool slot for other traffic during Google I/O. A
 larger pool does not raise the cap. Excess operations
 return 429 before DB access; retry after an admitted operation finishes. With a
-one-slot pool, Wallet operations are paused; configure at least two slots for
-issuance/deletion. PostgreSQL transaction advisory admission also
+one-slot pool, Wallet issuance pauses and one account deletion at a time may
+use the sole connection. PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.

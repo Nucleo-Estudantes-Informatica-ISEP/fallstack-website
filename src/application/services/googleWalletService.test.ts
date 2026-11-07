@@ -75,9 +75,11 @@ beforeEach(() => {
   deleteUserMock.mockReset();
   findWalletPassMock.mockReset();
   recordWalletPassMock.mockReset();
-  lockedUserMock.mockImplementation(async (_id, callback) =>
-    callback({ active: true, student }, {})
-  );
+  lockedUserMock
+    .mockReset()
+    .mockImplementation(async (_id, callback) =>
+      callback({ active: true, student }, {})
+    );
   serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
   serverEnvMock.PRISMA_CONNECTION_LIMIT = 3;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
@@ -563,6 +565,38 @@ test("releases operation admission after failure for an immediate retry", async 
   await expect(
     withGoogleWalletOperation(student.id, async () => "retry")
   ).resolves.toBe("retry");
+});
+
+test("one-slot pools admit one account deletion across Wallet module instances", async () => {
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 1;
+  const { deleteUserAccount } = await import("./authApplicationService");
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  lockedUserMock
+    .mockImplementation(async (_id, work) => work({ student: null }, {}))
+    .mockImplementationOnce(async (_id, work) => {
+      await gate;
+      return work({ student: null }, {});
+    });
+  const pending = deleteUserAccount(student.id);
+  // Attach a rejection handler while testing admission from another bundle.
+  void pending.catch(() => undefined);
+  try {
+    vi.resetModules();
+    const otherBundle = await import("./authApplicationService");
+    await expect(
+      otherBundle.deleteUserAccount("other-user")
+    ).rejects.toMatchObject({
+      status: 429,
+    });
+    expect(lockedUserMock).toHaveBeenCalledTimes(1);
+  } finally {
+    release();
+    await pending;
+  }
+  expect(deleteUserMock).toHaveBeenCalledWith(student.id, {});
 });
 
 for (const operation of [
