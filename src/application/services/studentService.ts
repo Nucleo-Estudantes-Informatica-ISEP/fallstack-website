@@ -16,6 +16,7 @@ import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 
+import { countInterestsByIds } from "../repositories/interestRepository";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   connectStudentInterests,
@@ -106,6 +107,14 @@ export async function updateStudent(
   body: StudentPatch
 ) {
   const { interests, ...profile } = body;
+
+  // Unknown ids would make the relation `set` throw inside the transaction
+  // (Prisma P2025) and surface as a 500; reject them as a client error.
+  if (interests) {
+    const ids = new Set(interests);
+    if ((await countInterestsByIds([...ids])) !== ids.size)
+      throw new HttpError("Unknown interest id", 400);
+  }
 
   return withTransaction(async (tx) => {
     const student = await updateStudentProfile(code, profile, tx);

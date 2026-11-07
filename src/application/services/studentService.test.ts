@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { countInterestsByIds } from "../repositories/interestRepository";
 import {
   setStudentInterests,
   updateStudentFields,
@@ -18,6 +19,9 @@ import {
 const tx = {} as never;
 
 vi.mock("server-only", () => ({}));
+vi.mock("../repositories/interestRepository", () => ({
+  countInterestsByIds: vi.fn(),
+}));
 vi.mock("../repositories/savedStudentRepository", () => ({
   isStudentSaved: vi.fn(),
 }));
@@ -43,6 +47,9 @@ vi.mock("./authApplicationService", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(countInterestsByIds).mockImplementation(
+    (async (ids: string[]) => ids.length) as never
+  );
   vi.mocked(updateStudentFields).mockResolvedValue({ id: "s1" } as never);
   vi.mocked(updateStudentProfile).mockResolvedValue({
     id: "s1",
@@ -69,6 +76,24 @@ test("saving a profile forwards only the profile fields and sets interests separ
     ["interest-1", "interest-2"],
     tx
   );
+});
+
+test("rejects unknown interest ids with a 400 before opening a transaction", async () => {
+  vi.mocked(countInterestsByIds).mockResolvedValue(1);
+
+  await expect(
+    updateStudent("s1", "ABC123", { interests: ["interest-1", "gone"] })
+  ).rejects.toMatchObject({ status: 400 });
+
+  expect(withTransaction).not.toHaveBeenCalled();
+  expect(setStudentInterests).not.toHaveBeenCalled();
+});
+
+test("duplicate interest ids count once when validating", async () => {
+  await updateStudent("s1", "ABC123", { interests: ["a", "a"] });
+
+  expect(countInterestsByIds).toHaveBeenCalledWith(["a"]);
+  expect(setStudentInterests).toHaveBeenCalled();
 });
 
 test("leaves interests untouched when the profile update does not include them", async () => {
