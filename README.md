@@ -115,7 +115,9 @@ managed network using the service names `postgres`, `redis` and `minio`;
 it does not use the external Coolify networks or the host-facing URLs in
 `.env.example`. The infrastructure ports are also bound to loopback for
 local tools: PostgreSQL `54322`, Redis `6379`, MinIO API `9000` and MinIO
-console `9001`. The web port defaults to `4000`.
+console `9001`. The web port defaults to `4000`. If you override
+`FALLSTACK_LOCAL_WEB_PORT`, register the matching port in the OIDC callback
+URL as well.
 
 If one of those host ports is already in use (for example, by the standalone
 containers in the native-development instructions below), stop that local
