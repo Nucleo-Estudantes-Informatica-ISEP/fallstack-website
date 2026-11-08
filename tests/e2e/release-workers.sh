@@ -35,12 +35,19 @@ const services = {};
 for (const [name, command] of Object.entries(commands)) {
   const service = config.services[name];
   assert.equal(service.deploy.replicas, 1);
+  // Keep only dependencies that are part of this isolated release-ordering
+  // fixture. Infrastructure services are validated by the Compose regression test.
+  const dependencies = Object.fromEntries(
+    Object.entries(service.depends_on ?? {}).filter(([dependency]) =>
+      Object.hasOwn(commands, dependency)
+    )
+  );
   services[name] = {
     image: 'alpine:3.23',
     command: ['sh', '-ec', command],
     deploy: service.deploy,
     restart: service.restart,
-    depends_on: service.depends_on,
+    depends_on: dependencies,
     volumes: ['audit:/audit'],
     network_mode: 'none',
   };
