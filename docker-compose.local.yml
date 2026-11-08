@@ -1,6 +1,96 @@
-x-minio-endpoint: &minio_endpoint ${S3_ENDPOINT:-http://minio-gbheij1ljds8nrhfgdf9teeo:9000}
+name: fallstack-local
 
 services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+    ports:
+      - "127.0.0.1:${FALLSTACK_LOCAL_POSTGRES_PORT:-54322}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.12-alpine
+    command:
+      - redis-server
+      - --requirepass
+      - ${FALLSTACK_LOCAL_REDIS_PASSWORD:-replace-with-local-redis-secret}
+      - --maxmemory
+      - 96mb
+      - --maxmemory-policy
+      - noeviction
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --save
+      - ""
+    environment:
+      REDIS_PASSWORD: ${FALLSTACK_LOCAL_REDIS_PASSWORD:-replace-with-local-redis-secret}
+    ports:
+      - "127.0.0.1:${FALLSTACK_LOCAL_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=\"$${REDIS_PASSWORD}\" redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    restart: unless-stopped
+
+  minio:
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
+      MINIO_ROOT_PASSWORD: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
+    ports:
+      - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    restart: unless-stopped
+
+  # Create the app's buckets before either the web app or cleanup worker starts.
+  minio-init:
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    entrypoint: ["/bin/sh", "-ec"]
+    command: |
+      mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null
+      attempt=0
+      until mc ready local >/dev/null 2>&1; do
+        attempt=$$((attempt + 1))
+        if [ "$$attempt" -ge 60 ]; then
+          echo "MinIO did not become ready within 120 seconds" >&2
+          exit 1
+        fi
+        sleep 2
+      done
+      mc mb --ignore-existing "local/$$S3_BUCKET_AVATARS"
+      mc mb --ignore-existing "local/$$S3_BUCKET_LOGOS"
+      mc mb --ignore-existing "local/$$S3_BUCKET_CVS"
+    environment:
+      MINIO_ROOT_USER: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
+      MINIO_ROOT_PASSWORD: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
+      S3_BUCKET_AVATARS: fallstack-dev-avatars
+      S3_BUCKET_LOGOS: fallstack-dev-logos
+      S3_BUCKET_CVS: fallstack-dev-cvs
+    depends_on:
+      minio:
+        condition: service_started
+    restart: "no"
+
   migrate:
     deploy:
       replicas: 1
@@ -10,19 +100,18 @@ services:
       target: migrator
     restart: "no"
     environment:
-      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
-      DIRECT_URL: ${DIRECT_URL:-${DATABASE_URL:?Configure DATABASE_URL in Coolify}}
-    networks:
-      - default
-      - shared_data
+      DATABASE_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
+      DIRECT_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
+      PRISMA_CONNECTION_LIMIT: "1"
+      PRISMA_POOL_TIMEOUT_SECONDS: "5"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   storage-cleanup:
     stop_grace_period: 90s
     deploy:
       replicas: 1
-    labels:
-      metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
-      metrics_service: storage-cleanup
     build:
       context: .
       dockerfile: Dockerfile
@@ -31,120 +120,89 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
     environment:
-      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
-      DIRECT_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      DATABASE_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
+      DIRECT_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
       PRISMA_CONNECTION_LIMIT: "1"
       PRISMA_POOL_TIMEOUT_SECONDS: "5"
-      S3_ENDPOINT: *minio_endpoint
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure S3_ACCESS_KEY_ID in Coolify}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure S3_SECRET_ACCESS_KEY in Coolify}
-      S3_BUCKET_AVATARS: ${S3_BUCKET_AVATARS:?Configure S3_BUCKET_AVATARS in Coolify}
-      S3_BUCKET_LOGOS: ${S3_BUCKET_LOGOS:?Configure S3_BUCKET_LOGOS in Coolify}
-      S3_BUCKET_CVS: ${S3_BUCKET_CVS:?Configure S3_BUCKET_CVS in Coolify}
-      # First deployment audits only. Enable after reviewing a staging dry run.
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY_ID: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
+      S3_SECRET_ACCESS_KEY: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
+      S3_BUCKET_AVATARS: fallstack-dev-avatars
+      S3_BUCKET_LOGOS: fallstack-dev-logos
+      S3_BUCKET_CVS: fallstack-dev-cvs
       STORAGE_CLEANUP_MODE: ${STORAGE_CLEANUP_MODE:-dry-run}
-    networks:
-      - default
-      - shared_data
 
   web:
     stop_grace_period: 90s
-    # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
       replicas: 1
-    labels:
-      metrics_enabled: ${METRICS_ENABLED:-false}
-      metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
-      metrics_service: web
-      traefik.enable: "true"
-      traefik.http.services.web.loadbalancer.server.port: 4000
-      traefik.http.services.web.loadbalancer.healthcheck.path: /api/proxy-ready
-      traefik.http.services.web.loadbalancer.healthcheck.interval: 5s
-      traefik.http.services.web.loadbalancer.healthcheck.timeout: 2s
     build:
       context: .
       dockerfile: Dockerfile
       args:
+        NEXT_PUBLIC_BASE_URL: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}/api"
         NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
         SENTRY_URL: ${SENTRY_URL:-}
         SENTRY_ORG: ${SENTRY_ORG:-}
         SENTRY_PROJECT: ${SENTRY_PROJECT:-}
-        NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-${SERVICE_URL_WEB:-http://localhost:4000}/api}
         NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
-      secrets:
-        - sentry_auth_token
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FALLSTACK_LOCAL_WEB_PORT:-4000}:4000"
     depends_on:
       migrate:
         condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
     environment:
+      NODE_ENV: production
       NEXT_MANUAL_SIG_HANDLE: "true"
-      # Runtime-only connection contract for #413; never pass these as build args.
-      REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
-      REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
-      DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      DATABASE_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
+      DIRECT_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
       PRISMA_CONNECTION_LIMIT: ${PRISMA_CONNECTION_LIMIT:-3}
       PRISMA_POOL_TIMEOUT_SECONDS: ${PRISMA_POOL_TIMEOUT_SECONDS:-5}
-      # Coolify injects its runtime .env into every service. Keep migrator credentials out of web.
-      DIRECT_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
-      JWT_SECRET: ${JWT_SECRET:-${SERVICE_REALBASE64_64_JWT}}
-
-      # Storage credentials stay server-side; AuthNEI handles login.
-      S3_ENDPOINT: *minio_endpoint
-      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure S3_ACCESS_KEY_ID in Coolify}
-      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure S3_SECRET_ACCESS_KEY in Coolify}
-      S3_BUCKET_AVATARS: ${S3_BUCKET_AVATARS:?Configure S3_BUCKET_AVATARS in Coolify}
-      S3_BUCKET_LOGOS: ${S3_BUCKET_LOGOS:?Configure S3_BUCKET_LOGOS in Coolify}
-      S3_BUCKET_CVS: ${S3_BUCKET_CVS:?Configure S3_BUCKET_CVS in Coolify}
-
-      # Direct AuthNEI/ZITADEL OIDC. Only values that identify this concrete
-      # ZITADEL application/organization need to be configured in Coolify;
-      # stable URLs, generated secrets, scopes and claim names are derived.
+      REDIS_URL: "redis://default:${FALLSTACK_LOCAL_REDIS_PASSWORD:-replace-with-local-redis-secret}@redis:6379"
+      # The production-built Next.js server validates the deployed prefix set.
+      # This Redis is local and isolated; never point it at the shared dev Redis.
+      REDIS_KEY_PREFIX: "fallstack:dev:"
+      JWT_SECRET: ${JWT_SECRET:-fallstack-local-jwt-secret-change-me-32}
       AUTH_ISSUER_URL: ${AUTH_ISSUER_URL:-https://auth.nei-isep.org}
-      AUTH_PROJECT_ID: ${AUTH_PROJECT_ID:?Configure AUTH_PROJECT_ID in Coolify}
-      AUTH_GLOBAL_PROJECT_ID: ${AUTH_GLOBAL_PROJECT_ID:?Configure AUTH_GLOBAL_PROJECT_ID in Coolify}
-      AUTH_CLIENT_ID: ${AUTH_CLIENT_ID:?Configure AUTH_CLIENT_ID in Coolify}
-      AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET:?Configure AUTH_CLIENT_SECRET in Coolify}
-      AUTH_SECRET: ${AUTH_SECRET:-${SERVICE_REALBASE64_64_AUTH}}
-      AUTH_SCOPES: ${AUTH_SCOPES:-openid email profile urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:project:id:${AUTH_PROJECT_ID}:aud urn:zitadel:iam:org:project:id:${AUTH_GLOBAL_PROJECT_ID}:aud}
-      AUTH_ROLE_CLAIM: ${AUTH_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_PROJECT_ID}:roles}
-      AUTH_GLOBAL_ROLE_CLAIM: ${AUTH_GLOBAL_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_GLOBAL_PROJECT_ID}:roles}
-      AUTH_REDIRECT_URI: ${AUTH_REDIRECT_URI:-${SERVICE_URL_WEB:-http://localhost:4000}/api/auth/callback/zitadel}
-      AUTH_POST_LOGOUT_REDIRECT_URI: ${AUTH_POST_LOGOUT_REDIRECT_URI:-${SERVICE_URL_WEB:-http://localhost:4000}}
-      ZITADEL_ORG_ID: ${ZITADEL_ORG_ID:?Configure ZITADEL_ORG_ID in Coolify}
-      ZITADEL_ROLE_ASSIGNER_TOKEN: ${ZITADEL_ROLE_ASSIGNER_TOKEN:?Configure ZITADEL_ROLE_ASSIGNER_TOKEN in Coolify}
-
-      # Optional at startup; required together when Google Wallet is enabled.
-      GOOGLE_WALLET_NEVER_ENABLED: ${GOOGLE_WALLET_NEVER_ENABLED:-false}
+      AUTH_PROJECT_ID: ${AUTH_PROJECT_ID:-fallstack_project_id}
+      AUTH_GLOBAL_PROJECT_ID: ${AUTH_GLOBAL_PROJECT_ID:-nei_global_project_id}
+      AUTH_CLIENT_ID: ${AUTH_CLIENT_ID:-fallstack_oidc_client_id}
+      AUTH_CLIENT_SECRET: ${AUTH_CLIENT_SECRET:-fallstack_oidc_client_secret}
+      AUTH_SECRET: ${AUTH_SECRET:-fallstack-local-auth-secret-change-me-32}
+      AUTH_SCOPES: "${AUTH_SCOPES:-openid email profile urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:project:id:${AUTH_PROJECT_ID:-fallstack_project_id}:aud urn:zitadel:iam:org:project:id:${AUTH_GLOBAL_PROJECT_ID:-nei_global_project_id}:aud}"
+      AUTH_ROLE_CLAIM: "${AUTH_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_PROJECT_ID:-fallstack_project_id}:roles}"
+      AUTH_GLOBAL_ROLE_CLAIM: "${AUTH_GLOBAL_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_GLOBAL_PROJECT_ID:-nei_global_project_id}:roles}"
+      AUTH_REDIRECT_URI: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}/api/auth/callback/zitadel"
+      AUTH_POST_LOGOUT_REDIRECT_URI: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}"
+      ZITADEL_ORG_ID: ${ZITADEL_ORG_ID:-nei_org_id}
+      ZITADEL_ROLE_ASSIGNER_TOKEN: ${ZITADEL_ROLE_ASSIGNER_TOKEN:-fallstack_local_role_assigner_token}
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY_ID: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
+      S3_SECRET_ACCESS_KEY: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
+      S3_BUCKET_AVATARS: fallstack-dev-avatars
+      S3_BUCKET_LOGOS: fallstack-dev-logos
+      S3_BUCKET_CVS: fallstack-dev-cvs
+      GOOGLE_WALLET_NEVER_ENABLED: ${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}
       GOOGLE_WALLET_ISSUER_ID: ${GOOGLE_WALLET_ISSUER_ID:-}
       GOOGLE_WALLET_CLASS_ID: ${GOOGLE_WALLET_CLASS_ID:-}
       GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: ${GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64:-}
-
-      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-${SERVICE_URL_WEB:-http://localhost:4000}/api}
+      NEXT_PUBLIC_BASE_URL: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}/api"
       NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
       NEXT_PUBLIC_LOGS_DASHBOARD_URL: ${NEXT_PUBLIC_LOGS_DASHBOARD_URL:-}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      METRICS_ENABLED: ${METRICS_ENABLED:-false}
-      METRICS_ENVIRONMENT: ${METRICS_ENVIRONMENT:-}
-      METRICS_HOST: ${METRICS_HOST:-127.0.0.1}
-    networks:
-      - default
-      - shared_data
-      - redis_shared
+      METRICS_ENABLED: "false"
+      METRICS_ENVIRONMENT: ""
+      METRICS_HOST: "127.0.0.1"
 
-secrets:
-  sentry_auth_token:
-    environment: SENTRY_AUTH_TOKEN
-
-networks:
-  # Per-environment destination network of the standalone Coolify Redis.
-  # Attach web only: migrate and storage-cleanup never need Redis.
-  # Coolify rejects `:?` in network names, so an unset variable falls back to a
-  # sentinel and the deploy fails because that external network does not exist.
-  redis_shared:
-    external: true
-    name: ${REDIS_NETWORK_NAME:-redis_network_name_not_set}
-  shared_data:
-    external: true
-    name: gbheij1ljds8nrhfgdf9teeo
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
