@@ -199,8 +199,8 @@ services:
       AUTH_SCOPES: "${AUTH_SCOPES:-openid email profile urn:zitadel:iam:org:projects:roles urn:zitadel:iam:org:project:id:${AUTH_PROJECT_ID:-fallstack_project_id}:aud urn:zitadel:iam:org:project:id:${AUTH_GLOBAL_PROJECT_ID:-nei_global_project_id}:aud}"
       AUTH_ROLE_CLAIM: "${AUTH_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_PROJECT_ID:-fallstack_project_id}:roles}"
       AUTH_GLOBAL_ROLE_CLAIM: "${AUTH_GLOBAL_ROLE_CLAIM:-urn:zitadel:iam:org:project:${AUTH_GLOBAL_PROJECT_ID:-nei_global_project_id}:roles}"
-      AUTH_REDIRECT_URI: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}/api/auth/callback/zitadel"
-      AUTH_POST_LOGOUT_REDIRECT_URI: "http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}"
+      AUTH_REDIRECT_URI: "${FALLSTACK_LOCAL_AUTH_REDIRECT_URI:-http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}/api/auth/callback/zitadel}"
+      AUTH_POST_LOGOUT_REDIRECT_URI: "${FALLSTACK_LOCAL_AUTH_POST_LOGOUT_REDIRECT_URI:-http://localhost:${FALLSTACK_LOCAL_WEB_PORT:-4000}}"
       ZITADEL_ORG_ID: ${ZITADEL_ORG_ID:-nei_org_id}
       ZITADEL_ROLE_ASSIGNER_TOKEN: ${ZITADEL_ROLE_ASSIGNER_TOKEN:-fallstack_local_role_assigner_token}
       S3_ENDPOINT: http://minio:9000
