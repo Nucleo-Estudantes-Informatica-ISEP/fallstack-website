@@ -86,6 +86,47 @@ use `docker-compose.local.yml`; it mirrors the deployment definition but
 omits Coolify's `exclude_from_hc` extension. Keep the two files synchronized
 when changing services or environment configuration.
 
+## Run the full stack with Docker Compose
+
+Requires Docker Engine/Desktop and Docker Compose v2. The local Compose file
+starts isolated PostgreSQL, Redis and MinIO services, creates the three S3
+buckets, applies Prisma migrations, then starts the web app and the dry-run
+storage-cleanup worker.
+
+Optionally copy `.env.example` to `.env` and configure a **development**
+AuthNEI/ZITADEL client. Without real OIDC credentials the containers still
+start, but login will not work. Register this callback on that development
+client (the Compose setup uses port 4000, not the native `pnpm dev` port 3000):
+
+```
+http://localhost:4000/api/auth/callback/zitadel
+```
+
+Start the stack from the repository root:
+
+```bash
+docker compose -f docker-compose.local.yml up --build
+```
+
+Open `http://localhost:4000`. Compose connects containers through its own
+managed network using the service names `postgres`, `redis` and `minio`;
+it does not use the external Coolify networks or the host-facing URLs in
+`.env.example`. The infrastructure ports are also bound to loopback for
+local tools: PostgreSQL `54322`, Redis `6379`, MinIO API `9000` and MinIO
+console `9001`. The web port defaults to `4000`.
+
+If one of those host ports is already in use (for example, by the standalone
+containers in the native-development instructions below), stop that local
+service or override the corresponding `FALLSTACK_LOCAL_*_PORT` variable in
+your shell or `.env`. The local services use named Docker volumes and survive
+`docker compose down`; `docker compose -f docker-compose.local.yml down -v`
+deletes the local database, Redis state and MinIO objects.
+
+The app runs its production-built Node server in the container. Its Redis
+prefix is `fallstack:dev:` because the production runtime validates the
+deployed prefix set; the Redis instance itself is local and isolated. Never
+point this Compose stack at NEI's shared Redis or production data.
+
 ## Production builds on limited RAM
 
 Run one build at a time. To use a 1.5 GiB JavaScript heap ceiling:
