@@ -53,13 +53,10 @@ services:
     environment:
       MINIO_ROOT_USER: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
       MINIO_ROOT_PASSWORD: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
+      MC_HOST_local: "http://${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}:${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}@localhost:9000"
     ports:
       - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_CONSOLE_PORT:-9001}:9001"
-    environment:
-      MINIO_ROOT_USER: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
-      MINIO_ROOT_PASSWORD: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
-      MC_HOST_local: "http://${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}:${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}@localhost:9000"
     healthcheck:
       test: ["CMD", "/usr/bin/mc", "ready", "local"]
       interval: 5s
