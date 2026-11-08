@@ -118,7 +118,10 @@ console `9001`. The web port defaults to `4000`.
 If one of those host ports is already in use (for example, by the standalone
 containers in the native-development instructions below), stop that local
 service or override the corresponding `FALLSTACK_LOCAL_*_PORT` variable in
-your shell or `.env`. The local services use named Docker volumes and survive
+your shell or `.env`. MinIO credential overrides must use URL-safe characters
+because the one-shot bucket setup passes them through an `MC_HOST` URL. The
+available overrides are listed at the bottom of `.env.example`. The local
+services use named Docker volumes and survive
 `docker compose down`; `docker compose -f docker-compose.local.yml down -v`
 deletes the local database, Redis state and MinIO objects.
 
