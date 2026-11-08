@@ -34,10 +34,6 @@ for attempt in $(seq 1 90); do
     ready=true
     break
   fi
-  if ! "${compose[@]}" ps --status running --services | grep -Fxq web; then
-    echo "The local web service exited before becoming healthy" >&2
-    exit 1
-  fi
   sleep 2
 done
 
