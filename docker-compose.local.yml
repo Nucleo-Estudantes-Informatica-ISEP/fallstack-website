@@ -223,6 +223,6 @@ services:
       METRICS_HOST: "127.0.0.1"
 
 volumes:
-  postgres_data:
-  redis_data:
-  minio_data:
+  postgres_data: {}
+  redis_data: {}
+  minio_data: {}
