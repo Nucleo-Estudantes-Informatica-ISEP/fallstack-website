@@ -1,0 +1,54 @@
+@font-face {
+  font-family: Inter;
+  src: url("/assets/fonts/inter.ttf");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Coolvetica;
+  src: url("/assets/fonts/coolvetica.otf");
+  font-display: swap;
+}
+
+body {
+  display: grid;
+  min-height: 100vh;
+  margin: 0;
+  padding: 16px;
+  place-items: center;
+  background: #141414;
+  color: white;
+  font-family: Inter, sans-serif;
+}
+
+main {
+  width: min(100%, 576px);
+  padding: 32px;
+  border: 1px solid #484848;
+  border-radius: 8px;
+  text-align: center;
+}
+
+h1,
+h2 {
+  font-family: Coolvetica, sans-serif;
+  font-weight: normal;
+}
+
+a {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 8px;
+  background: #f97316;
+  color: white;
+  transition: background 0.2s ease-in-out;
+}
+
+a:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+}
+
+a:hover {
+  background: #d14c05;
+}
