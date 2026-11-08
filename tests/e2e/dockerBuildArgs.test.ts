@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { parse as parseYaml } from "yaml";
 import { expect, test } from "vitest";
 
 // The class of bug this guards against: a NEXT_PUBLIC_* var gets added to
@@ -271,13 +272,69 @@ test("Coolify compose keeps the migrator one-shot and avoids global container na
 });
 
 
-test("local Compose mirrors Coolify Compose without Coolify-only extensions", () => {
-  const coolifyCompose = readCompose();
-  const localCompose = readLocalCompose();
+test("local Compose starts an isolated full development stack", () => {
+  const source = readLocalCompose();
+  const compose = parseYaml(source) as {
+    services: Record<
+      string,
+      {
+        image?: string;
+        environment?: Record<string, string>;
+        depends_on?: Record<string, { condition?: string }>;
+        deploy?: { replicas?: number };
+      }
+    >;
+    networks?: Record<string, unknown>;
+    volumes?: Record<string, unknown>;
+  };
 
-  expect(coolifyCompose).toContain("exclude_from_hc: true");
-  expect(localCompose).not.toContain("exclude_from_hc");
-  expect(localCompose).toBe(
-    coolifyCompose.replace(/^    exclude_from_hc: true\r?\n/m, "")
+  expect(source).not.toContain("exclude_from_hc");
+  expect(source).not.toContain("external: true");
+  expect(source).not.toContain("shared_data");
+  expect(source).not.toContain("redis_shared");
+  expect(compose.networks).toBeUndefined();
+  expect(compose.services).toEqual(
+    expect.objectContaining({
+      postgres: expect.any(Object),
+      redis: expect.any(Object),
+      minio: expect.any(Object),
+      "minio-init": expect.any(Object),
+      migrate: expect.any(Object),
+      "storage-cleanup": expect.any(Object),
+      web: expect.any(Object),
+    })
+  );
+
+  expect(compose.services.migrate.depends_on?.postgres?.condition).toBe(
+    "service_healthy"
+  );
+  expect(
+    compose.services["minio-init"].depends_on?.minio?.condition
+  ).toBe("service_started");
+  expect(
+    compose.services.web.depends_on?.migrate?.condition
+  ).toBe("service_completed_successfully");
+  expect(
+    compose.services.web.depends_on?.redis?.condition
+  ).toBe("service_healthy");
+  expect(
+    compose.services.web.depends_on?.["minio-init"]?.condition
+  ).toBe("service_completed_successfully");
+
+  const webEnvironment = compose.services.web.environment ?? {};
+  expect(webEnvironment.DATABASE_URL).toContain("@postgres:5432/");
+  expect(webEnvironment.REDIS_URL).toContain("@redis:6379");
+  expect(webEnvironment.REDIS_KEY_PREFIX).toBe("fallstack:dev:");
+  expect(webEnvironment.S3_ENDPOINT).toBe("http://minio:9000");
+  expect(webEnvironment.GOOGLE_WALLET_NEVER_ENABLED).toBe(
+    "${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}"
+  );
+  expect(compose.services["minio-init"].image).toContain("minio/mc:");
+  expect(compose.volumes).toEqual(
+    expect.objectContaining({
+      postgres_data: expect.any(Object),
+      redis_data: expect.any(Object),
+      minio_data: expect.any(Object),
+    })
   );
 });
