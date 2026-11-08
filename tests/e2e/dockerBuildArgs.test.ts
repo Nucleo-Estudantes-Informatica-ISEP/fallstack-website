@@ -348,6 +348,9 @@ test("local Compose starts an isolated full development stack", () => {
   expect(webEnvironment.GOOGLE_WALLET_NEVER_ENABLED).toBe(
     "${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}"
   );
+  expect(compose.services.minio.environment?.MC_HOST_local).toContain(
+    "@localhost:9000"
+  );
   expect(
     compose.services["minio-init-avatars"].image
   ).toContain("coollabsio/minio:");
