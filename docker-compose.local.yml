@@ -58,37 +58,49 @@ services:
     ports:
       - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_API_PORT:-9000}:9000"
       - "127.0.0.1:${FALLSTACK_LOCAL_MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
     volumes:
       - minio_data:/data
     restart: unless-stopped
 
-  # Create the app's buckets before either the web app or cleanup worker starts.
-  minio-init:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
-    entrypoint: ["/bin/sh", "-ec"]
-    command: |
-      mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" >/dev/null
-      attempt=0
-      until mc ready local >/dev/null 2>&1; do
-        attempt=$$((attempt + 1))
-        if [ "$$attempt" -ge 60 ]; then
-          echo "MinIO did not become ready within 120 seconds" >&2
-          exit 1
-        fi
-        sleep 2
-      done
-      mc mb --ignore-existing "local/$$S3_BUCKET_AVATARS"
-      mc mb --ignore-existing "local/$$S3_BUCKET_LOGOS"
-      mc mb --ignore-existing "local/$$S3_BUCKET_CVS"
+  # The MinIO image includes mc. Each one-shot service creates one bucket,
+  # avoiding a shell dependency in the minimal mc image.
+  minio-init-avatars:
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    entrypoint: ["/usr/bin/mc"]
+    command: ["mb", "--ignore-existing", "local/fallstack-dev-avatars"]
     environment:
-      MINIO_ROOT_USER: ${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}
-      MINIO_ROOT_PASSWORD: ${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}
-      S3_BUCKET_AVATARS: fallstack-dev-avatars
-      S3_BUCKET_LOGOS: fallstack-dev-logos
-      S3_BUCKET_CVS: fallstack-dev-cvs
+      MC_HOST_local: "http://${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}:${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}@minio:9000"
     depends_on:
       minio:
-        condition: service_started
+        condition: service_healthy
+    restart: "no"
+
+  minio-init-logos:
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    entrypoint: ["/usr/bin/mc"]
+    command: ["mb", "--ignore-existing", "local/fallstack-dev-logos"]
+    environment:
+      MC_HOST_local: "http://${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}:${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}@minio:9000"
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+
+  minio-init-cvs:
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    entrypoint: ["/usr/bin/mc"]
+    command: ["mb", "--ignore-existing", "local/fallstack-dev-cvs"]
+    environment:
+      MC_HOST_local: "http://${FALLSTACK_LOCAL_MINIO_ROOT_USER:-fallstack_local}:${FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD:-replace-with-local-minio-secret}@minio:9000"
+    depends_on:
+      minio:
+        condition: service_healthy
     restart: "no"
 
   migrate:
@@ -120,7 +132,11 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
-      minio-init:
+      minio-init-avatars:
+        condition: service_completed_successfully
+      minio-init-logos:
+        condition: service_completed_successfully
+      minio-init-cvs:
         condition: service_completed_successfully
     environment:
       DATABASE_URL: "postgresql://postgres:${FALLSTACK_LOCAL_POSTGRES_PASSWORD:-postgres}@postgres:5432/postgres?schema=public"
@@ -157,7 +173,11 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
-      minio-init:
+      minio-init-avatars:
+        condition: service_completed_successfully
+      minio-init-logos:
+        condition: service_completed_successfully
+      minio-init-cvs:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
