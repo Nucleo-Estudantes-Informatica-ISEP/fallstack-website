@@ -351,7 +351,7 @@ test("local Compose starts an isolated full development stack", () => {
   expect(
     compose.services["minio-init-avatars"].image
   ).toContain("coollabsio/minio:");
-  expect(source).toContain("/minio/health/ready");
+  expect(source).toContain('["CMD", "/usr/bin/mc", "ready", "local"]');
   expect(compose.volumes).toEqual(
     expect.objectContaining({
       postgres_data: expect.any(Object),
