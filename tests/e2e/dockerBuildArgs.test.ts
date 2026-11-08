@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parse as parseYaml } from "yaml";
 import { expect, test } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 // The class of bug this guards against: a NEXT_PUBLIC_* var gets added to
 // src/config/env.client.ts (so it's picked up at *runtime* by anything
