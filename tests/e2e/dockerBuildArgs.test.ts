@@ -298,7 +298,9 @@ test("local Compose starts an isolated full development stack", () => {
       postgres: expect.any(Object),
       redis: expect.any(Object),
       minio: expect.any(Object),
-      "minio-init": expect.any(Object),
+      "minio-init-avatars": expect.any(Object),
+      "minio-init-logos": expect.any(Object),
+      "minio-init-cvs": expect.any(Object),
       migrate: expect.any(Object),
       "storage-cleanup": expect.any(Object),
       web: expect.any(Object),
@@ -308,18 +310,36 @@ test("local Compose starts an isolated full development stack", () => {
   expect(compose.services.migrate.depends_on?.postgres?.condition).toBe(
     "service_healthy"
   );
-  expect(
-    compose.services["minio-init"].depends_on?.minio?.condition
-  ).toBe("service_started");
+  for (const service of [
+    "minio-init-avatars",
+    "minio-init-logos",
+    "minio-init-cvs",
+  ]) {
+    expect(compose.services[service].depends_on?.minio?.condition).toBe(
+      "service_healthy"
+    );
+    expect(compose.services[service].environment?.MC_HOST_local).toContain(
+      "@minio:9000"
+    );
+  }
   expect(
     compose.services.web.depends_on?.migrate?.condition
   ).toBe("service_completed_successfully");
   expect(
     compose.services.web.depends_on?.redis?.condition
   ).toBe("service_healthy");
-  expect(
-    compose.services.web.depends_on?.["minio-init"]?.condition
-  ).toBe("service_completed_successfully");
+  for (const service of [
+    "minio-init-avatars",
+    "minio-init-logos",
+    "minio-init-cvs",
+  ]) {
+    expect(compose.services.web.depends_on?.[service]?.condition).toBe(
+      "service_completed_successfully"
+    );
+    expect(
+      compose.services["storage-cleanup"].depends_on?.[service]?.condition
+    ).toBe("service_completed_successfully");
+  }
 
   const webEnvironment = compose.services.web.environment ?? {};
   expect(webEnvironment.DATABASE_URL).toContain("@postgres:5432/");
@@ -329,7 +349,8 @@ test("local Compose starts an isolated full development stack", () => {
   expect(webEnvironment.GOOGLE_WALLET_NEVER_ENABLED).toBe(
     "${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}"
   );
-  expect(compose.services["minio-init"].image).toContain("minio/mc:");
+  expect(compose.services["minio-init-avatars"].image).toContain("coollabsio/minio:");
+  expect(source).toContain("/minio/health/ready");
   expect(compose.volumes).toEqual(
     expect.objectContaining({
       postgres_data: expect.any(Object),
