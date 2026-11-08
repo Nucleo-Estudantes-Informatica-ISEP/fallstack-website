@@ -231,6 +231,35 @@ Add `E2E_VERIFY_UPLOAD_LIMITS=yes` to check wrong MIME and over-10 MiB
 rejections. These checks run in Chromium only and create an unlinked staging
 object; delete it through the admin storage page after the run. Use staging only.
 
+### Multi-copy parity (#456)
+
+`tests/e2e/playwright/multi-copy.spec.ts` proves that successive requests
+behave the same on every web copy. Every response carries an opaque
+`x-instance-id` header that is unique per server process, so the spec can show
+which copy answered each request. Point `E2E_BASE_URL` at the load balancer
+(then again at the Cloudflare hostname) and set `E2E_EXPECTED_COPIES` to the
+number of copies behind it. The spec skips below two copies.
+
+```bash
+E2E_BASE_URL=https://staging.example.org \
+CONFIRM_NON_PRODUCTION=yes \
+E2E_EXPECTED_COPIES=3 \
+E2E_ALLOW_UPLOADS=yes \
+E2E_STUDENT_STORAGE_STATE=tests/e2e/.staging-student.json \
+E2E_EMPLOYEE_STORAGE_STATE=tests/e2e/.staging-employee.json \
+pnpm test:e2e --project=chromium tests/e2e/playwright/multi-copy.spec.ts
+```
+
+It checks that the proxy reaches every copy, that a Student session works on
+each copy, that a QR token issued on one copy scans once on another and a retry
+on a third returns `409`, and that a CV uploaded on one copy downloads from
+another while anonymous and foreign-code requests stay denied on every copy.
+Each cross-copy step first probes `/api/health` until a different copy answers,
+so a sticky proxy fails the run instead of passing by accident. The upload test
+replaces the synthetic Student's CV and leaves one unlinked object; use staging
+only. It does not compare secrets: set `JWT_SECRET`, `AUTH_SECRET` and the
+public URLs identically on every copy.
+
 Playwright writes failure screenshots and traces under `test-results/`, plus an
 HTML report under `playwright-report/` when that reporter is selected. Inspect a
 trace with `pnpm exec playwright show-trace <trace.zip>` and an HTML report with
