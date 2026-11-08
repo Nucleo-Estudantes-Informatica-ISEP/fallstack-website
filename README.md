@@ -120,8 +120,13 @@ console `9001`. The web port defaults to `4000`. The buckets created are
 Open the MinIO console at `http://localhost:9001` using the
 `FALLSTACK_LOCAL_MINIO_ROOT_USER` and `FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD`
 values (defaults: `fallstack_local` and `replace-with-local-minio-secret`).
-If you override `FALLSTACK_LOCAL_WEB_PORT`, register the matching port in the
-OIDC callback URL as well.
+The local Compose callback defaults to
+`http://localhost:4000/api/auth/callback/zitadel`, independently of the
+native-development `AUTH_REDIRECT_URI` in `.env.example`. If you override
+`FALLSTACK_LOCAL_WEB_PORT`, the callback follows that port automatically;
+use `FALLSTACK_LOCAL_AUTH_REDIRECT_URI` or
+`FALLSTACK_LOCAL_AUTH_POST_LOGOUT_REDIRECT_URI` only for a custom callback.
+PostgreSQL, Redis and MinIO password overrides must use URL-safe characters.
 
 If one of those host ports is already in use (for example, by the standalone
 containers in the native-development instructions below), stop that local
