@@ -278,6 +278,6 @@ test("local Compose mirrors Coolify Compose without Coolify-only extensions", ()
   expect(coolifyCompose).toContain("exclude_from_hc: true");
   expect(localCompose).not.toContain("exclude_from_hc");
   expect(localCompose).toBe(
-    coolifyCompose.replace(/^    exclude_from_hc: true\\r?\\n/m, "")
+    coolifyCompose.replace(/^    exclude_from_hc: true\r?\n/m, "")
   );
 });
