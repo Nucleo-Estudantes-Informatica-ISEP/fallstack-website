@@ -69,7 +69,7 @@ for (const name of ["postgres", "redis", "minio", "web", "storage-cleanup"]) {
 '
 
 # The cleanup worker must finish its initial dry-run, not merely stay running.
-cleanup_container_id="$(${compose[@]} ps -q storage-cleanup)"
+cleanup_container_id="$("${compose[@]}" ps -q storage-cleanup)"
 cleanup_ready=false
 for attempt in $(seq 1 30); do
   if docker exec "$cleanup_container_id" test -f /tmp/storage-cleanup-success; then
