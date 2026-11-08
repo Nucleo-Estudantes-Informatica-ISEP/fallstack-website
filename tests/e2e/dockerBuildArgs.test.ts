@@ -271,7 +271,6 @@ test("Coolify compose keeps the migrator one-shot and avoids global container na
   expect(webBlock).not.toMatch(/^\s*container_name:/m);
 });
 
-
 test("local Compose starts an isolated full development stack", () => {
   const source = readLocalCompose();
   const compose = parseYaml(source) as {
@@ -349,7 +348,9 @@ test("local Compose starts an isolated full development stack", () => {
   expect(webEnvironment.GOOGLE_WALLET_NEVER_ENABLED).toBe(
     "${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}"
   );
-  expect(compose.services["minio-init-avatars"].image).toContain("coollabsio/minio:");
+  expect(
+    compose.services["minio-init-avatars"].image
+  ).toContain("coollabsio/minio:");
   expect(source).toContain("/minio/health/ready");
   expect(compose.volumes).toEqual(
     expect.objectContaining({
