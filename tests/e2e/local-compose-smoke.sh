@@ -68,6 +68,21 @@ for (const name of ["postgres", "redis", "minio", "web", "storage-cleanup"]) {
 }
 '
 
+# The cleanup worker must finish its initial dry-run, not merely stay running.
+cleanup_container_id="$(${compose[@]} ps -q storage-cleanup)"
+cleanup_ready=false
+for attempt in $(seq 1 30); do
+  if docker exec "$cleanup_container_id" test -f /tmp/storage-cleanup-success; then
+    cleanup_ready=true
+    break
+  fi
+  sleep 2
+done
+if [ "$cleanup_ready" != true ]; then
+  echo "storage-cleanup did not complete its initial dry-run" >&2
+  exit 1
+fi
+
 # Confirm that the bucket initializer created all required buckets.
 buckets="$("${compose[@]}" run --rm --no-deps minio-init-avatars ls local)"
 for bucket in fallstack-dev-avatars fallstack-dev-logos fallstack-dev-cvs; do
