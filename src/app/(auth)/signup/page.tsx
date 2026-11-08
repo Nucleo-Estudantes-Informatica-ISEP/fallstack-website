@@ -11,7 +11,9 @@ interface SignUpPageProps {
   searchParams: Promise<{ lang?: string | string[] }>;
 }
 
+
 const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
+
   const interests = await getInterests();
   const { lang } = await searchParams;
   const language = resolveRequestLanguage(
