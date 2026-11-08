@@ -26,7 +26,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${compose[@]}" up --build -d
+timeout 300s "${compose[@]}" up --build -d
 
 ready=false
 for attempt in $(seq 1 90); do
