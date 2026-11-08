@@ -70,11 +70,14 @@ export async function withGoogleWalletOperation<T>(
       "A Wallet operation is already in progress. Retry shortly.",
       429
     );
-  // A one-slot pool can still service one account deletion at a time.
+  // Sole-slot occupancy during revocation requires explicit operator opt-in.
   const capacity = Math.min(
     MAX_WALLET_OPERATIONS,
     Math.max(
-      operation === "delete" ? 1 : 0,
+      operation === "delete" &&
+        serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE
+        ? 1
+        : 0,
       serverEnv.PRISMA_CONNECTION_LIMIT - 1
     )
   );

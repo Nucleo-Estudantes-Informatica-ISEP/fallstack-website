@@ -57,3 +57,24 @@ test.each(["http://redis:6379", "not-a-url"])(
     expect(() => getRedisUrl()).toThrow("REDIS_URL");
   }
 );
+
+test.each([undefined, "", "false", "true"])(
+  "parses single-connection deletion opt-in %s explicitly",
+  async (value) => {
+    if (value === undefined)
+      delete process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE;
+    else process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = value;
+    const { serverEnv } = await import("./env.server");
+    expect(serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE).toBe(
+      value === "true"
+    );
+  }
+);
+
+test("rejects an ambiguous single-connection deletion opt-in", async () => {
+  process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = "yes";
+  const { serverEnv } = await import("./env.server");
+  expect(() => serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE).toThrow(
+    "GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE"
+  );
+});

@@ -98,5 +98,22 @@ test("slow different-user Wallet saves leave request capacity and reject excess 
     await expect(createGoogleWalletSaveUrl(excessSave)).resolves.toMatch(
       /^https:\/\/pay\.google\.com\/gp\/v\/save\//
     );
-  await expect(deleteUserAccount(accountToDelete.id)).resolves.toBeUndefined();
+  if (
+    limit === 1 &&
+    process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE !== "true"
+  ) {
+    await expect(deleteUserAccount(accountToDelete.id)).rejects.toMatchObject({
+      status: 429,
+    });
+    await expect(
+      prisma.user.findUnique({ where: { id: accountToDelete.id } })
+    ).resolves.not.toBeNull();
+  } else {
+    await expect(
+      deleteUserAccount(accountToDelete.id)
+    ).resolves.toBeUndefined();
+    await expect(
+      prisma.user.findUnique({ where: { id: accountToDelete.id } })
+    ).resolves.toBeNull();
+  }
 });

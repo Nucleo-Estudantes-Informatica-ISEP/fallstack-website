@@ -12,6 +12,7 @@ const {
 } = vi.hoisted(() => ({
   serverEnvMock: {
     PRISMA_CONNECTION_LIMIT: 3,
+    GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: false,
     GOOGLE_WALLET_NEVER_ENABLED: false,
     GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
     GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
@@ -82,6 +83,7 @@ beforeEach(() => {
     );
   serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
   serverEnvMock.PRISMA_CONNECTION_LIMIT = 3;
+  serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = false;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
   serverEnvMock.GOOGLE_WALLET_CLASS_ID = "123456789.fallstack-2026-staging";
   serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = validCredentials;
@@ -567,7 +569,18 @@ test("releases operation admission after failure for an immediate retry", async 
   ).resolves.toBe("retry");
 });
 
-test("one-slot pools admit one account deletion across Wallet module instances", async () => {
+test("one-slot pools reject deletion before database or Google work by default", async () => {
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 1;
+  const { deleteUserAccount } = await import("./authApplicationService");
+  await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+    status: 429,
+  });
+  expect(lockedUserMock).not.toHaveBeenCalled();
+  expect(deleteUserMock).not.toHaveBeenCalled();
+});
+
+test("opted-in one-slot pools admit one account deletion across Wallet module instances", async () => {
+  serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = true;
   serverEnvMock.PRISMA_CONNECTION_LIMIT = 1;
   const { deleteUserAccount } = await import("./authApplicationService");
   let release!: () => void;
@@ -580,6 +593,11 @@ test("one-slot pools admit one account deletion across Wallet module instances",
       await gate;
       return work({ student: null }, {});
     });
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+    status: 429,
+  });
+  expect(lockedUserMock).not.toHaveBeenCalled();
   const pending = deleteUserAccount(student.id);
   // Attach a rejection handler while testing admission from another bundle.
   void pending.catch(() => undefined);

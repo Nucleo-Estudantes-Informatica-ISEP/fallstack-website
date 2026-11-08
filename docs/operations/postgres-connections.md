@@ -100,8 +100,13 @@ deployed routing and restart configuration still require separate verification.
   that is smaller, returning 429 before DB access when full. The default
   three-slot pool admits two operations and leaves one connection for other
   requests even during slow Google I/O. A two-slot pool admits one operation; a
-  one-slot pool pauses issuance and admits one account deletion, which can
-  occupy the sole slot. Larger pools still admit two operations. Ordinary queries
+  one-slot pool admits none by default. The explicit opt-in
+  `GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` admits one deletion,
+  which can occupy the sole slot during Google I/O and cause other requests
+  (including session lookups) to time out with 503. Issuance remains paused.
+  Prefer at least two slots within the agreed budget; see
+  [ADR 0030](../decisions/0030-opt-in-single-connection-deletion.md).
+  Larger pools still admit two operations. Ordinary queries
   can occupy all request slots, so an admitted Wallet transaction can still
   exhaust its `maxWait` and fail with P2028. Pool wait
   (P2024) and P2028 are logged, then returned to clients as a retryable

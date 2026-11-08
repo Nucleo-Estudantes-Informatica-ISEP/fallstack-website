@@ -1,6 +1,6 @@
 # 0028: Bound runtime PostgreSQL pools
 
-Status: Accepted
+Status: Superseded by [ADR 0030](0030-opt-in-single-connection-deletion.md) (one-slot Wallet deletion clause only)
 Date: 2026-11-03
 Amends: [ADR 0024](0024-separate-liveness-and-dependency-readiness.md) (the readiness `SELECT 1` runs on its own one-connection pool, not the request pool); [ADR 0027](0027-readiness-checks-and-graceful-shutdown.md) (drain timeout 25s to 65s, web stop grace 45s to 90s)
 Source: [Task02-A #414](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/414)
@@ -61,9 +61,9 @@ can still exhaust the transaction `maxWait` and fail with P2028. `withLockedUser
 sets that wait to `PRISMA_POOL_TIMEOUT_SECONDS` because URL `pool_timeout` does
 not change Prisma's two-second default. P2024 and P2028 are logged and returned
 as a retryable 503 rather than a generic 500.
-A one-slot configuration pauses Wallet issuance and admits one account
-deletion at a time, which can occupy the sole slot. Pool limits protect shared
-capacity but do not establish acceptable event latency.
+A one-slot configuration admits no Wallet operations;
+use at least two slots when Wallet issuance/deletion is needed. Pool
+limits protect shared capacity but do not establish acceptable event latency.
 Proxy removal/drain ordering still needs staging validation. No shared DB role
 quota, global PostgreSQL setting, production restart or new pooler is introduced.
 The runbook records the generic budget, repeatable isolated saturation/drain

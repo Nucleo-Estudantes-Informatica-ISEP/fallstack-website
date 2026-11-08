@@ -286,8 +286,12 @@ capped at two per process, or `PRISMA_CONNECTION_LIMIT - 1` when that is
 smaller, leaving one request-pool slot for other traffic during Google I/O. A
 larger pool does not raise the cap. Excess operations
 return 429 before DB access; retry after an admitted operation finishes. With a
-one-slot pool, Wallet issuance pauses and one account deletion at a time may
-use the sole connection. PostgreSQL transaction advisory admission also
+one-slot pool, all Wallet operations are paused by default. Explicitly setting
+`GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` permits one account deletion
+at a time to use the sole connection; issuance remains paused. This can block
+all other requests, including session lookups, during Google I/O and cause
+retryable 503 responses. Prefer at least two slots within the cluster budget.
+See [ADR 0030](decisions/0030-opt-in-single-connection-deletion.md). PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.

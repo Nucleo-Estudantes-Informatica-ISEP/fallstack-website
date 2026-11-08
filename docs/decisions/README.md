@@ -54,5 +54,6 @@ implementation PR needs an ADR.
 | [0025](0025-share-upload-rate-limits.md)                         | Share upload rate limits across web copies       | Accepted   |
 | [0026](0026-bound-upload-memory-streaming-transport.md)          | Bound upload memory with streaming multipart     | Accepted   |
 | [0027](0027-readiness-checks-and-graceful-shutdown.md)           | Readiness checks and graceful shutdown           | Accepted   |
-| [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Accepted   |
+| [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Superseded (in part) |
 | [0029](0029-rehearse-restores-away-from-production.md)           | Rehearse restores away from production           | Accepted   |
+| [0030](0030-opt-in-single-connection-deletion.md)             | Opt in to single-connection account deletion      | Accepted   |
