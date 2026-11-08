@@ -172,8 +172,11 @@ jobs:
         run: |
           docker build \
             --target runner \
-            --build-arg NEXT_PUBLIC_BASE_URL=https://ci.invalid/api \
+            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:14000/api \
             -t fallstack-app-check .
 
       - name: Verify application runs as non-root
         run: test "$(docker inspect --format '{{.Config.User}}' fallstack-app-check)" = "nextjs"
+
+      - name: Smoke test standalone local Compose stack
+        run: bash tests/e2e/local-compose-smoke.sh
