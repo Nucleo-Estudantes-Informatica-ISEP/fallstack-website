@@ -81,10 +81,12 @@ as its callback. Use development credentials and data only.
 
 ## Docker Compose files
 
-Use `docker-compose.app.yml` in Coolify. For stock Docker Compose tooling,
-use `docker-compose.local.yml`; it mirrors the deployment definition but
-omits Coolify's `exclude_from_hc` extension. Keep the two files synchronized
-when changing services or environment configuration.
+Use `docker-compose.app.yml` in Coolify. `docker-compose.local.yml` is a
+separate, self-contained development stack: it provisions local PostgreSQL,
+Redis and MinIO, creates the app buckets, and uses Compose-managed networking
+instead of Coolify's external networks. It is intentionally not a literal copy
+of the deployment file. Keep the application runtime contract aligned when
+changing services or environment configuration in either file.
 
 ## Run the full stack with Docker Compose
 
