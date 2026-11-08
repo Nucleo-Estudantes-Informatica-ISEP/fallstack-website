@@ -91,4 +91,4 @@ What the runs show:
 
 Limits of this evidence: single runs, one load-generating laptop sharing a home connection, a development host, and no Google Wallet traffic or CV uploads. The cause of the throughput ceiling (application CPU, the load balancer or the load generator) is not proven. #411 and #419 still own the event capacity target, the number of copies and the per-copy CPU sizing.
 
-Decision unchanged: keep the request pool default at 3, adjustable up to 10 with `PRISMA_CONNECTION_LIMIT`. Raise it only when a capped run shows pool wait errors or `503` responses. Wallet admission stays at two operations per process regardless of pool size, so a larger pool cannot let more slow Google calls pin request connections.
+Decision unchanged: keep the request pool default at 3, adjustable up to 10 with `PRISMA_CONNECTION_LIMIT`. Raise it only when a capped run shows pool wait errors or `503` responses. Wallet admission stays capped at the smaller of two operations and the request pool size minus one per process, so a larger pool cannot let more than two slow Google calls pin request connections.
