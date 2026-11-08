@@ -17,7 +17,7 @@ trap cleanup EXIT
 
 # Use the stock-Compose variant; Coolify-only extensions stay in the deploy file.
 cp docker-compose.local.yml "$scratch/source.yml"
-# A stale/mistaken environment knob must not change the Coolify-facing counts.
+# Stale environment knobs must not change the local Compose replica defaults.
 WEB_REPLICAS=3 REDIS_URL=redis://:release-check@redis:6379 REDIS_NETWORK_NAME=release-check \
   REDIS_KEY_PREFIX=fallstack:check: \
   docker compose --env-file .env.example -p "$project" \
