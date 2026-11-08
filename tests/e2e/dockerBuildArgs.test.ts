@@ -70,6 +70,10 @@ function readCompose(): string {
   return readFileSync(path.join(ROOT, "docker-compose.app.yml"), "utf-8");
 }
 
+function readLocalCompose(): string {
+  return readFileSync(path.join(ROOT, "docker-compose.local.yml"), "utf-8");
+}
+
 function sliceIndentedBlock(lines: string[], fromIndex: number): string[] {
   const blockIndent = lines[fromIndex].search(/\S/);
   const blockLines: string[] = [];
@@ -264,4 +268,16 @@ test("Coolify compose keeps the migrator one-shot and avoids global container na
   expect(migrateBlock).toContain("exclude_from_hc: true");
   expect(migrateBlock).not.toMatch(/^\s*container_name:/m);
   expect(webBlock).not.toMatch(/^\s*container_name:/m);
+});
+
+
+test("local Compose mirrors Coolify Compose without Coolify-only extensions", () => {
+  const coolifyCompose = readCompose();
+  const localCompose = readLocalCompose();
+
+  expect(coolifyCompose).toContain("exclude_from_hc: true");
+  expect(localCompose).not.toContain("exclude_from_hc");
+  expect(localCompose).toBe(
+    coolifyCompose.replace(/^    exclude_from_hc: true\\r?\\n/m, "")
+  );
 });
