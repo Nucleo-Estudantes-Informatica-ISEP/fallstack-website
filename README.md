@@ -79,6 +79,13 @@ as its callback. Use development credentials and data only.
    Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
    before applying migrations. Login requires the configured OIDC client.
 
+## Docker Compose files
+
+Use `docker-compose.app.yml` in Coolify. For stock Docker Compose tooling,
+use `docker-compose.local.yml`; it mirrors the deployment definition but
+omits Coolify's `exclude_from_hc` extension. Keep the two files synchronized
+when changing services or environment configuration.
+
 ## Production builds on limited RAM
 
 Run one build at a time. To use a 1.5 GiB JavaScript heap ceiling:
