@@ -29,7 +29,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                 sizes={mobilePoster.sizes}
               />
               <Image
-                src="/assets/images/signup-2026.webp"
+                src="/assets/optimized/signup-2026.41e0e981ef13.webp"
                 fill
                 alt="Fallstack 2026"
                 sizes="48vw"
