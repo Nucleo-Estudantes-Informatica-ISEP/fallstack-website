@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MdOutlineArrowBack as BackIcon } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -16,6 +16,7 @@ import type { InterestDto } from "@/application/dto/interestDto";
 
 interface StudentSignUpProps {
   interests: InterestDto[];
+  institutionalEmail?: string;
 }
 
 // Wizard data collected before an AuthNEI redirect is stashed here so it can
@@ -24,7 +25,12 @@ interface StudentSignUpProps {
 // state, unlike the rest of this wizard's in-memory step transitions.
 const AUTHNEI_DRAFT_STORAGE_KEY = "authnei-signup-draft";
 
-const StudentSignUp = ({ interests }: StudentSignUpProps) => {
+const StudentSignUp = ({
+  interests,
+  institutionalEmail,
+}: StudentSignUpProps) => {
+  const stepRef = useRef<HTMLElement>(null);
+  const previousStep = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<StudentSignUpData>({} as StudentSignUpData);
   const [authNeiMode, setAuthNeiMode] = useState(false);
@@ -72,6 +78,20 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
     setCurrentStep(hasSavedName ? 1 : 0);
   }, []);
 
+  useEffect(() => {
+    if (previousStep.current === currentStep) return;
+    previousStep.current = currentStep;
+    const step = stepRef.current;
+    if (!step) return;
+    step.focus({ preventScroll: true });
+    if (
+      step.getBoundingClientRect().top < 64 ||
+      step.getBoundingClientRect().top > window.innerHeight / 2
+    ) {
+      step.scrollIntoView({ block: "start", behavior: "instant" });
+    }
+  }, [currentStep]);
+
   const stashDraftForAuthNei = () => {
     window.sessionStorage.setItem(
       AUTHNEI_DRAFT_STORAGE_KEY,
@@ -84,6 +104,7 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
     <AccountDetailsStep
       key="account"
       authNeiMode={authNeiMode}
+      institutionalEmail={institutionalEmail}
       onAuthNeiRedirect={stashDraftForAuthNei}
       {...{ currentStep, setCurrentStep, data, setData }}
     />,
@@ -100,12 +121,17 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
   ];
 
   return (
-    <section className="relative mx-auto w-full max-w-142">
+    <section
+      ref={stepRef}
+      tabIndex={-1}
+      aria-label="Registo de estudante"
+      className="student-signup-form relative mx-auto w-full max-w-142 field-focus-target outline-none"
+    >
       {currentStep > 0 && (
         <button
           type="button"
           onClick={() => setCurrentStep(currentStep - 1)}
-          className="absolute bottom-full mb-1 flex min-h-10 items-center gap-2 rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mb-2 flex min-h-11 items-center gap-2 rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           <BackIcon aria-hidden="true" />
           Voltar

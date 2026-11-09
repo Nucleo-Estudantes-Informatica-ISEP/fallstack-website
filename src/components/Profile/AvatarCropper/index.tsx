@@ -8,7 +8,7 @@ import {
   useState,
 } from "react";
 import Cropper, { Area, Point } from "react-easy-crop";
-import { MdFileUpload as UploadIcon } from "react-icons/md";
+import { MdOutlineCloudUpload as UploadIcon } from "react-icons/md";
 
 import { resizeMinWidthImage } from "@/utils/canvas";
 import { readFile } from "@/utils/files";
@@ -71,20 +71,20 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
       />
     </div>
   ) : (
-    <div className="flex w-full flex-row items-center justify-center">
+    <div className="relative flex w-full flex-row items-center justify-center">
       <input
         type="file"
         name="avatar"
         id="avatar"
         accept="image/*"
-        className="peer sr-only"
+        className="peer sr-only field-focus-target"
         onChange={onFileChange}
       />
       <label
-        className="flex h-12 flex-1 cursor-pointer flex-row items-center rounded-full border border-white/35 bg-background px-4 py-2 text-sm text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60 lg:h-14"
+        className="flex field-height min-w-0 flex-1 cursor-pointer items-center gap-4 rounded-full border field-border bg-background px-4 py-2 field-text text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
         htmlFor="avatar"
       >
-        <span className="mr-2.5 min-w-min text-lg text-gray-400">
+        <span aria-hidden="true" className="shrink-0 text-lg">
           <UploadIcon />
         </span>
         <span className="min-w-0 truncate">Insere uma imagem</span>

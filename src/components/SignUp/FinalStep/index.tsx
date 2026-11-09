@@ -171,7 +171,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         Criar uma conta
       </h1>
 
-      <div className="flex flex-col gap-y-3 lg:gap-y-4">
+      <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4">
         <FileInput
           name="Insere o teu CV. (Opcional)"
           placeholder="Insere um ficheiro"
@@ -180,12 +180,11 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           file={data.cv ? data.cv : null}
           icon={data.cv ? <FaFilePdf /> : <MdOutlineCloudUpload />}
           onClear={() => setData({ ...data, cv: null })}
-          className="lg:min-h-14"
         />
 
         <div className="flex w-full flex-col">
           <label
-            className="mb-1.5 text-left text-sm font-medium text-gray-100"
+            className="field-label text-left font-medium text-gray-100"
             htmlFor="avatar"
           >
             Insere uma imagem para foto de perfil. (Opcional)
@@ -197,11 +196,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           type="url"
           name="Insere o link do teu perfil do LinkedIn. (Opcional)"
           placeholder="Insere um link"
-          icon={<MdLink className="text-xl" />}
+          icon={<MdLink className="text-lg" />}
           center
           inputRef={linkedinRef}
           defaultValue={data.linkedin ? data.linkedin : undefined}
-          className="lg:min-h-14"
         />
       </div>
 
@@ -212,7 +210,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           aria-label="Aceito a política de privacidade"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "signup-privacy-error" : undefined}
-          className="size-5 shrink-0 cursor-pointer accent-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="grid size-5 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
           ref={privacyRef}
           onChange={() => setError(null)}
         />

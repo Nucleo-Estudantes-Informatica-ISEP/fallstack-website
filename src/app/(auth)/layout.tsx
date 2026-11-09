@@ -20,8 +20,8 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
     <AuthContextProvider>
       <Topbar />
       <main id="main-content">
-        <div className="grid min-h-svh grid-rows-[auto_1fr] bg-background pt-16 md:grid-cols-[47.6%_minmax(0,1fr)] md:grid-rows-1 md:pt-0">
-          <div className="relative min-h-56 overflow-hidden md:min-h-0">
+        <div className="grid min-h-svh grid-rows-[auto_1fr] bg-background pt-16 md:grid-cols-[44%_minmax(0,1fr)] md:grid-rows-1 md:pt-0 xl:grid-cols-[47.6%_minmax(0,1fr)]">
+          <div className="relative h-[clamp(8rem,30svh,14rem)] overflow-hidden sm:max-md:h-64 md:h-auto [@media(max-width:767px)_and_(max-height:440px)]:hidden">
             <picture>
               <source
                 media="(width < 768px)"
@@ -32,14 +32,14 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
                 src="/assets/optimized/signup-2026.41e0e981ef13.webp"
                 fill
                 alt="Fallstack 2026"
-                sizes="48vw"
+                sizes="(min-width: 1280px) 48vw, 44vw"
                 className="object-cover"
                 loading="eager"
                 fetchPriority="high"
               />
             </picture>
           </div>
-          <div className="flex min-w-0 items-center justify-center px-5 py-12 sm:px-10 xl:pr-20">
+          <div className="flex min-w-0 items-center justify-center px-4 pt-6 pb-10 sm:px-8 md:py-20 xl:pr-20">
             {children}
           </div>
         </div>

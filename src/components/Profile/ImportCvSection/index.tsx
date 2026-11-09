@@ -20,7 +20,7 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
 
   return (
     <div className={`flex min-w-0 flex-col ${className}`}>
-      <label htmlFor={id} className="mb-1.5 text-sm font-medium text-gray-100">
+      <label htmlFor={id} className="field-label font-medium text-gray-100">
         CV
       </label>
       <div className="relative">
@@ -32,12 +32,12 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
           type="file"
           accept="application/pdf,.pdf"
           ref={inputRef}
-          className="peer sr-only"
+          className="peer sr-only field-focus-target"
         />
         <label
           htmlFor={id}
           aria-hidden="true"
-          className="flex h-12 min-w-0 cursor-pointer items-center gap-2 rounded-full border border-white/35 bg-background px-4 text-sm text-gray-400 peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
+          className="flex field-height min-w-0 cursor-pointer items-center gap-2 rounded-full border field-border bg-background px-4 field-text text-gray-400 peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
         >
           <ImportCv className="size-5 shrink-0" />
           <span className="truncate">{fileName ?? text}</span>

@@ -125,7 +125,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   };
 
   return (
-    <section className="w-full">
+    <section className="student-profile-form w-full">
       <h2 className="mb-5 text-2xl text-white lg:text-[1.75rem]">
         Informações pessoais
       </h2>
@@ -135,9 +135,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           name="name"
           id="profile-name"
           label="Nome"
-          defaultValue={student.name}
-          disabled={true}
-          hint="Definido pela tua conta institucional e não pode ser alterado."
+          value={student.name}
+          readOnly
+          hint="Nome definido no registo."
         />
 
         {/* ANO */}
@@ -145,9 +145,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           name="year"
           id="profile-year"
           label="Ano"
-          defaultValue={student.year}
-          disabled={true}
-          hint="Definido no registo da conta e não pode ser alterado."
+          value={student.year}
+          readOnly
+          hint="Definido no registo."
         />
 
         {/* EMAIL */}
@@ -155,9 +155,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           name="email"
           id="profile-email"
           label="Email"
-          defaultValue={student.user.email}
-          disabled={true}
-          hint="Associado à tua conta institucional e não pode ser alterado."
+          value={student.user.email}
+          readOnly
+          hint="Associado à tua conta institucional."
         />
 
         {/* LINKEDIN */}
@@ -200,10 +200,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* INTERESSES */}
         <fieldset className="min-w-0">
-          <legend className="mb-1.5 text-sm font-medium text-gray-100">
+          <legend className="field-label font-medium text-gray-100">
             Interesses
           </legend>
           <InterestSelector
+            alignStart
             availableInterests={availableInterests}
             selectedInterestIds={profile.interests}
             setSelectedInterestIds={setUserInterests}
@@ -215,7 +216,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           onClick={handleSave}
           loading={isLoading}
           variant="form"
-          className="mt-3 h-12 w-full text-base font-semibold text-white"
+          className="mt-3 h-12 w-full field-focus-target text-base font-medium text-white"
         >
           Guardar
         </PrimaryButton>

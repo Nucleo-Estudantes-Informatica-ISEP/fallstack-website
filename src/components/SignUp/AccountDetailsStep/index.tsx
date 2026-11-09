@@ -8,6 +8,7 @@ import {
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import AuthNeiButton from "@/components/AuthNeiButton";
@@ -21,6 +22,7 @@ interface AccountDetailsStepProps {
   // AuthNEI sign-in — Supabase already has an authenticated identity for
   // this student at this point, only the year is missing.
   authNeiMode?: boolean;
+  institutionalEmail?: string;
   // Stashes any wizard data collected so far before redirecting to AuthNEI,
   // since the OAuth flow is a full page navigation that clears React state.
   onAuthNeiRedirect?: () => void;
@@ -32,6 +34,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   data,
   setData,
   authNeiMode = false,
+  institutionalEmail,
   onAuthNeiRedirect,
 }) => {
   const [error, setError] = useState<string | null>(null);
@@ -89,12 +92,22 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           placeholder="Insere o ano"
           inputRef={yearRef}
           defaultValue={data.year ? data.year : undefined}
-          className={`${error && !yearRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
+          className="aria-invalid:border-red-400"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "signup-year-error" : undefined}
           onChange={() => setError(null)}
           options={yearOptions}
         />
+        {institutionalEmail && (
+          <Input
+            id="signup-institutional-email"
+            name="institutional-email"
+            label="Email institucional"
+            value={institutionalEmail}
+            readOnly
+            hint="Confirmado pelo AuthNEI."
+          />
+        )}
       </div>
 
       {error && (

@@ -76,7 +76,9 @@ describe("ui/Input", () => {
 
     const input = screen.getByLabelText("LinkedIn");
     expect(input.className).toContain("rounded-full");
-    expect(input.className).toContain("pl-11");
-    expect(screen.getByTestId("test-icon")).toBeInTheDocument();
+    expect(screen.getByTestId("test-icon").parentElement).toHaveAttribute(
+      "aria-hidden",
+      "true"
+    );
   });
 });

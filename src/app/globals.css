@@ -49,6 +49,60 @@
   --h-192: 48rem;
 }
 
+@utility field-label {
+  font-size: var(--field-font-size, var(--text-sm));
+  line-height: 1.5;
+  letter-spacing: normal;
+  margin-bottom: var(--field-label-gap, 0.375rem);
+}
+
+@utility field-text {
+  font-size: var(--field-font-size, var(--text-sm));
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+
+@utility field-height {
+  min-height: var(--field-height, 3rem);
+}
+
+@utility field-border {
+  border-color: var(--field-border, rgb(255 255 255 / 35%));
+}
+
+@utility field-focus-target {
+  scroll-margin-block: 5rem 1rem;
+}
+
+@layer components {
+  .student-profile-form,
+  .student-signup-form {
+    --field-font-size: 1rem;
+    --field-label-gap: 0.25rem;
+    letter-spacing: normal;
+  }
+
+  .student-profile-form {
+    --field-border: #a3a3a3;
+  }
+
+  .student-signup-form {
+    --field-border: #666;
+  }
+
+  @media (min-width: 48rem) and (pointer: fine) {
+    .student-profile-form {
+      --field-height: 2.75rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .student-signup-form {
+      --field-height: 3.5rem;
+    }
+  }
+}
+
 /* Custom keyframes still go in plain CSS */
 @keyframes fade {
   from {

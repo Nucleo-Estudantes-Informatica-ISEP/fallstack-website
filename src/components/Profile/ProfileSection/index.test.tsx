@@ -58,33 +58,25 @@ test("labels biography, shows one live counter and exposes interest selection", 
   expect(interest).toHaveAttribute("aria-pressed", "true");
 });
 
-test("shows locked fields as disabled with short explanatory hints and readable labels", () => {
+test("shows locked fields as read-only with short explanatory hints and readable labels", () => {
   render(<Profile />);
 
   const nameInput = screen.getByLabelText("Nome");
-  expect(nameInput).toBeDisabled();
+  expect(nameInput).toHaveAttribute("readonly");
   expect(nameInput).toHaveValue("Student Example");
-  expect(
-    screen.getByText(
-      "Definido pela tua conta institucional e não pode ser alterado."
-    )
-  ).toBeInTheDocument();
+  expect(nameInput).toHaveAccessibleDescription("Nome definido no registo.");
 
   const yearInput = screen.getByLabelText("Ano");
-  expect(yearInput).toBeDisabled();
+  expect(yearInput).toHaveAttribute("readonly");
   expect(yearInput).toHaveValue("3º Ano Licenciatura");
-  expect(
-    screen.getByText("Definido no registo da conta e não pode ser alterado.")
-  ).toBeInTheDocument();
+  expect(yearInput).toHaveAccessibleDescription("Definido no registo.");
 
   const emailInput = screen.getByLabelText("Email");
-  expect(emailInput).toBeDisabled();
+  expect(emailInput).toHaveAttribute("readonly");
   expect(emailInput).toHaveValue("student@example.test");
-  expect(
-    screen.getByText(
-      "Associado à tua conta institucional e não pode ser alterado."
-    )
-  ).toBeInTheDocument();
+  expect(emailInput).toHaveAccessibleDescription(
+    "Associado à tua conta institucional."
+  );
 
   // Editable fields have readable labels
   expect(screen.getByLabelText("LinkedIn")).not.toBeDisabled();
