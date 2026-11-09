@@ -2,6 +2,8 @@
 
 import slugifyId from "@/utils/slugifyId";
 
+export type SelectOption = string | { value: string; label: string };
+
 interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
   center?: boolean;
@@ -9,7 +11,7 @@ interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement>
   className?: string;
   disabled?: boolean;
   inputRef?: React.Ref<HTMLSelectElement>;
-  options: string[];
+  options: SelectOption[];
 }
 
 const InputSelect: React.FC<InputSelectProps> = ({
@@ -37,21 +39,52 @@ const InputSelect: React.FC<InputSelectProps> = ({
           {name}
         </label>
       )}
-      <select
-        name={name}
-        id={resolvedId}
-        disabled={disabled}
-        defaultValue={placeholder}
-        ref={inputRef}
-        className={`h-12 w-full rounded-full border border-white/35 bg-background px-4 py-2 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className}`}
-        {...rest}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      <div className="relative flex w-full items-center">
+        <select
+          name={name}
+          id={resolvedId}
+          disabled={disabled}
+          defaultValue={placeholder}
+          ref={inputRef}
+          className={`h-12 w-full appearance-none rounded-full border border-white/35 bg-background px-4 py-2 pr-10 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className}`}
+          {...rest}
+        >
+          {placeholder && (
+            <option value="" disabled className="text-gray-500">
+              {placeholder}
+            </option>
+          )}
+          {options.map((option) => {
+            const val = typeof option === "string" ? option : option.value;
+            const lbl = typeof option === "string" ? option : option.label;
+            return (
+              <option
+                key={val}
+                value={val}
+                className="bg-neutral-900 text-white"
+              >
+                {lbl}
+              </option>
+            );
+          })}
+        </select>
+        <span className="pointer-events-none absolute right-4 flex items-center text-gray-400">
+          <svg
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </span>
+      </div>
     </div>
   );
 };
