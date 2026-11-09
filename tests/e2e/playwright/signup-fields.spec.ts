@@ -9,10 +9,7 @@ test("signup fields stay usable while moving through the wizard", async ({
       JSON.stringify({ name: "Estudante de teste" })
     );
   });
-  const sessionResponse = page.waitForResponse("**/api/auth/session");
   await page.goto("/signup?authnei=1");
-  await sessionResponse;
-  await page.evaluate(() => document.fonts.ready);
 
   const step = page.getByRole("region", { name: "Registo de estudante" });
   const year = step.getByRole("combobox", { name: "Seleciona o teu ano" });
@@ -66,4 +63,6 @@ test("signup fields stay usable while moving through the wizard", async ({
   await expect(
     page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)
   ).resolves.toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  await page.context().unrouteAll({ behavior: "wait" });
 });
