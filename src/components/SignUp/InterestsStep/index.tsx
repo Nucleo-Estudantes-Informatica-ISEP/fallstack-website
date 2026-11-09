@@ -33,7 +33,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
 
   return (
     <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] flex-col">
+      <div className="flex w-[90%] max-w-md flex-col">
         <p className="mb-8 font-sans text-[45px] font-semibold text-white">
           Criar uma conta
         </p>

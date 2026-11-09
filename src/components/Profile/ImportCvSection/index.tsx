@@ -13,25 +13,29 @@ interface ImportCvSectionProps {
 const ImportCvSection: React.FC<ImportCvSectionProps> = ({
   inputRef,
   text,
-  className = "my-4 text-black",
+  className = "text-gray-100",
 }) => {
   const [fileName, setFileName] = useState<string | null>(null);
 
   return (
-    <div className={`flex min-w-0 flex-col space-y-2 ${className}`}>
-      <label htmlFor="inputCv">Curriculum Vitae</label>
-      <div className="flex min-w-0 items-center space-x-2 hover:cursor-pointer hover:text-primary">
-        <ImportCv className="mb-2 size-6"></ImportCv>
+    <div className={`flex min-w-0 flex-col ${className}`}>
+      <label
+        htmlFor="inputCv"
+        className="mb-1.5 text-sm font-medium text-gray-100"
+      >
+        Curriculum Vitae
+      </label>
+      <div className="flex h-12 w-full min-w-0 items-center rounded-md border border-white/35 bg-background px-3 py-2 text-gray-100 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60">
+        <ImportCv className="size-5 shrink-0" />
         <button
           type="button"
           onClick={() => document.getElementById("inputCv")?.click()}
-          className="min-w-0 pl-2 text-left wrap-break-word underline"
+          className="min-w-0 flex-1 truncate pl-2 text-left underline hover:text-primary focus:outline-none"
         >
           {text}
-
-          <span className="ml-4 text-sm">
-            {fileName ? `(${fileName})` : null}
-          </span>
+          {fileName && (
+            <span className="ml-2 text-sm text-gray-400">({fileName})</span>
+          )}
         </button>
         <input
           id="inputCv"

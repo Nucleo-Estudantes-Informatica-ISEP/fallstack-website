@@ -41,7 +41,7 @@ const FileInput: React.FC<InputProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="mb-1 text-left text-sm font-normal text-white"
+          className="mb-1.5 text-left text-sm font-medium text-gray-100"
           htmlFor={resolvedId}
         >
           {name}
@@ -58,11 +58,11 @@ const FileInput: React.FC<InputProps> = ({
           placeholder={placeholder}
           accept={accept}
           hidden
-          className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+          className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-400 disabled:opacity-100`}
           {...rest}
         />
         <label
-          className={`flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-background px-2 py-1 text-sm ${file ? "text-white" : "text-white/35"}`}
+          className={`flex h-12 flex-1 cursor-pointer flex-row items-center rounded-md border border-white/35 bg-background px-3 py-2 text-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60 ${file ? "text-white" : "text-gray-400"}`}
           htmlFor={resolvedId}
         >
           <span className="mr-2 min-w-min text-lg md:text-xl">

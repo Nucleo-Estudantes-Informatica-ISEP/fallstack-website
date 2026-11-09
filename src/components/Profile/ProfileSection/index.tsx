@@ -9,11 +9,11 @@ import { toast } from "react-toastify";
 import { ProfileData } from "@/types/ProfileData";
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import Input from "@/components/ui/Input";
 import Modal from "@/components/ui/Modal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import ImportCvSection from "@/components/Profile/ImportCvSection";
-import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import UserImage from "@/components/Profile/UserImage";
@@ -165,174 +165,118 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         textRendering: "optimizeLegibility",
       }}
     >
-      <h2 className="mb-8 text-2xl font-bold tracking-tight text-gray-100">
-        Informações pessoais
-      </h2>
+      <div className="mx-auto w-full max-w-2xl">
+        <h2 className="mb-8 text-2xl font-bold tracking-tight text-gray-100">
+          Informações pessoais
+        </h2>
 
-      <div className="flex flex-col gap-y-5">
-        <div className="flex justify-center">
-          <UserImage
-            imageSrc={userImage}
-            editable={true}
-            setProfile={setProfile}
-            onChange={(imgSrc) => {
-              setImageSrc(imgSrc);
-              setIsModalVisible(true);
-            }}
+        <div className="flex flex-col gap-y-5">
+          <div className="flex justify-center">
+            <UserImage
+              imageSrc={userImage}
+              editable={true}
+              setProfile={setProfile}
+              onChange={(imgSrc) => {
+                setImageSrc(imgSrc);
+                setIsModalVisible(true);
+              }}
+            />
+          </div>
+          {student ? (
+            <>
+              {/* NOME */}
+              <Input
+                name="name"
+                id="profile-name"
+                label="Nome"
+                defaultValue={student.name}
+                disabled={true}
+                hint="Definido pela tua conta institucional e não pode ser alterado."
+              />
+
+              {/* ANO */}
+              <Input
+                name="year"
+                id="profile-year"
+                label="Ano"
+                defaultValue={student.year}
+                disabled={true}
+                hint="Definido no registo da conta e não pode ser alterado."
+              />
+
+              {/* EMAIL */}
+              <Input
+                name="email"
+                id="profile-email"
+                label="Email"
+                defaultValue={student.user.email}
+                disabled={true}
+                hint="Associado à tua conta institucional e não pode ser alterado."
+              />
+            </>
+          ) : (
+            <Skeleton height={40} count={3} />
+          )}
+
+          {/* LINKEDIN */}
+          <Input
+            name="linkedin"
+            id="profile-linkedin"
+            label="LinkedIn"
+            defaultValue={profile.linkedin}
+            placeholder="https://www.linkedin.com/in/nome"
+            inputRef={linkedinRef}
           />
-        </div>
-        {student ? (
-          <>
-            {/* NOME */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-name"
-              >
-                Nome
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-name"
-                  defaultValue={student.name}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
 
-            {/* ANO */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-year"
-              >
-                Ano
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-year"
-                  defaultValue={student.year}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
+          {/* GITHUB */}
+          <Input
+            name="github"
+            id="profile-github"
+            label="Github"
+            defaultValue={profile.github}
+            placeholder="https://github.com/example"
+            inputRef={githubRef}
+          />
 
-            {/* EMAIL */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-email"
-              >
-                Email
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-email"
-                  defaultValue={student.user.email}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
-          </>
-        ) : (
-          <Skeleton height={40} count={3} />
-        )}
+          {/* CV - Importar CV */}
+          <ImportCvSection
+            inputRef={cvRef}
+            text={student.cv ? "Alterar CV" : "Importar CV"}
+          />
 
-        {/* LINKEDIN */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-linkedin"
+          {/* BIOGRAFIA */}
+          <UserBioTextArea
+            id="profile-bio"
+            name="Biografia"
+            rows={5}
+            placeholder="Escreve algo sobre ti..."
+            setValue={handleUserBioChange}
+            value={profile.bio ? profile.bio : ""}
+            limit={LIMIT}
+            warningLimit={LIMIT - 30}
+          />
+
+          {/* INTERESSES */}
+          <div className="flex flex-col">
+            <label className="mb-1.5 text-sm font-medium text-gray-100">
+              Interesses
+            </label>
+            <InterestSelector
+              availableInterests={availableInterests}
+              selectedInterestIds={profile.interests}
+              setSelectedInterestIds={setUserInterests}
+            />
+          </div>
+
+          {/* BOTÃO GUARDAR */}
+          <PrimaryButton
+            onClick={handleSave}
+            loading={isLoading}
+            className="mt-6 w-full bg-[#8C3E1F] py-3 text-sm font-medium text-white transition-colors hover:bg-[#7A351A]"
           >
-            LinkedIn
-          </label>
-          <div className="border border-white bg-transparent">
-            <Input
-              name=""
-              id="profile-linkedin"
-              defaultValue={profile.linkedin}
-              placeholder="https://www.linkedin.com/in/nome"
-              inputRef={linkedinRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
-            />
-          </div>
+            Guardar
+          </PrimaryButton>
         </div>
-
-        {/* GITHUB */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-github"
-          >
-            Github
-          </label>
-          <div className="border border-white bg-transparent">
-            <Input
-              name=""
-              id="profile-github"
-              defaultValue={profile.github}
-              placeholder="https://github.com/example"
-              inputRef={githubRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
-            />
-          </div>
-        </div>
-
-        {/* CV - Importar CV */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center border border-white bg-transparent p-2 text-gray-100">
-            <ImportCvSection
-              inputRef={cvRef}
-              text={student.cv ? "Alterar CV" : "Importar CV"}
-              className="text-gray-100"
-            />
-          </div>
-        </div>
-
-        {/* BIOGRAFIA */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-bio"
-          >
-            Biografia
-          </label>
-          <div className="border border-white bg-transparent p-2">
-            <UserBioTextArea
-              id="profile-bio"
-              name=""
-              rows={5}
-              placeholder="Escreve algo sobre ti..."
-              setValue={handleUserBioChange}
-              value={profile.bio ? profile.bio : ""}
-              limit={LIMIT}
-              warningLimit={LIMIT - 30}
-              className="w-full resize-none border-none bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        {/* INTERESSES */}
-        <InterestSelector
-          availableInterests={availableInterests}
-          selectedInterestIds={profile.interests}
-          setSelectedInterestIds={setUserInterests}
-        />
-
-        {/* BOTÃO GUARDAR */}
-        <PrimaryButton
-          onClick={handleSave}
-          loading={isLoading}
-          className="mt-6 w-full bg-[#8C3E1F] py-3 text-sm font-medium text-white transition-colors hover:bg-[#7A351A]"
-        >
-          Guardar
-        </PrimaryButton>
       </div>
 
       <Modal

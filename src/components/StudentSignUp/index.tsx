@@ -100,7 +100,7 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
   ];
 
   return (
-    <div className="relative max-h-[90vh] w-full overflow-hidden md:mt-4">
+    <div className="relative mx-auto max-h-[90vh] w-full max-w-md overflow-hidden md:mt-4">
       {currentStep > 0 && (
         <button
           onClick={() => setCurrentStep(currentStep - 1)}

@@ -35,7 +35,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="mb-1 text-left text-sm font-normal text-white"
+          className="mb-1.5 text-left text-sm font-medium text-gray-100"
           htmlFor={id}
         >
           {name}
@@ -58,16 +58,16 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
           minHeight: "200px",
           maxHeight: "400px",
         }}
-        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:text-gray-400 ${className ?? ""}`}
+        className={`rounded-md border border-white/35 bg-background p-3 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
       />
 
       <p
-        className={`text-right ${
+        className={`mt-1.5 text-right text-xs ${
           value.length > limit - 10
             ? "text-red-400"
             : value.length > warningLimit
               ? "text-yellow-500"
-              : "text-white/70"
+              : "text-gray-400"
         }`}
       >
         {value.length} / {limit} caracteres

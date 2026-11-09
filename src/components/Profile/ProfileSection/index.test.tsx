@@ -59,3 +59,44 @@ test("labels biography, shows one live counter and exposes interest selection", 
   fireEvent.click(interest);
   expect(interest).toHaveAttribute("aria-pressed", "true");
 });
+
+test("shows locked fields as disabled with short explanatory hints and readable labels", () => {
+  render(<Profile />);
+
+  const nameInput = screen.getByLabelText("Nome");
+  expect(nameInput).toBeDisabled();
+  expect(nameInput).toHaveValue("Student Example");
+  expect(
+    screen.getByText(
+      "Definido pela tua conta institucional e não pode ser alterado."
+    )
+  ).toBeInTheDocument();
+
+  const yearInput = screen.getByLabelText("Ano");
+  expect(yearInput).toBeDisabled();
+  expect(yearInput).toHaveValue("3º Ano Licenciatura");
+  expect(
+    screen.getByText("Definido no registo da conta e não pode ser alterado.")
+  ).toBeInTheDocument();
+
+  const emailInput = screen.getByLabelText("Email");
+  expect(emailInput).toBeDisabled();
+  expect(emailInput).toHaveValue("student@example.test");
+  expect(
+    screen.getByText(
+      "Associado à tua conta institucional e não pode ser alterado."
+    )
+  ).toBeInTheDocument();
+
+  // Editable fields have readable labels
+  expect(screen.getByLabelText("LinkedIn")).not.toBeDisabled();
+  expect(screen.getByLabelText("Github")).not.toBeDisabled();
+  expect(screen.getByLabelText("Curriculum Vitae")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Biografia" })).not.toBeDisabled();
+});
+
+test("constrains field container width to prevent stretching on wide screens", () => {
+  const { container } = render(<Profile />);
+  const boundedContainer = container.querySelector(".max-w-2xl");
+  expect(boundedContainer).toBeInTheDocument();
+});
