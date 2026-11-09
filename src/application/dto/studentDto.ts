@@ -7,7 +7,7 @@ export interface StudentDto {
   name: string;
   bio: string | null;
   year: string;
-  course: string;
+  course: string | null;
   cv: string | null;
   // Non-null once the twice-yearly retention purge (#286) has cleared `cv` -
   // drives the profile "your CV was removed" banner.
@@ -28,7 +28,7 @@ interface StudentSummaryEntity {
   name: string;
   bio: string | null;
   year: StudentYear;
-  course: string;
+  course: string | null;
   cv: string | null;
   cvPurgedAt: Date | null;
   linkedin: string | null;

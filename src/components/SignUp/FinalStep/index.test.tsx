@@ -56,6 +56,9 @@ const data: StudentSignUpData = {
   avatar: null,
   year: "3",
   linkedin: null,
+  course: "Engenharia Informática",
+  privacyPolicyAccepted: true,
+  termsAccepted: true,
 };
 
 const renderFinalStep = () =>
