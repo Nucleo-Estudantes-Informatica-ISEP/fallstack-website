@@ -64,6 +64,7 @@ test("production PWA precaches a script-free document fallback without caching h
   expect(config).toContain('fallbacks: { document: "/offline.html" }');
   const offline = await readFile("public/offline.html", "utf8");
   expect(offline).toContain('href="/"');
+  expect(offline).toContain('href="/offline.css"');
   expect(offline).toContain("You are offline");
   expect(offline).not.toMatch(/<script|<iframe|\bon\w+=/i);
 });
