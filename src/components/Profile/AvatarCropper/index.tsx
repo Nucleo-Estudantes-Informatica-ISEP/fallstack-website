@@ -77,18 +77,17 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
         name="avatar"
         id="avatar"
         accept="image/*"
-        hidden
-        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+        className="peer sr-only"
         onChange={onFileChange}
       />
       <label
-        className="flex h-12 flex-1 cursor-pointer flex-row items-center rounded-full border border-white/35 bg-background px-4 py-2 text-sm text-gray-400 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60"
+        className="flex h-12 flex-1 cursor-pointer flex-row items-center rounded-full border border-white/35 bg-background px-4 py-2 text-sm text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60 lg:h-14"
         htmlFor="avatar"
       >
         <span className="mr-2.5 min-w-min text-lg text-gray-400">
           <UploadIcon />
         </span>
-        <span className="w-52 truncate text-gray-400">Insere uma imagem</span>
+        <span className="min-w-0 truncate">Insere uma imagem</span>
       </label>
     </div>
   );

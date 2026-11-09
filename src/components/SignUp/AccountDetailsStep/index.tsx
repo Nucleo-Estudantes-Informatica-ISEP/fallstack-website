@@ -60,66 +60,67 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   // completes and authNeiMode flips true.
   if (!authNeiMode) {
     return (
-      <div className="flex w-full flex-col items-center">
-        <div className="flex w-[90%] max-w-md flex-col">
-          <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
-            Criar uma conta
-          </h1>
-          <p className="mb-6 text-sm leading-relaxed text-gray-300">
-            A criação de conta é feita exclusivamente através do AuthNEI, a
-            forma centralizada de te ligares às plataformas do NEI.
-          </p>
-          <AuthNeiButton
-            next="/signup?authnei=1"
-            beforeRedirect={onAuthNeiRedirect}
-          />
-        </div>
+      <div className="flex w-full flex-col">
+        <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
+          Criar uma conta
+        </h1>
+        <p className="mb-6 text-sm leading-relaxed text-gray-300">
+          A criação de conta é feita exclusivamente através do AuthNEI, a forma
+          centralizada de te ligares às plataformas do NEI.
+        </p>
+        <AuthNeiButton
+          next="/signup?authnei=1"
+          beforeRedirect={onAuthNeiRedirect}
+        />
       </div>
     );
   }
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] max-w-md flex-col">
-        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
-          Criar uma conta
-        </h1>
+    <div className="flex w-full flex-col">
+      <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
+        Criar uma conta
+      </h1>
 
-        <div className="flex flex-col gap-y-4 text-left">
-          <InputSelect
-            center
-            name="Seleciona o teu ano"
-            placeholder="Insere o ano"
-            inputRef={yearRef}
-            defaultValue={data.year ? data.year : undefined}
-            autoFocus
-            className={`${error && !yearRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-            options={yearOptions}
-          />
-        </div>
-
-        {error && (
-          <motion.p
-            className="mt-1 text-center text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
-          >
-            {error}
-          </motion.p>
-        )}
-
-        <PrimaryButton
-          onClick={handleNext}
-          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
-        >
-          Seguinte
-        </PrimaryButton>
+      <div className="flex flex-col gap-y-4 text-left">
+        <InputSelect
+          center
+          name="Seleciona o teu ano"
+          placeholder="Insere o ano"
+          inputRef={yearRef}
+          defaultValue={data.year ? data.year : undefined}
+          className={`${error && !yearRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-year-error" : undefined}
+          onChange={() => setError(null)}
+          options={yearOptions}
+        />
       </div>
+
+      {error && (
+        <motion.p
+          id="signup-year-error"
+          role="alert"
+          className="mt-2 text-sm text-red-400"
+          animate={{
+            y: [-15, 0],
+          }}
+          transition={{
+            ease: "easeOut",
+            duration: 0.2,
+          }}
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <PrimaryButton
+        onClick={handleNext}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
+      >
+        Seguinte
+      </PrimaryButton>
     </div>
   );
 };

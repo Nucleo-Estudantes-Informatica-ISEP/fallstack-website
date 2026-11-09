@@ -166,109 +166,99 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   };
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] max-w-md flex-col">
-        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
-          Criar uma conta
-        </h1>
+    <div className="flex w-full flex-col">
+      <h1 className="mb-8 font-title text-4xl text-white lg:mb-16 lg:text-5xl">
+        Criar uma conta
+      </h1>
 
-        <div className="flex max-h-[60vh] flex-col gap-y-4 overflow-y-auto">
-          <FileInput
-            name="Insere o teu CV. (Opcional)"
-            placeholder="Insere um ficheiro"
-            accept="application/pdf"
-            onChange={onFileChange}
-            file={data.cv ? data.cv : null}
-            icon={data.cv ? <FaFilePdf /> : <MdOutlineCloudUpload />}
-            onClear={() => setData({ ...data, cv: null })}
-            className="z-10"
-          />
-
-          <div className="flex w-full flex-col">
-            <label
-              className="mb-1.5 text-left text-sm font-medium text-gray-100"
-              htmlFor="avatar"
-            >
-              Insere uma imagem para foto de perfil. (Opcional)
-            </label>
-            <AvatarCropper
-              {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
-            />
-          </div>
-
-          <Input
-            type="url"
-            name="Insere o link do teu perfil do LinkedIn. (Opcional)"
-            placeholder="Insere um link"
-            icon={<MdLink className="text-xl" />}
-            center
-            inputRef={linkedinRef}
-            defaultValue={data.linkedin ? data.linkedin : undefined}
-            className="z-10"
-          />
-        </div>
-
-        <label
-          htmlFor="privacy"
-          className="z-10 mt-4 flex items-center text-sm text-white"
-        >
-          <input
-            type="checkbox"
-            id="privacy"
-            className="mr-3 size-4 cursor-pointer appearance-none rounded-none border border-white bg-background checked:border-white checked:bg-white"
-            style={{
-              backgroundImage: "none",
-            }}
-            ref={privacyRef}
-            onChange={(e) => {
-              if (e.target.checked) {
-                e.target.style.backgroundImage = `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e")`;
-              } else {
-                e.target.style.backgroundImage = "none";
-              }
-            }}
-          />
-          <span>
-            Aceito a{" "}
-            <button
-              type="button"
-              onClick={() => setIsModalVisible(true)}
-              className="text-[#B1440A] underline hover:text-orange-400"
-            >
-              política de privacidade
-            </button>
-            .
-          </span>
-        </label>
-
-        <PrivacyPolicyModal
-          isVisible={isModalVisible}
-          setIsVisible={setIsModalVisible}
+      <div className="flex flex-col gap-y-3 lg:gap-y-4">
+        <FileInput
+          name="Insere o teu CV. (Opcional)"
+          placeholder="Insere um ficheiro"
+          accept="application/pdf"
+          onChange={onFileChange}
+          file={data.cv ? data.cv : null}
+          icon={data.cv ? <FaFilePdf /> : <MdOutlineCloudUpload />}
+          onClear={() => setData({ ...data, cv: null })}
+          className="lg:min-h-14"
         />
 
-        {error && (
-          <motion.p
-            className="mt-1 text-center text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
+        <div className="flex w-full flex-col">
+          <label
+            className="mb-1.5 text-left text-sm font-medium text-gray-100"
+            htmlFor="avatar"
           >
-            {error}
-          </motion.p>
-        )}
+            Insere uma imagem para foto de perfil. (Opcional)
+          </label>
+          <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+        </div>
 
-        <PrimaryButton
-          loading={loading}
-          onClick={handleSubmit}
-          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
-        >
-          Concluir
-        </PrimaryButton>
+        <Input
+          type="url"
+          name="Insere o link do teu perfil do LinkedIn. (Opcional)"
+          placeholder="Insere um link"
+          icon={<MdLink className="text-xl" />}
+          center
+          inputRef={linkedinRef}
+          defaultValue={data.linkedin ? data.linkedin : undefined}
+          className="lg:min-h-14"
+        />
       </div>
+
+      <div className="mt-5 flex items-center gap-3 text-sm text-white">
+        <input
+          type="checkbox"
+          id="privacy"
+          aria-label="Aceito a política de privacidade"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "signup-privacy-error" : undefined}
+          className="size-5 shrink-0 cursor-pointer accent-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          ref={privacyRef}
+          onChange={() => setError(null)}
+        />
+        <span>
+          <label htmlFor="privacy">Aceito a</label>{" "}
+          <button
+            type="button"
+            onClick={() => setIsModalVisible(true)}
+            className="rounded-sm text-orange-400 underline hover:text-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            política de privacidade
+          </button>
+          .
+        </span>
+      </div>
+
+      <PrivacyPolicyModal
+        isVisible={isModalVisible}
+        setIsVisible={setIsModalVisible}
+      />
+
+      {error && (
+        <motion.p
+          id="signup-privacy-error"
+          role="alert"
+          className="mt-2 text-sm text-red-400"
+          animate={{
+            y: [-15, 0],
+          }}
+          transition={{
+            ease: "easeOut",
+            duration: 0.2,
+          }}
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <PrimaryButton
+        loading={loading}
+        onClick={handleSubmit}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:mt-10 lg:h-16 lg:text-xl"
+      >
+        Concluir
+      </PrimaryButton>
     </div>
   );
 };

@@ -23,6 +23,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
   inputRef,
   options,
   id,
+  defaultValue,
   ...rest
 }) => {
   const resolvedId = id || slugifyId(name) || undefined;
@@ -44,13 +45,13 @@ const InputSelect: React.FC<InputSelectProps> = ({
           name={name}
           id={resolvedId}
           disabled={disabled}
-          defaultValue={placeholder}
+          defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
           ref={inputRef}
-          className={`h-12 w-full appearance-none rounded-full border border-white/35 bg-background px-4 py-2 pr-10 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className}`}
+          className={`h-12 w-full appearance-none rounded-full border border-white/35 bg-background px-4 py-2 pr-10 text-sm text-white focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 has-[option[value=""]:checked]:text-gray-400 ${className}`}
           {...rest}
         >
           {placeholder && (
-            <option value="" disabled className="text-gray-500">
+            <option value="" disabled className="bg-background text-gray-400">
               {placeholder}
             </option>
           )}

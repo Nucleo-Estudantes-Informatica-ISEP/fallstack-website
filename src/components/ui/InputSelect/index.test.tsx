@@ -22,6 +22,25 @@ describe("ui/InputSelect", () => {
     expect(screen.getByText("1º Ano - Licenciatura")).toBeInTheDocument();
   });
 
+  test("shows the placeholder for an empty value and restores a saved selection", () => {
+    const options = [{ value: "1", label: "Primeiro ano" }];
+    const { unmount } = render(
+      <InputSelect name="Ano" placeholder="Insere o ano" options={options} />
+    );
+    expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("");
+    unmount();
+
+    render(
+      <InputSelect
+        name="Ano"
+        placeholder="Insere o ano"
+        options={options}
+        defaultValue="1"
+      />
+    );
+    expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("1");
+  });
+
   test("renders disabled state with AA contrast", () => {
     render(
       <InputSelect

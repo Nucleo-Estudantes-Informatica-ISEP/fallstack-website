@@ -53,12 +53,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
         value={value}
         maxLength={limit}
         onChange={(e) => setValue(e.target.value)}
-        style={{
-          resize: "vertical",
-          minHeight: "200px",
-          maxHeight: "400px",
-        }}
-        className={`rounded-2xl border border-white/35 bg-background p-4 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
+        className={`max-h-100 min-h-32 resize-y border border-white/35 bg-background p-4 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
       />
 
       <p

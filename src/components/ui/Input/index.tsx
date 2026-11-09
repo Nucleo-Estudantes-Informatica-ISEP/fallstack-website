@@ -75,7 +75,7 @@ const Input: React.FC<InputProps> = ({
           defaultValue={defaultValue ?? undefined}
           ref={inputRef}
           aria-describedby={combinedAriaDescribedBy}
-          className={`h-12 w-full rounded-full border border-white/35 bg-background py-2 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${
+          className={`h-12 w-full rounded-full border border-white/35 bg-background py-2 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 disabled:[-webkit-text-fill-color:currentColor] ${
             icon ? "pr-4 pl-11" : "px-4"
           } ${className}`}
           {...rest}

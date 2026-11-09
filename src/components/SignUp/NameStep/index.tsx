@@ -43,52 +43,51 @@ const NameStep: FunctionComponent<NameStepProps> = ({
   };
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] max-w-md flex-col">
-        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
-          Criar uma conta
-        </h1>
+    <div className="flex w-full flex-col">
+      <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
+        Criar uma conta
+      </h1>
 
-        <Input
-          name="name"
-          label="Qual é o teu nome?"
-          placeholder="Insere o teu nome"
-          center
-          inputRef={inputRef}
-          onKeyUp={handleKeyUp}
-          defaultValue={data.name ? data.name : undefined}
-          className={`${error ? "border-2 border-red-600" : ""} z-10`}
-        />
+      <Input
+        name="name"
+        label="Qual é o teu nome?"
+        placeholder="Insere o teu nome"
+        center
+        inputRef={inputRef}
+        onKeyUp={handleKeyUp}
+        defaultValue={data.name ? data.name : undefined}
+        className={`${error ? "border-2 border-red-600" : ""} z-10`}
+      />
 
-        {error && (
-          <motion.p
-            className="mt-1 text-center text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
-          >
-            {error}
-          </motion.p>
-        )}
-
-        <PrimaryButton
-          onClick={handleNext}
-          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
+      {error && (
+        <motion.p
+          className="mt-1 text-center text-sm font-bold text-red-600"
+          animate={{
+            y: [-15, 0],
+          }}
+          transition={{
+            ease: "easeOut",
+            duration: 0.2,
+          }}
         >
-          Seguinte
-        </PrimaryButton>
+          {error}
+        </motion.p>
+      )}
 
-        <Link
-          href="/login"
-          className="text-center text-sm text-gray-400 transition-colors hover:text-white"
-        >
-          Já tenho uma conta
-        </Link>
-      </div>
+      <PrimaryButton
+        onClick={handleNext}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
+      >
+        Seguinte
+      </PrimaryButton>
+
+      <Link
+        href="/login"
+        className="mt-5 text-center text-sm text-gray-400 transition-colors hover:text-white"
+      >
+        Já tenho uma conta
+      </Link>
     </div>
   );
 };

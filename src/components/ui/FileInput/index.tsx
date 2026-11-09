@@ -48,58 +48,53 @@ const FileInput: React.FC<InputProps> = ({
         </label>
       )}
       <div
-        className={`flex w-full flex-row items-center justify-center ${className}`}
+        className={`flex min-h-12 min-w-0 items-center gap-1 rounded-full border border-white/35 bg-background pr-3 text-sm focus-within:border-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${className ?? ""}`}
       >
         <input
           type="file"
           name={name}
           disabled={disabled}
           id={resolvedId}
-          placeholder={placeholder}
           accept={accept}
-          hidden
-          className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:cursor-not-allowed disabled:text-gray-400 disabled:opacity-100`}
+          className="peer sr-only"
           {...rest}
         />
         <label
-          className={`flex h-12 flex-1 cursor-pointer flex-row items-center rounded-full border border-white/35 bg-background px-4 py-2 text-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60 ${file ? "text-white" : "text-gray-400"}`}
+          className={`flex min-h-12 min-w-0 flex-1 cursor-pointer items-center gap-2 pl-4 peer-disabled:cursor-not-allowed ${file ? "text-white" : "text-gray-400"}`}
           htmlFor={resolvedId}
+          aria-hidden="true"
         >
-          <span className="mr-2 min-w-min text-lg md:text-xl">
+          <span className="shrink-0 text-lg" aria-hidden="true">
             {file ? icon : <UploadIcon />}
           </span>
-          <span className="w-44 truncate">
-            {file ? file.name : placeholder}
-          </span>
-          {file && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(file.preview, "_blank");
-                }}
-                aria-label={`Pré-visualizar ${file.name}`}
-                className="ml-auto rounded-md p-1 transition-colors hover:bg-white/10"
-              >
-                <PreviewIcon />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onClear();
-                }}
-                aria-label={`Remover ${file.name}`}
-                className="ml-2 rounded-md p-1 transition-colors hover:bg-red-500 hover:text-white"
-              >
-                <TrashIcon />
-              </button>
-            </>
-          )}
+          <span className="truncate">{file ? file.name : placeholder}</span>
         </label>
+        {file && (
+          <>
+            <button
+              type="button"
+              onClick={() => window.open(file.preview, "_blank", "noopener")}
+              aria-label={`Pré-visualizar ${file.name}`}
+              className="shrink-0 rounded-md p-1 hover:bg-white/10"
+            >
+              <PreviewIcon />
+            </button>
+            <button
+              type="button"
+              onClick={(event) => {
+                const input =
+                  event.currentTarget.parentElement?.querySelector("input");
+                if (input) input.value = "";
+                onClear();
+                input?.focus();
+              }}
+              aria-label={`Remover ${file.name}`}
+              className="shrink-0 rounded-md p-1 hover:bg-red-500 hover:text-white"
+            >
+              <TrashIcon />
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

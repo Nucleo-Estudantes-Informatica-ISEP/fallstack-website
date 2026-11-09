@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image, { getImageProps } from "next/image";
 
 import { AuthContextProvider } from "@/contexts/AuthContext";
 import Topbar from "@/components/TopBar";
@@ -7,31 +7,39 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
+const { props: mobilePoster } = getImageProps({
+  src: "/assets/images/landing-2026.png",
+  alt: "Fallstack 2026",
+  width: 1512,
+  height: 982,
+  sizes: "100vw",
+});
+
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   return (
     <AuthContextProvider>
       <Topbar />
       <main id="main-content">
-        <div className="flex h-svh flex-col bg-background pt-16 md:flex-row md:pt-0">
-          <div className="relative h-48 w-full md:hidden">
-            <Image
-              src="/assets/images/landing-2026.png"
-              fill
-              alt="Fallstack 2026"
-              className="object-cover"
-              priority
-            />
+        <div className="grid min-h-svh grid-rows-[auto_1fr] bg-background pt-16 md:grid-cols-[47.6%_minmax(0,1fr)] md:grid-rows-1 md:pt-0">
+          <div className="relative min-h-56 overflow-hidden md:min-h-0">
+            <picture>
+              <source
+                media="(width < 768px)"
+                srcSet={mobilePoster.srcSet}
+                sizes={mobilePoster.sizes}
+              />
+              <Image
+                src="/assets/images/signup-2026.webp"
+                fill
+                alt="Fallstack 2026"
+                sizes="48vw"
+                className="object-cover"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </picture>
           </div>
-          <div className="relative hidden size-full md:block md:w-1/2">
-            <Image
-              src="/assets/images/landing-2026.png"
-              fill
-              alt="Fallstack 2026"
-              className="object-cover"
-              priority
-            />
-          </div>
-          <div className="flex size-full items-center justify-center overflow-y-auto px-6 py-8 md:w-1/2 md:px-12 md:py-16">
+          <div className="flex min-w-0 items-center justify-center px-5 py-12 sm:px-10 xl:pr-20">
             {children}
           </div>
         </div>

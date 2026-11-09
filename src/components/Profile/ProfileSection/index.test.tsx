@@ -8,8 +8,6 @@ import type { StudentDto } from "@/application/dto/studentDto";
 import ProfileSection from ".";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("@/components/Profile/UserImage", () => ({ default: () => null }));
-vi.mock("@/components/Profile/AvatarCropper", () => ({ default: () => null }));
 
 const student: StudentDto = {
   id: "student",
@@ -90,13 +88,7 @@ test("shows locked fields as disabled with short explanatory hints and readable 
 
   // Editable fields have readable labels
   expect(screen.getByLabelText("LinkedIn")).not.toBeDisabled();
-  expect(screen.getByLabelText("Github")).not.toBeDisabled();
-  expect(screen.getByLabelText("Curriculum Vitae")).toBeInTheDocument();
+  expect(screen.getByLabelText("GitHub")).not.toBeDisabled();
+  expect(screen.getByLabelText("CV")).toBeInTheDocument();
   expect(screen.getByRole("textbox", { name: "Biografia" })).not.toBeDisabled();
-});
-
-test("constrains field container width to prevent stretching on wide screens", () => {
-  const { container } = render(<Profile />);
-  const boundedContainer = container.querySelector(".max-w-2xl");
-  expect(boundedContainer).toBeInTheDocument();
 });

@@ -100,19 +100,19 @@ const StudentSignUp = ({ interests }: StudentSignUpProps) => {
   ];
 
   return (
-    <div className="relative mx-auto max-h-[90vh] w-full max-w-md overflow-hidden md:mt-4">
+    <section className="relative mx-auto w-full max-w-142">
       {currentStep > 0 && (
         <button
+          type="button"
           onClick={() => setCurrentStep(currentStep - 1)}
-          className="absolute -top-12 -left-2 rounded-full text-3xl text-secondary"
+          className="absolute bottom-full mb-1 flex min-h-10 items-center gap-2 rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          <BackIcon />
+          <BackIcon aria-hidden="true" />
+          Voltar
         </button>
       )}
-      <section className="flex max-h-[85vh] flex-col overflow-y-auto">
-        {steps[currentStep]}
-      </section>
-    </div>
+      {steps[currentStep]}
+    </section>
   );
 };
 
