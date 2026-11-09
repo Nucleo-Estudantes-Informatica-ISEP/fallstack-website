@@ -58,11 +58,11 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
           minHeight: "200px",
           maxHeight: "400px",
         }}
-        className={`rounded-md border border-white/35 bg-background p-3 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
+        className={`rounded-2xl border border-white/35 bg-background p-4 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
       />
 
       <p
-        className={`mt-1.5 text-right text-xs ${
+        className={`mt-1.5 text-left text-xs ${
           value.length > limit - 10
             ? "text-red-400"
             : value.length > warningLimit

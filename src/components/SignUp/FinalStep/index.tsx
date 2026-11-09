@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
 import { FaFilePdf } from "react-icons/fa";
+import { MdLink, MdOutlineCloudUpload } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
@@ -167,25 +168,25 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   return (
     <div className="flex w-full flex-col items-center">
       <div className="flex w-[90%] max-w-md flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
+        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
           Criar uma conta
-        </p>
+        </h1>
 
         <div className="flex max-h-[60vh] flex-col gap-y-4 overflow-y-auto">
           <FileInput
             name="Insere o teu CV. (Opcional)"
-            placeholder="CV ficheiro"
+            placeholder="Insere um ficheiro"
             accept="application/pdf"
             onChange={onFileChange}
             file={data.cv ? data.cv : null}
-            icon={<FaFilePdf />}
+            icon={data.cv ? <FaFilePdf /> : <MdOutlineCloudUpload />}
             onClear={() => setData({ ...data, cv: null })}
             className="z-10"
           />
 
           <div className="flex w-full flex-col">
             <label
-              className="mb-1 text-left text-sm font-normal text-white"
+              className="mb-1.5 text-left text-sm font-medium text-gray-100"
               htmlFor="avatar"
             >
               Insere uma imagem para foto de perfil. (Opcional)
@@ -198,7 +199,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           <Input
             type="url"
             name="Insere o link do teu perfil do LinkedIn. (Opcional)"
-            placeholder="https://linkedin.com/in/o-teu-perfil"
+            placeholder="Insere um link"
+            icon={<MdLink className="text-xl" />}
             center
             inputRef={linkedinRef}
             defaultValue={data.linkedin ? data.linkedin : undefined}
@@ -208,12 +210,12 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
         <label
           htmlFor="privacy"
-          className="z-10 mt-4 flex items-start text-white"
+          className="z-10 mt-4 flex items-center text-sm text-white"
         >
           <input
             type="checkbox"
             id="privacy"
-            className="mt-1 mr-3 size-4 cursor-pointer appearance-none border border-white bg-background checked:border-white checked:bg-white"
+            className="mr-3 size-4 cursor-pointer appearance-none rounded-none border border-white bg-background checked:border-white checked:bg-white"
             style={{
               backgroundImage: "none",
             }}
@@ -231,7 +233,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             <button
               type="button"
               onClick={() => setIsModalVisible(true)}
-              className="text-orange-500 underline"
+              className="text-[#B1440A] underline hover:text-orange-400"
             >
               política de privacidade
             </button>
@@ -262,9 +264,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         <PrimaryButton
           loading={loading}
           onClick={handleSubmit}
-          className="mt-4 mb-5 h-14 w-full font-bold"
+          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
         >
-          CONCLUIR
+          Concluir
         </PrimaryButton>
       </div>
     </div>

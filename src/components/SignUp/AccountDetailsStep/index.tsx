@@ -62,10 +62,10 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     return (
       <div className="flex w-full flex-col items-center">
         <div className="flex w-[90%] max-w-md flex-col">
-          <p className="mb-8 font-sans text-[45px] font-semibold text-white">
+          <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
             Criar uma conta
-          </p>
-          <p className="mb-4 text-sm text-gray-400">
+          </h1>
+          <p className="mb-6 text-sm leading-relaxed text-gray-300">
             A criação de conta é feita exclusivamente através do AuthNEI, a
             forma centralizada de te ligares às plataformas do NEI.
           </p>
@@ -81,9 +81,9 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   return (
     <div className="flex w-full flex-col items-center">
       <div className="flex w-[90%] max-w-md flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
+        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
           Criar uma conta
-        </p>
+        </h1>
 
         <div className="flex flex-col gap-y-4 text-left">
           <InputSelect
@@ -115,7 +115,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
 
         <PrimaryButton
           onClick={handleNext}
-          className="mt-4 mb-5 h-14 w-full font-bold"
+          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
         >
           Seguinte
         </PrimaryButton>

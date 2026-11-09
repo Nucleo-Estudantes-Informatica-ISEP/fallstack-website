@@ -25,7 +25,7 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
       >
         Curriculum Vitae
       </label>
-      <div className="flex h-12 w-full min-w-0 items-center rounded-md border border-white/35 bg-background px-3 py-2 text-gray-100 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60">
+      <div className="flex h-12 w-full min-w-0 items-center rounded-full border border-white/35 bg-background px-4 py-2 text-gray-100 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60">
         <ImportCv className="size-5 shrink-0" />
         <button
           type="button"

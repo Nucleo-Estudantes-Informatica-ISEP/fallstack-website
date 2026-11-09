@@ -20,6 +20,7 @@ export interface InputProps extends Omit<
   type?: string;
   hint?: React.ReactNode;
   defaultValue?: string | number | readonly string[] | null;
+  icon?: React.ReactNode;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -36,6 +37,7 @@ const Input: React.FC<InputProps> = ({
   id,
   hint,
   defaultValue,
+  icon,
   "aria-describedby": ariaDescribedBy,
   ...rest
 }) => {
@@ -50,7 +52,7 @@ const Input: React.FC<InputProps> = ({
     <div className={`flex w-full flex-col ${containerClassName}`}>
       {displayLabel && (
         <label
-          className={`mb-1.5 text-sm font-medium text-gray-100 ${
+          className={`mb-1.5 block text-sm font-medium text-gray-100 ${
             center ? "text-left" : ""
           } ${labelClassName}`}
           htmlFor={resolvedId}
@@ -58,18 +60,27 @@ const Input: React.FC<InputProps> = ({
           {displayLabel}
         </label>
       )}
-      <input
-        type={type}
-        name={name}
-        disabled={disabled}
-        id={resolvedId}
-        placeholder={placeholder}
-        defaultValue={defaultValue ?? undefined}
-        ref={inputRef}
-        aria-describedby={combinedAriaDescribedBy}
-        className={`h-12 w-full rounded-md border border-white/35 bg-background px-3 py-2 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className}`}
-        {...rest}
-      />
+      <div className="relative flex w-full items-center">
+        {icon && (
+          <span className="pointer-events-none absolute left-4 z-10 flex items-center text-lg text-gray-400">
+            {icon}
+          </span>
+        )}
+        <input
+          type={type}
+          name={name}
+          disabled={disabled}
+          id={resolvedId}
+          placeholder={placeholder}
+          defaultValue={defaultValue ?? undefined}
+          ref={inputRef}
+          aria-describedby={combinedAriaDescribedBy}
+          className={`h-12 w-full rounded-full border border-white/35 bg-background py-2 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${
+            icon ? "pr-4 pl-11" : "px-4"
+          } ${className}`}
+          {...rest}
+        />
+      </div>
       {hint && (
         <p id={hintId} className="mt-1.5 text-xs text-gray-400">
           {hint}

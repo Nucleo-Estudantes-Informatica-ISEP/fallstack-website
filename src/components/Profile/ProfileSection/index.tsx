@@ -272,7 +272,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           <PrimaryButton
             onClick={handleSave}
             loading={isLoading}
-            className="mt-6 w-full bg-[#8C3E1F] py-3 text-sm font-medium text-white transition-colors hover:bg-[#7A351A]"
+            className="mt-6 h-12 w-full rounded-full bg-[#82360D] py-3 text-base font-semibold text-white transition-colors hover:bg-[#6c2c09]"
           >
             Guardar
           </PrimaryButton>

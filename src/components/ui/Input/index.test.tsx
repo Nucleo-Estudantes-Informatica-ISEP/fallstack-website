@@ -64,4 +64,19 @@ describe("ui/Input", () => {
     expect(hint).toBeInTheDocument();
     expect(hint).toHaveAttribute("id", "locked-field-hint");
   });
+
+  test("renders with icon and pill shape", () => {
+    render(
+      <Input
+        name="LinkedIn"
+        id="linkedin-field"
+        icon={<span data-testid="test-icon">🔗</span>}
+      />
+    );
+
+    const input = screen.getByLabelText("LinkedIn");
+    expect(input.className).toContain("rounded-full");
+    expect(input.className).toContain("pl-11");
+    expect(screen.getByTestId("test-icon")).toBeInTheDocument();
+  });
 });

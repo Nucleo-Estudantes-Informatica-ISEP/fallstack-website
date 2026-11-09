@@ -74,7 +74,7 @@ beforeEach(() => {
 
 const acceptPrivacyAndSubmit = () => {
   fireEvent.click(screen.getByRole("checkbox"));
-  fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
+  fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
 };
 
 test("creates the profile for a student session with no profile yet", async () => {

@@ -45,12 +45,13 @@ const NameStep: FunctionComponent<NameStepProps> = ({
   return (
     <div className="flex w-full flex-col items-center">
       <div className="flex w-[90%] max-w-md flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-          Bem-vindo!
-        </p>
+        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
+          Criar uma conta
+        </h1>
 
         <Input
-          name="Precisamos de alguns dados para criar a tua conta. Qual é o teu nome?"
+          name="name"
+          label="Qual é o teu nome?"
           placeholder="Insere o teu nome"
           center
           inputRef={inputRef}
@@ -76,12 +77,15 @@ const NameStep: FunctionComponent<NameStepProps> = ({
 
         <PrimaryButton
           onClick={handleNext}
-          className="mt-4 mb-5 h-14 w-full font-bold"
+          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
         >
           Seguinte
         </PrimaryButton>
 
-        <Link href="/login" className="text-center text-sm text-gray-600">
+        <Link
+          href="/login"
+          className="text-center text-sm text-gray-400 transition-colors hover:text-white"
+        >
           Já tenho uma conta
         </Link>
       </div>

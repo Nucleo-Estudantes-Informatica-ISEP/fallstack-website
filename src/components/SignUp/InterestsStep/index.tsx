@@ -34,9 +34,9 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   return (
     <div className="flex w-full flex-col items-center">
       <div className="flex w-[90%] max-w-md flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
+        <h1 className="mb-8 font-sans text-3xl font-bold text-white sm:text-4xl">
           Criar uma conta
-        </p>
+        </h1>
 
         <p className="mb-4 font-sans text-base font-normal text-white">
           Escolhe os teus interesses. (Opcional)
@@ -51,7 +51,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
 
         <PrimaryButton
           onClick={handleNext}
-          className="mt-4 mb-5 h-14 w-full font-bold"
+          className="mt-6 mb-5 h-12 w-full rounded-full font-semibold"
         >
           Seguinte
         </PrimaryButton>

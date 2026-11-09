@@ -62,7 +62,7 @@ const FileInput: React.FC<InputProps> = ({
           {...rest}
         />
         <label
-          className={`flex h-12 flex-1 cursor-pointer flex-row items-center rounded-md border border-white/35 bg-background px-3 py-2 text-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60 ${file ? "text-white" : "text-gray-400"}`}
+          className={`flex h-12 flex-1 cursor-pointer flex-row items-center rounded-full border border-white/35 bg-background px-4 py-2 text-sm transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary hover:border-white/60 ${file ? "text-white" : "text-gray-400"}`}
           htmlFor={resolvedId}
         >
           <span className="mr-2 min-w-min text-lg md:text-xl">
