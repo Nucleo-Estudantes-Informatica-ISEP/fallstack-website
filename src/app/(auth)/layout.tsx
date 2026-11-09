@@ -1,13 +1,20 @@
+import { headers } from "next/headers";
 import Image from "next/image";
-
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 import { AuthContextProvider } from "@/contexts/AuthContext";
 import Topbar from "@/components/TopBar";
 
-interface AuthLayoutProps {
+interface AppProps {
   children: React.ReactNode;
+  params: Promise<any>;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
+const App = async (props: AppProps) => {
+  const language = resolveRequestLanguage(
+    undefined,
+    (await headers()).get("accept-language")
+  );
+
   return (
     <AuthContextProvider>
       <Topbar />
@@ -31,7 +38,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
             />
           </div>
           <div className="flex size-full items-center justify-center overflow-y-auto px-6 py-8 md:w-1/2 md:px-12 md:py-16">
-            {children}
+            {props.children}
           </div>
         </div>
       </main>
@@ -39,4 +46,4 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   );
 };
 
-export default AuthLayout;
+export default App;
