@@ -11,13 +11,10 @@ interface SignUpPageProps {
   searchParams: Promise<{ lang?: string | string[] }>;
 }
 
-const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
+  const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   
 
-  const interests: any[] = []; // Array vazio temporário para não dar erro
-
-  //const interests = await getInterests();
-
+  const interests = await getInterests();
 
   const { lang } = await searchParams;
   const language = resolveRequestLanguage(
@@ -26,7 +23,9 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   );
   return (
     <StudentSignUp
-      interests={interests.map((interest) => toInterestDto(interest, language))}
+      interests={interests.map((interest: Parameters<typeof toInterestDto>[0]) =>
+        toInterestDto(interest, language)
+      )}
     />
   );
 };

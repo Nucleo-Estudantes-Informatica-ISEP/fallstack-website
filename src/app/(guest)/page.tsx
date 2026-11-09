@@ -18,39 +18,35 @@ const App = async ({ searchParams }: AppProps) => {
     (await headers()).get("accept-language")
   );
 
-  // Alterar para true quando o utilizador tiver a inscrição feita
+  
   const isRegistered = false;
 
-  // URLs corrigidos com base no teu mapa de pastas
+  
   const buttonLink = isRegistered ? "/dashboard" : "/signup";
 
-  const buttonText = isRegistered
-    ? language.startsWith("pt")
-      ? "Ver Perfil"
-      : "View Profile"
-    : language.startsWith("pt")
-      ? "Registar Agora"
-      : "Register Now";
+  
+  const isPt = language.startsWith("pt");
+  const buttonText = isRegistered 
+    ? (isPt ? "Ver Perfil" : "View Profile") 
+    : (isPt ? "Registar Agora" : "Register Now");
 
   return (
-    <>
-      <CountdownLanding language={language}>
-        {/* Botão Dinâmico (Task 14) */}
-        <div className="my-6 flex justify-center">
-          <Link
-            href={buttonLink}
-            className="transform rounded-full bg-orange-600 px-8 py-3 font-bold text-white shadow-lg transition duration-300 hover:scale-105 hover:bg-orange-700"
-          >
-            {buttonText}
-          </Link>
-        </div>
+    <CountdownLanding language={language}>
+      <div className="flex justify-center w-full my-8">
+        <Link
+          href={buttonLink}
+          className="px-8 py-3 text-base font-medium text-white bg-[#111111] rounded-xl transition-all duration-200 hover:bg-black hover:scale-105 active:scale-95 shadow-md inline-block"
+        >
+          {buttonText}
+        </Link>
+      </div>
 
-        <Suspense fallback={null}>
-          <FeaturedCompanies language={language} />
-        </Suspense>
-      </CountdownLanding>
-    </>
+      <Suspense fallback={null}>
+        <FeaturedCompanies language={language} />
+      </Suspense>
+    </CountdownLanding>
   );
 };
 
 export default App;
+

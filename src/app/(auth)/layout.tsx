@@ -1,12 +1,13 @@
 import { headers } from "next/headers";
 import Image from "next/image";
-import { resolveRequestLanguage } from "@/domain/i18n/translations";
+
 import { AuthContextProvider } from "@/contexts/AuthContext";
 import Topbar from "@/components/TopBar";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
   children: React.ReactNode;
-  params: Promise<any>;
+  params: Promise<Record<string, unknown>>;
 }
 
 const App = async (props: AppProps) => {
@@ -17,6 +18,7 @@ const App = async (props: AppProps) => {
 
   return (
     <AuthContextProvider>
+      {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
       <Topbar />
       <main id="main-content">
         <div className="flex h-svh flex-col bg-background pt-16 md:flex-row md:pt-0">
