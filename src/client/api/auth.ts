@@ -11,7 +11,11 @@ export async function createStudentProfile(
       name: data.name,
       bio: data.bio,
       year: data.year,
+      course: data.course,
       interests: data.interests,
+      linkedin: data.linkedin || undefined,
+      privacyPolicyAccepted: data.privacyPolicyAccepted,
+      termsAccepted: data.termsAccepted,
       avatarUrl: data.avatarUrl || undefined,
       cvId: data.cvId,
     });

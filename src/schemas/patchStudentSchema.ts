@@ -5,6 +5,7 @@ export const patchStudentSchema = z
     bio: z.string().max(1000),
     linkedin: z.string().max(2048),
     github: z.string().max(2048),
+    course: z.string().min(1).max(150),
     interests: z.array(z.uuid()).max(50),
   })
   .partial()

@@ -143,6 +143,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         avatarUrl,
         cvId,
         linkedin,
+        privacyPolicyAccepted: true,
       });
 
       if (profile instanceof Error) {

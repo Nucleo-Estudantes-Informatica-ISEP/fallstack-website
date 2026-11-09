@@ -11,6 +11,9 @@ export interface StudentSignUpData {
   } | null;
   avatar: string | null;
   avatarUrl?: string | null;
+  course: string | null;
   year: string | null;
   linkedin: string | null;
+  privacyPolicyAccepted: boolean;
+  termsAccepted: boolean;
 }

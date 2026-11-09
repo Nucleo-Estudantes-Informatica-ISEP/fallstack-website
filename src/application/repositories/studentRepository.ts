@@ -70,6 +70,10 @@ export const createStudent = (
     name: string;
     bio?: string;
     year: StudentYear;
+    course?: string;
+    linkedin?: string;
+    privacyPolicyAccepted: boolean;
+    termsAccepted: boolean;
   },
   db: DbClient = prisma
 ) =>
@@ -80,17 +84,31 @@ export const createStudent = (
       name: input.name,
       bio: input.bio?.trim(),
       year: input.year,
+      course: input.course,
+      linkedin: input.linkedin,
+      privacyPolicyAccepted: input.privacyPolicyAccepted,
+      termsAccepted: input.termsAccepted,
     },
   });
 
 export const updateStudentProfile = (
   code: string,
-  data: { bio?: string; linkedin?: string; github?: string },
+  data: {
+    bio?: string;
+    linkedin?: string;
+    github?: string;
+    course?: string;
+  },
   db: DbClient = prisma
 ) =>
   db.student.update({
     where: { code },
-    data: { ...data, bio: data.bio?.trim() },
+    data: {
+      bio: data.bio?.trim(),
+      linkedin: data.linkedin,
+      github: data.github,
+      course: data.course,
+    },
   });
 
 export const updateStudentMedia = (

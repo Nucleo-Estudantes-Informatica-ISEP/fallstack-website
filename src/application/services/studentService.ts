@@ -82,6 +82,10 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
         name: body.name,
         bio: body.bio,
         year: parseStudentYear(body.year),
+        course: body.course,
+        linkedin: body.linkedin,
+        privacyPolicyAccepted: body.privacyPolicyAccepted,
+        termsAccepted: body.termsAccepted,
       },
       tx
     );
@@ -202,6 +206,9 @@ export async function createStudentForAdmin(input: {
           name: input.name,
           bio: input.bio,
           year: input.year,
+          course: "",
+          privacyPolicyAccepted: false,
+          termsAccepted: false,
         },
         tx
       );

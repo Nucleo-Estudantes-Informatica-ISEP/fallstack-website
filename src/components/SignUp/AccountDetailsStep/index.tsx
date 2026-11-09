@@ -36,12 +36,26 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
 }) => {
   const [error, setError] = useState<string | null>(null);
   const yearRef = useRef<HTMLSelectElement>(null);
+  const courseRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
-    if (!yearRef.current?.value) {
+    const course = courseRef.current?.value.trim();
+    const year = yearRef.current?.value;
+
+    if (!course) {
+      return setError("Por favor, indica o teu curso.");
+    }
+
+    if (!year) {
       return setError("Por favor, seleciona o teu ano.");
     }
-    setData({ ...data, year: yearRef.current.value });
+
+    setData((prev) => ({
+      ...prev,
+      course,
+      year,
+    }));
+
     setCurrentStep(currentStep + 1);
   };
 
@@ -86,6 +100,14 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
         </p>
 
         <div className="flex flex-col gap-y-4 text-left">
+          <input
+            ref={courseRef}
+            type="text"
+            placeholder="Indica o teu curso (ex.: Engenharia Informática)"
+            defaultValue={data.course ?? ""}
+            className="w-full rounded-lg border border-gray-600 bg-transparent p-4 text-white placeholder:text-gray-400"
+          />
+
           <InputSelect
             center
             name="Seleciona o teu ano"

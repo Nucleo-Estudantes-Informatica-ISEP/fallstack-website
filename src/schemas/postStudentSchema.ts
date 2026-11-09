@@ -10,6 +10,17 @@ export const postStudentSchema = z.object({
     "1º Ano Mestrado",
     "2º Ano Mestrado",
   ]),
+  course: z.string().min(1).max(150),
+  privacyPolicyAccepted: z.literal(true),
+  termsAccepted: z.literal(true),
+  linkedin: z
+    .string()
+    .trim()
+    .url("Invalid LinkedIn URL")
+    .max(2048)
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => (value === "" ? undefined : value)),
   interests: z.array(z.uuid()).max(50),
   avatar: z.uuid().optional(),
   cv: z.uuid().optional(),
