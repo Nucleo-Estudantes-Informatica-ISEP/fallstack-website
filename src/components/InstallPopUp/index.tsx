@@ -13,12 +13,13 @@ const CookieConsent: React.FC = () => {
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
-  const { isInstallable, handleConfirm } = useContext(InstallableContext);
+  const { isInstallable, installInstructions, handleConfirm } =
+    useContext(InstallableContext);
 
   useEffect(() => {
     const hide = localStorage.getItem(config.localStorage.hideInstallPrompt);
-    setVisible(isInstallable && !hide);
-  }, [isInstallable]);
+    setVisible((isInstallable || installInstructions !== null) && !hide);
+  }, [installInstructions, isInstallable]);
 
   const handleHideForever = () => {
     localStorage.setItem(config.localStorage.hideInstallPrompt, "yes");
@@ -40,6 +41,7 @@ const CookieConsent: React.FC = () => {
             <p className="font-medium">
               ✨ Adiciona o Fallstack ao teu ecrã inicial!
             </p>
+            {installInstructions && <p>{installInstructions}</p>}
           </div>
           <div className="flex items-center justify-center gap-3 max-md:w-full max-md:flex-col-reverse md:gap-4">
             <a
@@ -48,13 +50,15 @@ const CookieConsent: React.FC = () => {
             >
               Não mostrar mais
             </a>
-            <PrimaryButton
-              onClick={handleConfirm}
-              className="font-bold max-md:w-full"
-              tabIndex={2}
-            >
-              Adicionar
-            </PrimaryButton>
+            {isInstallable && (
+              <PrimaryButton
+                onClick={handleConfirm}
+                className="font-bold max-md:w-full"
+                tabIndex={2}
+              >
+                Adicionar
+              </PrimaryButton>
+            )}
           </div>
         </motion.div>
       )}

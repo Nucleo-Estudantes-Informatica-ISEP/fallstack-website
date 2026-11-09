@@ -14,7 +14,11 @@ function renderPrompt(pathname: string) {
   vi.mocked(usePathname).mockReturnValue(pathname);
   return render(
     <InstallableContext.Provider
-      value={{ isInstallable: true, handleConfirm: vi.fn() }}
+      value={{
+        isInstallable: true,
+        installInstructions: null,
+        handleConfirm: vi.fn(),
+      }}
     >
       <InstallPopUp />
     </InstallableContext.Provider>
@@ -29,4 +33,25 @@ test("does not cover the landing with an install prompt", () => {
 test("retains the install prompt on application pages", () => {
   renderPrompt("/dashboard");
   expect(screen.getByText(/Adiciona o Fallstack/)).toBeInTheDocument();
+});
+
+test("shows device-specific guidance when the native install prompt is unavailable", () => {
+  vi.mocked(usePathname).mockReturnValue("/dashboard");
+  render(
+    <InstallableContext.Provider
+      value={{
+        isInstallable: false,
+        installInstructions:
+          "No iPhone ou iPad, toca em Partilhar e escolhe “Adicionar ao ecrã principal”.",
+        handleConfirm: vi.fn(),
+      }}
+    >
+      <InstallPopUp />
+    </InstallableContext.Provider>
+  );
+
+  expect(screen.getByText(/No iPhone ou iPad/)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Adicionar" })
+  ).not.toBeInTheDocument();
 });
