@@ -12,7 +12,13 @@ interface SignUpPageProps {
 }
 
 const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
-  const interests = await getInterests();
+  
+
+  const interests: any[] = []; // Array vazio temporário para não dar erro
+
+  //const interests = await getInterests();
+
+
   const { lang } = await searchParams;
   const language = resolveRequestLanguage(
     lang,

@@ -15,6 +15,21 @@ const App = async ({ searchParams }: AppProps) => {
     lang,
     (await headers()).get("accept-language")
   );
+<<<<<<< Updated upstream
+=======
+
+  // Alterar para true quando o utilizador tiver a inscrição feita
+  const isRegistered = false; 
+
+  // URLs corrigidos com base no teu mapa de pastas
+  const buttonLink = isRegistered ? "/dashboard" : "/signup";
+
+  const buttonText = isRegistered
+    ? (language.startsWith('pt') ? 'Ver Perfil' : 'View Profile')
+    : (language.startsWith('pt') ? 'Registar Agora' : 'Register Now');
+
+    
+>>>>>>> Stashed changes
   return (
     <CountdownLanding language={language}>
       <Suspense fallback={null}>
