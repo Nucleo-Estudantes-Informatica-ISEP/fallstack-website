@@ -70,6 +70,7 @@ export const createStudent = (
     name: string;
     bio?: string;
     year: StudentYear;
+    linkedin?: string | null;
   },
   db: DbClient = prisma
 ) =>
@@ -80,6 +81,7 @@ export const createStudent = (
       name: input.name,
       bio: input.bio?.trim(),
       year: input.year,
+      linkedin: input.linkedin?.trim() || null,
     },
   });
 

@@ -12,6 +12,7 @@ export async function createStudentProfile(
       bio: data.bio,
       year: data.year,
       interests: data.interests,
+      linkedin: data.linkedin || undefined,
       avatarUrl: data.avatarUrl || undefined,
       cvId: data.cvId,
     });
