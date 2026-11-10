@@ -11,6 +11,7 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import { STUDENT_YEAR } from "@/domain/student/year";
 
 interface AccountDetailsStepProps {
   currentStep: number;
@@ -18,6 +19,8 @@ interface AccountDetailsStepProps {
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
   institutionalEmail: string;
+  /** True when AuthNEI gave no display name, so the student must enter one. */
+  needsName?: boolean;
 }
 
 const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
@@ -26,31 +29,53 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   data,
   setData,
   institutionalEmail,
+  needsName = false,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const yearRef = useRef<HTMLSelectElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
+    const name = nameRef.current?.value.trim() ?? "";
+    if (needsName && !name) {
+      return setError("Por favor, indica o teu nome.");
+    }
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
     }
-    setData({ ...data, year: yearRef.current.value });
+    setData({
+      ...data,
+      name: needsName ? name : data.name,
+      year: yearRef.current.value,
+    });
     setCurrentStep(currentStep + 1);
   };
 
-  const yearOptions = [
-    { value: "1º Ano Licenciatura", label: "1º Ano - Licenciatura" },
-    { value: "2º Ano Licenciatura", label: "2º Ano - Licenciatura" },
-    { value: "3º Ano Licenciatura", label: "3º Ano - Licenciatura" },
-    { value: "1º Ano Mestrado", label: "1º Ano - Mestrado" },
-    { value: "2º Ano Mestrado", label: "2º Ano - Mestrado" },
-  ];
+  const yearOptions = Object.values(STUDENT_YEAR).map((value) => ({
+    value,
+    label: value.replace(" Ano ", " Ano - "),
+  }));
 
   return (
     <div className="flex w-full flex-col">
       <h1 className="signup-heading">Criar uma conta</h1>
 
       <div className="flex flex-col gap-y-4 text-left">
+        {needsName && (
+          <Input
+            id="signup-name"
+            name="name"
+            label="Nome"
+            inputRef={nameRef}
+            defaultValue={data.name ?? ""}
+            maxLength={100}
+            autoComplete="name"
+            required
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "signup-year-error" : undefined}
+            onChange={() => setError(null)}
+          />
+        )}
         <InputSelect
           center
           name="Seleciona o teu ano"

@@ -55,17 +55,31 @@ test("creates a student with the verified AuthNEI name when the form omits it", 
   });
 });
 
-test("can complete onboarding when the identity has no display name", async () => {
+test("uses the name from the form when the identity has no display name", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     ...session,
     authName: undefined,
   } as never);
 
-  expect((await post(fields)).status).toBe(201);
+  expect((await post({ ...fields, name: "Maria Silva" })).status).toBe(201);
   expect(createStudentProfile).toHaveBeenCalledWith(session.id, {
     ...fields,
-    name: "student",
+    name: "Maria Silva",
   });
+});
+
+test("rejects signup without any name instead of deriving one from the email", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({
+    ...session,
+    authName: undefined,
+  } as never);
+
+  const response = await post(fields);
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
+    error: expect.any(String),
+  });
+  expect(createStudentProfile).not.toHaveBeenCalled();
 });
 
 test("an existing student cannot create another profile", async () => {

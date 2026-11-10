@@ -17,12 +17,15 @@ export const POST = defineHandler({
         { status: 403 }
       );
 
-    const name = (
-      studentSession.authName ||
-      body.name ||
-      studentSession.email.split("@")[0] ||
-      "Estudante"
-    ).slice(0, 100);
+    // The verified AuthNEI name wins. Without one the student must provide a
+    // name: it is public and read-only afterwards, so never derive it from the
+    // email address.
+    const name = (studentSession.authName || body.name || "").slice(0, 100);
+    if (!name)
+      return NextResponse.json(
+        { error: "Indica o teu nome para criar o perfil." },
+        { status: 400 }
+      );
 
     return NextResponse.json(
       toStudentSummaryDto(

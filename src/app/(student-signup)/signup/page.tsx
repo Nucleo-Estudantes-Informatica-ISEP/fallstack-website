@@ -43,6 +43,7 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   return (
     <StudentSignUp
       institutionalEmail={session.email}
+      authName={session.authName}
       interests={interests.map((interest) => toInterestDto(interest, language))}
     />
   );
