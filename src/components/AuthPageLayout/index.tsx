@@ -34,7 +34,7 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({
           <div
             className={
               studentSignup
-                ? "relative h-[clamp(7rem,20svh,12rem)] overflow-hidden bg-background lg:h-auto [@media(max-width:1023px)_and_(max-height:440px)]:hidden"
+                ? "relative aspect-[2.65] overflow-hidden bg-background lg:aspect-auto [@media(max-width:1023px)_and_(max-height:440px)]:hidden"
                 : "relative h-[clamp(8rem,30svh,14rem)] overflow-hidden sm:max-md:h-64 md:h-auto [@media(max-width:767px)_and_(max-height:440px)]:hidden"
             }
           >
@@ -51,7 +51,7 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({
                 sizes="(min-width: 1280px) 48vw, 44vw"
                 className={
                   studentSignup
-                    ? "object-cover object-[center_30%] sm:object-contain lg:object-cover lg:object-center"
+                    ? "object-cover object-[center_30%] lg:object-center"
                     : "object-cover"
                 }
                 loading="eager"
