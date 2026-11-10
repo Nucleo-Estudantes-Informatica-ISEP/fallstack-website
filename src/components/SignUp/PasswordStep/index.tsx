@@ -62,7 +62,7 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
 
   return (
     <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] max-w-md flex-col">
+      <div className="flex w-[90%] flex-col">
         <div className="mb-5 flex justify-center">
           <Image
             src={"/assets/images/logo_dark.png"}

@@ -43,11 +43,11 @@ const YearStep: FunctionComponent<YearStepProps> = ({
   };
 
   const options = [
-    { value: "1º Ano Licenciatura", label: "1º Ano - Licenciatura" },
-    { value: "2º Ano Licenciatura", label: "2º Ano - Licenciatura" },
-    { value: "3º Ano Licenciatura", label: "3º Ano - Licenciatura" },
-    { value: "1º Ano Mestrado", label: "1º Ano - Mestrado" },
-    { value: "2º Ano Mestrado", label: "2º Ano - Mestrado" },
+    "1º Ano Licenciatura",
+    "2º Ano Licenciatura",
+    "3º Ano Licenciatura",
+    "1º Ano Mestrado",
+    "2º Ano Mestrado",
   ];
 
   return (
