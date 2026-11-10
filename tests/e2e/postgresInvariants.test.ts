@@ -34,6 +34,8 @@ afterAll(async () => {
 });
 
 test("readiness succeeds while every request-pool connection is occupied", async () => {
+  // Test pool isolation separately from cold engine startup on slow machines.
+  await Promise.all([prisma.$connect(), readinessPrisma.$connect()]);
   const limit = Number(process.env.PRISMA_CONNECTION_LIMIT || 3);
   let acquired = 0;
   let started!: () => void;
@@ -50,7 +52,7 @@ test("readiness succeeds while every request-pool connection is occupied", async
         if (++acquired === limit) started();
         await gate;
       },
-      { timeout: 10000 }
+      { maxWait: 10_000, timeout: 20_000 }
     )
   );
   try {

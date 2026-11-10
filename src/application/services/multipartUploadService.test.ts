@@ -58,7 +58,9 @@ test.each([undefined, String(head.length + max + tail.length)])(
       max,
       async (file) => {
         path = file.path;
-        expect((await stat(path)).mode & 0o777).toBe(0o600);
+        // Windows does not expose POSIX permission bits through stat().
+        if (process.platform !== "win32")
+          expect((await stat(path)).mode & 0o777).toBe(0o600);
         expect(await readFile(path)).toEqual(bytes);
         expect(file.header).toEqual(bytes.subarray(0, 16));
         expect(file.size).toBe(max);
