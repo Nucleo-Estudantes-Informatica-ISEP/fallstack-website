@@ -51,7 +51,7 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({
                 sizes="(min-width: 1280px) 48vw, 44vw"
                 className={
                   studentSignup
-                    ? "object-cover sm:object-contain lg:object-cover"
+                    ? "object-cover object-[center_30%] sm:object-contain lg:object-cover lg:object-center"
                     : "object-cover"
                 }
                 loading="eager"
