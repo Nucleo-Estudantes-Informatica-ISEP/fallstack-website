@@ -115,7 +115,10 @@ These tests are also auto-discovered by `pnpm test` and the normal PR CI job,
 which already starts PostgreSQL 16 and applies `prisma migrate deploy`.
 They do not need the app server, browser sessions, MinIO, or staging credentials.
 
-Use a dedicated disposable local database, never a shared or production one:
+Vitest loads `.env` automatically. Its `DATABASE_URL` is used by integration
+tests, which create and delete records. Use a local test database, never a shared
+or production one. Shell environment variables take precedence over `.env`.
+For an isolated disposable database:
 
 ```bash
 docker run -d --name fallstack-test-postgres \
