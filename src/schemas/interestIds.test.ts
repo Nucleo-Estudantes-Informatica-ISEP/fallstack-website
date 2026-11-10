@@ -17,6 +17,9 @@ test("interest writes accept ids and reject display names", () => {
     postStudentSchema.safeParse({
       name: "Student",
       year: "3º Ano Licenciatura",
+      course: "Computer Science",
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
       interests: [interestId],
     }).success
   ).toBe(true);
