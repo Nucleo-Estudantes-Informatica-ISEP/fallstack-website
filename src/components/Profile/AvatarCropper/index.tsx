@@ -15,12 +15,14 @@ import { readFile } from "@/utils/files";
 
 interface AvatarCropperProps {
   imageSrc: string | null;
+  uploadIcon?: React.ReactNode;
   setImageSrc: Dispatch<SetStateAction<string | null>>;
   setCroppedAreaPixels: Dispatch<SetStateAction<Area | null>>;
 }
 
 const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
   imageSrc,
+  uploadIcon = <UploadIcon />,
   setImageSrc,
   setCroppedAreaPixels,
 }) => {
@@ -81,11 +83,14 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
         onChange={onFileChange}
       />
       <label
-        className="flex field-height min-w-0 flex-1 cursor-pointer items-center gap-4 rounded-full border field-border bg-background px-4 py-2 field-text text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
+        className="flex field-height min-w-0 flex-1 cursor-pointer items-center rounded-full border field-border bg-background py-2 pr-4 pl-(--field-icon-padding,3.125rem) field-text text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
         htmlFor="avatar"
       >
-        <span aria-hidden="true" className="shrink-0 text-lg">
-          <UploadIcon />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-(--field-icon-inset,1rem) flex items-center text-lg"
+        >
+          {uploadIcon}
         </span>
         <span className="min-w-0 truncate">Insere uma imagem</span>
       </label>

@@ -49,7 +49,12 @@
   --h-192: 48rem;
 }
 
+@utility signup-heading {
+  @apply mb-8 font-sans text-3xl leading-[1.2] font-semibold text-white lg:mb-16 lg:text-[45px];
+}
+
 @utility field-label {
+  font-weight: var(--field-label-weight, 500);
   font-size: var(--field-font-size, var(--text-sm));
   line-height: 1.5;
   letter-spacing: normal;
@@ -87,7 +92,8 @@
   }
 
   .student-signup-form {
-    --field-border: #666;
+    --field-border: rgb(255 255 255 / 35%);
+    --field-label-weight: 400;
   }
 
   @media (min-width: 48rem) and (pointer: fine) {
@@ -99,6 +105,7 @@
   @media (min-width: 64rem) {
     .student-signup-form {
       --field-height: 3.5rem;
+      --field-label-gap: 0.5rem;
     }
   }
 }

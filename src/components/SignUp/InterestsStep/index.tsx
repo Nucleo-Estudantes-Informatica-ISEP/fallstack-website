@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
+import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -22,36 +22,28 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setData,
   availableInterests,
 }) => {
-  const [interestIds, setInterestIds] = useState<string[]>(
-    data.interests || []
-  );
-
-  const handleNext = () => {
-    setData({ ...data, interests: interestIds });
-    setCurrentStep(currentStep + 1);
-  };
-
   return (
     <div className="flex w-full flex-col">
-      <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
-        Criar uma conta
-      </h1>
+      <h1 className="signup-heading">Criar uma conta</h1>
 
-      <p className="mb-4 font-sans text-base font-normal text-white">
-        Escolhe os teus interesses. (Opcional)
-      </p>
-
-      <InterestSelector
-        availableInterests={availableInterests}
-        selectedInterestIds={interestIds}
-        setSelectedInterestIds={setInterestIds}
-        scrollable
-      />
+      <fieldset className="min-w-0">
+        <legend className="mb-3 field-text text-white">
+          Escolhe os teus interesses. (Opcional)
+        </legend>
+        <InterestSelector
+          availableInterests={availableInterests}
+          selectedInterestIds={data.interests ?? []}
+          setSelectedInterestIds={(interests) =>
+            setData((previous) => ({ ...previous, interests }))
+          }
+          alignStart
+        />
+      </fieldset>
 
       <PrimaryButton
-        onClick={handleNext}
+        onClick={() => setCurrentStep(currentStep + 1)}
         variant="form"
-        className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
+        className="mt-8 h-12 w-full font-semibold lg:mt-14 lg:h-16 lg:text-xl"
       >
         Seguinte
       </PrimaryButton>

@@ -32,7 +32,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className={`field-label block font-medium text-gray-100 ${
+          className={`field-label block text-gray-100 ${
             center ? "text-left" : ""
           }`}
           htmlFor={resolvedId}

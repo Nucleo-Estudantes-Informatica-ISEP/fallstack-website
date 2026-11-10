@@ -22,10 +22,24 @@ test("signup fields stay usable while moving through the wizard", async ({
   );
   await year.selectOption({ label: "1º Ano - Licenciatura" });
 
-  for (let advance = 0; advance < 3; advance++) {
-    await next.click();
-    await expect(step).toBeFocused();
-  }
+  await next.click();
+  await expect(step).toBeFocused();
+  const bio = step.getByRole("textbox", { name: /Conta-nos mais sobre ti/ });
+  await bio.fill("Texto");
+  await expect(bio).toHaveAccessibleDescription("5 / 255 caracteres");
+  await expect(bio).toHaveCSS(
+    "height",
+    (page.viewportSize()?.width ?? 0) >= 1024 ? "264px" : "160px"
+  );
+
+  await next.click();
+  await expect(step).toBeFocused();
+  await expect(
+    step.getByRole("group", { name: /Escolhe os teus interesses/ })
+  ).toBeVisible();
+
+  await next.click();
+  await expect(step).toBeFocused();
 
   const cv = step.getByLabel("Insere o teu CV. (Opcional)", { exact: true });
   const avatar = step.getByLabel(

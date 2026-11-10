@@ -64,9 +64,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   if (!authNeiMode) {
     return (
       <div className="flex w-full flex-col">
-        <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
-          Criar uma conta
-        </h1>
+        <h1 className="signup-heading">Criar uma conta</h1>
         <p className="mb-6 text-sm leading-relaxed text-gray-300">
           A criação de conta é feita exclusivamente através do AuthNEI, a forma
           centralizada de te ligares às plataformas do NEI.
@@ -81,9 +79,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
 
   return (
     <div className="flex w-full flex-col">
-      <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
-        Criar uma conta
-      </h1>
+      <h1 className="signup-heading">Criar uma conta</h1>
 
       <div className="flex flex-col gap-y-4 text-left">
         <InputSelect

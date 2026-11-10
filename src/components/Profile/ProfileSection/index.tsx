@@ -200,9 +200,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* INTERESSES */}
         <fieldset className="min-w-0">
-          <legend className="field-label font-medium text-gray-100">
-            Interesses
-          </legend>
+          <legend className="field-label text-gray-100">Interesses</legend>
           <InterestSelector
             alignStart
             availableInterests={availableInterests}

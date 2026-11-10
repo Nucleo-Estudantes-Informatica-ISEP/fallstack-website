@@ -125,13 +125,13 @@ const StudentSignUp = ({
       ref={stepRef}
       tabIndex={-1}
       aria-label="Registo de estudante"
-      className="student-signup-form relative mx-auto w-full max-w-142 field-focus-target outline-none"
+      className="student-signup-form relative mx-auto w-full max-w-[567px] field-focus-target outline-none"
     >
       {currentStep > 0 && (
         <button
           type="button"
           onClick={() => setCurrentStep(currentStep - 1)}
-          className="mb-2 flex min-h-11 items-center gap-2 rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          className="mb-2 flex min-h-11 items-center gap-2 rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:absolute lg:bottom-full"
         >
           <BackIcon aria-hidden="true" />
           Voltar

@@ -52,7 +52,7 @@ const Input: React.FC<InputProps> = ({
     <div className={`flex w-full flex-col ${containerClassName}`}>
       {displayLabel && (
         <label
-          className={`field-label block font-medium text-gray-100 ${
+          className={`field-label block text-gray-100 ${
             center ? "text-left" : ""
           } ${labelClassName}`}
           htmlFor={resolvedId}
@@ -64,7 +64,7 @@ const Input: React.FC<InputProps> = ({
         {icon && (
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute left-4 flex items-center text-lg text-gray-400"
+            className="pointer-events-none absolute left-(--field-icon-inset,1rem) flex items-center text-lg text-gray-400"
           >
             {icon}
           </span>

@@ -20,6 +20,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     preview: string;
   } | null;
   icon: React.ReactNode;
+  emptyIcon?: React.ReactNode;
   onClear: () => void;
 }
 
@@ -31,6 +32,7 @@ const FileInput: React.FC<InputProps> = ({
   disabled,
   file,
   icon,
+  emptyIcon = <UploadIcon />,
   onClear,
   id,
   ...rest
@@ -41,7 +43,7 @@ const FileInput: React.FC<InputProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="field-label text-left font-medium text-gray-100"
+          className="field-label text-left text-gray-100"
           htmlFor={resolvedId}
         >
           {name}
@@ -60,12 +62,15 @@ const FileInput: React.FC<InputProps> = ({
           {...rest}
         />
         <label
-          className={`flex min-w-0 flex-1 cursor-pointer items-center gap-4 self-stretch pl-4 peer-disabled:cursor-not-allowed ${file ? "text-white" : "text-gray-400"}`}
+          className={`flex min-w-0 flex-1 cursor-pointer items-center self-stretch pl-(--field-icon-padding,3.125rem) peer-disabled:cursor-not-allowed ${file ? "text-white" : "text-gray-400"}`}
           htmlFor={resolvedId}
           aria-hidden="true"
         >
-          <span className="shrink-0 text-lg" aria-hidden="true">
-            {file ? icon : <UploadIcon />}
+          <span
+            className="pointer-events-none absolute left-(--field-icon-inset,1rem) flex items-center text-lg"
+            aria-hidden="true"
+          >
+            {file ? icon : emptyIcon}
           </span>
           <span className="truncate">{file ? file.name : placeholder}</span>
         </label>

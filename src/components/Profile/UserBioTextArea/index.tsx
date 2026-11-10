@@ -15,6 +15,7 @@ interface UserBioTextAreaProps {
   name: string;
   id?: string;
   autoFocus?: boolean;
+  counterClassName?: string;
 }
 
 const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
@@ -30,6 +31,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
   name,
   id,
   autoFocus,
+  counterClassName = "mt-1 text-left text-sm",
 }) => {
   const generatedId = useId();
   const fieldId = id ?? generatedId;
@@ -37,7 +39,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="field-label text-left font-medium text-gray-100"
+          className="field-label text-left text-gray-100"
           htmlFor={fieldId}
         >
           {name}
@@ -61,7 +63,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
 
       <p
         id={`${fieldId}-count`}
-        className={`mt-1 text-left text-sm ${
+        className={`${counterClassName} ${
           value.length > limit - 10
             ? "text-red-400"
             : value.length > warningLimit

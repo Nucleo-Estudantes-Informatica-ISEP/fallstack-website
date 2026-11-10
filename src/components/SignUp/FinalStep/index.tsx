@@ -7,11 +7,11 @@ import {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
 import { FaFilePdf } from "react-icons/fa";
-import { MdLink, MdOutlineCloudUpload } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
@@ -167,50 +167,73 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
   return (
     <div className="flex w-full flex-col">
-      <h1 className="mb-8 font-title text-4xl text-white lg:mb-16 lg:text-5xl">
-        Criar uma conta
-      </h1>
+      <h1 className="signup-heading">Criar uma conta</h1>
 
-      <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4">
+      <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4 lg:[--field-icon-inset:19px] lg:[--field-icon-padding:65px]">
         <FileInput
           name="Insere o teu CV. (Opcional)"
           placeholder="Insere um ficheiro"
           accept="application/pdf"
           onChange={onFileChange}
           file={data.cv ? data.cv : null}
-          icon={data.cv ? <FaFilePdf /> : <MdOutlineCloudUpload />}
+          icon={<FaFilePdf />}
+          emptyIcon={
+            <Image
+              src="/assets/images/signup/cv.svg"
+              width={22}
+              height={18}
+              alt=""
+            />
+          }
           onClear={() => setData({ ...data, cv: null })}
         />
 
         <div className="flex w-full flex-col">
           <label
-            className="field-label text-left font-medium text-gray-100"
+            className="field-label text-left text-gray-100"
             htmlFor="avatar"
           >
             Insere uma imagem para foto de perfil. (Opcional)
           </label>
-          <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+          <AvatarCropper
+            {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
+            uploadIcon={
+              <Image
+                src="/assets/images/signup/avatar.svg"
+                width={25}
+                height={26}
+                alt=""
+              />
+            }
+          />
         </div>
 
         <Input
           type="url"
           name="Insere o link do teu perfil do LinkedIn. (Opcional)"
           placeholder="Insere um link"
-          icon={<MdLink className="text-lg" />}
+          icon={
+            <Image
+              src="/assets/images/signup/link.svg"
+              width={24}
+              height={24}
+              alt=""
+            />
+          }
           center
           inputRef={linkedinRef}
           defaultValue={data.linkedin ? data.linkedin : undefined}
         />
       </div>
 
-      <div className="mt-5 flex items-center gap-3 text-sm text-white">
+      <div className="mt-6 flex items-center gap-2.5 field-text text-white lg:mt-9">
         <input
           type="checkbox"
           id="privacy"
           aria-label="Aceito a política de privacidade"
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "signup-privacy-error" : undefined}
-          className="grid size-5 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
+          className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
           ref={privacyRef}
           onChange={() => setError(null)}
         />
@@ -253,7 +276,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         loading={loading}
         onClick={handleSubmit}
         variant="form"
-        className="mt-8 h-12 w-full font-semibold lg:mt-10 lg:h-16 lg:text-xl"
+        className="mt-8 h-12 w-full font-semibold lg:mt-9 lg:h-16 lg:text-xl"
       >
         Concluir
       </PrimaryButton>

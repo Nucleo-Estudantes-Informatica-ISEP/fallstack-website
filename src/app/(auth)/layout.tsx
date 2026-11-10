@@ -39,7 +39,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
               />
             </picture>
           </div>
-          <div className="flex min-w-0 items-center justify-center px-4 pt-6 pb-10 sm:px-8 md:py-20 xl:pr-20">
+          <div className="flex min-w-0 items-center justify-center px-4 pt-6 pb-10 sm:px-8 md:py-20 xl:pr-[70px]">
             {children}
           </div>
         </div>

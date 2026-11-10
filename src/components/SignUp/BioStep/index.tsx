@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, FunctionComponent, SetStateAction, useRef } from "react";
+import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -20,39 +20,26 @@ const BioStep: FunctionComponent<BioStepProps> = ({
   setData,
 }) => {
   const LIMIT = 255;
-  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleNext = () => {
-    if (inputRef.current?.value)
-      setData({ ...data, bio: inputRef.current.value });
-    setCurrentStep(currentStep + 1);
-  };
-
-  function handleUserBioChange(bio: string) {
-    if (bio.length > LIMIT) return;
-    setData({ ...data, bio });
-  }
   return (
     <div className="flex w-full flex-col">
-      <h1 className="mb-8 font-title text-4xl text-white lg:mb-14 lg:text-5xl">
-        Criar uma conta
-      </h1>
+      <h1 className="signup-heading">Criar uma conta</h1>
 
       <UserBioTextArea
         name="Conta-nos mais sobre ti. (Opcional)"
-        ref={inputRef}
         placeholder=""
-        className="mb-4"
+        className="h-40 lg:h-66"
+        counterClassName="mt-2 text-right field-text"
         value={data.bio ? data.bio : ""}
-        setValue={handleUserBioChange}
+        setValue={(bio) => setData((previous) => ({ ...previous, bio }))}
         limit={LIMIT}
         warningLimit={LIMIT - 30}
       />
 
       <PrimaryButton
-        onClick={handleNext}
+        onClick={() => setCurrentStep(currentStep + 1)}
         variant="form"
-        className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
+        className="mt-8 h-12 w-full font-semibold lg:mt-10 lg:h-16 lg:text-xl"
       >
         Seguinte
       </PrimaryButton>

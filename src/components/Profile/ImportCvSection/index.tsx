@@ -20,7 +20,7 @@ const ImportCvSection: React.FC<ImportCvSectionProps> = ({
 
   return (
     <div className={`flex min-w-0 flex-col ${className}`}>
-      <label htmlFor={id} className="field-label font-medium text-gray-100">
+      <label htmlFor={id} className="field-label text-gray-100">
         CV
       </label>
       <div className="relative">
