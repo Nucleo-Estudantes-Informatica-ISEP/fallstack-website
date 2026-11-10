@@ -56,10 +56,10 @@ This workload validates public read availability and readiness under load;
 Redis limiter fail-closed upload behavior has separate coverage in
 `tests/e2e/redisRateLimitFailure.test.ts` and `docs/operations/redis.md`.
 
-Run the dependency-free scenario regression checks with:
+Run the scenario regression checks using the project test runner:
 
 ```bash
-node --test tests/load/failure-scenarios.test.mjs
+pnpm exec vitest run tests/load/failure-scenarios.test.mjs
 ```
 
 These checks replace HTTP with a test double to validate emitted requests and

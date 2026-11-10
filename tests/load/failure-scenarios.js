@@ -1,6 +1,6 @@
 import { check, sleep } from "k6";
-import http from "k6/http";
 import execution from "k6/execution";
+import http from "k6/http";
 
 import { assertStagingTarget } from "../stagingTarget.js";
 
@@ -11,7 +11,9 @@ const base = assertStagingTarget(
 );
 const fault = __ENV.FAILURE_SCENARIO;
 if (!["copy-removed", "redis-unavailable", "copy-drained"].includes(fault))
-  throw new Error("FAILURE_SCENARIO must be copy-removed, redis-unavailable or copy-drained");
+  throw new Error(
+    "FAILURE_SCENARIO must be copy-removed, redis-unavailable or copy-drained"
+  );
 const vus = Number(__ENV.VUS || 10);
 if (!Number.isInteger(vus) || vus < 1 || vus > 100)
   throw new Error("VUS must be an integer between 1 and 100");
@@ -36,22 +38,41 @@ for (const phase of ["baseline", "fault", "recovery"]) {
 export const options = {
   maxRedirects: 0,
   scenarios: {
-    failure: { executor: "constant-vus", vus, duration: "150s", gracefulStop: "10s" },
+    failure: {
+      executor: "constant-vus",
+      vus,
+      duration: "150s",
+      gracefulStop: "10s",
+    },
   },
   thresholds,
 };
 
 export default function runFailure() {
   const phase = phaseAt(execution.instance.currentTestRunDuration / 1000);
-  for (const path of ["/api/health", "/api/proxy-ready", "/api/ready", "/api/schedule"]) {
-    const expected = fault === "redis-unavailable" && phase === "fault" && path === "/api/ready" ? 503 : 200;
+  for (const path of [
+    "/api/health",
+    "/api/proxy-ready",
+    "/api/ready",
+    "/api/schedule",
+  ]) {
+    const expected =
+      fault === "redis-unavailable" &&
+      phase === "fault" &&
+      path === "/api/ready"
+        ? 503
+        : 200;
     const tags = { phase, fault, name: path };
     const response = http.get(`${base}${path}`, {
       timeout: "5s",
       tags,
       responseCallback: http.expectedStatuses(expected),
     });
-    check(response, { "expected status": (res) => res.status === expected }, tags);
+    check(
+      response,
+      { "expected status": (res) => res.status === expected },
+      tags
+    );
   }
   sleep(1);
 }
