@@ -1,9 +1,22 @@
 import jwt from "jsonwebtoken";
 
-// Uses local development secrets from .env / .env.example
-const secret =
-  process.env.AUTH_SECRET ||
-  "local-auth-secret-for-fallstack-development-32chars";
+// Mints admin, employee and student session cookies. Local development only:
+// refuse to run against production settings, and never fall back to a
+// built-in secret, so a shell that has a real AUTH_SECRET exported cannot
+// print valid tokens by accident.
+try {
+  process.loadEnvFile(".env");
+} catch {
+  // No .env file: rely on the exported environment.
+}
+const configuredSecret = process.env.AUTH_SECRET;
+if (process.env.NODE_ENV === "production" || !configuredSecret) {
+  console.error(
+    "Refusing to run: set AUTH_SECRET (see .env.example) and do not use NODE_ENV=production."
+  );
+  process.exit(1);
+}
+const secret: string = configuredSecret;
 const cookieName = "@Fallstack26:auth";
 
 function createSessionToken(identity: {
