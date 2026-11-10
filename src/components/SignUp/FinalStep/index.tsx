@@ -24,6 +24,10 @@ import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import {
+  isValidLinkedinUrl,
+  LINKEDIN_FORMAT_ERROR,
+} from "@/schemas/linkedinSchema";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -81,6 +85,11 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
     try {
       if (!privacyRef.current?.checked) {
         return setError("Tens de aceitar a política de privacidade.");
+      }
+
+      const linkedin = data.linkedin?.trim();
+      if (linkedin && !isValidLinkedinUrl(linkedin)) {
+        return setError(LINKEDIN_FORMAT_ERROR);
       }
 
       setLoading(true);

@@ -82,6 +82,15 @@ test("rejects signup without any name instead of deriving one from the email", a
   expect(createStudentProfile).not.toHaveBeenCalled();
 });
 
+test("rejects a LinkedIn URL the profile editor would not accept", async () => {
+  const response = await post({
+    ...fields,
+    linkedin: "https://linkedin.com/in/user",
+  });
+  expect(response.status).toBe(400);
+  expect(createStudentProfile).not.toHaveBeenCalled();
+});
+
 test("an existing student cannot create another profile", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     ...session,

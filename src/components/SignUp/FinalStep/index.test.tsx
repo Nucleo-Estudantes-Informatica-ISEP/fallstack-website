@@ -58,12 +58,12 @@ const data: StudentSignUpData = {
   linkedin: null,
 };
 
-const renderFinalStep = () =>
+const renderFinalStep = (overrides: Partial<typeof data> = {}) =>
   render(
     <FinalStep
       currentStep={4}
       setCurrentStep={vi.fn()}
-      data={data}
+      data={{ ...data, ...overrides }}
       setData={vi.fn()}
     />
   );
@@ -87,6 +87,19 @@ test("creates the profile for a student session with no profile yet", async () =
   await waitFor(() => expect(createStudentProfileMock).toHaveBeenCalled());
 
   expect(pushMock).toHaveBeenCalledWith("/");
+});
+
+test("does not submit a LinkedIn URL the profile editor would reject", async () => {
+  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
+
+  renderFinalStep({ linkedin: "https://linkedin.com/in/user" });
+  acceptPrivacyAndSubmit();
+
+  expect(
+    await screen.findByText("O teu Linkedin não segue o formato correto!")
+  ).toBeInTheDocument();
+  expect(getSessionMock).not.toHaveBeenCalled();
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
 
 test("redirects home when the profile already exists", async () => {

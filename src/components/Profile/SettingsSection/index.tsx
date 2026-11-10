@@ -20,6 +20,10 @@ import UserImage from "@/components/Profile/UserImage";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import {
+  isValidLinkedinUrl,
+  LINKEDIN_FORMAT_ERROR,
+} from "@/schemas/linkedinSchema";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface SettingsSectionProps {
@@ -75,11 +79,9 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
     // check if linkedin follows the format https://www.linkedin.com/in/example/
     if (
       linkedinRef.current?.value &&
-      !linkedinRef.current?.value?.match(
-        /^(https:\/\/www\.linkedin\.com\/in\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
-      )
+      !isValidLinkedinUrl(linkedinRef.current.value)
     ) {
-      toast.error("O teu Linkedin não segue o formato correto!");
+      toast.error(LINKEDIN_FORMAT_ERROR);
       return;
     }
 

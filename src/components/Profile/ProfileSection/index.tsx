@@ -15,6 +15,10 @@ import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { uploadCv } from "@/client/api/upload";
+import {
+  isValidLinkedinUrl,
+  LINKEDIN_FORMAT_ERROR,
+} from "@/schemas/linkedinSchema";
 
 interface ProfileSectionProps {
   student: StudentDto;
@@ -61,11 +65,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     // Validação LinkedIn
     if (
       linkedinRef.current?.value &&
-      !linkedinRef.current?.value?.match(
-        /^(https:\/\/www\.linkedin\.com\/in\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
-      )
+      !isValidLinkedinUrl(linkedinRef.current.value)
     ) {
-      toast.error("O teu Linkedin não segue o formato correto!");
+      toast.error(LINKEDIN_FORMAT_ERROR);
       return;
     }
 
