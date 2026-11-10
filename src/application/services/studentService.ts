@@ -56,7 +56,7 @@ import {
   publicAvatarUrl,
 } from "./objectStorageService";
 
-type NewStudent = z.infer<typeof postStudentSchema>;
+type NewStudent = z.infer<typeof postStudentSchema> & { name: string };
 type StudentPatch = z.infer<typeof patchStudentSchema>;
 
 export async function createStudentProfile(userId: string, body: NewStudent) {
@@ -81,6 +81,7 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
         code,
         name: body.name,
         bio: body.bio,
+        linkedin: body.linkedin,
         year: parseStudentYear(body.year),
       },
       tx

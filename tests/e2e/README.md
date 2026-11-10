@@ -336,3 +336,8 @@ preview-scan scenario, see [shared limiter validation](../../docs/rate-limiter-l
 The route check mocks limiter decisions; distributed checks run production limiter
 code in two independent HTTP processes against disposable Redis. Neither replaces
 SAD's authenticated per-copy Coolify rollout evidence.
+
+For the authenticated signup fields smoke test, set `E2E_SIGNUP_STORAGE_STATE`
+to a Playwright storage state for a synthetic AuthNEI student who has no
+Fallstack profile yet. The test visits all four steps and checks validation
+without creating a profile.

@@ -10,14 +10,24 @@ export const POST = defineHandler({
   schema: postStudentSchema,
   authorize: (session) => session.role === "STUDENT",
   handler: async ({ session, body }) => {
-    if (session!.student)
+    const studentSession = session!;
+    if (studentSession.student)
       return NextResponse.json(
         { error: "Já tens um perfil criado." },
         { status: 403 }
       );
 
+    const name = (
+      studentSession.authName ||
+      body.name ||
+      studentSession.email.split("@")[0] ||
+      "Estudante"
+    ).slice(0, 100);
+
     return NextResponse.json(
-      toStudentSummaryDto(await createStudentProfile(session!.id, body)),
+      toStudentSummaryDto(
+        await createStudentProfile(studentSession.id, { ...body, name })
+      ),
       { status: 201 }
     );
   },

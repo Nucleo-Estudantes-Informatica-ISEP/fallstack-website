@@ -1,8 +1,12 @@
 import { z } from "zod";
 
 export const postStudentSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().trim().min(1).max(100).optional(),
   bio: z.string().max(1000).optional(),
+  linkedin: z
+    .url({ protocol: /^https?$/ })
+    .max(2048)
+    .optional(),
   year: z.enum([
     "1º Ano Licenciatura",
     "2º Ano Licenciatura",

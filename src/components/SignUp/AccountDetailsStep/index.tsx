@@ -11,21 +11,13 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import AuthNeiButton from "@/components/AuthNeiButton";
 
 interface AccountDetailsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
-  // True when this step is being rendered after returning from a successful
-  // AuthNEI sign-in — Supabase already has an authenticated identity for
-  // this student at this point, only the year is missing.
-  authNeiMode?: boolean;
-  institutionalEmail?: string;
-  // Stashes any wizard data collected so far before redirecting to AuthNEI,
-  // since the OAuth flow is a full page navigation that clears React state.
-  onAuthNeiRedirect?: () => void;
+  institutionalEmail: string;
 }
 
 const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
@@ -33,9 +25,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   setCurrentStep,
   data,
   setData,
-  authNeiMode = false,
   institutionalEmail,
-  onAuthNeiRedirect,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const yearRef = useRef<HTMLSelectElement>(null);
@@ -56,27 +46,6 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     { value: "2º Ano Mestrado", label: "2º Ano - Mestrado" },
   ];
 
-  // Account creation happens exclusively through AuthNEI (centralizes
-  // student identity across NEI platforms on Supabase Auth, with Zitadel as
-  // the OAuth provider) — there's no manual email/password fallback, so
-  // there's nothing else to collect on this step until that redirect
-  // completes and authNeiMode flips true.
-  if (!authNeiMode) {
-    return (
-      <div className="flex w-full flex-col">
-        <h1 className="signup-heading">Criar uma conta</h1>
-        <p className="mb-6 text-sm leading-relaxed text-gray-300">
-          A criação de conta é feita exclusivamente através do AuthNEI, a forma
-          centralizada de te ligares às plataformas do NEI.
-        </p>
-        <AuthNeiButton
-          next="/signup?authnei=1"
-          beforeRedirect={onAuthNeiRedirect}
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="flex w-full flex-col">
       <h1 className="signup-heading">Criar uma conta</h1>
@@ -94,16 +63,14 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           onChange={() => setError(null)}
           options={yearOptions}
         />
-        {institutionalEmail && (
-          <Input
-            id="signup-institutional-email"
-            name="institutional-email"
-            label="Email institucional"
-            value={institutionalEmail}
-            readOnly
-            hint="Confirmado pelo AuthNEI."
-          />
-        )}
+        <Input
+          id="signup-institutional-email"
+          name="institutional-email"
+          label="Email institucional"
+          value={institutionalEmail}
+          readOnly
+          hint="Confirmado pelo AuthNEI."
+        />
       </div>
 
       {error && (

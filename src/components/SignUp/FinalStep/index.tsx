@@ -42,7 +42,6 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const [error, setError] = useState<string | null>(null);
 
   const router = useRouter();
-  const linkedinRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -63,25 +62,18 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   };
 
   const handleAvatarUpload = async () => {
-    setLoading(true);
-
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) {
-        setLoading(false);
-        return null;
-      }
+      if (!image) return null;
 
       const uploaded = await uploadAvatar(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        setLoading(false);
         return null;
       }
       avatarUrl = uploaded.url;
     }
-    setLoading(false);
     return avatarUrl;
   };
 
@@ -93,11 +85,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       setLoading(true);
 
-      // The account and session are established earlier in the wizard via
-      // AuthNEI (account creation happens exclusively through it - see
-      // AccountDetailsStep) - if there's no session by this point, it
-      // expired or was never established, so restart instead of hitting an
-      // Unauthorized failure on profile creation below.
+      // Check the session before uploading files because it may have expired
+      // while the student was filling out the profile.
       const existingSession = await getSession();
 
       if (!existingSession) {
@@ -114,11 +103,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return;
       }
 
-      // A session belonging to a different account type (e.g. an
-      // employee/admin browsing this public page) - not a resumable
-      // partial student signup. StudentSignUp's mount-time guard should
-      // already have redirected this case away; this is a defense-in-depth
-      // check for anyone who reaches this point regardless.
+      // The active account may have changed in another tab.
       if (existingSession.role !== "STUDENT") {
         toast.error("Já tens sessão iniciada como outro tipo de conta.");
         return setLoading(false);
@@ -136,14 +121,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         }
       }
 
-      // Add LinkedIn if provided
-      const linkedin = linkedinRef.current?.value || null;
-
       const profile = await createStudentProfile({
         ...data,
         avatarUrl,
         cvId,
-        linkedin,
       });
 
       if (profile instanceof Error) {
@@ -221,8 +202,13 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             />
           }
           center
-          inputRef={linkedinRef}
-          defaultValue={data.linkedin ? data.linkedin : undefined}
+          value={data.linkedin ?? ""}
+          onChange={(event) =>
+            setData((previous) => ({
+              ...previous,
+              linkedin: event.target.value,
+            }))
+          }
         />
       </div>
 
