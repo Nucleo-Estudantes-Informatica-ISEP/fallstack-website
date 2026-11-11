@@ -90,3 +90,34 @@ test("rejects an unknown Wallet code without saving it as a JWT", async () => {
   expect(postMock).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument();
 });
+
+test("converts a six-character Wallet student code before saving the scanned profile", async () => {
+  scan.value = "ab12cd";
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+  await waitFor(() => {
+    expect(getTokenMock).toHaveBeenCalledWith("AB12CD");
+    expect(postMock).toHaveBeenCalledWith("/saved", {
+      token: "signed-preview-token",
+    });
+  });
+});
+
+test("accepts a six-character code through manual entry", async () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.change(screen.getByPlaceholderText("código"), {
+    target: { value: "AB12CD" },
+  });
+
+  fireEvent.click(screen.getByRole("button", { name: "Validar" }));
+
+  await waitFor(() => {
+    expect(getTokenMock).toHaveBeenCalledWith("AB12CD");
+    expect(postMock).toHaveBeenCalledWith("/saved", {
+      token: "signed-preview-token",
+    });
+  });
+});

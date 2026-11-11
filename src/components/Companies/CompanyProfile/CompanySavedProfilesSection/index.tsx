@@ -102,7 +102,7 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
-      const code = inputRef.current?.value;
+      const code = normalizeStudentCode(inputRef.current.value);
       const token = await getStudentPreviewToken(code);
 
       if (!token) {
@@ -212,7 +212,6 @@ const CompanySavedProfilesSection = ({
             }}
             ref={inputRef}
             onKeyUp={handleKeyUp}
-            maxLength={4}
             disabled={isSubmittingManualEntry}
           />
           <button
