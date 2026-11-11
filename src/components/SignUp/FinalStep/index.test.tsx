@@ -55,6 +55,7 @@ const data: StudentSignUpData = {
   cv: null,
   avatar: null,
   year: "3",
+  course: "Engenharia Informática",
   linkedin: null,
 };
 
@@ -73,7 +74,8 @@ beforeEach(() => {
 });
 
 const acceptPrivacyAndSubmit = () => {
-  fireEvent.click(screen.getByRole("checkbox"));
+  for (const checkbox of screen.getAllByRole("checkbox"))
+    fireEvent.click(checkbox);
   fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
 };
 
@@ -92,7 +94,7 @@ test("creates the profile for a student session with no profile yet", async () =
 test("does not submit a LinkedIn URL the profile editor would reject", async () => {
   getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
 
-  renderFinalStep({ linkedin: "https://linkedin.com/in/user" });
+  renderFinalStep({ linkedin: "https://evil.example/in/user" });
   acceptPrivacyAndSubmit();
 
   expect(
@@ -103,8 +105,10 @@ test("does not submit a LinkedIn URL the profile editor would reject", async () 
     "aria-describedby",
     "signup-linkedin-error"
   );
-  expect(screen.getByRole("checkbox")).not.toHaveAttribute("aria-invalid");
-  expect(screen.getByRole("checkbox")).not.toHaveAttribute("aria-describedby");
+  for (const checkbox of screen.getAllByRole("checkbox")) {
+    expect(checkbox).not.toHaveAttribute("aria-invalid");
+    expect(checkbox).not.toHaveAttribute("aria-describedby");
+  }
   expect(getSessionMock).not.toHaveBeenCalled();
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
@@ -152,5 +156,40 @@ test("sends back to signup when there's no session (AuthNEI never established on
   );
 
   expect(pushMock).toHaveBeenCalledWith("/signup");
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
+});
+
+test.each([
+  "https://www.linkedin.com/in/example",
+  "https://linkedin.com/in/example",
+  "https://pt.linkedin.com/in/example",
+])("sends valid LinkedIn address %s with the profile", async (linkedin) => {
+  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
+  createStudentProfileMock.mockResolvedValue(true);
+
+  renderFinalStep({ linkedin });
+  acceptPrivacyAndSubmit();
+
+  await waitFor(() =>
+    expect(createStudentProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedin,
+        privacyPolicyAccepted: true,
+        termsAccepted: true,
+      })
+    )
+  );
+});
+
+test("requires terms independently of privacy before any upload or request", async () => {
+  renderFinalStep();
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: /política de privacidade/ })
+  );
+  fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
+  expect(
+    await screen.findByText("Tens de aceitar os termos de utilização.")
+  ).toBeInTheDocument();
+  expect(getSessionMock).not.toHaveBeenCalled();
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });

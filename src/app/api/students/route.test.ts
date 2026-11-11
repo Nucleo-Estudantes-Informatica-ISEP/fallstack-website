@@ -3,6 +3,10 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 import getServerSession from "@/application/services/sessionService";
 import { createStudentProfile } from "@/application/services/studentService";
+import {
+  PRIVACY_POLICY_VERSION,
+  TERMS_VERSION,
+} from "@/domain/student/signupPolicy";
 
 import { POST } from "./route";
 
@@ -26,8 +30,13 @@ const session = {
 
 const fields = {
   year: "1º Ano Licenciatura",
+  course: "Engenharia Informática",
   interests: [],
   linkedin: "https://www.linkedin.com/in/student",
+  privacyPolicyAccepted: true,
+  termsAccepted: true,
+  privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+  termsVersion: TERMS_VERSION,
 };
 
 function post(body: unknown) {
@@ -85,7 +94,7 @@ test("rejects signup without any name instead of deriving one from the email", a
 test("rejects a LinkedIn URL the profile editor would not accept", async () => {
   const response = await post({
     ...fields,
-    linkedin: "https://linkedin.com/in/user",
+    linkedin: "https://evil.example/in/user",
   });
   expect(response.status).toBe(400);
   expect(createStudentProfile).not.toHaveBeenCalled();
@@ -99,4 +108,41 @@ test("an existing student cannot create another profile", async () => {
 
   expect((await post(fields)).status).toBe(403);
   expect(createStudentProfile).not.toHaveBeenCalled();
+});
+
+test.each([
+  "course",
+  "privacyPolicyAccepted",
+  "termsAccepted",
+  "privacyPolicyVersion",
+  "termsVersion",
+])("direct signup rejects missing %s before writes", async (field) => {
+  const body = { ...fields } as Record<string, unknown>;
+  delete body[field];
+  expect((await post(body)).status).toBe(400);
+  expect(createStudentProfile).not.toHaveBeenCalled();
+});
+
+test.each([
+  { privacyPolicyAccepted: false },
+  { termsAccepted: false },
+  { privacyPolicyVersion: "old" },
+  { termsVersion: "old" },
+  { course: "  " },
+])("direct signup rejects invalid consent or course: %j", async (override) => {
+  expect((await post({ ...fields, ...override })).status).toBe(400);
+  expect(createStudentProfile).not.toHaveBeenCalled();
+});
+
+test("valid signup trims the course and ignores a forged consent timestamp", async () => {
+  const response = await post({
+    ...fields,
+    course: ` ${fields.course} `,
+    consentAcceptedAt: "2000-01-01",
+  });
+  expect(response.status).toBe(201);
+  expect(createStudentProfile).toHaveBeenCalledWith(session.id, {
+    ...fields,
+    name: session.authName,
+  });
 });

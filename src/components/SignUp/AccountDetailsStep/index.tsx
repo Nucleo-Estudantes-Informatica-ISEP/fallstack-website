@@ -43,9 +43,11 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
     }
+    if (!data.course?.trim()) return setError("Por favor, indica o teu curso.");
     setData({
       ...data,
       name: needsName ? name : data.name,
+      course: data.course.trim(),
       year: yearRef.current.value,
     });
     setCurrentStep(currentStep + 1);
@@ -76,6 +78,21 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
             onChange={() => setError(null)}
           />
         )}
+        <Input
+          id="signup-course"
+          name="course"
+          label="Curso"
+          placeholder="Ex.: Engenharia Informática"
+          value={data.course ?? ""}
+          maxLength={100}
+          required
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-year-error" : undefined}
+          onChange={(event) => {
+            setError(null);
+            setData({ ...data, course: event.target.value });
+          }}
+        />
         <InputSelect
           center
           name="Seleciona o teu ano"

@@ -172,6 +172,11 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
           {student ? (
             <>
               <Input name="Nome" defaultValue={student.name} disabled={true} />
+              <Input
+                name="Curso"
+                defaultValue={student.course ?? "Não indicado"}
+                disabled
+              />
               <Input name="Ano" defaultValue={student.year} disabled={true} />
               <Input
                 name="Email"

@@ -11,6 +11,8 @@ import AdminForm, {
 import type { AdminStudentDto } from "@/application/dto/studentDto";
 import { STUDENT_YEAR } from "@/domain/student/year";
 
+import { linkedinPatch } from "./linkedinPatch";
+
 interface StudentFormProps {
   student?: AdminStudentDto;
 }
@@ -30,8 +32,8 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
           name: values.name,
           bio: values.bio || null,
           year: values.year,
-          linkedin: values.linkedin || null,
           github: values.github || null,
+          ...linkedinPatch(values.linkedin, student.linkedin),
         };
         if (values.avatar) payload.avatar = values.avatar;
         if (values.password) payload.password = values.password;

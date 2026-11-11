@@ -1,5 +1,10 @@
 import { expect, test } from "vitest";
 
+import {
+  PRIVACY_POLICY_VERSION,
+  TERMS_VERSION,
+} from "@/domain/student/signupPolicy";
+
 import { isValidLinkedinUrl } from "./linkedinSchema";
 import { patchStudentSchema } from "./patchStudentSchema";
 import { postStudentSchema } from "./postStudentSchema";
@@ -8,9 +13,10 @@ const valid = [
   "https://www.linkedin.com/in/maria-silva",
   "https://www.linkedin.com/in/maria-silva/",
   "https://www.linkedin.com/in/joão_pereira2",
+  "https://linkedin.com/in/maria",
+  "https://pt.linkedin.com/in/maria-silva/",
 ];
 const invalid = [
-  "https://linkedin.com/in/maria",
   "http://www.linkedin.com/in/maria",
   "https://www.linkedin.com/company/acme",
   "https://www.linkedin.com/in/",
@@ -37,6 +43,12 @@ test("long non-matching input is rejected quickly (no catastrophic backtracking)
 test("signup and profile update schemas apply the same rule", () => {
   const signup = (linkedin: string) =>
     postStudentSchema.safeParse({
+      name: "Student",
+      course: "Engenharia Informática",
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
+      privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      termsVersion: TERMS_VERSION,
       year: "1º Ano Licenciatura",
       interests: [],
       linkedin,

@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
@@ -47,6 +48,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const [linkedinError, setLinkedinError] = useState<string | null>(null);
 
   const router = useRouter();
+  const termsRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,6 +91,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
     try {
       if (!privacyRef.current?.checked) {
         return setError("Tens de aceitar a política de privacidade.");
+      }
+      if (!termsRef.current?.checked) {
+        return setError("Tens de aceitar os termos de utilização.");
       }
 
       const linkedin = data.linkedin?.trim();
@@ -138,6 +143,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         ...data,
         avatarUrl,
         cvId,
+        privacyPolicyAccepted: true,
+        termsAccepted: true,
       });
 
       if (profile instanceof Error) {
@@ -257,6 +264,31 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           >
             política de privacidade
           </button>
+          .
+        </span>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2.5 field-text text-white">
+        <input
+          type="checkbox"
+          id="terms"
+          aria-label="Aceito os termos de utilização"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "signup-privacy-error" : undefined}
+          className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
+          ref={termsRef}
+          onChange={() => setError(null)}
+        />
+        <span>
+          <label htmlFor="terms">Aceito os</label>{" "}
+          <Link
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-sm text-orange-400 underline hover:text-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            termos de utilização
+          </Link>
           .
         </span>
       </div>

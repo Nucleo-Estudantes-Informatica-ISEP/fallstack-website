@@ -14,6 +14,7 @@ const student: StudentDto = {
   code: "123",
   name: "Student Example",
   year: "3º Ano Licenciatura",
+  course: null,
   user: { email: "student@example.test" },
   bio: "Hello",
   cv: null,
