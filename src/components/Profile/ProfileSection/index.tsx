@@ -201,6 +201,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
               </div>
             </div>
 
+            <Input
+              name="Curso"
+              defaultValue={student.course ?? "Não indicado"}
+              disabled
+            />
             {/* ANO */}
             <div className="flex flex-col gap-1">
               <label

@@ -74,6 +74,11 @@ beforeEach(() => {
 test("completes the LinkedIn action during signup when a LinkedIn URL is provided", async () => {
   await createStudentProfile("u1", {
     name: "Student",
+    course: "Engenharia Informática",
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
     year: "3º Ano Licenciatura",
     interests: [],
     linkedin: "https://www.linkedin.com/in/example",
@@ -89,6 +94,11 @@ test("completes the LinkedIn action during signup when a LinkedIn URL is provide
 test("does not complete the LinkedIn action during signup without a LinkedIn URL", async () => {
   await createStudentProfile("u1", {
     name: "Student",
+    course: "Engenharia Informática",
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
     year: "3º Ano Licenciatura",
     interests: [],
   });
@@ -173,4 +183,29 @@ test("deletes the student account through the shared auth-aware service", async 
   await deleteStudentForAdmin("s1");
 
   expect(deleteUserAccount).toHaveBeenCalledWith("s1");
+});
+
+test("signup persists consent versions and a server-generated acceptance time", async () => {
+  const before = Date.now();
+  await createStudentProfile("u1", {
+    name: "Student",
+    year: "3º Ano Licenciatura",
+    course: "Engenharia Informática",
+    interests: [],
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
+  });
+  const input = vi.mocked(createStudent).mock.calls[0][0];
+  expect(input).toMatchObject({
+    course: "Engenharia Informática",
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
+    consentAcceptedAt: expect.any(Date),
+  });
+  expect(input.consentAcceptedAt!.getTime()).toBeGreaterThanOrEqual(before);
+  expect(input.consentAcceptedAt!.getTime()).toBeLessThanOrEqual(Date.now());
 });

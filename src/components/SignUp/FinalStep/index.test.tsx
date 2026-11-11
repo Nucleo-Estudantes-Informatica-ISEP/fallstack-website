@@ -73,7 +73,8 @@ beforeEach(() => {
 });
 
 const acceptPrivacyAndSubmit = () => {
-  fireEvent.click(screen.getByRole("checkbox"));
+  for (const checkbox of screen.getAllByRole("checkbox"))
+    fireEvent.click(checkbox);
   fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
 };
 
@@ -172,4 +173,14 @@ test.each([
       })
     )
   );
+});
+
+test("requires terms independently of privacy before any upload or request", async () => {
+  renderFinalStep();
+  fireEvent.click(screen.getByRole("checkbox", { name: /Aceito a/ }));
+  fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
+  expect(
+    await screen.findByText("Tens de aceitar os termos de utilização.")
+  ).toBeInTheDocument();
+  expect(getSessionMock).not.toHaveBeenCalled();
 });

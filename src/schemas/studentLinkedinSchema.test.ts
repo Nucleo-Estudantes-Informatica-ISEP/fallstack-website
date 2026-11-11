@@ -7,6 +7,11 @@ import { postStudentSchema } from "./postStudentSchema";
 test("student creation accepts an absolute LinkedIn URL and rejects relative URLs", () => {
   const validProfile = {
     name: "Student",
+    course: "Engenharia Informática",
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
     year: "3º Ano Licenciatura",
     interests: [],
     linkedin: "https://www.linkedin.com/in/example",
@@ -49,6 +54,11 @@ test.each([
   expect(
     postStudentSchema.safeParse({
       name: "Student",
+      course: "Engenharia Informática",
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
+      privacyPolicyVersion: "2026-10-31",
+      termsVersion: "2026-11-11",
       year: "3º Ano Licenciatura",
       interests: [],
       linkedin,
@@ -69,6 +79,11 @@ test.each([
   expect(
     postStudentSchema.safeParse({
       name: "Student",
+      course: "Engenharia Informática",
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
+      privacyPolicyVersion: "2026-10-31",
+      termsVersion: "2026-11-11",
       year: "3º Ano Licenciatura",
       interests: [],
       linkedin,

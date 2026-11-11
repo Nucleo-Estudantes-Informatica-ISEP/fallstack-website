@@ -58,6 +58,9 @@ model Student {
   linkedin              String?
   privacyPolicyAccepted Boolean   @default(false)
   termsAccepted         Boolean   @default(false)
+  privacyPolicyVersion  String?
+  termsVersion          String?
+  consentAcceptedAt     DateTime? @db.Timestamptz(6)
   github                String?
   avatar                String?
   createdAt             DateTime  @default(now())

@@ -1,9 +1,19 @@
 import { z } from "zod";
 
+import {
+  PRIVACY_POLICY_VERSION,
+  TERMS_VERSION,
+} from "@/domain/student/signupPolicy";
+
 import { linkedinUrlSchema } from "./studentLinkedinSchema";
 
 export const postStudentSchema = z.object({
   name: z.string().min(1).max(100),
+  course: z.string().trim().min(1).max(100),
+  privacyPolicyAccepted: z.literal(true),
+  termsAccepted: z.literal(true),
+  privacyPolicyVersion: z.literal(PRIVACY_POLICY_VERSION),
+  termsVersion: z.literal(TERMS_VERSION),
   bio: z.string().max(1000).optional(),
   linkedin: linkedinUrlSchema.nullable().optional(),
   year: z.enum([

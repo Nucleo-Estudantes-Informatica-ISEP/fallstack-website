@@ -8,6 +8,7 @@ import {
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import AuthNeiButton from "@/components/AuthNeiButton";
@@ -41,7 +42,12 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
     }
-    setData({ ...data, year: yearRef.current.value });
+    if (!data.course?.trim()) return setError("Por favor, indica o teu curso.");
+    setData({
+      ...data,
+      course: data.course.trim(),
+      year: yearRef.current.value,
+    });
     setCurrentStep(currentStep + 1);
   };
 
@@ -86,6 +92,16 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
         </p>
 
         <div className="flex flex-col gap-y-4 text-left">
+          <Input
+            name="Curso"
+            placeholder="Ex.: Engenharia Informática"
+            value={data.course ?? ""}
+            maxLength={100}
+            required
+            onChange={(event) =>
+              setData({ ...data, course: event.target.value })
+            }
+          />
           <InputSelect
             center
             name="Seleciona o teu ano"

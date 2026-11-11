@@ -1,6 +1,6 @@
 # 0030: Store signup consent as booleans for now
 
-Status: Accepted
+Status: Superseded by [ADR 0031](0031-record-versioned-signup-consent.md)
 
 Date: 2026-11-11
 

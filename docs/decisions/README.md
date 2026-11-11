@@ -56,4 +56,5 @@ implementation PR needs an ADR.
 | [0027](0027-readiness-checks-and-graceful-shutdown.md)           | Readiness checks and graceful shutdown           | Accepted   |
 | [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Accepted   |
 | [0029](0029-rehearse-restores-away-from-production.md)           | Rehearse restores away from production           | Accepted   |
-| [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now         | Accepted   |
+| [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now         | Superseded |
+| [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                  | Accepted   |

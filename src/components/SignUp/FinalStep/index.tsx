@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
@@ -43,6 +44,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
   const router = useRouter();
   const linkedinRef = useRef<HTMLInputElement>(null);
+  const [linkedinError, setLinkedinError] = useState<string | null>(null);
+  const termsRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -91,11 +94,17 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return setError("Tens de aceitar a política de privacidade.");
       }
 
+      if (!termsRef.current?.checked)
+        return setError("Tens de aceitar os termos de utilização.");
+      setError(null);
+      setLinkedinError(null);
+
       // Validate before uploading files so a bad link does not cost a round trip.
       const linkedinValue = linkedinRef.current?.value.trim() || null;
       if (linkedinValue) {
         const parsed = linkedinUrlSchema.safeParse(linkedinValue);
-        if (!parsed.success) return setError(parsed.error.issues[0]!.message);
+        if (!parsed.success)
+          return setLinkedinError(parsed.error.issues[0]!.message);
       }
 
       setLoading(true);
@@ -148,6 +157,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         avatarUrl,
         cvId,
         linkedin: linkedinValue,
+        privacyPolicyAccepted: true,
+        termsAccepted: true,
       });
 
       if (profile instanceof Error) {
@@ -206,9 +217,19 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             placeholder="https://www.linkedin.com/in/o-teu-perfil"
             center
             inputRef={linkedinRef}
+            aria-invalid={linkedinError ? true : undefined}
+            aria-describedby={
+              linkedinError ? "signup-linkedin-error" : undefined
+            }
+            onChange={() => setLinkedinError(null)}
             defaultValue={data.linkedin ? data.linkedin : undefined}
             className="z-10"
           />
+          {linkedinError && (
+            <p id="signup-linkedin-error" role="alert" className="text-red-400">
+              {linkedinError}
+            </p>
+          )}
         </div>
 
         <label
@@ -240,6 +261,31 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             >
               política de privacidade
             </button>
+            .
+          </span>
+        </label>
+
+        <label
+          htmlFor="terms"
+          className="z-10 mt-4 flex items-start gap-3 text-white"
+        >
+          <input
+            type="checkbox"
+            id="terms"
+            ref={termsRef}
+            className="mt-1 size-4 accent-primary"
+            onChange={() => setError(null)}
+          />
+          <span>
+            Aceito os{" "}
+            <Link
+              href="/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-500 underline"
+            >
+              termos de utilização
+            </Link>
             .
           </span>
         </label>
