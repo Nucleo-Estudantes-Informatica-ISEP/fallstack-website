@@ -18,25 +18,45 @@ export function copyOf(response: HeaderSource): string {
   return id;
 }
 
+/** Probe budget: round-robin reaches another copy within one pass. */
+export const probeAttempts = (copies: number) => copies * 4;
+
 /**
- * Sends cheap requests until a different copy answers than `current`.
- * Used to force the next step of a flow onto another copy without sticky
- * routing. Fails when the proxy never leaves `current`.
+ * Repeats a safe, repeatable operation until a copy other than `current`
+ * answers it, and returns that response. A probe on another route cannot do
+ * this: it consumes the proxy's turn, so the real operation may land on the
+ * same copy again. Use only for operations that are safe to repeat.
  */
-export async function untilOtherCopy(
-  context: APIRequestContext,
+export async function repeatOnOtherCopy<T extends HeaderSource>(
+  operation: () => Promise<T>,
   current: string,
   attempts: number
-): Promise<string> {
+): Promise<T> {
   for (let i = 0; i < attempts; i += 1) {
-    const probe = await context.get("/api/health");
-    const id = copyOf(probe);
-    if (id !== current) return id;
+    const response = await operation();
+    if (copyOf(response) !== current) return response;
   }
   throw new Error(
-    `Copy ${current} answered ${attempts} probes in a row; the proxy looks sticky or has one healthy copy.`
+    `Copy ${current} answered ${attempts} attempts in a row; the proxy looks sticky or has one healthy copy.`
   );
 }
 
-/** Probe budget: round-robin reaches another copy within one pass. */
-export const probeAttempts = (copies: number) => copies * 4;
+/**
+ * Repeats a safe operation until every expected copy has answered it, running
+ * `check` on each response. Returns the copies seen, so each scenario is
+ * tracked on its own.
+ */
+export async function collectCopies<T extends HeaderSource>(
+  operation: () => Promise<T>,
+  copies: number,
+  attempts: number,
+  check: (response: T) => void | Promise<void>
+): Promise<Set<string>> {
+  const seen = new Set<string>();
+  for (let i = 0; i < attempts && seen.size < copies; i += 1) {
+    const response = await operation();
+    await check(response);
+    seen.add(copyOf(response));
+  }
+  return seen;
+}

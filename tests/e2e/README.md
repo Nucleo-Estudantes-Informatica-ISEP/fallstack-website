@@ -251,12 +251,17 @@ pnpm test:e2e --project=chromium tests/e2e/playwright/multi-copy.spec.ts
 ```
 
 It checks that the proxy reaches every copy, that a Student session works on
-each copy, that a QR token issued on one copy scans once on another and a retry
-on a third returns `409`, and that a CV uploaded on one copy downloads from
-another while anonymous and foreign-code requests stay denied on every copy.
-Each cross-copy step first probes `/api/health` until a different copy answers,
-so a sticky proxy fails the run instead of passing by accident. The upload test
-replaces the synthetic Student's CV and leaves one unlinked object; use staging
+each copy, that a QR token scans once and every copy then refuses a retry with
+`409`, and that a CV uploaded on one copy attaches and downloads through other
+copies while anonymous and foreign-code requests are each denied on every copy.
+Safe operations (the retry, CV attach and download) repeat until a different
+copy answers, and each response's `x-instance-id` is checked, so a sticky proxy
+fails the run instead of passing by accident. The first QR scan changes state
+and cannot be repeated, so it runs once on whichever copy answers. It needs a
+Student that the Employee's company has not saved; the test fails with a
+message when the save already exists, and the API cannot remove it, so remove
+the row or use another Student before each run. The upload test replaces the
+synthetic Student's CV and leaves one unlinked object; use staging
 only. It does not compare secrets: set `JWT_SECRET`, `AUTH_SECRET` and the
 public URLs identically on every copy.
 

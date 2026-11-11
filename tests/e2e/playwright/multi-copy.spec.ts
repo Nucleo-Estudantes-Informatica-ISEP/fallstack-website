@@ -1,7 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 
-import { copyOf, probeAttempts, untilOtherCopy } from "../copyUtils";
+import {
+  collectCopies,
+  copyOf,
+  probeAttempts,
+  repeatOnOtherCopy,
+} from "../copyUtils";
 import { e2eEnv } from "../env";
 import { createRoleContext, hasRoleStates } from "../roleTestUtils";
 import { expect, test } from "./fixtures";
@@ -72,7 +77,7 @@ test.describe("requests behave the same on every web copy", () => {
     }
   });
 
-  test("a QR token issued on one copy scans once on another", async () => {
+  test("a QR token issued on one copy scans once and is refused on every copy", async () => {
     test.skip(
       !hasRoleStates("student", "employee"),
       "Set Student and Employee storage-state files."
@@ -80,47 +85,63 @@ test.describe("requests behave the same on every web copy", () => {
     const student = await createRoleContext("student");
     const employee = await createRoleContext("employee");
     const marker = `e2e-${randomUUID()}`;
-    const attempts = probeAttempts(copies);
+    const attempts = probeAttempts(copies) * 2;
 
     try {
       const { body } = await sessionOn(student, "STUDENT");
       const code = body.student!.code;
       await sessionOn(employee, "EMPLOYEE");
 
-      const savedBefore = async () => {
+      const savedCount = async () => {
         const response = await employee.get("/api/companies/history");
         expect(response.status()).toBe(200);
         return ((await response.json()) as SavedStudentBody[]).filter(
           (item) => item.student.code === code
         ).length;
       };
-      const initial = await savedBefore();
-      expect(initial).toBeLessThanOrEqual(1);
+      // The first scan must create the save, so the pair must start unsaved.
+      // A save cannot be undone through the API: use a Student that the
+      // Employee's company has not saved, or remove the row first.
+      expect(
+        await savedCount(),
+        `Student ${code} is already saved by the Employee's company. Use a Student that is not saved, or remove the save, so the first scan has to succeed.`
+      ).toBe(0);
 
       const qr = await student.get("/api/qrcode");
       expect(qr.status()).toBe(200);
       const issuedOn = copyOf(qr);
       const { data: token } = (await qr.json()) as { data: string };
 
-      const scanCopy = await untilOtherCopy(employee, issuedOn, attempts);
-      expect(scanCopy).not.toBe(issuedOn);
+      // The first scan changes state, so it cannot be repeated until it lands
+      // on another copy. It is checked on the copy that answered it.
       const first = await employee.post("/api/saved", {
         data: { token, comment: marker },
       });
-      expect(first.status()).toBe(initial ? 409 : 201);
+      expect(first.status()).toBe(201);
       const scannedOn = copyOf(first);
 
-      await untilOtherCopy(employee, scannedOn, attempts);
-      const retry = await employee.post("/api/saved", {
-        data: { token, comment: `${marker}-retry` },
-      });
-      expect(retry.status()).toBe(409);
-      expect(copyOf(retry)).not.toBe(scannedOn);
-      await expect(retry.json()).resolves.toMatchObject({
-        error: "Student already saved by your company",
-      });
+      // The refusal is safe to repeat: every copy must verify the token issued
+      // on `issuedOn`, see the save written on `scannedOn`, and refuse it.
+      const refusedOn = await collectCopies(
+        () =>
+          employee.post("/api/saved", {
+            data: { token, comment: `${marker}-retry` },
+          }),
+        copies,
+        attempts,
+        async (retry) => {
+          expect(retry.status()).toBe(409);
+          await expect(retry.json()).resolves.toMatchObject({
+            error: "Student already saved by your company",
+          });
+        }
+      );
+      expect(
+        refusedOn.size,
+        `Retry was refused on ${refusedOn.size} of ${copies} copies (issued on ${issuedOn}, scanned on ${scannedOn}).`
+      ).toBe(copies);
 
-      expect(await savedBefore()).toBe(1);
+      expect(await savedCount()).toBe(1);
     } finally {
       await Promise.all([student.dispose(), employee.dispose()]);
     }
@@ -150,29 +171,42 @@ test.describe("requests behave the same on every web copy", () => {
       expect(upload.status()).toBe(201);
       const { id } = (await upload.json()) as { id: string };
 
-      await untilOtherCopy(student, copyOf(upload), attempts);
-      const attach = await student.post(`/api/students/${code}/cv`, {
-        data: { id },
-      });
+      // Attaching the same object is idempotent, so repeat it until another
+      // copy than the upload's answers it.
+      const attach = await repeatOnOtherCopy(
+        () => student.post(`/api/students/${code}/cv`, { data: { id } }),
+        copyOf(upload),
+        attempts
+      );
       expect(attach.status()).toBe(200);
 
-      await untilOtherCopy(student, copyOf(attach), attempts);
-      const download = await student.get(`/api/students/${code}/cv/file`);
+      const download = await repeatOnOtherCopy(
+        () => student.get(`/api/students/${code}/cv/file`),
+        copyOf(attach),
+        attempts
+      );
       expect(download.status()).toBe(200);
       expect(Buffer.compare(await download.body(), pdf)).toBe(0);
 
-      const seen = new Set<string>();
-      for (let i = 0; i < copies * 3; i += 1) {
-        const denied = await anonymous.get(`/api/students/${code}/cv/file`);
-        expect(denied.status()).toBe(401);
-        seen.add(copyOf(denied));
-        const foreign = await student.get(
-          `/api/students/e2e-${randomUUID()}/cv/file`
-        );
-        expect(foreign.status()).toBe(404);
-        seen.add(copyOf(foreign));
-      }
-      expect(seen.size).toBe(copies);
+      const deniedOn = await collectCopies(
+        () => anonymous.get(`/api/students/${code}/cv/file`),
+        copies,
+        attempts * 2,
+        (denied) => expect(denied.status()).toBe(401)
+      );
+      expect(deniedOn.size, "anonymous requests denied on every copy").toBe(
+        copies
+      );
+
+      const foreignOn = await collectCopies(
+        () => student.get(`/api/students/e2e-${randomUUID()}/cv/file`),
+        copies,
+        attempts * 2,
+        (foreign) => expect(foreign.status()).toBe(404)
+      );
+      expect(foreignOn.size, "foreign-code requests denied on every copy").toBe(
+        copies
+      );
     } finally {
       await Promise.all([student.dispose(), anonymous.dispose()]);
     }
