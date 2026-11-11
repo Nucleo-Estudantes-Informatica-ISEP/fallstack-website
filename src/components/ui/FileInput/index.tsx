@@ -1,17 +1,16 @@
+
 "use client";
 
 import { FaTrashCan as TrashIcon } from "react-icons/fa6";
 import {
   MdOutlineOpenInNew as PreviewIcon,
-  MdFileUpload as UploadIcon,
+  MdOutlineCloudUpload as UploadIcon,
 } from "react-icons/md";
 
 import slugifyId from "@/utils/slugifyId";
 
-interface FileInputProps extends Omit<
-  React.InputHTMLAttributes<HTMLInputElement>,
-  "type"
-> {
+interface FileInputProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
   name: string;
   accept: string;
   placeholder: string;
@@ -20,6 +19,7 @@ interface FileInputProps extends Omit<
     preview: string;
   } | null;
   icon: React.ReactNode;
+  emptyIcon?: React.ReactNode;
   onClear: () => void;
 }
 
@@ -31,6 +31,7 @@ const FileInput: React.FC<FileInputProps> = ({
   disabled = false,
   file,
   icon,
+  emptyIcon = <UploadIcon />,
   onClear,
   id,
   ...rest
@@ -41,7 +42,7 @@ const FileInput: React.FC<FileInputProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="mb-1 text-left text-sm font-normal text-white"
+          className="field-label text-left text-gray-100"
           htmlFor={resolvedId}
         >
           {name}
@@ -49,7 +50,7 @@ const FileInput: React.FC<FileInputProps> = ({
       )}
 
       <div
-        className={`relative flex h-14 w-full min-w-0 items-center border border-ui-border bg-ui-surface text-sm focus-within:border-ui-focus focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ui-focus ${
+        className={`relative flex field-height min-w-0 items-center gap-1 rounded-full border field-border bg-background pr-3 field-text focus-within:border-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${
           disabled ? "opacity-60" : ""
         } ${className ?? ""}`}
       >
@@ -61,26 +62,30 @@ const FileInput: React.FC<FileInputProps> = ({
           accept={accept}
           disabled={disabled}
           aria-label={name}
-          className="absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
+          className="peer sr-only field-focus-target"
         />
 
-        <div
+        <label
+          className={`flex min-w-0 flex-1 items-center self-stretch pl-(--field-icon-padding,3.125rem) ${
+            disabled ? "cursor-not-allowed" : "cursor-pointer"
+          } ${file ? "text-white" : "text-gray-400"}`}
+          htmlFor={resolvedId}
           aria-hidden="true"
-          className={`pointer-events-none flex min-w-0 flex-1 items-center gap-2 px-3 ${
-            file ? "text-white" : "text-ui-muted"
-          }`}
         >
-          <span className="shrink-0 text-lg md:text-xl">
-            {file ? icon : <UploadIcon />}
+          <span
+            className="pointer-events-none absolute left-(--field-icon-inset,1rem) flex items-center text-lg"
+            aria-hidden="true"
+          >
+            {file ? icon : emptyIcon}
           </span>
 
-          <span className="min-w-0 truncate">
+          <span className="truncate">
             {file ? file.name : placeholder}
           </span>
-        </div>
+        </label>
 
         {file && (
-          <div className="relative z-10 flex shrink-0 items-center gap-1 pr-2">
+          <>
             <button
               type="button"
               disabled={disabled}
@@ -88,7 +93,7 @@ const FileInput: React.FC<FileInputProps> = ({
                 window.open(file.preview, "_blank", "noopener,noreferrer");
               }}
               aria-label={`Pré-visualizar ${file.name}`}
-              className="ui-focus flex min-h-10 min-w-10 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <PreviewIcon aria-hidden="true" />
             </button>
@@ -96,13 +101,25 @@ const FileInput: React.FC<FileInputProps> = ({
             <button
               type="button"
               disabled={disabled}
-              onClick={onClear}
+              onClick={(event) => {
+                const input =
+                  event.currentTarget.parentElement?.parentElement?.querySelector(
+                    'input[type="file"]'
+                  );
+
+                if (input instanceof HTMLInputElement) {
+                  input.value = "";
+                  input.focus();
+                }
+
+                onClear();
+              }}
               aria-label={`Remover ${file.name}`}
-              className="ui-focus flex min-h-10 min-w-10 items-center justify-center rounded-md text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+              className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               <TrashIcon aria-hidden="true" />
             </button>
-          </div>
+          </>
         )}
       </div>
     </div>
