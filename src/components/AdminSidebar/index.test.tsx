@@ -24,12 +24,19 @@ beforeEach(() => {
 test("renders an accessible admin navigation", () => {
   render(<AdminSidebar isSuperAdmin={false} />);
 
-  expect(screen.getByRole("navigation", { name: "Admin" })).toBeInTheDocument();
+  expect(
+    screen.getAllByRole("navigation", { name: "Admin" }).length
+  ).toBeGreaterThan(0);
 
-  expect(screen.getByRole("link", { name: "Dashboard" })).toHaveAttribute(
-    "href",
-    "/overview"
-  );
+  const dashboardLinks = screen.getAllByRole("link", {
+    name: "Dashboard",
+  });
+
+  expect(dashboardLinks.length).toBeGreaterThan(0);
+
+  dashboardLinks.forEach((link) => {
+    expect(link).toHaveAttribute("href", "/overview");
+  });
 });
 
 test("marks the current page with aria-current", () => {
@@ -37,14 +44,13 @@ test("marks the current page with aria-current", () => {
 
   render(<AdminSidebar isSuperAdmin={false} />);
 
-  expect(screen.getByRole("link", { name: "Students" })).toHaveAttribute(
-    "aria-current",
-    "page"
-  );
+  screen.getAllByRole("link", { name: "Students" }).forEach((link) => {
+    expect(link).toHaveAttribute("aria-current", "page");
+  });
 
-  expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute(
-    "aria-current"
-  );
+  screen.getAllByRole("link", { name: "Dashboard" }).forEach((link) => {
+    expect(link).not.toHaveAttribute("aria-current");
+  });
 });
 
 test("keeps the active state on nested routes", () => {
@@ -52,35 +58,34 @@ test("keeps the active state on nested routes", () => {
 
   render(<AdminSidebar isSuperAdmin={false} />);
 
-  expect(screen.getByRole("link", { name: "Companies" })).toHaveAttribute(
-    "aria-current",
-    "page"
-  );
+  screen.getAllByRole("link", { name: "Companies" }).forEach((link) => {
+    expect(link).toHaveAttribute("aria-current", "page");
+  });
 });
 
 test("hides admin management from regular administrators", () => {
   render(<AdminSidebar isSuperAdmin={false} />);
 
-  expect(
-    screen.queryByRole("link", { name: "Admins" })
-  ).not.toBeInTheDocument();
+  expect(screen.queryAllByRole("link", { name: "Admins" })).toHaveLength(0);
 });
 
 test("shows admin management to super administrators", () => {
   render(<AdminSidebar isSuperAdmin />);
 
-  expect(screen.getByRole("link", { name: "Admins" })).toHaveAttribute(
-    "href",
-    "/admins"
-  );
+  screen.getAllByRole("link", { name: "Admins" }).forEach((link) => {
+    expect(link).toHaveAttribute("href", "/admins");
+  });
 });
 
 test("uses shared focus styles and accessible target sizes", () => {
   render(<AdminSidebar isSuperAdmin={false} />);
 
-  const dashboard = screen.getByRole("link", { name: "Dashboard" });
-  const students = screen.getByRole("link", { name: "Students" });
+  const links = [
+    ...screen.getAllByRole("link", { name: "Dashboard" }),
+    ...screen.getAllByRole("link", { name: "Students" }),
+  ];
 
-  expect(dashboard).toHaveClass("ui-focus", "min-h-11");
-  expect(students).toHaveClass("ui-focus", "min-h-11");
+  links.forEach((link) => {
+    expect(link).toHaveClass("ui-focus", "min-h-11");
+  });
 });
