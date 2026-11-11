@@ -23,6 +23,7 @@ import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import { linkedinUrlSchema } from "@/schemas/studentLinkedinSchema";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -90,6 +91,13 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return setError("Tens de aceitar a política de privacidade.");
       }
 
+      // Validate before uploading files so a bad link does not cost a round trip.
+      const linkedinValue = linkedinRef.current?.value.trim() || null;
+      if (linkedinValue) {
+        const parsed = linkedinUrlSchema.safeParse(linkedinValue);
+        if (!parsed.success) return setError(parsed.error.issues[0]!.message);
+      }
+
       setLoading(true);
 
       // The account and session are established earlier in the wizard via
@@ -135,14 +143,11 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         }
       }
 
-      // Add LinkedIn if provided
-      const linkedin = linkedinRef.current?.value || null;
-
       const profile = await createStudentProfile({
         ...data,
         avatarUrl,
         cvId,
-        linkedin,
+        linkedin: linkedinValue,
       });
 
       if (profile instanceof Error) {
@@ -198,7 +203,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           <Input
             type="url"
             name="Insere o link do teu perfil do LinkedIn. (Opcional)"
-            placeholder="https://linkedin.com/in/o-teu-perfil"
+            placeholder="https://www.linkedin.com/in/o-teu-perfil"
             center
             inputRef={linkedinRef}
             defaultValue={data.linkedin ? data.linkedin : undefined}

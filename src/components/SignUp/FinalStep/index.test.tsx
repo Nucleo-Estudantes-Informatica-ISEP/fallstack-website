@@ -134,3 +134,38 @@ test("sends back to signup when there's no session (AuthNEI never established on
   expect(pushMock).toHaveBeenCalledWith("/signup");
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
+
+test("rejects a LinkedIn address the profile editor would reject, before any request", async () => {
+  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
+
+  renderFinalStep();
+  fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
+    target: { value: "https://linkedin.com/in/example" },
+  });
+  acceptPrivacyAndSubmit();
+
+  expect(
+    await screen.findByText("O teu Linkedin não segue o formato correto!")
+  ).toBeTruthy();
+  expect(getSessionMock).not.toHaveBeenCalled();
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
+});
+
+test("sends a valid LinkedIn address with the profile", async () => {
+  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
+  createStudentProfileMock.mockResolvedValue(true);
+
+  renderFinalStep();
+  fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
+    target: { value: "https://www.linkedin.com/in/example" },
+  });
+  acceptPrivacyAndSubmit();
+
+  await waitFor(() =>
+    expect(createStudentProfileMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        linkedin: "https://www.linkedin.com/in/example",
+      })
+    )
+  );
+});
