@@ -50,6 +50,14 @@ const serverEnvSchema = z.object({
       .default("false")
       .transform((value) => value === "true")
   ),
+  // Explicitly accept sole-slot occupancy during account revocation.
+  GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true")
+  ),
   GOOGLE_WALLET_ISSUER_ID: optionalNonEmptyString,
   GOOGLE_WALLET_CLASS_ID: optionalNonEmptyString,
   GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64: optionalNonEmptyString,
