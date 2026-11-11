@@ -12,7 +12,7 @@ const HeadingText: React.FC<HeadingTextProps> = ({ text, className }) => {
     <h1
       className={`${
         className ? className : ""
-      } my-12 text-center text-3xl md:text-4xl lg:text-4xl`}
+      } my-12 text-center text-3xl md:text-4xl lg:text-6xl`}
     >
       {text}
     </h1>
