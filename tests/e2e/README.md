@@ -234,6 +234,43 @@ Add `E2E_VERIFY_UPLOAD_LIMITS=yes` to check wrong MIME and over-10 MiB
 rejections. These checks run in Chromium only and create an unlinked staging
 object; delete it through the admin storage page after the run. Use staging only.
 
+### Multi-copy parity (#456)
+
+`tests/e2e/playwright/multi-copy.spec.ts` proves that successive requests
+behave the same on every web copy. Every response carries an opaque
+`x-instance-id` header that is unique per server process, so the spec can show
+which copy answered each request. Point `E2E_BASE_URL` at the load balancer
+(then again at the Cloudflare hostname) and set `E2E_EXPECTED_COPIES` to the
+number of copies behind it. The spec skips below two copies.
+
+```bash
+E2E_BASE_URL=https://staging.example.org \
+CONFIRM_NON_PRODUCTION=yes \
+E2E_EXPECTED_COPIES=3 \
+E2E_ALLOW_UPLOADS=yes \
+E2E_STUDENT_STORAGE_STATE=tests/e2e/.staging-student.json \
+E2E_EMPLOYEE_STORAGE_STATE=tests/e2e/.staging-employee.json \
+pnpm test:e2e --project=chromium tests/e2e/playwright/multi-copy.spec.ts
+```
+
+It checks that the proxy reaches every copy, that a Student session works on
+each copy, that a QR token scans once and every copy then refuses a retry with
+`409`, and that a CV uploaded on one copy attaches and downloads through other
+copies while anonymous and foreign-code requests are each denied on every copy.
+Safe operations (the retry, CV attach and download) repeat until a different
+copy answers, and each response's `x-instance-id` is checked, so a sticky proxy
+fails the run instead of passing by accident. The first QR scan changes state
+and cannot be repeated, so the spec probes with an invalid token until the
+copy that issued the QR answers, then scans once. The scan must succeed on a
+different copy, which needs a round-robin proxy; the run fails when it lands
+on the issuing copy. It needs a
+Student that the Employee's company has not saved; the test fails with a
+message when the save already exists, and the API cannot remove it, so remove
+the row or use another Student before each run. The upload test replaces the
+synthetic Student's CV and leaves one unlinked object; use staging
+only. It does not compare secrets: set `JWT_SECRET`, `AUTH_SECRET` and the
+public URLs identically on every copy.
+
 Playwright writes failure screenshots and traces under `test-results/`, plus an
 HTML report under `playwright-report/` when that reporter is selected. Inspect a
 trace with `pnpm exec playwright show-trace <trace.zip>` and an HTML report with
