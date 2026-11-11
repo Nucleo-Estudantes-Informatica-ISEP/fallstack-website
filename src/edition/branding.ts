@@ -31,7 +31,6 @@ export const branding = {
     hideInstallPrompt: "@Fallstack26:hidePrompt",
   },
   hashtag: "#fallstack2026",
-  heroLogoAlt: "Logo principal do evento Fall-Stack 2026",
   repositoryUrl:
     "https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website",
 };
