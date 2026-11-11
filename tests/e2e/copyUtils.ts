@@ -42,6 +42,26 @@ export async function repeatOnOtherCopy<T extends HeaderSource>(
 }
 
 /**
+ * Repeats a safe operation until `target` answers it. A round-robin proxy
+ * sends the next request to a different copy, so a state-changing request
+ * sent right after this returns avoids `target`. Use only for operations that
+ * are safe to repeat.
+ */
+export async function repeatUntilCopy<T extends HeaderSource>(
+  operation: () => Promise<T>,
+  target: string,
+  attempts: number
+): Promise<T> {
+  for (let i = 0; i < attempts; i += 1) {
+    const response = await operation();
+    if (copyOf(response) === target) return response;
+  }
+  throw new Error(
+    `Copy ${target} never answered in ${attempts} attempts; it may be unhealthy or excluded by the proxy.`
+  );
+}
+
+/**
  * Repeats a safe operation until every expected copy has answered it, running
  * `check` on each response. Returns the copies seen, so each scenario is
  * tracked on its own.

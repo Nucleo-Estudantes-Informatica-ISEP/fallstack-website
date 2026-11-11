@@ -5,6 +5,7 @@ import {
   copyOf,
   INSTANCE_ID_HEADER,
   repeatOnOtherCopy,
+  repeatUntilCopy,
 } from "./copyUtils";
 
 const response = (headers: Record<string, string>) => ({
@@ -39,6 +40,24 @@ describe("repeatOnOtherCopy", () => {
     await expect(
       repeatOnOtherCopy(serving(["a", "a", "a"]), "a", 3)
     ).rejects.toThrow(/sticky/);
+  });
+});
+
+describe("repeatUntilCopy", () => {
+  const serving = (ids: string[]) => {
+    let call = 0;
+    return async () => response({ [INSTANCE_ID_HEADER]: ids[call++] });
+  };
+
+  it("returns the first response from the target copy", async () => {
+    const result = await repeatUntilCopy(serving(["b", "c", "a"]), "a", 5);
+    expect(copyOf(result)).toBe("a");
+  });
+
+  it("fails when the target copy never answers", async () => {
+    await expect(
+      repeatUntilCopy(serving(["b", "c", "b"]), "a", 3)
+    ).rejects.toThrow(/never answered/);
   });
 });
 

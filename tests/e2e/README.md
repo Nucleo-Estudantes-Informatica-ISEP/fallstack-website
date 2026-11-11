@@ -257,7 +257,10 @@ copies while anonymous and foreign-code requests are each denied on every copy.
 Safe operations (the retry, CV attach and download) repeat until a different
 copy answers, and each response's `x-instance-id` is checked, so a sticky proxy
 fails the run instead of passing by accident. The first QR scan changes state
-and cannot be repeated, so it runs once on whichever copy answers. It needs a
+and cannot be repeated, so the spec probes with an invalid token until the
+copy that issued the QR answers, then scans once. The scan must succeed on a
+different copy, which needs a round-robin proxy; the run fails when it lands
+on the issuing copy. It needs a
 Student that the Employee's company has not saved; the test fails with a
 message when the save already exists, and the API cannot remove it, so remove
 the row or use another Student before each run. The upload test replaces the

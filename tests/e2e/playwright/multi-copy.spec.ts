@@ -6,6 +6,7 @@ import {
   copyOf,
   probeAttempts,
   repeatOnOtherCopy,
+  repeatUntilCopy,
 } from "../copyUtils";
 import { e2eEnv } from "../env";
 import { createRoleContext, hasRoleStates } from "../roleTestUtils";
@@ -113,12 +114,23 @@ test.describe("requests behave the same on every web copy", () => {
       const { data: token } = (await qr.json()) as { data: string };
 
       // The first scan changes state, so it cannot be repeated until it lands
-      // on another copy. It is checked on the copy that answered it.
+      // on another copy. Probe with an invalid token (400, no state change)
+      // until the issuing copy answers: a round-robin proxy then sends the
+      // scan to a different copy. The scan must succeed on that other copy.
+      await repeatUntilCopy(
+        () => employee.post("/api/saved", { data: { token: "invalid" } }),
+        issuedOn,
+        attempts
+      );
       const first = await employee.post("/api/saved", {
         data: { token, comment: marker },
       });
-      expect(first.status()).toBe(201);
       const scannedOn = copyOf(first);
+      expect(
+        scannedOn,
+        `The scan landed on ${scannedOn}, the copy that issued the token. The proxy is not round-robin, so the cross-copy scan is unproven. The save exists now: remove it or use another Student before rerunning.`
+      ).not.toBe(issuedOn);
+      expect(first.status()).toBe(201);
 
       // The refusal is safe to repeat: every copy must verify the token issued
       // on `issuedOn`, see the save written on `scannedOn`, and refuse it.
