@@ -51,9 +51,6 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": file.contentType,
-        ...(svg
-          ? { "Content-Security-Policy": "default-src 'none'; sandbox" }
-          : {}),
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },

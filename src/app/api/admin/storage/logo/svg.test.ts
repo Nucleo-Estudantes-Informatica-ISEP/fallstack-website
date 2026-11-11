@@ -60,7 +60,7 @@ test("normal logo uploads, serves and rasterizes at configured dimensions", asyn
   });
   expect(media.status).toBe(200);
   expect(media.headers.get("content-type")).toBe("image/svg+xml");
-  expect(media.headers.get("content-security-policy")).toContain("sandbox");
+  expect(media.headers.get("x-content-type-options")).toBe("nosniff");
   const bytes = Buffer.from(await media.arrayBuffer());
   const { data, info } = await sharp(bytes)
     .resize(200, 200)

@@ -33,9 +33,7 @@ caching remains in place. Do not enable dangerouslyAllowSVG globally.
 No amendment to ADR 0008 or the document CSP is required. Logos are served via
 same-origin /api/media/logo URLs; img-src 'self' covers them. The private bucket
 origin is never requested by the browser. script-src, object-src and frame-src
-stay unchanged. Media responses carry a sandboxed default-src 'none' CSP as
-additional protection for direct navigation; this does not grant capabilities.
-There is no object/embed/iframe/inline SVG or foreignObject rendering path.
+stay unchanged. There is no object/embed/iframe/inline SVG or foreignObject rendering path.
 
 ## Consequences
 
