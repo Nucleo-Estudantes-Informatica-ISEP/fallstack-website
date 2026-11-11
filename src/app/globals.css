@@ -88,6 +88,10 @@
       "cv05" 1;
   }
 
+  body {
+    background-color: var(--color-background);
+  }
+
   h1,
   h2,
   h3,

@@ -130,13 +130,7 @@ const CompanyProfileSectionContainer: React.FC<
   };
 
   return (
-    <div
-      className="artwork-clean artwork-readable flex min-h-screen w-screen flex-col"
-      style={{
-        marginLeft: "calc(50% - 50vw)",
-        marginRight: "calc(50% - 50vw)",
-      }}
-    >
+    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
       <div
         className="flex flex-col items-center pt-12 pb-8"
         style={{
