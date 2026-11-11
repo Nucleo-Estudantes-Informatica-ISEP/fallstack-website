@@ -38,7 +38,26 @@ test("student profile and admin updates reject relative LinkedIn URLs", () => {
 });
 
 test.each([
+  "https://ca.linkedin.com/in/example",
+  "https://pt.linkedin.com/in/example/",
+  "https://www.linkedin.com/in/jo%C3%A3o-silva",
+])("LinkedIn schemas accept %s", (linkedin) => {
+  expect(patchStudentSchema.safeParse({ linkedin }).success).toBe(true);
+  expect(updateAdminStudentSchema.safeParse({ linkedin }).success).toBe(true);
+  expect(
+    postStudentSchema.safeParse({
+      name: "Student",
+      year: "3º Ano Licenciatura",
+      interests: [],
+      linkedin,
+    }).success
+  ).toBe(true);
+});
+
+test.each([
   "javascript:alert(1)",
+  "https://evil.linkedin.com.example/in/x",
+  "https://abc.linkedin.com/in/x",
   "https://evil.example/in/x",
   "http://www.linkedin.com/in/x",
   "https://www.linkedin.com/company/acme",

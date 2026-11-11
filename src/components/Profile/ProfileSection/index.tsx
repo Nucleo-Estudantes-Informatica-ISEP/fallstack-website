@@ -20,6 +20,7 @@ import UserImage from "@/components/Profile/UserImage";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import { linkedinUrlSchema } from "@/schemas/studentLinkedinSchema";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface ProfileSectionProps {
@@ -95,9 +96,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     // Validação LinkedIn
     if (
       linkedinRef.current?.value &&
-      !linkedinRef.current?.value?.match(
-        /^(https:\/\/www\.linkedin\.com\/in\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
-      )
+      !linkedinUrlSchema.safeParse(linkedinRef.current.value).success
     ) {
       toast.error("O teu Linkedin não segue o formato correto!");
       return;

@@ -4,9 +4,12 @@ import { z } from "zod";
 // is rendered as a link href, so only https LinkedIn profile URLs may pass:
 // `z.url()` alone would also accept `javascript:` and arbitrary hosts.
 // Written without nested quantifiers to avoid catastrophic backtracking.
-const SEGMENT = "[A-Za-zÀ-ú0-9ç_-]+";
+// LinkedIn serves public profiles from `www` and from two-letter country hosts
+// such as `ca.linkedin.com` or `pt.linkedin.com`.
+const HOST = "(?:www|[a-z]{2})\\.linkedin\\.com";
+const SEGMENT = "[A-Za-zÀ-ú0-9ç_%-]+";
 const LINKEDIN_PATTERN = new RegExp(
-  `^https://www\\.linkedin\\.com/in/${SEGMENT}(?:/${SEGMENT})*/?$`
+  `^https://${HOST}/in/${SEGMENT}(?:/${SEGMENT})*/?$`
 );
 
 export const linkedinUrlSchema = z
