@@ -10,7 +10,16 @@ test("renders an accessible button", () => {
 
   expect(button).toBeEnabled();
   expect(button).toHaveAttribute("type", "button");
-  expect(button).toHaveClass("ui-action");
+  expect(button).toHaveClass("bg-[#B1440A]");
+});
+
+test("applies the form variant styles", () => {
+  render(<PrimaryButton variant="form">Guardar</PrimaryButton>);
+
+  const button = screen.getByRole("button", { name: "Guardar" });
+
+  expect(button).toHaveClass("bg-[#82360d]");
+  expect(button).toHaveClass("hover:bg-[#6c2c09]");
 });
 
 test("calls onClick when clicked", () => {
