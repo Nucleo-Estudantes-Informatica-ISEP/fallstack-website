@@ -12,8 +12,9 @@ export async function createStudentProfile(
 ) {
   try {
     await httpClient.post("/students", {
-      name: data.name,
-      bio: data.bio,
+      name: data.name?.trim() || undefined,
+      bio: data.bio ?? undefined,
+      linkedin: data.linkedin?.trim() || undefined,
       year: data.year,
       course: data.course,
       privacyPolicyAccepted: data.privacyPolicyAccepted,
@@ -21,7 +22,6 @@ export async function createStudentProfile(
       privacyPolicyVersion: PRIVACY_POLICY_VERSION,
       termsVersion: TERMS_VERSION,
       interests: data.interests,
-      linkedin: data.linkedin || undefined,
       avatarUrl: data.avatarUrl || undefined,
       cvId: data.cvId,
     });

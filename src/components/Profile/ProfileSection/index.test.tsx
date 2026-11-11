@@ -8,8 +8,6 @@ import type { StudentDto } from "@/application/dto/studentDto";
 import ProfileSection from ".";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
-vi.mock("@/components/Profile/UserImage", () => ({ default: () => null }));
-vi.mock("@/components/Profile/AvatarCropper", () => ({ default: () => null }));
 
 const student: StudentDto = {
   id: "student",
@@ -59,4 +57,31 @@ test("labels biography, shows one live counter and exposes interest selection", 
   });
   fireEvent.click(interest);
   expect(interest).toHaveAttribute("aria-pressed", "true");
+});
+
+test("shows locked fields as read-only with short explanatory hints and readable labels", () => {
+  render(<Profile />);
+
+  const nameInput = screen.getByLabelText("Nome");
+  expect(nameInput).toHaveAttribute("readonly");
+  expect(nameInput).toHaveValue("Student Example");
+  expect(nameInput).toHaveAccessibleDescription("Nome definido no registo.");
+
+  const yearInput = screen.getByLabelText("Ano");
+  expect(yearInput).toHaveAttribute("readonly");
+  expect(yearInput).toHaveValue("3º Ano Licenciatura");
+  expect(yearInput).toHaveAccessibleDescription("Definido no registo.");
+
+  const emailInput = screen.getByLabelText("Email");
+  expect(emailInput).toHaveAttribute("readonly");
+  expect(emailInput).toHaveValue("student@example.test");
+  expect(emailInput).toHaveAccessibleDescription(
+    "Associado à tua conta institucional."
+  );
+
+  // Editable fields have readable labels
+  expect(screen.getByLabelText("LinkedIn")).not.toBeDisabled();
+  expect(screen.getByLabelText("GitHub")).not.toBeDisabled();
+  expect(screen.getByLabelText("CV")).toBeInTheDocument();
+  expect(screen.getByRole("textbox", { name: "Biografia" })).not.toBeDisabled();
 });

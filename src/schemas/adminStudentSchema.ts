@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { STUDENT_YEAR } from "@/domain/student/year";
 
-import { linkedinOrEmptySchema } from "./studentLinkedinSchema";
+import { linkedinOrEmptySchema } from "./linkedinSchema";
 
 const yearSchema = z.enum(
   Object.keys(STUDENT_YEAR) as [keyof typeof STUDENT_YEAR]

@@ -55,15 +55,16 @@ const data: StudentSignUpData = {
   cv: null,
   avatar: null,
   year: "3",
+  course: "Engenharia Informática",
   linkedin: null,
 };
 
-const renderFinalStep = () =>
+const renderFinalStep = (overrides: Partial<typeof data> = {}) =>
   render(
     <FinalStep
       currentStep={4}
       setCurrentStep={vi.fn()}
-      data={data}
+      data={{ ...data, ...overrides }}
       setData={vi.fn()}
     />
   );
@@ -75,7 +76,7 @@ beforeEach(() => {
 const acceptPrivacyAndSubmit = () => {
   for (const checkbox of screen.getAllByRole("checkbox"))
     fireEvent.click(checkbox);
-  fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
+  fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
 };
 
 test("creates the profile for a student session with no profile yet", async () => {
@@ -88,6 +89,28 @@ test("creates the profile for a student session with no profile yet", async () =
   await waitFor(() => expect(createStudentProfileMock).toHaveBeenCalled());
 
   expect(pushMock).toHaveBeenCalledWith("/");
+});
+
+test("does not submit a LinkedIn URL the profile editor would reject", async () => {
+  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
+
+  renderFinalStep({ linkedin: "https://evil.example/in/user" });
+  acceptPrivacyAndSubmit();
+
+  expect(
+    await screen.findByText("O teu Linkedin não segue o formato correto!")
+  ).toBeInTheDocument();
+  expect(screen.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("textbox")).toHaveAttribute(
+    "aria-describedby",
+    "signup-linkedin-error"
+  );
+  for (const checkbox of screen.getAllByRole("checkbox")) {
+    expect(checkbox).not.toHaveAttribute("aria-invalid");
+    expect(checkbox).not.toHaveAttribute("aria-describedby");
+  }
+  expect(getSessionMock).not.toHaveBeenCalled();
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
 
 test("redirects home when the profile already exists", async () => {
@@ -136,22 +159,6 @@ test("sends back to signup when there's no session (AuthNEI never established on
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
 
-test("rejects a LinkedIn address the profile editor would reject, before any request", async () => {
-  getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
-
-  renderFinalStep();
-  fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
-    target: { value: "https://evil.example/in/example" },
-  });
-  acceptPrivacyAndSubmit();
-
-  expect(
-    await screen.findByText("O teu Linkedin não segue o formato correto!")
-  ).toBeTruthy();
-  expect(getSessionMock).not.toHaveBeenCalled();
-  expect(createStudentProfileMock).not.toHaveBeenCalled();
-});
-
 test.each([
   "https://www.linkedin.com/in/example",
   "https://linkedin.com/in/example",
@@ -160,16 +167,15 @@ test.each([
   getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
   createStudentProfileMock.mockResolvedValue(true);
 
-  renderFinalStep();
-  fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
-    target: { value: linkedin },
-  });
+  renderFinalStep({ linkedin });
   acceptPrivacyAndSubmit();
 
   await waitFor(() =>
     expect(createStudentProfileMock).toHaveBeenCalledWith(
       expect.objectContaining({
         linkedin,
+        privacyPolicyAccepted: true,
+        termsAccepted: true,
       })
     )
   );
@@ -177,10 +183,13 @@ test.each([
 
 test("requires terms independently of privacy before any upload or request", async () => {
   renderFinalStep();
-  fireEvent.click(screen.getByRole("checkbox", { name: /Aceito a/ }));
-  fireEvent.click(screen.getByRole("button", { name: "CONCLUIR" }));
+  fireEvent.click(
+    screen.getByRole("checkbox", { name: /política de privacidade/ })
+  );
+  fireEvent.click(screen.getByRole("button", { name: /concluir/i }));
   expect(
     await screen.findByText("Tens de aceitar os termos de utilização.")
   ).toBeInTheDocument();
   expect(getSessionMock).not.toHaveBeenCalled();
+  expect(createStudentProfileMock).not.toHaveBeenCalled();
 });

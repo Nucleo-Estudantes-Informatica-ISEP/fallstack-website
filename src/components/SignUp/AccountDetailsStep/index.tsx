@@ -11,20 +11,16 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import AuthNeiButton from "@/components/AuthNeiButton";
+import { STUDENT_YEAR } from "@/domain/student/year";
 
 interface AccountDetailsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
-  // True when this step is being rendered after returning from a successful
-  // AuthNEI sign-in — Supabase already has an authenticated identity for
-  // this student at this point, only the year is missing.
-  authNeiMode?: boolean;
-  // Stashes any wizard data collected so far before redirecting to AuthNEI,
-  // since the OAuth flow is a full page navigation that clears React state.
-  onAuthNeiRedirect?: () => void;
+  institutionalEmail: string;
+  /** True when AuthNEI gave no display name, so the student must enter one. */
+  needsName?: boolean;
 }
 
 const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
@@ -32,110 +28,117 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   setCurrentStep,
   data,
   setData,
-  authNeiMode = false,
-  onAuthNeiRedirect,
+  institutionalEmail,
+  needsName = false,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const yearRef = useRef<HTMLSelectElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
+    const name = nameRef.current?.value.trim() ?? "";
+    if (needsName && !name) {
+      return setError("Por favor, indica o teu nome.");
+    }
     if (!yearRef.current?.value) {
       return setError("Por favor, seleciona o teu ano.");
     }
     if (!data.course?.trim()) return setError("Por favor, indica o teu curso.");
     setData({
       ...data,
+      name: needsName ? name : data.name,
       course: data.course.trim(),
       year: yearRef.current.value,
     });
     setCurrentStep(currentStep + 1);
   };
 
-  const yearOptions = [
-    "1º Ano Licenciatura",
-    "2º Ano Licenciatura",
-    "3º Ano Licenciatura",
-    "1º Ano Mestrado",
-    "2º Ano Mestrado",
-  ];
-
-  // Account creation happens exclusively through AuthNEI (centralizes
-  // student identity across NEI platforms on Supabase Auth, with Zitadel as
-  // the OAuth provider) — there's no manual email/password fallback, so
-  // there's nothing else to collect on this step until that redirect
-  // completes and authNeiMode flips true.
-  if (!authNeiMode) {
-    return (
-      <div className="flex w-full flex-col items-center">
-        <div className="flex w-[90%] flex-col">
-          <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-            Criar uma conta
-          </p>
-          <p className="mb-4 text-sm text-gray-400">
-            A criação de conta é feita exclusivamente através do AuthNEI, a
-            forma centralizada de te ligares às plataformas do NEI.
-          </p>
-          <AuthNeiButton
-            next="/signup?authnei=1"
-            beforeRedirect={onAuthNeiRedirect}
-          />
-        </div>
-      </div>
-    );
-  }
+  const yearOptions = Object.values(STUDENT_YEAR).map((value) => ({
+    value,
+    label: value.replace(" Ano ", " Ano - "),
+  }));
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-          Criar uma conta
-        </p>
+    <div className="flex w-full flex-col">
+      <h1 className="signup-heading">Criar uma conta</h1>
 
-        <div className="flex flex-col gap-y-4 text-left">
+      <div className="flex flex-col gap-y-4 text-left">
+        {needsName && (
           <Input
-            name="Curso"
-            placeholder="Ex.: Engenharia Informática"
-            value={data.course ?? ""}
+            id="signup-name"
+            name="name"
+            label="Nome"
+            inputRef={nameRef}
+            defaultValue={data.name ?? ""}
             maxLength={100}
+            autoComplete="name"
             required
-            onChange={(event) =>
-              setData({ ...data, course: event.target.value })
-            }
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? "signup-year-error" : undefined}
+            onChange={() => setError(null)}
           />
-          <InputSelect
-            center
-            name="Seleciona o teu ano"
-            placeholder="Insere o ano"
-            inputRef={yearRef}
-            defaultValue={data.year ? data.year : undefined}
-            autoFocus
-            className={`${error && !yearRef.current?.value ? "border-2 border-red-600" : ""} z-10`}
-            options={yearOptions}
-          />
-        </div>
-
-        {error && (
-          <motion.p
-            className="mt-1 text-center text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
-          >
-            {error}
-          </motion.p>
         )}
-
-        <PrimaryButton
-          onClick={handleNext}
-          className="mt-4 mb-5 h-14 w-full font-bold"
-        >
-          Seguinte
-        </PrimaryButton>
+        <Input
+          id="signup-course"
+          name="course"
+          label="Curso"
+          placeholder="Ex.: Engenharia Informática"
+          value={data.course ?? ""}
+          maxLength={100}
+          required
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-year-error" : undefined}
+          onChange={(event) => {
+            setError(null);
+            setData({ ...data, course: event.target.value });
+          }}
+        />
+        <InputSelect
+          center
+          name="Seleciona o teu ano"
+          placeholder="Insere o ano"
+          inputRef={yearRef}
+          defaultValue={data.year ? data.year : undefined}
+          className="aria-invalid:border-red-400"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-year-error" : undefined}
+          onChange={() => setError(null)}
+          options={yearOptions}
+        />
+        <Input
+          id="signup-institutional-email"
+          name="institutional-email"
+          label="Email institucional"
+          value={institutionalEmail}
+          readOnly
+          hint="Confirmado pelo AuthNEI."
+        />
       </div>
+
+      {error && (
+        <motion.p
+          id="signup-year-error"
+          role="alert"
+          className="mt-2 text-sm text-red-400"
+          animate={{
+            y: [-15, 0],
+          }}
+          transition={{
+            ease: "easeOut",
+            duration: 0.2,
+          }}
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <PrimaryButton
+        onClick={handleNext}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
+      >
+        Seguinte
+      </PrimaryButton>
     </div>
   );
 };

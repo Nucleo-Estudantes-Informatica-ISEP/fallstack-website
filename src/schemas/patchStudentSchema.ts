@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { linkedinOrEmptySchema } from "./studentLinkedinSchema";
+import { linkedinOrEmptySchema } from "./linkedinSchema";
 
 export const patchStudentSchema = z
   .object({

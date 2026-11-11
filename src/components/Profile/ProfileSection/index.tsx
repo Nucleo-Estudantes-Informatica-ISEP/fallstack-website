@@ -1,27 +1,24 @@
 "use client";
 
-import { Dispatch, SetStateAction, useRef, useState } from "react";
+import { Dispatch, SetStateAction, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Area } from "react-easy-crop";
-import Skeleton from "react-loading-skeleton";
 import { toast } from "react-toastify";
 
 import { ProfileData } from "@/types/ProfileData";
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
-import Modal from "@/components/ui/Modal";
+import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import AvatarCropper from "@/components/Profile/AvatarCropper";
 import ImportCvSection from "@/components/Profile/ImportCvSection";
-import Input from "@/components/Profile/Input";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
-import UserImage from "@/components/Profile/UserImage";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
-import { uploadAvatar, uploadCv } from "@/client/api/upload";
-import { linkedinUrlSchema } from "@/schemas/studentLinkedinSchema";
-import { getCroppedImg } from "@/utils/canvas";
+import { uploadCv } from "@/client/api/upload";
+import {
+  isValidLinkedinUrl,
+  LINKEDIN_FORMAT_ERROR,
+} from "@/schemas/linkedinSchema";
 
 interface ProfileSectionProps {
   student: StudentDto;
@@ -50,12 +47,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   const { mutate: mutateSave, isPending: isLoading } = useMutation(
     "Erro ao atualizar perfil."
   );
-  const [userImage, setUserImage] = useState<string | null>(student.avatar);
-  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
-  const [isAvatarLoading, setIsAvatarLoading] = useState<boolean>(false);
-
   function handleUserBioChange(bio: string) {
     if (bio.length > LIMIT) return;
     setProfile({ ...profile, bio });
@@ -64,28 +55,6 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   function setUserInterests(interests: string[]) {
     setProfile({ ...profile, interests });
   }
-
-  const handleConfirmAvatar = async () => {
-    setIsAvatarLoading(true);
-
-    if (!imageSrc || !croppedAreaPixels) return;
-
-    const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-    if (!image) return setIsAvatarLoading(false);
-
-    const uploaded = await uploadAvatar(image);
-    if (!uploaded) {
-      toast.error("Não foi possível dar upload à imagem.");
-      return setIsAvatarLoading(false);
-    }
-
-    setIsAvatarLoading(false);
-    setIsModalVisible(false);
-
-    setUserImage(uploaded.url);
-    // store the URL so the save handler can persist it
-    setProfile({ ...profile, avatar: uploaded.url as unknown as string });
-  };
 
   const handleSave = () => {
     if (profile.bio && profile.bio?.length > LIMIT) {
@@ -96,9 +65,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     // Validação LinkedIn
     if (
       linkedinRef.current?.value &&
-      !linkedinUrlSchema.safeParse(linkedinRef.current.value).success
+      !isValidLinkedinUrl(linkedinRef.current.value)
     ) {
-      toast.error("O teu Linkedin não segue o formato correto!");
+      toast.error(LINKEDIN_FORMAT_ERROR);
       return;
     }
 
@@ -158,205 +127,110 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   };
 
   return (
-    <section
-      className="w-full rounded bg-[#111111] p-4 antialiased shadow-2xl sm:p-6 xl:p-8"
-      style={{
-        textRendering: "optimizeLegibility",
-      }}
-    >
-      <h2 className="mb-8 text-2xl font-bold tracking-tight text-gray-100">
+    <section className="student-profile-form w-full">
+      <h2 className="mb-5 text-2xl text-white lg:text-[1.75rem]">
         Informações pessoais
       </h2>
+      <div className="flex flex-col gap-y-4">
+        {/* NOME */}
+        <Input
+          name="name"
+          id="profile-name"
+          label="Nome"
+          value={student.name}
+          readOnly
+          hint="Nome definido no registo."
+        />
 
-      <div className="flex flex-col gap-y-5">
-        <div className="flex justify-center">
-          <UserImage
-            imageSrc={userImage}
-            editable={true}
-            setProfile={setProfile}
-            onChange={(imgSrc) => {
-              setImageSrc(imgSrc);
-              setIsModalVisible(true);
-            }}
-          />
-        </div>
-        {student ? (
-          <>
-            {/* NOME */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-name"
-              >
-                Nome
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-name"
-                  defaultValue={student.name}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
+        {/* CURSO */}
+        <Input
+          name="course"
+          id="profile-course"
+          label="Curso"
+          value={student.course ?? "Não indicado"}
+          readOnly
+          hint="Definido no registo."
+        />
 
-            <Input
-              name="Curso"
-              defaultValue={student.course ?? "Não indicado"}
-              disabled
-            />
-            {/* ANO */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-year"
-              >
-                Ano
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-year"
-                  defaultValue={student.year}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
+        {/* ANO */}
+        <Input
+          name="year"
+          id="profile-year"
+          label="Ano"
+          value={student.year}
+          readOnly
+          hint="Definido no registo."
+        />
 
-            {/* EMAIL */}
-            <div className="flex flex-col gap-1">
-              <label
-                className="text-xs font-medium text-gray-100"
-                htmlFor="profile-email"
-              >
-                Email
-              </label>
-              <div className="border border-white bg-transparent">
-                <Input
-                  name=""
-                  id="profile-email"
-                  defaultValue={student.user.email}
-                  disabled={true}
-                  className="w-full border-none bg-transparent px-3 py-2 text-gray-100 focus:ring-0"
-                />
-              </div>
-            </div>
-          </>
-        ) : (
-          <Skeleton height={40} count={3} />
-        )}
+        {/* EMAIL */}
+        <Input
+          name="email"
+          id="profile-email"
+          label="Email"
+          value={student.user.email}
+          readOnly
+          hint="Associado à tua conta institucional."
+        />
 
         {/* LINKEDIN */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-linkedin"
-          >
-            LinkedIn
-          </label>
-          <div className="border border-white bg-transparent">
-            <Input
-              name=""
-              id="profile-linkedin"
-              defaultValue={profile.linkedin}
-              placeholder="https://www.linkedin.com/in/nome"
-              inputRef={linkedinRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
-            />
-          </div>
-        </div>
+        <Input
+          name="linkedin"
+          id="profile-linkedin"
+          label="LinkedIn"
+          defaultValue={profile.linkedin}
+          placeholder="https://www.linkedin.com/in/nome"
+          inputRef={linkedinRef}
+        />
 
         {/* GITHUB */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-github"
-          >
-            Github
-          </label>
-          <div className="border border-white bg-transparent">
-            <Input
-              name=""
-              id="profile-github"
-              defaultValue={profile.github}
-              placeholder="https://github.com/example"
-              inputRef={githubRef}
-              className="w-full border-none bg-transparent px-3 py-2 text-gray-100 placeholder:text-gray-400 focus:ring-0"
-            />
-          </div>
-        </div>
+        <Input
+          name="github"
+          id="profile-github"
+          label="GitHub"
+          defaultValue={profile.github}
+          placeholder="https://github.com/nome"
+          inputRef={githubRef}
+        />
 
         {/* CV - Importar CV */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center border border-white bg-transparent p-2 text-gray-100">
-            <ImportCvSection
-              inputRef={cvRef}
-              text={student.cv ? "Alterar CV" : "Importar CV"}
-              className="text-gray-100"
-            />
-          </div>
-        </div>
+        <ImportCvSection
+          inputRef={cvRef}
+          text={student.cv ? "Alterar CV" : "Importar CV"}
+        />
 
         {/* BIOGRAFIA */}
-        <div className="flex flex-col gap-1">
-          <label
-            className="text-xs font-medium text-gray-100"
-            htmlFor="profile-bio"
-          >
-            Biografia
-          </label>
-          <div className="border border-white bg-transparent p-2">
-            <UserBioTextArea
-              id="profile-bio"
-              name=""
-              rows={5}
-              placeholder="Escreve algo sobre ti..."
-              setValue={handleUserBioChange}
-              value={profile.bio ? profile.bio : ""}
-              limit={LIMIT}
-              warningLimit={LIMIT - 30}
-              className="w-full resize-none border-none bg-transparent text-gray-100 placeholder:text-gray-400 focus:outline-none"
-            />
-          </div>
-        </div>
+        <UserBioTextArea
+          id="profile-bio"
+          name="Biografia"
+          rows={5}
+          placeholder="Escreve algo sobre ti..."
+          setValue={handleUserBioChange}
+          value={profile.bio ? profile.bio : ""}
+          limit={LIMIT}
+          warningLimit={LIMIT - 30}
+        />
 
         {/* INTERESSES */}
-        <InterestSelector
-          availableInterests={availableInterests}
-          selectedInterestIds={profile.interests}
-          setSelectedInterestIds={setUserInterests}
-        />
+        <fieldset className="min-w-0">
+          <legend className="field-label text-gray-100">Interesses</legend>
+          <InterestSelector
+            alignStart
+            availableInterests={availableInterests}
+            selectedInterestIds={profile.interests}
+            setSelectedInterestIds={setUserInterests}
+          />
+        </fieldset>
 
         {/* BOTÃO GUARDAR */}
         <PrimaryButton
           onClick={handleSave}
           loading={isLoading}
-          className="mt-6 w-full bg-[#8C3E1F] py-3 text-sm font-medium text-white transition-colors hover:bg-[#7A351A]"
+          variant="form"
+          className="mt-3 h-12 w-full field-focus-target text-base font-medium text-white"
         >
           Guardar
         </PrimaryButton>
       </div>
-
-      <Modal
-        isVisible={isModalVisible}
-        setIsVisible={setIsModalVisible}
-        className="flex flex-col items-center justify-center gap-8"
-        aria-labelledby="avatar-modal-title"
-      >
-        <h1 id="avatar-modal-title" className="text-3xl font-bold">
-          Altera o teu Avatar
-        </h1>
-        <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
-        <PrimaryButton
-          className="w-full py-2 text-xl"
-          onClick={handleConfirmAvatar}
-          loading={isAvatarLoading}
-        >
-          Confirmar
-        </PrimaryButton>
-      </Modal>
     </section>
   );
 };
