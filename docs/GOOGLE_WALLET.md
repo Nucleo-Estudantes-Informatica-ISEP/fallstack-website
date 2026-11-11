@@ -289,8 +289,8 @@ return 429 before DB access; retry after an admitted operation finishes. With a
 one-slot pool, all Wallet operations are paused by default. Explicitly setting
 `GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` permits one account deletion
 at a time to use the sole connection; issuance remains paused. This can block
-all other requests, including session lookups, during Google I/O and cause
-retryable 503 responses. Prefer at least two slots within the cluster budget.
+other requests during Google I/O. Session lookups return null and protected
+routes respond 401/403; other database requests can return retryable 503 responses. Prefer at least two slots within the cluster budget.
 See [ADR 0030](decisions/0030-opt-in-single-connection-deletion.md). PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second

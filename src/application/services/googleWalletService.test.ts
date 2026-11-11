@@ -594,14 +594,13 @@ test("opted-in one-slot pools admit one account deletion across Wallet module in
       return work({ student: null }, {});
     });
   const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
-  await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
-    status: 429,
-  });
-  expect(lockedUserMock).not.toHaveBeenCalled();
   const pending = deleteUserAccount(student.id);
   // Attach a rejection handler while testing admission from another bundle.
   void pending.catch(() => undefined);
   try {
+    await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+      status: 429,
+    });
     vi.resetModules();
     const otherBundle = await import("./authApplicationService");
     await expect(

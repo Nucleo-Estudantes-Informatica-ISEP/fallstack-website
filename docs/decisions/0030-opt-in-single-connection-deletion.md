@@ -11,7 +11,8 @@ all Wallet operations, including account deletion, before database work.
 Revocation runs inside the user-lock transaction and can hold that sole
 connection during sequential Google requests, each with a ten-second timeout.
 Allowing deletion by default would expose all other requests, including session
-lookups, to acquisition timeouts and retryable 503 responses.
+lookups, to acquisition timeouts. Session lookups return null and protected
+routes respond 401/403; other database requests can return retryable 503 responses.
 
 ## Decision
 
@@ -26,7 +27,8 @@ pools retain the combined two-operation ceiling.
 
 Operators can accept temporary request starvation to enable deletion on a
 one-slot installation. This is not event-capacity approval: prefer at least two
-slots, within the agreed cluster budget. Revocation failures still retain the
+slots, within the agreed cluster budget. With N replicas, N different deletions
+can each hold a sole connection simultaneously, starving every replica. Revocation failures still retain the
 account, and issuance/deletion retain their existing transaction and auth rules.
 Moving Google I/O outside that transaction requires a separate ordering design.
 The rest of ADR 0028, including rollout and staging prerequisites, still applies.
