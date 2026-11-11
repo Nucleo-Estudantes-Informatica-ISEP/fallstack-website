@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { httpErrorResponse } from "@/lib/http/server";
+import { sanitizeLogoSvg } from "@/lib/svgLogo";
 import { companyVideoResponse } from "@/application/services/companyVideoService";
 import {
   avatarKey,
@@ -31,17 +32,28 @@ export async function GET(
     );
     if (!file)
       return NextResponse.json({ error: "Not found" }, { status: 404 });
-    if (
+    const svg = params.type === "logo" && file.contentType === "image/svg+xml";
+    let bytes = file.bytes;
+    if (svg) {
+      try {
+        bytes = sanitizeLogoSvg(bytes);
+      } catch {
+        return NextResponse.json({ error: "Not found" }, { status: 404 });
+      }
+    } else if (
       !(config.uploads[params.type].types as readonly string[]).includes(
         file.contentType
       ) ||
-      !matchesDeclaredType(file.bytes, file.contentType)
+      !matchesDeclaredType(bytes, file.contentType)
     )
       return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return new NextResponse(file.bytes as unknown as BodyInit, {
+    return new NextResponse(bytes as unknown as BodyInit, {
       status: 200,
       headers: {
         "Content-Type": file.contentType,
+        ...(svg
+          ? { "Content-Security-Policy": "default-src 'none'; sandbox" }
+          : {}),
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },

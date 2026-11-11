@@ -263,3 +263,23 @@ Send your report (video or document) directly to the **current coordinators of t
 - Reports are treated as confidential.
 - Maintainers will aim to respond within 72 hours.
 - For critical issues, mitigation and patches are prioritized based on impact.
+
+### SVG logo audit (2026-11-11, #282)
+
+Dedicated logo uploads accept server-sanitized SVG; avatar uploads remain PNG/JPEG.
+[ADR 0030](decisions/0030-sanitize-svg-logo-pipeline.md) defines the static subset,
+XML validation and complexity limits. CSS, scripts, handlers, foreignObject and
+external resources are removed before storage. Invalid XML and DTDs are rejected.
+
+No document CSP amendment is required: logos use same-origin `/api/media/logo/`
+URLs, already covered by `img-src 'self'`. The private logo bucket origin stays
+server-side. Next Image emits ordinary img elements and bypasses optimization
+for this pipeline; no inline SVG, object, embed, iframe or foreignObject path is
+introduced. `script-src`, `object-src`, `frame-src` and nonce design are unchanged.
+SVG media responses additionally use `default-src 'none'; sandbox` for direct
+navigation. There is no policy relaxation to trial in Report-Only.
+
+Regression coverage uploads a normal fixture through the admin route, reads it
+through the public media route, and rasterizes the returned vector at 200px.
+Storage is mocked in that test; staging should additionally confirm the real
+bucket write/read and browser preview with an authenticated administrator.
