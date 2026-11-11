@@ -81,6 +81,7 @@ services:
         condition: service_completed_successfully
     environment:
       NEXT_MANUAL_SIG_HANDLE: "true"
+      SHOWCASE_FULL_WEBSITE: ${SHOWCASE_FULL_WEBSITE:-false}
       # Runtime-only connection contract for #413; never pass these as build args.
       REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"

@@ -136,7 +136,7 @@ jobs:
         run: pnpm exec vitest run tests/e2e/googleWalletCapacity.test.ts --maxWorkers=1
 
       - name: Install Chromium
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm exec playwright install chromium
 
       - name: Test staging redirect safety
         env:
@@ -185,8 +185,21 @@ jobs:
         run: |
           docker build \
             --target runner \
-            --build-arg NEXT_PUBLIC_BASE_URL=https://ci.invalid/api \
+            --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:14000/api \
             -t fallstack-app-check .
 
       - name: Verify application runs as non-root
         run: test "$(docker inspect --format '{{.Config.User}}' fallstack-app-check)" = "nextjs"
+
+      - name: Scan production image OS packages for critical and high vulnerabilities
+        run: |
+          # This PR validates the Node/Alpine base image. Trivy also found
+          # separate Node library advisories; track those in issue #543.
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$HOME/.cache/trivy:/root/.cache/" \
+            aquasec/trivy:0.76.2 \
+            image --scanners vuln --pkg-types os --severity CRITICAL,HIGH --exit-code 1 fallstack-app-check
+
+      - name: Smoke test standalone local Compose stack
+        run: bash tests/e2e/local-compose-smoke.sh

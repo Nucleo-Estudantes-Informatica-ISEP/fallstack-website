@@ -79,6 +79,71 @@ as its callback. Use development credentials and data only.
    Migrate need the [one-time baseline step](docs/database-workflow.md#one-time-adoption-note)
    before applying migrations. Login requires the configured OIDC client.
 
+## Docker Compose files
+
+Use `docker-compose.app.yml` in Coolify. `docker-compose.local.yml` is a
+separate, self-contained development stack: it provisions local PostgreSQL,
+Redis and MinIO, creates the app buckets, and uses Compose-managed networking
+instead of Coolify's external networks. It is intentionally not a literal copy
+of the deployment file. Keep the application runtime contract aligned when
+changing services or environment configuration in either file.
+
+## Run the full stack with Docker Compose
+
+Requires Docker Engine/Desktop and Docker Compose v2. The local Compose file
+starts isolated PostgreSQL, Redis and MinIO services, creates the three S3
+buckets, applies Prisma migrations, then starts the web app and the dry-run
+storage-cleanup worker.
+
+Optionally copy `.env.example` to `.env` and configure a **development**
+AuthNEI/ZITADEL client. Without real OIDC credentials the containers still
+start, but login will not work. Register this callback on that development
+client (the Compose setup uses port 4000, not the native `pnpm dev` port 3000):
+
+```
+http://localhost:4000/api/auth/callback/zitadel
+```
+
+Start the stack from the repository root:
+
+```bash
+docker compose -f docker-compose.local.yml up --build
+```
+
+Open `http://localhost:4000`. Compose connects containers through its own
+managed network using the service names `postgres`, `redis` and `minio`;
+it does not use the external Coolify networks or the host-facing URLs in
+`.env.example`. The infrastructure ports are also bound to loopback for
+local tools: PostgreSQL `54322`, Redis `6379`, MinIO API `9000` and MinIO
+console `9001`. The web port defaults to `4000`. The buckets created are
+`fallstack-dev-avatars`, `fallstack-dev-logos` and `fallstack-dev-cvs`.
+Open the MinIO console at `http://localhost:9001` using the
+`FALLSTACK_LOCAL_MINIO_ROOT_USER` and `FALLSTACK_LOCAL_MINIO_ROOT_PASSWORD`
+values (defaults: `fallstack_local` and `replace-with-local-minio-secret`).
+The local Compose callback defaults to
+`http://localhost:4000/api/auth/callback/zitadel`, independently of the
+native-development `AUTH_REDIRECT_URI` in `.env.example`. If you override
+`FALLSTACK_LOCAL_WEB_PORT`, the callback follows that port automatically;
+use `FALLSTACK_LOCAL_AUTH_REDIRECT_URI` or
+`FALLSTACK_LOCAL_AUTH_POST_LOGOUT_REDIRECT_URI` only for a custom callback.
+PostgreSQL, Redis and MinIO password overrides must use URL-safe characters.
+
+If one of those host ports is already in use (for example, by the standalone
+containers in the native-development instructions below), stop that local
+service or override the corresponding `FALLSTACK_LOCAL_*_PORT` variable in
+your shell or `.env`. MinIO credential overrides must use URL-safe characters
+because the one-shot bucket setup passes them through an `MC_HOST` URL. The
+available overrides are listed at the bottom of `.env.example`. The local
+services use named Docker volumes and survive
+`docker compose -f docker-compose.local.yml down`; `docker compose -f
+docker-compose.local.yml down -v` deletes the local database, Redis state and
+MinIO objects.
+
+The app runs its production-built Node server in the container. Its Redis
+prefix is `fallstack:dev:` because the production runtime validates the
+deployed prefix set; the Redis instance itself is local and isolated. Never
+point this Compose stack at NEI's shared Redis or production data.
+
 ## Production builds on limited RAM
 
 Run one build at a time. To use a 1.5 GiB JavaScript heap ceiling:
