@@ -8,13 +8,13 @@ import {
 
 import slugifyId from "@/utils/slugifyId";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FileInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   name: string;
   accept: string;
   placeholder: string;
-  className?: string;
-  disabled?: boolean;
-  type?: string;
   file: {
     name: string;
     preview: string;
@@ -23,12 +23,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onClear: () => void;
 }
 
-const FileInput: React.FC<InputProps> = ({
+const FileInput: React.FC<FileInputProps> = ({
   name,
   placeholder,
   accept,
   className,
-  disabled,
+  disabled = false,
   file,
   icon,
   onClear,
@@ -47,59 +47,63 @@ const FileInput: React.FC<InputProps> = ({
           {name}
         </label>
       )}
+
       <div
-        className={`flex w-full flex-row items-center justify-center ${className}`}
+        className={`relative flex h-14 w-full min-w-0 items-center border border-ui-border bg-ui-surface text-sm focus-within:border-ui-focus focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ui-focus ${
+          disabled ? "opacity-60" : ""
+        } ${className ?? ""}`}
       >
         <input
+          {...rest}
           type="file"
           name={name}
-          disabled={disabled}
           id={resolvedId}
-          placeholder={placeholder}
           accept={accept}
-          hidden
-          className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
-          {...rest}
+          disabled={disabled}
+          aria-label={name}
+          className="absolute inset-0 size-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
         />
-        <label
-          className={`flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-background px-2 py-1 text-sm ${file ? "text-white" : "text-white/35"}`}
-          htmlFor={resolvedId}
+
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none flex min-w-0 flex-1 items-center gap-2 px-3 ${
+            file ? "text-white" : "text-ui-muted"
+          }`}
         >
-          <span className="mr-2 min-w-min text-lg md:text-xl">
+          <span className="shrink-0 text-lg md:text-xl">
             {file ? icon : <UploadIcon />}
           </span>
-          <span className="w-44 truncate">
+
+          <span className="min-w-0 truncate">
             {file ? file.name : placeholder}
           </span>
-          {file && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  window.open(file.preview, "_blank");
-                }}
-                aria-label={`Pré-visualizar ${file.name}`}
-                className="ml-auto rounded-md p-1 transition-colors hover:bg-white/10"
-              >
-                <PreviewIcon />
-              </button>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onClear();
-                }}
-                aria-label={`Remover ${file.name}`}
-                className="ml-2 rounded-md p-1 transition-colors hover:bg-red-500 hover:text-white"
-              >
-                <TrashIcon />
-              </button>
-            </>
-          )}
-        </label>
+        </div>
+
+        {file && (
+          <div className="relative z-10 flex shrink-0 items-center gap-1 pr-2">
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                window.open(file.preview, "_blank", "noopener,noreferrer");
+              }}
+              aria-label={`Pré-visualizar ${file.name}`}
+              className="ui-focus flex min-h-10 min-w-10 items-center justify-center rounded-md text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <PreviewIcon aria-hidden="true" />
+            </button>
+
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={onClear}
+              aria-label={`Remover ${file.name}`}
+              className="ui-focus flex min-h-10 min-w-10 items-center justify-center rounded-md text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <TrashIcon aria-hidden="true" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

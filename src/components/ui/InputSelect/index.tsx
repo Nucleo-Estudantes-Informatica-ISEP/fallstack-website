@@ -21,6 +21,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
   inputRef,
   options,
   id,
+  defaultValue,
   ...rest
 }) => {
   const resolvedId = id || slugifyId(name) || undefined;
@@ -41,11 +42,16 @@ const InputSelect: React.FC<InputSelectProps> = ({
         name={name}
         id={resolvedId}
         disabled={disabled}
-        defaultValue={placeholder}
+        defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
         ref={inputRef}
-        className={`h-14 w-full border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
+        className={`ui-field h-14 ${className ?? ""}`}
         {...rest}
       >
+        {placeholder && (
+          <option value="" disabled>
+            {placeholder}
+          </option>
+        )}
         {options.map((option) => (
           <option key={option} value={option}>
             {option}

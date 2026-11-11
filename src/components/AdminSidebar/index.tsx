@@ -78,7 +78,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
             aria-current={
               pathname?.startsWith("/overview") ? "page" : undefined
             }
-            className={`block rounded-md px-2 py-1.5 text-sm font-semibold transition-colors ${
+            className={`ui-focus flex min-h-11 items-center rounded-md px-2 py-1.5 text-sm font-semibold transition-colors ${
               pathname?.startsWith("/overview")
                 ? "bg-primary/10 text-primary"
                 : "text-gray-800 hover:bg-gray-100"
@@ -100,7 +100,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
                     <Link
                       href={item.href}
                       aria-current={isActive ? "page" : undefined}
-                      className={`block rounded-md px-2 py-1.5 text-sm transition-colors ${
+                      className={`ui-focus flex min-h-11 items-center rounded-md px-2 py-1.5 text-sm transition-colors ${
                         isActive
                           ? "bg-primary/10 font-medium text-primary"
                           : "text-gray-600 hover:bg-gray-100"
@@ -123,7 +123,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
               href={logsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="block rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+              className="ui-focus flex min-h-11 items-center rounded-md px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
             >
               Open dashboard ↗
             </a>

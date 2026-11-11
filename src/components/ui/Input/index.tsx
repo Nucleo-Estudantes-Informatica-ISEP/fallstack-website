@@ -5,11 +5,7 @@ import slugifyId from "@/utils/slugifyId";
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   name: string;
   center?: boolean;
-  placeholder?: string;
-  className?: string;
-  disabled?: boolean;
   inputRef?: React.Ref<HTMLInputElement>;
-  type?: string;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -37,15 +33,16 @@ const Input: React.FC<InputProps> = ({
           {name}
         </label>
       )}
+
       <input
+        {...rest}
         type={type}
         name={name}
         disabled={disabled}
         id={resolvedId}
         placeholder={placeholder}
         ref={inputRef}
-        className={`h-14 w-full border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-white/50 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
-        {...rest}
+        className={`ui-field h-14 ${className ?? ""}`}
       />
     </div>
   );
