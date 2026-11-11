@@ -103,8 +103,10 @@ deployed routing and restart configuration still require separate verification.
   one-slot pool admits none by default. The explicit opt-in
   `GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` admits one deletion,
   which can occupy the sole slot during Google I/O and cause other requests
-  to time out. Session lookups return null and protected routes respond 401/403; other database requests can return 503. Issuance remains paused. With N replicas, N different deletions can each hold a sole connection simultaneously, starving every replica.
+  to time out. Session lookups return null and protected routes respond 401/403; other database requests can return 503. Issuance remains paused. A PostgreSQL transaction try-lock limits this exception to one deletion across replicas. Competing requests may briefly occupy their own connection while acquiring admission.
   Prefer at least two slots within the agreed budget; see
+  The flag must be exactly
+  `true` or `false` in lowercase; invalid values prevent server environment validation.
   [ADR 0030](../decisions/0030-opt-in-single-connection-deletion.md).
   Larger pools still admit two operations. Ordinary queries
   can occupy all request slots, so an admitted Wallet transaction can still

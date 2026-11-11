@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { generateKeyPairSync } from "node:crypto";
 import { NextRequest } from "next/server";
+import { PrismaClient } from "@prisma/client";
 import { afterAll, afterEach, expect, test, vi } from "vitest";
 
 import { defineHandler } from "@/lib/http/server";
@@ -210,3 +211,37 @@ test.runIf(
   },
   15000
 );
+
+test.runIf(
+  process.env.PRISMA_CONNECTION_LIMIT === "1" &&
+    process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE === "true"
+)("one-slot deletion rejects a lock held by another connection", async () => {
+  const student = await fixtures.student();
+  const other = new PrismaClient();
+  let release!: () => void;
+  let started!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const held = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const transaction = other.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT pg_advisory_xact_lock(540, 1)`;
+    started();
+    await gate;
+  });
+  try {
+    await held;
+    await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+      status: 429,
+    });
+    await expect(
+      prisma.user.findUnique({ where: { id: student.id } })
+    ).resolves.not.toBeNull();
+  } finally {
+    release();
+    await transaction;
+    await other.$disconnect();
+  }
+});

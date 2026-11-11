@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
@@ -84,10 +85,21 @@ export async function withGoogleWalletOperation<T>(
   if (activeWalletOperations.size >= capacity)
     throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
   activeWalletOperations.add(userId);
+  const exception =
+    operation === "delete" && serverEnv.PRISMA_CONNECTION_LIMIT === 1;
+  const started = exception ? Date.now() : 0;
   try {
     return await work();
   } finally {
     activeWalletOperations.delete(userId);
+    if (exception)
+      logger.warn(
+        {
+          userHash: createHash("sha256").update(userId).digest("hex"),
+          durationMs: Date.now() - started,
+        },
+        "Single-connection Wallet deletion released"
+      );
   }
 }
 

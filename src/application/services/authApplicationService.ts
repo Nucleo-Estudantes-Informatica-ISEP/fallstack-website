@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "crypto";
 
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
+import { serverEnv } from "@/config/env.server";
 import { reportError } from "@/lib/logger";
 
 import { findCompanyByInviteCodeHash } from "../repositories/companyInviteRepository";
@@ -33,6 +34,16 @@ export async function deleteUserAccount(userId: string) {
     () =>
       withLockedUser(userId, async (user, tx) => {
         if (!user) throw new HttpError("Account not found", 404);
+        if (
+          serverEnv.PRISMA_CONNECTION_LIMIT === 1 &&
+          serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE
+        ) {
+          const [lock] = await tx.$queryRaw<
+            { admitted: boolean }[]
+          >`SELECT pg_try_advisory_xact_lock(540, 1) AS admitted`;
+          if (!lock.admitted)
+            throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
+        }
         // Keep the account on upstream failure so the same deletion can be retried.
         if (user.student) await revokeGoogleWalletPass(user.student.id, tx);
         await deleteUser(userId, tx);

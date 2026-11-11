@@ -43,7 +43,7 @@ vi.mock("@/config/env.client", () => ({
 vi.mock("@/config/env.server", () => ({ serverEnv: serverEnvMock }));
 vi.mock("@/lib/logger", () => ({
   reportError: reportErrorMock,
-  default: { info: infoMock },
+  default: { info: infoMock, warn: vi.fn() },
 }));
 
 const student = {
@@ -587,11 +587,12 @@ test("opted-in one-slot pools admit one account deletion across Wallet module in
   const gate = new Promise<void>((resolve) => {
     release = resolve;
   });
+  const tx = { $queryRaw: vi.fn().mockResolvedValue([{ admitted: true }]) };
   lockedUserMock
-    .mockImplementation(async (_id, work) => work({ student: null }, {}))
+    .mockImplementation(async (_id, work) => work({ student: null }, tx))
     .mockImplementationOnce(async (_id, work) => {
       await gate;
-      return work({ student: null }, {});
+      return work({ student: null }, tx);
     });
   const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
   const pending = deleteUserAccount(student.id);
@@ -613,7 +614,7 @@ test("opted-in one-slot pools admit one account deletion across Wallet module in
     release();
     await pending;
   }
-  expect(deleteUserMock).toHaveBeenCalledWith(student.id, {});
+  expect(deleteUserMock).toHaveBeenCalledWith(student.id, tx);
 });
 
 for (const operation of [
@@ -870,3 +871,32 @@ test("issuer rotation retains recorded passes until original credentials are res
   });
   expect(fetchMock).not.toHaveBeenCalled();
 });
+
+test.each([
+  [2, ["issue"], "delete"],
+  [3, ["delete", "issue"], "delete"],
+] as const)(
+  "opted-in limit %i shares admission across bundles",
+  async (limit, operations, excess) => {
+    serverEnvMock.PRISMA_CONNECTION_LIMIT = limit;
+    serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = true;
+    const first = await import("./googleWalletService");
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const pending = operations.map((operation, index) =>
+      first.withGoogleWalletOperation(`held-${index}`, () => gate, operation)
+    );
+    try {
+      vi.resetModules();
+      const other = await import("./googleWalletService");
+      await expect(
+        other.withGoogleWalletOperation("excess", async () => {}, excess)
+      ).rejects.toMatchObject({ status: 429 });
+    } finally {
+      release();
+      await Promise.all(pending);
+    }
+  }
+);
