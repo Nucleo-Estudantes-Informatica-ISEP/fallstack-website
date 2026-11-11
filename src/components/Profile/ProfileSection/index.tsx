@@ -142,6 +142,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           hint="Nome definido no registo."
         />
 
+        {/* CURSO */}
+        <Input
+          name="course"
+          id="profile-course"
+          label="Curso"
+          value={student.course ?? "Não indicado"}
+          readOnly
+          hint="Definido no registo."
+        />
+
         {/* ANO */}
         <Input
           name="year"

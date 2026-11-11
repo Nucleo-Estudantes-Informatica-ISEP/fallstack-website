@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
@@ -14,6 +15,7 @@ const data: StudentSignUpData = {
   cv: null,
   avatar: null,
   year: null,
+  course: "Engenharia Informática",
   linkedin: null,
 };
 
@@ -61,4 +63,37 @@ test("requires a name before continuing when AuthNEI has none", () => {
     })
   );
   expect(setCurrentStep).toHaveBeenCalledWith(1);
+});
+
+test("requires a course independently of the year before proceeding", () => {
+  const setCurrentStep = vi.fn();
+  function Step() {
+    const [value, setValue] = useState<StudentSignUpData>({
+      ...data,
+      course: "",
+    });
+    return (
+      <AccountDetailsStep
+        currentStep={1}
+        setCurrentStep={setCurrentStep}
+        data={value}
+        setData={setValue}
+        institutionalEmail="student@example.test"
+      />
+    );
+  }
+  render(<Step />);
+
+  fireEvent.change(screen.getByRole("combobox"), {
+    target: { value: "3º Ano Licenciatura" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Seguinte" }));
+  expect(screen.getByRole("alert")).toHaveTextContent("indica o teu curso");
+  expect(setCurrentStep).not.toHaveBeenCalled();
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Curso" }), {
+    target: { value: "Engenharia Informática" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Seguinte" }));
+  expect(setCurrentStep).toHaveBeenCalledWith(2);
 });

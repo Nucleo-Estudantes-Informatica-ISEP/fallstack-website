@@ -12,6 +12,7 @@ const {
 } = vi.hoisted(() => ({
   serverEnvMock: {
     PRISMA_CONNECTION_LIMIT: 3,
+    GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: false,
     GOOGLE_WALLET_NEVER_ENABLED: false,
     GOOGLE_WALLET_ISSUER_ID: undefined as string | undefined,
     GOOGLE_WALLET_CLASS_ID: undefined as string | undefined,
@@ -42,7 +43,7 @@ vi.mock("@/config/env.client", () => ({
 vi.mock("@/config/env.server", () => ({ serverEnv: serverEnvMock }));
 vi.mock("@/lib/logger", () => ({
   reportError: reportErrorMock,
-  default: { info: infoMock },
+  default: { info: infoMock, warn: vi.fn() },
 }));
 
 const student = {
@@ -75,11 +76,14 @@ beforeEach(() => {
   deleteUserMock.mockReset();
   findWalletPassMock.mockReset();
   recordWalletPassMock.mockReset();
-  lockedUserMock.mockImplementation(async (_id, callback) =>
-    callback({ active: true, student }, {})
-  );
+  lockedUserMock
+    .mockReset()
+    .mockImplementation(async (_id, callback) =>
+      callback({ active: true, student }, {})
+    );
   serverEnvMock.GOOGLE_WALLET_NEVER_ENABLED = false;
   serverEnvMock.PRISMA_CONNECTION_LIMIT = 3;
+  serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = false;
   serverEnvMock.GOOGLE_WALLET_ISSUER_ID = "123456789";
   serverEnvMock.GOOGLE_WALLET_CLASS_ID = "123456789.fallstack-2026-staging";
   serverEnvMock.GOOGLE_WALLET_SERVICE_ACCOUNT_JSON_B64 = validCredentials;
@@ -565,6 +569,54 @@ test("releases operation admission after failure for an immediate retry", async 
   ).resolves.toBe("retry");
 });
 
+test("one-slot pools reject deletion before database or Google work by default", async () => {
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 1;
+  const { deleteUserAccount } = await import("./authApplicationService");
+  await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
+    status: 429,
+  });
+  expect(lockedUserMock).not.toHaveBeenCalled();
+  expect(deleteUserMock).not.toHaveBeenCalled();
+});
+
+test("opted-in one-slot pools admit one account deletion across Wallet module instances", async () => {
+  serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = true;
+  serverEnvMock.PRISMA_CONNECTION_LIMIT = 1;
+  const { deleteUserAccount } = await import("./authApplicationService");
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const tx = { $queryRaw: vi.fn().mockResolvedValue([{ admitted: true }]) };
+  lockedUserMock
+    .mockImplementation(async (_id, work) => work({ student: null }, tx))
+    .mockImplementationOnce(async (_id, work) => {
+      await gate;
+      return work({ student: null }, tx);
+    });
+  const { createGoogleWalletSaveUrl } = await import("./googleWalletService");
+  const pending = deleteUserAccount(student.id);
+  // Attach a rejection handler while testing admission from another bundle.
+  void pending.catch(() => undefined);
+  try {
+    await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
+      status: 429,
+    });
+    vi.resetModules();
+    const otherBundle = await import("./authApplicationService");
+    await expect(
+      otherBundle.deleteUserAccount("other-user")
+    ).rejects.toMatchObject({
+      status: 429,
+    });
+    expect(lockedUserMock).toHaveBeenCalledTimes(1);
+  } finally {
+    release();
+    await pending;
+  }
+  expect(deleteUserMock).toHaveBeenCalledWith(student.id, tx);
+});
+
 for (const operation of [
   "oauth",
   "get",
@@ -819,3 +871,32 @@ test("issuer rotation retains recorded passes until original credentials are res
   });
   expect(fetchMock).not.toHaveBeenCalled();
 });
+
+test.each([
+  [2, ["issue"], "delete"],
+  [3, ["delete", "issue"], "delete"],
+] as const)(
+  "opted-in limit %i shares admission across bundles",
+  async (limit, operations, excess) => {
+    serverEnvMock.PRISMA_CONNECTION_LIMIT = limit;
+    serverEnvMock.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = true;
+    const first = await import("./googleWalletService");
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const pending = operations.map((operation, index) =>
+      first.withGoogleWalletOperation(`held-${index}`, () => gate, operation)
+    );
+    try {
+      vi.resetModules();
+      const other = await import("./googleWalletService");
+      await expect(
+        other.withGoogleWalletOperation("excess", async () => {}, excess)
+      ).rejects.toMatchObject({ status: 429 });
+    } finally {
+      release();
+      await Promise.all(pending);
+    }
+  }
+);
