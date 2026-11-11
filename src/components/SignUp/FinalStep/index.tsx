@@ -69,7 +69,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      if (!image) return null;
+      if (!image) {
+        toast.error("Não foi possível preparar a imagem.");
+        return null;
+      }
 
       const uploaded = await uploadAvatar(image);
       if (!uploaded) {
