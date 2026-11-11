@@ -38,10 +38,10 @@ const Hero: FunctionComponent<HeaderProps> = ({
           viewport={{
             once: true,
           }}
-          className="flex w-full flex-col items-center justify-center gap-28 pt-20 md:px-14"
+          className="flex w-full flex-col items-center justify-center gap-12 pt-20 md:px-14"
         >
           <Image
-            className="mt-12 max-h-95 w-1/2 object-contain drop-shadow-md md:mt-0 lg:max-h-145 lg:w-96"
+            className="mt-12 h-auto max-h-64 w-1/2 object-contain drop-shadow-md md:mt-0 lg:max-h-80 lg:w-72"
             src={logoSrc}
             alt={logoAlt}
           />

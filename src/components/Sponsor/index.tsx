@@ -11,7 +11,7 @@ export interface SponsorProps {
 
 const Sponsor: React.FC<SponsorProps> = ({ logoHref, name, website }) => {
   const className =
-    "mx-2 flex h-24 w-24 items-center justify-center transition duration-300 ease-in-out hover:scale-105 sm:h-32 sm:w-32 md:h-40 md:w-40 lg:size-48";
+    "mx-2 flex h-16 w-24 items-center justify-center transition duration-300 ease-in-out hover:scale-105 sm:h-20 sm:w-28 md:h-24 md:w-32";
   const logo = (
     <div className="relative size-[85%] sm:size-[90%]">
       <Image
@@ -19,7 +19,7 @@ const Sponsor: React.FC<SponsorProps> = ({ logoHref, name, website }) => {
         src={logoHref}
         alt={name}
         fill
-        sizes="(min-width: 1024px) 12rem, (min-width: 768px) 10rem, (min-width: 640px) 8rem, 6rem"
+        sizes="(min-width: 768px) 8rem, (min-width: 640px) 7rem, 6rem"
       />
     </div>
   );
