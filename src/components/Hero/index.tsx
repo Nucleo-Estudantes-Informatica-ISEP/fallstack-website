@@ -1,23 +1,18 @@
 "use client";
 
 import { FunctionComponent } from "react";
-import Image, { StaticImageData } from "next/image";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
 import PrimaryLinkButton from "@/components/ui/PrimaryLinkButton";
+import { branding } from "@/edition/branding";
 
 interface HeaderProps {
-  logoSrc: StaticImageData;
-  logoAlt: string;
   contentRef: React.RefObject<HTMLDivElement>;
 }
 
-const Hero: FunctionComponent<HeaderProps> = ({
-  logoSrc,
-  logoAlt,
-  contentRef,
-}) => {
+const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
   const { user } = useSession();
 
   return (
@@ -26,6 +21,16 @@ const Hero: FunctionComponent<HeaderProps> = ({
         ref={contentRef}
         className="artwork-clean artwork-readable relative flex size-full min-h-screen flex-col items-center justify-center bg-cover bg-center bg-no-repeat text-center"
       >
+        <h1 className="sr-only">
+          {branding.name} {branding.year}
+        </h1>
+        <Image
+          src="/favicon.ico"
+          width={256}
+          height={296}
+          alt={branding.heroLogoAlt}
+          className="mt-20 h-auto w-1/2 max-w-80 object-contain"
+        />
         <motion.div
           initial={{
             opacity: 0,
@@ -38,13 +43,8 @@ const Hero: FunctionComponent<HeaderProps> = ({
           viewport={{
             once: true,
           }}
-          className="flex w-full flex-col items-center justify-center gap-28 pt-20 md:px-14"
+          className="flex w-full flex-col items-center justify-center pb-20 md:px-14"
         >
-          <Image
-            className="mt-12 max-h-95 w-1/2 object-contain drop-shadow-md md:mt-0 lg:max-h-145 lg:w-96"
-            src={logoSrc}
-            alt={logoAlt}
-          />
           <motion.div
             initial={{
               opacity: 0,

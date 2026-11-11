@@ -9,8 +9,8 @@ Local checks on 11 November 2026; design references are not QA evidence.
 - `pnpm lint`: passed with five pre-existing formatting warnings. Final touched
   component check passed with one canonical Tailwind class warning.
 - `pnpm typecheck` and `pnpm exec prisma validate`: passed.
-- Production build: passed before the final app-mark correction; final rebuild
-  is recorded in the PR once completed.
+- Production build: passed after the final auth app-mark correction. The
+  post-merge build is recorded in the PR.
 - `git diff --check` and changed-source formatting checks: passed.
 
 ## Browser checks

@@ -18,8 +18,12 @@ host port. Never expose S3 credentials to the browser.
 
 Keep one resource per environment. Web, migration and cleanup replica counts
 are literal `1`; there is no `WEB_REPLICAS` environment setting. Multiple web
-copies are unverified on Coolify and require #419's staging/configuration and
-shared-state checks before a reviewed configuration change. Singleton ownership
+copies require #419's staging/configuration and shared-state checks before a
+reviewed configuration change. Every copy must receive the same `JWT_SECRET`,
+`AUTH_SECRET` and public addresses; Coolify makes different generated secrets
+for a new resource, so duplicate the existing resource with its environment.
+Run the [multi-copy parity spec](../tests/e2e/README.md#multi-copy-parity-456)
+behind the load balancer and again through Cloudflare. Singleton ownership
 is operator-enforced; CLI scaling overrides and duplicate resources bypass it.
 See the [release worker runbook](operations/release-workers.md)
 for rollout ordering, duplicate-resource restrictions and verification.
