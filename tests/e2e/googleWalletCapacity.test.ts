@@ -190,6 +190,9 @@ test.runIf(
       await expect(createGoogleWalletSaveUrl(student)).rejects.toMatchObject({
         status: 429,
       });
+      await expect(prisma.user.count()).rejects.toMatchObject({
+        code: "P2024",
+      });
       const handler = defineHandler({
         handler: () => new Response(null, { status: 204 }),
       });
