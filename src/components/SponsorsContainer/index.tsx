@@ -10,7 +10,7 @@ interface SponsorsContainerProps {
 }
 const SponsorsContainer: React.FC<SponsorsContainerProps> = ({ sponsors }) => {
   return (
-    <motion.div className="flex flex-col items-center justify-center py-12">
+    <motion.div className="flex w-full flex-col items-center justify-center py-12">
       <h2 className="z-0 mx-2 mb-8 text-center text-3xl text-secondary md:text-4xl lg:mb-4">
         Agradecimentos
       </h2>
