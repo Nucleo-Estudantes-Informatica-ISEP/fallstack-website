@@ -2,15 +2,17 @@
 
 Local checks on 11 November 2026; design references are not QA evidence.
 
-- Focused asset, CSP and company-content tests: 39 passed.
-- Full `pnpm test`: 859 passed, 51 failed, 12 skipped. Nine failing files/suites
+- Focused asset, CSP, company-content and homepage tests: 42 passed after
+  integrating dev at 51da900.
+- Full `pnpm test` before integrating the latest dev: 859 passed, 51 failed, 12 skipped. Nine failing files/suites
   require PostgreSQL at localhost:5432, which was unavailable. No shared DB
   was used, and no migrations or destructive data commands were run.
 - `pnpm lint`: passed with five pre-existing formatting warnings. Final touched
-  component check passed with one canonical Tailwind class warning.
+  component check passed; the canonical Tailwind class warning was normalized
+  by the repository commit hook.
 - `pnpm typecheck` and `pnpm exec prisma validate`: passed.
-- Production build: passed after the final auth app-mark correction. The
-  post-merge build is recorded in the PR.
+- Production build and typecheck passed after integrating dev and correcting
+  the hero accessible name to use the current branding fields.
 - `git diff --check` and changed-source formatting checks: passed.
 
 ## Browser checks
@@ -45,3 +47,16 @@ environment. No full performance or all-panel accessibility claim is made.
 The temporary countdown composite stays intact, as documented in ADR 0030.
 The shared asset is smaller than both the combined old backgrounds and the
 old hero; no extra runtime JavaScript or blur filter was introduced.
+
+## Production CSP smoke check
+
+Started the completed build with `NODE_ENV=production` on port 3108. Auth
+returned 200 with enforced `script-src 'self' 'nonce-…' 'strict-dynamic'` and
+`img-src 'self' data: blob:`. Shared artwork and bundled Inter loaded, 36 script
+elements carried nonces, no external font request or horizontal overflow was
+observed. Console errors were the expected anonymous session 401 responses;
+no CSP violation was reported. This was a local build served by `next start`,
+which warns about the standalone output configuration, not a deployed-container
+check. Task-owned server and preview tabs were stopped/closed afterward.
+
+![Production auth at 1280 CSS pixels](auth-1280.png)

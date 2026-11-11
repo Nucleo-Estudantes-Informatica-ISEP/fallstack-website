@@ -28,7 +28,7 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
           src="/favicon.ico"
           width={256}
           height={296}
-          alt={branding.heroLogoAlt}
+          alt={`${branding.name} ${branding.year}`}
           className="mt-20 h-auto w-1/2 max-w-80 object-contain"
         />
         <motion.div
