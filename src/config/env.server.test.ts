@@ -10,6 +10,16 @@ afterEach(() => {
   process.env = { ...originalEnv };
 });
 
+test.each([undefined, "false", "true"])(
+  "showcase flag %s defaults to the countdown",
+  async (value) => {
+    if (value === undefined) delete process.env.SHOWCASE_FULL_WEBSITE;
+    else process.env.SHOWCASE_FULL_WEBSITE = value;
+    const { serverEnv } = await import("./env.server");
+    expect(serverEnv.SHOWCASE_FULL_WEBSITE).toBe(value === "true");
+  }
+);
+
 test.each([undefined, "", "false", "true"])(
   "parses never-enabled declaration %s without truthy-string coercion",
   async (value) => {

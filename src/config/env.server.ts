@@ -19,6 +19,10 @@ const serverEnvSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  SHOWCASE_FULL_WEBSITE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   JWT_SECRET: z
     .string()
     .min(32, "JWT_SECRET must be at least 32 characters long"),
