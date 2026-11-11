@@ -68,8 +68,8 @@ test("optimized source references resolve and stay within the transfer budget", 
     expect(bytes.length, url).toBeLessThan(150_000);
     totalBytes += bytes.length;
   }
-  expect(references.size).toBe(7);
-  expect(totalBytes).toBeLessThan(350_000);
+  expect(references.size).toBe(1);
+  expect(totalBytes).toBeLessThan(32_582);
 });
 
 test.each([

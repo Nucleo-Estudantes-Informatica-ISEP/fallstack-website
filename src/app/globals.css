@@ -88,12 +88,6 @@
       "cv05" 1;
   }
 
-  @supports (font-variation-settings: normal) {
-    :root {
-      font-family: InterVariable, sans-serif;
-    }
-  }
-
   h1,
   h2,
   h3,
@@ -151,4 +145,17 @@
   .firefox-scrollbar-margin {
     padding-right: 4px;
   }
+}
+
+/* Shared no-logo artwork; cover preserves aspect ratio without layout work. */
+.artwork-clean {
+  background: var(--color-background)
+    url("/assets/optimized/theme-clean.a9aad2a7a171.webp") center / cover
+    no-repeat;
+}
+/* White text stays >= 4.5:1 even over the artwork's lightest pixels. */
+.artwork-readable {
+  background-image:
+    linear-gradient(#14141499, #14141499),
+    url("/assets/optimized/theme-clean.a9aad2a7a171.webp");
 }

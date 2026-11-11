@@ -13,21 +13,13 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
       <Topbar />
       <main id="main-content">
         <div className="flex h-svh flex-col bg-background pt-16 md:flex-row md:pt-0">
-          <div className="w-full md:hidden">
+          <div className="artwork-clean relative aspect-24/5 w-full shrink-0 md:aspect-auto md:size-full md:w-1/2">
             <Image
-              src={"/assets/optimized/hero_privacy_policy.c5fb8aa9d266.webp"}
-              width={1920}
-              height={400}
-              alt="Auth Header"
-              className="h-auto w-full"
-            />
-          </div>
-          <div className="relative hidden size-full md:block md:w-1/2">
-            <Image
-              src={"/assets/optimized/auth-component.247f2d9a6d0a.webp"}
-              fill
-              alt="Auth Header"
-              className="object-cover"
+              src="/favicon.ico"
+              width={128}
+              height={128}
+              alt="Fallstack 2026"
+              className="absolute inset-0 m-auto h-3/4 w-auto max-w-32 object-contain md:h-48 md:max-w-48"
             />
           </div>
           <div className="flex size-full items-center justify-center overflow-y-auto px-6 py-8 md:w-1/2 md:px-12 md:py-16">
