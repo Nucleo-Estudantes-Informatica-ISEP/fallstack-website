@@ -44,6 +44,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkedinError, setLinkedinError] = useState<string | null>(null);
 
   const router = useRouter();
   const privacyRef = useRef<HTMLInputElement>(null);
@@ -92,7 +93,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       const linkedin = data.linkedin?.trim();
       if (linkedin && !isValidLinkedinUrl(linkedin)) {
-        return setError(LINKEDIN_FORMAT_ERROR);
+        return setLinkedinError(LINKEDIN_FORMAT_ERROR);
       }
 
       setLoading(true);
@@ -214,14 +215,26 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             />
           }
           center
+          aria-invalid={linkedinError ? true : undefined}
+          aria-describedby={linkedinError ? "signup-linkedin-error" : undefined}
           value={data.linkedin ?? ""}
-          onChange={(event) =>
+          onChange={(event) => {
+            setLinkedinError(null);
             setData((previous) => ({
               ...previous,
               linkedin: event.target.value,
-            }))
-          }
+            }));
+          }}
         />
+        {linkedinError && (
+          <p
+            id="signup-linkedin-error"
+            role="alert"
+            className="mt-2 text-sm text-red-400"
+          >
+            {linkedinError}
+          </p>
+        )}
       </div>
 
       <div className="mt-6 flex items-center gap-2.5 field-text text-white lg:mt-9">

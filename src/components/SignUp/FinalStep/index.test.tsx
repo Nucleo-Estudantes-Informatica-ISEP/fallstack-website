@@ -98,6 +98,13 @@ test("does not submit a LinkedIn URL the profile editor would reject", async () 
   expect(
     await screen.findByText("O teu Linkedin não segue o formato correto!")
   ).toBeInTheDocument();
+  expect(screen.getByRole("textbox")).toHaveAttribute("aria-invalid", "true");
+  expect(screen.getByRole("textbox")).toHaveAttribute(
+    "aria-describedby",
+    "signup-linkedin-error"
+  );
+  expect(screen.getByRole("checkbox")).not.toHaveAttribute("aria-invalid");
+  expect(screen.getByRole("checkbox")).not.toHaveAttribute("aria-describedby");
   expect(getSessionMock).not.toHaveBeenCalled();
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
