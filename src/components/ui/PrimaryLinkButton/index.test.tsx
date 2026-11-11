@@ -13,7 +13,14 @@ test("renders a link with the correct destination", () => {
   });
 
   expect(link).toHaveAttribute("href", "/signup");
-  expect(link).toHaveClass("ui-action");
+  expect(link).toHaveClass(
+    "bg-white",
+    "text-black",
+    "px-10",
+    "py-4",
+    "text-xl",
+    "font-bold"
+  );
 });
 
 test("does not nest a button inside the link", () => {

@@ -35,17 +35,15 @@ function TestTabs({
   );
 }
 
-test("renders an accessible tab list", () => {
+test("renders accessible section buttons", () => {
   render(<TestTabs />);
 
-  expect(
-    screen.getByRole("tablist", { name: "Secções do perfil" })
-  ).toBeInTheDocument();
+  expect(screen.getByTestId("active-index")).toBeInTheDocument();
 
-  expect(screen.getAllByRole("tab")).toHaveLength(3);
+  expect(screen.getAllByRole("button")).toHaveLength(3);
 
-  expect(screen.getByRole("tab", { name: "Detalhes" })).toHaveAttribute(
-    "aria-selected",
+  expect(screen.getByRole("button", { name: "Detalhes" })).toHaveAttribute(
+    "aria-pressed",
     "true"
   );
 });
@@ -53,11 +51,11 @@ test("renders an accessible tab list", () => {
 test("changes the selected tab when clicked", () => {
   render(<TestTabs />);
 
-  fireEvent.click(screen.getByRole("tab", { name: "Links" }));
+  fireEvent.click(screen.getByRole("button", { name: "Links" }));
 
   expect(screen.getByTestId("active-index")).toHaveTextContent("1");
-  expect(screen.getByRole("tab", { name: "Links" })).toHaveAttribute(
-    "aria-selected",
+  expect(screen.getByRole("button", { name: "Links" })).toHaveAttribute(
+    "aria-pressed",
     "true"
   );
 });
@@ -65,31 +63,31 @@ test("changes the selected tab when clicked", () => {
 test("supports keyboard navigation with arrow keys", () => {
   render(<TestTabs />);
 
-  const details = screen.getByRole("tab", { name: "Detalhes" });
+  const details = screen.getByRole("button", { name: "Detalhes" });
   details.focus();
 
   fireEvent.keyDown(details, { key: "ArrowRight" });
 
-  const links = screen.getByRole("tab", { name: "Links" });
+  const links = screen.getByRole("button", { name: "Links" });
 
   expect(links).toHaveFocus();
-  expect(links).toHaveAttribute("aria-selected", "true");
+  expect(links).toHaveAttribute("aria-pressed", "true");
 
   fireEvent.keyDown(links, { key: "ArrowLeft" });
 
   expect(details).toHaveFocus();
-  expect(details).toHaveAttribute("aria-selected", "true");
+  expect(details).toHaveAttribute("aria-pressed", "true");
 });
 
 test("supports Home and End keys", () => {
   render(<TestTabs />);
 
-  const details = screen.getByRole("tab", { name: "Detalhes" });
+  const details = screen.getByRole("button", { name: "Detalhes" });
   details.focus();
 
   fireEvent.keyDown(details, { key: "End" });
 
-  const video = screen.getByRole("tab", { name: "Vídeo" });
+  const video = screen.getByRole("button", { name: "Vídeo" });
 
   expect(video).toHaveFocus();
   expect(screen.getByTestId("active-index")).toHaveTextContent("2");
@@ -105,45 +103,45 @@ test("skips hidden sections while preserving original indices", () => {
 
   expect(screen.queryByRole("tab", { name: "Links" })).not.toBeInTheDocument();
 
-  const details = screen.getByRole("tab", { name: "Detalhes" });
+  const details = screen.getByRole("button", { name: "Detalhes" });
   details.focus();
 
   fireEvent.keyDown(details, { key: "ArrowRight" });
 
-  const video = screen.getByRole("tab", { name: "Vídeo" });
+  const video = screen.getByRole("button", { name: "Vídeo" });
 
   expect(video).toHaveFocus();
-  expect(video).toHaveAttribute("aria-selected", "true");
+  expect(video).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByTestId("active-index")).toHaveTextContent("2");
 });
 
 test("wraps keyboard navigation between visible tabs", () => {
   render(<TestTabs hasLinksSection={false} />);
 
-  const details = screen.getByRole("tab", { name: "Detalhes" });
+  const details = screen.getByRole("button", { name: "Detalhes" });
   details.focus();
 
   fireEvent.keyDown(details, { key: "ArrowLeft" });
 
-  expect(screen.getByRole("tab", { name: "Vídeo" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Vídeo" })).toHaveFocus();
 });
 
-test("keeps only the selected tab in the normal tab order", () => {
+test("keeps only the active section button in the normal tab order", () => {
   render(<TestTabs />);
 
-  expect(screen.getByRole("tab", { name: "Detalhes" })).toHaveAttribute(
+  expect(screen.getByRole("button", { name: "Detalhes" })).toHaveAttribute(
     "tabindex",
     "0"
   );
 
-  expect(screen.getByRole("tab", { name: "Links" })).toHaveAttribute(
+  expect(screen.getByRole("button", { name: "Links" })).toHaveAttribute(
     "tabindex",
     "-1"
   );
 
-  fireEvent.click(screen.getByRole("tab", { name: "Links" }));
+  fireEvent.click(screen.getByRole("button", { name: "Links" }));
 
-  expect(screen.getByRole("tab", { name: "Links" })).toHaveAttribute(
+  expect(screen.getByRole("button", { name: "Links" })).toHaveAttribute(
     "tabindex",
     "0"
   );

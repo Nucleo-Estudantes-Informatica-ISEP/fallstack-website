@@ -64,18 +64,17 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
 
     setActiveTabIndex(nextTab.index);
 
-    const buttons =
-      event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="tab"]');
+    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      "button[aria-pressed]"
+    );
 
     buttons[nextPosition]?.focus();
   };
 
   return (
     <div
-      role="tablist"
-      aria-label="Secções do perfil"
       onKeyDown={handleKeyDown}
-      className="relative mx-auto flex w-full flex-col items-center justify-between md:flex-row"
+      className="mx-auto flex w-full flex-col items-center justify-between md:flex-row"
     >
       <div
         className={`absolute top-28 left-0 ${tabWidth} bg-modal-accent mt-2 mr-2 hidden h-1 rounded-lg transition-transform duration-300 ease-in-out hover:brightness-90 sm:block ${
@@ -93,8 +92,7 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
           key={index}
           id={`${tabsId}-tab-${index}`}
           type="button"
-          role="tab"
-          aria-selected={activeTabIndex === index}
+          aria-pressed={activeTabIndex === index}
           tabIndex={activeTabIndex === index ? 0 : -1}
           onClick={() => setActiveTabIndex(index)}
           className={`ui-focus z-10 mx-4 min-h-11 flex-1 cursor-pointer rounded-lg px-3 py-2 text-center text-lg transition-colors ${

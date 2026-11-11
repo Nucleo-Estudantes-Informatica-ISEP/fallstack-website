@@ -36,7 +36,7 @@ const PrimaryLinkButton: React.FC<PrimaryLinkButtonProps> = ({
       aria-disabled={isDisabled || undefined}
       aria-busy={loading || undefined}
       tabIndex={isDisabled ? -1 : rest.tabIndex}
-      className={`ui-action ${
+      className={`inline-flex items-center justify-center bg-white px-10 py-4 text-xl font-bold text-black transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
         isDisabled ? "cursor-not-allowed opacity-60" : ""
       } ${className ?? ""}`}
     >
