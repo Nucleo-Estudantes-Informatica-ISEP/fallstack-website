@@ -18,7 +18,7 @@ const App = async (props: AppProps) => {
 
   return (
     <AuthContextProvider>
-      {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+      {}
       <Topbar />
       <main id="main-content">
         <div className="flex h-svh flex-col bg-background pt-16 md:flex-row md:pt-0">
