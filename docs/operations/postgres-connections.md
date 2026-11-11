@@ -107,7 +107,7 @@ deployed routing and restart configuration still require separate verification.
   Prefer at least two slots within the agreed budget; see
   The flag must be exactly
   `true` or `false` in lowercase; invalid values prevent server environment validation.
-  [ADR 0030](../decisions/0030-opt-in-single-connection-deletion.md).
+  [ADR 0032](../decisions/0032-opt-in-single-connection-deletion.md).
   Larger pools still admit two operations. Ordinary queries
   can occupy all request slots, so an admitted Wallet transaction can still
   exhaust its `maxWait` and fail with P2028. Pool wait

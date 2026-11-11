@@ -69,6 +69,7 @@ async function seedAdmin() {
       role: null,
       name: "Admin",
       adminRole: AdminRole.SUPER_ADMIN,
+      zitadelUserId: "local-admin",
     },
   });
 
@@ -85,7 +86,7 @@ async function seedStudent() {
   }
 
   const user = await prisma.user.create({
-    data: { email, role: Role.STUDENT },
+    data: { email, role: Role.STUDENT, zitadelUserId: "local-student" },
   });
   await prisma.student.create({
     data: {
@@ -109,7 +110,7 @@ async function seedStudent2() {
   }
 
   const user = await prisma.user.create({
-    data: { email, role: Role.STUDENT },
+    data: { email, role: Role.STUDENT, zitadelUserId: "local-student-2" },
   });
   await prisma.student.create({
     data: {
@@ -168,7 +169,11 @@ async function seedCompanies() {
     let user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
       user = await prisma.user.create({
-        data: { email, role: Role.EMPLOYEE },
+        data: {
+          email,
+          role: Role.EMPLOYEE,
+          zitadelUserId: `local-${companySeed.name.toLowerCase()}`,
+        },
       });
     }
 

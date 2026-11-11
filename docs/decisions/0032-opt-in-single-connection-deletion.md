@@ -1,4 +1,4 @@
-# 0030: Opt in to single-connection account deletion
+# 0032: Opt in to single-connection account deletion
 
 Status: Accepted
 Date: 2026-11-08

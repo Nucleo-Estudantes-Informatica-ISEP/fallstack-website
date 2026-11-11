@@ -1,6 +1,6 @@
 # 0028: Bound runtime PostgreSQL pools
 
-Status: Superseded by [ADR 0030](0030-opt-in-single-connection-deletion.md) (one-slot Wallet deletion clause only)
+Status: Superseded by [ADR 0032](0032-opt-in-single-connection-deletion.md) (one-slot Wallet deletion clause only)
 Date: 2026-11-03
 Amends: [ADR 0024](0024-separate-liveness-and-dependency-readiness.md) (the readiness `SELECT 1` runs on its own one-connection pool, not the request pool); [ADR 0027](0027-readiness-checks-and-graceful-shutdown.md) (drain timeout 25s to 65s, web stop grace 45s to 90s)
 Source: [Task02-A #414](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/414)

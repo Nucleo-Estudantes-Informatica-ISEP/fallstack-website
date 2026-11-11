@@ -16,12 +16,14 @@ const CookieConsent: React.FC = () => {
   const { isInstallable, handleConfirm } = useContext(InstallableContext);
 
   useEffect(() => {
-    const hide = localStorage.getItem(config.localStorage.hideInstallPrompt);
+    const hide = window.localStorage.getItem(
+      config.localStorage.hideInstallPrompt
+    );
     setVisible(isInstallable && !hide);
   }, [isInstallable]);
 
   const handleHideForever = () => {
-    localStorage.setItem(config.localStorage.hideInstallPrompt, "yes");
+    window.localStorage.setItem(config.localStorage.hideInstallPrompt, "yes");
     setVisible(false);
   };
 

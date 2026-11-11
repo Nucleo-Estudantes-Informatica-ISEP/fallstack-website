@@ -83,7 +83,7 @@ const UserImage: React.FC<UserImageProps> = ({
     <motion.div
       initial="initial"
       whileHover="hover"
-      className={`${containerClass} hover:cursor-pointer`}
+      className={`${containerClass} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary hover:cursor-pointer`}
     >
       <Image
         width={328}
@@ -99,6 +99,7 @@ const UserImage: React.FC<UserImageProps> = ({
         />
         <motion.input
           onChange={handleChange}
+          aria-label="Alterar foto de perfil"
           accept="image/*"
           type="file"
           className="absolute top-0 left-0 z-10 size-full rounded-full opacity-0"
