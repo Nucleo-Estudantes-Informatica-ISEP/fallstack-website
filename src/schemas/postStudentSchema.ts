@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { linkedinUrlSchema } from "./studentLinkedinSchema";
+
 export const postStudentSchema = z.object({
   name: z.string().min(1).max(100),
   bio: z.string().max(1000).optional(),
-  linkedin: z.url().max(2048).nullable().optional(),
+  linkedin: linkedinUrlSchema.nullable().optional(),
   year: z.enum([
     "1º Ano Licenciatura",
     "2º Ano Licenciatura",

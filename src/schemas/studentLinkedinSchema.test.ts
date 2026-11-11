@@ -36,3 +36,34 @@ test("student profile and admin updates reject relative LinkedIn URLs", () => {
     }).success
   ).toBe(false);
 });
+
+test.each([
+  "javascript:alert(1)",
+  "https://evil.example/in/x",
+  "http://www.linkedin.com/in/x",
+  "https://www.linkedin.com/company/acme",
+])("LinkedIn schemas reject %s", (linkedin) => {
+  expect(patchStudentSchema.safeParse({ linkedin }).success).toBe(false);
+  expect(updateAdminStudentSchema.safeParse({ linkedin }).success).toBe(false);
+  expect(
+    postStudentSchema.safeParse({
+      name: "Student",
+      year: "3º Ano Licenciatura",
+      interests: [],
+      linkedin,
+    }).success
+  ).toBe(false);
+});
+
+test("clearing LinkedIn with an empty string is accepted on update", () => {
+  expect(patchStudentSchema.safeParse({ linkedin: "" }).success).toBe(true);
+  expect(patchStudentSchema.safeParse({ bio: "x", linkedin: "" }).success).toBe(
+    true
+  );
+  expect(updateAdminStudentSchema.safeParse({ linkedin: "" }).success).toBe(
+    true
+  );
+  expect(updateAdminStudentSchema.safeParse({ linkedin: null }).success).toBe(
+    true
+  );
+});

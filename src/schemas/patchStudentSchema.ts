@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { linkedinOrEmptySchema } from "./studentLinkedinSchema";
+
 export const patchStudentSchema = z
   .object({
     bio: z.string().max(1000),
-    linkedin: z.url().max(2048),
+    linkedin: linkedinOrEmptySchema,
     github: z.string().max(2048),
     interests: z.array(z.uuid()).max(50),
   })
