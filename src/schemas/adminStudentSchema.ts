@@ -20,7 +20,7 @@ export const updateAdminStudentSchema = z
     name: z.string().min(1).max(100),
     bio: z.string().max(1000).nullable(),
     year: yearSchema,
-    linkedin: z.string().max(200).nullable(),
+    linkedin: z.url().max(200).nullable(),
     github: z.string().max(200).nullable(),
     avatar: z.string().max(2048).nullable(),
     password: z.string().min(8),

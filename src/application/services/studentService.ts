@@ -90,6 +90,8 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
     );
     await connectStudentInterests(userId, body.interests, tx);
     await completeAction(code, actionNames.createProfile, tx);
+    if (body.linkedin)
+      await completeAction(code, actionNames.updateLinkedin, tx);
     if (cv) await completeAction(code, actionNames.uploadCv, tx);
     await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
     return student;

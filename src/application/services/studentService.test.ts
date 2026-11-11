@@ -1,7 +1,11 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { actionNames } from "@/edition/actions";
+
 import { countInterestsByIds } from "../repositories/interestRepository";
 import {
+  createStudent,
+  findStudentByCode,
   setStudentInterests,
   updateStudentFields,
   updateStudentMedia,
@@ -9,8 +13,10 @@ import {
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
 import { updateUserActive } from "../repositories/userRepository";
+import { completeAction } from "./actionService";
 import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
 import {
+  createStudentProfile,
   deleteStudentForAdmin,
   updateStudent,
   updateStudentForAdmin,
@@ -26,6 +32,9 @@ vi.mock("../repositories/savedStudentRepository", () => ({
   isStudentSaved: vi.fn(),
 }));
 vi.mock("../repositories/studentRepository", () => ({
+  connectStudentInterests: vi.fn(),
+  createStudent: vi.fn(),
+  findStudentByCode: vi.fn(),
   setStudentInterests: vi.fn(),
   updateStudentFields: vi.fn(),
   updateStudentMedia: vi.fn(),
@@ -50,6 +59,8 @@ beforeEach(() => {
   vi.mocked(countInterestsByIds).mockImplementation(
     (async (ids: string[]) => ids.length) as never
   );
+  vi.mocked(findStudentByCode).mockResolvedValue(null);
+  vi.mocked(createStudent).mockResolvedValue({ id: "s1" } as never);
   vi.mocked(updateStudentFields).mockResolvedValue({ id: "s1" } as never);
   vi.mocked(updateStudentProfile).mockResolvedValue({
     id: "s1",
@@ -58,6 +69,35 @@ beforeEach(() => {
   vi.mocked(withTransaction).mockImplementation((async (
     callback: (db: never) => unknown
   ) => callback(tx)) as never);
+});
+
+test("completes the LinkedIn action during signup when a LinkedIn URL is provided", async () => {
+  await createStudentProfile("u1", {
+    name: "Student",
+    year: "3º Ano Licenciatura",
+    interests: [],
+    linkedin: "https://www.linkedin.com/in/example",
+  });
+
+  expect(completeAction).toHaveBeenCalledWith(
+    expect.any(String),
+    actionNames.updateLinkedin,
+    tx
+  );
+});
+
+test("does not complete the LinkedIn action during signup without a LinkedIn URL", async () => {
+  await createStudentProfile("u1", {
+    name: "Student",
+    year: "3º Ano Licenciatura",
+    interests: [],
+  });
+
+  expect(completeAction).not.toHaveBeenCalledWith(
+    expect.any(String),
+    actionNames.updateLinkedin,
+    tx
+  );
 });
 
 test("saving a profile forwards only the profile fields and sets interests separately", async () => {
