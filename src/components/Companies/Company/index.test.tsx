@@ -4,9 +4,9 @@ import { expect, test, vi } from "vitest";
 import Company from ".";
 
 vi.mock("next/image", () => ({
-  default: ({ fill, ...props }: { fill?: boolean; alt: string }) => (
+  default: ({ fill, alt, ...props }: { fill?: boolean; alt: string }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img {...props} data-fill={fill} />
+    <img {...props} alt={alt} data-fill={fill} />
   ),
 }));
 
