@@ -321,12 +321,12 @@ test("local Compose starts an isolated full development stack", () => {
       "@minio:9000"
     );
   }
-  expect(
-    compose.services.web.depends_on?.migrate?.condition
-  ).toBe("service_completed_successfully");
-  expect(
-    compose.services.web.depends_on?.redis?.condition
-  ).toBe("service_healthy");
+  expect(compose.services.web.depends_on?.migrate?.condition).toBe(
+    "service_completed_successfully"
+  );
+  expect(compose.services.web.depends_on?.redis?.condition).toBe(
+    "service_healthy"
+  );
   for (const service of [
     "minio-init-avatars",
     "minio-init-logos",
@@ -354,9 +354,9 @@ test("local Compose starts an isolated full development stack", () => {
   expect(webEnvironment.AUTH_REDIRECT_URI).toContain(
     "FALLSTACK_LOCAL_AUTH_REDIRECT_URI"
   );
-  expect(
-    compose.services["minio-init-avatars"].image
-  ).toContain("coollabsio/minio:");
+  expect(compose.services["minio-init-avatars"].image).toContain(
+    "coollabsio/minio:"
+  );
   expect(source).toContain('["CMD", "/usr/bin/mc", "ready", "local"]');
   expect(compose.volumes).toEqual(
     expect.objectContaining({
@@ -365,4 +365,13 @@ test("local Compose starts an isolated full development stack", () => {
       minio_data: expect.any(Object),
     })
   );
+});
+
+test("production runner excludes npm's independent dependency tree", () => {
+  const dockerfile = readFileSync(path.join(ROOT, "Dockerfile"), "utf-8");
+  const runner = dockerfile.split("FROM base AS runner")[1];
+  expect(runner).toContain(
+    "RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx"
+  );
+  expect(runner).toContain('CMD ["node", "server.js"]');
 });

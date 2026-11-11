@@ -109,6 +109,8 @@ RUN --mount=type=cache,id=fallstack-next,target=/app/.next/cache,sharing=locked 
   fi
 
 FROM base AS runner
+# Runtime starts node directly; npm bundles vulnerable libraries outside pnpm.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
