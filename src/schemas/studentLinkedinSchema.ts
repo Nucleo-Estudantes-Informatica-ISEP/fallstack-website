@@ -6,7 +6,7 @@ import { z } from "zod";
 // Written without nested quantifiers to avoid catastrophic backtracking.
 // LinkedIn serves public profiles from `www` and from two-letter country hosts
 // such as `ca.linkedin.com` or `pt.linkedin.com`.
-const HOST = "(?:www|[a-z]{2})\\.linkedin\\.com";
+const HOST = "(?:(?:www|[a-z]{2})\\.)?linkedin\\.com";
 const SEGMENT = "[A-Za-zÀ-ú0-9ç_%-]+";
 const LINKEDIN_PATTERN = new RegExp(
   `^https://${HOST}/in/${SEGMENT}(?:/${SEGMENT})*/?$`

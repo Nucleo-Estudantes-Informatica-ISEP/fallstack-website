@@ -38,6 +38,8 @@ test("student profile and admin updates reject relative LinkedIn URLs", () => {
 });
 
 test.each([
+  "https://linkedin.com/in/example",
+  "https://linkedin.com/in/example/",
   "https://ca.linkedin.com/in/example",
   "https://pt.linkedin.com/in/example/",
   "https://www.linkedin.com/in/jo%C3%A3o-silva",

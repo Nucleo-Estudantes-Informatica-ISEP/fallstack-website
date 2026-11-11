@@ -140,7 +140,7 @@ test("rejects a LinkedIn address the profile editor would reject, before any req
 
   renderFinalStep();
   fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
-    target: { value: "https://linkedin.com/in/example" },
+    target: { value: "https://evil.example/in/example" },
   });
   acceptPrivacyAndSubmit();
 
@@ -151,20 +151,24 @@ test("rejects a LinkedIn address the profile editor would reject, before any req
   expect(createStudentProfileMock).not.toHaveBeenCalled();
 });
 
-test("sends a valid LinkedIn address with the profile", async () => {
+test.each([
+  "https://www.linkedin.com/in/example",
+  "https://linkedin.com/in/example",
+  "https://pt.linkedin.com/in/example",
+])("sends valid LinkedIn address %s with the profile", async (linkedin) => {
   getSessionMock.mockResolvedValue({ role: "STUDENT", student: null });
   createStudentProfileMock.mockResolvedValue(true);
 
   renderFinalStep();
   fireEvent.change(screen.getByPlaceholderText(/linkedin\.com\/in/), {
-    target: { value: "https://www.linkedin.com/in/example" },
+    target: { value: linkedin },
   });
   acceptPrivacyAndSubmit();
 
   await waitFor(() =>
     expect(createStudentProfileMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        linkedin: "https://www.linkedin.com/in/example",
+        linkedin,
       })
     )
   );
