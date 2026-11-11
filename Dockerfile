@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:26-alpine AS base
+FROM node:26.13.0-alpine3.24 AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
-RUN apk add --no-cache libc6-compat curl openssl \
+RUN apk upgrade --no-cache \
+  && apk add --no-cache libc6-compat openssl \
   && npm install --global corepack@0.35.0 \
   && corepack enable
 
@@ -124,6 +125,6 @@ ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
 ENV NEXT_MANUAL_SIG_HANDLE=true
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD curl -f http://localhost:4000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD node -e "fetch('http://localhost:4000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 CMD ["node", "server.js"]
