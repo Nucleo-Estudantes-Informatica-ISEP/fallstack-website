@@ -2,6 +2,7 @@
 
 Status: Accepted
 Date: 2026-11-11
+Amends: [ADR 0008](0008-enforce-content-security-policy.md) (SVG deferral only; CSP unchanged), [ADR 0026](0026-bound-upload-memory-streaming-transport.md) (bounded logo XML parsing)
 Source: [Task21 #282](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/282)
 
 ## Context
