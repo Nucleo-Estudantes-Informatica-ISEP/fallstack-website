@@ -33,3 +33,17 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.
 
 Scan results must come from the final image, not the source lockfile alone.
 No exceptions are authorized by this change.
+
+## Local verification (11 November 2026)
+
+At implementation commit `6408268`, frozen install, lint, typecheck, production
+build and Prisma validation passed. Full suite on an isolated migrated
+PostgreSQL database: 915 passed, 8 skipped. Production pnpm audit reported
+zero HIGH/CRITICAL and two MODERATE findings.
+
+The final Docker runner build was attempted, but BuildKit failed during Next.js
+compilation with `ResourceExhausted: cannot allocate memory`. Host has 8 GiB
+RAM; after failure, swap usage was 3.58 GiB and memory_pressure reported 41%
+free. No heap limits or host settings were changed, and the build was not
+blindly retried. Consequently no final-image Trivy result is claimed locally.
+The expanded CI image gate must pass before this remediation is accepted.
