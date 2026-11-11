@@ -227,12 +227,12 @@ test.runIf(
     started = resolve;
   });
   const transaction = other.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT pg_advisory_xact_lock(540, 1)`;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(540, 1)`;
     started();
     await gate;
   });
   try {
-    await held;
+    await Promise.race([held, transaction]);
     await expect(deleteUserAccount(student.id)).rejects.toMatchObject({
       status: 429,
     });
@@ -241,7 +241,10 @@ test.runIf(
     ).resolves.not.toBeNull();
   } finally {
     release();
-    await transaction;
-    await other.$disconnect();
+    try {
+      await transaction;
+    } finally {
+      await other.$disconnect();
+    }
   }
 });
