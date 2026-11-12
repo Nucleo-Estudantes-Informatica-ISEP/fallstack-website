@@ -219,11 +219,11 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
 
   return (
     <div
-      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : ""}`}
+      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
       style={{
         backgroundImage: isPersonalInfo
           ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
-          : "url(/assets/optimized/bgHero.900094f51c2f.webp)",
+          : undefined,
       }}
     >
       <div

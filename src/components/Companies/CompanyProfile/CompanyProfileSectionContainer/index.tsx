@@ -130,17 +130,7 @@ const CompanyProfileSectionContainer: React.FC<
   };
 
   return (
-    <div
-      className="flex min-h-screen w-screen flex-col"
-      style={{
-        backgroundImage: "url(/assets/optimized/bgHero.900094f51c2f.webp)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        marginLeft: "calc(50% - 50vw)",
-        marginRight: "calc(50% - 50vw)",
-      }}
-    >
+    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
       <div
         className="flex flex-col items-center pt-12 pb-8"
         style={{
@@ -173,13 +163,13 @@ const CompanyProfileSectionContainer: React.FC<
         }}
       >
         <div className="w-full shrink-0 md:w-96">
-          <nav className="overflow-hidden bg-black shadow-xl">
+          <nav className="overflow-hidden bg-background shadow-xl">
             <div className="divide-y divide-gray-800">
               {sidebarItems.map((item) => renderButton(item))}
             </div>
           </nav>
           <div style={{ height: "8px" }} />
-          <nav className="overflow-hidden bg-black shadow-xl">
+          <nav className="overflow-hidden bg-background shadow-xl">
             <div className="divide-y divide-gray-800">
               {secondaryItems.map((item) => renderButton(item))}
             </div>
@@ -187,7 +177,7 @@ const CompanyProfileSectionContainer: React.FC<
         </div>
 
         <div
-          className="flex flex-1 flex-col bg-[rgba(20,20,20,1)] p-8 shadow-xl"
+          className="flex flex-1 flex-col bg-background p-8 shadow-xl"
           style={{
             marginLeft: "clamp(0px, 0.26vw, 0px)",
             border: "1px solid #484848",
