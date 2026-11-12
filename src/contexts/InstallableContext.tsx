@@ -3,6 +3,7 @@
 import { createContext, useEffect, useState } from "react";
 
 import { BeforeInstallPromptEvent } from "@/types/BeforeInstallPromptEvent";
+import { getInstallGuidance } from "@/domain/pwa/installGuidance";
 
 export interface InstallableContextData {
   isInstallable: boolean;
@@ -34,26 +35,16 @@ export function InstallableContextProvider({
         window.matchMedia("(display-mode: standalone)").matches) ||
       (navigator as Navigator & { standalone?: boolean }).standalone === true;
 
+    setInstallInstructions(
+      getInstallGuidance({
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        maxTouchPoints: navigator.maxTouchPoints,
+        standalone: isStandalone,
+      })
+    );
+
     if (isStandalone) return;
-
-    const userAgent = navigator.userAgent;
-    const isAppleMobile =
-      /iPhone|iPad|iPod/i.test(userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-
-    if (isAppleMobile) {
-      setInstallInstructions(
-        "No iPhone ou iPad, toca em Partilhar e escolhe “Adicionar ao ecrã principal”."
-      );
-    } else if (/Android/i.test(userAgent)) {
-      setInstallInstructions(
-        "Abre o menu do browser e escolhe “Instalar aplicação” ou “Adicionar ao ecrã inicial”."
-      );
-    } else {
-      setInstallInstructions(
-        "Abre o menu do browser e procura “Instalar aplicação” ou “Instalar site”, se disponível."
-      );
-    }
 
     const handler = (e: BeforeInstallPromptEvent) => {
       e.preventDefault();

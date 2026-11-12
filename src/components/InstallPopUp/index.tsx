@@ -17,12 +17,23 @@ const CookieConsent: React.FC = () => {
     useContext(InstallableContext);
 
   useEffect(() => {
-    const hide = localStorage.getItem(config.localStorage.hideInstallPrompt);
+    let hide: string | null = null;
+    try {
+      hide = window.localStorage.getItem(config.localStorage.hideInstallPrompt);
+    } catch (error) {
+      console.warn("Could not read the install prompt preference.", error);
+    }
+
     setVisible((isInstallable || installInstructions !== null) && !hide);
   }, [installInstructions, isInstallable]);
 
   const handleHideForever = () => {
-    localStorage.setItem(config.localStorage.hideInstallPrompt, "yes");
+    try {
+      window.localStorage.setItem(config.localStorage.hideInstallPrompt, "yes");
+    } catch (error) {
+      console.warn("Could not save the install prompt preference.", error);
+    }
+
     setVisible(false);
   };
 
