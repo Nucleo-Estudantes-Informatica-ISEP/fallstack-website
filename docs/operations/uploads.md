@@ -26,7 +26,7 @@ PDF parser or image decoder. Interrupted transport is rejected even if its
 initial bytes match a valid file signature.
 
 SVG is the logo-only exception: staged bytes are parsed as UTF-8 XML and rebuilt
-using the static subset in [ADR 0030](../decisions/0030-sanitize-svg-logo-pipeline.md)
+using the static subset in [ADR 0033](../decisions/0033-sanitize-svg-logo-pipeline.md)
 before PUT. Invalid XML, DTDs and excessive complexity fail with 400. Sanitized
 output must still fit 5 MiB. This bounded parse buffers the logo in memory; raster
 images and CVs retain streamed validation/PUT. Student avatars reject SVG.

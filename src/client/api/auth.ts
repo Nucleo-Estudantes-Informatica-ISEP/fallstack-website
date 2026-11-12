@@ -2,6 +2,10 @@ import "client-only";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import { httpClient } from "@/lib/http/client";
+import {
+  PRIVACY_POLICY_VERSION,
+  TERMS_VERSION,
+} from "@/domain/student/signupPolicy";
 
 export async function createStudentProfile(
   data: StudentSignUpData & { avatarUrl?: string | null; cvId?: string }
@@ -12,6 +16,11 @@ export async function createStudentProfile(
       bio: data.bio ?? undefined,
       linkedin: data.linkedin?.trim() || undefined,
       year: data.year,
+      course: data.course,
+      privacyPolicyAccepted: data.privacyPolicyAccepted,
+      termsAccepted: data.termsAccepted,
+      privacyPolicyVersion: PRIVACY_POLICY_VERSION,
+      termsVersion: TERMS_VERSION,
       interests: data.interests,
       avatarUrl: data.avatarUrl || undefined,
       cvId: data.cvId,
