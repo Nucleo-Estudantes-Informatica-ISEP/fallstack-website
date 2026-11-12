@@ -68,6 +68,11 @@ Common commands: `pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm lint`,
 `pnpm typecheck`, `pnpm build`, `pnpm generate`. See the contribution and
 database guides for checks and migration commands.
 
+Before database-backed checks, start or reuse a confirmed isolated local test
+database and apply its migrations. Configure the checks to use it, and stop any
+database started for the task afterward. Never run destructive checks against
+shared or production services.
+
 Do not run destructive local data commands against shared services. `pnpm wipe`
 requires `NODE_ENV=development`; check the target database first.
 
