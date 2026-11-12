@@ -32,8 +32,6 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   );
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 
-  if (pathname === "/") return null;
-
   return (
     <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
       {solid ? (

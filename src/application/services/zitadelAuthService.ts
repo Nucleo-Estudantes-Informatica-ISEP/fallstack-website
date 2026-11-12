@@ -52,6 +52,7 @@ type RoleClaim = Record<string, unknown> | string[] | string | undefined;
 export interface ZitadelIdentity {
   sub: string;
   email: string;
+  loginName?: string;
   name?: string;
   emailVerified: boolean;
   isEmployee: boolean;
@@ -61,6 +62,7 @@ export interface ZitadelIdentity {
 export interface AppSessionClaims extends jwt.JwtPayload {
   sub: string;
   email: string;
+  loginName?: string;
   name?: string;
   employee: boolean;
   admin: boolean;
@@ -290,6 +292,10 @@ export async function completeAuthorizationCode(input: {
   const claims = (await response.json()) as Record<string, unknown>;
   const sub = typeof claims.sub === "string" ? claims.sub : "";
   const email = typeof claims.email === "string" ? claims.email : "";
+  const loginName =
+    typeof claims.preferred_username === "string"
+      ? claims.preferred_username
+      : undefined;
   const name = typeof claims.name === "string" ? claims.name : undefined;
   const emailVerified = claims.email_verified === true;
 
@@ -306,6 +312,7 @@ export async function completeAuthorizationCode(input: {
   return {
     sub,
     email,
+    loginName,
     name,
     emailVerified,
     isEmployee: employeeRoles.includes("employee"),
@@ -317,6 +324,7 @@ export function signAppSession(identity: ZitadelIdentity) {
   return jwt.sign(
     {
       email: identity.email,
+      loginName: identity.loginName,
       name: identity.name,
       employee: identity.isEmployee,
       admin: identity.isGlobalAdmin,
@@ -346,7 +354,7 @@ export function verifyAppSession(token: string): AppSessionClaims | null {
   }
 }
 
-export async function getLogoutUrl(idTokenHint?: string) {
+export async function getLogoutUrl(loginName?: string) {
   const discovery = await getDiscovery();
   if (!discovery.end_session_endpoint)
     return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
@@ -357,7 +365,7 @@ export async function getLogoutUrl(idTokenHint?: string) {
     serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI
   );
   url.searchParams.set("client_id", serverEnv.AUTH_CLIENT_ID);
-  if (idTokenHint) url.searchParams.set("id_token_hint", idTokenHint);
+  if (loginName) url.searchParams.set("logout_hint", loginName);
   return url.toString();
 }
 

@@ -36,24 +36,17 @@ test("worker override replaces duplicate and stale URL pool settings", () => {
   expect(url.searchParams.getAll("pool_timeout")).toEqual(["2"]);
 });
 
-test.each(["0", "11", "1.5", "", "bad"])(
-  "rejects unsafe pool size %s",
-  (value) => {
-    expect(
-      databaseEnvSchema.safeParse({ PRISMA_CONNECTION_LIMIT: value }).success
-    ).toBe(false);
-  }
-);
+test.each(["11", "1.5", "bad"])("rejects unsafe pool size %s", (value) => {
+  expect(
+    databaseEnvSchema.safeParse({ PRISMA_CONNECTION_LIMIT: value }).success
+  ).toBe(false);
+});
 
-test.each(["0", "11", "bad"])(
-  "rejects unbounded or invalid wait %s",
-  (value) => {
-    expect(
-      databaseEnvSchema.safeParse({ PRISMA_POOL_TIMEOUT_SECONDS: value })
-        .success
-    ).toBe(false);
-  }
-);
+test.each(["11", "bad"])("rejects unbounded or invalid wait %s", (value) => {
+  expect(
+    databaseEnvSchema.safeParse({ PRISMA_POOL_TIMEOUT_SECONDS: value }).success
+  ).toBe(false);
+});
 
 test("build imports need no database; malformed URLs do not leak secrets", () => {
   expect(runtimeDatabaseUrl({})).toBeUndefined();
@@ -77,3 +70,18 @@ test("standalone jobs and readiness always use one finite-wait connection", () =
   expect(url.username).toBe("runtime");
   expect(url.searchParams.get("schema")).toBe("fallstack");
 });
+
+test.each([undefined, "", "  ", "0", "-1", "0.5"])(
+  "defaults empty or below-minimum pool settings %s",
+  (value) => {
+    const url = new URL(
+      runtimeDatabaseUrl({
+        DATABASE_URL: base,
+        PRISMA_CONNECTION_LIMIT: value,
+        PRISMA_POOL_TIMEOUT_SECONDS: value,
+      })!
+    );
+    expect(url.searchParams.get("connection_limit")).toBe("3");
+    expect(url.searchParams.get("pool_timeout")).toBe("5");
+  }
+);
