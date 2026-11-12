@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useState } from "react";
-import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 
 import { branding } from "@/edition/branding";
@@ -211,25 +210,6 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
         }}
       >
         {hashtag}
-      </div>
-      {/* Fallstack Logo Avatar */}
-      <div
-        className="absolute flex items-center justify-center rounded-full border border-white/20 bg-black/30 backdrop-blur-xs"
-        style={{
-          left: 20,
-          bottom: 20,
-          width: 44,
-          height: 44,
-        }}
-        aria-hidden="true"
-      >
-        <Image
-          src="/assets/images/logo_white.svg"
-          alt="Fallstack"
-          width={28}
-          height={28}
-          className="object-contain"
-        />
       </div>
       {/* Enlarged overlay */}
       {isEnlarged && qrValue && (
