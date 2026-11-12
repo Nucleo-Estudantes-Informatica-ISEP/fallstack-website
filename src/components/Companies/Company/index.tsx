@@ -47,7 +47,9 @@ const Company: React.FC<CompanyProps> = ({
             sizes="160px"
           />
         ) : (
-          <span className="text-lg font-semibold">{name}</span>
+          <span className="line-clamp-2 text-center text-lg font-semibold">
+            {name}
+          </span>
         )}
       </Link>
     </div>

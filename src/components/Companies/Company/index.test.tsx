@@ -27,3 +27,10 @@ test("uploaded logos ignore company size and class overrides", () => {
   expect(logo.closest("a")).toHaveClass("max-w-40");
   expect(logo.closest("a")?.parentElement).not.toHaveClass("h-screen");
 });
+
+test("long names stay within logo-less cells", () => {
+  const name =
+    "A very long company name that would otherwise overflow its cell";
+  render(<Company name={name} hasContent={false} rankStyle={null} />);
+  expect(screen.getByText(name)).toHaveClass("line-clamp-2", "text-center");
+});
