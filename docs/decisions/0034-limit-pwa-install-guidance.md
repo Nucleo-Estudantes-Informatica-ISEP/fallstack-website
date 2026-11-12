@@ -1,4 +1,4 @@
-# 0033: Limit PWA install guidance to supported platforms
+# 0034: Limit PWA install guidance to supported platforms
 
 Status: Accepted
 
@@ -28,5 +28,6 @@ standalone mode.
   event and standalone wiring are covered separately.
 - Browser identification remains heuristic and must be adjusted if platform
   behavior changes.
-- Confirming Safari tab and installed-app behavior on a real iPhone remains a
-  manual release check; an emulator does not replace that evidence.
+- The Safari tab guidance and the installed app's standalone behavior were
+  confirmed manually on a real iPhone for this change. Repeat that check when
+  the install flow changes; an emulator does not replace that evidence.
