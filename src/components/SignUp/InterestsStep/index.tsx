@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
+import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -22,40 +22,31 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setData,
   availableInterests,
 }) => {
-  const [interestIds, setInterestIds] = useState<string[]>(
-    data.interests || []
-  );
-
-  const handleNext = () => {
-    setData({ ...data, interests: interestIds });
-    setCurrentStep(currentStep + 1);
-  };
-
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-          Criar uma conta
-        </p>
+    <div className="flex w-full flex-col">
+      <h1 className="signup-heading">Criar uma conta</h1>
 
-        <p className="mb-4 font-sans text-base font-normal text-white">
+      <fieldset className="min-w-0">
+        <legend className="mb-3 field-text text-white">
           Escolhe os teus interesses. (Opcional)
-        </p>
-
+        </legend>
         <InterestSelector
           availableInterests={availableInterests}
-          selectedInterestIds={interestIds}
-          setSelectedInterestIds={setInterestIds}
-          scrollable
+          selectedInterestIds={data.interests ?? []}
+          setSelectedInterestIds={(interests) =>
+            setData((previous) => ({ ...previous, interests }))
+          }
+          alignStart
         />
+      </fieldset>
 
-        <PrimaryButton
-          onClick={handleNext}
-          className="mt-4 mb-5 h-14 w-full font-bold"
-        >
-          Seguinte
-        </PrimaryButton>
-      </div>
+      <PrimaryButton
+        onClick={() => setCurrentStep(currentStep + 1)}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:mt-14 lg:h-16 lg:text-xl"
+      >
+        Seguinte
+      </PrimaryButton>
     </div>
   );
 };

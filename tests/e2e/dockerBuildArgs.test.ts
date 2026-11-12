@@ -203,7 +203,12 @@ test("every server environment variable is available to the runtime web service"
   for (const name of declaredVars.filter((name) =>
     name.startsWith("GOOGLE_WALLET_")
   )) {
-    const defaultValue = name === "GOOGLE_WALLET_NEVER_ENABLED" ? "false" : "";
+    const defaultValue = [
+      "GOOGLE_WALLET_NEVER_ENABLED",
+      "GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE",
+    ].includes(name)
+      ? "false"
+      : "";
     expectComposeVariable(
       webEnvironment,
       name,

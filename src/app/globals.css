@@ -10,7 +10,8 @@
   /* Colors (migrated from your old config) */
   --color-text: #ffffff;
   --color-background: #141414;
-  --color-primary: #f97316; /* Tailwind orange-500, the site's brand orange */
+  --color-primary: #f97316;
+  /* Tailwind orange-500, the site's brand orange */
   /* backward-compatible alias for older code (e.g. .auth-pane below) that
      uses var(--primary) directly instead of a bg-primary/text-primary
      utility - only --color-* keys become Tailwind utilities in v4, so this
@@ -26,6 +27,24 @@
   --color-company-secondary: #94a3b8;
   --color-call-to-action: #ef4444;
   --color-topbar: #1f2937;
+
+  /* Surfaces and borders */
+  --color-ui-surface: #141414;
+  --color-ui-border: #484848;
+  --color-ui-text: #ffffff;
+  --color-ui-muted: #d1d3d4;
+
+  /* Existing component accents — pending final consolidation */
+  --color-ui-action: #b1440a;
+  --color-ui-action-hover: #8d3508;
+  --color-ui-highlight: #ed8326;
+
+  /* Feedback */
+  --color-ui-error: #ef4444;
+  --color-ui-success: #10b981;
+
+  /* Keyboard focus */
+  --color-ui-focus: #ffb347;
 
   /* Background image alias */
   --image-company: var(--company-bg);
@@ -49,11 +68,73 @@
   --h-192: 48rem;
 }
 
+@utility signup-heading {
+  @apply mb-8 font-sans text-3xl leading-[1.2] font-semibold text-white lg:mb-16 lg:text-[45px];
+}
+
+@utility field-label {
+  font-weight: var(--field-label-weight, 500);
+  font-size: var(--field-font-size, var(--text-sm));
+  line-height: 1.5;
+  letter-spacing: normal;
+  margin-bottom: var(--field-label-gap, 0.375rem);
+}
+
+@utility field-text {
+  font-size: var(--field-font-size, var(--text-sm));
+  line-height: 1.5;
+  letter-spacing: normal;
+}
+
+@utility field-height {
+  min-height: var(--field-height, 3rem);
+}
+
+@utility field-border {
+  border-color: var(--field-border, rgb(255 255 255 / 35%));
+}
+
+@utility field-focus-target {
+  scroll-margin-block: 5rem 1rem;
+}
+
+@layer components {
+  .student-profile-form,
+  .student-signup-form {
+    --field-font-size: 1rem;
+    --field-label-gap: 0.25rem;
+    letter-spacing: normal;
+  }
+
+  .student-profile-form {
+    --field-border: #a3a3a3;
+  }
+
+  .student-signup-form {
+    --field-border: rgb(255 255 255 / 35%);
+    --field-label-weight: 400;
+  }
+
+  @media (min-width: 48rem) and (pointer: fine) {
+    .student-profile-form {
+      --field-height: 2.75rem;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .student-signup-form {
+      --field-height: 3.5rem;
+      --field-label-gap: 0.5rem;
+    }
+  }
+}
+
 /* Custom keyframes still go in plain CSS */
 @keyframes fade {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -107,7 +188,8 @@
   p,
   b,
   div {
-    letter-spacing: -0.03em; /* -3% */
+    letter-spacing: -0.03em;
+    /* -3% */
   }
 
   :root {
@@ -129,7 +211,8 @@
 .auth-left {
   position: relative;
   height: 100vh;
-  width: calc(100vh * 0.703125); /* 720 / 1024 = 0.703125 */
+  width: calc(100vh * 0.703125);
+  /* 720 / 1024 = 0.703125 */
   flex-shrink: 0;
 }
 
@@ -151,4 +234,64 @@
   .firefox-scrollbar-margin {
     padding-right: 4px;
   }
+}
+
+@layer components {
+  .ui-focus {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-focus;
+  }
+
+  .ui-panel {
+    @apply border border-ui-border bg-ui-surface text-ui-text;
+  }
+
+  .ui-field {
+    @apply min-h-12 w-full min-w-0 rounded-md border border-ui-border bg-ui-surface px-3 py-2 text-base text-ui-text transition-colors;
+    @apply placeholder:text-ui-muted;
+    @apply focus-visible:border-ui-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-focus;
+    @apply disabled:cursor-not-allowed disabled:opacity-100;
+    @apply aria-invalid:border-ui-error;
+  }
+
+  .ui-field:disabled,
+  .ui-field[readonly] {
+    background-color: color-mix(in srgb, var(--color-ui-surface) 85%, white);
+    color: var(--color-ui-text);
+  }
+
+  .ui-field[readonly] {
+    cursor: default;
+  }
+
+  .ui-action {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-md border border-transparent px-4 py-2 text-center text-base font-medium text-white transition-colors;
+    @apply bg-ui-action hover:bg-ui-action-hover;
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-focus;
+    @apply disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .ui-action[aria-busy="true"] {
+    cursor: progress;
+  }
+}
+
+/* Shared notification styles */
+.fallstack-toasts {
+  --toastify-color-dark: var(--color-ui-surface);
+  --toastify-text-color-dark: var(--color-ui-text);
+  --toastify-color-progress-success: var(--color-ui-success);
+  --toastify-color-progress-error: var(--color-ui-error);
+  --toastify-color-progress-warning: var(--color-ui-highlight);
+  --toastify-color-progress-info: var(--color-ui-focus);
+}
+
+.fallstack-toasts .Toastify__toast {
+  border: 1px solid var(--color-ui-border);
+  border-radius: 0.5rem;
+  font-family: Inter, sans-serif;
+}
+
+.fallstack-toasts .Toastify__close-button:focus-visible {
+  outline: 2px solid var(--color-ui-focus);
+  outline-offset: 2px;
 }

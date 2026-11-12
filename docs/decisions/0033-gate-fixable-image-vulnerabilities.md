@@ -1,4 +1,4 @@
-# 0030: Gate fixable image vulnerabilities
+# 0033: Gate fixable image vulnerabilities
 
 Status: Accepted
 Date: 2026-11-12

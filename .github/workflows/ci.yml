@@ -122,6 +122,19 @@ jobs:
           : "${TEST_REDIS_URL:?Shared limiter integration tests require TEST_REDIS_URL in CI}"
           pnpm exec vitest run --maxWorkers=2
 
+      - name: Test one-slot Wallet deletion default
+        env:
+          PRISMA_CONNECTION_LIMIT: "1"
+          PRISMA_POOL_TIMEOUT_SECONDS: "1"
+        run: env -u GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE pnpm exec vitest run tests/e2e/googleWalletCapacity.test.ts --maxWorkers=1
+
+      - name: Test one-slot Wallet deletion
+        env:
+          PRISMA_CONNECTION_LIMIT: "1"
+          PRISMA_POOL_TIMEOUT_SECONDS: "1"
+          GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: "true"
+        run: pnpm exec vitest run tests/e2e/googleWalletCapacity.test.ts --maxWorkers=1
+
       - name: Install Chromium
         run: pnpm exec playwright install chromium
 

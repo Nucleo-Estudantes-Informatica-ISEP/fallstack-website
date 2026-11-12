@@ -7,6 +7,8 @@ import {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Area } from "react-easy-crop";
@@ -23,6 +25,10 @@ import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import {
+  isValidLinkedinUrl,
+  LINKEDIN_FORMAT_ERROR,
+} from "@/schemas/linkedinSchema";
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
@@ -39,9 +45,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [linkedinError, setLinkedinError] = useState<string | null>(null);
 
   const router = useRouter();
-  const linkedinRef = useRef<HTMLInputElement>(null);
+  const termsRef = useRef<HTMLInputElement>(null);
   const privacyRef = useRef<HTMLInputElement>(null);
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,25 +69,21 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   };
 
   const handleAvatarUpload = async () => {
-    setLoading(true);
-
     let avatarUrl: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!image) {
-        setLoading(false);
+        toast.error("Não foi possível preparar a imagem.");
         return null;
       }
 
       const uploaded = await uploadAvatar(image);
       if (!uploaded) {
         toast.error("Não foi possível dar upload à imagem.");
-        setLoading(false);
         return null;
       }
       avatarUrl = uploaded.url;
     }
-    setLoading(false);
     return avatarUrl;
   };
 
@@ -89,14 +92,19 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       if (!privacyRef.current?.checked) {
         return setError("Tens de aceitar a política de privacidade.");
       }
+      if (!termsRef.current?.checked) {
+        return setError("Tens de aceitar os termos de utilização.");
+      }
+
+      const linkedin = data.linkedin?.trim();
+      if (linkedin && !isValidLinkedinUrl(linkedin)) {
+        return setLinkedinError(LINKEDIN_FORMAT_ERROR);
+      }
 
       setLoading(true);
 
-      // The account and session are established earlier in the wizard via
-      // AuthNEI (account creation happens exclusively through it - see
-      // AccountDetailsStep) - if there's no session by this point, it
-      // expired or was never established, so restart instead of hitting an
-      // Unauthorized failure on profile creation below.
+      // Check the session before uploading files because it may have expired
+      // while the student was filling out the profile.
       const existingSession = await getSession();
 
       if (!existingSession) {
@@ -113,11 +121,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return;
       }
 
-      // A session belonging to a different account type (e.g. an
-      // employee/admin browsing this public page) - not a resumable
-      // partial student signup. StudentSignUp's mount-time guard should
-      // already have redirected this case away; this is a defense-in-depth
-      // check for anyone who reaches this point regardless.
+      // The active account may have changed in another tab.
       if (existingSession.role !== "STUDENT") {
         toast.error("Já tens sessão iniciada como outro tipo de conta.");
         return setLoading(false);
@@ -135,14 +139,12 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         }
       }
 
-      // Add LinkedIn if provided
-      const linkedin = linkedinRef.current?.value || null;
-
       const profile = await createStudentProfile({
         ...data,
         avatarUrl,
         cvId,
-        linkedin,
+        privacyPolicyAccepted: true,
+        termsAccepted: true,
       });
 
       if (profile instanceof Error) {
@@ -165,108 +167,162 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   };
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="flex w-[90%] flex-col">
-        <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-          Criar uma conta
-        </p>
+    <div className="flex w-full flex-col">
+      <h1 className="signup-heading">Criar uma conta</h1>
 
-        <div className="flex max-h-[60vh] flex-col gap-y-4 overflow-y-auto">
-          <FileInput
-            name="Insere o teu CV. (Opcional)"
-            placeholder="CV ficheiro"
-            accept="application/pdf"
-            onChange={onFileChange}
-            file={data.cv ? data.cv : null}
-            icon={<FaFilePdf />}
-            onClear={() => setData({ ...data, cv: null })}
-            className="z-10"
-          />
-
-          <div className="flex w-full flex-col">
-            <label
-              className="mb-1 text-left text-sm font-normal text-white"
-              htmlFor="avatar"
-            >
-              Insere uma imagem para foto de perfil. (Opcional)
-            </label>
-            <AvatarCropper
-              {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
+      <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4 lg:[--field-icon-inset:19px] lg:[--field-icon-padding:65px]">
+        <FileInput
+          name="Insere o teu CV. (Opcional)"
+          placeholder="Insere um ficheiro"
+          accept="application/pdf"
+          onChange={onFileChange}
+          file={data.cv ? data.cv : null}
+          icon={<FaFilePdf />}
+          emptyIcon={
+            <Image
+              src="/assets/images/signup/cv.svg"
+              width={22}
+              height={18}
+              alt=""
             />
-          </div>
+          }
+          onClear={() => setData({ ...data, cv: null })}
+        />
 
-          <Input
-            type="url"
-            name="Insere o link do teu perfil do LinkedIn. (Opcional)"
-            placeholder="https://linkedin.com/in/o-teu-perfil"
-            center
-            inputRef={linkedinRef}
-            defaultValue={data.linkedin ? data.linkedin : undefined}
-            className="z-10"
+        <div className="flex w-full flex-col">
+          <label
+            className="field-label text-left text-gray-100"
+            htmlFor="avatar"
+          >
+            Insere uma imagem para foto de perfil. (Opcional)
+          </label>
+          <AvatarCropper
+            {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
+            uploadIcon={
+              <Image
+                src="/assets/images/signup/avatar.svg"
+                width={25}
+                height={26}
+                alt=""
+              />
+            }
           />
         </div>
 
-        <label
-          htmlFor="privacy"
-          className="z-10 mt-4 flex items-start text-white"
-        >
-          <input
-            type="checkbox"
-            id="privacy"
-            className="mt-1 mr-3 size-4 cursor-pointer appearance-none border border-white bg-background checked:border-white checked:bg-white"
-            style={{
-              backgroundImage: "none",
-            }}
-            ref={privacyRef}
-            onChange={(e) => {
-              if (e.target.checked) {
-                e.target.style.backgroundImage = `url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='black' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e")`;
-              } else {
-                e.target.style.backgroundImage = "none";
-              }
-            }}
-          />
-          <span>
-            Aceito a{" "}
-            <button
-              type="button"
-              onClick={() => setIsModalVisible(true)}
-              className="text-orange-500 underline"
-            >
-              política de privacidade
-            </button>
-            .
-          </span>
-        </label>
-
-        <PrivacyPolicyModal
-          isVisible={isModalVisible}
-          setIsVisible={setIsModalVisible}
+        <Input
+          type="url"
+          name="Insere o link do teu perfil do LinkedIn. (Opcional)"
+          placeholder="Insere um link"
+          icon={
+            <Image
+              src="/assets/images/signup/link.svg"
+              width={24}
+              height={24}
+              alt=""
+            />
+          }
+          center
+          aria-invalid={linkedinError ? true : undefined}
+          aria-describedby={linkedinError ? "signup-linkedin-error" : undefined}
+          value={data.linkedin ?? ""}
+          onChange={(event) => {
+            setLinkedinError(null);
+            setData((previous) => ({
+              ...previous,
+              linkedin: event.target.value,
+            }));
+          }}
         />
-
-        {error && (
-          <motion.p
-            className="mt-1 text-center text-sm font-bold text-red-600"
-            animate={{
-              y: [-15, 0],
-            }}
-            transition={{
-              ease: "easeOut",
-              duration: 0.2,
-            }}
+        {linkedinError && (
+          <p
+            id="signup-linkedin-error"
+            role="alert"
+            className="mt-2 text-sm text-red-400"
           >
-            {error}
-          </motion.p>
+            {linkedinError}
+          </p>
         )}
-
-        <PrimaryButton
-          loading={loading}
-          onClick={handleSubmit}
-          className="mt-4 mb-5 h-14 w-full font-bold"
-        >
-          CONCLUIR
-        </PrimaryButton>
       </div>
+
+      <div className="mt-6 flex items-center gap-2.5 field-text text-white lg:mt-9">
+        <input
+          type="checkbox"
+          id="privacy"
+          aria-label="Aceito a política de privacidade"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "signup-privacy-error" : undefined}
+          className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
+          ref={privacyRef}
+          onChange={() => setError(null)}
+        />
+        <span>
+          <label htmlFor="privacy">Aceito a</label>{" "}
+          <button
+            type="button"
+            onClick={() => setIsModalVisible(true)}
+            className="rounded-sm text-orange-400 underline hover:text-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            política de privacidade
+          </button>
+          .
+        </span>
+      </div>
+
+      <div className="mt-4 flex items-center gap-2.5 field-text text-white">
+        <input
+          type="checkbox"
+          id="terms"
+          aria-label="Aceito os termos de utilização"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "signup-privacy-error" : undefined}
+          className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
+          ref={termsRef}
+          onChange={() => setError(null)}
+        />
+        <span>
+          <label htmlFor="terms">Aceito os</label>{" "}
+          <Link
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-sm text-orange-400 underline hover:text-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            termos de utilização
+          </Link>
+          .
+        </span>
+      </div>
+
+      <PrivacyPolicyModal
+        isVisible={isModalVisible}
+        setIsVisible={setIsModalVisible}
+      />
+
+      {error && (
+        <motion.p
+          id="signup-privacy-error"
+          role="alert"
+          className="mt-2 text-sm text-red-400"
+          animate={{
+            y: [-15, 0],
+          }}
+          transition={{
+            ease: "easeOut",
+            duration: 0.2,
+          }}
+        >
+          {error}
+        </motion.p>
+      )}
+
+      <PrimaryButton
+        loading={loading}
+        onClick={handleSubmit}
+        variant="form"
+        className="mt-8 h-12 w-full font-semibold lg:mt-9 lg:h-16 lg:text-xl"
+      >
+        Concluir
+      </PrimaryButton>
     </div>
   );
 };
