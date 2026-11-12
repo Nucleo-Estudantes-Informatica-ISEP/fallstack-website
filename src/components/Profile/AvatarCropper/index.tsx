@@ -8,19 +8,21 @@ import {
   useState,
 } from "react";
 import Cropper, { Area, Point } from "react-easy-crop";
-import { MdFileUpload as UploadIcon } from "react-icons/md";
+import { MdOutlineCloudUpload as UploadIcon } from "react-icons/md";
 
 import { resizeMinWidthImage } from "@/utils/canvas";
 import { readFile } from "@/utils/files";
 
 interface AvatarCropperProps {
   imageSrc: string | null;
+  uploadIcon?: React.ReactNode;
   setImageSrc: Dispatch<SetStateAction<string | null>>;
   setCroppedAreaPixels: Dispatch<SetStateAction<Area | null>>;
 }
 
 const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
   imageSrc,
+  uploadIcon = <UploadIcon />,
   setImageSrc,
   setCroppedAreaPixels,
 }) => {
@@ -71,26 +73,26 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
       />
     </div>
   ) : (
-    <div className="flex w-full flex-row items-center justify-center">
+    <div className="relative flex w-full flex-row items-center justify-center">
       <input
         type="file"
         name="avatar"
         id="avatar"
         accept="image/*"
-        hidden
-        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white focus:border-primary focus:ring-0 disabled:text-gray-600`}
+        className="peer sr-only field-focus-target"
         onChange={onFileChange}
       />
       <label
-        className={
-          "flex h-14 flex-1 cursor-pointer flex-row items-center border border-white/35 bg-background px-2 py-1 text-sm text-white/35"
-        }
+        className="flex field-height min-w-0 flex-1 cursor-pointer items-center rounded-full border field-border bg-background py-2 pr-4 pl-(--field-icon-padding,3.125rem) field-text text-gray-400 transition-colors peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
         htmlFor="avatar"
       >
-        <span className="mr-2 min-w-min text-lg md:text-xl">
-          <UploadIcon />
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute left-(--field-icon-inset,1rem) flex items-center text-lg"
+        >
+          {uploadIcon}
         </span>
-        <span className="w-52 truncate">Selecionar imagem</span>
+        <span className="min-w-0 truncate">Insere uma imagem</span>
       </label>
     </div>
   );

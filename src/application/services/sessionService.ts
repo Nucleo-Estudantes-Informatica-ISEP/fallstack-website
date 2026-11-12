@@ -28,6 +28,8 @@ const getServerSession = cache(async () => {
 
     return {
       ...appUser,
+      authName:
+        typeof claims.name === "string" ? claims.name.trim() : undefined,
       adminRole,
       role:
         appUser.role === "EMPLOYEE" && !employeeAllowed ? null : appUser.role,

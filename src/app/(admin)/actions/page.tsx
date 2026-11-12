@@ -5,6 +5,7 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import AdminPageHeader from "@/components/AdminPageHeader";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminActionDto } from "@/application/dto/actionDto";
@@ -42,15 +43,14 @@ const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Ações</h1>
+      <AdminPageHeader title="Ações">
         <Link
           href="/actions/new"
-          className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
           Adicionar ação
         </Link>
-      </div>
+      </AdminPageHeader>
 
       <DataTable
         columns={columns}

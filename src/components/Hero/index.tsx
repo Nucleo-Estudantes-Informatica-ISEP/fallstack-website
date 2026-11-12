@@ -1,6 +1,7 @@
 "use client";
 
 import { FunctionComponent } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
@@ -18,11 +19,18 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
     <>
       <section
         ref={contentRef}
-        className="relative flex size-full min-h-screen flex-col items-center justify-end bg-[url('/assets/images/landing-2026.png')] bg-cover bg-center bg-no-repeat text-center"
+        className="artwork-clean artwork-readable relative flex size-full min-h-screen flex-col items-center justify-center bg-cover bg-center bg-no-repeat text-center"
       >
         <h1 className="sr-only">
           {branding.name} {branding.year}
         </h1>
+        <Image
+          src="/favicon.ico"
+          width={256}
+          height={296}
+          alt={`${branding.name} ${branding.year}`}
+          className="mt-20 h-auto w-1/2 max-w-80 object-contain"
+        />
         <motion.div
           initial={{
             opacity: 0,

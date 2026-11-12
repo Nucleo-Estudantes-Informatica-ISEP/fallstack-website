@@ -7,21 +7,18 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 interface AuthNeiButtonProps {
   next?: string;
   className?: string;
-  beforeRedirect?: () => void;
   icon?: React.ReactNode;
 }
 
 const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
   next = "/",
   className,
-  beforeRedirect,
   icon,
 }) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = () => {
     setLoading(true);
-    beforeRedirect?.();
     const url = new URL("/api/auth/login", window.location.origin);
     url.searchParams.set("next", next);
     window.location.assign(url.toString());
