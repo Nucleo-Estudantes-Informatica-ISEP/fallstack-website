@@ -20,9 +20,6 @@ export interface CompanyContentValue {
     linkedin?: string;
   };
   facts: { iconName: string; description: string }[];
-  logoWidth: number | null;
-  logoHeight: number | null;
-  className: string | null;
   interestIds: string[];
 }
 
