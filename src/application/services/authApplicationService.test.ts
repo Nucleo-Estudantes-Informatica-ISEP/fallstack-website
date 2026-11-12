@@ -230,7 +230,8 @@ test("account deletion enters shared admission before taking a DB lock", async (
   });
   expect(withGoogleWalletOperation).toHaveBeenCalledWith(
     "app-user-1",
-    expect.any(Function)
+    expect.any(Function),
+    "delete"
   );
   expect(withLockedUser).not.toHaveBeenCalled();
   expect(deleteUser).not.toHaveBeenCalled();

@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import Image from "next/image";
 
+import { PRIVACY_POLICY_VERSION } from "@/domain/student/signupPolicy";
+
 interface PrivacyPolicyModalProps {
   isVisible: boolean;
   setIsVisible: (value: boolean) => void;
@@ -79,7 +81,8 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
                 Aplicação do Regulamento Geral sobre a Proteção de Dados
               </h2>
               <p className="mt-4 text-gray-300">
-                Em vigor a partir de 31 de outubro de 2026.
+                Versão {PRIVACY_POLICY_VERSION}. Em vigor a partir de 31 de
+                outubro de 2026.
               </p>
               <p className="mt-4 leading-relaxed text-gray-300">
                 O Núcleo de Estudantes de Informática do Instituto Superior de

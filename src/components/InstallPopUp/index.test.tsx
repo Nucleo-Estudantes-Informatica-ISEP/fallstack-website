@@ -8,7 +8,25 @@ import InstallPopUp from "@/components/InstallPopUp";
 vi.mock("next/navigation", () => ({ usePathname: vi.fn() }));
 vi.mock("@/hooks/useIsMobile", () => ({ default: () => false }));
 
-beforeEach(() => localStorage.clear());
+const store = new Map<string, string>();
+const localStorageMock: Storage = {
+  get length() {
+    return store.size;
+  },
+  clear: () => store.clear(),
+  getItem: (key) => store.get(key) ?? null,
+  key: (index) => [...store.keys()][index] ?? null,
+  removeItem: (key) => store.delete(key),
+  setItem: (key, value) => store.set(key, String(value)),
+};
+
+beforeEach(() => {
+  store.clear();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageMock,
+  });
+});
 afterEach(() => vi.restoreAllMocks());
 
 function renderPrompt(pathname: string) {
@@ -58,7 +76,7 @@ test("shows device-specific guidance when the native install prompt is unavailab
 });
 
 test("shows the prompt when reading its storage preference fails", async () => {
-  vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+  vi.spyOn(localStorageMock, "getItem").mockImplementation(() => {
     throw new DOMException("Storage is blocked", "SecurityError");
   });
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -73,7 +91,7 @@ test("shows the prompt when reading its storage preference fails", async () => {
 });
 
 test("hides the prompt for the session when saving its preference fails", async () => {
-  vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+  vi.spyOn(localStorageMock, "setItem").mockImplementation(() => {
     throw new DOMException("Storage is blocked", "SecurityError");
   });
   vi.spyOn(console, "warn").mockImplementation(() => {});

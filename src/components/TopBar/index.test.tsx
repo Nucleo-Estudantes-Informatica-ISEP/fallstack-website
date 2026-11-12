@@ -5,18 +5,35 @@ import { expect, test, vi } from "vitest";
 import TopBar from "@/components/TopBar";
 
 vi.mock("next/navigation", () => ({ usePathname: vi.fn() }));
-vi.mock("@/hooks/useSession", () => ({ default: () => ({ user: null }) }));
+const { session } = vi.hoisted(() => ({
+  session: { user: null as object | null },
+}));
+vi.mock("@/hooks/useSession", () => ({ default: () => session }));
 vi.mock("@/components/LogoutButton", () => ({ default: () => null }));
-vi.mock("@/components/Profile/UserButton", () => ({ default: () => null }));
+vi.mock("@/components/Profile/UserButton", () => ({
+  default: () => <span>O meu perfil</span>,
+}));
 
-test("keeps account navigation off the temporary landing", () => {
+test("shows sign in on the homepage", () => {
   vi.mocked(usePathname).mockReturnValue("/");
+  session.user = null;
   render(<TopBar />);
-  expect(screen.queryByRole("navigation")).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Iniciar sessão" })).toHaveAttribute(
+    "href",
+    "/login"
+  );
+});
+
+test("shows profile navigation on the homepage when signed in", () => {
+  vi.mocked(usePathname).mockReturnValue("/");
+  session.user = {};
+  render(<TopBar />);
+  expect(screen.getByText("O meu perfil")).toBeInTheDocument();
 });
 
 test("keeps account navigation available on other pages", () => {
   vi.mocked(usePathname).mockReturnValue("/privacy-policy");
+  session.user = null;
   render(<TopBar />);
   expect(screen.getByRole("navigation")).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Iniciar sessão" })).toHaveAttribute(

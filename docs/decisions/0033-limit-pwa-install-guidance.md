@@ -1,4 +1,4 @@
-# 0030: Limit PWA install guidance to supported platforms
+# 0033: Limit PWA install guidance to supported platforms
 
 Status: Accepted
 
