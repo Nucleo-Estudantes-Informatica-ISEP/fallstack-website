@@ -17,10 +17,6 @@ test("uploaded logos ignore company size and class overrides", () => {
       logoHref="/logo.png"
       hasContent={false}
       rankStyle={null}
-      logoWidth={9000}
-      logoHeight={9000}
-      className="w-screen scale-200"
-      divClassName="h-screen"
     />
   );
   const logo = screen.getByRole("img", { name: "Partner" });

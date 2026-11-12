@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import { FACT_ICON_NAMES, isFactIconName } from "@/domain/company/factIcons";
-import { LOGO_WIDTH_CLASSES } from "@/domain/company/logoDisplayClasses";
 
 export interface CompanyContentValue {
   companyId: string;
@@ -68,11 +67,6 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
       },
       facts: parseFactsText(String(values.facts ?? "")),
     };
-    const displayStylePayload = {
-      logoWidth: values.logoWidth ? Number(values.logoWidth) : null,
-      logoHeight: values.logoHeight ? Number(values.logoHeight) : null,
-      className: values.className ? String(values.className) : null,
-    };
     const interestsPayload = {
       interestIds: Array.isArray(values.interestIds) ? values.interestIds : [],
     };
@@ -82,10 +76,6 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
         httpClient.patch(
           `/admin/companies/${content.companyId}/profile`,
           profilePayload
-        ),
-        httpClient.patch(
-          `/admin/companies/${content.companyId}/display-style`,
-          displayStylePayload
         ),
         httpClient.patch(
           `/admin/companies/${content.companyId}/interests`,
@@ -136,26 +126,6 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
         },
         {
           kind: "fields",
-          title: "Logótipo",
-          fields: [
-            { kind: "number", name: "logoWidth", label: "Largura" },
-            { kind: "number", name: "logoHeight", label: "Altura" },
-            {
-              kind: "select",
-              name: "className",
-              label: "Largura de exibição",
-              options: [
-                { label: "Padrão", value: "" },
-                ...LOGO_WIDTH_CLASSES.map((value) => ({
-                  label: value,
-                  value,
-                })),
-              ],
-            },
-          ],
-        },
-        {
-          kind: "fields",
           title: "Interesses",
           fields: [
             {
@@ -180,9 +150,6 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
         socialYoutube: content.socialLinks.youtube ?? "",
         socialLinkedin: content.socialLinks.linkedin ?? "",
         facts: factsToText(content.facts),
-        logoWidth: content.logoWidth ?? "",
-        logoHeight: content.logoHeight ?? "",
-        className: content.className ?? "",
         interestIds: content.interestIds,
       }}
       onSubmit={handleSubmit}

@@ -12,10 +12,6 @@ export interface CompanyProps {
   websiteUrl?: string;
   hasContent: boolean;
   rankStyle: { hasInternalPage: boolean } | null;
-  className?: string;
-  divClassName?: string;
-  logoWidth?: number;
-  logoHeight?: number;
 }
 
 const Company: React.FC<CompanyProps> = ({
