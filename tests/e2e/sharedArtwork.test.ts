@@ -35,3 +35,9 @@ test("shared artwork uses cover and a contrast-safe scrim without fixed attachme
   expect(source("src/app/layout.tsx")).not.toContain("rsms.me");
   expect(css).not.toContain("InterVariable");
 });
+
+test("Inter exposes its variable weight range", () => {
+  expect(source("src/app/globals.css")).toMatch(
+    /@font-face\s*\{[^}]*font-family:\s*"Inter";[^}]*font-weight:\s*100 900;/
+  );
+});
