@@ -9,7 +9,7 @@ vi.mock("@/hooks/useLogout", () => ({
   useLogout: () => ({ handleLogout, ConfirmDialog: null }),
 }));
 vi.mock("@/components/Companies/CompanyProfile/CompanyImage", () => ({
-  default: () => null,
+  default: () => <div data-testid="company-logo" />,
 }));
 vi.mock("@/components/Companies/CompanyProfile/CompanyStatsSection", () => ({
   default: () => <div data-testid="summary-tab" />,
@@ -23,10 +23,10 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-function renderDashboard() {
+function renderDashboard(company: { avatar?: string | null } = {}) {
   return render(
     <CompanyProfileSectionContainer
-      company={{ id: "c1", name: "Armis" } as never}
+      company={{ id: "c1", name: "Armis", avatar: null, ...company } as never}
       employeeName="Rui"
       globalStats={{ totalScans: 0, totalSaves: 0 }}
       totalStudents={10}
@@ -65,9 +65,54 @@ test("no student-only or staff entries are offered to employees", () => {
 test("the header shows the company and the employee", () => {
   renderDashboard();
 
-  const heading = screen.getByRole("heading", { level: 1 });
-  expect(heading).toHaveTextContent("Armis");
-  expect(heading).toHaveTextContent("Rui");
+  // Company name is the title; the employee name is the line below it.
+  expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Armis");
+  expect(screen.getByText("Rui")).toBeInTheDocument();
+});
+
+test("the company logo shows only when the company has one", () => {
+  const { unmount } = renderDashboard();
+  expect(screen.queryByTestId("company-logo")).toBeNull();
+  unmount();
+
+  renderDashboard({ avatar: "/api/media/logo/logo-id" });
+  expect(screen.getByTestId("company-logo")).toBeInTheDocument();
+});
+
+test("the current menu entry is marked and moves with the selection", () => {
+  renderDashboard();
+
+  expect(screen.getByRole("button", { name: "Sumário" })).toHaveAttribute(
+    "aria-current",
+    "true"
+  );
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan de Perfil" }));
+
+  expect(
+    screen.getByRole("button", { name: "Scan de Perfil" })
+  ).toHaveAttribute("aria-current", "true");
+  expect(screen.getByRole("button", { name: "Sumário" })).not.toHaveAttribute(
+    "aria-current"
+  );
+});
+
+test("selecting an entry keeps keyboard focus on it", () => {
+  renderDashboard();
+
+  const scan = screen.getByRole("button", { name: "Scan de Perfil" });
+  scan.focus();
+  fireEvent.click(scan);
+
+  expect(screen.getByRole("button", { name: "Scan de Perfil" })).toHaveFocus();
+});
+
+test("the menu is a labelled navigation landmark", () => {
+  renderDashboard();
+
+  expect(
+    screen.getByRole("navigation", { name: "Painel da empresa" })
+  ).toBeInTheDocument();
 });
 
 test("Sumário is shown first and Scan de Perfil switches the content", () => {

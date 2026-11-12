@@ -163,6 +163,10 @@ identity that `pnpm dev:session` mints. It provides the student session used
 for the student dashboard reference captures, since the shared shell also
 serves the student dashboard.
 
+“Empregado Sintético” is an Armis employee **without** an admin role, linked
+to the `local-armis` identity from `pnpm dev:session`. It provides the
+Employee (no admin) session in the recipes without a real login.
+
 ### Recipes
 
 Sessions: **Employee** is the Armis employee account. **Employee (no admin)**

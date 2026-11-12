@@ -39,23 +39,19 @@ const Dashboard = async ({ searchParams }: DashboardProps) => {
     ]);
 
   return (
-    <section
-      className={`bg-company flex size-full min-h-screen flex-col items-center`}
-    >
-      <CompanyProfileSectionContainer
-        company={toCompanyDto(session.employee.company)}
-        employeeName={session.employee.name}
-        globalStats={globalStats}
-        totalStudents={students.length}
-        history={
-          history instanceof HttpError ? [] : history.map(toSavedStudentDto)
-        }
-        interestIds={companyInterestIds}
-        availableInterests={interests.map((interest) =>
-          toInterestDto(interest, language)
-        )}
-      />
-    </section>
+    <CompanyProfileSectionContainer
+      company={toCompanyDto(session.employee.company)}
+      employeeName={session.employee.name}
+      globalStats={globalStats}
+      totalStudents={students.length}
+      history={
+        history instanceof HttpError ? [] : history.map(toSavedStudentDto)
+      }
+      interestIds={companyInterestIds}
+      availableInterests={interests.map((interest) =>
+        toInterestDto(interest, language)
+      )}
+    />
   );
 };
 
