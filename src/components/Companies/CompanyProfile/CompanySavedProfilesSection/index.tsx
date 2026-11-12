@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -19,6 +19,21 @@ interface CompanySavedProfilesSectionProps {
   history: SavedStudentDto[];
 }
 
+// One toast per message: repeated clicks replace it instead of stacking
+// copies over the code field.
+const TOAST = {
+  emptyCode: "scan-empty-code",
+  invalidCode: "scan-invalid-code",
+  duplicate: "scan-duplicate",
+  saveFailed: "scan-save-failed",
+  scanFailed: "scan-failed",
+  exportFailed: "scan-export-failed",
+  tooMany: "scan-too-many",
+} as const;
+
+const SAVE_FAILED = "Não foi possível guardar o perfil. Tenta novamente.";
+const DUPLICATE = "Este estudante já foi guardado anteriormente.";
+
 const CompanySavedProfilesSection = ({
   history,
 }: CompanySavedProfilesSectionProps) => {
@@ -26,8 +41,11 @@ const CompanySavedProfilesSection = ({
   const [downloading, setDownloading] = useState<boolean>(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const codeFieldId = useId();
+  const codeHintId = useId();
+  const exportHintId = useId();
   const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
-    useMutation("Ocorreu um erro.");
+    useMutation(SAVE_FAILED);
 
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
@@ -50,6 +68,24 @@ const CompanySavedProfilesSection = ({
     }
   }
 
+  // Saves the student for this company, then opens the saved preview.
+  // A duplicate (409) is a warning; anything else is one Portuguese error,
+  // since server and network messages arrive in English.
+  async function saveAndOpen(token: string) {
+    try {
+      await httpClient.post("/saved", { token });
+    } catch (error) {
+      if (error instanceof HttpClientError && error.status === 409) {
+        toast.warning(DUPLICATE, { toastId: TOAST.duplicate });
+      } else {
+        toast.error(SAVE_FAILED, { toastId: TOAST.saveFailed });
+      }
+      return;
+    }
+    router.refresh();
+    router.push(`/student/${token}/preview`);
+  }
+
   const handleScan = async (data: string) => {
     try {
       setProcessing(true);
@@ -69,60 +105,60 @@ const CompanySavedProfilesSection = ({
         : data;
 
       if (!token) {
-        toast.error("O código de estudante deste passe é inválido.");
+        toast.error("O código de estudante deste passe é inválido.", {
+          toastId: TOAST.invalidCode,
+        });
         setProcessing(false);
         return;
       }
 
-      try {
-        await httpClient.post("/saved", { token });
-        router.refresh();
-        router.push(`/student/${token}/preview`);
-      } catch (error) {
-        if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
-        } else if (error instanceof HttpClientError) {
-          toast.error(error.message || "Erro ao guardar perfil");
-        } else {
-          throw error;
-        }
-      }
-
+      await saveAndOpen(token);
       setProcessing(false);
     } catch {
       setProcessing(false);
-      toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
+      toast.error("Ocorreu um erro a dar scan no QR Code do estudante...", {
+        toastId: TOAST.scanFailed,
+      });
     }
   };
 
   const handleManualEntry = () =>
     mutateManualEntry(async () => {
       if (!inputRef.current?.value) {
-        toast.error("Sem código inserido.");
+        toast.error("Sem código inserido.", { toastId: TOAST.emptyCode });
+        inputRef.current?.focus();
         return;
       }
 
       const code = inputRef.current?.value;
-      const token = await getStudentPreviewToken(code);
+      let token: string | null;
+      try {
+        token = await getStudentPreviewToken(code);
+      } catch (error) {
+        const status = error instanceof HttpClientError ? error.status : 0;
+        if (status === 429) {
+          toast.error("Demasiadas tentativas. Aguarde um momento.", {
+            toastId: TOAST.tooMany,
+          });
+          return;
+        }
+        if (status !== 400) {
+          toast.error(SAVE_FAILED, { toastId: TOAST.saveFailed });
+          return;
+        }
+        // A malformed code gets the same message as an unknown one.
+        token = null;
+      }
 
       if (!token) {
-        toast.error("O código introduzido é inválido.");
+        toast.error("O código introduzido é inválido.", {
+          toastId: TOAST.invalidCode,
+        });
+        inputRef.current?.focus();
         return;
       }
 
-      try {
-        await httpClient.post("/saved", { token });
-        router.refresh();
-        router.push(`/student/${token}/preview`);
-      } catch (error) {
-        if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
-        } else {
-          toast.error(
-            error instanceof Error ? error.message : "Failed to save profile"
-          );
-        }
-      }
+      await saveAndOpen(token);
     });
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -142,41 +178,24 @@ const CompanySavedProfilesSection = ({
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Não foi possível exportar os CVs. Tenta novamente.", {
+        toastId: TOAST.exportFailed,
+      });
+    } finally {
       setDownloading(false);
-    } catch (error) {
-      setDownloading(false);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível exportar os CVs."
-      );
     }
   };
 
+  const hasSaves = history.length > 0;
+
   return (
-    <section className="flex w-full flex-col items-start justify-start px-4 pt-2 pb-4 text-white md:px-8 md:pt-4 md:pb-8">
+    <section className="flex w-full flex-col items-start justify-start text-white">
       <div className="w-full">
-        <h1
-          className="mb-6 text-white"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 600,
-            fontSize: "25px",
-            lineHeight: "100%",
-          }}
-        >
+        <h2 className="mb-6 font-sans text-[25px] leading-none font-semibold text-white">
           Scan
-        </h1>
-        <p
-          className="mb-8 text-gray-300"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 400,
-            fontSize: "15px",
-            lineHeight: "100%",
-            textAlign: "justify",
-          }}
-        >
+        </h2>
+        <p className="mb-8 text-base text-ui-muted">
           Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
           forma a garantir o registo das interações e a participação nos
           giveaways promovidos pelo NEI.
@@ -184,98 +203,83 @@ const CompanySavedProfilesSection = ({
       </div>
 
       <div className="flex w-full flex-col items-center justify-center">
-        {processing ? (
-          <div
-            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
-            role="status"
-          >
-            <span className="absolute! -m-px! size-px overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
-              A processar...
-            </span>
-          </div>
-        ) : (
-          <div className="w-full max-w-2xl overflow-hidden bg-gray-300">
+        {/* `relative` contains the scanner's own "A ligar a tua câmara..."
+            overlay inside this box. */}
+        <div className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full">
+          {processing ? (
+            <div
+              className="inline-block size-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              role="status"
+            >
+              <span className="sr-only">A processar...</span>
+            </div>
+          ) : (
             <QRCodeScanner handleScan={handleScan} />
-          </div>
-        )}
+          )}
+        </div>
+        <p className="mt-3 max-w-2xl text-center text-sm text-ui-muted">
+          Sem câmara ou sem permissão? Introduza o código abaixo.
+        </p>
       </div>
 
       <div className="mt-8 flex w-full flex-col items-center justify-center">
-        <div className="relative flex w-full max-w-142 items-center">
-          <input
-            type="text"
-            placeholder="código"
-            className="h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 400,
-            }}
-            ref={inputRef}
-            onKeyUp={handleKeyUp}
-            maxLength={4}
-            disabled={isSubmittingManualEntry}
-          />
-          <button
-            onClick={handleManualEntry}
-            disabled={isSubmittingManualEntry}
-            className="absolute inset-y-2 right-2 flex w-26 items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 400,
-              lineHeight: "100%",
-            }}
-          >
-            {isSubmittingManualEntry ? "..." : "Validar"}
-          </button>
+        <div className="w-full max-w-142">
+          <label htmlFor={codeFieldId} className="mb-2 block text-sm">
+            Código do estudante
+          </label>
+          <div className="relative flex w-full items-center">
+            <input
+              id={codeFieldId}
+              type="text"
+              placeholder="código"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-describedby={codeHintId}
+              className="ui-field h-14 pr-32 text-lg uppercase"
+              ref={inputRef}
+              onKeyUp={handleKeyUp}
+              maxLength={4}
+              disabled={isSubmittingManualEntry}
+            />
+            <button
+              type="button"
+              onClick={handleManualEntry}
+              disabled={isSubmittingManualEntry}
+              aria-busy={isSubmittingManualEntry}
+              className="ui-action absolute inset-y-2 right-2 min-h-0 w-28"
+            >
+              {isSubmittingManualEntry ? "A validar..." : "Validar"}
+            </button>
+          </div>
+          <p id={codeHintId} className="mt-2 text-center text-sm text-ui-muted">
+            Introduza o código associado ao QR Code do aluno para que o seu
+            perfil fique registado.
+          </p>
         </div>
-        <p
-          className="mt-2 text-gray-500"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 400,
-            fontSize: "11px",
-            lineHeight: "100%",
-            textAlign: "center",
-          }}
-        >
-          ou introduza o código associado ao QR Code do aluno para que o seu
-          perfil fique registado.
-        </p>
       </div>
 
       <div className="mt-12 w-full">
         <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
-          <h2
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 600,
-              fontSize: "25px",
-              lineHeight: "100%",
-            }}
-          >
+          <h2 className="font-sans text-[25px] leading-none font-semibold">
             Histórico de scans
           </h2>
-          <button
-            onClick={handleDownloadAllCvs}
-            disabled={downloading}
-            className="inline-flex items-center justify-center bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {downloading ? "A preparar..." : "Download CVs"}
-          </button>
-        </div>
-        <div className="w-full border-b border-white pb-2">
-          <div
-            className="flex w-full justify-between px-4 text-white"
-            style={{
-              fontFamily: "Inter", // Assuming Font 1 is Inter
-              fontWeight: 700,
-              fontSize: "15.63px",
-              lineHeight: "24px",
-              letterSpacing: "-0.48px",
-            }}
-          >
-            <span className="flex-1 text-center">Nome</span>
-            <span className="flex-1 text-center">Data</span>
+          <div className="flex flex-col items-start gap-1 md:items-end">
+            <button
+              type="button"
+              onClick={handleDownloadAllCvs}
+              disabled={downloading || !hasSaves}
+              aria-busy={downloading}
+              aria-describedby={hasSaves ? undefined : exportHintId}
+              className="ui-action text-sm"
+            >
+              {downloading ? "A preparar..." : "Download CVs"}
+            </button>
+            {!hasSaves && (
+              <p id={exportHintId} className="text-sm text-ui-muted">
+                Guarde perfis para poder exportar os CVs.
+              </p>
+            )}
           </div>
         </div>
         <CompanySavesSection historyData={history} />
