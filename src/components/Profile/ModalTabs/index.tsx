@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useId } from "react";
 
 import useTabWidth from "@/hooks/useTabWidth";
 
@@ -25,8 +25,57 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
     hasVideoSection
   );
 
+  const tabsId = useId();
+
+  const tabs = [
+    { index: 0, title: "Detalhes", visible: hasDetailsSection },
+    { index: 1, title: "Links", visible: hasLinksSection },
+    { index: 2, title: "Vídeo", visible: hasVideoSection },
+  ].filter((tab) => tab.visible);
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!["ArrowRight", "ArrowLeft", "Home", "End"].includes(event.key)) {
+      return;
+    }
+
+    if (tabs.length === 0) return;
+
+    event.preventDefault();
+
+    const currentPosition = tabs.findIndex(
+      (tab) => tab.index === activeTabIndex
+    );
+
+    let nextPosition = currentPosition;
+
+    if (event.key === "ArrowRight") {
+      nextPosition = (currentPosition + 1) % tabs.length;
+    } else if (event.key === "ArrowLeft") {
+      nextPosition = (currentPosition - 1 + tabs.length) % tabs.length;
+    } else if (event.key === "Home") {
+      nextPosition = 0;
+    } else if (event.key === "End") {
+      nextPosition = tabs.length - 1;
+    }
+
+    const nextTab = tabs[nextPosition];
+
+    if (!nextTab) return;
+
+    setActiveTabIndex(nextTab.index);
+
+    const buttons = event.currentTarget.querySelectorAll<HTMLButtonElement>(
+      "button[aria-pressed]"
+    );
+
+    buttons[nextPosition]?.focus();
+  };
+
   return (
-    <div className="mx-auto flex w-full flex-col items-center justify-between md:flex-row">
+    <div
+      onKeyDown={handleKeyDown}
+      className="mx-auto flex w-full flex-col items-center justify-between md:flex-row"
+    >
       <div
         className={`absolute top-28 left-0 ${tabWidth} bg-modal-accent mt-2 mr-2 hidden h-1 rounded-lg transition-transform duration-300 ease-in-out hover:brightness-90 sm:block ${
           activeTabIndex === 0
@@ -35,32 +84,26 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
               ? "md:translate-x-full"
               : "md:translate-x-200"
         }`}
-        aria-hidden
+        aria-hidden="true"
       />
-      {hasDetailsSection && (
-        <li
-          className={`z-10 mx-4 h-full max-h-10 flex-1 cursor-pointer list-none rounded-lg py-2 text-center text-lg font-semibold ${activeTabIndex === 0 ? "font-semibold" : "font-thin"} ${activeTabIndex === 0 ? "text-modal-active" : "text-black"} ${activeTabIndex !== 0 && "hover:bg-modal-hover-accent"}`}
-          onClick={() => setActiveTabIndex(0)}
+
+      {tabs.map(({ index, title }) => (
+        <button
+          key={index}
+          id={`${tabsId}-tab-${index}`}
+          type="button"
+          aria-pressed={activeTabIndex === index}
+          tabIndex={activeTabIndex === index ? 0 : -1}
+          onClick={() => setActiveTabIndex(index)}
+          className={`ui-focus z-10 mx-4 min-h-11 flex-1 cursor-pointer rounded-lg px-3 py-2 text-center text-lg transition-colors ${
+            activeTabIndex === index
+              ? "text-modal-active font-semibold"
+              : "hover:bg-modal-hover-accent font-normal text-black"
+          }`}
         >
-          Detalhes
-        </li>
-      )}
-      {hasLinksSection && (
-        <li
-          className={`z-10 mx-4 h-full max-h-10 flex-1 cursor-pointer list-none rounded-lg py-2 text-center text-lg font-semibold ${activeTabIndex === 1 ? "font-semibold" : "font-thin"} ${activeTabIndex === 1 ? "text-modal-active" : "text-black"} ${activeTabIndex !== 1 && "hover:bg-modal-hover-accent"}`}
-          onClick={() => setActiveTabIndex(1)}
-        >
-          Links
-        </li>
-      )}
-      {hasVideoSection && (
-        <li
-          className={`z-10 mx-4 h-full max-h-10 flex-1 cursor-pointer list-none rounded-lg py-2 text-center text-lg font-semibold ${activeTabIndex === 2 ? "font-semibold" : "font-thin"} ${activeTabIndex === 2 ? "text-modal-active" : "text-black"} ${activeTabIndex !== 2 && "hover:bg-modal-hover-accent"}`}
-          onClick={() => setActiveTabIndex(2)}
-        >
-          Vídeo
-        </li>
-      )}
+          {title}
+        </button>
+      ))}
     </div>
   );
 };

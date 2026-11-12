@@ -1,10 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
-import InputSelect from ".";
+import InputSelect from "@/components/ui/InputSelect";
+
+const options = ["1.º ano", "2.º ano", "3.º ano"];
 
 describe("ui/InputSelect", () => {
-  test("renders accessible label associated with select", () => {
+  test("renders an accessible select", () => {
+    render(
+      <InputSelect name="Ano" options={options} placeholder="Seleciona o ano" />
+    );
+
+    expect(screen.getByRole("combobox", { name: "Ano" })).toBeInTheDocument();
+  });
+
+  test("preserves an explicit id and option labels", () => {
     render(
       <InputSelect
         name="Ano"
@@ -16,44 +26,65 @@ describe("ui/InputSelect", () => {
       />
     );
 
-    const select = screen.getByLabelText("Ano");
-    expect(select).toBeInTheDocument();
-    expect(select).toHaveAttribute("id", "ano-select");
-    expect(screen.getByText("1º Ano - Licenciatura")).toBeInTheDocument();
+    expect(screen.getByLabelText("Ano")).toHaveAttribute("id", "ano-select");
+    expect(
+      screen.getByRole("option", { name: "1º Ano - Licenciatura" })
+    ).toBeInTheDocument();
   });
 
-  test("shows the placeholder for an empty value and restores a saved selection", () => {
-    const options = [{ value: "1", label: "Primeiro ano" }];
-    const { unmount } = render(
-      <InputSelect name="Ano" placeholder="Insere o ano" options={options} />
+  test("shows a disabled placeholder initially", () => {
+    render(
+      <InputSelect name="Ano" options={options} placeholder="Seleciona o ano" />
     );
-    expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("");
-    unmount();
 
+    expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("");
+
+    expect(
+      screen.getByRole("option", { name: "Seleciona o ano" })
+    ).toBeDisabled();
+  });
+
+  test("preserves an explicit default value", () => {
+    render(
+      <InputSelect
+        name="Ano"
+        options={options}
+        placeholder="Seleciona o ano"
+        defaultValue="2.º ano"
+      />
+    );
+
+    expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue(
+      "2.º ano"
+    );
+  });
+
+  test("restores a saved selection with object options", () => {
     render(
       <InputSelect
         name="Ano"
         placeholder="Insere o ano"
-        options={options}
+        options={[{ value: "1", label: "Primeiro ano" }]}
         defaultValue="1"
       />
     );
+
     expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("1");
   });
 
-  test("renders disabled state with AA contrast", () => {
+  test("supports disabled fields with accessible styles", () => {
     render(
       <InputSelect
         name="Ano Bloqueado"
         id="ano-locked"
         disabled
-        options={["1º Ano", "2º Ano"]}
+        options={options}
       />
     );
 
     const select = screen.getByLabelText("Ano Bloqueado");
+
     expect(select).toBeDisabled();
-    expect(select.className).toContain("disabled:text-gray-400");
-    expect(select.className).toContain("rounded-full");
+    expect(select).toHaveClass("disabled:text-gray-400", "rounded-full");
   });
 });

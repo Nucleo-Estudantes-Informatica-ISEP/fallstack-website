@@ -3,6 +3,7 @@ import { performance } from "node:perf_hooks";
 import React from "react";
 import { renderToString } from "react-dom/server";
 import { expect, test, vi } from "vitest";
+import { z } from "zod";
 
 import GuestLayout from "../../src/app/(guest)/layout";
 import RootLayout from "../../src/app/layout";
@@ -18,6 +19,13 @@ vi.mock("client-only", () => ({}));
 vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/privacy-policy" }));
 
+const env = z
+  .object({
+    RUN_PAGE_FRAME_BENCHMARK: z.string().optional(),
+    PAGE_FRAME_BASE_URL: z.string().url().optional(),
+  })
+  .parse(process.env);
+
 function measure(operation: () => string) {
   for (let i = 0; i < 200; i++) operation();
   const samples: number[] = [];
@@ -30,7 +38,7 @@ function measure(operation: () => string) {
   return { p50ms: +samples[15].toFixed(4), p95ms: +samples[28].toFixed(4) };
 }
 
-test.skipIf(process.env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
+test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
   "measure shared SSR frame and error-tracking candidates",
   async () => {
     const child = <section>Measurement</section>;
@@ -40,14 +48,14 @@ test.skipIf(process.env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
     const render = () => renderToString(frame);
     expect(render()).toContain('id="main-content"');
     const results = [];
-    for (const pass of ["before", "after"]) {
+    for (const pass of ["rep1", "rep2"]) {
       results.push({
         pass,
         mode: "child-only",
         ...measure(() => renderToString(child)),
       });
       results.push({ pass, mode: "frame-only", ...measure(render) });
-      for (const logs of [true, false]) {
+      for (const logs of pass === "rep1" ? [true, false] : [false, true]) {
         Sentry.init({
           dsn: "http://public@127.0.0.1:9/1",
           tracesSampleRate: 0,
@@ -78,16 +86,13 @@ test.skipIf(process.env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
   60000
 );
 
-test.skipIf(
-  process.env.RUN_PAGE_FRAME_BENCHMARK !== "1" ||
-    !process.env.PAGE_FRAME_BASE_URL
-)(
+test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1" || !env.PAGE_FRAME_BASE_URL)(
   "measure warm production HTTP frame",
   async () => {
-    const url = new URL("/privacy-policy", process.env.PAGE_FRAME_BASE_URL);
+    const url = new URL("/privacy-policy", env.PAGE_FRAME_BASE_URL);
     const results = [];
     const nonces = new Set<string>();
-    for (const pass of ["before", "after"]) {
+    for (const pass of ["rep1", "rep2"]) {
       const samples: number[] = [];
       for (let i = 0; i < 120; i++) {
         const start = performance.now();

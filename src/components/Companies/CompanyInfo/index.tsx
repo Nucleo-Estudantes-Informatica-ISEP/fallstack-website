@@ -31,13 +31,13 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
     .filter(Boolean);
 
   return (
-    <section className="mx-auto w-11/12 rounded-lg bg-white p-10 sm:w-3/4 lg:p-12">
+    <section className="mx-auto w-11/12 rounded-lg bg-background p-10 sm:w-3/4 lg:p-12">
       {paragraphs.length > 0 && (
         <CompanyDescription>
-          <h1 className="mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+          <h1 className="mb-4 text-left text-lg font-bold text-white uppercase sm:text-lg md:text-xl lg:text-2xl">
             Sobre
           </h1>
-          <div className="space-y-4 text-left font-light text-black md:text-lg lg:text-xl">
+          <div className="space-y-4 text-left font-light text-white md:text-lg lg:text-xl">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -52,7 +52,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           if (!embedUrl && !uploadedVideo) return null;
           return (
             <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
-              <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+              <h1 className="mb-4 w-full text-left text-lg font-bold text-white uppercase sm:text-lg md:text-xl lg:text-2xl">
                 {videoTitle || "Vídeo"}
               </h1>
               <div className="flex w-full items-center justify-center">
@@ -81,7 +81,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           );
         })()}
       <div className="px-10">
-        <h1 className="mt-8 mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+        <h1 className="mt-8 mb-4 text-left text-lg font-bold text-white uppercase sm:text-lg md:text-xl lg:text-2xl">
           Interesses
         </h1>
         {interests !== undefined && interests.length > 0 ? (
@@ -89,7 +89,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
             {interests.map((interest) => (
               <div
                 key={interest}
-                className="relative rounded-xl bg-slate-200 px-3 py-1 text-black"
+                className="relative rounded-xl bg-secondary px-3 py-1 text-white"
               >
                 {interest}
               </div>
@@ -97,7 +97,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           </div>
         ) : (
           <div className="flex w-full flex-wrap gap-4">
-            <div className="relative py-1 text-black">
+            <div className="relative py-1 text-white">
               Sem interesses definidos...
             </div>
           </div>

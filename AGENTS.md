@@ -55,7 +55,7 @@ for procedure and rationale.
   timestamp freshness; they have no one-time nonce. See
   [data ownership](docs/architecture.md#data-ownership) and
   [authentication](docs/architecture.md#authentication-and-short-lived-tokens).
-- Keep unit tests next to code. Put integration and smoke tests under
+- Keep unit tests next to code. Put performance measurements under `tests/performance/`. Put integration and smoke tests under
   `tests/e2e/`. Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
 - `src/config/` holds config, `src/utils/` generic helpers, `src/edition/`
   current event constants, and `src/hooks/` and `src/contexts/` React state.
@@ -67,6 +67,11 @@ for procedure and rationale.
 Common commands: `pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm lint`,
 `pnpm typecheck`, `pnpm build`, `pnpm generate`. See the contribution and
 database guides for checks and migration commands.
+
+Before database-backed checks, start or reuse a confirmed isolated local test
+database and apply its migrations. Configure the checks to use it, and stop any
+database started for the task afterward. Never run destructive checks against
+shared or production services.
 
 Do not run destructive local data commands against shared services. `pnpm wipe`
 requires `NODE_ENV=development`; check the target database first.
