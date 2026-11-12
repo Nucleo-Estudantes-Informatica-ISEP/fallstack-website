@@ -20,9 +20,11 @@ export const branding = {
   },
   wallet: {
     cardTitle: "Fallstack 2026",
-    // Dark enough for the white logo and text; sampled from the hero image.
+    // Pass background color; sampled from the hero image.
     hexBackgroundColor: "#641b04",
     // Public paths; Google fetches them, so they must resolve on the site origin.
+    // Note: Google Wallet displays the logo inside a white circular avatar mask,
+    // so logoPath must use dark artwork (#141414) for proper contrast.
     logoPath: "/google-wallet/logo.png",
     heroImagePath: "/google-wallet/hero.png",
   },
