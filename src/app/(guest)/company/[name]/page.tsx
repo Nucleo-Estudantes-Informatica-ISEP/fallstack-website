@@ -34,7 +34,7 @@ const CompanyPage = async (props: CompanySearchProps) => {
     return Custom404();
 
   return (
-    <section className="flex size-full flex-col items-center bg-black">
+    <section className="artwork-clean artwork-readable flex size-full flex-col items-center">
       <CompanyPageSection company={toCompanyDisplayDto(company, language)} />
     </section>
   );

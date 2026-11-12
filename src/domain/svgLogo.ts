@@ -1,8 +1,6 @@
-import "server-only";
-
-import { HttpError } from "@/types/HttpError";
-
 import { SaxesParser } from "saxes";
+
+export class InvalidSvgLogoError extends Error {}
 
 const SVG = "http://www.w3.org/2000/svg";
 const elements = new Set(
@@ -85,6 +83,8 @@ export function sanitizeLogoSvg(bytes: Uint8Array): Buffer {
     if (!nodes) throw new Error("Empty SVG");
     return Buffer.from(output.join(""));
   } catch {
-    throw new HttpError("Invalid SVG logo", 400);
+    throw new InvalidSvgLogoError(
+      "Invalid SVG logo; DTDs and processing instructions are not supported"
+    );
   }
 }

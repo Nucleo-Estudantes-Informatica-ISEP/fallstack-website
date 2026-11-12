@@ -267,7 +267,7 @@ Send your report (video or document) directly to the **current coordinators of t
 ### SVG logo audit (2026-11-11, #282)
 
 Dedicated logo uploads accept server-sanitized SVG; avatar uploads remain PNG/JPEG.
-[ADR 0033](decisions/0033-sanitize-svg-logo-pipeline.md) defines the static subset,
+[ADR 0034](decisions/0034-sanitize-svg-logo-pipeline.md) defines the static subset,
 XML validation and complexity limits. CSS, scripts, handlers, foreignObject and
 external resources are removed before storage. Invalid XML and DTDs are rejected.
 

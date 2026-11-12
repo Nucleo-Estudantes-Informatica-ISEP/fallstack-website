@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
-import { sanitizeLogoSvg } from "@/lib/svgLogo";
+import { InvalidSvgLogoError, sanitizeLogoSvg } from "@/domain/svgLogo";
 
 import { withMultipartFile } from "./multipartUploadService";
 import {
@@ -43,7 +43,14 @@ export async function uploadFile(kind: StorageBucket, request: Request) {
       )
         throw new HttpError("Invalid file type", 400);
       if (kind === "logo" && file.type === "image/svg+xml") {
-        const sanitized = sanitizeLogoSvg(await readFile(file.path));
+        let sanitized: Buffer;
+        try {
+          sanitized = sanitizeLogoSvg(await readFile(file.path));
+        } catch (error) {
+          if (error instanceof InvalidSvgLogoError)
+            throw new HttpError(error.message, 400);
+          throw error;
+        }
         if (sanitized.length > config.uploads.logo.maxSize)
           throw new HttpError("File too large", 400);
         await writeFile(file.path, sanitized);

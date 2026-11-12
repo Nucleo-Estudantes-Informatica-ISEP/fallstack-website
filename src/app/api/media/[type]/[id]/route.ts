@@ -3,13 +3,13 @@ import { NextResponse } from "next/server";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { httpErrorResponse } from "@/lib/http/server";
-import { sanitizeLogoSvg } from "@/lib/svgLogo";
 import { companyVideoResponse } from "@/application/services/companyVideoService";
 import {
   avatarKey,
   getObject,
   logoKey,
 } from "@/application/services/objectStorageService";
+import { sanitizeLogoSvg } from "@/domain/svgLogo";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -51,6 +51,10 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": file.contentType,
+        ...(svg && {
+          "Content-Security-Policy":
+            "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        }),
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },

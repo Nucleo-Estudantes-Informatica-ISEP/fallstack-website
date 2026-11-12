@@ -59,4 +59,5 @@ implementation PR needs an ADR.
 | [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now         | Superseded           |
 | [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                  | Accepted             |
 | [0032](0032-opt-in-single-connection-deletion.md)                | Opt in to single-connection account deletion     | Accepted             |
-| [0033](0033-sanitize-svg-logo-pipeline.md)                       | Sanitize SVG only in the logo pipeline           | Accepted             |
+| [0034](0034-sanitize-svg-logo-pipeline.md)                       | Sanitize SVG only in the logo pipeline           | Accepted             |
+| [0033](0033-share-2026-background-artwork.md)                    | Share 2026 background artwork                    | Accepted             |

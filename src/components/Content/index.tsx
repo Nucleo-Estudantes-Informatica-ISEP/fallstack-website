@@ -19,7 +19,7 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
     <>
       <section
         ref={contentRef}
-        className="w-full bg-[url('/assets/optimized/bgDates.c7375bcdd8ed.webp')] bg-cover bg-center bg-no-repeat pt-14 pb-12"
+        className="artwork-clean artwork-readable w-full bg-cover bg-center bg-no-repeat pt-14 pb-12"
       >
         <InfoText
           days={branding.event.days}
@@ -36,7 +36,7 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
         {sections.schedule}
       </section>
 
-      <section className="flex w-full flex-col items-center bg-[url('/assets/optimized/bgInterview.af72997ee427.webp')] bg-cover bg-center bg-no-repeat pb-12 text-center">
+      <section className="artwork-clean artwork-readable flex w-full flex-col items-center bg-cover bg-center bg-no-repeat pb-12 text-center">
         <HeadingText className="font-normal!" text="Speed Interviews" />
         <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
           Este ano podes experienciar a modalidade de speed interviews com

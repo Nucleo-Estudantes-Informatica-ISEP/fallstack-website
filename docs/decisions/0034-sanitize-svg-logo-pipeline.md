@@ -41,3 +41,7 @@ stay unchanged. There is no object/embed/iframe/inline SVG or foreignObject rend
 Static path logos and gradients remain vector images. Embedded fonts, CSS,
 filters, animation and linked images are deliberately unsupported. Administrators
 must preview artwork after upload. Stored SVGs cannot rely on outside resources.
+
+Sanitization runs synchronously on uncached public requests. The existing size
+and complexity limits bound each parse; repeated cache-bypassing requests remain
+an accepted availability risk. Revisit caching or rate limiting if abuse occurs.

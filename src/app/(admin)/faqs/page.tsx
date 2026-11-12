@@ -6,6 +6,7 @@ import {
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import AdminPageHeader from "@/components/AdminPageHeader";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toFaqDto } from "@/application/dto/faqDto";
 import { listFaqEntriesForAdmin } from "@/application/services/faqService";
@@ -25,11 +26,17 @@ const columns: DataTableColumn<FaqRow>[] = [
     render: (faq) => faq.question,
     sortable: true,
   },
-  { key: "order", header: "Ordem", render: (faq) => faq.order, sortable: true },
+  {
+    key: "order",
+    header: "Ordem",
+    render: (faq) => faq.order,
+    sortable: true,
+  },
 ];
 
 const FaqsAdminPage = async ({ searchParams }: FaqsAdminPageProps) => {
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
+
   const { items, totalCount } = await listFaqEntriesForAdmin({
     page,
     pageSize: PAGE_SIZE,
@@ -37,27 +44,25 @@ const FaqsAdminPage = async ({ searchParams }: FaqsAdminPageProps) => {
     order,
     search: q,
   });
+
   const faqs = items.map((faq) => toFaqDto(faq));
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">FAQs</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/faqs/order"
-            className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-100"
-          >
-            Ordenar
-          </Link>
-          <Link
-            href="/faqs/new"
-            className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
-          >
-            Adicionar pergunta
-          </Link>
-        </div>
-      </div>
+      <AdminPageHeader title="FAQs">
+        <Link
+          href="/faqs/order"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md border border-gray-300 px-4 py-2 whitespace-nowrap hover:bg-gray-100"
+        >
+          Ordenar
+        </Link>
+        <Link
+          href="/faqs/new"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
+        >
+          Adicionar pergunta
+        </Link>
+      </AdminPageHeader>
 
       <DataTable
         columns={columns}

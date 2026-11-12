@@ -24,8 +24,15 @@ test("rejects active content before storage", () => {
 });
 
 test.each([
-  '<script>alert(1)</script>',
-  '<foreignObject/>',
+  "<script>alert(1)</script>",
+  "<foreignObject/>",
+  '<rect ONLOAD="alert(1)"/>',
+  '<rect href="&#106;avascript:alert(1)"/>',
+  '<rect xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://evil.test"/>',
+  '<rect style="fill:url(https://evil.test)"/>',
+  '<use onload="alert(1)"/>',
+  '<style onload="alert(1)"/>',
+  '<animate onload="alert(1)"/>',
   '<rect onload="alert(1)"/>',
   '<image href="https://evil.test/a"/>',
   '<rect fill="url(https://evil.test/a)"/>',

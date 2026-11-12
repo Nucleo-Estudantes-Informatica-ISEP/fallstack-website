@@ -60,6 +60,7 @@ test("normal logo uploads, serves and rasterizes at configured dimensions", asyn
   });
   expect(media.status).toBe(200);
   expect(media.headers.get("content-type")).toBe("image/svg+xml");
+  expect(media.headers.get("content-security-policy")).toContain("sandbox");
   expect(media.headers.get("x-content-type-options")).toBe("nosniff");
   const bytes = Buffer.from(await media.arrayBuffer());
   const { data, info } = await sharp(bytes)
@@ -88,4 +89,25 @@ test.each([
 ])("invalid bytes never reach storage", async (bytes) => {
   expect((await uploadLogo(request(bytes), context)).status).toBe(400);
   expect(putObjectStream).not.toHaveBeenCalled();
+});
+
+test("hostile stored SVG is rejected on serving", async () => {
+  const id = "00000000-0000-4000-8000-000000000000";
+  storage.set(`distribution/logo/${id}`, {
+    bytes: fixture("malicious"),
+    contentType: "image/svg+xml",
+  });
+  expect(
+    (
+      await GET(new Request(`http://localhost/api/media/logo/${id}`), {
+        params: Promise.resolve({ type: "logo", id }),
+      })
+    ).status
+  ).toBe(404);
+});
+
+test("SVG bytes declared as PNG are rejected", async () => {
+  expect(
+    (await uploadLogo(request(fixture("logo"), "image/png"), context)).status
+  ).toBe(400);
 });

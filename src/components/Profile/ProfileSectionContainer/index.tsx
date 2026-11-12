@@ -219,11 +219,11 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
 
   return (
     <div
-      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : ""}`}
+      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
       style={{
         backgroundImage: isPersonalInfo
           ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
-          : "url(/assets/optimized/bgHero.900094f51c2f.webp)",
+          : undefined,
       }}
     >
       <div
@@ -273,7 +273,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
               backgroundColor: "rgba(237,131,38,0.1)",
             }}
           >
-            <FiAlertTriangle className="size-5 shrink-0 text-[#ED8326]" />
+            <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
               Definições.

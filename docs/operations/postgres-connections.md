@@ -55,7 +55,9 @@ logs in isolation and use explicit ceilings rather than idle snapshots.
 only with workload evidence (#411) and after recomputing the shared budget: every
 unit adds one connection per web process, including rollout overlap.
 `PRISMA_POOL_TIMEOUT_SECONDS` defaults to **5**, validated integer **1–10**;
-zero/infinite waits are rejected. `runtimeDatabaseUrl` sets these authoritative
+empty or below-one environment values use defaults (3 connections, 5 seconds).
+Other values must be integers in 1–10; malformed or above-ten values are rejected.
+`runtimeDatabaseUrl` sets these authoritative
 Prisma URL parameters while retaining runtime identity, schema, TLS and other
 parameters. Old URL `connection_limit`/`pool_timeout` values are replaced,
 including duplicates. Never log the resulting URL.

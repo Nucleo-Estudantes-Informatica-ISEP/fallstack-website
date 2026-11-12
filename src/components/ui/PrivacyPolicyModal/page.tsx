@@ -31,25 +31,9 @@ const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
         onClick={() => setIsVisible(false)}
       ></div>
 
-      <section className="relative z-10 flex size-full flex-col overflow-hidden border border-white/10 bg-black text-white antialiased shadow-2xl md:max-h-[90vh] md:max-w-5xl md:rounded-xl">
+      <section className="relative z-10 flex size-full flex-col overflow-hidden border border-secondary bg-background text-white antialiased shadow-2xl md:max-h-[90vh] md:max-w-5xl md:rounded-xl">
         <div className="scrollbar-thin flex-1 scrollbar-thumb-gray-600 scrollbar-track-black overflow-y-auto">
-          <div className="relative flex h-75 w-full shrink-0 items-center justify-center bg-gray-900">
-            <div className="absolute inset-0 z-0 flex items-center justify-center">
-              <Image
-                src="/icons/header-privacy-policy-background.png"
-                alt="Background Texture"
-                fill
-                priority
-                quality={100}
-                className="scale-125 object-contain opacity-60 md:scale-100 lg:scale-90"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-              />
-            </div>
-
-            <div className="absolute inset-0 z-10 bg-black/50" />
-
-            <div className="absolute inset-x-0 bottom-0 z-10 h-24 bg-linear-to-t from-black to-transparent" />
-
+          <div className="artwork-clean relative flex h-75 w-full shrink-0 items-center justify-center">
             <div className="relative z-20">
               <Image
                 src="/favicon.ico"
