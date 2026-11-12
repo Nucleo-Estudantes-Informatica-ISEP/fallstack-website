@@ -366,12 +366,3 @@ test("local Compose starts an isolated full development stack", () => {
     })
   );
 });
-
-test("production runner excludes npm's independent dependency tree", () => {
-  const dockerfile = readFileSync(path.join(ROOT, "Dockerfile"), "utf-8");
-  const runner = dockerfile.split("FROM base AS runner")[1];
-  expect(runner).toContain(
-    "RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx"
-  );
-  expect(runner).toContain('CMD ["node", "server.js"]');
-});

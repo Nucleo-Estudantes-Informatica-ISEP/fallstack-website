@@ -10,15 +10,19 @@ overrides:
   "@typescript-eslint/parser": ^8.8.1
   "@typescript-eslint/type-utils": ^8.8.1
   "@typescript-eslint/utils": ^8.8.1
+  # Sentry glob dependency.
   brace-expansion@<1.1.21: 1.1.21
   brace-expansion@>=2.0.0 <2.1.7: 2.1.7
   brace-expansion@>=4.0.0 <5.0.12: 5.0.12
+  # Sentry/webpack schema-utils dependency.
   fast-uri@>=3.0.0 <3.1.9: 3.1.9
   js-yaml@>=4.0.0 <4.3.1: 4.3.1
   nanoid@<3.3.18: 3.3.18
   postcss: ^8.5.10
   postcss@<=8.5.22: ">=8.5.23"
   serialize-javascript: ^7.0.5
+  # Next.js image processing dependency.
   sharp@>=0.34.5 <0.35.5: 0.35.5
   undici@>=7.0.0 <7.29.0: 7.29.0
+  # Guard the 6.x line if it returns.
   undici@>=6.0.0 <6.29.1: 6.29.1

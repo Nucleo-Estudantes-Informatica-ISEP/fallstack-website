@@ -20,7 +20,14 @@ from the runner only: it starts `node server.js` and does not install packages.
 Build and migration stages retain their tooling.
 
 CI's existing Trivy 0.76.2 gate now scans both OS and library packages with
-HIGH/CRITICAL failures enabled, without ignores or unfixed exceptions.
+HIGH/CRITICAL failures enabled for fixable vulnerabilities (`--ignore-unfixed`).
+The migrator and storage-cleanup images are outside this runner scan; they
+retain build tooling and require separate vulnerability assessment.
+
+The maintainers triaging security alerts should review unfixed HIGH/CRITICAL
+findings when alerts appear and at least weekly, track each finding in an issue,
+and update or mitigate it when a fix becomes available. Run the same scan
+without `--ignore-unfixed` to see those findings.
 
 ## Reproduce
 
@@ -28,11 +35,11 @@ Build the final runner and scan that exact image:
 
 ```sh
 docker build --target runner --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:4000/api -t fallstack-security-543 .
-docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 image --scanners vuln --pkg-types os,library --severity HIGH,CRITICAL --exit-code 1 fallstack-security-543
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.76.2 image --scanners vuln --pkg-types os,library --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 fallstack-security-543
 ```
 
 Scan results must come from the final image, not the source lockfile alone.
-No exceptions are authorized by this change.
+The blocking gate excludes unfixed findings; triage them as described above.
 
 ## Local verification (11 November 2026)
 

@@ -178,6 +178,9 @@ jobs:
       - name: Verify application runs as non-root
         run: test "$(docker inspect --format '{{.Config.User}}' fallstack-app-check)" = "nextjs"
 
+      - name: Verify npm and npx are absent
+        run: docker run --rm --entrypoint sh fallstack-app-check -c '! command -v npm && ! command -v npx'
+
       - name: Scan production image OS and libraries for critical and high vulnerabilities
         run: |
           docker run --rm \
