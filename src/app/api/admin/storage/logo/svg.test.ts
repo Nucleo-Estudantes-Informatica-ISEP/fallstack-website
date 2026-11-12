@@ -71,15 +71,11 @@ test("normal logo uploads, serves and rasterizes at configured dimensions", asyn
   expect(data[(50 * 200 + 100) * 4 + 1]).toBeGreaterThan(100);
 });
 
-test("malicious logo is sanitized before storage, avatars reject SVG", async () => {
+test("malicious logos and SVG avatars are rejected before storage", async () => {
   expect(
     (await uploadLogo(request(fixture("malicious")), context)).status
-  ).toBe(201);
-  const stored = [...storage.values()][0].bytes.toString();
-  expect(stored).not.toMatch(
-    /script|onload|onclick|foreignObject|https:|href|style|animate|image|use/i
-  );
-  vi.mocked(putObjectStream).mockClear();
+  ).toBe(400);
+  expect(putObjectStream).not.toHaveBeenCalled();
   expect((await uploadAvatar(request(fixture("logo")), context)).status).toBe(
     400
   );

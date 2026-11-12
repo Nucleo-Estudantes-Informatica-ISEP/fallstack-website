@@ -41,6 +41,17 @@ export function sanitizeLogoSvg(bytes: Uint8Array): Buffer {
       if (++nodes > 10000 || ++depth > 64) throw new Error("SVG too complex");
       if (depth === 1 && (tag.local !== "svg" || tag.uri !== SVG))
         throw new Error("Not SVG");
+      if (/^(script|foreignObject)$/i.test(tag.local))
+        throw new Error("Active SVG element");
+      for (const attr of Object.values(tag.attributes)) {
+        if (
+          /^on/i.test(attr.local) ||
+          (attr.local === "href" && !attr.value.startsWith("#")) ||
+          (/url\s*\(/i.test(attr.value) &&
+            !/^url\(#[a-zA-Z_][\w-]*\)$/.test(attr.value))
+        )
+          throw new Error("Active SVG attribute");
+      }
       if (skipped || tag.uri !== SVG || !elements.has(tag.local)) {
         skipped++;
         return;

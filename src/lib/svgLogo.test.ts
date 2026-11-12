@@ -17,12 +17,24 @@ test("preserves static logo geometry and local gradients", () => {
   expect(sanitizeLogoSvg(Buffer.from(clean)).toString()).toBe(clean);
 });
 
-test("removes active content before storage", () => {
-  const clean = sanitizeLogoSvg(fixture("malicious")).toString();
-  expect(clean).toContain('<rect width="100" height="100"');
-  expect(clean).not.toMatch(
-    /script|onload|onclick|foreignObject|https:|href|style|animate|image|use/i
+test("rejects active content before storage", () => {
+  expect(() => sanitizeLogoSvg(fixture("malicious"))).toThrow(
+    "Invalid SVG logo"
   );
+});
+
+test.each([
+  '<script>alert(1)</script>',
+  '<foreignObject/>',
+  '<rect onload="alert(1)"/>',
+  '<image href="https://evil.test/a"/>',
+  '<rect fill="url(https://evil.test/a)"/>',
+])("rejects active SVG constructs", (content) => {
+  expect(() =>
+    sanitizeLogoSvg(
+      Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg">${content}</svg>`)
+    )
+  ).toThrow("Invalid SVG logo");
 });
 
 test.each([

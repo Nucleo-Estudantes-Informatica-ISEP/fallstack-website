@@ -17,9 +17,9 @@ Parse UTF-8 XML using the strict namespace-aware saxes parser. Rebuild a static
 allowlist of geometry, groups, gradients, clipping and descriptive text. Reject
 malformed XML, DTDs, processing instructions, non-SVG roots, excessive depth
 (64) and element counts (10,000). Keep the existing 5 MiB upload limit.
-Drop unknown elements with their descendants and unknown attributes. Drop CSS,
-scripts, event handlers, foreignObject, animation, use/image nodes, namespaced
-attributes, external references and escaped CSS. Only local fragment paint and
+Reject scripts, event handlers, foreignObject and external references; drop
+other unknown elements with their descendants and unknown attributes. Drop CSS,
+animation, use/image nodes, namespaced attributes and escaped CSS. Only local fragment paint and
 clip references survive. Logos exported with CSS must use presentation attributes
 or paths instead. No rasterization replaces the stored vector artwork.
 
