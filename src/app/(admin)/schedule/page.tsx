@@ -52,7 +52,7 @@ const ScheduleAdminPage = async ({ searchParams }: ScheduleAdminPageProps) => {
       <AdminPageHeader title="Programa">
         <Link
           href="/schedule/order"
-          className="ui-focus inline-flex min-h-11 items-center rounded-md border border-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/10"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md border border-gray-300 px-4 py-2 whitespace-nowrap hover:bg-gray-100"
         >
           Ordenar
         </Link>
