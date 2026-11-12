@@ -6,6 +6,7 @@ import {
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
 import LogoThumbnail from "@/components/ui/LogoThumbnail";
+import AdminPageHeader from "@/components/AdminPageHeader";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminSponsorDto } from "@/application/dto/sponsorDto";
@@ -43,15 +44,14 @@ const SponsorsAdminPage = async ({ searchParams }: SponsorsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Patrocinadores</h1>
+      <AdminPageHeader title="Patrocinadores">
         <Link
           href="/sponsors/new"
-          className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
           Adicionar patrocinador
         </Link>
-      </div>
+      </AdminPageHeader>
 
       <DataTable
         columns={columns}

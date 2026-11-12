@@ -1,10 +1,12 @@
+
 "use client";
 
 import slugifyId from "@/utils/slugifyId";
 
 export type SelectOption = string | { value: string; label: string };
 
-interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface InputSelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
   center?: boolean;
   placeholder?: string;
@@ -40,42 +42,50 @@ const InputSelect: React.FC<InputSelectProps> = ({
           {name}
         </label>
       )}
+
       <div className="relative flex w-full items-center">
         <select
+          {...rest}
           name={name}
           id={resolvedId}
           disabled={disabled}
           defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
           ref={inputRef}
-          className={`field-height w-full field-focus-target appearance-none rounded-full border field-border bg-background px-4 py-2 pr-10 field-text text-white focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 has-[option[value=""]:checked]:text-gray-400 ${className}`}
-          {...rest}
+          className={`field-height w-full field-focus-target appearance-none rounded-full border field-border bg-background px-4 py-2 pr-10 field-text text-white focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 has-[option[value=""]:checked]:text-gray-400 ${className ?? ""}`}
         >
           {placeholder && (
             <option value="" disabled className="bg-background text-gray-400">
               {placeholder}
             </option>
           )}
+
           {options.map((option) => {
-            const val = typeof option === "string" ? option : option.value;
-            const lbl = typeof option === "string" ? option : option.label;
+            const value =
+              typeof option === "string" ? option : option.value;
+            const label =
+              typeof option === "string" ? option : option.label;
+
             return (
               <option
-                key={val}
-                value={val}
+                key={value}
+                value={value}
                 className="bg-neutral-900 text-white"
               >
-                {lbl}
+                {label}
               </option>
             );
           })}
         </select>
-        <span className="pointer-events-none absolute right-4 flex items-center text-gray-400">
+
+        <span
+          className="pointer-events-none absolute right-4 flex items-center text-gray-400"
+          aria-hidden="true"
+        >
           <svg
             className="size-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
-            aria-hidden="true"
           >
             <path
               strokeLinecap="round"

@@ -44,7 +44,18 @@ export default async function RootLayout({
         <InstallableContextProvider>
           <SkeletonTheme baseColor="#eaeaea" highlightColor="#bfbfbf">
             {children}
-            <ToastContainer position="bottom-right" />
+            <ToastContainer
+              position="bottom-right"
+              theme="dark"
+              autoClose={5000}
+              newestOnTop
+              closeOnClick
+              pauseOnHover
+              pauseOnFocusLoss
+              draggable
+              limit={4}
+              className="fallstack-toasts"
+            />
             <InstallPopUp />
           </SkeletonTheme>
         </InstallableContextProvider>

@@ -1,41 +1,48 @@
 "use client";
 
+import type { AnchorHTMLAttributes, ReactNode } from "react";
+
 import Spinner from "@/components/ui/Spinner";
 
-interface PrimaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  children: React.ReactNode;
-  href: string;
-  className?: string;
+interface PrimaryLinkButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
+  children: ReactNode;
   loading?: boolean;
   disabled?: boolean;
-  onClick?: () => void;
-  target?: string;
-  rel?: string;
 }
 
-const PrimaryButton: React.FC<PrimaryButtonProps> = ({
+const PrimaryLinkButton: React.FC<PrimaryLinkButtonProps> = ({
   children,
-  href,
   className,
-  loading,
-  disabled,
+  loading = false,
+  disabled = false,
+  href,
   onClick,
-  target,
-  rel,
   ...rest
 }) => {
+  const isDisabled = disabled || loading;
+
   return (
-    <a href={href} target={target} rel={rel}>
-      <button
-        {...rest}
-        onClick={onClick}
-        disabled={disabled || loading}
-        className={`flex items-center justify-between bg-white px-10 py-4 text-center text-xl leading-5 font-bold text-black opacity-70 transition-opacity duration-200 hover:opacity-100 active:bg-primary disabled:opacity-50 ${className}`}
-      >
-        {loading ? <Spinner /> : children}
-      </button>
+    <a
+      {...rest}
+      href={isDisabled ? undefined : href}
+      onClick={(event) => {
+        if (isDisabled) {
+          event.preventDefault();
+          return;
+        }
+
+        onClick?.(event);
+      }}
+      aria-disabled={isDisabled || undefined}
+      aria-busy={loading || undefined}
+      tabIndex={isDisabled ? -1 : rest.tabIndex}
+      className={`inline-flex items-center justify-center bg-white px-10 py-4 text-xl font-bold text-black transition-opacity focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+        isDisabled ? "cursor-not-allowed opacity-60" : ""
+      } ${className ?? ""}`}
+    >
+      {loading ? <Spinner /> : children}
     </a>
   );
 };
 
-export default PrimaryButton;
+export default PrimaryLinkButton;
