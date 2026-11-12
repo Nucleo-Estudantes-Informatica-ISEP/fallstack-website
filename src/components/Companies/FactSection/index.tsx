@@ -18,7 +18,7 @@ const FactSection: React.FC<FactSectionProps> = ({ facts }) => {
             className="my-1 grid grid-cols-10 items-center"
           >
             <Icon className="left-0 fill-stone-500 text-2xl" />
-            <div className="col-span-9 ml-3 text-left leading-5 text-black">
+            <div className="col-span-9 ml-3 text-left leading-5 text-white">
               {fact.description}
             </div>
           </div>

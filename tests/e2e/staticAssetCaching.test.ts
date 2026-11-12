@@ -68,8 +68,19 @@ test("optimized source references resolve and stay within the transfer budget", 
     expect(bytes.length, url).toBeLessThan(150_000);
     totalBytes += bytes.length;
   }
-  expect(references.size).toBe(7);
-  expect(totalBytes).toBeLessThan(350_000);
+  expect(references).toEqual(
+    new Set([
+      "/assets/optimized/theme-clean.a9aad2a7a171.webp",
+      "/assets/optimized/signup-2026.41e0e981ef13.webp",
+      "/assets/optimized/profile-2026.403096771b21.webp",
+    ])
+  );
+  expect(
+    readFileSync(
+      path.join(root, "public/assets/optimized/theme-clean.a9aad2a7a171.webp")
+    ).length
+  ).toBeLessThan(32_582);
+  expect(totalBytes).toBeLessThan(130_000);
 });
 
 test.each([

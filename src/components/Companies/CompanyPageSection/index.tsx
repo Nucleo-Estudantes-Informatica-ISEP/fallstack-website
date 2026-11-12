@@ -25,7 +25,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
   const social = profile.socialLinks;
 
   return (
-    <div className="mt-12 size-full items-center justify-center bg-black md:my-14">
+    <div className="mt-12 size-full items-center justify-center md:my-14">
       <div className="mt-4 mb-12 flex size-full flex-col items-center">
         <div className="flex flex-col items-center justify-center pt-8">
           {company.avatar ? (
@@ -95,14 +95,16 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
           </p>
         </div>
       </div>
-      <CompanyInfo
-        bodyText={profile.bodyText}
-        videoHref={profile.videoHref ?? undefined}
-        videoTitle={profile.videoTitle ?? undefined}
-        showsPromoVideo={company.rank.style?.showsPromoVideo ?? false}
-        facts={profile.facts}
-        interests={company.interests}
-      />
+      <div className="border border-secondary bg-background">
+        <CompanyInfo
+          bodyText={profile.bodyText}
+          videoHref={profile.videoHref ?? undefined}
+          videoTitle={profile.videoTitle ?? undefined}
+          showsPromoVideo={company.rank.style?.showsPromoVideo ?? false}
+          facts={profile.facts}
+          interests={company.interests}
+        />
+      </div>
     </div>
   );
 };
