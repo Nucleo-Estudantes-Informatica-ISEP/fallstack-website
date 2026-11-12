@@ -58,6 +58,25 @@ test("employee policy requires EMPLOYEE role with an employee's company", () => 
   );
 });
 
+test("staff policy allows nei-members and admins but not students", () => {
+  const employeeSession: AuthPolicySession = {
+    role: "EMPLOYEE",
+    adminRole: null,
+    student: null,
+    employee: { company: { id: "company-1" } },
+  };
+  assert.equal(passesAuthPolicy("staff", employeeSession), true);
+  assert.equal(
+    passesAuthPolicy("staff", { ...employeeSession, employee: null }),
+    false
+  );
+  assert.equal(
+    passesAuthPolicy("staff", { ...studentSession, adminRole: "ADMIN" }),
+    true
+  );
+  assert.equal(passesAuthPolicy("staff", studentSession), false);
+});
+
 test("admin policy accepts either admin tier", () => {
   assert.equal(
     passesAuthPolicy("admin", { ...studentSession, adminRole: "ADMIN" }),
@@ -107,6 +126,7 @@ test("every non-public policy rejects a missing session", () => {
     "session",
     "student",
     "employee",
+    "staff",
     "admin",
     "superadmin",
   ] as const) {
