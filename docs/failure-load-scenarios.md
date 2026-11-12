@@ -44,6 +44,9 @@ Baseline, settled fault (45–90s) and recovery (105–150s) each require sample
 100% expected-status checks, under 1% unexpected HTTP failures and p95 below
 three seconds. Health, proxy-ready and schedule remain 200. During a Redis
 outage deep readiness must return 503; after restoration it must return 200.
+Each request samples the clock immediately before it starts; its expected status,
+HTTP metric tags and check tags use that start phase, even if it finishes in the
+next phase. Later requests in the same iteration sample the clock again.
 The 15-second transition windows account for readiness caching and proxy
 healthcheck propagation. Their errors remain in the output and must be reported,
 though they do not share the steady-phase gates.
@@ -63,5 +66,11 @@ pnpm exec vitest run tests/load/failure-scenarios.test.mjs
 ```
 
 These checks replace HTTP with a test double to validate emitted requests and
-assertions. They are not load measurements. No staging measurements have been
-recorded for this addition yet.
+assertions, including an advancing clock across every phase boundary and Redis
+readiness on both sides of restoration. They are not load measurements. No
+staging measurements have been recorded for this addition yet.
+
+Keep the implementation PR in draft until evidence for all three staging
+scenarios is attached and reviewed. The Development link to #451 tracks the
+intended completion; passing local regression checks does not complete the
+issue or justify merging before staging validation.

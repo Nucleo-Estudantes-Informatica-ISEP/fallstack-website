@@ -11,30 +11,37 @@ const source = readFileSync(
   .replace(/^import .*;\n/gm, "")
   .replace(/export default /g, "")
   .replace(/export /g, "");
-function load(fault, seconds, status = null) {
+function load(fault, seconds, status = null, requestSeconds = 0) {
   const requests = [];
   const checks = [];
+  const checkTags = [];
+  const instance = { currentTestRunDuration: seconds * 1000 };
   const result = vm.runInNewContext(
     `${source}\n({runFailure, phaseAt, options})`,
     {
       __ENV: { FAILURE_SCENARIO: fault },
       assertStagingTarget: () => "http://localhost",
-      execution: { instance: { currentTestRunDuration: seconds * 1000 } },
+      execution: { instance },
       sleep() {},
-      check(res, predicates) {
+      check(res, predicates, tags) {
+        checkTags.push(tags);
         checks.push(...Object.values(predicates).map((fn) => fn(res)));
       },
       http: {
         expectedStatuses: (value) => value,
         get(url, params) {
           requests.push({ url, ...params });
-          return { status: status ?? params.responseCallback };
+          const startedAt = instance.currentTestRunDuration / 1000;
+          const responseStatus =
+            typeof status === "function" ? status(url, startedAt) : status;
+          instance.currentTestRunDuration += requestSeconds * 1000;
+          return { status: responseStatus ?? params.responseCallback };
         },
       },
     }
   );
   result.runFailure();
-  return { ...result, requests, checks };
+  return { ...result, requests, checks, checkTags };
 }
 for (const fault of ["copy-removed", "copy-drained", "redis-unavailable"]) {
   test(`${fault}: baseline, outage and recovery requests`, () => {
@@ -75,3 +82,43 @@ test("phase boundaries and required samples", () => {
 });
 test("unknown scenario is rejected", () =>
   assert.throws(() => load("unknown", 0)));
+
+for (const [seconds, phases] of [
+  [29, ["baseline", "injection", "injection", "injection"]],
+  [44, ["injection", "fault", "fault", "fault"]],
+  [88, ["fault", "fault", "restoration", "restoration"]],
+  [104, ["restoration", "recovery", "recovery", "recovery"]],
+]) {
+  test(`requests and checks use their own start phase at ${seconds}s`, () => {
+    const result = load("copy-removed", seconds, 200, 1);
+    assert.deepEqual(
+      result.requests.map(({ tags }) => tags.phase),
+      phases
+    );
+    assert.deepEqual(
+      result.checkTags.map(({ phase }) => phase),
+      phases
+    );
+    assert.ok(result.checks.every(Boolean));
+  });
+}
+for (const [seconds, readyStatus, readyPhase] of [
+  [86, 503, "fault"],
+  [88, 200, "restoration"],
+]) {
+  test(`Redis readiness follows its request start time at ${seconds}s`, () => {
+    const result = load(
+      "redis-unavailable",
+      seconds,
+      (url, startedAt) =>
+        url.endsWith("/api/ready") && startedAt >= 45 && startedAt < 90
+          ? 503
+          : 200,
+      1
+    );
+    const ready = result.requests.find(({ url }) => url.endsWith("/api/ready"));
+    assert.equal(ready.responseCallback, readyStatus);
+    assert.equal(ready.tags.phase, readyPhase);
+    assert.ok(result.checks.every(Boolean));
+  });
+}

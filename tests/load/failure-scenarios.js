@@ -49,13 +49,13 @@ export const options = {
 };
 
 export default function runFailure() {
-  const phase = phaseAt(execution.instance.currentTestRunDuration / 1000);
   for (const path of [
     "/api/health",
     "/api/proxy-ready",
     "/api/ready",
     "/api/schedule",
   ]) {
+    const phase = phaseAt(execution.instance.currentTestRunDuration / 1000);
     const expected =
       fault === "redis-unavailable" &&
       phase === "fault" &&
