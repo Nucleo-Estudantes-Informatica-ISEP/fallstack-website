@@ -16,6 +16,11 @@ test("interest writes accept ids and reject display names", () => {
   expect(
     postStudentSchema.safeParse({
       name: "Student",
+      course: "Engenharia Informática",
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
+      privacyPolicyVersion: "2026-10-31",
+      termsVersion: "2026-11-11",
       year: "3º Ano Licenciatura",
       interests: [interestId],
     }).success

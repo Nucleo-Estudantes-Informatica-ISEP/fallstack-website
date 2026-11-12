@@ -1,35 +1,22 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { expect, test, vi } from "vitest";
 
 import StudentSignUp from ".";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace: vi.fn() }) }));
-vi.mock("react-toastify", () => ({ toast: { error: vi.fn() } }));
-vi.mock("@/hooks/useSession", () => ({ default: () => ({ user: null }) }));
-vi.mock("@/components/SignUp/NameStep", () => ({
-  default: () => <p>Name step</p>,
-}));
 vi.mock("@/components/SignUp/AccountDetailsStep", () => ({
-  default: () => <p>Account step</p>,
+  default: ({ institutionalEmail }: { institutionalEmail: string }) => (
+    <p>{institutionalEmail}</p>
+  ),
 }));
-vi.mock("@/components/SignUp/BioStep", () => ({
-  default: () => <p>Bio step</p>,
-}));
-vi.mock("@/components/SignUp/InterestsStep", () => ({
-  default: () => <p>Interests step</p>,
-}));
-vi.mock("@/components/SignUp/FinalStep", () => ({
-  default: () => <p>Final step</p>,
-}));
+vi.mock("@/components/SignUp/BioStep", () => ({ default: () => null }));
+vi.mock("@/components/SignUp/InterestsStep", () => ({ default: () => null }));
+vi.mock("@/components/SignUp/FinalStep", () => ({ default: () => null }));
 
-beforeEach(() => {
-  window.history.replaceState({}, "", "/signup?authnei=1");
-  window.sessionStorage.clear();
-});
+test("starts with the account details using the server-provided email", () => {
+  render(
+    <StudentSignUp interests={[]} institutionalEmail="student@example.test" />
+  );
 
-test("collects a name after an AuthNEI login without a saved signup draft", async () => {
-  render(<StudentSignUp interests={[]} />);
-
-  await screen.findByText("Name step");
-  expect(screen.queryByText("Account step")).toBeNull();
+  expect(screen.getByText("student@example.test")).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: "Voltar" })).toBeNull();
 });
