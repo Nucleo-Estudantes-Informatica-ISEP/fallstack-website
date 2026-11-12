@@ -158,6 +158,11 @@ are generated gradient images and CVs are one-page generated PDFs.
 
 With this data Armis has 18 saved students, enough to make both lists scroll.
 
+`Z100` (“Carolina Referência”, not saved) is linked to the `local-student`
+identity that `pnpm dev:session` mints. It provides the student session used
+for the student dashboard reference captures, since the shared shell also
+serves the student dashboard.
+
 ### Recipes
 
 Sessions: **Employee** is the Armis employee account. **Employee (no admin)**
