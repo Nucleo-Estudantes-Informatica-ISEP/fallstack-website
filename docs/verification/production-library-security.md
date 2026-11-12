@@ -10,14 +10,13 @@ The lockfile contained three distinct dependency paths:
 Overrides now resolve brace-expansion to patched releases on the existing
 1.x, 2.x and 5.x lines, fast-uri to 3.1.9, and sharp to 0.35.5. The existing
 4.x-to-5.x brace-expansion override and 0.34.5-to-0.35.x Sharp override are
-preserved; no additional major migration is introduced.
+preserved. Prisma’s deepmerge-ts dependency is overridden from 7.x to 8.0.0 because [GHSA-ggr8-5vv4-36mx](https://github.com/advisories/GHSA-ggr8-5vv4-36mx) affects all versions below 8.0.0. CI run 43226106369 passed the compose migration smoke test at fc502c6; other Prisma configuration shapes remain unverified. Vite is overridden to 8.1.6.
 
 Undici 6 is absent from the application lockfile on the reviewed dev base;
-its installed Undici is 7.29.0. A bounded 6.x override protects that line
+its installed Undici is overridden to 7.30.1. A bounded 6.x override protects that line
 if it returns. The production base image also carries npm's independent
 bundled dependency tree, which pnpm overrides cannot patch. Remove npm/npx
-from the runner only: it starts `node server.js` and does not install packages.
-Build and migration stages retain their tooling.
+from the runner, migrator and storage-cleanup images. The runner starts `node server.js`; the migrator invokes Prisma directly with Node. The builder retains its tooling.
 
 CI's existing Trivy 0.76.2 gate now scans both OS and library packages with
 HIGH/CRITICAL failures enabled for fixable vulnerabilities (`--ignore-unfixed`).
