@@ -1,4 +1,4 @@
-# 0030: Share 2026 background artwork
+# 0033: Share 2026 background artwork
 
 Status: Accepted
 Date: 2026-11-11
@@ -31,9 +31,7 @@ Inter stylesheet and the unbundled InterVariable override. No CSP changes.
 
 The shared asset is 28,710 bytes versus 294,632 bytes across the seven retired
 optimized backgrounds; it is also smaller than the old 32,582-byte hero used
-by dashboards. CSS backgrounds add no layout dimensions. Auth mobile keeps its
-24:5 banner box, desktop keeps its existing split, and artwork remains in
-existing normal-flow containers. Removing fixed background attachment avoids
+by dashboards. CSS backgrounds add no layout dimensions. Auth artwork remains in existing normal-flow containers; student signup retains its dedicated artwork. Removing fixed background attachment avoids
 scroll repaint work. Fonts retain swap behavior; this change does not claim to
 eliminate pre-existing font-swap shifts or hero entrance animation.
 

@@ -8,7 +8,25 @@ import InstallPopUp from "@/components/InstallPopUp";
 vi.mock("next/navigation", () => ({ usePathname: vi.fn() }));
 vi.mock("@/hooks/useIsMobile", () => ({ default: () => false }));
 
-beforeEach(() => localStorage.clear());
+const store = new Map<string, string>();
+const localStorageMock: Storage = {
+  get length() {
+    return store.size;
+  },
+  clear: () => store.clear(),
+  getItem: (key) => store.get(key) ?? null,
+  key: (index) => [...store.keys()][index] ?? null,
+  removeItem: (key) => store.delete(key),
+  setItem: (key, value) => store.set(key, String(value)),
+};
+
+beforeEach(() => {
+  store.clear();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageMock,
+  });
+});
 
 function renderPrompt(pathname: string) {
   vi.mocked(usePathname).mockReturnValue(pathname);

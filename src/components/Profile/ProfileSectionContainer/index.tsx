@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Area } from "react-easy-crop";
 import {
   FiAlertTriangle,
   FiChevronRight,
@@ -10,17 +11,23 @@ import {
   FiMapPin,
   FiUser,
 } from "react-icons/fi";
+import { toast } from "react-toastify";
 
 import { ProfileData } from "@/types/ProfileData";
 import type { Stats } from "@/types/Stats";
 import { useLogout } from "@/hooks/useLogout";
 import useSession from "@/hooks/useSession";
+import Modal from "@/components/ui/Modal";
+import PrimaryButton from "@/components/ui/PrimaryButton";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
+import AvatarCropper from "@/components/Profile/AvatarCropper";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentActionDto } from "@/application/dto/actionDto";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
+import { uploadAvatar } from "@/client/api/upload";
+import { getCroppedImg } from "@/utils/canvas";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
@@ -77,6 +84,31 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     avatar: null,
   });
 
+  const [imageSrc, setImageSrc] = useState<string | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isAvatarModalVisible, setIsAvatarModalVisible] = useState(false);
+  const [isAvatarLoading, setIsAvatarLoading] = useState(false);
+  const isPersonalInfo = selectedMenu === "info";
+
+  const confirmAvatar = async () => {
+    if (!imageSrc || !croppedAreaPixels) return;
+    setIsAvatarLoading(true);
+    try {
+      const image = await getCroppedImg(imageSrc, croppedAreaPixels);
+      const uploaded = image && (await uploadAvatar(image));
+      if (!uploaded) {
+        toast.error("Não foi possível carregar a imagem.");
+        return;
+      }
+      setProfile((previous) => ({ ...previous, avatar: uploaded.url }));
+      setIsAvatarModalVisible(false);
+    } catch {
+      toast.error("Não foi possível carregar a imagem.");
+    } finally {
+      setIsAvatarLoading(false);
+    }
+  };
+
   const sidebarItems: SidebarItem[] = [
     { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
     // show Passe only if current session user is the profile student
@@ -119,13 +151,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         onClick={() =>
           item.key === "logout" ? handleLogout() : handleMenuClick(item)
         }
-        className="flex h-12 w-full items-center justify-between px-6 py-3 text-left text-white transition"
-        style={{
-          border: "1px solid #484848",
-          backgroundColor: "rgba(20,20,20,1)",
-          borderLeftWidth: isCurrent ? "4px" : "1px",
-          borderLeftColor: isCurrent ? "#ED8326" : "#484848",
-        }}
+        type="button"
+        aria-current={isCurrent ? "true" : undefined}
+        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" />
@@ -136,7 +164,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     );
   };
 
-  const horizontalPadding = "px-4 sm:px-8 xl:px-[11.11vw] 2xl:px-[168px]";
+  const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 
   const renderContent = () => {
     if (selectedMenu === "passe") return <PassMenuContent student={student} />;
@@ -190,12 +218,28 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   };
 
   return (
-    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
+    <div
+      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
+      style={{
+        backgroundImage: isPersonalInfo
+          ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
+          : undefined,
+      }}
+    >
       <div
-        className={`flex flex-col items-center pt-12 pb-8 ${horizontalPadding}`}
+        className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${horizontalPadding}`}
       >
         <div className="relative mb-6 flex items-center justify-center">
-          <UserImage imageSrc={student.avatar} className="size-52" />
+          <UserImage
+            imageSrc={profile.avatar ?? student.avatar}
+            className="size-32 lg:size-52"
+            editable={isPersonalInfo}
+            onChange={(image) => {
+              setImageSrc(image);
+              setCroppedAreaPixels(null);
+              setIsAvatarModalVisible(true);
+            }}
+          />
         </div>
         <h1
           className="mb-2 max-w-full text-center wrap-break-word text-white"
@@ -217,7 +261,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             fontSize: "20px",
             lineHeight: "100%",
             letterSpacing: "0%",
-            marginBottom: "clamp(13px, 6.25vw, 63px)",
           }}
         >
           {student.user.email}
@@ -263,32 +306,37 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       </div>
 
       <div
-        className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-2 ${horizontalPadding}`}
+        className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="w-full shrink-0 lg:w-64 xl:w-96">
-          <nav className="overflow-hidden bg-background shadow-xl">
-            <div className="divide-y divide-gray-800">
-              {sidebarItems.map((item) => renderButton(item))}
-            </div>
-          </nav>
-          <div style={{ height: "8px" }} />
-          <nav className="overflow-hidden bg-background shadow-xl">
-            <div className="divide-y divide-gray-800">
-              {secondaryItems.map((item) => renderButton(item))}
-            </div>
+        <div className="w-full shrink-0 lg:w-64 xl:w-88.5">
+          <nav aria-label="Perfil" className="flex flex-col gap-1">
+            {sidebarItems.map(renderButton)}
+            {secondaryItems.map(renderButton)}
           </nav>
         </div>
 
-        <div
-          className="flex min-w-0 flex-1 flex-col bg-background p-4 shadow-xl sm:p-6 xl:p-8"
-          style={{
-            marginLeft: "clamp(0px, 0.26vw, 0px)",
-            border: "1px solid #484848",
-          }}
-        >
+        <div className="min-w-0 flex-1 border border-secondary bg-background p-4 sm:p-6 xl:p-11">
           {renderContent()}
         </div>
       </div>
+      <Modal
+        isVisible={isAvatarModalVisible}
+        setIsVisible={setIsAvatarModalVisible}
+        className="flex w-full max-w-lg flex-col gap-6"
+        aria-labelledby="avatar-modal-title"
+      >
+        <h2 id="avatar-modal-title" className="text-3xl">
+          Altera o teu avatar
+        </h2>
+        <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
+        <PrimaryButton
+          onClick={confirmAvatar}
+          loading={isAvatarLoading}
+          disabled={!croppedAreaPixels}
+        >
+          Confirmar
+        </PrimaryButton>
+      </Modal>
       {ConfirmDialog}
     </div>
   );

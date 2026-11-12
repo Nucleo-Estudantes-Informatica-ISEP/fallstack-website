@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { PRIVACY_POLICY_VERSION } from "@/domain/student/signupPolicy";
+
 export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-background text-white">
@@ -32,7 +34,10 @@ export default function PrivacyPolicyPage() {
           <h2 className="text-2xl font-semibold">
             Aplicação do Regulamento Geral sobre a Proteção de Dados
           </h2>
-          <p className="mt-4">Em vigor a partir de 31 de outubro de 2026.</p>
+          <p className="mt-4">
+            Versão {PRIVACY_POLICY_VERSION}. Em vigor a partir de 31 de outubro
+            de 2026.
+          </p>
           <p className="mt-4">
             O Núcleo de Estudantes de Informática do Instituto Superior de
             Engenharia do Porto (NEI- ISEP), em conformidade com o Regulamento

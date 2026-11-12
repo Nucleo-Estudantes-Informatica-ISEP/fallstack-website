@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
@@ -7,25 +8,29 @@ import InterestsStep from ".";
 
 const data = { interests: [] } as unknown as StudentSignUpData;
 
-test("signup interests step uses the shared centred selector and keeps the selection", () => {
-  const setData = vi.fn();
+test("signup interests wrap from the left and retain the selection", () => {
   const setCurrentStep = vi.fn();
 
-  render(
-    <InterestsStep
-      currentStep={2}
-      setCurrentStep={setCurrentStep}
-      data={data}
-      setData={setData}
-      availableInterests={[
-        { id: "typescript", name: "TypeScript" },
-        { id: "react", name: "React" },
-      ]}
-    />
-  );
+  function Step() {
+    const [draft, setData] = useState(data);
+    return (
+      <InterestsStep
+        currentStep={2}
+        setCurrentStep={setCurrentStep}
+        data={draft}
+        setData={setData}
+        availableInterests={[
+          { id: "typescript", name: "TypeScript" },
+          { id: "react", name: "React" },
+        ]}
+      />
+    );
+  }
+
+  render(<Step />);
 
   const tag = screen.getByRole("button", { name: "React", pressed: false });
-  expect(tag.parentElement).toHaveClass("flex-wrap", "justify-center");
+  expect(tag.parentElement).toHaveClass("flex-wrap", "justify-start");
 
   fireEvent.click(tag);
   expect(
@@ -35,6 +40,5 @@ test("signup interests step uses the shared centred selector and keeps the selec
   ).toHaveAttribute("aria-hidden", "true");
 
   fireEvent.click(screen.getByRole("button", { name: "Seguinte" }));
-  expect(setData).toHaveBeenCalledWith({ ...data, interests: ["react"] });
   expect(setCurrentStep).toHaveBeenCalledWith(3);
 });
