@@ -8,7 +8,7 @@ import {
 } from "@/domain/student/signupPolicy";
 
 export async function createStudentProfile(
-  data: StudentSignUpData & { avatarUrl?: string | null; cvId?: string }
+  data: StudentSignUpData & { avatarId?: string | null; cvId?: string }
 ) {
   try {
     await httpClient.post("/students", {
@@ -22,7 +22,7 @@ export async function createStudentProfile(
       privacyPolicyVersion: PRIVACY_POLICY_VERSION,
       termsVersion: TERMS_VERSION,
       interests: data.interests,
-      avatarUrl: data.avatarUrl || undefined,
+      avatar: data.avatarId || undefined,
       cvId: data.cvId,
     });
     return true;
