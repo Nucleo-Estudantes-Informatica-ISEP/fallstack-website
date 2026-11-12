@@ -138,11 +138,7 @@ const StudentPage = async (props: ProfileProps) => {
 
   return (
     <>
-      <section
-        className={`${
-          session && session.role === "EMPLOYEE" ? "bg-company" : "bg-inherit"
-        } flex size-full min-h-screen flex-col items-center`}
-      >
+      <section className="flex size-full min-h-screen flex-col items-center">
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
             interests={localizedInterestNames}

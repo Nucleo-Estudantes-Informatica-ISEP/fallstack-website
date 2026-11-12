@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
@@ -18,18 +18,28 @@ interface PreviewProfileSectionContainerProps {
   isSavedStudent?: boolean;
 }
 
+// Student profile as a company sees it after a scan (S3/S4). Same header and
+// dark panels as the dashboards; the saved-student (S1) and public (S6) views
+// repeat this look in their own files.
+const container = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
+const panel = "border border-secondary bg-background p-6";
+const panelTitle =
+  "font-sans text-xs font-semibold tracking-[0.08em] text-gray-300 uppercase";
+const linkPill =
+  "inline-flex min-h-11 items-center gap-2 rounded-full border border-secondary bg-black/40 px-4 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
+
 const PreviewProfileSectionContainer: React.FC<
   PreviewProfileSectionContainerProps
 > = ({ student, interests, token, isCompanyView, isSavedStudent }) => {
-  const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
-
   const orderedInterests = useMemo(
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
   );
-  const router = useRouter();
-  const { mutate, isPending } = useMutation("Erro ao salvar perfil!");
+  const { mutate, isPending } = useMutation();
   const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const yearAndCourse = [student.year, student.course]
+    .filter(Boolean)
+    .join(" · ");
 
   useEffect(() => {
     return () => {
@@ -43,45 +53,50 @@ const PreviewProfileSectionContainer: React.FC<
 
       try {
         await httpClient.patch("/saved", { token });
-        toast.success("Perfil salvo com sucesso!");
-        reloadTimeoutRef.current = setTimeout(
-          () => window.location.reload(),
-          1500
-        );
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 400) {
-          toast.warning("Perfil já salvo!");
+          toast.warning("Perfil já salvo!", { toastId: "preview-saved" });
           return;
         }
-        throw error;
+        toast.error("Não foi possível guardar o perfil. Tenta novamente.", {
+          toastId: "preview-save-failed",
+        });
+        return;
       }
+      toast.success("Perfil salvo com sucesso!");
+      reloadTimeoutRef.current = setTimeout(
+        () => window.location.reload(),
+        1500
+      );
     });
 
   const handleOpenCv = async () => {
-    const { url } = await httpClient.get<{ url: string }>(
-      `/students/${student.code}/cv`
-    );
-    window.open(url, "_blank");
+    try {
+      const { url } = await httpClient.get<{ url: string }>(
+        `/students/${student.code}/cv`
+      );
+      window.open(url, "_blank");
+    } catch {
+      toast.error("Não foi possível abrir o CV. Tenta novamente.", {
+        toastId: "preview-cv-failed",
+      });
+    }
   };
 
   return (
     <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
       <div
-        className="flex flex-col items-center pt-12 pb-10"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
+        className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${container}`}
       >
         <div className="relative mb-6 flex items-center justify-center">
-          <UserImage imageSrc={student.avatar} className="size-40 md:size-52" />
+          <UserImage imageSrc={student.avatar} className="size-32 lg:size-52" />
         </div>
         <h1
-          className="mb-2 text-center text-white"
+          className="mb-2 max-w-full text-center wrap-break-word text-white"
           style={{
             fontFamily: '"Coolvetica", sans-serif',
             fontWeight: 400,
-            fontSize: "42px",
+            fontSize: "45px",
             lineHeight: "100%",
             letterSpacing: "0%",
           }}
@@ -89,14 +104,13 @@ const PreviewProfileSectionContainer: React.FC<
           {student.name}
         </h1>
         <p
-          className="text-center text-gray-200"
+          className="mb-6 max-w-full text-center wrap-anywhere text-gray-100"
           style={{
             fontFamily: '"Inter", sans-serif',
             fontWeight: 400,
-            fontSize: "18px",
+            fontSize: "20px",
             lineHeight: "100%",
             letterSpacing: "0%",
-            marginBottom: "clamp(10px, 4vw, 36px)",
           }}
         >
           {student.user.email}
@@ -107,12 +121,11 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.github}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
+              aria-label={`GitHub de ${student.name} (abre num novo separador)`}
+              className={linkPill}
             >
-              <div className="flex items-center gap-2">
-                <Github className="size-5" />
-                <span>GitHub</span>
-              </div>
+              <Github className="size-5" aria-hidden />
+              <span>GitHub</span>
             </a>
           )}
           {student.linkedin && (
@@ -120,19 +133,20 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-[#2d2d2d] bg-black/40 px-4 py-2 text-white transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg"
+              aria-label={`LinkedIn de ${student.name} (abre num novo separador)`}
+              className={linkPill}
             >
-              <div className="flex items-center gap-2">
-                <Linkedin className="size-5" />
-                <span>LinkedIn</span>
-              </div>
+              <Linkedin className="size-5" aria-hidden />
+              <span>LinkedIn</span>
             </a>
           )}
           {isCompanyView && !isSavedStudent && (
             <button
+              type="button"
               onClick={handleSaveProfile}
               disabled={isPending}
-              className="rounded-full border border-primary/60 bg-primary px-4 py-2 font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              aria-busy={isPending}
+              className="ui-action rounded-full"
             >
               {isPending ? "A guardar..." : "+ Salvar perfil"}
             </button>
@@ -140,95 +154,107 @@ const PreviewProfileSectionContainer: React.FC<
         </div>
       </div>
 
-      <div
-        className="flex flex-1 flex-col gap-6 pb-16"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
-      >
+      <div className={`flex flex-1 flex-col gap-6 pb-20 ${container}`}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
-                    Informações pessoais
-                  </p>
-                  <h2 className="mt-1 text-2xl font-bold text-white">
-                    {student.name}
-                  </h2>
-                  <p className="text-sm text-gray-300">{student.year}</p>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="flex items-center gap-3 rounded-xl border border-[#2a2a2a] bg-black/60 px-4 py-3 text-sm text-gray-200">
-                  <Email className="size-5 text-primary" />
-                  <div className="flex flex-col">
-                    <span className="text-xs tracking-[0.08em] text-gray-500 uppercase">
-                      Email
-                    </span>
-                    <span className="font-medium">{student.user.email}</span>
-                  </div>
-                </div>
-                {student.cv && (
-                  <button
-                    onClick={handleOpenCv}
-                    className="flex items-center gap-3 rounded-xl border border-primary/60 bg-primary/10 px-4 py-3 text-left text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-primary/20"
-                  >
-                    <OpenCv className="size-5 text-primary" />
-                    <div className="flex flex-col">
-                      <span className="text-xs tracking-[0.08em] text-gray-300 uppercase">
-                        Curriculum
-                      </span>
-                      <span>Abrir o CV de {student.name}</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </section>
-          </div>
-
-          <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
-            <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
-              Interesses
+          <section
+            aria-labelledby="preview-info"
+            className={`${panel} min-w-0 lg:col-span-2`}
+          >
+            <h2 id="preview-info" className={panelTitle}>
+              Informações pessoais
+            </h2>
+            <p className="mt-2 text-2xl font-bold wrap-break-word text-white">
+              {student.name}
             </p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              {orderedInterests.length === 0 ? (
-                <p className="text-sm text-gray-400">
-                  Ainda não definiste os teus interesses...
-                </p>
-              ) : (
-                orderedInterests.map((interest) => (
-                  <span
-                    key={interest}
-                    className="rounded-full border border-primary/50 bg-primary/15 px-3 py-1 text-sm font-medium text-white"
-                  >
-                    {interest}
+            {yearAndCourse && (
+              <p className="text-sm wrap-break-word text-gray-300">
+                {yearAndCourse}
+              </p>
+            )}
+
+            <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="flex min-w-0 items-center gap-3 border border-secondary bg-black/60 px-4 py-3 text-sm text-gray-200">
+                <Email className="size-5 shrink-0 text-primary" aria-hidden />
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-xs tracking-[0.08em] text-gray-300 uppercase">
+                    Email
                   </span>
-                ))
+                  <a
+                    href={`mailto:${student.user.email}`}
+                    className="font-medium wrap-anywhere hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    {student.user.email}
+                  </a>
+                </div>
+              </div>
+              {student.cv && (
+                <button
+                  type="button"
+                  onClick={handleOpenCv}
+                  className="flex min-w-0 items-center gap-3 border border-primary/60 bg-primary/10 px-4 py-3 text-left text-sm font-semibold text-white transition-colors hover:bg-primary/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <OpenCv
+                    className="size-5 shrink-0 text-primary"
+                    aria-hidden
+                  />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-xs tracking-[0.08em] text-gray-300 uppercase">
+                      Curriculum
+                    </span>
+                    <span className="wrap-break-word">
+                      Abrir o CV de {student.name}
+                    </span>
+                  </span>
+                </button>
               )}
             </div>
+          </section>
+
+          <section
+            aria-labelledby="preview-interests"
+            className={`${panel} min-w-0`}
+          >
+            <h2 id="preview-interests" className={panelTitle}>
+              Interesses
+            </h2>
+            {orderedInterests.length === 0 ? (
+              <p className="mt-4 text-sm text-gray-300">
+                Este estudante ainda não indicou interesses.
+              </p>
+            ) : (
+              <ul className="mt-4 flex flex-wrap gap-3">
+                {orderedInterests.map((interest) => (
+                  <li
+                    key={interest}
+                    className="max-w-full rounded-full border border-primary/50 bg-primary/15 px-3 py-1 text-sm font-medium wrap-break-word text-white"
+                  >
+                    {interest}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 
         {student.bio && (
-          <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
-            <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
+          <section aria-labelledby="preview-bio" className={panel}>
+            <h2 id="preview-bio" className={panelTitle}>
               Sobre
-            </p>
-            <p className="mt-3 text-base leading-relaxed whitespace-pre-wrap text-gray-100">
+            </h2>
+            <p className="mt-3 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-100">
               {student.bio}
             </p>
           </section>
         )}
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="rounded-full border border-[#2a2a2a] bg-black/50 px-4 py-2 text-white transition hover:bg-black/60"
-        >
-          Voltar
-        </button>
+
+        {isCompanyView && (
+          <Link
+            href="/dashboard"
+            className="self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            Voltar ao painel
+          </Link>
+        )}
       </div>
     </div>
   );
