@@ -181,13 +181,15 @@ jobs:
       - name: Verify npm and npx are absent
         run: docker run --rm --entrypoint sh fallstack-app-check -c '! command -v npm && ! command -v npx'
 
-      - name: Scan production image OS and libraries for critical and high vulnerabilities
+      - name: Scan deployed images for critical and high vulnerabilities
         run: |
-          docker run --rm \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v "$HOME/.cache/trivy:/root/.cache/" \
-            aquasec/trivy:0.76.2 \
-            image --scanners vuln --pkg-types os,library --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 fallstack-app-check
+          for image in fallstack-app-check fallstack-migrator-check fallstack-storage-cleanup-check; do
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "$HOME/.cache/trivy:/root/.cache/" \
+              aquasec/trivy:0.76.2 \
+              image --scanners vuln --pkg-types os,library --severity CRITICAL,HIGH --ignore-unfixed --exit-code 1 "$image" || exit $?
+          done
 
       - name: Smoke test standalone local Compose stack
         run: bash tests/e2e/local-compose-smoke.sh

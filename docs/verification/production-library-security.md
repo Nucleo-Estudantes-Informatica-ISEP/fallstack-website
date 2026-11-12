@@ -21,8 +21,8 @@ Build and migration stages retain their tooling.
 
 CI's existing Trivy 0.76.2 gate now scans both OS and library packages with
 HIGH/CRITICAL failures enabled for fixable vulnerabilities (`--ignore-unfixed`).
-The migrator and storage-cleanup images are outside this runner scan; they
-retain build tooling and require separate vulnerability assessment.
+The gate also scans the migrator and storage-cleanup images, which retain
+build tooling and development dependencies.
 
 The maintainers triaging security alerts should review unfixed HIGH/CRITICAL
 findings when alerts appear and at least weekly, track each finding in an issue,

@@ -56,3 +56,4 @@ implementation PR needs an ADR.
 | [0027](0027-readiness-checks-and-graceful-shutdown.md)           | Readiness checks and graceful shutdown           | Accepted   |
 | [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Accepted   |
 | [0029](0029-rehearse-restores-away-from-production.md)           | Rehearse restores away from production           | Accepted   |
+| [0030](0030-gate-fixable-image-vulnerabilities.md) | Gate fixable image vulnerabilities | Accepted |

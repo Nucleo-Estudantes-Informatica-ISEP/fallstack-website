@@ -35,11 +35,9 @@
 
 ## 3. Security Controls
 
-The required production Docker image CI job scans the application runner image for
+The required production Docker image CI job scans the application runner, migrator and storage-cleanup images for
 fixable HIGH and CRITICAL OS and library vulnerabilities. Unfixed findings are
-excluded from this gate until a fix is available. The deployed migrator and
-storage-cleanup images inherit builder dependencies and are outside this scan;
-the runner scan does not establish their vulnerability status.
+excluded from this gate until a fix is available.
 
 ### SQL Injection
 
