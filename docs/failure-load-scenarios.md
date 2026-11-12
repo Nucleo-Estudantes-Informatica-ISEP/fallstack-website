@@ -68,9 +68,13 @@ pnpm exec vitest run tests/load/failure-scenarios.test.mjs
 These checks replace HTTP with a test double to validate emitted requests and
 assertions, including an advancing clock across every phase boundary and Redis
 readiness on both sides of restoration. They are not load measurements. No
-staging measurements have been recorded for this addition yet.
+shared-staging measurements have been recorded for this addition yet.
 
-Keep the implementation PR in draft until evidence for all three staging
-scenarios is attached and reviewed. The Development link to #451 tracks the
-intended completion; passing local regression checks does not complete the
-issue or justify merging before staging validation.
+A complete two-copy local Docker rehearsal is recorded in
+[the 2026-11-12 evidence](evidence/task01-c3-local-failures-2026-11-12.md),
+including actual fault injection, recovery and in-flight request draining.
+
+Before merging, attach fault-injection evidence for all three scenarios and
+obtain review. Distinguish a complete isolated local rehearsal from a shared
+staging deployment run. Passing mocked regression checks alone does not
+complete #451; the real fault, restoration and draining observations are required.
