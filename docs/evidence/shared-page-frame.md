@@ -36,8 +36,12 @@ production SSR timings or a replacement for a Next/RSC CPU profile.
 The Sentry candidate keeps tracing at zero, default PII disabled, the Pino
 integration and existing privacy filters. It wraps rendering in an isolation
 scope and unsampled span, comparing `enableLogs: true` with `false`. It excludes
-SDK startup, error/log ingestion, Next's instrumentation wrappers and browser
-instrumentation. It measures a healthy render with no emitted application logs.
+SDK startup, remote ingestion, Next's instrumentation wrappers and browser
+instrumentation. The updated harness emits one fixed, synthetic SDK log per
+render and asserts that all 3,200 warmup/sample logs reach the privacy filter
+when enabled and none do when disabled. Each render uses the active client,
+including after changing modes. Transport is a no-op; no telemetry leaves the
+process. This measures local log processing, not remote delivery cost.
 
 The HTTP control uses a production build with the optional Sentry DSN unset.
 It GETs `/privacy-policy` sequentially, discards 20 warmups per pass and samples
@@ -67,8 +71,9 @@ A verification rerun on 2026-11-13 at `956a00ee` used the updated harness and a 
 
 ## Decision and limits
 
-Keep the shared frame and existing error-tracking settings. The null control cannot establish the cost of log reporting. Shared-frame component rendering is small in this
-microbenchmark; removing accessibility, install, authentication or theme behavior
+Keep the shared frame and existing error-tracking settings. The historical null control cannot establish the cost of log reporting.
+The updated log-emitting comparison below covers local processing. Shared-frame
+component rendering is small in the original microbenchmark; removing accessibility, install, authentication or theme behavior
 is not justified by these numbers. HTTP controls also demonstrate variation
 without a code change; do not report their difference as an optimization saving.
 The measured shipped saving is zero: no runtime change is proposed.
@@ -85,3 +90,43 @@ The [nonce decision](../decisions/0008-enforce-content-security-policy.md), dyna
 rendering, document CSP and CDN behavior remain unchanged. Any future nonce or
 HTML-cache redesign requires its own ADR. No architecture decision is introduced
 by this measurement-only PR.
+
+## Issue #492 completion scope
+
+The before configuration and the retained after configuration are identical:
+shared frame retained, tracing sample rate zero, structured logs enabled, and
+per-request nonces retained. Shipped saving is **0 ms (0%) by construction**;
+control-run differences are measurement noise, not savings. The log-emitting
+candidate comparison measures local work that the historical null control did
+not exercise. A noisy or small synthetic delta does not justify removing
+centralized reporting or shared-frame behavior.
+
+This completes the measurement-first decision in #492: record shared-frame and
+SDK setting costs, make only justified changes (none), record before/after
+configuration and zero shipped saving, and preserve the nonce decision. It does
+not claim to reproduce the original homepage profile, quantify remote ingestion,
+or establish production capacity. A future production optimization needs its own
+representative profile; those broader claims are outside this measured decision.
+
+## Log-emitting verification (2026-11-13)
+
+The updated harness passed both tests, including 3,200 processed logs per
+enabled replicate, zero per disabled replicate, and 240 unique HTTP nonces.
+One SDK client is initialized once; the candidate toggles its `enableLogs`
+option between modes, with opposite order in rep2. Startup is outside timing.
+
+| Mode                                  | Rep1 p50 ms | Rep1 p95 ms | Rep2 p50 ms | Rep2 p95 ms |
+| ------------------------------------- | ----------: | ----------: | ----------: | ----------: |
+| child-only                            |       0.006 |      0.0243 |      0.0014 |      0.0055 |
+| frame-only                            |      0.7624 |      3.2376 |      0.2251 |      0.4138 |
+| frame+scope+unsampled-span/logs=true  |      0.5345 |      1.8344 |      0.2342 |      0.5453 |
+| frame+scope+unsampled-span/logs=false |      0.4723 |      1.4156 |      0.2261 |      0.3145 |
+
+Production HTTP controls: rep1 p50/p95 12.559/26.482 ms; rep2
+28.146/80.570 ms. Concurrent activity in other worktrees and growing swap
+made this run resource-contended despite this task running checks sequentially.
+The enabled-minus-disabled median delta was 0.0622 ms in rep1 and 0.0081 ms
+in rep2, while frame-only medians varied by 0.5373 ms. These are observations,
+not an isolated causal cost estimate or production saving. Logging actually ran,
+but the variance prevents a reliable optimization claim. Preserve reporting;
+repeat on an idle representative host before changing settings for performance.

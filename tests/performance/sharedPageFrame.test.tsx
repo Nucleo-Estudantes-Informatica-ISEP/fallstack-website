@@ -47,6 +47,24 @@ test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
     });
     const render = () => renderToString(frame);
     expect(render()).toContain('id="main-content"');
+    let processedLogs = 0;
+    const client = Sentry.init({
+      dsn: "http://public@127.0.0.1:9/1",
+      tracesSampleRate: 0,
+      enableLogs: true,
+      sendDefaultPii: false,
+      integrations: [Sentry.pinoIntegration()],
+      beforeSend: sanitizeSentryEvent,
+      beforeSendLog: (log) => {
+        processedLogs++;
+        return sanitizeSentryLog(log);
+      },
+      transport: () => ({
+        send: async () => ({}),
+        flush: async () => true,
+      }),
+    });
+    if (!client) throw new Error("Benchmark Sentry client was not initialized");
     const results = [];
     for (const pass of ["rep1", "rep2"]) {
       results.push({
@@ -56,31 +74,24 @@ test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
       });
       results.push({ pass, mode: "frame-only", ...measure(render) });
       for (const logs of pass === "rep1" ? [true, false] : [false, true]) {
-        Sentry.init({
-          dsn: "http://public@127.0.0.1:9/1",
-          tracesSampleRate: 0,
-          enableLogs: logs,
-          sendDefaultPii: false,
-          integrations: [Sentry.pinoIntegration()],
-          beforeSend: sanitizeSentryEvent,
-          beforeSendLog: sanitizeSentryLog,
-          transport: () => ({
-            send: async () => ({}),
-            flush: async () => true,
-          }),
-        });
+        processedLogs = 0;
+        client.getOptions().enableLogs = logs;
         results.push({
           pass,
           mode: `frame+scope+unsampled-span/logs=${logs}`,
           ...measure(() =>
-            Sentry.withIsolationScope(() =>
-              Sentry.startSpan({ name: "frame", op: "render" }, render)
-            )
+            Sentry.withIsolationScope(() => {
+              return Sentry.startSpan({ name: "frame", op: "render" }, () => {
+                Sentry.logger.info("Synthetic frame benchmark");
+                return render();
+              });
+            })
           ),
         });
-        await Sentry.close();
+        expect(processedLogs, `${pass} logs=${logs}`).toBe(logs ? 3200 : 0);
       }
     }
+    await client.close();
     process.stdout.write(`shared-frame benchmark ${JSON.stringify(results)}\n`);
   },
   60000
