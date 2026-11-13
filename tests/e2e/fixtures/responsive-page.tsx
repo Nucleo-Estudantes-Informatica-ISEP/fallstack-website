@@ -67,7 +67,7 @@ export default function Fixture() {
           sections={{ schedule, companies: null, sponsors: null, faqs: null }}
         />
       ) : view === "signup" ? (
-        <AuthPageLayout studentSignup>
+        <AuthPageLayout>
           <StudentSignUp
             interests={[]}
             institutionalEmail="1234567@isep.ipp.pt"
