@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:docs/decisions/0035-record-session-attendance.md
 # 0035: Record session attendance
+========
+# 0037: Record session attendance
+>>>>>>>> f06efe0f (docs: avoid attendance ADR collision with SVG logos):docs/decisions/0037-record-session-attendance.md
 
 Status: Accepted
 Date: 2026-11-13
