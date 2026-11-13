@@ -1,4 +1,4 @@
-# 0034: Sanitize SVG only in the logo pipeline
+# 0035: Sanitize SVG only in the logo pipeline
 
 Status: Accepted
 Date: 2026-11-11
@@ -17,7 +17,8 @@ Parse UTF-8 XML using the strict namespace-aware saxes parser. Rebuild a static
 allowlist of geometry, groups, gradients, clipping and descriptive text. Reject
 malformed XML, DTDs, processing instructions, non-SVG roots, excessive depth
 (64) and element counts (10,000). Keep the existing 5 MiB upload limit.
-Reject scripts, event handlers, foreignObject and external references; drop
+Reject scripts, event handlers, foreignObject and non-fragment hrefs; drop
+unsupported paint values, including external URLs, and drop
 other unknown elements with their descendants and unknown attributes. Drop CSS,
 animation, use/image nodes, namespaced attributes and escaped CSS. Only local fragment paint and
 clip references survive. Logos exported with CSS must use presentation attributes

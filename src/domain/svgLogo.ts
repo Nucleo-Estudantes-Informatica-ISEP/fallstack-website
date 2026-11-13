@@ -44,9 +44,7 @@ export function sanitizeLogoSvg(bytes: Uint8Array): Buffer {
       for (const attr of Object.values(tag.attributes)) {
         if (
           /^on/i.test(attr.local) ||
-          (attr.local === "href" && !attr.value.startsWith("#")) ||
-          (/url\s*\(/i.test(attr.value) &&
-            !/^url\(#[a-zA-Z_][\w-]*\)$/.test(attr.value))
+          (attr.local === "href" && !attr.value.startsWith("#"))
         )
           throw new Error("Active SVG attribute");
       }

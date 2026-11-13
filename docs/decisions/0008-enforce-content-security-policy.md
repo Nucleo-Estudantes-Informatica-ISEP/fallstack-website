@@ -66,7 +66,7 @@ configuration.
 
 - SVG logo support (#282) is explicitly deferred beyond the 2026 edition. No
   pre-emptive SVG exception is added to the enforced policy. This deferral is
-  superseded by [ADR 0034](0034-sanitize-svg-logo-pipeline.md); CSP remains unchanged.
+  superseded by [ADR 0035](0035-sanitize-svg-logo-pipeline.md); CSP remains unchanged.
 - A dedicated CSP `report-uri` endpoint is not added. Violations in production
   can be observed through Sentry/GlitchTip error events.
 

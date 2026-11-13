@@ -29,13 +29,11 @@ test.each([
   '<rect ONLOAD="alert(1)"/>',
   '<rect href="&#106;avascript:alert(1)"/>',
   '<rect xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="https://evil.test"/>',
-  '<rect style="fill:url(https://evil.test)"/>',
   '<use onload="alert(1)"/>',
   '<style onload="alert(1)"/>',
   '<animate onload="alert(1)"/>',
   '<rect onload="alert(1)"/>',
   '<image href="https://evil.test/a"/>',
-  '<rect fill="url(https://evil.test/a)"/>',
 ])("rejects active SVG constructs", (content) => {
   expect(() =>
     sanitizeLogoSvg(
@@ -87,4 +85,26 @@ test("serializes decoded XML text safely", () => {
   );
   expect(clean.toString()).toContain("]]&gt; &amp; &lt;");
   expect(sanitizeLogoSvg(clean)).toEqual(clean);
+});
+
+test.each(["url(#g) #fff", "url( #g )", "url(https://evil.test/a)"])(
+  "drops unsupported paint values",
+  (value) => {
+    const clean = sanitizeLogoSvg(
+      Buffer.from(
+        `<svg xmlns="http://www.w3.org/2000/svg"><rect fill="${value}"/></svg>`
+      )
+    ).toString();
+    expect(clean).not.toContain("fill=");
+  }
+);
+
+test("drops styles containing external URLs", () => {
+  const clean = sanitizeLogoSvg(
+    Buffer.from(
+      '<svg xmlns="http://www.w3.org/2000/svg"><rect style="fill:url(https://evil.test)"/></svg>'
+    )
+  ).toString();
+  expect(clean).not.toContain("style");
+  expect(clean).not.toContain("evil.test");
 });

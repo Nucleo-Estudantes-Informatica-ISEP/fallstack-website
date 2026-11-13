@@ -2,7 +2,7 @@
 
 Status: Accepted
 Date: 2026-11-04
-Amended by: [ADR 0034](0034-sanitize-svg-logo-pipeline.md) for bounded SVG logo parsing; raster/CV streaming remains unchanged.
+Amended by: [ADR 0035](0035-sanitize-svg-logo-pipeline.md) for bounded SVG logo parsing; raster/CV streaming remains unchanged.
 Source: [Issue #417](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/417)
 
 ## Context
