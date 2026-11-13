@@ -1,7 +1,8 @@
 # ZITADEL cross-project role claims
 
 Fallstack reads `employee` from its own ZITADEL project and `admin` from the
-shared NEI project. A valid NEI admin assignment can otherwise produce an app
+shared NEI project. Session attendance also reads the global `nei-member`
+grant. A valid NEI admin assignment can otherwise produce an app
 session with `admin: false` and leave the user in the student area.
 
 ## Required project settings
@@ -71,6 +72,7 @@ keep authorization codes, tokens, cookies, and secrets out of logs and PRs.
 These checks require the hosted identity provider and real role assignments.
 Local application tests cannot reproduce ZITADEL's automatic scope injection;
 record the environment and checks actually performed in the PR.
+
 ## Redirect configuration
 
 For each deployed environment, set `AUTH_REDIRECT_URI` to the site's

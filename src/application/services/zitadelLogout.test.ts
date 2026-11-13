@@ -52,3 +52,15 @@ test("uses the verified session login name as the logout hint", async () => {
     false
   );
 });
+
+test("preserves the NEI member grant in the signed app session", () => {
+  const token = signAppSession({
+    sub: "member",
+    email: "member@example.org",
+    emailVerified: true,
+    isEmployee: false,
+    isGlobalAdmin: false,
+    isNeiMember: true,
+  });
+  expect(verifyAppSession(token)?.neiMember).toBe(true);
+});

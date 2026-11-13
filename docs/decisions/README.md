@@ -59,3 +59,4 @@ implementation PR needs an ADR.
 | [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now         | Superseded           |
 | [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                  | Accepted             |
 | [0032](0032-opt-in-single-connection-deletion.md)                | Opt in to single-connection account deletion     | Accepted             |
+| [0035](0035-record-session-attendance.md)                        | Record session attendance                        | Accepted             |

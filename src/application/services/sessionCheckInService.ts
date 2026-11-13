@@ -27,10 +27,14 @@ type CredentialInput = {
 };
 
 function getCodeFromToken(token: string) {
-  const decoded = verifyJwt(token);
+  const decoded = verifyJwt(token, { algorithms: ["HS256"] });
   const code =
     decoded &&
     typeof decoded === "object" &&
+    "purpose" in decoded &&
+    decoded.purpose === "student-pass" &&
+    "exp" in decoded &&
+    typeof decoded.exp === "number" &&
     "code" in decoded &&
     typeof decoded.code === "string"
       ? decoded.code

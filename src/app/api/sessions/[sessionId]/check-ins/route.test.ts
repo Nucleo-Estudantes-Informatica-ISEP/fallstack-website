@@ -23,7 +23,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-test("rejects students and allows nei-members", async () => {
+test("rejects students and company employees and allows NEI members", async () => {
   const getServerSession = (
     await import("@/application/services/sessionService")
   ).default;
@@ -53,6 +53,22 @@ test("rejects students and allows nei-members", async () => {
     adminRole: null,
     student: null,
     employee: { company: { id: "company-1" } },
+  } as never);
+  assert.equal(
+    (
+      await POST(request({ code: "AB12" }), {
+        params: Promise.resolve({ sessionId: "session-1" }),
+      })
+    ).status,
+    403
+  );
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "staff-user",
+    role: null,
+    adminRole: null,
+    neiMember: true,
+    student: null,
+    employee: null,
   } as never);
   vi.mocked(recordSessionCheckIn).mockResolvedValue({
     id: "check-in-1",
@@ -100,6 +116,7 @@ test("returns schema errors for multiple credentials", async () => {
     id: "staff-user",
     role: "EMPLOYEE",
     adminRole: null,
+    neiMember: true,
     student: null,
     employee: { company: { id: "company-1" } },
   } as never);
