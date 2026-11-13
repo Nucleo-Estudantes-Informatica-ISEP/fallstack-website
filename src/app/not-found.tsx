@@ -4,18 +4,19 @@ export default function Custom404() {
   return (
     <section
       data-testid="not-found"
-      className="flex h-screen w-screen flex-col items-center justify-center bg-[url('/assets/optimized/bgHero.900094f51c2f.webp')] bg-cover bg-center bg-no-repeat px-12"
+      className="bg-background[#141414] flex min-h-screen w-full flex-col items-center justify-center px-4"
     >
       <h1 className="text-center text-3xl font-semibold sm:text-4xl md:text-6xl">
         Não encontramos a página que estás à procura...
       </h1>
-      <h1 className="text-9xl font-bold text-primary sm:text-[200px] md:text-[320px]">
-        404
-      </h1>
+      <p className="text-7xl font-bold text-primary sm:text-8xl">404</p>
 
-      <p className="text-center text-2xl font-thin">
+      <p className="text-center text-2xl font-normal">
         Dica: Experimenta voltar à{" "}
-        <Link href="/" className="font-normal text-primary">
+        <Link
+          href="/"
+          className="underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+        >
           Página inicial
         </Link>
       </p>
