@@ -10,6 +10,10 @@ on them. Before captures cover D1 and S4 at 773f0fc, plus the typed-code
 messages (D5) and the student 404 page at 991638f, already on the shared
 background. Every other state is recorded with after captures.
 
+**After** captures taken on this branch at 569818c (13 November 2026): every
+inventory row except D1, which is explained in [After
+captures](#after-captures).
+
 ## Environment
 
 - `pnpm dev` on port 3000 with local Docker PostgreSQL 16, Redis and MinIO.
@@ -20,9 +24,15 @@ background. Every other state is recorded with after captures.
 - Synthetic students from `pnpm seed` (`A123`, `A456`), plus the synthetic
   `Z1xx` students described in [Test data](#test-data). No real student
   data, CVs or emails appear in the captures.
-- Captures use Zen/Firefox Responsive Design Mode at DPR 1 and 100% zoom,
-  with full-page screenshots (`:screenshot --fullpage --dpr 1`). Heights:
-  360 × 800, 400 × 900, 768 × 1024, 1440 × 900 and 1920 × 1080.
+- Before captures use Zen/Firefox Responsive Design Mode at DPR 1 and 100%
+  zoom. Heights: 360 × 800, 400 × 900, 768 × 1024, 1440 × 900 and
+  1920 × 1080.
+- After captures use headless Chrome 156 (Playwright with the installed
+  Chrome) at the same sizes and DPR 1, signed in with the local
+  `pnpm dev:session` identities described in [Test data](#test-data). The
+  camera is Chrome's fake capture device (a moving test pattern), allowed or
+  denied per capture. The Next.js development indicator is hidden. Files are
+  reduced to 256-colour PNGs.
 
 ## Route × role × state inventory
 
@@ -43,25 +53,28 @@ profile linked to a company renders it; every other session gets the 404 page.
 
 | ID  | Who              | State                                           | Before | After |
 | --- | ---------------- | ----------------------------------------------- | ------ | ----- |
-| D1  | Employee         | Sumário, no saved students                      | ✓      | ☐     |
-| D2  | Employee         | Sumário, saved students listed                  | ☐      | ☐     |
-| D3  | Employee         | Interests edited and saved (success, failure)   | ☐      | ☐     |
-| D4  | Employee         | Scan de Perfil: camera (allowed, denied)        | ☐      | ☐     |
-| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | ☐     |
-| D6  | Employee         | Scan history: empty, with entries               | ☐      | ☐     |
-| D7  | Employee         | CV export (`cvs-guardados.zip`): success, error | ☐      | ☐     |
-| D8  | Student, no role | Any state: 404 page, no company navigation      | ☐      | ☐     |
+| D1  | Employee         | Sumário, no saved students                      | ✓      | ✗     |
+| D2  | Employee         | Sumário, saved students listed                  | ☐      | ✓     |
+| D3  | Employee         | Interests edited and saved (success, failure)   | ☐      | ✓     |
+| D4  | Employee         | Scan de Perfil: camera (allowed, denied)        | ☐      | ✓     |
+| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | ✓     |
+| D6  | Employee         | Scan history: empty, with entries               | ☐      | ◐     |
+| D7  | Employee         | CV export (`cvs-guardados.zip`): success, error | ☐      | ✓     |
+| D8  | Student, no role | Any state: 404 page, no company navigation      | ☐      | ✓     |
 
 ### Student profile (`/student/[...data]`)
 
 | ID  | Route                        | Who                     | Component                            | Before | After |
 | --- | ---------------------------- | ----------------------- | ------------------------------------ | ------ | ----- |
-| S1  | `/student/<code>`            | Employee, student saved | `CompanyViewProfileSectionContainer` | ☐      | ☐     |
-| S2  | `/student/<code>`            | Employee, not saved     | 404 page                             | ☐      | ☐     |
-| S3  | `/student/<token>/preview`   | Employee, not saved yet | `PreviewProfileSectionContainer`     | ☐      | ☐     |
-| S4  | `/student/<token>/preview`   | Employee, already saved | `PreviewProfileSectionContainer`     | ✓      | ☐     |
-| S5  | `/student/<invalid>/preview` | Employee, not saved     | 404 page                             | ☐      | ☐     |
-| S6  | `/student/<code>`            | Admin without profile   | `PublicProfileSectionContainer`      | ☐      | ☐     |
+| S1  | `/student/<code>`            | Employee, student saved | `CompanyViewProfileSectionContainer` | ☐      | ✓     |
+| S2  | `/student/<code>`            | Employee, not saved     | 404 page                             | ☐      | ✓     |
+| S3  | `/student/<token>/preview`   | Employee, not saved yet | `PreviewProfileSectionContainer`     | ☐      | ✓     |
+| S4  | `/student/<token>/preview`   | Employee, already saved | `PreviewProfileSectionContainer`     | ✓      | ✓     |
+| S5  | `/student/<invalid>/preview` | Employee, not saved     | 404 page                             | ☐      | ✓     |
+| S6  | `/student/<code>`            | Admin without profile   | `PublicProfileSectionContainer`      | ☐      | ✓     |
+
+✗ and ◐ in the After column: the empty saved list (D1, and the empty half
+of D6) has no after capture. See [After captures](#after-captures).
 
 How employees reach these screens in the app:
 
@@ -85,21 +98,20 @@ links, no CV, and long name, bio, links and comment.
 
 ### Viewport checklist
 
-| Screen | 360 | 400 | 768 | 1440 | 1920 |
-| ------ | --- | --- | --- | ---- | ---- |
-| D1     | ✓   | ✓   | ✓   | ✓    | ✓    |
-| D2     | ☐   | ☐   | ☐   | ☐    | ☐    |
-| D4–D6  | ☐   | ☐   | ☐   | ☐    | ☐    |
-| S1     | ☐   | ☐   | ☐   | ☐    | ☐    |
-| S3     | ☐   | ☐   | ☐   | ☐    | ☐    |
-| S4     | ✓   | ✓   | ✓   | ✓    | ✓    |
+| Screen | 360 | 400 | 768 | 1024 | 1440 | 1920 |
+| ------ | --- | --- | --- | ---- | ---- | ---- |
+| D1     | B   | B   |     | B    | B    | B    |
+| D2     | A   | A   | A   |      | A    | A    |
+| D4–D6  | A   | A   | A   |      | A    | A    |
+| S1     | A   | A   | A   |      | A    | A    |
+| S3     | A   | A   | A   |      | A    | A    |
+| S4     | B A | B A | A   | B A  | B A  | B A  |
 
-✓ marks a **before** capture. ◐ marks a state with before captures at 360
-and 1440 only (D5: empty, invalid and duplicate; no success capture). The
-other rows are filled in with after captures.
-
-Each capture records horizontal overflow (`scrollWidth` against `clientWidth`)
-and whether anything covers the camera or controls.
+B is a **before** capture and A an **after** capture. The before set used a
+1024 × 768 landscape tablet instead of 768 × 1024, so S4 has an extra after
+capture at 1024 for a direct comparison. Every other state has after
+captures at 360 and 1440. Horizontal overflow was measured at all five
+widths for every screen; see [Horizontal overflow](#horizontal-overflow).
 
 ## Findings to resolve
 
@@ -173,6 +185,11 @@ mirrors the student dashboard's format in its own code.
 to the `local-armis` identity from `pnpm dev:session`. It provides the
 Employee (no admin) session in the recipes without a real login.
 
+“Admin Sintético” (`synthetic-516-admin@example.com`) is an admin-only
+account with no student or employee profile, linked to the `local-admin`
+identity from `pnpm dev:session`. It provides the Admin session for S6 and
+D8.
+
 ### Recipes
 
 Sessions: **Employee** is the Armis employee account. **Employee (no admin)**
@@ -217,9 +234,8 @@ Notes:
 Run on 13 November 2026 against `pnpm dev` with the test data, in headless
 Chrome (Playwright with the installed Chrome) at the checklist's viewport
 sizes. Session: the Employee (no admin) account; D8 uses the student account.
-S6 was not run, because no local session has an admin role; its component is
-covered by unit tests. D1 (no saved students) was not run separately: it is
-the D2 frame with an empty list.
+S6 was added during the after captures, with the Admin account. D1 (no saved
+students) was not run separately: it is the D2 frame with an empty list.
 
 ### Horizontal overflow
 
@@ -238,6 +254,7 @@ the D2 frame with an empty list.
 | S3: Z104, signed link       | ✓   | ✓   | ✓   | ✓    | ✓    |
 | S4: Z101, Z102, Z103, Z105  | ✓   | ✓   | ✓   | ✓    | ✓    |
 | S5: invalid token (404)     | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S6: Z101, Z102, Z103, admin | ✓   | ✓   | ✓   | ✓    | ✓    |
 
 Long content: Z103's name wraps in the headings and is clamped to two lines,
 with the full name in a tooltip, in both saved lists. Its email, links and bio
@@ -270,7 +287,9 @@ are blended with what is behind them.
 | Bio, menu, headings and body text                    | #F3F4F6–#FFFFFF on #141414 | ≥16.74:1 | 4.5:1  |
 
 No pair in the restyled screens is under 4.5:1. The only failure is the
-shared 404 page's `404` digits (see [Findings](#findings-to-resolve)).
+shared 404 page's `404` digits (see [Findings](#findings-to-resolve)). S6
+uses the same pairs; its lowest is 7.15:1. Its keyboard order, focus
+outlines and accessible names were checked the same way, with no findings.
 
 Focus indicators: the menu's orange ring measures at least 4.6:1 against the
 real artwork pixels around each menu button, and the other rings are orange
@@ -389,4 +408,195 @@ Taken at 991638f. S2 and S5 render this same page.
 
 ## After captures
 
-Added after the restyle, using the same IDs and widths.
+Files are named `after-<id>-<width>.png`, for example `after-D2-1440.png`.
+Taken on 13 November 2026 at 569818c, as described in
+[Environment](#environment). Screens whose content runs below the first
+screen are full-page captures; message states show the visible screen, with
+the message in place. Every capture was checked for horizontal overflow, and
+none has any.
+
+**Not captured: D1 and the empty half of D6.** Both need Armis to have no
+saved students, which means removing the `A123` and `A456` saves from
+`pnpm seed` as well as the test data. They show the same frame as D2 and D6
+with an empty list; the empty-list text is covered by the component tests.
+
+### D2: Sumário with 18 saved students
+
+The saved list scrolls inside its panel.
+
+![Sumário at 360](after-D2-360.png)
+
+![Sumário at 400](after-D2-400.png)
+
+![Sumário at 768](after-D2-768.png)
+
+![Sumário at 1440](after-D2-1440.png)
+
+![Sumário at 1920](after-D2-1920.png)
+
+### D3: interests saved and failed
+
+Failure is a blocked request.
+
+![Interests saved at 360](after-D3-saved-360.png)
+
+![Interests saved at 1440](after-D3-saved-1440.png)
+
+![Interests not saved at 360](after-D3-failed-360.png)
+
+![Interests not saved at 1440](after-D3-failed-1440.png)
+
+### D4–D6: Scan de Perfil with the camera allowed
+
+The camera box shows Chrome's fake camera. The full page includes the typed
+code (D5) and the scan history with Z103's long name and comment (D6).
+
+![Scan de Perfil at 360](after-D4-D6-360.png)
+
+![Scan de Perfil at 400](after-D4-D6-400.png)
+
+![Scan de Perfil at 768](after-D4-D6-768.png)
+
+![Scan de Perfil at 1440](after-D4-D6-1440.png)
+
+![Scan de Perfil at 1920](after-D4-D6-1920.png)
+
+### D4: camera denied
+
+The camera message covers the bottom of the empty camera box (see
+[Messages over the camera and controls](#messages-over-the-camera-and-controls)).
+
+![Camera denied at 360](after-D4-denied-360.png)
+
+![Camera denied at 1440](after-D4-denied-1440.png)
+
+### D5: typed-code messages
+
+Same states as the before captures. The message no longer covers the field
+or Validar, and keyboard focus is back in the code field.
+
+![Empty code message at 360](after-D5-empty-360.png)
+
+![Empty code message at 1440](after-D5-empty-1440.png)
+
+![Invalid code message at 360](after-D5-invalid-360.png)
+
+![Invalid code message at 1440](after-D5-invalid-1440.png)
+
+![Duplicate code message at 360](after-D5-duplicate-360.png)
+
+![Duplicate code message at 1440](after-D5-duplicate-1440.png)
+
+Success: `Z104` typed, saved and opened as a saved preview (S4). The save was
+removed after each capture.
+
+![Preview after saving Z104 at 360](after-D5-success-360.png)
+
+![Preview after saving Z104 at 1440](after-D5-success-1440.png)
+
+### D6: comment editor open
+
+Z103's 950-character comment in the editor, with its character count.
+
+![Comment editor at 360](after-D6-edit-360.png)
+
+![Comment editor at 1440](after-D6-edit-1440.png)
+
+### D7: CV export
+
+Success downloads `cvs-guardados.zip` with the Z101 and Z103 CVs and
+`dados.csv`; there is no visible change on the page. Failure is a server
+error (500) answered to the export request.
+
+![Export failed at 360](after-D7-failed-360.png)
+
+![Export failed at 1440](after-D7-failed-1440.png)
+
+### D8: `/dashboard` without an employee profile
+
+Student and admin sessions both get the shared 404 page, with no company
+navigation.
+
+![Student on the dashboard at 360](after-D8-360.png)
+
+![Student on the dashboard at 1440](after-D8-1440.png)
+
+![Admin on the dashboard at 360](after-D8-admin-360.png)
+
+### S1: saved student by direct URL
+
+Z101 has everything; Z102 has no avatar, links, CV, bio or interests; Z103
+has long content everywhere.
+
+![Z101 at 360](after-S1-Z101-360.png)
+
+![Z101 at 400](after-S1-Z101-400.png)
+
+![Z101 at 768](after-S1-Z101-768.png)
+
+![Z101 at 1440](after-S1-Z101-1440.png)
+
+![Z101 at 1920](after-S1-Z101-1920.png)
+
+![Z102 at 360](after-S1-Z102-360.png)
+
+![Z102 at 1440](after-S1-Z102-1440.png)
+
+![Z103 at 360](after-S1-Z103-360.png)
+
+![Z103 at 1440](after-S1-Z103-1440.png)
+
+### S2 and S5: student route 404
+
+S2 is an employee on a student their company has not saved; S5 is an invalid
+preview token. Both render the shared 404 page.
+
+![Not saved at 360](after-S2-360.png)
+
+![Not saved at 1440](after-S2-1440.png)
+
+![Invalid token at 360](after-S5-360.png)
+
+### S3: signed preview of a student not saved yet
+
+Z104 opened from a signed link without saving, with the save button.
+
+![Unsaved preview at 360](after-S3-Z104-360.png)
+
+![Unsaved preview at 400](after-S3-Z104-400.png)
+
+![Unsaved preview at 768](after-S3-Z104-768.png)
+
+![Unsaved preview at 1440](after-S3-Z104-1440.png)
+
+![Unsaved preview at 1920](after-S3-Z104-1920.png)
+
+### S4: preview of a saved student
+
+`A123`, the same student as the before captures, plus Z103's long content.
+
+![Saved preview at 360](after-S4-A123-360.png)
+
+![Saved preview at 400](after-S4-A123-400.png)
+
+![Saved preview at 768](after-S4-A123-768.png)
+
+![Saved preview at 1024 × 768 (landscape tablet)](after-S4-A123-1024.png)
+
+![Saved preview at 1440](after-S4-A123-1440.png)
+
+![Saved preview at 1920](after-S4-A123-1920.png)
+
+![Z103 saved preview at 360](after-S4-Z103-360.png)
+
+![Z103 saved preview at 1440](after-S4-Z103-1440.png)
+
+### S6: admin without a profile
+
+![Z101 as admin at 360](after-S6-Z101-360.png)
+
+![Z101 as admin at 1440](after-S6-Z101-1440.png)
+
+![Z102 as admin at 360](after-S6-Z102-360.png)
+
+![Z103 as admin at 360](after-S6-Z103-360.png)
