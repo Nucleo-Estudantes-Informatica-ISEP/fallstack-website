@@ -1,4 +1,6 @@
 import fs from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { chromium } from "@playwright/test";
 
 (async () => {
@@ -108,13 +110,13 @@ import { chromium } from "@playwright/test";
       }
     }
     fs.writeFileSync(
-      "/tmp/fallstack-408-viewports.json",
+      path.join(tmpdir(), "fallstack-408-viewports.json"),
       JSON.stringify(results, null, 2)
     );
     console.log("Passed " + results.length + " viewport/page combinations");
   } catch (error) {
     await page.screenshot({
-      path: "/tmp/fallstack-408-failure.png",
+      path: path.join(tmpdir(), "fallstack-408-failure.png"),
       fullPage: true,
     });
     console.log(

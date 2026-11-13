@@ -41,5 +41,28 @@ Use a clean local checkout; do not copy this fixture into a deployed environment
 5. Stop the development server and remove only the temporary fixture:
    `rm src/app/responsive-check/page.tsx && rmdir src/app/responsive-check`
 
-Real-device verification under #344 and authenticated end-to-end flows remain
-release gates. Browser fixture evidence does not satisfy those gates.
+## PR review follow-up and closure scope
+
+On 13 November 2026, the task owner explicitly waived the requested additional
+device/live-flow evidence for closing #408 and requested code verification instead.
+This waiver applies to #408 only; #344 retains its independent release gates.
+No device, external AuthNEI or live Wallet success is implied.
+
+The reviewed implementation uses the supplied stacked mobile menu, retains the
+desktop sidebar, focuses selected content, and reuses the shared QR modal for
+Escape, focus trapping and focus restoration. Fluid gutters/cards and wrapping
+programme/history text address containment; controls retain visible focus and
+accessible touch targets. The existing tests cover menu focus, QR dismissal and
+unavailable QR states.
+
+Additional local authenticated flow evidence is recorded in PR #582 for revision
+`eee7027ede4a55e600bbec0c0db5a9a8ecfbb9e1`: onboarding returned HTTP 201,
+profile and consent flags persisted, and navigation returned home. The actual
+student route and QR API were exercised at all five widths, including QR JWT
+signature/student-code verification and Enter/Escape. This follow-up inspected
+that report; it did not rerun those flows.
+
+The responsive fixture runner is a manual development script. Its JSON report
+(`fallstack-408-viewports.json`) and failure screenshot
+(`fallstack-408-failure.png`) use the operating system's temporary directory
+(`os.tmpdir()`); successful 400 px captures use this evidence directory.
