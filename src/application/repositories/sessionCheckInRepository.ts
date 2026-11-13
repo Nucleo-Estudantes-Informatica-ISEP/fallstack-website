@@ -30,3 +30,16 @@ export const createSessionCheckIn = (
 export const isSessionCheckInUniqueError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === "P2002";
+
+export const findAttendanceForExport = (day: number) =>
+  prisma.sessionCheckIn.findMany({
+    where: { session: { day } },
+    orderBy: [{ checkedInAt: "asc" }, { id: "asc" }],
+    select: {
+      checkedInAt: true,
+      student: { select: { name: true, user: { select: { email: true } } } },
+      session: {
+        select: { day: true, startTime: true, endTime: true, activity: true },
+      },
+    },
+  });
