@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useState } from "react";
 
 import { httpClient } from "@/lib/http/client";
 import { Clipboard } from "@/components/ui/Icons";
+import GoogleWalletButton from "@/components/GoogleWalletButton";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
 
@@ -62,13 +63,14 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
       {student.code && (
         <button
           onClick={handleCopy}
-          className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-[#ED8326] hover:text-[#ED8326]"
+          className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-ui-highlight hover:text-ui-highlight"
         >
           <Clipboard className="size-4" />
           <span className="font-mono">{student.code}</span>
           {copied && <span className="ml-1 text-green-400">Copiado!</span>}
         </button>
       )}
+      <GoogleWalletButton />
       {/* Keep old card below (optional) - can remove later */}
       {/* <div className="mt-10"><QRCodeCard name={user.name} subtitle={user.email} qrValue={qrToken} code={user.student?.code ?? undefined} loading={loading} onCopy={handleCopy} isCopied={copied} onRefresh={handleRefresh} /></div> */}
     </div>

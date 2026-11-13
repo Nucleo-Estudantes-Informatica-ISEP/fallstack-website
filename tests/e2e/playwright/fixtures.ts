@@ -10,7 +10,11 @@ export { expect } from "@playwright/test";
 export const test = base.extend({
   context: async ({ context, baseURL }, run) => {
     await guardBrowserContext(context, baseURL!);
-    await run(context);
+    try {
+      await run(context);
+    } finally {
+      await context.unrouteAll({ behavior: "wait" });
+    }
   },
   request: async ({ baseURL, storageState }, run) => {
     const context = await createStagingRequestContext({
