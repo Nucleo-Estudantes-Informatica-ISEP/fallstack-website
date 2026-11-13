@@ -55,11 +55,11 @@ profile linked to a company renders it; every other session gets the 404 page.
 | --- | ---------------- | ----------------------------------------------- | ------ | ----- |
 | D1  | Employee         | Sumário, no saved students                      | ✓      | ✗     |
 | D2  | Employee         | Sumário, saved students listed                  | ☐      | ✓     |
-| D3  | Employee         | Interests edited and saved (success, failure)   | ☐      | ✓     |
+| D3  | Employee         | Interests edited and saved (success, failure)   | ☐      | T     |
 | D4  | Employee         | Scan de Perfil: camera (allowed, denied)        | ☐      | ✓     |
-| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | ✓     |
+| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | ◐ T   |
 | D6  | Employee         | Scan history: empty, with entries               | ☐      | ◐     |
-| D7  | Employee         | CV export (`cvs-guardados.zip`): success, error | ☐      | ✓     |
+| D7  | Employee         | CV export (`cvs-guardados.zip`): success, error | ☐      | T     |
 | D8  | Student, no role | Any state: 404 page, no company navigation      | ☐      | ✓     |
 
 ### Student profile (`/student/[...data]`)
@@ -73,8 +73,10 @@ profile linked to a company renders it; every other session gets the 404 page.
 | S5  | `/student/<invalid>/preview` | Employee, not saved     | 404 page                             | ☐      | ✓     |
 | S6  | `/student/<code>`            | Admin without profile   | `PublicProfileSectionContainer`      | ☐      | ✓     |
 
-✗ and ◐ in the After column: the empty saved list (D1, and the empty half
-of D6) has no after capture. See [After captures](#after-captures).
+In the After column, ✗ and ◐ mark the empty saved list (D1, and the empty
+half of D6), which has no after capture. T marks message states recorded in
+text instead of captures (D3, D7, and the D4 and D5 messages; D4 and D5 are
+otherwise captured). See [After captures](#after-captures).
 
 How employees reach these screens in the app:
 
@@ -101,17 +103,17 @@ links, no CV, and long name, bio, links and comment.
 | Screen | 360 | 400 | 768 | 1024 | 1440 | 1920 |
 | ------ | --- | --- | --- | ---- | ---- | ---- |
 | D1     | B   | B   |     | B    | B    | B    |
-| D2     | A   | A   | A   |      | A    | A    |
-| D4–D6  | A   | A   | A   |      | A    | A    |
-| S1     | A   | A   | A   |      | A    | A    |
-| S3     | A   | A   | A   |      | A    | A    |
-| S4     | B A | B A | A   | B A  | B A  | B A  |
+| D2     | A   |     | A   |      | A    |      |
+| D4–D6  | A   |     | A   |      | A    |      |
+| S1     | A   |     | A   |      | A    |      |
+| S3     | A   |     | A   |      | A    |      |
+| S4     | B A | B   | A   | B    | B A  | B    |
 
-B is a **before** capture and A an **after** capture. The before set used a
-1024 × 768 landscape tablet instead of 768 × 1024, so S4 has an extra after
-capture at 1024 for a direct comparison. Every other state has after
-captures at 360 and 1440. Horizontal overflow was measured at all five
-widths for every screen; see [Horizontal overflow](#horizontal-overflow).
+B is a **before** capture and A an **after** capture. After captures keep
+one phone (360), one tablet (768) and one desktop (1440) width; every other
+state has them at 360 and 1440. The before set used a 1024 × 768 landscape
+tablet. Horizontal overflow was still measured at all five widths for every
+screen; see [Horizontal overflow](#horizontal-overflow).
 
 ## Findings to resolve
 
@@ -411,8 +413,8 @@ Taken at 991638f. S2 and S5 render this same page.
 Files are named `after-<id>-<width>.png`, for example `after-D2-1440.png`.
 Taken on 13 November 2026 at 569818c, as described in
 [Environment](#environment). Screens whose content runs below the first
-screen are full-page captures; message states show the visible screen, with
-the message in place. Every capture was checked for horizontal overflow, and
+screen are full-page captures; the comment editor and the 404 pages show the
+visible screen. Message states are recorded in text, not captures. Every capture was checked for horizontal overflow, and
 none has any.
 
 **Not captured: D1 and the empty half of D6.** Both need Armis to have no
@@ -426,25 +428,9 @@ The saved list scrolls inside its panel.
 
 ![Sumário at 360](after-D2-360.png)
 
-![Sumário at 400](after-D2-400.png)
-
 ![Sumário at 768](after-D2-768.png)
 
 ![Sumário at 1440](after-D2-1440.png)
-
-![Sumário at 1920](after-D2-1920.png)
-
-### D3: interests saved and failed
-
-Failure is a blocked request.
-
-![Interests saved at 360](after-D3-saved-360.png)
-
-![Interests saved at 1440](after-D3-saved-1440.png)
-
-![Interests not saved at 360](after-D3-failed-360.png)
-
-![Interests not saved at 1440](after-D3-failed-1440.png)
 
 ### D4–D6: Scan de Perfil with the camera allowed
 
@@ -453,42 +439,14 @@ code (D5) and the scan history with Z103's long name and comment (D6).
 
 ![Scan de Perfil at 360](after-D4-D6-360.png)
 
-![Scan de Perfil at 400](after-D4-D6-400.png)
-
 ![Scan de Perfil at 768](after-D4-D6-768.png)
 
 ![Scan de Perfil at 1440](after-D4-D6-1440.png)
 
-![Scan de Perfil at 1920](after-D4-D6-1920.png)
+### D5: typed code saved
 
-### D4: camera denied
-
-The camera message covers the bottom of the empty camera box (see
-[Messages over the camera and controls](#messages-over-the-camera-and-controls)).
-
-![Camera denied at 360](after-D4-denied-360.png)
-
-![Camera denied at 1440](after-D4-denied-1440.png)
-
-### D5: typed-code messages
-
-Same states as the before captures. The message no longer covers the field
-or Validar, and keyboard focus is back in the code field.
-
-![Empty code message at 360](after-D5-empty-360.png)
-
-![Empty code message at 1440](after-D5-empty-1440.png)
-
-![Invalid code message at 360](after-D5-invalid-360.png)
-
-![Invalid code message at 1440](after-D5-invalid-1440.png)
-
-![Duplicate code message at 360](after-D5-duplicate-360.png)
-
-![Duplicate code message at 1440](after-D5-duplicate-1440.png)
-
-Success: `Z104` typed, saved and opened as a saved preview (S4). The save was
-removed after each capture.
+`Z104` typed, saved and opened as a saved preview (S4). The save was removed
+after each capture.
 
 ![Preview after saving Z104 at 360](after-D5-success-360.png)
 
@@ -502,15 +460,22 @@ Z103's 950-character comment in the editor, with its character count.
 
 ![Comment editor at 1440](after-D6-edit-1440.png)
 
-### D7: CV export
+### Messages (not captured)
 
-Success downloads `cvs-guardados.zip` with the Z101 and Z103 CVs and
-`dados.csv`; there is no visible change on the page. Failure is a server
-error (500) answered to the export request.
+Message states were checked at 360 and 1440 but are recorded in text only.
+Each shows one toast at the bottom (full width on phones, bottom right on
+desktop) that closes after 5 seconds:
 
-![Export failed at 360](after-D7-failed-360.png)
+| State                        | Message                                                                   | Result                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| D3 interests saved           | “Interesses guardados com sucesso!”                                       | Shown                                                                                                                           |
+| D3 interests not saved       | “Não foi possível guardar os interesses. Tenta novamente.”                | Shown when the request fails                                                                                                    |
+| D4 camera denied             | “Não foi possível aceder à câmara. Confirma permissão e tenta novamente.” | Covers the bottom of the empty camera box (see [Messages over the camera and controls](#messages-over-the-camera-and-controls)) |
+| D5 empty, invalid, duplicate | As in the before captures                                                 | Covers neither the field nor Validar; focus returns to the code field                                                           |
+| D7 export failed             | “Não foi possível exportar os CVs. Tenta novamente.”                      | Shown on a server error (500); the button is usable again                                                                       |
 
-![Export failed at 1440](after-D7-failed-1440.png)
+D7 success downloads `cvs-guardados.zip` with the Z101 and Z103 CVs and
+`dados.csv`; there is no visible change on the page.
 
 ### D8: `/dashboard` without an employee profile
 
@@ -530,13 +495,9 @@ has long content everywhere.
 
 ![Z101 at 360](after-S1-Z101-360.png)
 
-![Z101 at 400](after-S1-Z101-400.png)
-
 ![Z101 at 768](after-S1-Z101-768.png)
 
 ![Z101 at 1440](after-S1-Z101-1440.png)
-
-![Z101 at 1920](after-S1-Z101-1920.png)
 
 ![Z102 at 360](after-S1-Z102-360.png)
 
@@ -563,13 +524,9 @@ Z104 opened from a signed link without saving, with the save button.
 
 ![Unsaved preview at 360](after-S3-Z104-360.png)
 
-![Unsaved preview at 400](after-S3-Z104-400.png)
-
 ![Unsaved preview at 768](after-S3-Z104-768.png)
 
 ![Unsaved preview at 1440](after-S3-Z104-1440.png)
-
-![Unsaved preview at 1920](after-S3-Z104-1920.png)
 
 ### S4: preview of a saved student
 
@@ -577,15 +534,9 @@ Z104 opened from a signed link without saving, with the save button.
 
 ![Saved preview at 360](after-S4-A123-360.png)
 
-![Saved preview at 400](after-S4-A123-400.png)
-
 ![Saved preview at 768](after-S4-A123-768.png)
 
-![Saved preview at 1024 × 768 (landscape tablet)](after-S4-A123-1024.png)
-
 ![Saved preview at 1440](after-S4-A123-1440.png)
-
-![Saved preview at 1920](after-S4-A123-1920.png)
 
 ![Z103 saved preview at 360](after-S4-Z103-360.png)
 
