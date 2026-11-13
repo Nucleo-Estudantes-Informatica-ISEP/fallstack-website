@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useId, useRef, useState } from "react";
+import React, { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -46,6 +46,17 @@ const CompanySavedProfilesSection = ({
   const exportHintId = useId();
   const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
     useMutation(SAVE_FAILED);
+  const wasSubmittingRef = useRef(false);
+
+  // The field and Validar are disabled while a typed code is checked, which
+  // drops keyboard focus to the page. Put it back on the field afterwards.
+  useEffect(() => {
+    const finished = wasSubmittingRef.current && !isSubmittingManualEntry;
+    wasSubmittingRef.current = isSubmittingManualEntry;
+    const active = document.activeElement;
+    if (finished && (!active || active === document.body))
+      inputRef.current?.focus();
+  }, [isSubmittingManualEntry]);
 
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
@@ -154,7 +165,6 @@ const CompanySavedProfilesSection = ({
         toast.error("O código introduzido é inválido.", {
           toastId: TOAST.invalidCode,
         });
-        inputRef.current?.focus();
         return;
       }
 
@@ -204,8 +214,13 @@ const CompanySavedProfilesSection = ({
 
       <div className="flex w-full flex-col items-center justify-center">
         {/* `relative` contains the scanner's own "A ligar a tua câmara..."
-            overlay inside this box. */}
-        <div className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full">
+            overlay inside this box. The label names the unlabelled camera
+            video for screen readers. */}
+        <div
+          role="group"
+          aria-label="Câmara do leitor de QR Code"
+          className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full"
+        >
           {processing ? (
             <div
               className="inline-block size-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -236,7 +251,7 @@ const CompanySavedProfilesSection = ({
               autoCapitalize="characters"
               spellCheck={false}
               aria-describedby={codeHintId}
-              className="ui-field h-14 pr-32 text-lg uppercase"
+              className="ui-field h-14 field-focus-target pr-32 text-lg uppercase"
               ref={inputRef}
               onKeyUp={handleKeyUp}
               maxLength={4}
@@ -247,7 +262,7 @@ const CompanySavedProfilesSection = ({
               onClick={handleManualEntry}
               disabled={isSubmittingManualEntry}
               aria-busy={isSubmittingManualEntry}
-              className="ui-action absolute inset-y-2 right-2 min-h-0 w-28"
+              className="ui-action absolute inset-y-2 right-2 min-h-0 w-28 field-focus-target"
             >
               {isSubmittingManualEntry ? "A validar..." : "Validar"}
             </button>
@@ -271,7 +286,7 @@ const CompanySavedProfilesSection = ({
               disabled={downloading || !hasSaves}
               aria-busy={downloading}
               aria-describedby={hasSaves ? undefined : exportHintId}
-              className="ui-action text-sm"
+              className="ui-action field-focus-target text-sm"
             >
               {downloading ? "A preparar..." : "Download CVs"}
             </button>

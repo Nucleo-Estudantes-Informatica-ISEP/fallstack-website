@@ -149,6 +149,25 @@ test("the code field has a visible label and a description", () => {
   expect(screen.getByText(/Sem câmara ou sem permissão/)).toBeInTheDocument();
 });
 
+test("the camera box is named for screen readers", () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  expect(
+    screen.getByRole("group", { name: "Câmara do leitor de QR Code" })
+  ).toContainElement(screen.getByRole("button", { name: "Scan QR" }));
+});
+
+test("keyboard focus keeps the code field and buttons clear of the fixed top bar", () => {
+  render(<CompanySavedProfilesSection history={SAVED} />);
+
+  for (const control of [
+    codeField(),
+    screen.getByRole("button", { name: "Validar" }),
+    screen.getByRole("button", { name: "Download CVs" }),
+  ])
+    expect(control).toHaveClass("field-focus-target");
+});
+
 test("an empty code shows one message, however many times Validar is pressed", async () => {
   render(<CompanySavedProfilesSection history={[]} />);
 
@@ -242,6 +261,29 @@ test("a duplicate save is a warning and does not navigate", async () => {
   );
   expect(pushMock).not.toHaveBeenCalled();
 });
+
+test.each([
+  ["an invalid", () => getTokenMock.mockResolvedValue(null)],
+  [
+    "a duplicate",
+    async () =>
+      postMock.mockRejectedValue(await httpError(409, "Student already saved")),
+  ],
+])(
+  "after %s code, keyboard focus returns to the code field",
+  async (_, arrange) => {
+    await arrange();
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    // The field and button are disabled while the code is checked, which in
+    // a browser drops keyboard focus to the page body.
+    typeCode("Z101");
+    expect(screen.getByRole("button", { name: "A validar..." })).toBeDisabled();
+    expect(document.body).toHaveFocus();
+
+    await waitFor(() => expect(codeField()).toHaveFocus());
+  }
+);
 
 test("other save failures show one Portuguese message instead of the server text", async () => {
   postMock.mockRejectedValue(await httpError(400, "Student already saved"));
