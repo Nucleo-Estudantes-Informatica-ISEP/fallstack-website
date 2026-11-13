@@ -34,3 +34,15 @@ test("renders the split layout without the site top bar", () => {
 
   expect(screen.queryByText("Top bar")).not.toBeInTheDocument();
 });
+
+test("keeps a link back to the homepage beside the form", () => {
+  render(
+    <AuthPageLayout>
+      <p>Form content</p>
+    </AuthPageLayout>
+  );
+
+  const home = screen.getByRole("link", { name: "Página inicial" });
+  expect(home).toHaveAttribute("href", "/");
+  expect(screen.getByRole("main")).toContainElement(home);
+});

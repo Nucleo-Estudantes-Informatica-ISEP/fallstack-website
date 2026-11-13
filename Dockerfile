@@ -48,11 +48,13 @@ FROM deps AS builder
 # once was a real build-time memory-pressure incident. See
 # docker-compose.app.yml's `migrate` service.
 FROM builder AS migrator
+RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
-CMD ["npx", "prisma", "migrate", "deploy"]
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 
 # Scheduled retention/orphan worker: reuse installed SDK, Prisma and tsx.
 FROM builder AS storage-cleanup
+RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY tsconfig.json ./
 COPY src/config/env.storage.ts src/config/env.database.ts ./src/config/
 COPY src/domain/company/companyVideo.ts ./src/domain/company/companyVideo.ts
@@ -109,6 +111,8 @@ RUN --mount=type=cache,id=fallstack-next,target=/app/.next/cache,sharing=locked 
   fi
 
 FROM base AS runner
+# Runtime starts node directly; npm bundles vulnerable libraries outside pnpm.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

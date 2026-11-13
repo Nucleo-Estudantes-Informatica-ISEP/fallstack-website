@@ -1,4 +1,5 @@
 import Image, { getImageProps } from "next/image";
+import Link from "next/link";
 
 import { AuthContextProvider } from "@/contexts/AuthContext";
 
@@ -37,8 +38,16 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({ children }) => {
               />
             </picture>
           </div>
-          <div className="flex min-w-0 items-start justify-center px-5 pt-5 pb-10 sm:px-8 sm:pt-8 lg:items-center lg:py-20 xl:pr-[70px]">
-            {children}
+          <div className="flex min-w-0 flex-col px-5 pt-5 pb-10 sm:px-8 sm:pt-8 lg:py-8 xl:pr-[70px]">
+            <Link
+              href="/"
+              className="inline-flex min-h-11 items-center self-start text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Página inicial
+            </Link>
+            <div className="flex flex-1 items-start justify-center pt-4 lg:items-center lg:py-12">
+              {children}
+            </div>
           </div>
         </div>
       </main>
