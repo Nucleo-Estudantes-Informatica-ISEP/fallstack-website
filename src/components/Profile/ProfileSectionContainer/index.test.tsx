@@ -196,3 +196,19 @@ test("the removed-CV notice shows only after a retention purge", () => {
   renderDashboard({ cvPurgedAt: "2026-05-01T00:00:00.000Z" });
   expect(screen.getByText(/O teu CV foi removido/)).toBeInTheDocument();
 });
+
+test("menu changes focus the selected content and preserve navigation labels", () => {
+  renderDashboard();
+
+  fireEvent.click(screen.getByRole("button", { name: "Passe do FallStack" }));
+  expect(
+    screen.getByRole("region", { name: "Passe do FallStack" })
+  ).toHaveFocus();
+  expect(screen.getByTestId("pass-tab")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Desafios" }));
+  expect(screen.getByRole("region", { name: "Desafios" })).toHaveFocus();
+  expect(screen.getByTestId("challenges-tab")).toBeInTheDocument();
+  expect(
+    screen.getByRole("navigation", { name: "Perfil" })
+  ).toBeInTheDocument();
+});

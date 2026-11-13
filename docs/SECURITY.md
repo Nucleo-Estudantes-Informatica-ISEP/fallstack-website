@@ -35,6 +35,10 @@
 
 ## 3. Security Controls
 
+The required production Docker image CI job scans the application runner, migrator and storage-cleanup images for
+fixable HIGH and CRITICAL OS and library vulnerabilities. Unfixed findings are
+excluded from this gate until a fix is available.
+
 ### SQL Injection
 
 The application does not rely on string concatenation for database queries. Every database read/write is performed through Prisma in `src/application/repositories/` and through typed query input objects.
