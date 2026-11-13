@@ -273,7 +273,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
               backgroundColor: "rgba(237,131,38,0.1)",
             }}
           >
-            <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
+            <FiAlertTriangle className="size-5 shrink-0 text-[#ED8326]" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
               Definições.
