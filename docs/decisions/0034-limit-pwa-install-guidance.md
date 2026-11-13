@@ -29,5 +29,6 @@ standalone mode.
 - Browser identification remains heuristic and must be adjusted if platform
   behavior changes.
 - The Safari tab guidance and the installed app's standalone behavior were
-  confirmed manually on a real iPhone for this change. Repeat that check when
-  the install flow changes; an emulator does not replace that evidence.
+  confirmed manually on a real iPhone for this change
+  ([verification record](../verification/409/README.md)). Repeat that check
+  when the install flow changes; an emulator does not replace that evidence.
