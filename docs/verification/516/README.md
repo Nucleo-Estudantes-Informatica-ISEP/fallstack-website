@@ -229,8 +229,42 @@ Z101 and Z103 CVs and `dados.csv`.
 
 ## Checks
 
-To fill in before review: `pnpm lint`, `pnpm test`, `pnpm typecheck`,
-`pnpm build`, `pnpm exec prisma validate` and `git diff --check`.
+Run on 13 November 2026 at 1acd657. Tests use an isolated local database.
+
+| Check                                         | Result                                                                                                                                                                                   |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm lint`                                   | 0 errors                                                                                                                                                                                 |
+| `pnpm typecheck`                              | Pass                                                                                                                                                                                     |
+| `pnpm test`                                   | 1,172 passed, 10 skipped, 3 failed. The 3 also fail on `dev` on this machine: two CSP tests read a local `.env` value, and one test starts `pnpm` as a subprocess, which Windows cannot. |
+| `pnpm build`                                  | Compiles and generates all 54 pages. The final standalone copy fails on Windows without Developer Mode (symlinks); it runs in CI.                                                        |
+| `pnpm exec prisma validate`                   | Pass                                                                                                                                                                                     |
+| `git diff --check`, Prettier on changed `.md` | Pass                                                                                                                                                                                     |
+
+Authorised flow, as the Employee with `pnpm dev`:
+
+| Step                                    | Result                                                               |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| Type `Z104` and press Validar           | Saved; its preview opens without “Salvar perfil”                     |
+| Open the CV from a saved preview (Z101) | Opens in a new tab as a PDF                                          |
+| Add a comment in Histórico de scans     | Saved, and still shown after a reload                                |
+| Reopen Z104 from the Sumário list       | Opens `/student/Z104/preview`                                        |
+| Download CVs                            | `cvs-guardados.zip` with the Z101, Z103 and Z104 CVs and `dados.csv` |
+
+The Z104 save was removed afterwards.
+
+Unauthorised flows. Each shows the 404 page, with no company navigation and
+none of the student's data in the response:
+
+- Signed out, Student and Admin on `/dashboard`.
+- Employee on `/student/Z104` (not saved).
+- Employee with an invalid, an expired and a wrongly signed preview token.
+- Signed out with a valid preview token.
+
+In a production build (`pnpm start`), the `/student/Z104` 404 and its
+client-navigation response also contain none of Z104's data, and Student and
+Admin get the 404 on `/dashboard`.
+
+Not exercised here: a real camera and a real phone.
 
 ## Before captures
 
