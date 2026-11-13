@@ -1,4 +1,4 @@
-# 0035: Sanitize SVG only in the logo pipeline
+# 0036: Sanitize SVG only in the logo pipeline
 
 Status: Accepted
 Date: 2026-11-11

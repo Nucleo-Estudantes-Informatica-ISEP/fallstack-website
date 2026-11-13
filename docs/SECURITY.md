@@ -35,6 +35,10 @@
 
 ## 3. Security Controls
 
+The required production Docker image CI job scans the application runner, migrator and storage-cleanup images for
+fixable HIGH and CRITICAL OS and library vulnerabilities. Unfixed findings are
+excluded from this gate until a fix is available.
+
 ### SQL Injection
 
 The application does not rely on string concatenation for database queries. Every database read/write is performed through Prisma in `src/application/repositories/` and through typed query input objects.
@@ -267,7 +271,7 @@ Send your report (video or document) directly to the **current coordinators of t
 ### SVG logo audit (2026-11-11, #282)
 
 Dedicated logo uploads accept server-sanitized SVG; avatar uploads remain PNG/JPEG.
-[ADR 0035](decisions/0035-sanitize-svg-logo-pipeline.md) defines the static subset,
+[ADR 0036](decisions/0036-sanitize-svg-logo-pipeline.md) defines the static subset,
 XML validation and complexity limits. CSS, scripts, handlers, foreignObject and
 external resources are removed before storage. Invalid XML and DTDs are rejected.
 
