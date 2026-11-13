@@ -4,7 +4,7 @@ CREATE TABLE "SessionCheckIn" (
     "checkedInAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "sessionId" UUID NOT NULL,
     "studentId" UUID NOT NULL,
-    "scannedById" UUID NOT NULL,
+    "scannedById" UUID,
 
     CONSTRAINT "SessionCheckIn_pkey" PRIMARY KEY ("id")
 );
@@ -21,7 +21,7 @@ ON "SessionCheckIn"("studentId");
 ALTER TABLE "SessionCheckIn"
 ADD CONSTRAINT "SessionCheckIn_sessionId_fkey"
 FOREIGN KEY ("sessionId") REFERENCES "ScheduleEvent"("id")
-ON DELETE CASCADE ON UPDATE CASCADE;
+ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AlterTable
 ALTER TABLE "SessionCheckIn"
@@ -33,4 +33,4 @@ ON DELETE CASCADE ON UPDATE CASCADE;
 ALTER TABLE "SessionCheckIn"
 ADD CONSTRAINT "SessionCheckIn_scannedById_fkey"
 FOREIGN KEY ("scannedById") REFERENCES "User"("id")
-ON DELETE RESTRICT ON UPDATE CASCADE;
+ON DELETE SET NULL ON UPDATE CASCADE;

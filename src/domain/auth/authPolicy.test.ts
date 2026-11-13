@@ -65,7 +65,11 @@ test("staff policy allows nei-members and admins but not students", () => {
     student: null,
     employee: { company: { id: "company-1" } },
   };
-  assert.equal(passesAuthPolicy("staff", employeeSession), true);
+  assert.equal(passesAuthPolicy("staff", employeeSession), false);
+  assert.equal(
+    passesAuthPolicy("staff", { ...employeeSession, neiMember: true }),
+    true
+  );
   assert.equal(
     passesAuthPolicy("staff", { ...employeeSession, employee: null }),
     false

@@ -31,6 +31,7 @@ const getServerSession = cache(async () => {
       authName:
         typeof claims.name === "string" ? claims.name.trim() : undefined,
       adminRole,
+      neiMember: claims.neiMember === true,
       role:
         appUser.role === "EMPLOYEE" && !employeeAllowed ? null : appUser.role,
     };

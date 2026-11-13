@@ -57,6 +57,7 @@ export interface ZitadelIdentity {
   emailVerified: boolean;
   isEmployee: boolean;
   isGlobalAdmin: boolean;
+  isNeiMember?: boolean;
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
@@ -66,6 +67,7 @@ export interface AppSessionClaims extends jwt.JwtPayload {
   name?: string;
   employee: boolean;
   admin: boolean;
+  neiMember?: boolean;
 }
 
 let discoveryPromise: Promise<OidcDiscovery> | undefined;
@@ -317,6 +319,7 @@ export async function completeAuthorizationCode(input: {
     emailVerified,
     isEmployee: employeeRoles.includes("employee"),
     isGlobalAdmin: globalRoles.includes("admin"),
+    isNeiMember: globalRoles.includes("nei-member"),
   };
 }
 
@@ -328,6 +331,7 @@ export function signAppSession(identity: ZitadelIdentity) {
       name: identity.name,
       employee: identity.isEmployee,
       admin: identity.isGlobalAdmin,
+      neiMember: identity.isNeiMember === true,
     },
     serverEnv.AUTH_SECRET,
     {
