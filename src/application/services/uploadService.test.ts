@@ -40,7 +40,9 @@ beforeEach(() => {
   vi.mocked(deleteObject).mockResolvedValue(undefined);
   vi.mocked(putObjectStream).mockImplementation(async (_kind, _key, stream) => {
     stagedPath = String((stream as ReadStream).path);
-    expect((await stat(stagedPath)).mode & 0o777).toBe(0o600);
+    // Windows does not expose POSIX permission bits through stat().
+    if (process.platform !== "win32")
+      expect((await stat(stagedPath)).mode & 0o777).toBe(0o600);
     const chunks: Buffer[] = [];
     for await (const chunk of stream) chunks.push(chunk);
     stored = Buffer.concat(chunks);

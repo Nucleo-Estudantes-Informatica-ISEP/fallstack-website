@@ -38,27 +38,33 @@ model Student {
   id   String @id @db.Uuid
   user User   @relation(fields: [id], references: [id], onDelete: Cascade)
 
-  code         String    @unique
-  name         String
-  bio          String?
-  year         Year
+  code                  String    @unique
+  name                  String
+  bio                   String?
+  year                  Year
+  course                String?
   // Cleanup queues unreferenced objects; DB triggers reject tombstoned keys.
-  cv           String?
+  cv                    String?
   // Set on every successful CV upload - updatedAt isn't CV-specific (bumped
   // by any profile edit), so the daily retention purge (#389) needs
   // its own clock to tell which CVs are genuinely older than 6 months. Not
   // modified by the purge itself: it stays as the last-upload timestamp
   // even after `cv` is cleared (see cvPurgedAt below).
-  cvUploadedAt DateTime?
+  cvUploadedAt          DateTime?
   // Stamped by the retention purge when it nulls out `cv`; drives the
   // profile "your CV was removed" banner. Cleared back to null on the next
   // successful upload, which also refreshes cvUploadedAt above.
-  cvPurgedAt   DateTime?
-  linkedin     String?
-  github       String?
-  avatar       String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  cvPurgedAt            DateTime?
+  linkedin              String?
+  privacyPolicyAccepted Boolean   @default(false)
+  termsAccepted         Boolean   @default(false)
+  privacyPolicyVersion  String?
+  termsVersion          String?
+  consentAcceptedAt     DateTime? @db.Timestamptz(6)
+  github                String?
+  avatar                String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   walletPass        WalletPass?
   actionCompletions ActionCompletion[]

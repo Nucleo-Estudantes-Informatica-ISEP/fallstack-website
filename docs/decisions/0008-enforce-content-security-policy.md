@@ -41,6 +41,13 @@ nonce blocks these scripts and breaks client-side hydration.
    Company video links are validated and normalized to `https://www.youtube.com/embed/<id>`
    on save and render.
 
+Browser schema validation uses Zod's `jitless` mode, configured in the client
+configuration bootstrap before its eager environment parse. Zod's dynamic-code
+capability probe otherwise emits a CSP violation even when it catches the
+blocked `Function` call. Disabling that browser optimization preserves schema
+validation and the enforced policy; server-side validation keeps its default
+configuration.
+
 ## Accepted exceptions and rationale
 
 | Exception                  | Directive               | Reason                                                                                                                                                 |
@@ -86,6 +93,10 @@ in `src/app/layout.tsx`).
 - **PWA Service Worker**: PWA service worker files (`sw.js`, `workbox-*`) and the web
   manifest (`manifest.webmanifest`) are excluded from the middleware matcher so the service
   worker installs and caches assets offline without nonce friction.
+- **API routes**: the matcher also covers `/api/*` so every response carries
+  `x-instance-id` (an opaque per-process value used by multi-copy tests, #456).
+  `needsCsp` in `src/security/instanceId.ts` keeps the nonce and
+  `Content-Security-Policy` off API and prefetch responses, as before.
 - **Performance impact**: Dynamic rendering of guest pages introduces negligible overhead
   (sub-10ms render time) while completely eliminating `'unsafe-inline'` from `script-src`.
 

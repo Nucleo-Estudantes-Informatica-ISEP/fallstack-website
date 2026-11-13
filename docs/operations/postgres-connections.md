@@ -55,7 +55,9 @@ logs in isolation and use explicit ceilings rather than idle snapshots.
 only with workload evidence (#411) and after recomputing the shared budget: every
 unit adds one connection per web process, including rollout overlap.
 `PRISMA_POOL_TIMEOUT_SECONDS` defaults to **5**, validated integer **1–10**;
-zero/infinite waits are rejected. `runtimeDatabaseUrl` sets these authoritative
+empty or below-one environment values use defaults (3 connections, 5 seconds).
+Other values must be integers in 1–10; malformed or above-ten values are rejected.
+`runtimeDatabaseUrl` sets these authoritative
 Prisma URL parameters while retaining runtime identity, schema, TLS and other
 parameters. Old URL `connection_limit`/`pool_timeout` values are replaced,
 including duplicates. Never log the resulting URL.
@@ -100,10 +102,17 @@ deployed routing and restart configuration still require separate verification.
   that is smaller, returning 429 before DB access when full. The default
   three-slot pool admits two operations and leaves one connection for other
   requests even during slow Google I/O. A two-slot pool admits one operation; a
-  one-slot pool admits none; larger pools still admit two. Configure at least
-  two slots for Wallet issuance/deletion. The cap does not reserve connections for
-  Wallet: ordinary queries can occupy all request slots, so an admitted Wallet
-  transaction can still exhaust its `maxWait` and fail with P2028. Pool wait
+  one-slot pool admits none by default. The explicit opt-in
+  `GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` admits one deletion,
+  which can occupy the sole slot during Google I/O and cause other requests
+  to time out. Session lookups return null and protected routes respond 401/403; other database requests can return 503. Issuance remains paused. A PostgreSQL transaction try-lock limits this exception to one deletion across replicas. Competing requests may briefly occupy their own connection while acquiring admission.
+  Prefer at least two slots within the agreed budget; see
+  The flag must be exactly
+  `true` or `false` in lowercase; invalid values prevent server environment validation.
+  [ADR 0032](../decisions/0032-opt-in-single-connection-deletion.md).
+  Larger pools still admit two operations. Ordinary queries
+  can occupy all request slots, so an admitted Wallet transaction can still
+  exhaust its `maxWait` and fail with P2028. Pool wait
   (P2024) and P2028 are logged, then returned to clients as a retryable
   `503 {"error":"Service busy, please retry shortly"}` with `Retry-After: 5`,
   not a generic 500. This limits Wallet occupancy; it does not guarantee

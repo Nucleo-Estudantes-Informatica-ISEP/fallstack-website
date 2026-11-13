@@ -115,7 +115,10 @@ These tests are also auto-discovered by `pnpm test` and the normal PR CI job,
 which already starts PostgreSQL 16 and applies `prisma migrate deploy`.
 They do not need the app server, browser sessions, MinIO, or staging credentials.
 
-Use a dedicated disposable local database, never a shared or production one:
+Vitest loads `.env` automatically. Its `DATABASE_URL` is used by integration
+tests, which create and delete records. Use a local test database, never a shared
+or production one. Shell environment variables take precedence over `.env`.
+For an isolated disposable database:
 
 ```bash
 docker run -d --name fallstack-test-postgres \
@@ -231,6 +234,43 @@ Add `E2E_VERIFY_UPLOAD_LIMITS=yes` to check wrong MIME and over-10 MiB
 rejections. These checks run in Chromium only and create an unlinked staging
 object; delete it through the admin storage page after the run. Use staging only.
 
+### Multi-copy parity (#456)
+
+`tests/e2e/playwright/multi-copy.spec.ts` proves that successive requests
+behave the same on every web copy. Every response carries an opaque
+`x-instance-id` header that is unique per server process, so the spec can show
+which copy answered each request. Point `E2E_BASE_URL` at the load balancer
+(then again at the Cloudflare hostname) and set `E2E_EXPECTED_COPIES` to the
+number of copies behind it. The spec skips below two copies.
+
+```bash
+E2E_BASE_URL=https://staging.example.org \
+CONFIRM_NON_PRODUCTION=yes \
+E2E_EXPECTED_COPIES=3 \
+E2E_ALLOW_UPLOADS=yes \
+E2E_STUDENT_STORAGE_STATE=tests/e2e/.staging-student.json \
+E2E_EMPLOYEE_STORAGE_STATE=tests/e2e/.staging-employee.json \
+pnpm test:e2e --project=chromium tests/e2e/playwright/multi-copy.spec.ts
+```
+
+It checks that the proxy reaches every copy, that a Student session works on
+each copy, that a QR token scans once and every copy then refuses a retry with
+`409`, and that a CV uploaded on one copy attaches and downloads through other
+copies while anonymous and foreign-code requests are each denied on every copy.
+Safe operations (the retry, CV attach and download) repeat until a different
+copy answers, and each response's `x-instance-id` is checked, so a sticky proxy
+fails the run instead of passing by accident. The first QR scan changes state
+and cannot be repeated, so the spec probes with an invalid token until the
+copy that issued the QR answers, then scans once. The scan must succeed on a
+different copy, which needs a round-robin proxy; the run fails when it lands
+on the issuing copy. It needs a
+Student that the Employee's company has not saved; the test fails with a
+message when the save already exists, and the API cannot remove it, so remove
+the row or use another Student before each run. The upload test replaces the
+synthetic Student's CV and leaves one unlinked object; use staging
+only. It does not compare secrets: set `JWT_SECRET`, `AUTH_SECRET` and the
+public URLs identically on every copy.
+
 Playwright writes failure screenshots and traces under `test-results/`, plus an
 HTML report under `playwright-report/` when that reporter is selected. Inspect a
 trace with `pnpm exec playwright show-trace <trace.zip>` and an HTML report with
@@ -333,3 +373,8 @@ preview-scan scenario, see [shared limiter validation](../../docs/rate-limiter-l
 The route check mocks limiter decisions; distributed checks run production limiter
 code in two independent HTTP processes against disposable Redis. Neither replaces
 SAD's authenticated per-copy Coolify rollout evidence.
+
+For the authenticated signup fields smoke test, set `E2E_SIGNUP_STORAGE_STATE`
+to a Playwright storage state for a synthetic AuthNEI student who has no
+Fallstack profile yet. The test visits all four steps and checks validation
+without creating a profile.

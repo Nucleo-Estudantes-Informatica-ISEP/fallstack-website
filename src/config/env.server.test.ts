@@ -10,6 +10,16 @@ afterEach(() => {
   process.env = { ...originalEnv };
 });
 
+test.each([undefined, "false", "true"])(
+  "showcase flag %s defaults to the countdown",
+  async (value) => {
+    if (value === undefined) delete process.env.SHOWCASE_FULL_WEBSITE;
+    else process.env.SHOWCASE_FULL_WEBSITE = value;
+    const { serverEnv } = await import("./env.server");
+    expect(serverEnv.SHOWCASE_FULL_WEBSITE).toBe(value === "true");
+  }
+);
+
 test.each([undefined, "", "false", "true"])(
   "parses never-enabled declaration %s without truthy-string coercion",
   async (value) => {
@@ -57,3 +67,24 @@ test.each(["http://redis:6379", "not-a-url"])(
     expect(() => getRedisUrl()).toThrow("REDIS_URL");
   }
 );
+
+test.each([undefined, "", "false", "true"])(
+  "parses single-connection deletion opt-in %s explicitly",
+  async (value) => {
+    if (value === undefined)
+      delete process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE;
+    else process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = value;
+    const { serverEnv } = await import("./env.server");
+    expect(serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE).toBe(
+      value === "true"
+    );
+  }
+);
+
+test("rejects an ambiguous single-connection deletion opt-in", async () => {
+  process.env.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE = "yes";
+  const { serverEnv } = await import("./env.server");
+  expect(() => serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE).toThrow(
+    "GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE"
+  );
+});

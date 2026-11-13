@@ -4,7 +4,7 @@ export default function Custom404() {
   return (
     <section
       data-testid="not-found"
-      className="bg-background[#141414] flex min-h-screen w-full flex-col items-center justify-center px-4"
+      className="artwork-clean artwork-readable flex min-h-screen w-full flex-col items-center justify-center px-4"
     >
       <h1 className="text-center text-3xl font-semibold sm:text-4xl md:text-6xl">
         Não encontramos a página que estás à procura...
@@ -23,3 +23,4 @@ export default function Custom404() {
     </section>
   );
 }
+
