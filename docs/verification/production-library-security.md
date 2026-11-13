@@ -52,4 +52,4 @@ compilation with `ResourceExhausted: cannot allocate memory`. Host has 8 GiB
 RAM; after failure, swap usage was 3.58 GiB and memory_pressure reported 41%
 free. No heap limits or host settings were changed, and the build was not
 blindly retried. Consequently no final-image Trivy result is claimed locally.
-The expanded CI image gate must pass before this remediation is accepted.
+CI run 43285823256 passed the production Docker image job at 5bd08c4, including the three image scans and Compose smoke test. Changes after that revision require fresh CI verification.

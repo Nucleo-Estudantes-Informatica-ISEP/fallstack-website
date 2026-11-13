@@ -10,7 +10,7 @@ test("renders an accessible button", () => {
 
   expect(button).toBeEnabled();
   expect(button).toHaveAttribute("type", "button");
-  expect(button).toHaveClass("bg-ui-action");
+  expect(button).toHaveClass("bg-[#B1440A]");
 });
 
 test("applies the form variant styles", () => {
