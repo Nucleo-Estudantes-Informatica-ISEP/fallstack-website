@@ -63,6 +63,8 @@ measure the homepage, authenticated traffic, browser hydration or font downloads
 
 The original measurements ran logs enabled first in both replicates. The harness now reverses the order in rep2; the historical numbers above retain the original order. The logs-disabled mode is a null control: no logs were emitted, so it does not measure logging cost. There is no shipped runtime optimization. All assertions passed (two tests) in the original run.
 
+A verification rerun on 2026-11-13 at `956a00ee` used the updated harness and a local production build with example configuration. Both tests passed, including 240 distinct HTTP nonces. HTTP rep1 p50/p95 was 4.910/6.312 ms; rep2 was 4.499/6.860 ms. These local controls are not production traffic or an optimization comparison.
+
 ## Decision and limits
 
 Keep the shared frame and existing error-tracking settings. The null control cannot establish the cost of log reporting. Shared-frame component rendering is small in this
