@@ -38,26 +38,38 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({
                 : "relative h-[clamp(8rem,30svh,14rem)] overflow-hidden sm:max-md:h-64 md:h-auto [@media(max-width:767px)_and_(max-height:440px)]:hidden"
             }
           >
-            <picture>
-              <source
-                media={studentSignup ? "(width < 1024px)" : "(width < 768px)"}
-                srcSet={mobilePoster.srcSet}
-                sizes={mobilePoster.sizes}
-              />
-              <Image
-                src="/assets/optimized/signup-2026.41e0e981ef13.webp"
-                fill
-                alt="Fallstack 2026"
-                sizes="(min-width: 1280px) 48vw, 44vw"
-                className={
-                  studentSignup
-                    ? "object-cover object-[center_30%] lg:object-center"
-                    : "object-cover"
-                }
-                loading="eager"
-                fetchPriority="high"
-              />
-            </picture>
+            {studentSignup ? (
+              <picture>
+                <source
+                  media={studentSignup ? "(width < 1024px)" : "(width < 768px)"}
+                  srcSet={mobilePoster.srcSet}
+                  sizes={mobilePoster.sizes}
+                />
+                <Image
+                  src="/assets/optimized/signup-2026.41e0e981ef13.webp"
+                  fill
+                  alt="Fallstack 2026"
+                  sizes="(min-width: 1280px) 48vw, 44vw"
+                  className={
+                    studentSignup
+                      ? "object-cover object-[center_30%] lg:object-center"
+                      : "object-cover"
+                  }
+                  loading="eager"
+                  fetchPriority="high"
+                />
+              </picture>
+            ) : (
+              <div className="artwork-clean relative size-full">
+                <Image
+                  src="/favicon.ico"
+                  width={128}
+                  height={128}
+                  alt="Fallstack 2026"
+                  className="absolute inset-0 m-auto h-3/4 w-auto max-w-32 object-contain md:h-48 md:max-w-48"
+                />
+              </div>
+            )}
           </div>
           <div
             className={

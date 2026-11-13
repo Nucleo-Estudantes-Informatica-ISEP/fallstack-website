@@ -69,7 +69,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   };
 
   const handleAvatarUpload = async () => {
-    let avatarUrl: string | null = null;
+    let avatarId: string | null = null;
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!image) {
@@ -82,9 +82,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         toast.error("Não foi possível dar upload à imagem.");
         return null;
       }
-      avatarUrl = uploaded.url;
+      avatarId = uploaded.id;
     }
-    return avatarUrl;
+    return avatarId;
   };
 
   const handleSubmit = async () => {
@@ -127,7 +127,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return setLoading(false);
       }
 
-      const avatarUrl = await handleAvatarUpload();
+      const avatarId = await handleAvatarUpload();
 
       let cvId: string | undefined;
       if (data.cv) {
@@ -141,7 +141,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       const profile = await createStudentProfile({
         ...data,
-        avatarUrl,
+        avatarId,
         cvId,
         privacyPolicyAccepted: true,
         termsAccepted: true,

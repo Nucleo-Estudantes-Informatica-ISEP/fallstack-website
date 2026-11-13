@@ -41,6 +41,13 @@ nonce blocks these scripts and breaks client-side hydration.
    Company video links are validated and normalized to `https://www.youtube.com/embed/<id>`
    on save and render.
 
+Browser schema validation uses Zod's `jitless` mode, configured in the client
+configuration bootstrap before its eager environment parse. Zod's dynamic-code
+capability probe otherwise emits a CSP violation even when it catches the
+blocked `Function` call. Disabling that browser optimization preserves schema
+validation and the enforced policy; server-side validation keeps its default
+configuration.
+
 ## Accepted exceptions and rationale
 
 | Exception                  | Directive               | Reason                                                                                                                                                 |

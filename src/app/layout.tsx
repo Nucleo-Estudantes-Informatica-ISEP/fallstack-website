@@ -30,10 +30,6 @@ export default async function RootLayout({
 
   return (
     <html lang="pt" className="h-svh">
-      <head>
-        <link rel="preconnect" href="https://rsms.me/" />
-        <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
-      </head>
       <body>
         <a
           href="#main-content"
