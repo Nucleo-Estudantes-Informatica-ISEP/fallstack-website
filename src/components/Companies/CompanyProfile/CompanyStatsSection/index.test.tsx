@@ -96,6 +96,17 @@ test("interest choices are grouped under the Interesses heading", () => {
   );
 });
 
+test("interest tags get the same side padding as the student's tags", () => {
+  renderSummary();
+
+  // The shared selector pads tags only in its left-aligned mode; the
+  // centred company summary adds the student's padding around it.
+  expect(screen.getByRole("group", { name: "Interesses" })).toHaveClass(
+    "[&_button]:px-5",
+    "sm:[&_button]:px-7"
+  );
+});
+
 test("saving interests sends the selection and confirms success", async () => {
   renderSummary();
 

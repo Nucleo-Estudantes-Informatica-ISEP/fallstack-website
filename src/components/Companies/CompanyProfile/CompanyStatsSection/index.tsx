@@ -82,10 +82,12 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
       >
         Interesses
       </h2>
+      {/* The shared selector pads its tags only when left-aligned; this keeps
+          the summary centred and gives the tags the student's padding. */}
       <div
         role="group"
         aria-labelledby="company-interests-heading"
-        className="w-full"
+        className="w-full [&_button]:px-5 sm:[&_button]:px-7"
       >
         <InterestSelector
           availableInterests={availableInterests}
