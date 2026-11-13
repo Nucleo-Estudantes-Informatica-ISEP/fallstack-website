@@ -4,6 +4,7 @@
  * "session"    - any logged-in user
  * "student"    - logged-in user with a Student profile
  * "employee"   - logged-in user with an Employee profile and a Company
+ * "staff"     - a nei-member employee or an admin
  * "admin"      - logged-in user with session.adminRole set (ADMIN or SUPER_ADMIN)
  * "superadmin" - logged-in user with session.adminRole === "SUPER_ADMIN"
  */
@@ -13,6 +14,7 @@ export type AuthPolicy =
   | "session"
   | "student"
   | "employee"
+  | "staff"
   | "admin"
   | "superadmin";
 
@@ -51,6 +53,11 @@ export function passesAuthPolicy(
     return session.role === "STUDENT" && !!session.student;
   if (policy === "employee")
     return session.role === "EMPLOYEE" && !!session.employee?.company;
+  if (policy === "staff")
+    return (
+      session.adminRole !== null ||
+      (session.role === "EMPLOYEE" && !!session.employee?.company)
+    );
   if (policy === "admin") return session.adminRole !== null;
   if (policy === "superadmin") return session.adminRole === "SUPER_ADMIN";
   return false;

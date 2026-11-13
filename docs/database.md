@@ -76,6 +76,13 @@ erDiagram
         UUID studentId FK
         DateTime completedAt
     }
+    SessionCheckIn {
+        UUID id PK
+        UUID sessionId FK
+        UUID studentId FK
+        UUID scannedById FK
+        DateTime checkedInAt
+    }
     Interest {
         UUID id PK
         Json name
@@ -118,6 +125,9 @@ erDiagram
     Company |o--o| Action : booth_action
     Action ||--o{ ActionCompletion : completed_in
     Student ||--o{ ActionCompletion : completes
+    ScheduleEvent ||--o{ SessionCheckIn : attendance
+    Student ||--o{ SessionCheckIn : attends
+    User ||--o{ SessionCheckIn : scans
     Student }o--o{ Interest : interests
     Company }o--o{ Interest : interests
     Student ||--o{ SavedStudent : saved
@@ -128,10 +138,11 @@ erDiagram
 `Student.id` and `Employee.id` are also `User.id`: these are shared-primary-key
 profiles, not separate identities. Prisma manages the two implicit many-to-many
 relations through `_InterestToStudent` and `_CompanyToInterest`. `Sponsor`,
-`ScheduleEvent`, and `FaqEntry` have no model relations. `SavedStudent` has a
+`FaqEntry` has no model relations. `SavedStudent` has a
 composite primary key `(studentId, employeeId)` plus a separate unique key
 `(studentId, companyId)`; `ActionCompletion` has a unique key
-`(actionId, studentId)`; `ScheduleEvent` has a unique key `(day, order)`.
+`(actionId, studentId)`; `SessionCheckIn` has a unique key
+`(sessionId, studentId)`; `ScheduleEvent` has a unique key `(day, order)`.
 
 ## Design notes
 
