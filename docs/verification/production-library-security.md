@@ -44,7 +44,8 @@ The blocking gate excludes unfixed findings; triage them as described above.
 
 At implementation commit `6408268`, frozen install, lint, typecheck, production
 build and Prisma validation passed. Full suite on an isolated migrated
-PostgreSQL database: 915 passed, 8 skipped. Production pnpm audit reported
+PostgreSQL database at that revision: 915 passed, 8 skipped. Later test counts
+in the PR describe separate runs on newer revisions. Production pnpm audit reported
 zero HIGH/CRITICAL and two MODERATE findings.
 
 The final Docker runner build was attempted, but BuildKit failed during Next.js
@@ -52,4 +53,4 @@ compilation with `ResourceExhausted: cannot allocate memory`. Host has 8 GiB
 RAM; after failure, swap usage was 3.58 GiB and memory_pressure reported 41%
 free. No heap limits or host settings were changed, and the build was not
 blindly retried. Consequently no final-image Trivy result is claimed locally.
-CI run 43285823256 passed the production Docker image job at 5bd08c4, including the three image scans and Compose smoke test. Changes after that revision require fresh CI verification.
+CI run [43422446866](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/actions/runs/43422446866) passed the production Docker image job at `58f4e4a`, including the three image scans and Compose smoke test. Changes after that revision require fresh CI verification.
