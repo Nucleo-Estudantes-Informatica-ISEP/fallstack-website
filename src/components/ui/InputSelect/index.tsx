@@ -1,10 +1,12 @@
+
 "use client";
 
 import slugifyId from "@/utils/slugifyId";
 
 export type SelectOption = string | { value: string; label: string };
 
-interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface InputSelectProps
+  extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
   center?: boolean;
   placeholder?: string;
@@ -58,8 +60,10 @@ const InputSelect: React.FC<InputSelectProps> = ({
           )}
 
           {options.map((option) => {
-            const value = typeof option === "string" ? option : option.value;
-            const label = typeof option === "string" ? option : option.label;
+            const value =
+              typeof option === "string" ? option : option.value;
+            const label =
+              typeof option === "string" ? option : option.label;
 
             return (
               <option

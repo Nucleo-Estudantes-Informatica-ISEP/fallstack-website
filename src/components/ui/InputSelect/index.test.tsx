@@ -1,3 +1,4 @@
+
 import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 
@@ -8,10 +9,16 @@ const options = ["1.º ano", "2.º ano", "3.º ano"];
 describe("ui/InputSelect", () => {
   test("renders an accessible select", () => {
     render(
-      <InputSelect name="Ano" options={options} placeholder="Seleciona o ano" />
+      <InputSelect
+        name="Ano"
+        options={options}
+        placeholder="Seleciona o ano"
+      />
     );
 
-    expect(screen.getByRole("combobox", { name: "Ano" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: "Ano" })
+    ).toBeInTheDocument();
   });
 
   test("preserves an explicit id and option labels", () => {
@@ -34,7 +41,11 @@ describe("ui/InputSelect", () => {
 
   test("shows a disabled placeholder initially", () => {
     render(
-      <InputSelect name="Ano" options={options} placeholder="Seleciona o ano" />
+      <InputSelect
+        name="Ano"
+        options={options}
+        placeholder="Seleciona o ano"
+      />
     );
 
     expect(screen.getByRole("combobox", { name: "Ano" })).toHaveValue("");
