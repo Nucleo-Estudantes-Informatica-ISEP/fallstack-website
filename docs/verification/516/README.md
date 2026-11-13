@@ -10,9 +10,10 @@ on them. Before captures cover D1 and S4 at 773f0fc, plus the typed-code
 messages (D5) and the student 404 page at 991638f, already on the shared
 background. Every other state is recorded with after captures.
 
-**After** captures taken on this branch at 569818c (13 November 2026): every
-inventory row except D1, which is explained in [After
-captures](#after-captures).
+**After** captures taken on this branch at 569818c (13 November 2026), one
+phone, tablet and desktop width each. Message states and the profile views
+that repeat the S4 layout are recorded in text; D1 has no after capture. See
+[After captures](#after-captures).
 
 ## Environment
 
@@ -57,7 +58,7 @@ profile linked to a company renders it; every other session gets the 404 page.
 | D2  | Employee         | Sumário, saved students listed                  | ☐      | ✓     |
 | D3  | Employee         | Interests edited and saved (success, failure)   | ☐      | T     |
 | D4  | Employee         | Scan de Perfil: camera (allowed, denied)        | ☐      | ✓     |
-| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | ◐ T   |
+| D5  | Employee         | Typed code: empty, invalid, duplicate, success  | ◐      | T     |
 | D6  | Employee         | Scan history: empty, with entries               | ☐      | ◐     |
 | D7  | Employee         | CV export (`cvs-guardados.zip`): success, error | ☐      | T     |
 | D8  | Student, no role | Any state: 404 page, no company navigation      | ☐      | ✓     |
@@ -66,17 +67,18 @@ profile linked to a company renders it; every other session gets the 404 page.
 
 | ID  | Route                        | Who                     | Component                            | Before | After |
 | --- | ---------------------------- | ----------------------- | ------------------------------------ | ------ | ----- |
-| S1  | `/student/<code>`            | Employee, student saved | `CompanyViewProfileSectionContainer` | ☐      | ✓     |
+| S1  | `/student/<code>`            | Employee, student saved | `CompanyViewProfileSectionContainer` | ☐      | T     |
 | S2  | `/student/<code>`            | Employee, not saved     | 404 page                             | ☐      | ✓     |
 | S3  | `/student/<token>/preview`   | Employee, not saved yet | `PreviewProfileSectionContainer`     | ☐      | ✓     |
 | S4  | `/student/<token>/preview`   | Employee, already saved | `PreviewProfileSectionContainer`     | ✓      | ✓     |
 | S5  | `/student/<invalid>/preview` | Employee, not saved     | 404 page                             | ☐      | ✓     |
-| S6  | `/student/<code>`            | Admin without profile   | `PublicProfileSectionContainer`      | ☐      | ✓     |
+| S6  | `/student/<code>`            | Admin without profile   | `PublicProfileSectionContainer`      | ☐      | T     |
 
 In the After column, ✗ and ◐ mark the empty saved list (D1, and the empty
-half of D6), which has no after capture. T marks message states recorded in
-text instead of captures (D3, D7, and the D4 and D5 messages; D4 and D5 are
-otherwise captured). See [After captures](#after-captures).
+half of D6), which has no after capture. T marks states recorded in text
+instead of captures: messages (D3, D5, D7 and the D4 camera message) and the
+profile views that look the same as S4 (S1, S6). See
+[After captures](#after-captures).
 
 How employees reach these screens in the app:
 
@@ -95,7 +97,7 @@ How employees reach these screens in the app:
 The student's own profile (`ProfileSectionContainer`) belongs to #487 and is
 listed only to keep the inventory complete.
 
-Content states to capture for S1, S3 and S6: missing avatar, missing social
+Content states checked for S1, S3, S4 and S6: missing avatar, missing social
 links, no CV, and long name, bio, links and comment.
 
 ### Viewport checklist
@@ -105,13 +107,13 @@ links, no CV, and long name, bio, links and comment.
 | D1     | B   | B   |     | B    | B    | B    |
 | D2     | A   |     | A   |      | A    |      |
 | D4–D6  | A   |     | A   |      | A    |      |
-| S1     | A   |     | A   |      | A    |      |
 | S3     | A   |     | A   |      | A    |      |
 | S4     | B A | B   | A   | B    | B A  | B    |
 
 B is a **before** capture and A an **after** capture. After captures keep
 one phone (360), one tablet (768) and one desktop (1440) width; every other
-state has them at 360 and 1440. The before set used a 1024 × 768 landscape
+captured state has them at 360 and 1440. The before S4 shows `A123`; the after
+S4 shows Z101, the one student used for all profile captures. The before set used a 1024 × 768 landscape
 tablet. Horizontal overflow was still measured at all five widths for every
 screen; see [Horizontal overflow](#horizontal-overflow).
 
@@ -443,15 +445,6 @@ code (D5) and the scan history with Z103's long name and comment (D6).
 
 ![Scan de Perfil at 1440](after-D4-D6-1440.png)
 
-### D5: typed code saved
-
-`Z104` typed, saved and opened as a saved preview (S4). The save was removed
-after each capture.
-
-![Preview after saving Z104 at 360](after-D5-success-360.png)
-
-![Preview after saving Z104 at 1440](after-D5-success-1440.png)
-
 ### D6: comment editor open
 
 Z103's 950-character comment in the editor, with its character count.
@@ -488,25 +481,6 @@ navigation.
 
 ![Admin on the dashboard at 360](after-D8-admin-360.png)
 
-### S1: saved student by direct URL
-
-Z101 has everything; Z102 has no avatar, links, CV, bio or interests; Z103
-has long content everywhere.
-
-![Z101 at 360](after-S1-Z101-360.png)
-
-![Z101 at 768](after-S1-Z101-768.png)
-
-![Z101 at 1440](after-S1-Z101-1440.png)
-
-![Z102 at 360](after-S1-Z102-360.png)
-
-![Z102 at 1440](after-S1-Z102-1440.png)
-
-![Z103 at 360](after-S1-Z103-360.png)
-
-![Z103 at 1440](after-S1-Z103-1440.png)
-
 ### S2 and S5: student route 404
 
 S2 is an employee on a student their company has not saved; S5 is an invalid
@@ -530,24 +504,28 @@ Z104 opened from a signed link without saving, with the save button.
 
 ### S4: preview of a saved student
 
-`A123`, the same student as the before captures, plus Z103's long content.
+Z101, a complete profile: avatar, GitHub, LinkedIn, CV, bio and interests.
+This is the screen employees reach from both saved lists and after saving a
+typed or scanned code (D5 success opens it).
 
-![Saved preview at 360](after-S4-A123-360.png)
+![Saved preview at 360](after-S4-Z101-360.png)
 
-![Saved preview at 768](after-S4-A123-768.png)
+![Saved preview at 768](after-S4-Z101-768.png)
 
-![Saved preview at 1440](after-S4-A123-1440.png)
+![Saved preview at 1440](after-S4-Z101-1440.png)
 
-![Z103 saved preview at 360](after-S4-Z103-360.png)
+### Profile views and content states not captured
 
-![Z103 saved preview at 1440](after-S4-Z103-1440.png)
+All student profile views share the S4 layout, so only S4 and S3 are
+captured, with one student each:
 
-### S6: admin without a profile
+- **S1** (`/student/<code>`, saved student) looks the same as S4.
+- **S6** (admin) looks the same as S4 without “Voltar ao painel”, since an
+  admin has no dashboard.
+- **S3** (above) adds the “Salvar perfil” button.
 
-![Z101 as admin at 360](after-S6-Z101-360.png)
-
-![Z101 as admin at 1440](after-S6-Z101-1440.png)
-
-![Z102 as admin at 360](after-S6-Z102-360.png)
-
-![Z103 as admin at 360](after-S6-Z103-360.png)
+The other students were opened in S1, S4 and S6 during the sweep (Z105 in
+S1 and S4 only), with no overflow at any of the five widths: Z102 (no avatar, links, CV, bio or
+interests: the avatar placeholder, no social buttons and “Este estudante
+ainda não indicou interesses.”), Z103 (long name, email, links, bio and
+comment, all wrapping) and Z105 (all 17 interests).
