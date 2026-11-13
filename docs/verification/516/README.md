@@ -138,6 +138,12 @@ and whether anything covers the camera or controls.
   role; confirmed in code and tracked as a separate bug, not changed in this
   task. Duplicate-save captures use an employee account without an admin
   role.
+- **404 digits are below 3:1 on the artwork.** The orange `404` on the shared
+  not-found page (`src/app/not-found.tsx`) averages 3.5–3.9:1 against the
+  artwork but drops to 2.8:1 over its lightest areas (1.8:1 at 360). That
+  page is shared and is not changed in this task. S2, S5 and D8 render it.
+- **Avatar alt text is in English.** The shared `UserImage` component labels
+  every avatar “profile image”. Not changed in this task.
 
 ## Test data
 
@@ -160,8 +166,8 @@ With this data Armis has 18 saved students, enough to make both lists scroll.
 
 `Z100` (“Carolina Referência”, not saved) is linked to the `local-student`
 identity that `pnpm dev:session` mints. It provides the student session used
-for the student dashboard reference captures, since the shared shell also
-serves the student dashboard.
+for the student dashboard reference captures, since the company dashboard
+mirrors the student dashboard's format in its own code.
 
 “Empregado Sintético” is an Armis employee **without** an admin role, linked
 to the `local-armis` identity from `pnpm dev:session`. It provides the
@@ -205,6 +211,114 @@ Notes:
 - Loading and removing the data: `bash load.sh` and `bash load.sh --cleanup`
   in the local `issue-516-test-data` folder kept next to the repository
   checkout.
+
+## Accessibility and layout sweep
+
+Run on 13 November 2026 against `pnpm dev` with the test data, in headless
+Chrome (Playwright with the installed Chrome) at the checklist's viewport
+sizes. Session: the Employee (no admin) account; D8 uses the student account.
+S6 was not run, because no local session has an admin role; its component is
+covered by unit tests. D1 (no saved students) was not run separately: it is
+the D2 frame with an empty list.
+
+### Horizontal overflow
+
+`scrollWidth` against `clientWidth` of the page, plus any element inside
+`<main>` that extends past the viewport. ✓ means neither happens.
+
+| Screen                      | 360 | 400 | 768 | 1440 | 1920 |
+| --------------------------- | --- | --- | --- | ---- | ---- |
+| D2: Sumário, 18 saved       | ✓   | ✓   | ✓   | ✓    | ✓    |
+| D4–D6: Scan, camera allowed | ✓   | ✓   | ✓   | ✓    | ✓    |
+| D4: Scan, camera denied     | ✓   | ✓   | ✓   | ✓    | ✓    |
+| D6: comment editor open     | ✓   | ✓   | ✓   | ✓    | ✓    |
+| D8: student on `/dashboard` | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S1: Z101, Z102, Z103, Z105  | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S2: not saved (404)         | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S3: Z104, signed link       | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S4: Z101, Z102, Z103, Z105  | ✓   | ✓   | ✓   | ✓    | ✓    |
+| S5: invalid token (404)     | ✓   | ✓   | ✓   | ✓    | ✓    |
+
+Long content: Z103's name wraps in the headings and is clamped to two lines,
+with the full name in a tooltip, in both saved lists. Its email, links and bio
+wrap. With the camera allowed, the video fills its 4:3 box at every width.
+
+### Text contrast
+
+Every text and background pair inside `<main>` on the screens above. Over the
+artwork, the background is the artwork's lightest pixel under the
+`artwork-readable` overlay (#6A494C), the worst case. Semi-transparent colours
+are blended with what is behind them.
+
+| Where                                                | Text on background         | Ratio    | Needed |
+| ---------------------------------------------------- | -------------------------- | -------- | ------ |
+| Action buttons (Guardar, Validar, Download CVs)      | #FFFFFF on #B1440A         | 5.67:1   | 4.5:1  |
+| “SALVO” in the Sumário list                          | #F97316 on #141414         | 6.57:1   | 4.5:1  |
+| Dashboard and profile subtitle, over the artwork     | #F3F4F6 on #6A494C         | 7.15:1   | 4.5:1  |
+| Dashboard and profile name (45 px), over the artwork | #FFFFFF on #6A494C         | 7.86:1   | 3:1    |
+| Table headers in both saved lists                    | #B9B9B9 on #141414         | 9.34:1   | 4.5:1  |
+| “Curriculum” label in the CV button                  | #D1D5DC on #2B1E14         | 10.98:1  | 4.5:1  |
+| Unselected interests                                 | #D0D0D0 on #141414         | 11.94:1  | 4.5:1  |
+| Muted text and the code field placeholder            | #D1D3D4 on #141414         | 12.26:1  | 4.5:1  |
+| Profile panel titles                                 | #D1D5DC on #141414         | 12.51:1  | 4.5:1  |
+| GitHub and LinkedIn buttons, over the artwork        | #FFFFFF on #402C2E         | 12.98:1  | 4.5:1  |
+| Selected interests                                   | #FFFFFF on #2C2C2C         | 13.97:1  | 4.5:1  |
+| “Voltar ao painel”, over the artwork                 | #FFFFFF on #352526         | 14.54:1  | 4.5:1  |
+| History comments                                     | #E8E8E8 on #141414         | 14.97:1  | 4.5:1  |
+| Student interest chips                               | #FFFFFF on #362214         | 15.05:1  | 4.5:1  |
+| Profile email                                        | #E5E7EB on #080808         | 16.18:1  | 4.5:1  |
+| Bio, menu, headings and body text                    | #F3F4F6–#FFFFFF on #141414 | ≥16.74:1 | 4.5:1  |
+
+No pair in the restyled screens is under 4.5:1. The only failure is the
+shared 404 page's `404` digits (see [Findings](#findings-to-resolve)).
+
+Focus indicators: the menu's orange ring measures at least 4.6:1 against the
+real artwork pixels around each menu button, and the other rings are orange
+or white on dark panels (at least 6.5:1).
+
+### Keyboard
+
+Tab and Shift+Tab through every screen above at 360 and 1440, waiting for
+scrolling to finish after each key.
+
+| Check                          | Result                                                                                                                        |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| Order                          | Follows the reading order: top bar, menu, tab content, list rows (name, then its comment button), footer.                     |
+| Visible focus                  | Every stop in `<main>` matches `:focus-visible` and shows an outline.                                                         |
+| Traps                          | None. Every walk leaves `<main>` for the footer, and Shift+Tab returns to the top bar.                                        |
+| Hidden under the fixed top bar | Fixed. Shift+Tab used to hide the code field and Validar (360) and Download CVs (1440) under the bar; they now keep a margin. |
+| Focus after a typed-code error | Fixed. Invalid and duplicate codes used to drop focus to the page; it now returns to the code field.                          |
+| Comment editor                 | Opening moves focus to the comment field; Escape closes it and returns focus to “Editar comentário sobre …”.                  |
+
+### Accessible names
+
+Every link, button, field and image in `<main>` has a name, checked in
+Chrome's accessibility tree. Links that open a new tab say so (“GitHub de
+Beatriz Sintética (abre num novo separador)”); history buttons name the
+student (“Editar comentário sobre …”); interest buttons expose
+`aria-pressed`. The camera box is now a group named “Câmara do leitor de QR
+Code”, since the video itself has no name. Avatars use the shared English
+alt text “profile image” (see [Findings](#findings-to-resolve)).
+
+### Messages over the camera and controls
+
+Typed-code messages, triggered twice each to check that copies do not stack:
+
+| Message                       | 360 | 400 | 768 | 1440 | 1920 |
+| ----------------------------- | --- | --- | --- | ---- | ---- |
+| Empty: “Sem código inserido.” | ✓   | ✓   | ✓   | ✓    | ✓    |
+| Invalid: `ZZZZ`               | ✓   | ✓   | ✓   | ✓    | ✓    |
+| Duplicate: `Z101`             | ✓   | ✓   | ✓   | ✓    | ✓    |
+
+✓: one message, announced as an alert, covering none of the code field,
+Validar or the camera, with focus back in the code field.
+
+Camera messages: with the camera denied, “Não foi possível aceder à câmara…”
+covers the bottom of the empty camera box (78 px at 360; a 132 × 102 px
+corner at 1440) until it closes after 5 seconds. The same bottom-corner
+position would apply to a QR scan error while the camera is running, when the
+camera's bottom edge is near the bottom of the screen. Not changed: decision
+pending.
 
 ## Checks
 
