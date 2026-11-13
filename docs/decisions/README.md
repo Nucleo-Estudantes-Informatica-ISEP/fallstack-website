@@ -60,4 +60,5 @@ implementation PR needs an ADR.
 | [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                  | Accepted             |
 | [0032](0032-opt-in-single-connection-deletion.md)                | Opt in to single-connection account deletion     | Accepted             |
 | [0033](0033-share-2026-background-artwork.md)                    | Share 2026 background artwork                    | Accepted             |
-| [0034](0034-gate-fixable-image-vulnerabilities.md)               | Gate fixable image vulnerabilities               | Accepted             |
+| [0034](0034-limit-pwa-install-guidance.md)                       | Limit PWA install guidance                       | Accepted             |
+| [0035](0035-gate-fixable-image-vulnerabilities.md)               | Gate fixable image vulnerabilities               | Accepted             |
