@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Area } from "react-easy-crop";
 import {
   FiAlertTriangle,
@@ -65,6 +65,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   actions,
   availableInterests,
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousMenu = useRef<MenuKey>("sumario");
   const session = useSession();
   const { handleLogout, ConfirmDialog } = useLogout();
 
@@ -74,6 +76,12 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   useEffect(() => {
     setSelectedMenu(menuMap[activeTab]);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (previousMenu.current === selectedMenu) return;
+    previousMenu.current = selectedMenu;
+    contentRef.current?.focus();
+  }, [selectedMenu]);
 
   const [profile, setProfile] = useState<ProfileData>({
     interests: interestIds,
@@ -153,7 +161,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         }
         type="button"
         aria-current={isCurrent ? "true" : undefined}
-        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
+        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" />
@@ -227,7 +235,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       }}
     >
       <div
-        className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${horizontalPadding}`}
+        className={`flex flex-col items-center pt-20 pb-6 lg:pb-16 ${horizontalPadding}`}
       >
         <div className="relative mb-6 flex items-center justify-center">
           <UserImage
@@ -246,7 +254,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           style={{
             fontFamily: '"Coolvetica", sans-serif',
             fontWeight: 400,
-            fontSize: "45px",
+            fontSize: "clamp(2rem, 5vw, 2.8125rem)",
             lineHeight: "100%",
             letterSpacing: "0%",
           }}
@@ -273,7 +281,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
               backgroundColor: "rgba(237,131,38,0.1)",
             }}
           >
-            <FiAlertTriangle className="size-5 shrink-0 text-[#ED8326]" />
+            <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
               Definições.
@@ -308,15 +316,28 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       <div
         className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="w-full shrink-0 lg:w-64 xl:w-88.5">
+        <div className="min-w-0 flex-1 lg:order-2">
+          <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
+            {sidebarItems.find((item) => item.key === selectedMenu)?.label}
+          </p>
+          <div
+            ref={contentRef}
+            tabIndex={-1}
+            role="region"
+            aria-label={
+              sidebarItems.find((item) => item.key === selectedMenu)?.label ??
+              "Perfil"
+            }
+            className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
+          >
+            {renderContent()}
+          </div>
+        </div>
+        <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
           <nav aria-label="Perfil" className="flex flex-col gap-1">
             {sidebarItems.map(renderButton)}
             {secondaryItems.map(renderButton)}
           </nav>
-        </div>
-
-        <div className="min-w-0 flex-1 border border-secondary bg-background p-4 sm:p-6 xl:p-11">
-          {renderContent()}
         </div>
       </div>
       <Modal
