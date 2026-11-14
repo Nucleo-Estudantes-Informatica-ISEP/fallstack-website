@@ -156,3 +156,18 @@ test("aborts storage on request disconnect and never returns an id", async () =>
   ).rejects.toMatchObject({ status: 400 });
   expect(deleteObject).toHaveBeenCalledTimes(1);
 });
+
+test("rejects SVG that grows beyond the limit after sanitization", async () => {
+  const prefix =
+    '<svg xmlns="http://www.w3.org/2000/svg">' + "<path/>".repeat(9000);
+  const suffix = "</svg>";
+  const source = Buffer.from(
+    prefix +
+      "a".repeat(config.uploads.logo.maxSize - prefix.length - suffix.length) +
+      suffix
+  );
+  await expect(
+    uploadFile("logo", request(source, "image/svg+xml"))
+  ).rejects.toMatchObject({ status: 400 });
+  expect(putObjectStream).not.toHaveBeenCalled();
+});

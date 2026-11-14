@@ -1,15 +1,13 @@
-
 "use client";
 
 import React from "react";
 
 import slugifyId from "@/utils/slugifyId";
 
-export interface InputProps
-  extends Omit<
-    React.InputHTMLAttributes<HTMLInputElement>,
-    "defaultValue"
-  > {
+export interface InputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "defaultValue"
+> {
   name: string;
   label?: React.ReactNode;
   center?: boolean;

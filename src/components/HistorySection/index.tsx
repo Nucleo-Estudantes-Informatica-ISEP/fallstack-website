@@ -34,7 +34,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
               key={`${item.studentId}-${item.createdAt}`}
               className="grid w-full grid-cols-4 border-t-2 py-4 text-center first:border-0"
             >
-              <div className="col-span-2 px-1 font-bold">
+              <div className="col-span-2 min-w-0 px-1 font-bold wrap-anywhere">
                 {isCompany ? (
                   <Link
                     href={`/student/${item.student.code}/preview`}
@@ -48,10 +48,10 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
                   </span>
                 )}
               </div>
-              <div className="justify-center px-1">
+              <div className="min-w-0 justify-center px-1 wrap-anywhere">
                 {formatDateDDStrMonthHourMin(item.createdAt)}
               </div>
-              <div className="justify-center px-1 font-bold">
+              <div className="min-w-0 justify-center px-1 font-bold wrap-anywhere">
                 <span className="text-primary">SALVO</span>
               </div>
             </div>

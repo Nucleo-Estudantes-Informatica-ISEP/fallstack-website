@@ -19,7 +19,7 @@ const StatsSection: React.FC<StatsProps> = ({
 
   return (
     <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">
-      <h1 className="mx-auto my-6 w-1/2 text-center text-2xl font-extrabold uppercase md:my-2">
+      <h1 className="mx-auto my-6 w-full text-center text-2xl font-extrabold uppercase md:my-2">
         Visão Geral
       </h1>
       <div className="mb-6 grid w-full grid-cols-1 items-center justify-center gap-y-4 md:my-6 md:grid-cols-3">

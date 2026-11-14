@@ -25,10 +25,8 @@ const InfoText: React.FC<InfoTextProps> = ({
     <motion.section
       initial={{
         opacity: 0,
-        marginRight: -500,
       }}
       whileInView={{
-        marginRight: 0,
         opacity: 1,
       }}
       viewport={{

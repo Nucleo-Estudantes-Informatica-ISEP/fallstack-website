@@ -186,7 +186,7 @@ For example, a new source would be added in the `sources` object and then only w
 - The project enforces the policy using `Content-Security-Policy` as the production header.
 - The `Content-Security-Policy-Report-Only` header has been removed; the policy is fully enforced (see [ADR 0008](decisions/0008-enforce-content-security-policy.md)).
 - The policy was tuned and validated in Report-Only mode (#343) before being promoted to enforced mode (#346).
-- SVG logo support (#282) is deferred beyond the 2026 edition; the enforced policy covers current raster logo formats only and carries no pre-emptive SVG exceptions.
+- SVG logo support (#282) uses the existing same-origin image policy without additional SVG exceptions; see the audit below.
 - There is no browser `report-uri` endpoint and no dedicated CSP report route in the app. Violations are observable through Sentry/GlitchTip error events and browser developer tools.
 
 This keeps the policy strict and actionable without introducing a local reporting endpoint or a production-only exception path.
@@ -267,3 +267,22 @@ Send your report (video or document) directly to the **current coordinators of t
 - Reports are treated as confidential.
 - Maintainers will aim to respond within 72 hours.
 - For critical issues, mitigation and patches are prioritized based on impact.
+
+### SVG logo audit (2026-11-11, #282)
+
+Dedicated logo uploads accept server-sanitized SVG; avatar uploads remain PNG/JPEG.
+[ADR 0036](decisions/0036-sanitize-svg-logo-pipeline.md) defines the static subset,
+XML validation and complexity limits. CSS, scripts, handlers, foreignObject and
+external resources are removed before storage. Invalid XML and DTDs are rejected.
+
+No document CSP amendment is required: logos use same-origin `/api/media/logo/`
+URLs, already covered by `img-src 'self'`. The private logo bucket origin stays
+server-side. Next Image emits ordinary img elements and bypasses optimization
+for this pipeline; no inline SVG, object, embed, iframe or foreignObject path is
+introduced. `script-src`, `object-src`, `frame-src` and nonce design are unchanged.
+There is no policy amendment to trial in Report-Only.
+
+Regression coverage uploads a normal fixture through the admin route, reads it
+through the public media route, and rasterizes the returned vector at 200px.
+Storage is mocked in that test; staging should additionally confirm the real
+bucket write/read and browser preview with an authenticated administrator.

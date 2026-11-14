@@ -31,6 +31,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
           {company.avatar ? (
             <div className="relative my-8 flex size-full flex-col items-center">
               <Image
+                unoptimized={company.avatar.startsWith("/api/media/logo/")}
                 width={320}
                 height={320}
                 src={company.avatar}

@@ -14,7 +14,10 @@ test("renders the company logo URL without a static fallback", () => {
 
   expect(screen.getByRole("img", { name: "Company logo" })).toHaveAttribute(
     "src",
-    expect.stringContaining(encodeURIComponent(logoUrl))
+    logoUrl
+  );
+  expect(screen.getByRole("img", { name: "Company logo" })).not.toHaveAttribute(
+    "srcset"
   );
 });
 

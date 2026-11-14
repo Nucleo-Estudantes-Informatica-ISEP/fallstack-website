@@ -108,11 +108,9 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
         <motion.p
           initial={{
             opacity: 0,
-            marginLeft: -500,
           }}
           whileInView={{
             opacity: 1,
-            marginLeft: 0,
           }}
           viewport={{
             once: true,

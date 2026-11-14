@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FaTrashCan as TrashIcon } from "react-icons/fa6";
@@ -9,8 +8,10 @@ import {
 
 import slugifyId from "@/utils/slugifyId";
 
-interface FileInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "type"> {
+interface FileInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   name: string;
   accept: string;
   placeholder: string;
@@ -79,9 +80,7 @@ const FileInput: React.FC<FileInputProps> = ({
             {file ? icon : emptyIcon}
           </span>
 
-          <span className="truncate">
-            {file ? file.name : placeholder}
-          </span>
+          <span className="truncate">{file ? file.name : placeholder}</span>
         </label>
 
         {file && (

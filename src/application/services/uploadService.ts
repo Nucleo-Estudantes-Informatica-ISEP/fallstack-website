@@ -1,11 +1,13 @@
 import "server-only";
 
 import { createReadStream } from "node:fs";
+import { readFile, writeFile } from "node:fs/promises";
 import { v4 as uuidv4 } from "uuid";
 
 import { HttpError } from "@/types/HttpError";
 import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
+import { InvalidSvgLogoError, sanitizeLogoSvg } from "@/domain/svgLogo";
 
 import { withMultipartFile } from "./multipartUploadService";
 import {
@@ -40,7 +42,20 @@ export async function uploadFile(kind: StorageBucket, request: Request) {
         !(config.uploads[kind].types as readonly string[]).includes(file.type)
       )
         throw new HttpError("Invalid file type", 400);
-      if (!matchesDeclaredType(file.header, file.type))
+      if (kind === "logo" && file.type === "image/svg+xml") {
+        let sanitized: Buffer;
+        try {
+          sanitized = sanitizeLogoSvg(await readFile(file.path));
+        } catch (error) {
+          if (error instanceof InvalidSvgLogoError)
+            throw new HttpError(error.message, 400);
+          throw error;
+        }
+        if (sanitized.length > config.uploads.logo.maxSize)
+          throw new HttpError("File too large", 400);
+        await writeFile(file.path, sanitized);
+        file.size = sanitized.length;
+      } else if (!matchesDeclaredType(file.header, file.type))
         throw new HttpError("File content does not match its type", 400);
 
       const id = uuidv4();

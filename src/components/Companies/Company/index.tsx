@@ -48,6 +48,7 @@ const Company: React.FC<CompanyProps> = ({
       >
         {logoHref ? (
           <Image
+            unoptimized={logoHref.startsWith("/api/media/logo/")}
             className={`${className} object-cover`}
             src={logoHref}
             alt={name}

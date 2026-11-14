@@ -57,6 +57,31 @@ test("uses AuthNEI as the single login method", () => {
   ).toBeInTheDocument();
 });
 
+test("offers a create-account link to the signup page", () => {
+  render(<LoginCard />);
+
+  expect(
+    screen.getByRole("heading", { name: "Iniciar Sessão" })
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Criar uma conta" })).toHaveAttribute(
+    "href",
+    "/signup"
+  );
+});
+
+test("sends password recovery to AuthNEI instead of a local reset flow", () => {
+  render(<LoginCard />);
+
+  expect(
+    screen.getByText(
+      "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI."
+    )
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("link", { name: /palavra-passe/i })
+  ).not.toBeInTheDocument();
+});
+
 test("employee onboarding requires AuthNEI first when logged out", () => {
   render(<LoginCard />);
 
