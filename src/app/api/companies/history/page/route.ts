@@ -15,7 +15,7 @@ export const GET = defineHandler({
 
     const page = await getCompanyHistoryPage(
       session!.employee!.company!.id,
-      cursor.data.studentId
+      { studentId: cursor.data.studentId, createdAt: new Date(cursor.data.createdAt) }
     );
     return NextResponse.json(page);
   },

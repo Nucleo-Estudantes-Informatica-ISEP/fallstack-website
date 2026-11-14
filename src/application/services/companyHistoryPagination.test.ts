@@ -34,7 +34,7 @@ test.each([0, 14, 15, 16])(
 
 test("passes the cursor and company to the repository", async () => {
   findPage.mockResolvedValue([record(15)]);
-  const cursor = "student-14";
+  const cursor = { studentId: "student-14", createdAt: new Date("2026-11-14T12:00:00.000Z") };
   const page = await getCompanyHistoryPage("company", cursor);
   expect(findPage).toHaveBeenCalledWith("company", cursor);
   expect(page.items[0].student.name).toBe("Student 15");

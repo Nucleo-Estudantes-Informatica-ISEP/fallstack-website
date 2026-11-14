@@ -72,7 +72,7 @@ const CompanyProfileSectionContainer: React.FC<
     setLoadingHistory(true);
     setHistoryError(false);
     try {
-      const query = new URLSearchParams({ studentId: last.studentId });
+      const query = new URLSearchParams({ studentId: last.studentId, createdAt: last.createdAt });
       const page = await httpClient.get<{
         items: SavedStudentDto[];
         hasMore: boolean;

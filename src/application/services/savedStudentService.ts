@@ -156,7 +156,7 @@ export const getCompanyHistory = (companyId: string) =>
   findCompanyHistory(companyId);
 export async function getCompanyHistoryPage(
   companyId: string,
-  cursor?: string
+  cursor?: { createdAt: Date; studentId: string }
 ) {
   const records = await findCompanyHistoryPage(companyId, cursor);
   return {
