@@ -320,6 +320,7 @@ model SavedStudent {
 
   @@id([studentId, employeeId])
   @@unique([studentId, companyId])
+  @@index([companyId, createdAt(sort: Desc), studentId(sort: Desc)])
 }
 
 enum Role {
