@@ -1,6 +1,6 @@
 "use client";
 
-import { Ref } from "react";
+import { Ref, useId } from "react";
 
 interface UserBioTextAreaProps {
   ref?: Ref<HTMLTextAreaElement>;
@@ -15,6 +15,7 @@ interface UserBioTextAreaProps {
   name: string;
   id?: string;
   autoFocus?: boolean;
+  counterClassName?: string;
 }
 
 const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
@@ -28,22 +29,25 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
   value,
   className,
   name,
-  id = name,
+  id,
   autoFocus,
+  counterClassName = "mt-1 text-left text-sm",
 }) => {
+  const generatedId = useId();
+  const fieldId = id ?? generatedId;
   return (
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className="mb-1 text-left text-sm font-normal text-white"
-          htmlFor={id}
+          className="field-label text-left text-gray-100"
+          htmlFor={fieldId}
         >
           {name}
         </label>
       )}
 
       <textarea
-        id={id}
+        id={fieldId}
         name={name}
         ref={ref}
         disabled={disabled}
@@ -51,23 +55,20 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
         autoFocus={autoFocus}
         placeholder={placeholder}
         value={value}
+        aria-describedby={`${fieldId}-count`}
         maxLength={limit}
         onChange={(e) => setValue(e.target.value)}
-        style={{
-          resize: "vertical",
-          minHeight: "200px",
-          maxHeight: "400px",
-        }}
-        className={`border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:text-gray-400 ${className ?? ""}`}
+        className={`max-h-100 min-h-32 resize-y field-focus-target border field-border bg-background px-4 py-2 field-text text-white placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 ${className ?? ""}`}
       />
 
       <p
-        className={`text-right ${
+        id={`${fieldId}-count`}
+        className={`${counterClassName} ${
           value.length > limit - 10
             ? "text-red-400"
             : value.length > warningLimit
               ? "text-yellow-500"
-              : "text-white/70"
+              : "text-gray-400"
         }`}
       >
         {value.length} / {limit} caracteres

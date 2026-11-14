@@ -30,6 +30,15 @@ for procedure and rationale.
   settles a meaningful architecture or product decision.
 - Run the checks and manual flow in the
   [contribution workflow](docs/agents/contribution.md#checks-and-test-first-work).
+- Reuse successful checks for unchanged code and relevant configuration. Do not
+  rerun tests, lint, typechecks, builds, or manual checks merely for another
+  commit, push, or status update. Rerun affected checks only when code,
+  configuration, dependencies, or environment changes invalidate the result,
+  or a failure or unresolved concern needs investigation. Report which revision
+  and environment the reused evidence covers.
+- After all required local checks have passed, bypass Git hooks that would only
+  repeat them for that command (for Husky, use `HUSKY=0`). Never bypass a failed
+  or outstanding required check, disable hooks persistently, or disable CI.
 
 ## Quick rules
 
@@ -55,8 +64,9 @@ for procedure and rationale.
   timestamp freshness; they have no one-time nonce. See
   [data ownership](docs/architecture.md#data-ownership) and
   [authentication](docs/architecture.md#authentication-and-short-lived-tokens).
-- Keep unit tests next to code. Put integration and smoke tests under
-  `tests/e2e/`. Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
+- Keep unit tests next to code. Put performance measurements under
+  `tests/performance/`, and integration and smoke tests under `tests/e2e/`.
+  Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
 - `src/config/` holds config, `src/utils/` generic helpers, `src/edition/`
   current event constants, and `src/hooks/` and `src/contexts/` React state.
 - Check PWA or service-worker changes on a real device or installed PWA.
@@ -67,6 +77,18 @@ for procedure and rationale.
 Common commands: `pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm lint`,
 `pnpm typecheck`, `pnpm build`, `pnpm generate`. See the contribution and
 database guides for checks and migration commands.
+
+Before starting application checks (including commit/push hooks), prepare a
+confirmed task-owned isolated local PostgreSQL database. Set both `DATABASE_URL`
+and `DIRECT_URL` to that database, verify connectivity, apply migrations with
+`pnpm migrate:deploy`, and run `pnpm exec prisma validate` before lint, tests,
+typecheck, or build. Keep these variables set for every check and Git hook
+process; do not start an unconfigured run and wait for database failures. Reuse
+a prepared task-owned database when safe. If preparation fails, fix it before
+continuing; do not skip database tests. Stop task-owned database processes after
+verification. Never run destructive checks against shared or production
+services. Documentation-only tasks retain the contribution workflow's
+lighter documentation checks.
 
 Do not run destructive local data commands against shared services. `pnpm wipe`
 requires `NODE_ENV=development`; check the target database first.

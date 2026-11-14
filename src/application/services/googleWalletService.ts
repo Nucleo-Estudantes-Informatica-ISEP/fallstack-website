@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 
@@ -51,23 +52,54 @@ let cachedAccessToken: CachedAccessToken | undefined;
 let accessTokenRequest:
   { clientEmail: string; promise: Promise<string> } | undefined;
 
-// shortcut: process-local admission; use shared admission if replicas share a pool.
-const activeWalletOperations = new Set<string>();
+// Each admitted issuance/deletion can hold one request-pool connection during
+// Google I/O. Keep admission shared across server bundles like the request pool.
+const MAX_WALLET_OPERATIONS = 2;
+const walletGlobals = globalThis as typeof globalThis & {
+  fallstackActiveWalletOperations?: Set<string>;
+};
+const activeWalletOperations =
+  (walletGlobals.fallstackActiveWalletOperations ??= new Set<string>());
 
 export async function withGoogleWalletOperation<T>(
   userId: string,
-  work: () => Promise<T>
+  work: () => Promise<T>,
+  operation: "issue" | "delete" = "issue"
 ): Promise<T> {
   if (activeWalletOperations.has(userId))
     throw new HttpError(
       "A Wallet operation is already in progress. Retry shortly.",
       429
     );
+  // Sole-slot occupancy during revocation requires explicit operator opt-in.
+  const capacity = Math.min(
+    MAX_WALLET_OPERATIONS,
+    Math.max(
+      operation === "delete" &&
+        serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE
+        ? 1
+        : 0,
+      serverEnv.PRISMA_CONNECTION_LIMIT - 1
+    )
+  );
+  if (activeWalletOperations.size >= capacity)
+    throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
   activeWalletOperations.add(userId);
+  const exception =
+    operation === "delete" && serverEnv.PRISMA_CONNECTION_LIMIT === 1;
+  const started = exception ? Date.now() : 0;
   try {
     return await work();
   } finally {
     activeWalletOperations.delete(userId);
+    if (exception)
+      logger.warn(
+        {
+          userHash: createHash("sha256").update(userId).digest("hex"),
+          durationMs: Date.now() - started,
+        },
+        "Single-connection Wallet deletion released"
+      );
   }
 }
 
@@ -148,7 +180,13 @@ export function buildGoogleWalletObjectId(classId: string, studentId: string) {
   return `${classId}-${studentId}`;
 }
 
-function buildGenericObject(classId: string, student: WalletStudent) {
+function buildGenericObject(
+  classId: string,
+  student: WalletStudent,
+  origin: string
+) {
+  const { hexBackgroundColor, logoPath, heroImagePath } =
+    edition.branding.wallet;
   return {
     id: buildGoogleWalletObjectId(classId, student.id),
     classId,
@@ -160,6 +198,9 @@ function buildGenericObject(classId: string, student: WalletStudent) {
     cardTitle: localized(edition.branding.wallet.cardTitle),
     subheader: localized(`Código ${student.code}`),
     header: localized(student.name),
+    hexBackgroundColor,
+    logo: { sourceUri: { uri: new URL(logoPath, origin).href } },
+    heroImage: { sourceUri: { uri: new URL(heroImagePath, origin).href } },
     barcode: {
       type: "QR_CODE" as const,
       value: student.code,
@@ -404,7 +445,7 @@ export async function createGoogleWalletSaveUrl(student: WalletStudent) {
     return withLockedUser(student.id, async (user) => {
       if (!user?.active || !user.student)
         throw new HttpError("Student account is no longer available", 403);
-      const object = buildGenericObject(classId, user.student);
+      const object = buildGenericObject(classId, user.student, origin);
       await syncGenericObject(object, accessToken);
       return createSaveUrl(object.id, credentials, origin);
     });

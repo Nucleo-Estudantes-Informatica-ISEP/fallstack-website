@@ -1,5 +1,21 @@
 import { NextResponse } from "next/server";
 
+import type { RateLimitDecision } from "@/domain/rateLimit";
+
+/** Transport mapping for shared limits; storage outages are distinct from 429. */
+export function rateLimitResponse(
+  decision: RateLimitDecision
+): NextResponse | undefined {
+  if (decision.status === "limited")
+    return tooManyRequestsResponse(decision.retryAfterMs);
+  if (decision.status === "unavailable")
+    return NextResponse.json(
+      { error: "Rate limiter unavailable" },
+      { status: 503, headers: { "Retry-After": "1" } }
+    );
+}
+
+// Legacy employee-preview policy (#393), not used for uploads (#413).
 // Single-server, in-memory fixed-window limiter. A key can use the full budget
 // on both sides of a window boundary, so this is traffic shaping rather than a
 // hard security boundary. It is intentionally keyed by authenticated user ID.

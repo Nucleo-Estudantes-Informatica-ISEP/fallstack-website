@@ -18,6 +18,7 @@ services:
       - shared_data
 
   storage-cleanup:
+    stop_grace_period: 90s
     deploy:
       replicas: 1
     labels:
@@ -34,6 +35,8 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       DIRECT_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      PRISMA_CONNECTION_LIMIT: "1"
+      PRISMA_POOL_TIMEOUT_SECONDS: "5"
       S3_ENDPOINT: *minio_endpoint
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure S3_ACCESS_KEY_ID in Coolify}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure S3_SECRET_ACCESS_KEY in Coolify}
@@ -47,6 +50,7 @@ services:
       - shared_data
 
   web:
+    stop_grace_period: 90s
     # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
       replicas: 1
@@ -54,6 +58,11 @@ services:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}
       metrics_service: web
+      traefik.enable: "true"
+      traefik.http.services.web.loadbalancer.server.port: 4000
+      traefik.http.services.web.loadbalancer.healthcheck.path: /api/proxy-ready
+      traefik.http.services.web.loadbalancer.healthcheck.interval: 5s
+      traefik.http.services.web.loadbalancer.healthcheck.timeout: 2s
     build:
       context: .
       dockerfile: Dockerfile
@@ -71,10 +80,14 @@ services:
       migrate:
         condition: service_completed_successfully
     environment:
+      NEXT_MANUAL_SIG_HANDLE: "true"
+      SHOWCASE_FULL_WEBSITE: ${SHOWCASE_FULL_WEBSITE:-false}
       # Runtime-only connection contract for #413; never pass these as build args.
       REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
       DATABASE_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
+      PRISMA_CONNECTION_LIMIT: ${PRISMA_CONNECTION_LIMIT:-3}
+      PRISMA_POOL_TIMEOUT_SECONDS: ${PRISMA_POOL_TIMEOUT_SECONDS:-5}
       # Coolify injects its runtime .env into every service. Keep migrator credentials out of web.
       DIRECT_URL: ${DATABASE_URL:?Configure DATABASE_URL in Coolify}
       JWT_SECRET: ${JWT_SECRET:-${SERVICE_REALBASE64_64_JWT}}
@@ -105,6 +118,7 @@ services:
       ZITADEL_ROLE_ASSIGNER_TOKEN: ${ZITADEL_ROLE_ASSIGNER_TOKEN:?Configure ZITADEL_ROLE_ASSIGNER_TOKEN in Coolify}
 
       # Optional at startup; required together when Google Wallet is enabled.
+      GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: ${GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE:-false}
       GOOGLE_WALLET_NEVER_ENABLED: ${GOOGLE_WALLET_NEVER_ENABLED:-false}
       GOOGLE_WALLET_ISSUER_ID: ${GOOGLE_WALLET_ISSUER_ID:-}
       GOOGLE_WALLET_CLASS_ID: ${GOOGLE_WALLET_CLASS_ID:-}

@@ -26,6 +26,7 @@ export default defineConfig([
       "next-env.d.ts",
       ".claude/worktrees/**",
       "public/sw.js",
+      "public/fallback-*.js",
       "public/workbox-*.js",
     ],
   },

@@ -1,9 +1,10 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:26-alpine AS base
+FROM node:26.13.0-alpine3.24 AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
-RUN apk add --no-cache libc6-compat curl openssl \
+RUN apk upgrade --no-cache \
+  && apk add --no-cache libc6-compat openssl \
   && npm install --global corepack@0.35.0 \
   && corepack enable
 
@@ -47,15 +48,17 @@ FROM deps AS builder
 # once was a real build-time memory-pressure incident. See
 # docker-compose.app.yml's `migrate` service.
 FROM builder AS migrator
+RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 USER nextjs
-CMD ["npx", "prisma", "migrate", "deploy"]
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy"]
 
 # Scheduled retention/orphan worker: reuse installed SDK, Prisma and tsx.
 FROM builder AS storage-cleanup
+RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY tsconfig.json ./
-COPY src/config/env.storage.ts ./src/config/env.storage.ts
+COPY src/config/env.storage.ts src/config/env.database.ts ./src/config/
 COPY src/domain/company/companyVideo.ts ./src/domain/company/companyVideo.ts
-COPY src/application/repositories/database.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
+COPY src/application/repositories/storageCleanupDatabase.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
 COPY src/application/services/objectStorageService.ts src/application/services/storageCleanupService.ts ./src/application/services/
 COPY scripts/storage-cleanup.ts ./scripts/storage-cleanup.ts
 ENV NODE_ENV=production
@@ -108,6 +111,8 @@ RUN --mount=type=cache,id=fallstack-next,target=/app/.next/cache,sharing=locked 
   fi
 
 FROM base AS runner
+# Runtime starts node directly; npm bundles vulnerable libraries outside pnpm.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -122,7 +127,8 @@ USER nextjs
 EXPOSE 4000 9464
 ENV PORT=4000
 ENV HOSTNAME=0.0.0.0
+ENV NEXT_MANUAL_SIG_HANDLE=true
 
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD curl -f http://localhost:4000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 CMD node -e "fetch('http://localhost:4000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
 
 CMD ["node", "server.js"]

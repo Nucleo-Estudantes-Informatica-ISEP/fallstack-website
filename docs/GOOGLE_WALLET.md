@@ -118,9 +118,14 @@ object ID from the configured class ID and student ID, so use a distinct class I
 for every environment. A separate issuer for non-production adds another layer
 of isolation when staging data is cloned from production.
 
-The class should contain only shared Fallstack 2026 presentation data (brand,
-logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by the application.
+The class can stay minimal: only its ID is required. For Generic passes, `logo`,
+`heroImage` and `hexBackgroundColor` are Generic **Object** fields, not class
+fields, so the console class form has no inputs for them. The application sets
+them on every object from `edition.branding.wallet`: images are served from
+`public/google-wallet/` (`logo.png`, square; `hero.png`, 1032×344) at
+`NEXT_PUBLIC_BASE_URL`, so Google must be able to fetch them over public HTTPS.
+Create a **Generic** class; an Event ticket class ID does not work with this
+integration.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create
@@ -276,7 +281,17 @@ not guarantee removal from a user's device or immediate synchronization.
 Issuance and deletion lock the same database user row and re-read the account,
 so an in-flight request cannot recreate or reactivate a deleted student's pass.
 One issuance or deletion operation per user is admitted in each application
-process before database access; PostgreSQL transaction advisory admission also
+process before database access. Combined issuance/deletion concurrency is also
+capped at two per process, or `PRISMA_CONNECTION_LIMIT - 1` when that is
+smaller, leaving one request-pool slot for other traffic during Google I/O. A
+larger pool does not raise the cap. Excess operations
+return 429 before DB access; retry after an admitted operation finishes. With a
+one-slot pool, all Wallet operations are paused by default. Explicitly setting
+`GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` permits one account deletion
+at a time to use the sole connection; issuance remains paused. This can block
+other requests during Google I/O. Session lookups return null and protected
+routes respond 401/403; other database requests can return retryable 503 responses. Prefer at least two slots within the cluster budget.
+See [ADR 0032](decisions/0032-opt-in-single-connection-deletion.md). PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.

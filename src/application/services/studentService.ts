@@ -16,6 +16,7 @@ import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 
+import { countInterestsByIds } from "../repositories/interestRepository";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   connectStudentInterests,
@@ -55,7 +56,7 @@ import {
   publicAvatarUrl,
 } from "./objectStorageService";
 
-type NewStudent = z.infer<typeof postStudentSchema>;
+type NewStudent = z.infer<typeof postStudentSchema> & { name: string };
 type StudentPatch = z.infer<typeof patchStudentSchema>;
 
 export async function createStudentProfile(userId: string, body: NewStudent) {
@@ -79,13 +80,22 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
         userId,
         code,
         name: body.name,
+        course: body.course,
+        privacyPolicyAccepted: body.privacyPolicyAccepted,
+        termsAccepted: body.termsAccepted,
+        privacyPolicyVersion: body.privacyPolicyVersion,
+        termsVersion: body.termsVersion,
+        consentAcceptedAt: new Date(),
         bio: body.bio,
+        linkedin: body.linkedin,
         year: parseStudentYear(body.year),
       },
       tx
     );
     await connectStudentInterests(userId, body.interests, tx);
     await completeAction(code, actionNames.createProfile, tx);
+    if (body.linkedin)
+      await completeAction(code, actionNames.updateLinkedin, tx);
     if (cv) await completeAction(code, actionNames.uploadCv, tx);
     await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
     return student;
@@ -105,11 +115,21 @@ export async function updateStudent(
   code: string,
   body: StudentPatch
 ) {
+  const { interests, ...profile } = body;
+
+  // Unknown ids would make the relation `set` throw inside the transaction
+  // (Prisma P2025) and surface as a 500; reject them as a client error.
+  if (interests) {
+    const ids = new Set(interests);
+    if ((await countInterestsByIds([...ids])) !== ids.size)
+      throw new HttpError("Unknown interest id", 400);
+  }
+
   return withTransaction(async (tx) => {
-    const student = await updateStudentProfile(code, body, tx);
+    const student = await updateStudentProfile(code, profile, tx);
     if (student.linkedin)
       await completeAction(code, actionNames.updateLinkedin, tx);
-    if (body.interests) await setStudentInterests(userId, body.interests, tx);
+    if (interests) await setStudentInterests(userId, interests, tx);
     return student;
   });
 }

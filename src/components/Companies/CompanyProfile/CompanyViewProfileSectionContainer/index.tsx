@@ -103,7 +103,7 @@ const CompanyViewProfileSectionContainer: React.FC<
                 <button
                   onClick={handleSaveProfile}
                   disabled={isPending}
-                  className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary/100 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-primary px-3 font-bold hover:scale-105 hover:bg-primary hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isPending ? "A guardar..." : "+ Salvar Perfil"}
                 </button>

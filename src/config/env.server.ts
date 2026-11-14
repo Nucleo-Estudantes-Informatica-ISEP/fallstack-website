@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { databaseEnvSchema } from "./env.database";
+import { redisEnvSchema } from "./env.redis";
 import { storageEnvSchema } from "./env.storage";
 
 const optionalNonEmptyString = z.preprocess(
@@ -12,9 +14,15 @@ const optionalNonEmptyString = z.preprocess(
 // Secrets and server-only config for PostgreSQL/MinIO and AuthNEI.
 const serverEnvSchema = z.object({
   ...storageEnvSchema.shape,
+  ...databaseEnvSchema.shape,
+  ...redisEnvSchema.shape,
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  SHOWCASE_FULL_WEBSITE: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   JWT_SECRET: z
     .string()
     .min(32, "JWT_SECRET must be at least 32 characters long"),
@@ -36,6 +44,14 @@ const serverEnvSchema = z.object({
   // Optional at process level so non-Wallet environments still boot. The
   // Wallet endpoint requires all three together and responds 503 otherwise.
   GOOGLE_WALLET_NEVER_ENABLED: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true")
+  ),
+  // Explicitly accept sole-slot occupancy during account revocation.
+  GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: z.preprocess(
     (value) => (value === "" ? undefined : value),
     z
       .enum(["true", "false"])

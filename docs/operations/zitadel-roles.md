@@ -71,3 +71,12 @@ keep authorization codes, tokens, cookies, and secrets out of logs and PRs.
 These checks require the hosted identity provider and real role assignments.
 Local application tests cannot reproduce ZITADEL's automatic scope injection;
 record the environment and checks actually performed in the PR.
+
+## Redirect configuration
+
+For each deployed environment, set `AUTH_REDIRECT_URI` to the site's
+`/api/auth/callback/zitadel` URL and `AUTH_POST_LOGOUT_REDIRECT_URI` to its
+desired post-logout destination. Register those exact values in the AuthNEI
+application's Redirect URIs and Post Logout URIs respectively. A trailing
+slash is significant. After changing deployment variables, redeploy the app;
+verify login and logout through the public hostname.

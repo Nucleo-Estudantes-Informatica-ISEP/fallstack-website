@@ -15,9 +15,9 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Stock Compose rejects this Coolify-only extension.
-sed '/^[[:space:]]*exclude_from_hc:/d' docker-compose.app.yml > "$scratch/source.yml"
-# A stale/mistaken environment knob must not change the Coolify-facing counts.
+# Use the stock-Compose variant; Coolify-only extensions stay in the deploy file.
+cp docker-compose.local.yml "$scratch/source.yml"
+# Stale environment knobs must not change the local Compose replica defaults.
 WEB_REPLICAS=3 REDIS_URL=redis://:release-check@redis:6379 REDIS_NETWORK_NAME=release-check \
   REDIS_KEY_PREFIX=fallstack:check: \
   docker compose --env-file .env.example -p "$project" \
@@ -35,12 +35,19 @@ const services = {};
 for (const [name, command] of Object.entries(commands)) {
   const service = config.services[name];
   assert.equal(service.deploy.replicas, 1);
+  // Keep only dependencies that are part of this isolated release-ordering
+  // fixture. Infrastructure services are validated by the Compose regression test.
+  const dependencies = Object.fromEntries(
+    Object.entries(service.depends_on ?? {}).filter(([dependency]) =>
+      Object.hasOwn(commands, dependency)
+    )
+  );
   services[name] = {
     image: 'alpine:3.23',
     command: ['sh', '-ec', command],
     deploy: service.deploy,
     restart: service.restart,
-    depends_on: service.depends_on,
+    depends_on: dependencies,
     volumes: ['audit:/audit'],
     network_mode: 'none',
   };

@@ -20,7 +20,7 @@ for entry in "dev:$REDIS_DEV_CONTAINER" "main:$REDIS_MAIN_CONTAINER"; do
   name=${entry#*:}
   # Stopped or unreachable Redis fails the exec and counts as unhealthy.
   if timeout 5 docker exec "$name" sh -c \
-    'REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli ping | grep -q PONG' \
+    'test -n "${REDIS_PASSWORD:-}" && reply=$(REDISCLI_AUTH="$REDIS_PASSWORD" redis-cli --raw -e ping) && [ "$reply" = PONG ]' \
     >/dev/null 2>&1; then
     healthy=1
   else

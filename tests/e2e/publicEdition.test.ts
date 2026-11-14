@@ -10,7 +10,10 @@ const measurement = vi.hoisted(() => ({ operations: 0 }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/application/repositories/database", async () => {
   const { PrismaClient } = await import("@prisma/client");
-  const db = new PrismaClient().$extends({
+  const { singleConnectionDatabaseUrl } = await import("@/config/env.database");
+  const db = new PrismaClient({
+    datasourceUrl: singleConnectionDatabaseUrl(),
+  }).$extends({
     query: {
       $allModels: {
         $allOperations({ args, query }) {
