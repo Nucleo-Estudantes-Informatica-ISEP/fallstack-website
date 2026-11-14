@@ -15,6 +15,7 @@ const Sponsor: React.FC<SponsorProps> = ({ logoHref, name, website }) => {
   const logo = (
     <div className="relative size-[85%] sm:size-[90%]">
       <Image
+        unoptimized={logoHref.startsWith("/api/media/logo/")}
         className="rounded-[5px] object-contain"
         src={logoHref}
         alt={name}
