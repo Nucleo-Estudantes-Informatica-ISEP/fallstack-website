@@ -7,6 +7,7 @@ import CountdownLanding from "@/components/CountdownLanding";
 import FeaturedCompanies from "@/components/FeaturedCompanies";
 import HomePage from "@/components/HomePage";
 import HomepageSection from "@/components/HomepageSection";
+import OffseasonLanding from "@/components/OffseasonLanding";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
@@ -19,6 +20,9 @@ const App = async ({ searchParams }: AppProps) => {
     lang,
     (await headers()).get("accept-language")
   );
+  if (serverEnv.EVENT_MODE === "offseason") {
+    return <OffseasonLanding language={language} />;
+  }
   if (serverEnv.SHOWCASE_FULL_WEBSITE) {
     const sections = Object.fromEntries(
       (["schedule", "companies", "sponsors", "faqs"] as const).map(

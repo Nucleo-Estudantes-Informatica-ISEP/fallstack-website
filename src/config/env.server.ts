@@ -23,6 +23,7 @@ const serverEnvSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  EVENT_MODE: z.enum(["active", "offseason"]).default("active"),
   JWT_SECRET: z
     .string()
     .min(32, "JWT_SECRET must be at least 32 characters long"),
