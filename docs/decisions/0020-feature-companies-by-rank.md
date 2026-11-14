@@ -29,10 +29,5 @@ the existing public company-cache invalidation. Page and video entitlements
 remain independent. A company-data failure hides only the partner row while
 the landing page remains available.
 
-## Logo sizing
-
-Partner tier cards use uniform bounds and ignore the stored per-company logo
-width, height and CSS overrides. Retain those fields and the display-style API
-for compatibility and to preserve existing data; callers must not expect them
-to affect tier cards. A future removal requires a separately planned migration
-and API retirement.
+Logo sizing and compatibility are recorded separately in
+[ADR 0038](0038-use-uniform-partner-logo-bounds.md).

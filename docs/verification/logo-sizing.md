@@ -12,8 +12,8 @@ Footer artwork is capped at 192 px; 28 px social artwork retains 44 px
 minimum link targets. The install control uses its normal icon size inside a
 44 px target. Help and section titles use 30/36 px responsive type.
 
-These are implementation choices following the supplied Figma proportions;
-they are not a claim of Ricardo's approval. No content, colors or dates change.
+These are implementation choices following the supplied Figma proportions.
+No content, colors or dates change.
 
 ## Required staging review
 
@@ -52,36 +52,13 @@ retained in the local browser artifacts directory. Existing black artwork
 (e.g. ARMIS/ITSector) has low contrast on the dark background; sizing does not
 alter supplied artwork or brand colors.
 
-Ricardo's confirmation is accepted as supplied by the user in this session;
-no independent message from Ricardo approving this revision was inspected.
+## Production upload summary — 13 November 2026
 
-## Production upload trace — 13 November 2026
-
-Read-only verification against the public production `/api/companies/roster`
-response identified these rows and media URLs. The media route maps each logo
-UUID to `distribution/logo/<UUID>` in the configured logo bucket.
-
-| Company        | Company ID                             | Uploaded object key                                      |
-| -------------- | -------------------------------------- | -------------------------------------------------------- |
-| GILT           | `c082e04e-1abc-489c-8cb8-ab362672b137` | `distribution/logo/1620f233-b33a-4fd5-b2cf-5e7e2975aa87` |
-| Virtual Campus | `38f036c7-0a5d-4f9d-af0a-d87329d22f89` | `distribution/logo/967578c4-07b0-47b1-a159-e877d0816f34` |
-| AIESEC         | `6f91e8b8-e61c-4fe3-984e-7173f30d72ea` | `distribution/logo/db2c4f43-2d96-435f-8a53-cdbee8f133b6` |
-| NBanks         | `9359b51b-a678-4794-9f9a-e6293a4c08f0` | `distribution/logo/db5d43b3-cd2a-49b1-9429-2bec25f1476e` |
-
-The original upload session recorded the previous logo value as empty for all
-four rows. It did not retain whether that empty value was SQL NULL or an empty
-string, nor an independent before-state export. The current roster verifies
-row/media identity, not that historical state. To revert the recorded content
-change, clear only the listed company's logo association through the admin;
-check current use before removing any storage object.
-
-Production upload authorization is recorded in the original task on
-11 November 2026: the user requested adding the missing logos from Drive and
-instructed not to add them again where they already existed. That task also
-explicitly instructed accepting Ricardo's confirmation and proceeding. Treat
-that as owner-accepted sign-off; no direct message from Ricardo approving this
-revision was inspected. This follow-up only reads public production data and
-makes no production content changes.
+Four company rows received missing logos: GILT, Virtual Campus, AIESEC and
+NBanks. The row identifiers, object keys, authorization record and reversal
+notes are retained in the [PR #557 description](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/pull/557).
+The original upload session recorded empty previous logo values but did not
+retain their exact SQL representation or an independent before-state export.
 
 ## Follow-up verification — 13 November 2026
 
