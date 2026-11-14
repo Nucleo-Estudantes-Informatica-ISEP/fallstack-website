@@ -9,6 +9,7 @@ import { serverEnv } from "@/config/env.server";
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
 const APP_SESSION_TTL_SECONDS = 8 * 60 * 60;
+const NEI_MEMBER_SESSION_TTL_SECONDS = 5 * 60;
 const OIDC_STATE_TTL_SECONDS = 10 * 60;
 
 export const oidcCookieNames = {
@@ -57,6 +58,7 @@ export interface ZitadelIdentity {
   emailVerified: boolean;
   isEmployee: boolean;
   isGlobalAdmin: boolean;
+  isNeiMember?: boolean;
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
@@ -66,6 +68,7 @@ export interface AppSessionClaims extends jwt.JwtPayload {
   name?: string;
   employee: boolean;
   admin: boolean;
+  neiMember?: boolean;
 }
 
 let discoveryPromise: Promise<OidcDiscovery> | undefined;
@@ -133,6 +136,20 @@ function roleKeys(value: RoleClaim): string[] {
   if (Array.isArray(value)) return value.map(String);
   if (typeof value === "string") return [value];
   return Object.keys(value);
+}
+
+export function mapIdentityRoles(
+  claims: Record<string, unknown>,
+  employeeClaim: string,
+  globalClaim: string
+) {
+  const employeeRoles = roleKeys(claims[employeeClaim] as RoleClaim);
+  const globalRoles = roleKeys(claims[globalClaim] as RoleClaim);
+  return {
+    isEmployee: employeeRoles.includes("employee"),
+    isGlobalAdmin: globalRoles.includes("admin"),
+    isNeiMember: globalRoles.includes("nei-member"),
+  };
 }
 
 function safeNext(value: string | null | undefined) {
@@ -302,21 +319,17 @@ export async function completeAuthorizationCode(input: {
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 
-  const employeeRoles = roleKeys(
-    claims[serverEnv.AUTH_ROLE_CLAIM] as RoleClaim
-  );
-  const globalRoles = roleKeys(
-    claims[serverEnv.AUTH_GLOBAL_ROLE_CLAIM] as RoleClaim
-  );
-
   return {
     sub,
     email,
     loginName,
     name,
     emailVerified,
-    isEmployee: employeeRoles.includes("employee"),
-    isGlobalAdmin: globalRoles.includes("admin"),
+    ...mapIdentityRoles(
+      claims,
+      serverEnv.AUTH_ROLE_CLAIM,
+      serverEnv.AUTH_GLOBAL_ROLE_CLAIM
+    ),
   };
 }
 
@@ -328,6 +341,7 @@ export function signAppSession(identity: ZitadelIdentity) {
       name: identity.name,
       employee: identity.isEmployee,
       admin: identity.isGlobalAdmin,
+      neiMember: identity.isNeiMember === true,
     },
     serverEnv.AUTH_SECRET,
     {
@@ -335,7 +349,9 @@ export function signAppSession(identity: ZitadelIdentity) {
       subject: identity.sub,
       issuer: APP_SESSION_ISSUER,
       audience: APP_SESSION_AUDIENCE,
-      expiresIn: APP_SESSION_TTL_SECONDS,
+      expiresIn: identity.isNeiMember
+        ? NEI_MEMBER_SESSION_TTL_SECONDS
+        : APP_SESSION_TTL_SECONDS,
     }
   );
 }
@@ -348,6 +364,13 @@ export function verifyAppSession(token: string): AppSessionClaims | null {
       audience: APP_SESSION_AUDIENCE,
     });
     if (typeof claims === "string" || !claims.sub || !claims.email) return null;
+    // Also bound member cookies issued before the shorter TTL was deployed.
+    if (
+      claims.neiMember === true &&
+      (typeof claims.iat !== "number" ||
+        Date.now() / 1000 - claims.iat >= NEI_MEMBER_SESSION_TTL_SECONDS)
+    )
+      return null;
     return claims as AppSessionClaims;
   } catch {
     return null;
