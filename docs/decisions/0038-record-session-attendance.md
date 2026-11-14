@@ -1,4 +1,4 @@
-# 0037: Record session attendance
+# 0038: Record session attendance
 
 Status: Accepted
 Date: 2026-11-13
