@@ -11,9 +11,6 @@ interface EmployeeSignUpFormProps {
   onSuccess?: () => void;
 }
 
-const fieldClassName =
-  "!rounded-lg !border-[rgba(255,255,255,0.35)] bg-transparent px-3 py-2 text-white placeholder:text-gray-500 sm:py-3";
-
 const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
   onSuccess,
 }) => {
@@ -57,7 +54,6 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
           placeholder="João Silva"
           value={form.name}
           onChange={onChange("name")}
-          className={fieldClassName}
           required
         />
       </div>
@@ -67,7 +63,6 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
           placeholder="https://linkedin.com/in/..."
           value={form.linkedin}
           onChange={onChange("linkedin")}
-          className={fieldClassName}
         />
       </div>
       <div className="w-full">
@@ -76,7 +71,6 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
           placeholder="fs_emp_..."
           value={form.companyCode}
           onChange={onChange("companyCode")}
-          className={fieldClassName}
           autoComplete="off"
           required
         />
@@ -90,7 +84,8 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
         loading={loading}
         type="submit"
         disabled={!canSubmit}
-        className="flex! w-full cursor-pointer items-center! justify-center! rounded-lg! bg-[#B1440A]! px-3! py-3 text-[17px]! font-semibold tracking-normal! hover:bg-[#8d3508]! disabled:cursor-not-allowed disabled:bg-[#3d1806]! sm:py-4 sm:text-[19px]!"
+        variant="form"
+        className="mt-2 h-12 w-full font-semibold lg:h-16 lg:text-xl"
       >
         Associar à empresa
       </PrimaryButton>
