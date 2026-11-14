@@ -280,6 +280,9 @@ context.
 
 ## k6 load test
 
+For the 1,200-arrival, 200-heavy-user and multi-copy saturation matrix, use
+[the capacity test guide](../../docs/testing/capacity-targets.md).
+
 Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) separately.
 The script refuses to run without an explicit non-production confirmation.
 
