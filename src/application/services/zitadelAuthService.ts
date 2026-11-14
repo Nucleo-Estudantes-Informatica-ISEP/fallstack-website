@@ -57,6 +57,7 @@ export interface ZitadelIdentity {
   emailVerified: boolean;
   isEmployee: boolean;
   isGlobalAdmin: boolean;
+  isNeiMember?: boolean;
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
@@ -66,6 +67,7 @@ export interface AppSessionClaims extends jwt.JwtPayload {
   name?: string;
   employee: boolean;
   admin: boolean;
+  neiMember?: boolean;
 }
 
 let discoveryPromise: Promise<OidcDiscovery> | undefined;
@@ -133,6 +135,20 @@ function roleKeys(value: RoleClaim): string[] {
   if (Array.isArray(value)) return value.map(String);
   if (typeof value === "string") return [value];
   return Object.keys(value);
+}
+
+export function mapIdentityRoles(
+  claims: Record<string, unknown>,
+  employeeClaim: string,
+  globalClaim: string
+) {
+  const employeeRoles = roleKeys(claims[employeeClaim] as RoleClaim);
+  const globalRoles = roleKeys(claims[globalClaim] as RoleClaim);
+  return {
+    isEmployee: employeeRoles.includes("employee"),
+    isGlobalAdmin: globalRoles.includes("admin"),
+    isNeiMember: globalRoles.includes("nei-member"),
+  };
 }
 
 function safeNext(value: string | null | undefined) {
@@ -302,21 +318,17 @@ export async function completeAuthorizationCode(input: {
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 
-  const employeeRoles = roleKeys(
-    claims[serverEnv.AUTH_ROLE_CLAIM] as RoleClaim
-  );
-  const globalRoles = roleKeys(
-    claims[serverEnv.AUTH_GLOBAL_ROLE_CLAIM] as RoleClaim
-  );
-
   return {
     sub,
     email,
     loginName,
     name,
     emailVerified,
-    isEmployee: employeeRoles.includes("employee"),
-    isGlobalAdmin: globalRoles.includes("admin"),
+    ...mapIdentityRoles(
+      claims,
+      serverEnv.AUTH_ROLE_CLAIM,
+      serverEnv.AUTH_GLOBAL_ROLE_CLAIM
+    ),
   };
 }
 
@@ -328,6 +340,7 @@ export function signAppSession(identity: ZitadelIdentity) {
       name: identity.name,
       employee: identity.isEmployee,
       admin: identity.isGlobalAdmin,
+      neiMember: identity.isNeiMember === true,
     },
     serverEnv.AUTH_SECRET,
     {

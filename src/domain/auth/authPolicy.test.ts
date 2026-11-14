@@ -58,9 +58,44 @@ test("employee policy requires EMPLOYEE role with an employee's company", () => 
   );
 });
 
+test("staff policy allows nei-members and admins but not students", () => {
+  const employeeSession: AuthPolicySession = {
+    role: "EMPLOYEE",
+    adminRole: null,
+    student: null,
+    employee: { company: { id: "company-1" } },
+  };
+  assert.equal(passesAuthPolicy("staff", employeeSession), false);
+  assert.equal(
+    passesAuthPolicy("staff", {
+      ...employeeSession,
+      neiMember: true,
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
+    true
+  );
+  assert.equal(
+    passesAuthPolicy("staff", { ...employeeSession, employee: null }),
+    false
+  );
+  assert.equal(
+    passesAuthPolicy("staff", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
+    true
+  );
+  assert.equal(passesAuthPolicy("staff", studentSession), false);
+});
+
 test("admin policy accepts either admin tier", () => {
   assert.equal(
-    passesAuthPolicy("admin", { ...studentSession, adminRole: "ADMIN" }),
+    passesAuthPolicy("admin", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     true
   );
   assert.equal(
@@ -82,7 +117,11 @@ test("superadmin policy requires SUPER_ADMIN specifically", () => {
     true
   );
   assert.equal(
-    passesAuthPolicy("superadmin", { ...studentSession, adminRole: "ADMIN" }),
+    passesAuthPolicy("superadmin", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     false
   );
   assert.equal(passesAuthPolicy("superadmin", studentSession), false);
@@ -107,9 +146,41 @@ test("every non-public policy rejects a missing session", () => {
     "session",
     "student",
     "employee",
+    "staff",
     "admin",
     "superadmin",
   ] as const) {
     assert.equal(passesAuthPolicy(policy, null), false);
   }
 });
+
+test.each([null, "ADMIN", "SUPER_ADMIN"] as const)(
+  "bounds attendance freshness for %s",
+  (adminRole) => {
+    const session = {
+      ...studentSession,
+      adminRole,
+      neiMember: adminRole === null,
+    };
+    for (const attendanceExpiresAt of [
+      undefined,
+      0,
+      Date.now() - 1,
+      Date.now(),
+    ]) {
+      assert.equal(
+        passesAuthPolicy("staff", { ...session, attendanceExpiresAt }),
+        false
+      );
+    }
+    assert.equal(
+      passesAuthPolicy("staff", {
+        ...session,
+        attendanceExpiresAt: Date.now() + 10000,
+      }),
+      true
+    );
+    assert.equal(passesAuthPolicy("session", session), true);
+    if (adminRole) assert.equal(passesAuthPolicy("admin", session), true);
+  }
+);

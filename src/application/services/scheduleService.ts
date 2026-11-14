@@ -12,6 +12,7 @@ import {
   findAllScheduleEvents,
   findScheduleEventById,
   findScheduleEventsForAdmin,
+  isScheduleDeletionConflict,
   isUniqueSchedulePositionError,
   updateScheduleEvent,
   type AdminScheduleQuery,
@@ -209,7 +210,16 @@ export async function updateScheduleEventForAdmin(
 
 export async function deleteScheduleEventForAdmin(id: string) {
   if (!(await findScheduleEventById(id))) throw new HttpError("Not found", 404);
-  await afterPublicDataWrite("schedule", deleteScheduleEvent(id));
+  try {
+    await afterPublicDataWrite("schedule", deleteScheduleEvent(id));
+  } catch (error) {
+    if (isScheduleDeletionConflict(error))
+      throw new HttpError(
+        "Cannot delete a session with attendance records.",
+        409
+      );
+    throw error;
+  }
 }
 
 // The admin board already disables "Guardar" while any row is
