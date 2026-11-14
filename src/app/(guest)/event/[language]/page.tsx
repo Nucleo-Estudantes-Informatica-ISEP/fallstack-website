@@ -6,6 +6,7 @@ import CountdownLanding from "@/components/CountdownLanding";
 import FeaturedCompanies from "@/components/FeaturedCompanies";
 import HomePage from "@/components/HomePage";
 import HomepageSection from "@/components/HomepageSection";
+import OffseasonLanding from "@/components/OffseasonLanding";
 import {
   getPublicCompanyRoster,
   getPublicFaqs,
@@ -29,6 +30,9 @@ export default async function EventPage({
   const { language: slug } = await params;
   if (slug !== "pt" && slug !== "en") notFound();
   const language = slug === "pt" ? Language.PT : Language.EN;
+  if (serverEnv.EVENT_MODE === "offseason") {
+    return <OffseasonLanding language={language} />;
+  }
   if (serverEnv.SHOWCASE_FULL_WEBSITE) {
     const [schedule, companies, sponsors, faqs] = await Promise.all([
       getPublicSchedule(language),

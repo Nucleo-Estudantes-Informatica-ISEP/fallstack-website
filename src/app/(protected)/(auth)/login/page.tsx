@@ -1,3 +1,4 @@
+import { serverEnv } from "@/config/env.server";
 import LoginCard from "@/components/LoginCard";
 
 interface LoginPageProps {
@@ -10,7 +11,10 @@ interface LoginPageProps {
 const LoginPage = async ({ searchParams }: LoginPageProps) => {
   const { modal } = await searchParams;
   return (
-    <LoginCard initialView={modal === "employee" ? "employee" : undefined} />
+    <LoginCard
+      initialView={modal === "employee" ? "employee" : undefined}
+      offseason={serverEnv.EVENT_MODE === "offseason"}
+    />
   );
 };
 
