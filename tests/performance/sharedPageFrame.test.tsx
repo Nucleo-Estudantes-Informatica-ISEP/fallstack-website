@@ -5,8 +5,9 @@ import { renderToString } from "react-dom/server";
 import { expect, test, vi } from "vitest";
 import { z } from "zod";
 
-import GuestLayout from "../../src/app/(guest)/layout";
-import RootLayout from "../../src/app/layout";
+import DocumentLayout from "@/components/DocumentLayout";
+import GuestLayout from "@/components/GuestLayout";
+
 import {
   sanitizeSentryEvent,
   sanitizeSentryLog,
@@ -16,7 +17,6 @@ import * as Sentry from "@sentry/nextjs";
 
 vi.mock("client-only", () => ({}));
 
-vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/privacy-policy" }));
 
 const env = z
@@ -42,7 +42,7 @@ test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
   "measure shared SSR frame and error-tracking candidates",
   async () => {
     const child = <section>Measurement</section>;
-    const frame = await RootLayout({
+    const frame = DocumentLayout({
       children: GuestLayout({ children: child }),
     });
     const render = () => renderToString(frame);
@@ -100,7 +100,7 @@ test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1")(
 test.skipIf(env.RUN_PAGE_FRAME_BENCHMARK !== "1" || !env.PAGE_FRAME_BASE_URL)(
   "measure warm production HTTP frame",
   async () => {
-    const url = new URL("/privacy-policy", env.PAGE_FRAME_BASE_URL);
+    const url = new URL("/login", env.PAGE_FRAME_BASE_URL);
     const results = [];
     const nonces = new Set<string>();
     for (const pass of ["rep1", "rep2"]) {

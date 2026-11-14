@@ -9,9 +9,14 @@ export const INSTANCE_ID_HEADER = "x-instance-id";
 
 export const instanceId = crypto.randomUUID().slice(0, 8);
 
-/** Paths where middleware sets the CSP nonce: HTML pages, not API routes. */
+const publicDocuments =
+  /^\/(?:about|privacy-policy|terms|event\/(?:pt|en))\/?$/;
+
+/** Paths where middleware sets the CSP nonce. */
 export function needsCsp(pathname: string, headers: Headers): boolean {
-  if (pathname === "/api" || pathname.startsWith("/api/")) return false;
+  if (publicDocuments.test(pathname)) return false;
+  if (pathname === "/" || pathname === "/api" || pathname.startsWith("/api/"))
+    return false;
   if (headers.has("next-router-prefetch")) return false;
   return headers.get("purpose") !== "prefetch";
 }

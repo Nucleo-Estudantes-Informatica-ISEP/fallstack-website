@@ -36,25 +36,21 @@ test("homepage HTML/RSC and public JSON bypass Workbox cache for both languages,
 
 test("homepage navigation, language variants and RSC bypass old document caches", () => {
   const [rule] = publicDataRuntimeCaching;
-  for (const query of [
-    "",
-    "?lang=PT",
-    "?lang=EN",
-    "?_rsc=abc",
-    "?lang=EN&_rsc=abc",
-  ]) {
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://example.com/${query}`),
-        sameOrigin: true,
-      })
-    ).toBe(true);
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://elsewhere.com/${query}`),
-        sameOrigin: false,
-      })
-    ).toBe(false);
+  for (const path of ["/", "/event/pt", "/event/en"]) {
+    for (const query of ["", "?lang=EN", "?_rsc=abc"]) {
+      expect(
+        rule.urlPattern({
+          url: new URL(`${path}${query}`, "https://example.com"),
+          sameOrigin: true,
+        })
+      ).toBe(true);
+      expect(
+        rule.urlPattern({
+          url: new URL(`${path}${query}`, "https://elsewhere.com"),
+          sameOrigin: false,
+        })
+      ).toBe(false);
+    }
   }
 });
 

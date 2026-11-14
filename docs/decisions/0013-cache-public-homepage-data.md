@@ -1,5 +1,8 @@
 # 0013: Cache public homepage data
 
+[ADR 0038](0038-cache-public-html-by-language.md) amends the HTML rendering,
+failure and caching behavior described here.
+
 Status: Accepted
 Date: 2026-10-19
 Source: [Public read caching](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/415), [Server-loaded homepage](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/416)

@@ -170,7 +170,7 @@ function visitHomepage() {
   const visitor = profile === "smoke" ? __ITER + 1 : __VU;
   const cookie = visitorCookie(visitor, studentCookies);
   const headers = cookie ? { Cookie: cookie } : {};
-  const page = http.get(`${baseUrl}/`, {
+  const page = http.get(`${baseUrl}/event/pt`, {
     headers,
     tags: { name: "homepage", kind: "core" },
   });
