@@ -1,6 +1,13 @@
 import { expect, test } from "./fixtures";
 
-const HOME_PATH = "/";
+const NONCE_PATH = "/login";
+const CACHEABLE_DOCUMENTS = [
+  "/event/pt",
+  "/event/en",
+  "/about",
+  "/privacy-policy",
+  "/terms",
+];
 
 function parseDirectives(csp: string): Map<string, string[]> {
   const map = new Map<string, string[]>();
@@ -13,10 +20,10 @@ function parseDirectives(csp: string): Map<string, string[]> {
   return map;
 }
 
-test("home page emits an enforced CSP header with per-request nonce and removes report-only mode", async ({
+test("login emits an enforced CSP header with a fresh nonce per document", async ({
   page,
 }) => {
-  const response = await page.goto(HOME_PATH);
+  const response = await page.goto(NONCE_PATH);
 
   expect(response).not.toBeNull();
   expect(response!.status()).toBe(200);
@@ -48,19 +55,61 @@ test("home page emits an enforced CSP header with per-request nonce and removes 
   expect(imgSrcValues.some((v) => v.toLowerCase().includes("svg"))).toBe(false);
 
   expect(csp).not.toContain("report-uri");
+  expect(await response!.text()).toContain(
+    `nonce="${csp.match(/'nonce-([^']+)'/)![1]}"`
+  );
+  const reload = await page.reload();
+  expect(reload!.headers()["content-security-policy"]).not.toBe(csp);
 });
 
-test("X-Frame-Options is DENY, consistent with frame-ancestors 'none'", async ({
+test("cacheable public documents omit CSP and retain X-Frame-Options", async ({
+  request,
+}) => {
+  for (const path of CACHEABLE_DOCUMENTS) {
+    const response = await request.get(path);
+    expect(response.status()).toBe(200);
+    const headers = response.headers();
+    expect(headers["content-type"]).toContain("text/html");
+    expect(headers["content-security-policy"]).toBeUndefined();
+    expect(headers["content-security-policy-report-only"]).toBeUndefined();
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["set-cookie"]).toBeUndefined();
+    expect(await response.text()).not.toMatch(/\bnonce="[^"]+"/);
+  }
+});
+
+test("navigating from the public homepage to login loads a protected document", async ({
   page,
 }) => {
-  const response = await page.goto(HOME_PATH);
+  await page.goto("/event/pt");
+  const document = page.waitForResponse(
+    (response) =>
+      response.request().isNavigationRequest() &&
+      new URL(response.url()).pathname === NONCE_PATH
+  );
+  await page.getByRole("link", { name: "Iniciar sessão" }).click();
+  const response = await document;
+  expect(response.headers()["content-security-policy"]).toContain(
+    "'strict-dynamic'"
+  );
+});
 
-  expect(response).not.toBeNull();
-  const headers = response!.headers();
-
-  // Both the legacy header and the CSP directive must deny framing.
-  // SAMEORIGIN would contradict frame-ancestors 'none'.
-  expect(headers["x-frame-options"]).toBe("DENY");
+test("the homepage URL preserves Accept-Language and explicit language links", async ({
+  request,
+}) => {
+  for (const [path, locale, target] of [
+    ["/", "en-GB", "/event/en"],
+    ["/", "pt-PT", "/event/pt"],
+    ["/?lang=EN", "pt-PT", "/event/en"],
+  ]) {
+    const response = await request.get(path, {
+      headers: { "Accept-Language": locale },
+      maxRedirects: 0,
+    });
+    expect(response.status()).toBe(307);
+    expect(response.headers().location).toBe(target);
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  }
 });
 
 test("critical public and guest routes load without CSP violations under enforcement", async ({
@@ -103,7 +152,7 @@ test("critical public and guest routes load without CSP violations under enforce
   });
 
   const guestRoutes = [
-    { path: "/", waitSelector: "#main-content" },
+    { path: "/event/pt", waitSelector: "#main-content" },
     { path: "/about", waitSelector: "#main-content" },
     { path: "/privacy-policy", waitSelector: "#main-content" },
     {

@@ -128,11 +128,7 @@ async function main() {
       outgoing.writeHead(400).end();
       return;
     }
-    const allowedQueryKeys = new Set([
-      "partNumber",
-      "uploadId",
-      "x-id",
-    ]);
+    const allowedQueryKeys = new Set(["partNumber", "uploadId", "x-id"]);
     for (const [key, value] of parsedTarget.searchParams) {
       if (!allowedQueryKeys.has(key) || value.length > 512) {
         outgoing.writeHead(400).end();

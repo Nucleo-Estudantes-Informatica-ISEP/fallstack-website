@@ -46,7 +46,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
       <div className="flex flex-col items-center px-6 pt-6 pb-8">
         <div className="rounded-xl bg-white p-4 shadow-lg">
           {loading ? (
-            <div className="inline-block size-40 animate-spin rounded-full border-4 border-solid border-[#ED8326] border-r-transparent" />
+            <div className="inline-block size-40 animate-spin rounded-full border-4 border-solid border-ui-highlight border-r-transparent" />
           ) : qrValue ? (
             <QRCodeSVG value={qrValue} size={180} />
           ) : (
@@ -58,7 +58,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
         {code && (
           <button
             onClick={onCopy}
-            className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-[#ED8326] hover:text-[#ED8326]"
+            className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-ui-highlight hover:text-ui-highlight"
           >
             <FiClipboard className="size-4" />
             <span className="font-mono">{code}</span>
@@ -68,7 +68,7 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
         {onRefresh && (
           <button
             onClick={onRefresh}
-            className="mt-4 flex items-center gap-2 rounded-md bg-[#ED8326] px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
+            className="mt-4 flex items-center gap-2 rounded-md bg-ui-highlight px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
           >
             <FiRefreshCw className="size-4" />
             Atualizar QR Code

@@ -4,7 +4,7 @@ import { FunctionComponent, useState } from "react";
 import { toast } from "react-toastify";
 
 import ConfettiEffect from "@/components/ConfettiEffect";
-import { pickGiveawayWinner } from "@/app/(admin)/giveaway/actions";
+import { pickGiveawayWinner } from "@/app/(protected)/(admin)/giveaway/actions";
 
 interface GiveawayStudent {
   id: string;

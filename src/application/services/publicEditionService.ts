@@ -75,13 +75,3 @@ export const getPublicCompanyRoster = (language: Language) =>
       reportLoadError("companies")
     )
   );
-
-export async function readHomepageSection<T>(
-  read: Promise<readonly T[]>
-): Promise<readonly T[]> {
-  try {
-    return await read;
-  } catch {
-    return [];
-  }
-}

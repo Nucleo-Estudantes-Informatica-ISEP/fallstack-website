@@ -1,5 +1,3 @@
-import type { APIRequestContext } from "@playwright/test";
-
 /** Response header set by `src/middleware.ts`; one opaque value per web copy. */
 export const INSTANCE_ID_HEADER = "x-instance-id";
 
