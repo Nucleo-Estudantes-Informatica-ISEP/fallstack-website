@@ -57,7 +57,7 @@ test("keyset pagination survives deletion, equal timestamps, and newer inserts w
   });
   const remaining = await findCompanyHistoryPage(company.id, {
     studentId: last.studentId,
-    createdAt: last.createdAt.toISOString(),
+    createdAt: last.createdAt,
   });
   expect(remaining.map((row) => row.studentId)).toEqual(
     sorted.slice(15).map((row) => row.id)

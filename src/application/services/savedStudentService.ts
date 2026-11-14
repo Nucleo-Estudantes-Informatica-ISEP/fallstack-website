@@ -1,5 +1,3 @@
-import type { CompanyHistoryCursor } from "@/schemas/companyHistoryCursorSchema";
-
 import "server-only";
 
 import { Email } from "@/types/Email";
@@ -158,7 +156,7 @@ export const getCompanyHistory = (companyId: string) =>
   findCompanyHistory(companyId);
 export async function getCompanyHistoryPage(
   companyId: string,
-  cursor?: CompanyHistoryCursor
+  cursor?: { createdAt: Date; studentId: string }
 ) {
   const records = await findCompanyHistoryPage(companyId, cursor);
   return {

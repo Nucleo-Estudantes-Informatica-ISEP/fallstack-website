@@ -1,5 +1,3 @@
-import type { CompanyHistoryCursor } from "@/schemas/companyHistoryCursorSchema";
-
 import "server-only";
 
 import { Prisma } from "@prisma/client";
@@ -93,18 +91,15 @@ export const findCompanyHistory = (companyId: string) =>
 
 export const findCompanyHistoryPage = (
   companyId: string,
-  cursor?: CompanyHistoryCursor
+  cursor?: { createdAt: Date; studentId: string }
 ) =>
   prisma.savedStudent.findMany({
     where: {
       companyId,
       ...(cursor && {
         OR: [
-          { createdAt: { lt: new Date(cursor.createdAt) } },
-          {
-            createdAt: new Date(cursor.createdAt),
-            studentId: { lt: cursor.studentId },
-          },
+          { createdAt: { lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, studentId: { lt: cursor.studentId } },
         ],
       }),
     },
