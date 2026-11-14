@@ -65,17 +65,7 @@ const PreviewProfileSectionContainer: React.FC<
   };
 
   return (
-    <div
-      className="flex min-h-screen w-screen flex-col"
-      style={{
-        backgroundImage: "url(/assets/optimized/bgHero.900094f51c2f.webp)",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundAttachment: "fixed",
-        marginLeft: "calc(50% - 50vw)",
-        marginRight: "calc(50% - 50vw)",
-      }}
-    >
+    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
       <div
         className="flex flex-col items-center pt-12 pb-10"
         style={{
@@ -159,7 +149,7 @@ const PreviewProfileSectionContainer: React.FC<
       >
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <section className="rounded-2xl border border-[#303030] bg-[rgba(15,15,15,0.85)] p-6 shadow-2xl backdrop-blur">
+            <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
@@ -200,7 +190,7 @@ const PreviewProfileSectionContainer: React.FC<
             </section>
           </div>
 
-          <section className="rounded-2xl border border-[#303030] bg-[rgba(15,15,15,0.85)] p-6 shadow-2xl backdrop-blur">
+          <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
             <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
               Interesses
             </p>
@@ -224,7 +214,7 @@ const PreviewProfileSectionContainer: React.FC<
         </div>
 
         {student.bio && (
-          <section className="rounded-2xl border border-[#303030] bg-[rgba(15,15,15,0.85)] p-6 shadow-2xl backdrop-blur">
+          <section className="rounded-2xl border border-secondary bg-background p-6 shadow-2xl">
             <p className="text-xs font-semibold tracking-[0.08em] text-gray-400 uppercase">
               Sobre
             </p>

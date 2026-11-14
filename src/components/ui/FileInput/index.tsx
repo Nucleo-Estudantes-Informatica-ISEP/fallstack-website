@@ -8,13 +8,13 @@ import {
 
 import slugifyId from "@/utils/slugifyId";
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface FileInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  "type"
+> {
   name: string;
   accept: string;
   placeholder: string;
-  className?: string;
-  disabled?: boolean;
-  type?: string;
   file: {
     name: string;
     preview: string;
@@ -24,12 +24,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onClear: () => void;
 }
 
-const FileInput: React.FC<InputProps> = ({
+const FileInput: React.FC<FileInputProps> = ({
   name,
   placeholder,
   accept,
   className,
-  disabled,
+  disabled = false,
   file,
   icon,
   emptyIcon = <UploadIcon />,
@@ -49,20 +49,27 @@ const FileInput: React.FC<InputProps> = ({
           {name}
         </label>
       )}
+
       <div
-        className={`relative flex field-height min-w-0 items-center gap-1 rounded-full border field-border bg-background pr-3 field-text focus-within:border-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${className ?? ""}`}
+        className={`relative flex field-height min-w-0 items-center gap-1 rounded-full border field-border bg-background pr-3 field-text focus-within:border-primary focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-primary ${
+          disabled ? "opacity-60" : ""
+        } ${className ?? ""}`}
       >
         <input
+          {...rest}
           type="file"
           name={name}
-          disabled={disabled}
           id={resolvedId}
           accept={accept}
+          disabled={disabled}
+          aria-label={name}
           className="peer sr-only field-focus-target"
-          {...rest}
         />
+
         <label
-          className={`flex min-w-0 flex-1 cursor-pointer items-center self-stretch pl-(--field-icon-padding,3.125rem) peer-disabled:cursor-not-allowed ${file ? "text-white" : "text-gray-400"}`}
+          className={`flex min-w-0 flex-1 items-center self-stretch pl-(--field-icon-padding,3.125rem) ${
+            disabled ? "cursor-not-allowed" : "cursor-pointer"
+          } ${file ? "text-white" : "text-gray-400"}`}
           htmlFor={resolvedId}
           aria-hidden="true"
         >
@@ -72,31 +79,44 @@ const FileInput: React.FC<InputProps> = ({
           >
             {file ? icon : emptyIcon}
           </span>
+
           <span className="truncate">{file ? file.name : placeholder}</span>
         </label>
+
         {file && (
           <>
             <button
               type="button"
-              onClick={() => window.open(file.preview, "_blank", "noopener")}
+              disabled={disabled}
+              onClick={() => {
+                window.open(file.preview, "_blank", "noopener,noreferrer");
+              }}
               aria-label={`Pré-visualizar ${file.name}`}
-              className="grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-primary"
+              className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <PreviewIcon />
+              <PreviewIcon aria-hidden="true" />
             </button>
+
             <button
               type="button"
+              disabled={disabled}
               onClick={(event) => {
                 const input =
-                  event.currentTarget.parentElement?.querySelector("input");
-                if (input) input.value = "";
+                  event.currentTarget.parentElement?.parentElement?.querySelector(
+                    'input[type="file"]'
+                  );
+
+                if (input instanceof HTMLInputElement) {
+                  input.value = "";
+                  input.focus();
+                }
+
                 onClear();
-                input?.focus();
               }}
               aria-label={`Remover ${file.name}`}
-              className="grid size-11 shrink-0 place-items-center rounded-md hover:bg-red-500 hover:text-white focus-visible:outline-2 focus-visible:outline-primary"
+              className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <TrashIcon />
+              <TrashIcon aria-hidden="true" />
             </button>
           </>
         )}

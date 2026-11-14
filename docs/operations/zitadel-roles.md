@@ -71,6 +71,7 @@ keep authorization codes, tokens, cookies, and secrets out of logs and PRs.
 These checks require the hosted identity provider and real role assignments.
 Local application tests cannot reproduce ZITADEL's automatic scope injection;
 record the environment and checks actually performed in the PR.
+
 ## Redirect configuration
 
 For each deployed environment, set `AUTH_REDIRECT_URI` to the site's

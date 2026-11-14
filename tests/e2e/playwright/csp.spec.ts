@@ -121,11 +121,13 @@ test("critical public and guest routes load without CSP violations under enforce
     const response = await page.goto(path);
     expect(response).not.toBeNull();
 
-    // Wait on a concrete UI element instead of flaky networkidle
+    // Verify visible content before waiting for this page's lazy requests.
     await page
       .locator(waitSelector)
       .first()
       .waitFor({ state: "visible", timeout: 10_000 });
+    // Observe late CSP events and let guarded prefetches finish before navigating.
+    await page.waitForLoadState("networkidle");
 
     expect(
       violations,

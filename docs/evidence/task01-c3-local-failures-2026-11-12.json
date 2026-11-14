@@ -1,0 +1,483 @@
+{
+  "date": "2026-11-12",
+  "sourceRevision": "16691c3a48ff2ac8a52f113b875c335e4b684948",
+  "environment": "Isolated local Docker on Ubuntu/WSL; not shared Coolify staging",
+  "load": {
+    "virtualUsers": 10,
+    "configuredDurationSeconds": 150,
+    "requestTimeoutSeconds": 5
+  },
+  "sourceSha256": {
+    "tests/load/failure-scenarios.js": "bfc0a94183d9f691c4ec3a2f06a988c86b01dd5be23e8fdbe4fa4da089fdcb5c",
+    "tests/load/failure-scenarios.test.mjs": "842ef44029ad00e13100365c01def8c83b44390867783a38f8f12ad0aff616e0"
+  },
+  "scenarios": [
+    {
+      "scenario": "copy-removed",
+      "run": "copy-removed-20261112T120344Z",
+      "durationSeconds": 151.137,
+      "k6ExitCode": 0,
+      "gatedPhases": {
+        "baseline": {
+          "requests": 1168,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 12.699320299999986
+        },
+        "fault": {
+          "requests": 1720,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 17.023757099999955
+        },
+        "recovery": {
+          "requests": 1764,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 3.4113777499999998
+        }
+      },
+      "checksByPhase": {
+        "baseline": {
+          "passed": 1168,
+          "failed": 0
+        },
+        "injection": {
+          "passed": 502,
+          "failed": 30
+        },
+        "fault": {
+          "passed": 1720,
+          "failed": 0
+        },
+        "restoration": {
+          "passed": 600,
+          "failed": 0
+        },
+        "recovery": {
+          "passed": 1764,
+          "failed": 0
+        }
+      },
+      "httpStatusesByPhase": {
+        "baseline": {
+          "200": 1168
+        },
+        "injection": {
+          "200": 502,
+          "502": 28,
+          "0": 2
+        },
+        "fault": {
+          "200": 1720
+        },
+        "restoration": {
+          "200": 600
+        },
+        "recovery": {
+          "200": 1764
+        }
+      },
+      "proxyRequestsByPhaseAndCopy": {
+        "baseline": {
+          "fallstack-552-full-web-2:4000": 579,
+          "fallstack-552-full-web-1:4000": 579
+        },
+        "injection": {
+          "fallstack-552-full-web-2:4000": 502,
+          "fallstack-552-full-web-1:4000": 30
+        },
+        "fault": {
+          "fallstack-552-full-web-2:4000": 1720
+        },
+        "restoration": {
+          "fallstack-552-full-web-2:4000": 360,
+          "fallstack-552-full-web-1:4000": 240
+        },
+        "recovery": {
+          "fallstack-552-full-web-1:4000": 884,
+          "fallstack-552-full-web-2:4000": 884
+        }
+      },
+      "timeline": [
+        {
+          "event": "load_started",
+          "timestamp": "2026-11-12T12:03:46.845865+00:00",
+          "secondsFromFirstResponse": 0.203,
+          "scenario": "copy-removed",
+          "revision": "16691c3a48ff2ac8a52f113b875c335e4b684948"
+        },
+        {
+          "event": "fault_injection_started",
+          "timestamp": "2026-11-12T12:04:16.642724+00:00",
+          "secondsFromFirstResponse": 30.0,
+          "target": "fallstack-552-full-web-1"
+        },
+        {
+          "event": "fault_signal_sent",
+          "timestamp": "2026-11-12T12:04:17.554601+00:00",
+          "secondsFromFirstResponse": 30.912
+        },
+        {
+          "event": "settled_fault_verified",
+          "timestamp": "2026-11-12T12:04:36.952722+00:00",
+          "secondsFromFirstResponse": 50.31
+        },
+        {
+          "event": "restoration_started",
+          "timestamp": "2026-11-12T12:05:16.642698+00:00",
+          "secondsFromFirstResponse": 90.0
+        },
+        {
+          "event": "restoration_started_container",
+          "timestamp": "2026-11-12T12:05:17.239972+00:00",
+          "secondsFromFirstResponse": 90.597
+        },
+        {
+          "event": "recovery_verified",
+          "timestamp": "2026-11-12T12:05:36.972251+00:00",
+          "secondsFromFirstResponse": 110.33
+        },
+        {
+          "event": "load_completed",
+          "timestamp": "2026-11-12T12:06:17.779113+00:00",
+          "secondsFromFirstResponse": 151.137,
+          "exitCode": 0
+        },
+        {
+          "event": "all_gates_passed",
+          "timestamp": "2026-11-12T12:06:17.780054+00:00",
+          "secondsFromFirstResponse": 151.137
+        }
+      ],
+      "artifacts": {
+        "summary.json": "6703f366f92bd20d97351ca5a05ce2c1d54797ad4f267be8294bdc2cd6671cbf",
+        "k6.log": "0db7da7a7488c4316110161bd31dc6fddc20dd412b52dce00ccfa3f531399595",
+        "gates.json": "0c4f2cf45491b9f90edbbd24642faad67970af3b08da94fd36232f23c64afaef",
+        "fallstack-552-full-redis-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timeline.json": "2ea8d4af1b6a25df1581b37782485dba7d62bf8b4355697a260d5bcc2e32bf57",
+        "fallstack-552-full-proxy-1.log": "d4b76fc3dd25174edc0d4ef84fc2a361f5b6706bb16c0b50cdc8b6e4e030aa39",
+        "fallstack-552-full-web-1.log": "246e23d95bb4749a4340b4901cb82a2f6c7b9ed7ea63ccfa06c03dc4c56b6073",
+        "samples.json": "1a4b95dfe74f46f752ed98628587129d76a70c4ed62c4342e017a8345a8371f7",
+        "fallstack-552-full-web-2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "scenario": "redis-unavailable",
+      "run": "redis-unavailable-20261112T120618Z",
+      "durationSeconds": 151.184,
+      "k6ExitCode": 0,
+      "gatedPhases": {
+        "baseline": {
+          "requests": 1160,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 10.260543799999997
+        },
+        "fault": {
+          "requests": 1720,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 125.72087995
+        },
+        "recovery": {
+          "requests": 1764,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 8.060489699999987
+        }
+      },
+      "checksByPhase": {
+        "baseline": {
+          "passed": 1160,
+          "failed": 0
+        },
+        "injection": {
+          "passed": 460,
+          "failed": 140
+        },
+        "fault": {
+          "passed": 1720,
+          "failed": 0
+        },
+        "restoration": {
+          "passed": 530,
+          "failed": 30
+        },
+        "recovery": {
+          "passed": 1764,
+          "failed": 0
+        }
+      },
+      "httpStatusesByPhase": {
+        "baseline": {
+          "200": 1160
+        },
+        "injection": {
+          "200": 460,
+          "503": 140
+        },
+        "fault": {
+          "200": 1290,
+          "503": 430
+        },
+        "restoration": {
+          "200": 530,
+          "503": 30
+        },
+        "recovery": {
+          "200": 1764
+        }
+      },
+      "proxyRequestsByPhaseAndCopy": {
+        "baseline": {
+          "fallstack-552-full-web-2:4000": 575,
+          "fallstack-552-full-web-1:4000": 575
+        },
+        "injection": {
+          "fallstack-552-full-web-1:4000": 300,
+          "fallstack-552-full-web-2:4000": 300
+        },
+        "fault": {
+          "fallstack-552-full-web-1:4000": 860,
+          "fallstack-552-full-web-2:4000": 860
+        },
+        "restoration": {
+          "fallstack-552-full-web-1:4000": 280,
+          "fallstack-552-full-web-2:4000": 280
+        },
+        "recovery": {
+          "fallstack-552-full-web-1:4000": 884,
+          "fallstack-552-full-web-2:4000": 884
+        }
+      },
+      "timeline": [
+        {
+          "event": "load_started",
+          "timestamp": "2026-11-12T12:06:20.045869+00:00",
+          "secondsFromFirstResponse": 0.204,
+          "scenario": "redis-unavailable",
+          "revision": "16691c3a48ff2ac8a52f113b875c335e4b684948"
+        },
+        {
+          "event": "fault_injection_started",
+          "timestamp": "2026-11-12T12:06:49.842340+00:00",
+          "secondsFromFirstResponse": 30.0,
+          "target": "fallstack-552-full-redis-1"
+        },
+        {
+          "event": "fault_signal_sent",
+          "timestamp": "2026-11-12T12:06:50.571426+00:00",
+          "secondsFromFirstResponse": 30.729
+        },
+        {
+          "event": "settled_fault_verified",
+          "timestamp": "2026-11-12T12:07:10.319051+00:00",
+          "secondsFromFirstResponse": 50.477
+        },
+        {
+          "event": "restoration_started",
+          "timestamp": "2026-11-12T12:07:49.842301+00:00",
+          "secondsFromFirstResponse": 90.0
+        },
+        {
+          "event": "restoration_started_container",
+          "timestamp": "2026-11-12T12:07:50.628158+00:00",
+          "secondsFromFirstResponse": 90.786
+        },
+        {
+          "event": "recovery_verified",
+          "timestamp": "2026-11-12T12:08:10.173894+00:00",
+          "secondsFromFirstResponse": 110.332
+        },
+        {
+          "event": "load_completed",
+          "timestamp": "2026-11-12T12:08:51.026356+00:00",
+          "secondsFromFirstResponse": 151.184,
+          "exitCode": 0
+        },
+        {
+          "event": "all_gates_passed",
+          "timestamp": "2026-11-12T12:08:51.026824+00:00",
+          "secondsFromFirstResponse": 151.185
+        }
+      ],
+      "artifacts": {
+        "summary.json": "d88080235a380550c5d8efb9e6cc911a6a2edd9689877b561aa4028bf4fd186b",
+        "k6.log": "6447d16f25947922f50b0a2ce875f0cc74c57f9b098e361c7229a62f245dd640",
+        "gates.json": "f38d557d12c9624fafe1907033d4a6beed71084210b9bfff3cb46f351199bddb",
+        "fallstack-552-full-redis-1.log": "fee2a0d1a4680062fcd013f1f65a2edb81da995b5e41fb33c1b2f76cb1325fbe",
+        "timeline.json": "3eb8401371982a1ee12b955ecc09ecdfd256e9bc13c5ad29cc2609e7d6c5c60a",
+        "fallstack-552-full-proxy-1.log": "74ae5ffe573dca17b7386fe2e83d7bc078399064bc2bafc16f7502b4499d1cef",
+        "fallstack-552-full-web-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "samples.json": "4b38e48c6dd0efdd861595cc0a6654d196af66d8aed34207980363c218ca56a6",
+        "fallstack-552-full-web-2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "scenario": "copy-drained",
+      "run": "copy-drained-20261112T120851Z",
+      "durationSeconds": 151.09,
+      "k6ExitCode": 0,
+      "gatedPhases": {
+        "baseline": {
+          "requests": 1160,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 9.189969150000001
+        },
+        "fault": {
+          "requests": 1752,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 11.74961024999998
+        },
+        "recovery": {
+          "requests": 1772,
+          "checkPassRate": 1,
+          "unexpectedHttpFailureRate": 0,
+          "p95Milliseconds": 3.2427865999999983
+        }
+      },
+      "checksByPhase": {
+        "baseline": {
+          "passed": 1160,
+          "failed": 0
+        },
+        "injection": {
+          "passed": 551,
+          "failed": 49
+        },
+        "fault": {
+          "passed": 1752,
+          "failed": 0
+        },
+        "restoration": {
+          "passed": 560,
+          "failed": 0
+        },
+        "recovery": {
+          "passed": 1772,
+          "failed": 0
+        }
+      },
+      "httpStatusesByPhase": {
+        "baseline": {
+          "200": 1160
+        },
+        "injection": {
+          "200": 551,
+          "503": 49
+        },
+        "fault": {
+          "200": 1752
+        },
+        "restoration": {
+          "200": 560
+        },
+        "recovery": {
+          "200": 1772
+        }
+      },
+      "proxyRequestsByPhaseAndCopy": {
+        "baseline": {
+          "fallstack-552-full-web-2:4000": 575,
+          "fallstack-552-full-web-1:4000": 575
+        },
+        "injection": {
+          "fallstack-552-full-web-1:4000": 116,
+          "fallstack-552-full-web-2:4000": 484
+        },
+        "fault": {
+          "fallstack-552-full-web-2:4000": 1752
+        },
+        "restoration": {
+          "fallstack-552-full-web-2:4000": 380,
+          "fallstack-552-full-web-1:4000": 180
+        },
+        "recovery": {
+          "fallstack-552-full-web-1:4000": 888,
+          "fallstack-552-full-web-2:4000": 888
+        }
+      },
+      "timeline": [
+        {
+          "event": "load_started",
+          "timestamp": "2026-11-12T12:08:53.205725+00:00",
+          "secondsFromFirstResponse": 0.204,
+          "scenario": "copy-drained",
+          "revision": "16691c3a48ff2ac8a52f113b875c335e4b684948"
+        },
+        {
+          "event": "in_flight_request_blocked",
+          "timestamp": "2026-11-12T12:09:22.644554+00:00",
+          "secondsFromFirstResponse": 29.643,
+          "databaseWaiters": 1
+        },
+        {
+          "event": "fault_injection_started",
+          "timestamp": "2026-11-12T12:09:23.001785+00:00",
+          "secondsFromFirstResponse": 30.0,
+          "target": "fallstack-552-full-web-1"
+        },
+        {
+          "event": "fault_signal_sent",
+          "timestamp": "2026-11-12T12:09:23.198871+00:00",
+          "secondsFromFirstResponse": 30.197
+        },
+        {
+          "event": "draining_copy_unready",
+          "timestamp": "2026-11-12T12:09:23.362184+00:00",
+          "secondsFromFirstResponse": 30.361
+        },
+        {
+          "event": "in_flight_request_completed",
+          "timestamp": "2026-11-12T12:09:23.369781+00:00",
+          "secondsFromFirstResponse": 30.368
+        },
+        {
+          "event": "settled_fault_verified",
+          "timestamp": "2026-11-12T12:09:43.297886+00:00",
+          "secondsFromFirstResponse": 50.296
+        },
+        {
+          "event": "restoration_started",
+          "timestamp": "2026-11-12T12:10:23.001786+00:00",
+          "secondsFromFirstResponse": 90.0
+        },
+        {
+          "event": "restoration_started_container",
+          "timestamp": "2026-11-12T12:10:23.567385+00:00",
+          "secondsFromFirstResponse": 90.566
+        },
+        {
+          "event": "recovery_verified",
+          "timestamp": "2026-11-12T12:10:43.340530+00:00",
+          "secondsFromFirstResponse": 110.339
+        },
+        {
+          "event": "load_completed",
+          "timestamp": "2026-11-12T12:11:24.091795+00:00",
+          "secondsFromFirstResponse": 151.09,
+          "exitCode": 0
+        },
+        {
+          "event": "all_gates_passed",
+          "timestamp": "2026-11-12T12:11:24.092230+00:00",
+          "secondsFromFirstResponse": 151.091
+        }
+      ],
+      "artifacts": {
+        "summary.json": "c73d2cd307dedd842e922bcf96c58ef18237253ea8bfb6911ec37978c31417c8",
+        "k6.log": "70ba1e9f83e8f773a17a59347f63765adb224396e38fa39f196759e3c39d3369",
+        "gates.json": "04194dc4210c6a14ce95bdbc30019928acc6b58b7426f1318a9dc5bb1f1c9a92",
+        "fallstack-552-full-redis-1.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timeline.json": "90378362258df29d31d65fa3a7c3b88f220de4c827db0814707b993012d99df0",
+        "fallstack-552-full-proxy-1.log": "cb06b222541b3b2fefbe5669a3d157570cd4051911cb32ba127d5ed8eafc8059",
+        "fallstack-552-full-web-1.log": "6212ecb179d4bed961d7b2f4c3a309022c0e92fcc9262954e566872c00853902",
+        "samples.json": "e0b0a7888415615082312797805a9c18d498edf118fe9ef1abcfc5388f21ae61",
+        "fallstack-552-full-web-2.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  ]
+}

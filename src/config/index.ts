@@ -21,7 +21,7 @@ const config = {
       rateLimit: { windowMs: 60 * 1000, max: 5 },
     },
     logo: {
-      types: ["image/png", "image/webp"],
+      types: ["image/png", "image/webp", "image/svg+xml"],
       maxSize: 5 * 1024 * 1024,
     },
     cv: {
