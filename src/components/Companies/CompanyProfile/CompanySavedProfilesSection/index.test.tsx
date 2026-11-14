@@ -93,22 +93,30 @@ function typeCode(value: string) {
   fireEvent.click(screen.getByRole("button", { name: "Validar" }));
 }
 
-test("converts a Wallet student code before saving the scanned profile", async () => {
-  render(<CompanySavedProfilesSection history={[]} />);
+// ADR 0022: legacy four-character and new six-character codes both work.
+test.each([
+  ["four", "ab12", "AB12"],
+  ["six", "ab12cd", "AB12CD"],
+])(
+  "converts a %s-character Wallet student code before saving the scanned profile",
+  async (_, scanned, code) => {
+    scan.value = scanned;
+    render(<CompanySavedProfilesSection history={[]} />);
 
-  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+    fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
 
-  await waitFor(() => {
-    expect(getTokenMock).toHaveBeenCalledWith("AB12");
-    expect(postMock).toHaveBeenCalledWith("/saved", {
-      token: "signed-preview-token",
+    await waitFor(() => {
+      expect(getTokenMock).toHaveBeenCalledWith(code);
+      expect(postMock).toHaveBeenCalledWith("/saved", {
+        token: "signed-preview-token",
+      });
+      expect(pushMock).toHaveBeenCalledWith(
+        "/student/signed-preview-token/preview"
+      );
     });
-    expect(pushMock).toHaveBeenCalledWith(
-      "/student/signed-preview-token/preview"
-    );
-  });
-  expect(toastErrorMock).not.toHaveBeenCalled();
-});
+    expect(toastErrorMock).not.toHaveBeenCalled();
+  }
+);
 
 test("continues to save a signed QR token without exchanging it", async () => {
   scan.value = "existing-jwt";
@@ -139,48 +147,6 @@ test("rejects an unknown Wallet code without saving it as a JWT", async () => {
   expect(postMock).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument();
 });
-
-// ADR 0022: legacy four-character and new six-character codes both work.
-test.each([
-  ["four", "ab12", "AB12"],
-  ["six", "ab12cd", "AB12CD"],
-])(
-  "a scanned %s-character Wallet code is exchanged and saved",
-  async (_, scanned, code) => {
-    scan.value = scanned;
-    render(<CompanySavedProfilesSection history={[]} />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
-
-    await waitFor(() => {
-      expect(getTokenMock).toHaveBeenCalledWith(code);
-      expect(postMock).toHaveBeenCalledWith("/saved", {
-        token: "signed-preview-token",
-      });
-    });
-  }
-);
-
-test.each([
-  ["four", " z104 ", "Z104"],
-  ["six", " ab12cd ", "AB12CD"],
-])(
-  "a typed %s-character code is accepted in full and normalized",
-  async (_, typed, code) => {
-    render(<CompanySavedProfilesSection history={[]} />);
-
-    // The field fits the longest code, so a six-character code is not cut short.
-    expect(codeField()).toHaveAttribute("maxLength", "6");
-    typeCode(typed);
-
-    await waitFor(() => {
-      expect(getTokenMock).toHaveBeenCalledWith(code);
-      expect(postMock).toHaveBeenCalledWith("/saved", {
-        token: "signed-preview-token",
-      });
-    });
-  }
-);
 
 test("the code field has a visible label and a description", () => {
   render(<CompanySavedProfilesSection history={[]} />);
@@ -272,22 +238,30 @@ test("too many typed attempts get a Portuguese rate-limit message", async () => 
   expect(postMock).not.toHaveBeenCalled();
 });
 
-test("a typed code saves the student and opens the saved preview", async () => {
-  render(<CompanySavedProfilesSection history={[]} />);
+test.each([
+  ["four", "Z104", "Z104"],
+  ["six", " ab12cd ", "AB12CD"],
+])(
+  "a typed %s-character code saves the student and opens the saved preview",
+  async (_, typed, code) => {
+    render(<CompanySavedProfilesSection history={[]} />);
 
-  typeCode("Z104");
+    // The field fits the longest code, so a six-character code is not cut short.
+    expect(codeField()).toHaveAttribute("maxLength", "6");
+    typeCode(typed);
 
-  await waitFor(() =>
-    expect(pushMock).toHaveBeenCalledWith(
-      "/student/signed-preview-token/preview"
-    )
-  );
-  expect(getTokenMock).toHaveBeenCalledWith("Z104");
-  expect(postMock).toHaveBeenCalledWith("/saved", {
-    token: "signed-preview-token",
-  });
-  expect(refreshMock).toHaveBeenCalled();
-});
+    await waitFor(() =>
+      expect(pushMock).toHaveBeenCalledWith(
+        "/student/signed-preview-token/preview"
+      )
+    );
+    expect(getTokenMock).toHaveBeenCalledWith(code);
+    expect(postMock).toHaveBeenCalledWith("/saved", {
+      token: "signed-preview-token",
+    });
+    expect(refreshMock).toHaveBeenCalled();
+  }
+);
 
 test("a duplicate save is a warning and does not navigate", async () => {
   postMock.mockRejectedValue(await httpError(409, "Student already saved"));
