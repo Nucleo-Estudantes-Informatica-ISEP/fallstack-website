@@ -146,8 +146,6 @@ const StudentPage = async (props: ProfileProps) => {
           <CompanyViewProfileSectionContainer
             interests={localizedInterestNames}
             student={studentDto}
-            token={code}
-            isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer

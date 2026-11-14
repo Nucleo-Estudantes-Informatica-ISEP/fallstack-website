@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { toast } from "react-toastify";
 
-import { httpClient, HttpClientError } from "@/lib/http/client";
-import { useMutation } from "@/hooks/useMutation";
+import { httpClient } from "@/lib/http/client";
 import { Email, Github, Linkedin, OpenCv } from "@/components/ui/Icons";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
@@ -13,13 +12,13 @@ import type { StudentDto } from "@/application/dto/studentDto";
 interface CompanyViewProfileSectionContainerProps {
   student: StudentDto;
   interests: string[];
-  token: string;
-  isSavedStudent: boolean;
 }
 
 // Saved student opened by a company employee at /student/<code> (S1).
 // Same look as the preview (src/components/Profile/PreviewProfileSectionContainer),
-// kept as separate code.
+// kept as separate code. The page only renders this for a student the
+// company has already saved, so it has no save form; saving happens from the
+// preview, which holds the signed preview token.
 const container = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 const panel = "border border-secondary bg-background p-6";
 const panelTitle =
@@ -27,16 +26,9 @@ const panelTitle =
 const linkPill =
   "inline-flex min-h-11 items-center gap-2 rounded-full border border-secondary bg-black/40 px-4 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary";
 
-// Same limit as the server's comment schema (src/schemas/saveSchema.ts).
-const COMMENT_MAX_LENGTH = 1000;
-
 const CompanyViewProfileSectionContainer: React.FC<
   CompanyViewProfileSectionContainerProps
-> = ({ student, interests, token, isSavedStudent }) => {
-  const [comment, setComment] = useState("");
-  const { mutate, isPending } = useMutation();
-  const reloadTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const commentId = useId();
+> = ({ student, interests }) => {
   const orderedInterests = useMemo(
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
@@ -44,38 +36,6 @@ const CompanyViewProfileSectionContainer: React.FC<
   const yearAndCourse = [student.year, student.course]
     .filter(Boolean)
     .join(" · ");
-
-  useEffect(() => {
-    return () => {
-      if (reloadTimeoutRef.current) clearTimeout(reloadTimeoutRef.current);
-    };
-  }, []);
-
-  const handleSaveProfile = () =>
-    mutate(async () => {
-      try {
-        await httpClient.patch("/saved", { token, comment });
-      } catch (error) {
-        // Already saved: 409 from the duplicate check, or 400 when a
-        // concurrent save wins the race (saveStudent in savedStudentService).
-        if (
-          error instanceof HttpClientError &&
-          (error.status === 409 || error.status === 400)
-        ) {
-          toast.warning("Perfil já salvo!", { toastId: "view-saved" });
-          return;
-        }
-        toast.error("Não foi possível guardar o perfil. Tenta novamente.", {
-          toastId: "view-save-failed",
-        });
-        return;
-      }
-      toast.success("Perfil salvo com sucesso!");
-      reloadTimeoutRef.current = setTimeout(
-        () => window.location.reload(),
-        1500
-      );
-    });
 
   const handleOpenCv = async () => {
     try {
@@ -148,30 +108,6 @@ const CompanyViewProfileSectionContainer: React.FC<
             </a>
           )}
         </div>
-        {!isSavedStudent && (
-          <div className="mt-6 flex w-full max-w-md flex-col gap-2">
-            <label htmlFor={commentId} className="text-sm text-white">
-              Comentário (opcional)
-            </label>
-            <textarea
-              id={commentId}
-              className="ui-field resize-y"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              maxLength={COMMENT_MAX_LENGTH}
-              rows={3}
-            />
-            <button
-              type="button"
-              onClick={handleSaveProfile}
-              disabled={isPending}
-              aria-busy={isPending}
-              className="ui-action self-center rounded-full"
-            >
-              {isPending ? "A guardar..." : "+ Salvar perfil"}
-            </button>
-          </div>
-        )}
       </div>
 
       <div className={`flex flex-1 flex-col gap-6 pb-20 ${container}`}>

@@ -350,7 +350,7 @@ test("an employee whose company saved the student sees the company view of /stud
 
   const view = findByType(result, (await views()).CompanyView);
   assert.ok(view, "expected the company view");
-  assert.equal(view.props.isSavedStudent, true);
+  assert.equal((view.props.student as { code: string }).code, "S123");
   assert.equal(findByType(result, (await views()).Public), null);
 });
 
