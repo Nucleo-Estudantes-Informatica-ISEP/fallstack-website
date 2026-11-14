@@ -66,3 +66,32 @@ test("rejects employee registration during offseason", async () => {
 
   expect(signUpEmployee).not.toHaveBeenCalled();
 });
+
+test("employee signup propagates only verified membership and attendance expiry", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "employee",
+    zitadelUserId: "subject",
+    email: "employee@example.org",
+    neiMember: true,
+    attendanceExpiresAt: 123000,
+  } as never);
+  vi.mocked(signUpEmployee).mockResolvedValue("signed-session");
+  const response = await POST(
+    new NextRequest("http://localhost/api/auth/signup/employee", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        name: "Employee",
+        companyCode: "fs_emp_12345678",
+        isNeiMember: false,
+        attendanceExpiresAt: 999999,
+      }),
+    }),
+    { params: Promise.resolve({}) }
+  );
+  expect(response.status).toBe(201);
+  expect(signUpEmployee).toHaveBeenCalledWith(
+    expect.objectContaining({ isNeiMember: true, attendanceExpiresAt: 123000 })
+  );
+  expect(response.headers.get("set-cookie")).toContain("signed-session");
+});

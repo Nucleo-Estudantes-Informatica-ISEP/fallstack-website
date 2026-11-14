@@ -26,6 +26,8 @@ export const POST = defineHandler({
       zitadelUserId: session.zitadelUserId,
       email: Email.create(session.email),
       ...body,
+      isNeiMember: session.neiMember,
+      attendanceExpiresAt: session.attendanceExpiresAt,
     });
 
     const response = NextResponse.json(

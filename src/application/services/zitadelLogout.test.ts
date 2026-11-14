@@ -58,17 +58,26 @@ test("uses the verified session login name as the logout hint", async () => {
   );
 });
 
-test("preserves the NEI member grant in the signed app session", () => {
-  const token = signAppSession({
-    sub: "member",
-    email: "member@example.org",
-    emailVerified: true,
-    isEmployee: false,
-    isGlobalAdmin: false,
-    isNeiMember: true,
-  });
-  expect(verifyAppSession(token)?.neiMember).toBe(true);
-});
+test.each([undefined, 123000, 0])(
+  "preserves the NEI member grant and attendance deadline %s in the signed app session",
+  (attendanceExpiresAt) => {
+    const token = signAppSession(
+      {
+        sub: "member",
+        email: "member@example.org",
+        emailVerified: true,
+        isEmployee: false,
+        isGlobalAdmin: false,
+        isNeiMember: true,
+      },
+      attendanceExpiresAt
+    );
+    expect(verifyAppSession(token)?.neiMember).toBe(true);
+    expect(verifyAppSession(token)?.attendanceExpiresAt).toBe(
+      attendanceExpiresAt
+    );
+  }
+);
 
 test.each([
   [

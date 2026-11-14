@@ -161,24 +161,30 @@ test("rejects deactivated local accounts", async () => {
   expect(await getServerSession()).toBeNull();
 });
 
-test("carries the signed NEI member grant into the resolved session", async () => {
-  vi.mocked(verifyAppSession).mockReturnValue({
-    sub: "member-sub",
-    email: "member@example.org",
-    employee: false,
-    admin: false,
-    neiMember: true,
-    iat: 1000,
-  });
-  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
-    id: "member",
-    active: true,
-    role: "STUDENT",
-    adminRole: null,
-    student: { id: "member" },
-    employee: null,
-  } as never);
-  const session = await getServerSession();
-  expect(session?.neiMember).toBe(true);
-  expect(session?.attendanceExpiresAt).toBe(1300000);
-});
+test.each([undefined, 1100000, 0, 1500000])(
+  "preserves membership and bounds attendance deadline %s",
+  async (attendanceExpiresAt) => {
+    vi.mocked(verifyAppSession).mockReturnValue({
+      sub: "member-sub",
+      email: "member@example.org",
+      employee: false,
+      admin: false,
+      neiMember: true,
+      iat: 1000,
+      attendanceExpiresAt,
+    });
+    vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+      id: "member",
+      active: true,
+      role: "STUDENT",
+      adminRole: null,
+      student: { id: "member" },
+      employee: null,
+    } as never);
+    const session = await getServerSession();
+    expect(session?.neiMember).toBe(true);
+    expect(session?.attendanceExpiresAt).toBe(
+      Math.min(1300000, attendanceExpiresAt ?? Infinity)
+    );
+  }
+);

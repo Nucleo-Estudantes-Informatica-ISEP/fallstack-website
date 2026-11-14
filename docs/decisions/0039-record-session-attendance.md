@@ -39,3 +39,18 @@ Missing issuance times fail closed for attendance, and legacy eight-hour cookies
 use the same five-minute bound. Grant revocation can take up to five minutes to
 remove check-in access; other admin access retains its existing eight-hour grant
 snapshot. Local account deactivation is checked on each request.
+
+Student deletion intentionally removes that student's attendance as part of
+account erasure; it does not leave identifiable attendance behind. Session
+deletion remains restricted to prevent accidental loss during schedule editing.
+The database retention test covers both policies.
+
+The five-minute attendance window is an explicit product tradeoff: bounded grant
+revocation takes priority over uninterrupted scanning in this API-only issue.
+The check-in UI must pause scanning on 403, preserve the selected session, and
+offer AuthNEI sign-in with a sanitized return destination before resuming. It
+must distinguish expired staff authorization from an invalid student token and
+never silently retry a recorded scan. Silent grant refresh is deferred until a
+separate authentication design; no such refresh is claimed here. Employee
+onboarding preserves the verified membership and original attendance deadline;
+reissuing an app cookie does not refresh grants.

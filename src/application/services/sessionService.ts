@@ -33,7 +33,12 @@ const getServerSession = cache(async () => {
       adminRole,
       neiMember: claims.neiMember === true,
       attendanceExpiresAt:
-        typeof claims.iat === "number" ? (claims.iat + 300) * 1000 : 0,
+        typeof claims.iat === "number"
+          ? Math.min(
+              (claims.iat + 300) * 1000,
+              claims.attendanceExpiresAt ?? Infinity
+            )
+          : 0,
       role:
         appUser.role === "EMPLOYEE" && !employeeAllowed ? null : appUser.role,
     };

@@ -61,6 +61,7 @@ export interface ZitadelIdentity {
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
+  attendanceExpiresAt?: number;
   sub: string;
   email: string;
   loginName?: string;
@@ -332,7 +333,10 @@ export async function completeAuthorizationCode(input: {
   };
 }
 
-export function signAppSession(identity: ZitadelIdentity) {
+export function signAppSession(
+  identity: ZitadelIdentity,
+  attendanceExpiresAt?: number
+) {
   return jwt.sign(
     {
       email: identity.email,
@@ -341,6 +345,7 @@ export function signAppSession(identity: ZitadelIdentity) {
       employee: identity.isEmployee,
       admin: identity.isGlobalAdmin,
       neiMember: identity.isNeiMember === true,
+      attendanceExpiresAt,
     },
     serverEnv.AUTH_SECRET,
     {
