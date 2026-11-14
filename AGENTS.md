@@ -30,6 +30,15 @@ for procedure and rationale.
   settles a meaningful architecture or product decision.
 - Run the checks and manual flow in the
   [contribution workflow](docs/agents/contribution.md#checks-and-test-first-work).
+- Reuse successful checks for unchanged code and relevant configuration. Do not
+  rerun tests, lint, typechecks, builds, or manual checks merely for another
+  commit, push, or status update. Rerun affected checks only when code,
+  configuration, dependencies, or environment changes invalidate the result,
+  or a failure or unresolved concern needs investigation. Report which revision
+  and environment the reused evidence covers.
+- After all required local checks have passed, bypass Git hooks that would only
+  repeat them for that command (for Husky, use `HUSKY=0`). Never bypass a failed
+  or outstanding required check, disable hooks persistently, or disable CI.
 
 ## Quick rules
 
