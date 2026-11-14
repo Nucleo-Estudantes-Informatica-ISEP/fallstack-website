@@ -16,6 +16,7 @@ import { Language } from "@/domain/i18n/translations";
 
 // Generate each language on its first request. The build has no event DB or
 // runtime showcase setting. Subsequent requests reuse the generated HTML.
+export const dynamicParams = true;
 export function generateStaticParams() {
   return [];
 }

@@ -25,7 +25,9 @@ already cached within each process.
 - `/about`, `/privacy-policy` and `/terms` are also static and share the
   public document layout. These five paths omit CSP. They keep the baseline
   security headers and get any signed-in header state from the session API in
-  the browser.
+  the browser. The layout sets `dynamic = "error"` so request-specific server
+  reads fail generation, including reads introduced in nested components.
+  The event route explicitly permits on-demand language parameters.
 - Nonce-bearing documents use a separate dynamic root layout. Navigation
   between the two layout groups uses a document load, which applies the
   destination's CSP. Company profiles stay in the nonce-bearing group.
@@ -34,6 +36,13 @@ already cached within each process.
   [public cache runbook](../operations/public-data-cache.md#cloudflare-html-cache).
 
 ## Consequences
+
+During a database outage, a cold homepage render can return HTTP 500 when the
+company roster cannot load. Previously the countdown rendered without the
+roster. This availability cost is accepted so a partial page is not stored as
+a successful ISR result. A previously generated page remains available when
+regeneration fails; recovery of a cold render requires a later successful read.
+Full-showcase generation likewise fails when a required section is unavailable.
 
 Public documents lose the CSP browser-side script allowlist. Keeping separate
 root layouts ensures that entering account pages from a public document installs
