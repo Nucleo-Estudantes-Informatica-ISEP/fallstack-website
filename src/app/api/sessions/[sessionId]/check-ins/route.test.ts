@@ -67,6 +67,7 @@ test("rejects students and company employees and allows NEI members", async () =
     role: null,
     adminRole: null,
     neiMember: true,
+    attendanceExpiresAt: Date.now() + 300000,
     student: null,
     employee: null,
   } as never);
@@ -92,6 +93,7 @@ test("allows admins, including admin-only accounts", async () => {
     id: "admin-user",
     role: null,
     adminRole: "ADMIN",
+    attendanceExpiresAt: Date.now() + 300000,
     student: null,
     employee: null,
   } as never);
@@ -117,6 +119,7 @@ test("returns schema errors for multiple credentials", async () => {
     role: "EMPLOYEE",
     adminRole: null,
     neiMember: true,
+    attendanceExpiresAt: Date.now() + 300000,
     student: null,
     employee: { company: { id: "company-1" } },
   } as never);
@@ -127,3 +130,29 @@ test("returns schema errors for multiple credentials", async () => {
   });
   assert.equal(response.status, 400);
 });
+
+test.each([null, "ADMIN", "SUPER_ADMIN"])(
+  "rejects stale attendance rights for %s without recording attendance",
+  async (adminRole) => {
+    const getServerSession = (
+      await import("@/application/services/sessionService")
+    ).default;
+    const { recordSessionCheckIn } =
+      await import("@/application/services/sessionCheckInService");
+    vi.mocked(getServerSession).mockResolvedValue({
+      id: "staff-user",
+      role: null,
+      adminRole,
+      neiMember: true,
+      attendanceExpiresAt: Date.now() - 1,
+      student: null,
+      employee: null,
+    } as never);
+    const { POST } = await import("./route");
+    const response = await POST(request({ code: "AB12" }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+    assert.equal(response.status, 403);
+    assert.equal(vi.mocked(recordSessionCheckIn).mock.calls.length, 0);
+  }
+);

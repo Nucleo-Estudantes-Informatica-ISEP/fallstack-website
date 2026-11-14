@@ -95,7 +95,7 @@ test.each([
   expect(mapIdentityRoles(claims, "employee", "global")).toEqual(expected);
 });
 
-test("expires NEI member sessions after five minutes", () => {
+test("keeps NEI member app sessions valid for eight hours", () => {
   vi.useFakeTimers();
   const token = signAppSession({
     sub: "member",
@@ -108,10 +108,12 @@ test("expires NEI member sessions after five minutes", () => {
   vi.advanceTimersByTime(299000);
   expect(verifyAppSession(token)?.neiMember).toBe(true);
   vi.advanceTimersByTime(1000);
+  expect(verifyAppSession(token)?.neiMember).toBe(true);
+  vi.advanceTimersByTime((28800 - 300) * 1000);
   expect(verifyAppSession(token)).toBeNull();
 });
 
-test("rejects legacy member cookies older than five minutes", () => {
+test("keeps legacy member cookies valid outside attendance", () => {
   const token = jwt.sign(
     {
       sub: "member",
@@ -127,5 +129,5 @@ test("rejects legacy member cookies older than five minutes", () => {
       expiresIn: 28800,
     }
   );
-  expect(verifyAppSession(token)).toBeNull();
+  expect(verifyAppSession(token)?.neiMember).toBe(true);
 });

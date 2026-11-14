@@ -31,9 +31,11 @@ token. Staff must establish presence operationally; the API cannot prove it.
 QR tokens use the `attendance` purpose; profile-preview `student-pass` tokens
 are rejected by check-in.
 
-NEI-member app sessions expire after five minutes, requiring AuthNEI sign-in
-to refresh grants. Previously issued member cookies are subject to the same
-five-minute age limit. Revocation can therefore take up to five minutes to
-remove member access. Other app sessions retain their existing eight-hour TTL;
-admin grants retain that existing snapshot policy. Local account deactivation
-is checked on each request.
+App sessions retain their eight-hour TTL for all users. Only attendance rights
+expire five minutes after the signed app-session issuance time, for both NEI
+members and admins. Check-in then returns 403 until AuthNEI sign-in refreshes
+grants; other pages, forms and admin policies keep the existing session lifetime.
+Missing issuance times fail closed for attendance, and legacy eight-hour cookies
+use the same five-minute bound. Grant revocation can take up to five minutes to
+remove check-in access; other admin access retains its existing eight-hour grant
+snapshot. Local account deactivation is checked on each request.
