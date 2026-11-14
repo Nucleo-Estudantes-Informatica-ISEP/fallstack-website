@@ -55,8 +55,8 @@ alter supplied artwork or brand colors.
 ## Production upload summary — 13 November 2026
 
 Four company rows received missing logos: GILT, Virtual Campus, AIESEC and
-NBanks. The row identifiers, object keys, authorization record and reversal
-notes are retained in the [PR #557 description](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/pull/557).
+NBanks. Production row identifiers and storage object keys are omitted from
+this public summary and the PR description.
 The original upload session recorded empty previous logo values but did not
 retain their exact SQL representation or an independent before-state export.
 
