@@ -50,3 +50,16 @@ their nonce policy. Edits can take effect at different times across Next copies
 and the CDN. Warm both languages directly on the origin after rollout and purge
 the five HTML URLs after deploy or urgent changes. The underlying data cache and
 its API behavior are described in ADR 0013.
+
+## ISR recovery evidence
+
+On 2026-11-14, an operator exercised a local production Next server on
+`127.0.0.1:3753` with `SHOWCASE_FULL_WEBSITE=true`, a disposable PostgreSQL
+instance and a synthetic FAQ. The first `/event/pt` response contained
+`ISR-ANTES`. After PostgreSQL was stopped and the 60-second revalidation
+interval elapsed, two requests returned HTTP 200 with the original marker.
+Server logs recorded failed database reads and a failed regeneration. After
+PostgreSQL was restored and the FAQ changed, a subsequent response contained
+`ISR-DEPOIS`. The operator reported the recovery marker; no timing or hosted
+Cloudflare evidence was captured. The server used `next start` with a standalone
+build and logged the Next.js warning recommending the standalone server.
