@@ -4,9 +4,18 @@ import { expect, test, vi } from "vitest";
 import Company from ".";
 
 vi.mock("next/image", () => ({
-  default: ({ fill, alt, ...props }: { fill?: boolean; alt: string }) => (
+  default: ({
+    fill,
+    unoptimized,
+    alt,
+    ...props
+  }: {
+    fill?: boolean;
+    unoptimized?: boolean;
+    alt: string;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img {...props} alt={alt} data-fill={fill} />
+    <img {...props} alt={alt} data-fill={fill} data-unoptimized={unoptimized} />
   ),
 }));
 
@@ -33,4 +42,18 @@ test("long names stay within logo-less cells", () => {
     "A very long company name that would otherwise overflow its cell";
   render(<Company name={name} hasContent={false} rankStyle={null} />);
   expect(screen.getByText(name)).toHaveClass("line-clamp-2", "text-center");
+});
+
+test("uploaded SVG logos bypass image optimization without changing sizing", () => {
+  render(
+    <Company
+      name="SVG partner"
+      logoHref="/api/media/logo/partner.svg"
+      hasContent={false}
+      rankStyle={null}
+    />
+  );
+  const logo = screen.getByRole("img", { name: "SVG partner" });
+  expect(logo).toHaveAttribute("data-unoptimized", "true");
+  expect(logo).toHaveClass("object-contain");
 });
