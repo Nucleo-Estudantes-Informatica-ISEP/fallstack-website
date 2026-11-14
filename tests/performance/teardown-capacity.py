@@ -18,7 +18,7 @@ def owned(name, labels):
 
 
 def plan():
-    result = {"containers": [], "container_names": [], "volumes": [], "networks": [], "proxy": None}
+    result = {"containers": [], "container_names": [], "volumes": [], "networks": [], "proxy": None, "sampler_unit": None}
     for kind, listing in [("containers", ["ps", "-aq"]), ("volumes", ["volume", "ls", "-q"]),
                           ("networks", ["network", "ls", "-q"])]:
         ids = docker(*listing, "--filter", f"label=com.docker.compose.project={PROJECT}").split()
@@ -37,6 +37,11 @@ def plan():
         if set(config["services"]) != {PROJECT} or not all(n.startswith(PROJECT + "-") for n in config["routers"]):
             raise ValueError("Proxy override is not owned by this test")
         result["proxy"] = str(PROXY)
+    command = subprocess.run(["systemctl", "show", PROJECT + "-sampler.service", "-p", "ExecStart", "--value"], capture_output=True, text=True).stdout.strip()
+    if command:
+        if "/usr/bin/python3" not in command or "/tmp/fallstack-capacity-v3/sample.py" not in command:
+            raise ValueError("Sampler service is not owned by this test")
+        result["sampler_unit"] = PROJECT + "-sampler.service"
     return result
 
 
@@ -69,3 +74,5 @@ if __name__ == "__main__":
             for kind, command in [("volumes", "volume"), ("networks", "network")]:
                 if removal[kind]:
                     docker(command, "rm", *removal[kind])
+            if removal["sampler_unit"]:
+                subprocess.run(["systemctl", "stop", removal["sampler_unit"]], check=True)

@@ -148,8 +148,8 @@ Start `tests/performance/capacity-sampler.py` on the event host before any run
 addresses and records readiness status/latency with the resource samples.
 The supervisor checks fresh samples before starting k6 and every two seconds.
 It stops its own workload on either private readiness status other than 200,
-latency at or above 1,000 ms, a sample older than 15 seconds, or missing/broken
-control access. Public AuthNEI probes are recorded separately; an existing
+latency at or above 1,000 ms, a sample older than 15 seconds, missing task
+routing/web copies, or missing/broken control access. Public AuthNEI probes are recorded separately; an existing
 Cloudflare 403 is not treated as a successful sign-in. Keep the supervisor report
 for each run, including aborts. Its self-check exercises actual child termination.
 `CAPACITY_SSH_CONTROL_PATH` can reuse the operator's existing SSH connection.
@@ -163,7 +163,7 @@ upload request rate. Both round trips have independent completion gates.
 For the explicitly named `capacity453v3` stack, run
 `tests/performance/teardown-capacity.py` on the host first without arguments.
 Retain its dry-run plan. `--apply` validates Compose ownership labels and name
-prefixes, removes only this task's proxy override, then its containers, volumes
-and private network. It does not select the external shared proxy network.
+prefixes, removes only this task's proxy override, then its containers, volumes,
+private network and verified transient sampler service. It does not select the external shared proxy network.
 Record routing restoration, affected staging hostnames, UTC window, user
 authorization and the exact removed resource names with the final evidence.

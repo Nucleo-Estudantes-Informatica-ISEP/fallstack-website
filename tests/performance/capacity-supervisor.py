@@ -18,6 +18,8 @@ SAMPLE = "/tmp/fallstack-capacity-v3/resources.jsonl"
 
 
 def validate(sample, now):
+    if not sample.get("test_proxy_owned") or sample.get("test_web_running", 0) < 1:
+        raise ValueError("Disposable test routing or web copies are missing")
     age = (now - datetime.datetime.fromisoformat(sample["utc"])).total_seconds()
     if not 0 <= age <= 15:
         raise ValueError("AuthNEI sample is stale or from the future")
@@ -84,12 +86,13 @@ def interrupted(_signal, _frame):
 
 def self_test():
     now = datetime.datetime.now(datetime.timezone.utc)
-    good = {"utc": now.isoformat(), **{o: {"status": 200, "ms": 10} for o in ORIGINS}}
+    good = {"utc": now.isoformat(), "test_proxy_owned": True, "test_web_running": 3, **{o: {"status": 200, "ms": 10} for o in ORIGINS}}
     validate(good, now)
     cases = [{**good, "auth_prod_origin": {"status": 503, "ms": 10}},
              {**good, "auth_dev_origin": {"status": 200, "ms": 1000}},
              {**good, "utc": (now - datetime.timedelta(seconds=16)).isoformat()},
-             {"utc": now.isoformat()}]
+             {"utc": now.isoformat()}, {**good, "test_proxy_owned": False},
+             {**good, "test_web_running": 0}]
     for sample in cases:
         try:
             validate(sample, now)

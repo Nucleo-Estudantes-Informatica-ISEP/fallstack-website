@@ -6,6 +6,12 @@ while True:
  try:
   cs=json.loads(subprocess.check_output(['docker','inspect']+subprocess.check_output(['docker','ps','-aq'],text=True).split(),stderr=subprocess.DEVNULL))
   selected=[c for c in cs if c['Name'].startswith('/capacity453v3-') or any(x in c['Name'] for x in ['zitadel-','login-','db-x13','db-skoc','coolify-proxy'])]
+  proxy=pathlib.Path('/data/coolify/proxy/dynamic/capacity453v3.yaml')
+  config=json.loads(proxy.read_text())['http'] if proxy.exists() else {}
+  service=config.get('services',{}).get('capacity453v3',{})
+  servers=service.get('loadBalancer',{}).get('servers',[])
+  row['test_proxy_owned']=bool(servers) and all(x['url'] in [f'http://capacity453v3-web-{i}:4000' for i in range(1,5)] for x in servers) and all(x.get('service')=='capacity453v3' for x in config.get('routers',{}).values())
+  row['test_web_running']=sum(c['Name'].startswith('/capacity453v3-web-') and c['State']['Running'] for c in cs)
   row['containers']=[]
   for c in selected:
    x={'name':c['Name'][1:],'running':c['State']['Running'],'oom':c['State']['OOMKilled'],'restarts':c['RestartCount'],'cpu_limit':c['HostConfig']['NanoCpus']/1e9,'memory_limit':c['HostConfig']['Memory']}
