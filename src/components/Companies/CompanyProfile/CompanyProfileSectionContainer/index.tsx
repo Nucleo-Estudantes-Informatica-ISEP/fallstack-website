@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { BiScan } from "react-icons/bi";
 import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 
@@ -60,23 +60,35 @@ const CompanyProfileSectionContainer: React.FC<
   const [hasMore, setHasMore] = useState(historyHasMore);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(false);
+  const historyGeneration = useRef(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    historyGeneration.current += 1;
     setItems(history);
     setHasMore(historyHasMore);
+    setLoadingHistory(false);
+    setHistoryError(false);
+    return () => {
+      historyGeneration.current += 1;
+    };
   }, [history, historyHasMore]);
 
   const loadMore = async () => {
     const last = items.at(-1);
     if (!last || loadingHistory) return;
+    const generation = historyGeneration.current;
     setLoadingHistory(true);
     setHistoryError(false);
     try {
-      const query = new URLSearchParams({ studentId: last.studentId, createdAt: last.createdAt });
+      const query = new URLSearchParams({
+        studentId: last.studentId,
+        createdAt: last.createdAt,
+      });
       const page = await httpClient.get<{
         items: SavedStudentDto[];
         hasMore: boolean;
       }>(`/companies/history/page?${query}`);
+      if (generation !== historyGeneration.current) return;
       setItems((current) => [
         ...current,
         ...page.items.filter(
@@ -86,9 +98,9 @@ const CompanyProfileSectionContainer: React.FC<
       ]);
       setHasMore(page.hasMore);
     } catch {
-      setHistoryError(true);
+      if (generation === historyGeneration.current) setHistoryError(true);
     } finally {
-      setLoadingHistory(false);
+      if (generation === historyGeneration.current) setLoadingHistory(false);
     }
   };
 
