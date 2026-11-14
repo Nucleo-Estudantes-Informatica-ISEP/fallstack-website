@@ -11,6 +11,10 @@ vi.mock("@/application/services/sessionCheckInService", () => ({
   recordSessionCheckIn: vi.fn(),
 }));
 
+vi.mock("@/application/services/rateLimitService", () => ({
+  checkRateLimit: vi.fn(async () => ({ status: "allowed" })),
+}));
+
 function request(body: unknown) {
   return new NextRequest("http://localhost/api/sessions/session-1/check-ins", {
     method: "POST",
@@ -153,6 +157,41 @@ test.each([null, "ADMIN", "SUPER_ADMIN"])(
       params: Promise.resolve({ sessionId: "session-1" }),
     });
     assert.equal(response.status, 403);
+    assert.equal(vi.mocked(recordSessionCheckIn).mock.calls.length, 0);
+  }
+);
+
+test.each([
+  [{ status: "limited", retryAfterMs: 2500 }, 429, "3"],
+  [{ status: "unavailable" }, 503, "1"],
+] as const)(
+  "blocks check-in when limiter returns %j",
+  async (decision, status, retryAfter) => {
+    const getServerSession = (
+      await import("@/application/services/sessionService")
+    ).default;
+    const { checkRateLimit } =
+      await import("@/application/services/rateLimitService");
+    const { recordSessionCheckIn } =
+      await import("@/application/services/sessionCheckInService");
+    vi.mocked(getServerSession).mockResolvedValue({
+      id: "staff-user",
+      neiMember: true,
+      adminRole: null,
+      attendanceExpiresAt: Date.now() + 300000,
+    } as never);
+    vi.mocked(checkRateLimit).mockResolvedValueOnce(decision);
+    const { POST } = await import("./route");
+    const response = await POST(request({ code: "AB12" }), {
+      params: Promise.resolve({ sessionId: "session-1" }),
+    });
+    assert.equal(response.status, status);
+    assert.equal(response.headers.get("Retry-After"), retryAfter);
+    assert.deepEqual(vi.mocked(checkRateLimit).mock.calls[0], [
+      "session_check_in",
+      "staff-user",
+      { max: 60, windowMs: 60000 },
+    ]);
     assert.equal(vi.mocked(recordSessionCheckIn).mock.calls.length, 0);
   }
 );

@@ -184,3 +184,13 @@ test.each([null, "ADMIN", "SUPER_ADMIN"] as const)(
     if (adminRole) assert.equal(passesAuthPolicy("admin", session), true);
   }
 );
+
+test("missing admin role does not grant staff or admin access", () => {
+  const session = {
+    ...studentSession,
+    adminRole: undefined,
+    attendanceExpiresAt: Date.now() + 300000,
+  } as unknown as Parameters<typeof passesAuthPolicy>[1];
+  assert.equal(passesAuthPolicy("staff", session), false);
+  assert.equal(passesAuthPolicy("admin", session), false);
+});

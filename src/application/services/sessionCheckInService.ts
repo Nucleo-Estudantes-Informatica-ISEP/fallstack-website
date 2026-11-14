@@ -1,6 +1,7 @@
 import "server-only";
 
 import { HttpError } from "@/types/HttpError";
+import logger from "@/lib/logger";
 import { verifyJwt } from "@/application/services/authService";
 import {
   getSessionWindow,
@@ -70,7 +71,13 @@ export async function recordSessionCheckIn(
   if (!isStudentCode(code)) throw new HttpError("Invalid student code.", 400);
 
   const student = await findStudentForCheckIn(code);
-  if (!student) throw new HttpError("Student code not found.", 404);
+  if (!student) {
+    logger.warn(
+      { event: "attendance_student_miss", scannedById, sessionId },
+      "Attendance credential did not match a student"
+    );
+    throw new HttpError("Student code not found.", 404);
+  }
 
   try {
     return await createSessionCheckIn({

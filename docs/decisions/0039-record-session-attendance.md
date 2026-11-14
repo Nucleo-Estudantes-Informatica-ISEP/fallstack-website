@@ -54,3 +54,10 @@ never silently retry a recorded scan. Silent grant refresh is deferred until a
 separate authentication design; no such refresh is claimed here. Employee
 onboarding preserves the verified membership and original attendance deadline;
 reissuing an app cookie does not refresh grants.
+
+Check-in POSTs share a Redis-backed limit of 60 attempts per staff user per
+minute across all sessions and credential forms. Exhaustion returns 429 with
+Retry-After; a limiter outage fails closed with 503. Unknown student credentials
+emit a structured warning with scanner and session IDs, never the code or token,
+so repeated misses can be investigated. The 404 remains useful for staff input
+correction; authorized staff can still learn code existence within this budget.

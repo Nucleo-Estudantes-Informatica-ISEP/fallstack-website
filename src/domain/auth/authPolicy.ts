@@ -57,10 +57,10 @@ export function passesAuthPolicy(
     return session.role === "EMPLOYEE" && !!session.employee?.company;
   if (policy === "staff")
     return (
-      (session.adminRole !== null || session.neiMember === true) &&
+      (Boolean(session.adminRole) || session.neiMember === true) &&
       (session.attendanceExpiresAt ?? 0) > Date.now()
     );
-  if (policy === "admin") return session.adminRole !== null;
+  if (policy === "admin") return Boolean(session.adminRole);
   if (policy === "superadmin") return session.adminRole === "SUPER_ADMIN";
   return false;
 }
