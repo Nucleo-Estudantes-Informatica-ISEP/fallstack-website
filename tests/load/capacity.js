@@ -15,6 +15,18 @@ const base = assertStagingTarget(
   __ENV.CONFIRM_NON_PRODUCTION
 );
 const workload = __ENV.CAPACITY_WORKLOAD || "homepage-target";
+if (__ENV.CAPACITY_AUTHNEI_GUARD !== "active")
+  throw new Error(
+    "Run through tests/performance/capacity-supervisor.py to protect AuthNEI"
+  );
+if (
+  workload === "heavy" &&
+  __ENV.CONFIRM_DISPOSABLE_STAGING !==
+    base.replace(/^https?:\/\//, "").split(":")[0]
+)
+  throw new Error(
+    "Set CONFIRM_DISPOSABLE_STAGING to the disposable target hostname"
+  );
 const vus = Number(__ENV.VUS || 80);
 if (!["homepage-target", "homepage-concurrency", "heavy"].includes(workload))
   throw new Error("Unknown CAPACITY_WORKLOAD");
@@ -52,6 +64,7 @@ const completed = new Counter("completed_visits");
 const boothScans = new Counter("booth_scans");
 const actionCheckIns = new Counter("action_check_ins");
 const largeCvs = new Counter("large_cvs_verified");
+const nearCvs = new Counter("near_cvs_verified");
 export const options = {
   maxRedirects: 0,
   // Exclude URL/error tags: action paths contain tokens, student paths contain codes.
@@ -87,6 +100,7 @@ export const options = {
           booth_scans: [`count==${vus}`],
           action_check_ins: [`count==${vus}`],
           large_cvs_verified: ["count>0"],
+          near_cvs_verified: ["count>0"],
         }
       : { "http_req_duration{name:homepage}": ["p(95)<750"] }),
     ...(workload === "homepage-target"
@@ -100,19 +114,23 @@ export const options = {
 
 // k6 must discover every fixture before it initializes individual VUs.
 if (workload === "heavy" && __VU === 0)
-  for (const key of ["CV_SMALL", "CV_MEDIUM", "CV_LARGE"])
+  for (const key of ["CV_SMALL", "CV_MEDIUM", "CV_NEAR", "CV_LARGE"])
     open(__ENV[key], "b");
 
-// Only 10% of heavy VUs allocate a near-limit body; don't allocate 10 MiB per VU.
-const size = __VU % 10 === 0 ? "large" : __VU % 3 === 0 ? "medium" : "small";
-const pdf =
+// The 10% boundary group alternates near/exact files without doubling request rate.
+const sizes =
+  __VU % 10 === 0 ? ["near", "large"] : [__VU % 3 === 0 ? "medium" : "small"];
+const fixtures =
   workload === "heavy"
-    ? http.file(
-        open(__ENV[`CV_${size.toUpperCase()}`], "b"),
-        "cv.pdf",
-        "application/pdf"
-      )
-    : null;
+    ? sizes.map((size) => ({
+        size,
+        pdf: http.file(
+          open(__ENV[`CV_${size.toUpperCase()}`], "b"),
+          "cv.pdf",
+          "application/pdf"
+        ),
+      }))
+    : [];
 
 function observe(response, name, expected) {
   const tags = {
@@ -209,6 +227,7 @@ function homepage() {
 }
 
 function heavy() {
+  const { size, pdf } = fixtures[__ITER % fixtures.length];
   const a = accounts[__VU - 1];
   request("GET", "/dashboard", "dashboard", a.employeeCookie);
   request("GET", `/student/${a.code}`, "student_profile", a.studentCookie);
@@ -267,6 +286,7 @@ function heavy() {
           (r.status === 200 && r.body.byteLength === pdf.data.byteLength),
       });
       if (valid && download.ok && size === "large") largeCvs.add(1);
+      if (valid && download.ok && size === "near") nearCvs.add(1);
     }
   }
   request(

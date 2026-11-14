@@ -33,7 +33,7 @@ action, and public rows installed by the normal migrations. Synthetic signed
 sessions used a new isolated `AUTH_SECRET`; they did not mint or modify real
 AuthNEI identities. PDF fixtures contained a readable one-page synthetic CV,
 with byte sizes 262,144, 1,048,576 and 10,485,760. `pdfinfo`/`pdftotext` validated
-the final fixtures. Near-limit bodies were assigned to every tenth heavy VU.
+the final fixtures. Exact-limit bodies were assigned to every tenth heavy VU.
 
 The existing Traefik 3.7 proxy routed both staging hostnames to the isolated
 copies, with `/api/proxy-ready` checks every five seconds, two-second probe

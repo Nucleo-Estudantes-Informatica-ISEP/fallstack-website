@@ -33,9 +33,10 @@ the deployment passed the event targets.
   action check-in. Repeated work uploads a CV, attaches it, downloads it as the
   authorized Employee and reads Student history. Each upload is followed by
   at least 20 seconds of pacing, below five uploads per minute per Student.
-  10% use the 10 MiB limit; remaining VUs use 256 KiB or 1 MiB synthetic PDFs.
+  The 10% boundary group alternates near-limit and exact 10 MiB files;
+  remaining VUs use 256 KiB or 1 MiB synthetic PDFs.
   Heavy runs require all first scans/check-ins and at least one verified
-  near-limit CV round trip, as well as the agreed under-1% error gate; latency is recorded without
+  near-limit and exact-limit CV round trips, as well as the agreed under-1% error gate; latency is recorded without
   inventing a separate heavy-user latency requirement.
 
 All workloads record p95 and p99. HTTP 429s are counted separately and excluded
@@ -104,12 +105,16 @@ With the private environment loaded, run each matrix cell separately:
 export E2E_BASE_URL=https://staging-fallstack.nei-isep.org
 export STAGING_BASE_URL="$E2E_BASE_URL"
 export CONFIRM_NON_PRODUCTION=yes
+export CONFIRM_DISPOSABLE_STAGING=staging-fallstack.nei-isep.org
 CAPACITY_WORKLOAD=homepage-target VUS=200 \
-  k6 run --out json=target-samples.json --summary-export=target-summary.json tests/load/capacity.js
+  CAPACITY_GUARD_REPORT=target-auth-guard.json \
+  python3 tests/performance/capacity-supervisor.py -- k6 run --out json=target-samples.json --summary-export=target-summary.json tests/load/capacity.js
 CAPACITY_WORKLOAD=heavy VUS=200 \
-  k6 run --out json=heavy-samples.json --summary-export=heavy-summary.json tests/load/capacity.js
+  CAPACITY_GUARD_REPORT=heavy-auth-guard.json \
+  python3 tests/performance/capacity-supervisor.py -- k6 run --out json=heavy-samples.json --summary-export=heavy-summary.json tests/load/capacity.js
 CAPACITY_WORKLOAD=homepage-concurrency VUS=80 \
-  k6 run --out json=concurrency-samples.json --summary-export=concurrency-summary.json tests/load/capacity.js
+  CAPACITY_GUARD_REPORT=concurrency-auth-guard.json \
+  python3 tests/performance/capacity-supervisor.py -- k6 run --out json=concurrency-samples.json --summary-export=concurrency-summary.json tests/load/capacity.js
 ```
 
 `VUS` preallocates target workers; it is the user target only for concurrency
@@ -134,3 +139,31 @@ Publish exact outcomes, operation counts, latency/error/resource summaries,
 source/artifact hashes and limitations. Restore staging routing, stop only
 task-owned processes/containers, and remove private synthetic data/credentials
 when no longer needed. Keep the sanitized evidence used for the report.
+
+## Protect AuthNEI and teardown
+
+Start `tests/performance/capacity-sampler.py` on the event host before any run
+(with privileges to read Docker/cgroups), using the task directory
+`/tmp/fallstack-capacity-v3/`. It discovers both AuthNEI containers' private
+addresses and records readiness status/latency with the resource samples.
+The supervisor checks fresh samples before starting k6 and every two seconds.
+It stops its own workload on either private readiness status other than 200,
+latency at or above 1,000 ms, a sample older than 15 seconds, or missing/broken
+control access. Public AuthNEI probes are recorded separately; an existing
+Cloudflare 403 is not treated as a successful sign-in. Keep the supervisor report
+for each run, including aborts. Its self-check exercises actual child termination.
+`CAPACITY_SSH_CONTROL_PATH` can reuse the operator's existing SSH connection.
+
+Heavy mode also requires `CONFIRM_DISPOSABLE_STAGING` to exactly match the target
+hostname. A staging-shaped name alone is insufficient permission to write data.
+Provide `CV_NEAR` (10,484,736 bytes) and `CV_LARGE` (10,485,760 bytes). The 10%
+boundary group alternates these files between iterations without doubling the
+upload request rate. Both round trips have independent completion gates.
+
+For the explicitly named `capacity453v3` stack, run
+`tests/performance/teardown-capacity.py` on the host first without arguments.
+Retain its dry-run plan. `--apply` validates Compose ownership labels and name
+prefixes, removes only this task's proxy override, then its containers, volumes
+and private network. It does not select the external shared proxy network.
+Record routing restoration, affected staging hostnames, UTC window, user
+authorization and the exact removed resource names with the final evidence.

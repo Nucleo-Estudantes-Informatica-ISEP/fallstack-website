@@ -11,7 +11,13 @@ const source = readFileSync(new URL("./capacity.js", import.meta.url), "utf8")
   .replace(/export default /g, "")
   .replace(/export /g, "");
 
-function load(workload = "heavy", status = 200, env = {}, vu = 1) {
+function load(
+  workload = "heavy",
+  status = 200,
+  env = {},
+  vu = 1,
+  iteration = 0
+) {
   const requests: { path: string; name: string; responseType: string }[] = [];
   const samples: Record<string, unknown[]> = {};
   class Metric {
@@ -37,11 +43,13 @@ function load(workload = "heavy", status = 200, env = {}, vu = 1) {
       CAPACITY_WORKLOAD: workload,
       VUS: "200",
       E2E_ALLOW_UPLOADS: "yes",
+      CONFIRM_DISPOSABLE_STAGING: "staging.example.org",
+      CAPACITY_AUTHNEI_GUARD: "active",
       ACTION_ID: "action",
       ...env,
     },
     __VU: vu,
-    __ITER: 0,
+    __ITER: iteration,
     execution: { scenario: { iterationInTest: 0 } },
     SharedArray: class {
       constructor() {
@@ -150,7 +158,11 @@ test("heavy journey uploads, attaches, downloads, scans and checks in", () => {
   expect(samples.booth_scans).toEqual([1]);
   expect(samples.action_check_ins).toEqual([1]);
   expect(load().options.thresholds.large_cvs_verified).toEqual(["count>0"]);
-  const large = load("heavy", 200, {}, 10);
+  const near = load("heavy", 200, {}, 10);
+  near.runCapacity();
+  expect(near.samples.near_cvs_verified).toEqual([1]);
+  expect(near.options.thresholds.near_cvs_verified).toEqual(["count>0"]);
+  const large = load("heavy", 200, {}, 10, 1);
   large.runCapacity();
   expect(large.samples.large_cvs_verified).toEqual([1]);
 });
@@ -187,4 +199,16 @@ test("follows only the explicit same-origin language redirect with redirects dis
     "https://staging.example.org/event/pt",
   ]);
   expect(run.samples.completed_visits).toEqual([1]);
+});
+
+test("requires the health supervisor and exact disposable hostname before writes", () => {
+  expect(() => load("heavy", 200, { CONFIRM_DISPOSABLE_STAGING: "" })).toThrow(
+    /disposable/
+  );
+  expect(() =>
+    load("heavy", 200, { CONFIRM_DISPOSABLE_STAGING: "another.staging.org" })
+  ).toThrow(/disposable/);
+  expect(() =>
+    load("homepage-target", 200, { CAPACITY_AUTHNEI_GUARD: "" })
+  ).toThrow(/AuthNEI/);
 });
