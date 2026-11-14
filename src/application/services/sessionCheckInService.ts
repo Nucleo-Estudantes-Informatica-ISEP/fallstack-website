@@ -32,7 +32,7 @@ function getCodeFromToken(token: string) {
     decoded &&
     typeof decoded === "object" &&
     "purpose" in decoded &&
-    decoded.purpose === "student-pass" &&
+    decoded.purpose === "attendance" &&
     "exp" in decoded &&
     typeof decoded.exp === "number" &&
     "code" in decoded &&

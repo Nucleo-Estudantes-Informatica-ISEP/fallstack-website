@@ -33,3 +33,11 @@ test("accepts check-in through the end of the session only", () => {
     false
   );
 });
+
+test.each([
+  ["2026-01-01T00:30:00+01:00", 1, "2026-01-01T09:00:00.000Z"],
+  ["2026-12-31T23:30:00-01:00", 31, "2026-12-31T11:00:00.000Z"],
+])("uses the offset-local month/year for %s", (start, day, expected) => {
+  const window = getSessionWindow(event, [day], start);
+  assert.equal(window?.start.toISOString(), expected);
+});

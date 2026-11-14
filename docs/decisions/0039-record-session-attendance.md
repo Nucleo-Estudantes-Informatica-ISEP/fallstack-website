@@ -1,4 +1,4 @@
-# 0038: Record session attendance
+# 0039: Record session attendance
 
 Status: Accepted
 Date: 2026-11-13
@@ -24,3 +24,16 @@ Staff need a fresh login to receive the new grant in their application session.
 Sessions with attendance require the records to be removed before deletion. The
 scanner is no longer attributable after that user is deleted. A future change
 to early or break-time scans requires an explicit product decision.
+
+Manual codes (`code`, `permanentCode`, `typedCode`) are an intentional staff
+fallback: knowing a code permits recording attendance without a student-held
+token. Staff must establish presence operationally; the API cannot prove it.
+QR tokens use the `attendance` purpose; profile-preview `student-pass` tokens
+are rejected by check-in.
+
+NEI-member app sessions expire after five minutes, requiring AuthNEI sign-in
+to refresh grants. Previously issued member cookies are subject to the same
+five-minute age limit. Revocation can therefore take up to five minutes to
+remove member access. Other app sessions retain their existing eight-hour TTL;
+admin grants retain that existing snapshot policy. Local account deactivation
+is checked on each request.

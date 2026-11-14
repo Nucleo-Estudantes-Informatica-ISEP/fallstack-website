@@ -13,8 +13,7 @@ export function getSessionWindow(
   )
     return null;
 
-  const year = eventStartDate.getUTCFullYear();
-  const month = String(eventStartDate.getUTCMonth() + 1).padStart(2, "0");
+  const [year, month] = eventStart.split("T")[0].split("-");
   const day = String(dayOfMonth).padStart(2, "0");
   const offset = eventStart.match(/([+-]\d{2}:\d{2})$/)?.[1] ?? "Z";
   const start = new Date(
