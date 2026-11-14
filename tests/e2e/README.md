@@ -280,6 +280,9 @@ context.
 
 ## k6 load test
 
+For the 1,200-arrival, 200-heavy-user and multi-copy saturation matrix, use
+[the capacity test guide](../../docs/testing/capacity-targets.md).
+
 Install [k6](https://grafana.com/docs/k6/latest/set-up/install-k6/) separately.
 The script refuses to run without an explicit non-production confirmation.
 
@@ -378,3 +381,27 @@ For the authenticated signup fields smoke test, set `E2E_SIGNUP_STORAGE_STATE`
 to a Playwright storage state for a synthetic AuthNEI student who has no
 Fallstack profile yet. The test visits all four steps and checks validation
 without creating a profile.
+
+## Production ISR recovery
+
+After preparing a task-owned loopback PostgreSQL database whose name starts
+with `capacity453_`, applying migrations, and running the production build:
+
+```bash
+SHOWCASE_FULL_WEBSITE=true RUN_ISR_RECOVERY=yes pnpm exec tsx tests/e2e/isr-recovery.ts
+```
+
+Keep `DATABASE_URL`, `DIRECT_URL`, and the normal validated application environment
+set. The script starts one production server, creates a temporary read-only
+PostgreSQL role and FAQ, warms Portuguese HTML, and revokes FAQ reads after the
+real 60-second TTL. It asserts that failed regeneration keeps the complete
+last-good page, an uncached English page fails with HTTP 500, and both languages
+recover with changed content after access is restored. It removes its own role,
+fixture, and server in `finally`. It deliberately refuses remote/shared targets.
+This is an opt-in integration test, separate from Vitest and development mode.
+
+Company pagination browser coverage (`playwright/company-history.spec.ts`)
+requires an isolated employee account with at least 16 saved student profiles.
+It checks the initial 15 rows, cursor request, all remaining profiles and absence
+of duplicates. Browser output uses `test-results/playwright/`; retained load-test
+artifacts must stay outside that directory.

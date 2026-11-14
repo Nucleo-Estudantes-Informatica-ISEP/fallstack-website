@@ -2,6 +2,8 @@ import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Initialize before middleware inherits its environment, so both runtimes identify the same copy.
+    await import("./security/instanceId");
     await import("../sentry.server.config");
     try {
       const { metricsEnv } = await import("./config/env.metrics");

@@ -6,7 +6,9 @@ Decisions for the Fallstack 2026 capacity tests (#447, Task01-A).
 
 - 1,200 homepage users and 200 heavy users (QR scans, CV uploads, check-in).
 - All arrive within 1 minute, about 20 homepage loads per second.
-- 4 web copies behind the CDN. The capacity of 4 copies is an estimate until Task01-F measures it.
+- 4 web copies behind the CDN remain an unmeasured estimate. Task01-F
+  [records two/three-copy target and saturation measurements](../evidence/task01-f-capacity-2026-11-14.md);
+  those results do not approve four-copy event capacity.
 
 ## Pass limits
 

@@ -1,8 +1,11 @@
+import type { CompanyHistoryCursor } from "@/schemas/companyHistoryCursorSchema";
+
 import "server-only";
 
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
 import type { Stats } from "@/types/Stats";
+import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { assertStudentCanBeSaved } from "@/domain/savedStudent/saveRules";
 import {
   isAllowedToViewStudent,
@@ -23,6 +26,7 @@ import {
   createSavedStudent,
   findAdminScans,
   findCompanyHistory,
+  findCompanyHistoryPage,
   findCompanyHistoryWithInterests,
   findCompanySavedStudentsWithCv,
   findStudentHistory,
@@ -152,6 +156,17 @@ export async function getSavedStudentCountsByCompany() {
 
 export const getCompanyHistory = (companyId: string) =>
   findCompanyHistory(companyId);
+export async function getCompanyHistoryPage(
+  companyId: string,
+  cursor?: CompanyHistoryCursor
+) {
+  const records = await findCompanyHistoryPage(companyId, cursor);
+  return {
+    items: records.slice(0, 15).map(toSavedStudentDto),
+    hasMore: records.length > 15,
+  };
+}
+
 export const getCompanyHistoryWithInterests = (companyId: string) =>
   findCompanyHistoryWithInterests(companyId);
 export const getCompanySavedStudentsWithCv = (companyId: string) =>

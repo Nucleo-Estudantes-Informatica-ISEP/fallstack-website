@@ -1,3 +1,5 @@
+import type { CompanyHistoryCursor } from "@/schemas/companyHistoryCursorSchema";
+
 import "server-only";
 
 import { Prisma } from "@prisma/client";
@@ -87,6 +89,34 @@ export const findCompanyHistory = (companyId: string) =>
     where: { companyId },
     include: { savedBy: { include: { company: true } }, student: true },
     orderBy: { createdAt: "desc" },
+  });
+
+export const findCompanyHistoryPage = (
+  companyId: string,
+  cursor?: CompanyHistoryCursor
+) =>
+  prisma.savedStudent.findMany({
+    where: {
+      companyId,
+      ...(cursor && {
+        OR: [
+          { createdAt: { lt: new Date(cursor.createdAt) } },
+          {
+            createdAt: new Date(cursor.createdAt),
+            studentId: { lt: cursor.studentId },
+          },
+        ],
+      }),
+    },
+    orderBy: [{ createdAt: "desc" }, { studentId: "desc" }],
+    take: 16,
+    select: {
+      studentId: true,
+      createdAt: true,
+      comment: true,
+      student: { select: { code: true, name: true } },
+      savedBy: { select: { name: true, company: { select: { name: true } } } },
+    },
   });
 
 export const findCompanyHistoryWithInterests = (companyId: string) =>

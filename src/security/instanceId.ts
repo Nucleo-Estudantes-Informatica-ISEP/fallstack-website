@@ -7,7 +7,9 @@
  */
 export const INSTANCE_ID_HEADER = "x-instance-id";
 
-export const instanceId = crypto.randomUUID().slice(0, 8);
+export const instanceId = (process.env.FALLSTACK_INSTANCE_ID ??= crypto
+  .randomUUID()
+  .slice(0, 8));
 
 const publicDocuments =
   /^\/(?:about|privacy-policy|terms|event\/(?:pt|en))\/?$/;

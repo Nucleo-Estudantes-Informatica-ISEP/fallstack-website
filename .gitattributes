@@ -1,0 +1,2 @@
+# Preserve PDF cross-reference offsets and required entry padding.
+*.pdf binary

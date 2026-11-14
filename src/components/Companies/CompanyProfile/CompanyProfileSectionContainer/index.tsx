@@ -5,6 +5,7 @@ import { BiScan } from "react-icons/bi";
 import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 
 import type { Stats } from "@/types/Stats";
+import { httpClient } from "@/lib/http/client";
 import { useLogout } from "@/hooks/useLogout";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
@@ -21,6 +22,7 @@ interface CompanyProfileSectionContainerProps {
   globalStats: Stats;
   totalStudents: number;
   history: SavedStudentDto[];
+  historyHasMore: boolean;
   interestIds: string[];
   availableInterests: InterestDto[];
 }
@@ -49,10 +51,49 @@ const CompanyProfileSectionContainer: React.FC<
   globalStats,
   totalStudents,
   history,
+  historyHasMore,
   interestIds,
   availableInterests,
 }) => {
   const { handleLogout, ConfirmDialog } = useLogout();
+  const [items, setItems] = useState(history);
+  const [hasMore, setHasMore] = useState(historyHasMore);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState(false);
+
+  useEffect(() => {
+    setItems(history);
+    setHasMore(historyHasMore);
+  }, [history, historyHasMore]);
+
+  const loadMore = async () => {
+    const last = items.at(-1);
+    if (!last || loadingHistory) return;
+    setLoadingHistory(true);
+    setHistoryError(false);
+    try {
+      const query = new URLSearchParams({
+        studentId: last.studentId,
+        createdAt: last.createdAt,
+      });
+      const page = await httpClient.get<{
+        items: SavedStudentDto[];
+        hasMore: boolean;
+      }>(`/companies/history/page?${query}`);
+      setItems((current) => [
+        ...current,
+        ...page.items.filter(
+          (item) =>
+            !current.some((existing) => existing.studentId === item.studentId)
+        ),
+      ]);
+      setHasMore(page.hasMore);
+    } catch {
+      setHistoryError(true);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
   const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
@@ -110,20 +151,46 @@ const CompanyProfileSectionContainer: React.FC<
 
   const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
 
+  const pagination = (
+    <div className="flex flex-col items-center gap-2 pb-6 text-white">
+      {historyError && (
+        <p role="alert">Não foi possível carregar mais perfis.</p>
+      )}
+      {hasMore && (
+        <button
+          type="button"
+          onClick={loadMore}
+          disabled={loadingHistory}
+          className="bg-primary px-4 py-2 disabled:opacity-60"
+        >
+          {loadingHistory ? "A carregar..." : "Carregar mais"}
+        </button>
+      )}
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case "Sumário":
         return (
-          <CompanyStatsSection
-            stats={globalStats}
-            students={totalStudents}
-            history={history}
-            interestIds={interestIds}
-            availableInterests={availableInterests}
-          />
+          <>
+            <CompanyStatsSection
+              stats={globalStats}
+              students={totalStudents}
+              history={items}
+              interestIds={interestIds}
+              availableInterests={availableInterests}
+            />
+            {pagination}
+          </>
         );
       case "Scan de Perfil":
-        return <CompanySavedProfilesSection history={history} />;
+        return (
+          <>
+            <CompanySavedProfilesSection history={items} />
+            {pagination}
+          </>
+        );
       default:
         return null;
     }

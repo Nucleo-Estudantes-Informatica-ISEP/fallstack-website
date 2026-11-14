@@ -1,8 +1,9 @@
 # Cloudflare account and CDN
 
 The whole `nei-isep.org` domain uses Cloudflare DNS since 24 Oct 2026, so a change
-here affects every NEI service. Only `fallstack.nei-isep.org` and one test subdomain
-go through the CDN. Everything else, including login and mail, is DNS only. The
+here affects every NEI service. `fallstack.nei-isep.org` and its explicit test hostnames
+go through the CDN. AuthNEI production is also proxied as observed on 14 November 2026;
+development login and mail remain DNS only. The
 cPanel server no longer manages this DNS.
 
 ## Owners
@@ -42,12 +43,20 @@ Never add a rule that caches the HTML either: its nonce changes on every request
 
 Proxy only what the site needs. Everything else stays DNS only.
 
-| Record                               | Mode     |
-| ------------------------------------ | -------- |
-| `fallstack.nei-isep.org`             | Proxied  |
-| Test subdomain                       | Proxied  |
-| `nei-isep.org`, `www.nei-isep.org`   | DNS only |
-| Login (AuthNEI), mail and MX records | DNS only |
+| Record                                       | Mode     |
+| -------------------------------------------- | -------- |
+| `fallstack.nei-isep.org`                     | Proxied  |
+| `fallstack-cdn.nei-isep.org`                 | Proxied  |
+| `staging-fallstack.nei-isep.org`             | Proxied  |
+| `nei-isep.org`, `www.nei-isep.org`           | DNS only |
+| `auth.nei-isep.org`                          | Proxied  |
+| `auth.dev.nei-isep.org`, mail and MX records | DNS only |
+
+The explicit `staging-fallstack.nei-isep.org` record was added for #453 on
+14 November 2026. Its hostname is covered by Cloudflare Universal SSL; the
+nested `staging.fallstack.nei-isep.org` hostname remains DNS-only through the
+existing wildcard. The staging proxy route must target the same staging
+copies on both names. See [the capacity test guide](../testing/capacity-targets.md).
 
 ### Expected cache behavior
 
