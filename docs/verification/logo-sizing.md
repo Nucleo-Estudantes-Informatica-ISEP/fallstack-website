@@ -59,6 +59,10 @@ NBanks. Production row identifiers and storage object keys are omitted from
 this public summary and the PR description.
 The original upload session recorded empty previous logo values but did not
 retain their exact SQL representation or an independent before-state export.
+Earlier Git revisions still contain production identifiers; removing them from
+the current document does not purge that history. No private operations copy
+was created in this follow-up, so this public summary is not a complete
+row-level rollback record.
 
 ## Follow-up verification — 13 November 2026
 
