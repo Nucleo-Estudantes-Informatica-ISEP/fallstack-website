@@ -89,7 +89,10 @@ export const findCompanyHistory = (companyId: string) =>
     orderBy: { createdAt: "desc" },
   });
 
-export const findCompanyHistoryPage = (companyId: string, cursor?: { createdAt: Date; studentId: string }) =>
+export const findCompanyHistoryPage = (
+  companyId: string,
+  cursor?: { createdAt: Date; studentId: string }
+) =>
   prisma.savedStudent.findMany({
     where: {
       companyId,

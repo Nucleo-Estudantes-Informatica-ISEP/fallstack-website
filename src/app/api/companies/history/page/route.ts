@@ -13,10 +13,10 @@ export const GET = defineHandler({
     if (!cursor.success)
       return NextResponse.json({ error: "Invalid cursor" }, { status: 400 });
 
-    const page = await getCompanyHistoryPage(
-      session!.employee!.company!.id,
-      { studentId: cursor.data.studentId, createdAt: new Date(cursor.data.createdAt) }
-    );
+    const page = await getCompanyHistoryPage(session!.employee!.company!.id, {
+      studentId: cursor.data.studentId,
+      createdAt: new Date(cursor.data.createdAt),
+    });
     return NextResponse.json(page);
   },
 });
