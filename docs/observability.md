@@ -15,7 +15,7 @@ Next.js server code ──> Pino JSON ──> stdout ──> Docker/platform log
 Browser, server, and edge errors ──> Sentry Issues
 ```
 
-Tracing and Session Replay are disabled. The application does not intentionally send user identity, request bodies, cookies, query strings, full URLs, or original exception messages to Sentry.
+Tracing and Session Replay are disabled. The [shared-frame measurement](evidence/shared-page-frame.md) records the current healthy-render cost and a logs-disabled candidate; it does not justify changing these settings. The application does not intentionally send user identity, request bodies, cookies, query strings, full URLs, or original exception messages to Sentry.
 
 ## 1. Create the Sentry project
 

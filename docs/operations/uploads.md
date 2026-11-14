@@ -10,7 +10,7 @@ same lifecycle after admin authorization. See [ADR 0026](../decisions/0026-bound
 | ---------- | ------------ | ---------- | ------------------- |
 | CV         | PDF          | 10 MiB     | 5/minute/account    |
 | Avatar     | PNG/JPEG     | 5 MiB      | 5/minute/account    |
-| Admin logo | PNG/WebP     | 5 MiB      | Admin authorization |
+| Admin logo | PNG/WebP/SVG | 5 MiB      | Admin authorization |
 
 Allow 16 KiB for the multipart envelope. Exactly one `file` field is accepted.
 The body is counted even without Content-Length. A false declaration is
@@ -24,6 +24,14 @@ receives S3 credentials or a public CV URL.
 Signature checks preserve the existing leading-byte validation; they are not a
 PDF parser or image decoder. Interrupted transport is rejected even if its
 initial bytes match a valid file signature.
+
+SVG is the logo-only exception: staged bytes are parsed as UTF-8 XML and rebuilt
+using the static subset in [ADR 0036](../decisions/0036-sanitize-svg-logo-pipeline.md)
+before PUT. Invalid XML, DTDs and excessive complexity fail with 400. Sanitized
+output must still fit 5 MiB. This bounded parse buffers the logo in memory; raster
+images and CVs retain streamed validation/PUT. Student avatars reject SVG.
+Preview uploaded artwork: CSS, embedded fonts, animation and linked images are
+unsupported. Public SVG media is sanitized again and rendered through img only.
 
 `multipartUploadService` uses an OS temporary directory (0700), exclusive 0600
 files and backpressure. The full request including PUT has a 60-second deadline;

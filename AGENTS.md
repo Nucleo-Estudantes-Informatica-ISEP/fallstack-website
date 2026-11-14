@@ -55,8 +55,9 @@ for procedure and rationale.
   timestamp freshness; they have no one-time nonce. See
   [data ownership](docs/architecture.md#data-ownership) and
   [authentication](docs/architecture.md#authentication-and-short-lived-tokens).
-- Keep unit tests next to code. Put integration and smoke tests under
-  `tests/e2e/`. Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
+- Keep unit tests next to code. Put performance measurements under
+  `tests/performance/`, and integration and smoke tests under `tests/e2e/`.
+  Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
 - `src/config/` holds config, `src/utils/` generic helpers, `src/edition/`
   current event constants, and `src/hooks/` and `src/contexts/` React state.
 - Check PWA or service-worker changes on a real device or installed PWA.
