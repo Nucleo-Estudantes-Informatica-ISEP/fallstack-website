@@ -141,7 +141,7 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
-      const code = inputRef.current?.value;
+      const code = normalizeStudentCode(inputRef.current.value);
       let token: string | null;
       try {
         token = await getStudentPreviewToken(code);
@@ -254,7 +254,7 @@ const CompanySavedProfilesSection = ({
               className="ui-field h-14 field-focus-target pr-32 text-lg uppercase"
               ref={inputRef}
               onKeyUp={handleKeyUp}
-              maxLength={4}
+              maxLength={6}
               disabled={isSubmittingManualEntry}
             />
             <button

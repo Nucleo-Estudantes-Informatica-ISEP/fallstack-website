@@ -156,6 +156,28 @@ test("a failed save keeps the editor open with the typed text", async () => {
   );
 });
 
+test("after a failed save, keyboard focus returns to the preserved comment", async () => {
+  putMock.mockRejectedValue(new Error("Request failed"));
+  render(<CompanySavesSection historyData={[saved("Z102", "Rui Mínimo")]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: /Adicionar comentário/ }));
+  const field = screen.getByLabelText("Comentário sobre Rui Mínimo");
+  fireEvent.change(field, { target: { value: "Texto por guardar" } });
+  const save = screen.getByRole("button", { name: "Guardar" });
+  save.focus();
+  fireEvent.click(save);
+
+  // The field and buttons are disabled while saving, which in a browser
+  // drops keyboard focus to the page body.
+  expect(screen.getByRole("button", { name: "A guardar..." })).toBeDisabled();
+  expect(field).toBeDisabled();
+  (document.activeElement as HTMLElement | null)?.blur();
+
+  await waitFor(() => expect(field).toHaveFocus());
+  expect(field).toBeEnabled();
+  expect(field).toHaveValue("Texto por guardar");
+});
+
 test("removing sends null and is offered only when a comment exists", async () => {
   const { unmount } = render(
     <CompanySavesSection historyData={[saved("Z102", "Rui Mínimo")]} />

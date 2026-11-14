@@ -22,6 +22,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const wasEditing = useRef(false);
+  const saveFailed = useRef(false);
   const fieldId = useId();
   const counterId = useId();
   const name = item.student.name;
@@ -33,6 +34,16 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
     else if (wasEditing.current) editButtonRef.current?.focus();
     wasEditing.current = editing;
   }, [editing]);
+
+  // Saving disables the field and buttons, which drops keyboard focus to the
+  // page. After a failure the editor stays open, so put focus back on the
+  // preserved comment once the controls are enabled again.
+  useEffect(() => {
+    if (!loading && saveFailed.current) {
+      saveFailed.current = false;
+      fieldRef.current?.focus();
+    }
+  }, [loading]);
 
   const updateComment = async (nextComment: string | null) => {
     setLoading(true);
@@ -49,6 +60,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
       setEditing(false);
     } catch {
       // Keep the editor open with the typed text so nothing is lost.
+      saveFailed.current = true;
       toast.error("Não foi possível atualizar o comentário.", {
         toastId: `comment-failed-${item.studentId}`,
       });
