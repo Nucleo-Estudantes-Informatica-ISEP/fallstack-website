@@ -2,8 +2,12 @@ import { Suspense } from "react";
 import { headers } from "next/headers";
 import Link from "next/link";
 
+import { serverEnv } from "@/config/env.server";
+import type { HomepageSections } from "@/components/Content";
 import CountdownLanding from "@/components/CountdownLanding";
 import FeaturedCompanies from "@/components/FeaturedCompanies";
+import HomePage from "@/components/HomePage";
+import HomepageSection from "@/components/HomepageSection";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface AppProps {
@@ -18,24 +22,41 @@ const App = async ({ searchParams }: AppProps) => {
     (await headers()).get("accept-language")
   );
 
-  
   const isRegistered = false;
 
-  
   const buttonLink = isRegistered ? "/dashboard" : "/signup";
 
-  
   const isPt = language.startsWith("pt");
-  const buttonText = isRegistered 
-    ? (isPt ? "Ver Perfil" : "View Profile") 
-    : (isPt ? "Registar Agora" : "Register Now");
+  const buttonText = isRegistered
+    ? isPt
+      ? "Ver Perfil"
+      : "View Profile"
+    : isPt
+      ? "Registar Agora"
+      : "Register Now";
 
+  if (serverEnv.SHOWCASE_FULL_WEBSITE) {
+    const sections = Object.fromEntries(
+      (["schedule", "companies", "sponsors", "faqs"] as const).map(
+        (section) => [
+          section,
+          <Suspense
+            key={section}
+            fallback={<p role="status">A carregar / Loading…</p>}
+          >
+            <HomepageSection section={section} language={language} />
+          </Suspense>,
+        ]
+      )
+    ) as HomepageSections;
+    return <HomePage sections={sections} />;
+  }
   return (
     <CountdownLanding language={language}>
-      <div className="flex justify-center w-full my-8">
+      <div className="my-8 flex w-full justify-center">
         <Link
           href={buttonLink}
-          className="px-8 py-3 text-base font-medium text-white bg-[#111111] rounded-xl transition-all duration-200 hover:bg-black hover:scale-105 active:scale-95 shadow-md inline-block"
+          className="inline-block rounded-xl bg-[#111111] px-8 py-3 text-base font-medium text-white shadow-md transition-all duration-200 hover:scale-105 hover:bg-black active:scale-95"
         >
           {buttonText}
         </Link>
@@ -49,4 +70,3 @@ const App = async ({ searchParams }: AppProps) => {
 };
 
 export default App;
-

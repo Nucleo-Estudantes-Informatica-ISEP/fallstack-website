@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:session": "tsx scripts/generate-dev-session.ts",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
@@ -52,6 +53,7 @@
     "react-icons": "^5.7.0",
     "react-loading-skeleton": "^3.5.0",
     "react-zxing": "^2.2.0",
+    "saxes": "6.0.0",
     "server-only": "^0.0.1",
     "sharp": "^0.35.5",
     "typewriter-effect": "^2.22.0",
@@ -104,6 +106,7 @@
     "tsx": "^4.23.15",
     "typescript": "^5.9.3",
     "uuid": "^13.0.2",
+    "vite": "8.1.6",
     "vitest": "^4.1.12",
     "webpack": "^5.112.2",
     "yaml": "2.9.1"

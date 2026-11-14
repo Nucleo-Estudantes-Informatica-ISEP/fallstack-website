@@ -263,7 +263,7 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
         type="file"
         accept={
           uploadKind === "logo"
-            ? "image/png,image/webp"
+            ? "image/png,image/webp,image/svg+xml"
             : "image/png,image/jpeg"
         }
         className="hidden"

@@ -1,5 +1,5 @@
 {
-  "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": ["prettier --write", "eslint --fix"],
-  "*.{json,json5,md,mdx,css,scss,yml,yaml,html,graphql,gql}": "prettier --write",
-  "*.prisma": "prisma format --schema"
+  "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}": "node scripts/lint-staged.mjs code",
+  "*.{json,json5,md,mdx,css,scss,yml,yaml,html,graphql,gql}": "node scripts/lint-staged.mjs format",
+  "*.prisma": "node scripts/lint-staged.mjs prisma"
 }

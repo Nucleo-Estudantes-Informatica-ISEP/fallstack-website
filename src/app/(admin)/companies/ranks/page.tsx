@@ -6,6 +6,7 @@ import {
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
+import AdminPageHeader from "@/components/AdminPageHeader";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import type { AdminCompanyRankDto } from "@/application/dto/companyRankDto";
 import { listCompanyRanksForAdmin } from "@/application/services/companyRankService";
@@ -50,23 +51,20 @@ const CompanyRanksAdminPage = async ({
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-800">Ranks de empresas</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/companies/ranks/order"
-            className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-100"
-          >
-            Ordenar
-          </Link>
-          <Link
-            href="/companies/ranks/new"
-            className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90"
-          >
-            Adicionar rank
-          </Link>
-        </div>
-      </div>
+      <AdminPageHeader title="Ranks de empresas">
+        <Link
+          href="/companies/ranks/order"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md border border-gray-300 px-4 py-2 whitespace-nowrap hover:bg-gray-100"
+        >
+          Ordenar
+        </Link>
+        <Link
+          href="/companies/ranks/new"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
+        >
+          Adicionar rank
+        </Link>
+      </AdminPageHeader>
 
       <DataTable
         columns={columns}
