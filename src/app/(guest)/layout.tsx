@@ -1,15 +1,18 @@
-import { AuthContextProvider } from "@/contexts/AuthContext";
-import Topbar from "@/components/TopBar";
+import DocumentLayout from "@/components/DocumentLayout";
+import GuestLayout from "@/components/GuestLayout";
+import { branding } from "@/edition/branding";
 
-export default function GuestLayout({
+export const metadata = branding.metadata;
+export const revalidate = 60;
+
+export default function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <AuthContextProvider>
-      <Topbar />
-      <main id="main-content">{children}</main>
-    </AuthContextProvider>
+    <DocumentLayout>
+      <GuestLayout>{children}</GuestLayout>
+    </DocumentLayout>
   );
 }

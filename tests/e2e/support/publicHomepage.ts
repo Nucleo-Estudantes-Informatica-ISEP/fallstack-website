@@ -4,7 +4,6 @@ import {
   getPublicFaqs,
   getPublicSchedule,
   getPublicSponsors,
-  readHomepageSection,
 } from "@/application/services/publicEditionService";
 import type { Language } from "@/domain/i18n/translations";
 
@@ -13,10 +12,10 @@ export async function readHomepageDatasets(
   language: Language
 ): Promise<HomepageDto> {
   const [faqs, schedule, sponsors, companies] = await Promise.all([
-    readHomepageSection(getPublicFaqs(language)),
-    readHomepageSection(getPublicSchedule(language)),
-    readHomepageSection(getPublicSponsors()),
-    readHomepageSection(getPublicCompanyRoster(language)),
+    getPublicFaqs(language),
+    getPublicSchedule(language),
+    getPublicSponsors(),
+    getPublicCompanyRoster(language),
   ]);
   return { faqs, schedule, sponsors, companies };
 }
