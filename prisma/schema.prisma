@@ -256,13 +256,13 @@ model SessionCheckIn {
   id          String   @id @default(uuid()) @db.Uuid
   checkedInAt DateTime @default(now())
 
-  session   ScheduleEvent @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  session   ScheduleEvent @relation(fields: [sessionId], references: [id], onDelete: Restrict)
   student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  scannedBy User          @relation(fields: [scannedById], references: [id], onDelete: Restrict)
+  scannedBy User?         @relation(fields: [scannedById], references: [id], onDelete: SetNull)
 
-  sessionId   String @db.Uuid
-  studentId   String @db.Uuid
-  scannedById String @db.Uuid
+  sessionId   String  @db.Uuid
+  studentId   String  @db.Uuid
+  scannedById String? @db.Uuid
 
   @@unique([sessionId, studentId])
   @@index([studentId])

@@ -160,3 +160,22 @@ test("rejects deactivated local accounts", async () => {
 
   expect(await getServerSession()).toBeNull();
 });
+
+test("carries the signed NEI member grant into the resolved session", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "member-sub",
+    email: "member@example.org",
+    employee: false,
+    admin: false,
+    neiMember: true,
+  });
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    id: "member",
+    active: true,
+    role: "STUDENT",
+    adminRole: null,
+    student: { id: "member" },
+    employee: null,
+  } as never);
+  expect((await getServerSession())?.neiMember).toBe(true);
+});

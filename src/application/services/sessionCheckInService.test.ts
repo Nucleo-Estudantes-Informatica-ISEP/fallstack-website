@@ -50,7 +50,11 @@ test.beforeEach(() => {
 
 test("records a check-in from a pass token", async () => {
   const { verifyJwt } = await import("@/application/services/authService");
-  vi.mocked(verifyJwt).mockReturnValue({ code: "AB12" } as never);
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "attendance",
+    exp: 1900000000,
+  } as never);
 
   await recordSessionCheckIn(
     "session-1",
@@ -118,5 +122,38 @@ test.each([
   ).rejects.toMatchObject(
     new HttpError("Check-in is not available outside this session.", 400)
   );
+  expect(createSessionCheckIn).not.toHaveBeenCalled();
+});
+
+test("rejects tokens without the attendance purpose", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({ code: "AB12" } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "other" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+  expect(verifyJwt).toHaveBeenCalledWith("other", { algorithms: ["HS256"] });
+});
+
+test("rejects a pass token without an expiry", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "attendance",
+  } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "no-expiry" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+});
+
+test("rejects profile-preview tokens for attendance", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "student-pass",
+    exp: 1900000000,
+  } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "preview" }, now)
+  ).rejects.toMatchObject({ status: 400 });
   expect(createSessionCheckIn).not.toHaveBeenCalled();
 });

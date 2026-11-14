@@ -219,3 +219,9 @@ and is covered by the
 Keep constraints and point-of-change invariant comments in
 [`schema.prisma`](../prisma/schema.prisma). Update this diagram and these notes
 with model changes; this page does not replace the schema or migrations.
+
+### Session attendance retention
+
+A session with check-ins cannot be deleted while those records exist. Deleting
+an individual student removes their check-ins; deleting the scanning user keeps
+attendance and clears the nullable scanner reference.
