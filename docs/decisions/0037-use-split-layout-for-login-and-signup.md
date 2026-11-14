@@ -1,4 +1,4 @@
-# 0036: Use the split layout for login and signup
+# 0037: Use the split layout for login and signup
 
 Status: Accepted
 Date: 2026-11-12
