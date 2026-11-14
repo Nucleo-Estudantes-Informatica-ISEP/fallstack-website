@@ -2,14 +2,19 @@ import { z } from "zod";
 
 // Shared by server repositories and standalone Node jobs; never import into UI.
 // Runtime pools share a cluster with other applications; ADR 0028.
+function poolSetting(fallback: number) {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && (value.trim() === "" || Number(value) < 1)
+        ? undefined
+        : value,
+    z.coerce.number().int().min(1).max(10).default(fallback)
+  );
+}
+
 export const databaseEnvSchema = z.object({
-  PRISMA_CONNECTION_LIMIT: z.coerce.number().int().min(1).max(10).default(3),
-  PRISMA_POOL_TIMEOUT_SECONDS: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(10)
-    .default(5),
+  PRISMA_CONNECTION_LIMIT: poolSetting(3),
+  PRISMA_POOL_TIMEOUT_SECONDS: poolSetting(5),
 });
 
 export function runtimeDatabaseUrl(

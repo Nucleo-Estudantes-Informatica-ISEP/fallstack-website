@@ -6,6 +6,7 @@ import { FiDownload } from "react-icons/fi";
 
 import { httpClient } from "@/lib/http/client";
 import { Clipboard } from "@/components/ui/Icons";
+import GoogleWalletButton from "@/components/GoogleWalletButton";
 import { downloadOfflinePass } from "@/components/PassSection/generateOfflinePass";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
@@ -17,10 +18,7 @@ interface PassMenuContentProps {
   googleWalletSaveUrl?: string | null;
 }
 
-const PassMenuContent: React.FC<PassMenuContentProps> = ({
-  student,
-  googleWalletSaveUrl,
-}) => {
+const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
@@ -109,7 +107,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({
         <button
           type="button"
           onClick={handleCopy}
-          className="mt-5 flex items-center gap-2 rounded-md border border-secondary bg-[#1E1E1E] px-4 py-2 text-sm text-white transition hover:border-primary hover:text-primary"
+          className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-ui-highlight hover:text-ui-highlight"
         >
           <Clipboard className="size-4" />
           <span className="font-mono tracking-wider">{student.code}</span>
@@ -131,20 +129,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({
           </button>
         )}
 
-        {googleWalletSaveUrl && (
-          <a
-            href={googleWalletSaveUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center"
-          >
-            <img
-              src="/google-wallet/add-to-google-wallet-pt.svg"
-              alt="Adicionar à Carteira do Google"
-              className="h-12 w-auto"
-            />
-          </a>
-        )}
+        <GoogleWalletButton />
       </div>
     </div>
   );

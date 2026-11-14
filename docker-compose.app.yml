@@ -81,6 +81,7 @@ services:
         condition: service_completed_successfully
     environment:
       NEXT_MANUAL_SIG_HANDLE: "true"
+      SHOWCASE_FULL_WEBSITE: ${SHOWCASE_FULL_WEBSITE:-false}
       # Runtime-only connection contract for #413; never pass these as build args.
       REDIS_URL: ${REDIS_URL:?Configure REDIS_URL for this environment's standalone Redis in Coolify}
       REDIS_KEY_PREFIX: "${REDIS_KEY_PREFIX:?Set fallstack:dev: or fallstack:main: in Coolify}"
@@ -117,6 +118,7 @@ services:
       ZITADEL_ROLE_ASSIGNER_TOKEN: ${ZITADEL_ROLE_ASSIGNER_TOKEN:?Configure ZITADEL_ROLE_ASSIGNER_TOKEN in Coolify}
 
       # Optional at startup; required together when Google Wallet is enabled.
+      GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE: ${GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE:-false}
       GOOGLE_WALLET_NEVER_ENABLED: ${GOOGLE_WALLET_NEVER_ENABLED:-false}
       GOOGLE_WALLET_ISSUER_ID: ${GOOGLE_WALLET_ISSUER_ID:-}
       GOOGLE_WALLET_CLASS_ID: ${GOOGLE_WALLET_CLASS_ID:-}
