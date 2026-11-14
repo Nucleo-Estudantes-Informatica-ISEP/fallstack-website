@@ -37,6 +37,13 @@ test("exports the captured session after schedule edits and scanner deletion", a
       },
     });
     await db.user.delete({ where: { id: scanner.id } });
+    const replacementSession = await fixtures.schedule(2, 4713);
+    await expect(
+      db.sessionCheckIn.update({
+        where: { id: checkIn.id },
+        data: { sessionId: replacementSession.id },
+      })
+    ).rejects.toThrow("sessionId is immutable");
     await db.sessionCheckIn.update({
       where: { id: checkIn.id },
       data: { sessionDay: 999, sessionActivity: { PT: "Override" } },

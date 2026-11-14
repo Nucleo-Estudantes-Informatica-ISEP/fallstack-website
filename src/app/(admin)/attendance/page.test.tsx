@@ -24,10 +24,10 @@ test.each([null, { adminRole: null, authRoles: ["nei-member"] }])(
     expect(getAttendanceExport).not.toHaveBeenCalled();
   }
 );
-test("loads both days for an admin", async () => {
+test("loads only the selected day for an admin", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     adminRole: "ADMIN",
   } as never);
-  await AttendancePage();
-  expect(vi.mocked(getAttendanceExport).mock.calls).toEqual([[1], [2]]);
+  await AttendancePage({ searchParams: Promise.resolve({ day: "2" }) });
+  expect(vi.mocked(getAttendanceExport).mock.calls).toEqual([[2]]);
 });

@@ -56,7 +56,15 @@ const StudentPage = async (props: ProfileProps) => {
 
   if (isPreview) {
     const token = verifyJwt(code);
-    decodedPreviewCode = token ? (token as { code: string }).code : null;
+    decodedPreviewCode =
+      token &&
+      typeof token === "object" &&
+      "purpose" in token &&
+      token.purpose === "student-pass" &&
+      "code" in token &&
+      typeof token.code === "string"
+        ? token.code
+        : null;
     const targetCode = decodedPreviewCode ?? code;
     student = await getStudent(targetCode);
   } else {

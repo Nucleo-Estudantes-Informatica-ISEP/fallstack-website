@@ -67,7 +67,11 @@ test("staff policy allows nei-members and admins but not students", () => {
   };
   assert.equal(passesAuthPolicy("staff", employeeSession), false);
   assert.equal(
-    passesAuthPolicy("staff", { ...employeeSession, neiMember: true }),
+    passesAuthPolicy("staff", {
+      ...employeeSession,
+      neiMember: true,
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     true
   );
   assert.equal(
@@ -75,7 +79,11 @@ test("staff policy allows nei-members and admins but not students", () => {
     false
   );
   assert.equal(
-    passesAuthPolicy("staff", { ...studentSession, adminRole: "ADMIN" }),
+    passesAuthPolicy("staff", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     true
   );
   assert.equal(passesAuthPolicy("staff", studentSession), false);

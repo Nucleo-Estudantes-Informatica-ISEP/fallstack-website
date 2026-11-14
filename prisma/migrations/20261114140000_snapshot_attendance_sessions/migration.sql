@@ -19,6 +19,9 @@ BEGIN
                     NEW."sessionEndTime", NEW."sessionActivity"
         FROM "ScheduleEvent" WHERE id = NEW."sessionId";
     ELSE
+        IF NEW."sessionId" IS DISTINCT FROM OLD."sessionId" THEN
+            RAISE EXCEPTION 'sessionId is immutable';
+        END IF;
         NEW."sessionDay" := OLD."sessionDay";
         NEW."sessionStartTime" := OLD."sessionStartTime";
         NEW."sessionEndTime" := OLD."sessionEndTime";

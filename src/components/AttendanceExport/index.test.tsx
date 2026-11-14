@@ -16,10 +16,17 @@ vi.mock("@/components/ExcelButton", () => ({
     </button>
   ),
 }));
-test("day selection changes both formats without combining check-ins", () => {
+test("day selection loads the requested day", () => {
+  const location = { href: "" };
+  const originalLocation = window.location;
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: location,
+  });
   render(
     <AttendanceExport
-      rows={[[{ Name: "First" }], [{ Name: "Second" }]]}
+      rows={[{ Name: "First" }]}
+      day={1}
       days={["17 November", "18 November"]}
     />
   );
@@ -27,11 +34,9 @@ test("day selection changes both formats without combining check-ins", () => {
     screen.getByRole("button", { name: "xlsx: First" })
   ).toBeInTheDocument();
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "1" } });
-  expect(
-    screen.getByRole("button", { name: "xlsx: Second" })
-  ).toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "csv: Second" })
-  ).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: /First/ })).toBeNull();
+  expect(location.href).toBe("/admin/attendance?day=2");
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: originalLocation,
+  });
 });

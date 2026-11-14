@@ -1,5 +1,13 @@
 import { getSessionWindow } from "./sessionRules";
 
+function dateAtEventOffset(date: Date, startsAt: string) {
+  const match = startsAt.match(/([+-])(\d{2}):?(\d{2})$/);
+  if (!match) return date.toISOString().slice(0, 10);
+  const minutes = Number(match[2]) * 60 + Number(match[3]);
+  const offset = (match[1] === "+" ? 1 : -1) * minutes;
+  return new Date(date.getTime() + offset * 60_000).toISOString().slice(0, 10);
+}
+
 export function attendanceExportRow(
   checkIn: {
     checkedInAt: Date;
@@ -28,7 +36,7 @@ export function attendanceExportRow(
     Name: checkIn.student.name,
     Email: email,
     "Student number": number,
-    Date: window.start.toISOString().slice(0, 10),
+    Date: dateAtEventOffset(window.start, startsAt),
     Session: title,
     "Check-in time": checkIn.checkedInAt.toISOString(),
     "Valid until": window.end.toISOString(),

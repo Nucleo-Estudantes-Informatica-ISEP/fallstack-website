@@ -5,14 +5,23 @@ import { getAttendanceExport } from "@/application/services/attendanceExportServ
 import getServerSession from "@/application/services/sessionService";
 import { branding } from "@/edition/branding";
 
-export default async function AttendancePage() {
+export default async function AttendancePage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ day?: string }>;
+} = {}) {
   const session = await getServerSession();
   if (!session?.adminRole) notFound();
-  const rows = [];
-  for (let day = 1; day <= branding.event.days.length; day++) {
-    rows.push(await getAttendanceExport(day));
-  }
+  const requestedDay = Number((await searchParams)?.day);
+  const day = Number.isInteger(requestedDay)
+    ? Math.min(Math.max(requestedDay, 1), branding.event.days.length)
+    : 1;
+  const rows = await getAttendanceExport(day);
   return (
-    <AttendanceExport rows={rows} days={branding.event.scheduleDayTitles} />
+    <AttendanceExport
+      rows={rows}
+      day={day}
+      days={branding.event.scheduleDayTitles}
+    />
   );
 }

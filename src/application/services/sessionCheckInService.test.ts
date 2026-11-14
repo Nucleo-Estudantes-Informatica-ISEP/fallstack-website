@@ -10,6 +10,7 @@ import {
 } from "../repositories/sessionCheckInRepository";
 import { recordSessionCheckIn } from "./sessionCheckInService";
 
+vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn() } }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/application/services/authService", () => ({
   verifyJwt: vi.fn(),
@@ -156,4 +157,20 @@ test("rejects profile-preview tokens for attendance", async () => {
     recordSessionCheckIn("session-1", "staff-1", { token: "preview" }, now)
   ).rejects.toMatchObject({ status: 400 });
   expect(createSessionCheckIn).not.toHaveBeenCalled();
+});
+
+test("logs unknown student attempts without exposing credentials", async () => {
+  const logger = (await import("@/lib/logger")).default;
+  vi.mocked(findStudentForCheckIn).mockResolvedValueOnce(null);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject({ status: 404 });
+  expect(logger.warn).toHaveBeenCalledWith(
+    {
+      event: "attendance_student_miss",
+      scannedById: "staff-1",
+      sessionId: "session-1",
+    },
+    "Attendance credential did not match a student"
+  );
 });
