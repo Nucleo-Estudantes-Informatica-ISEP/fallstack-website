@@ -76,6 +76,12 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
+  // A preview without a valid signed token is the saved-students list's link
+  // back to a profile, so only an employee whose company saved the student
+  // may open one. Anyone else, such as another student, is blocked.
+  if (isPreview && !decodedPreviewCode && !(session.employee && isSavedStudent))
+    return Custom404();
+
   const studentInterests = student.interests.map(({ id, name }) => ({
     id,
     name: name[language],
@@ -118,9 +124,6 @@ const StudentPage = async (props: ProfileProps) => {
 
   const companiesLeft = totalCompanies - uniqueCompaniesSaved;
 
-  if (isPreview && !decodedPreviewCode && session.employee && !isSavedStudent)
-    return Custom404();
-
   if (isPreview) {
     return (
       <>
@@ -138,17 +141,11 @@ const StudentPage = async (props: ProfileProps) => {
 
   return (
     <>
-      <section
-        className={`${
-          session && session.role === "EMPLOYEE" ? "bg-company" : "bg-inherit"
-        } flex size-full min-h-screen flex-col items-center`}
-      >
+      <section className="flex size-full min-h-screen flex-col items-center">
         {session && session.employee?.company && session.role === "EMPLOYEE" ? (
           <CompanyViewProfileSectionContainer
             interests={localizedInterestNames}
             student={studentDto}
-            token={code}
-            isSavedStudent={isSavedStudent}
           />
         ) : !session || session.student?.code !== code ? (
           <PublicProfileSectionContainer

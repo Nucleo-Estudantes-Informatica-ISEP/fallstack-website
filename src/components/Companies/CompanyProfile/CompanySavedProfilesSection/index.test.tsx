@@ -1,31 +1,54 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import type { SavedStudentDto } from "@/application/dto/historyDto";
+
 import CompanySavedProfilesSection from ".";
 
-const { scan, postMock, getTokenMock, pushMock, refreshMock, toastErrorMock } =
-  vi.hoisted(() => ({
-    scan: { value: "ab12" },
-    postMock: vi.fn(),
-    getTokenMock: vi.fn(),
-    pushMock: vi.fn(),
-    refreshMock: vi.fn(),
-    toastErrorMock: vi.fn(),
-  }));
+const {
+  scan,
+  postMock,
+  rawMock,
+  getTokenMock,
+  pushMock,
+  refreshMock,
+  toastErrorMock,
+  toastWarningMock,
+} = vi.hoisted(() => ({
+  scan: { value: "ab12" },
+  postMock: vi.fn(),
+  rawMock: vi.fn(),
+  getTokenMock: vi.fn(),
+  pushMock: vi.fn(),
+  refreshMock: vi.fn(),
+  toastErrorMock: vi.fn(),
+  toastWarningMock: vi.fn(),
+}));
 
 vi.mock("client-only", () => ({}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, refresh: refreshMock }),
 }));
 vi.mock("@/lib/http/client", () => ({
-  httpClient: { post: postMock },
-  HttpClientError: class HttpClientError extends Error {},
+  httpClient: { post: postMock, raw: rawMock },
+  HttpClientError: class HttpClientError extends Error {
+    constructor(
+      message: string,
+      public status: number
+    ) {
+      super(message);
+    }
+  },
 }));
 vi.mock("@/client/api/studentToken", () => ({
   getStudentPreviewToken: getTokenMock,
 }));
 vi.mock("react-toastify", () => ({
-  toast: { error: toastErrorMock, success: vi.fn(), warning: vi.fn() },
+  toast: {
+    error: toastErrorMock,
+    success: vi.fn(),
+    warning: toastWarningMock,
+  },
 }));
 vi.mock("@/components/QRCode/QRCodeScanner", () => ({
   default: ({
@@ -38,6 +61,22 @@ vi.mock("@/components/Companies/CompanyProfile/CompanyHistorySection", () => ({
   default: () => null,
 }));
 
+async function httpError(status: number, message = "Request failed") {
+  const { HttpClientError } = await import("@/lib/http/client");
+  return new (
+    HttpClientError as unknown as new (message: string, status: number) => Error
+  )(message, status);
+}
+
+const SAVED = [
+  {
+    studentId: "s1",
+    createdAt: "2026-11-12T10:00:00.000Z",
+    comment: null,
+    student: { code: "Z101", name: "Beatriz Sintética" },
+  },
+] as SavedStudentDto[];
+
 beforeEach(() => {
   vi.clearAllMocks();
   scan.value = "ab12";
@@ -45,22 +84,39 @@ beforeEach(() => {
   postMock.mockResolvedValue({});
 });
 
-test("converts a Wallet student code before saving the scanned profile", async () => {
-  render(<CompanySavedProfilesSection history={[]} />);
+function codeField() {
+  return screen.getByLabelText("Código do estudante");
+}
 
-  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+function typeCode(value: string) {
+  fireEvent.change(codeField(), { target: { value } });
+  fireEvent.click(screen.getByRole("button", { name: "Validar" }));
+}
 
-  await waitFor(() => {
-    expect(getTokenMock).toHaveBeenCalledWith("AB12");
-    expect(postMock).toHaveBeenCalledWith("/saved", {
-      token: "signed-preview-token",
+// ADR 0022: legacy four-character and new six-character codes both work.
+test.each([
+  ["four", "ab12", "AB12"],
+  ["six", "ab12cd", "AB12CD"],
+])(
+  "converts a %s-character Wallet student code before saving the scanned profile",
+  async (_, scanned, code) => {
+    scan.value = scanned;
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+    await waitFor(() => {
+      expect(getTokenMock).toHaveBeenCalledWith(code);
+      expect(postMock).toHaveBeenCalledWith("/saved", {
+        token: "signed-preview-token",
+      });
+      expect(pushMock).toHaveBeenCalledWith(
+        "/student/signed-preview-token/preview"
+      );
     });
-    expect(pushMock).toHaveBeenCalledWith(
-      "/student/signed-preview-token/preview"
-    );
-  });
-  expect(toastErrorMock).not.toHaveBeenCalled();
-});
+    expect(toastErrorMock).not.toHaveBeenCalled();
+  }
+);
 
 test("continues to save a signed QR token without exchanging it", async () => {
   scan.value = "existing-jwt";
@@ -84,9 +140,207 @@ test("rejects an unknown Wallet code without saving it as a JWT", async () => {
 
   await waitFor(() =>
     expect(toastErrorMock).toHaveBeenCalledWith(
-      "O código de estudante deste passe é inválido."
+      "O código de estudante deste passe é inválido.",
+      expect.anything()
     )
   );
   expect(postMock).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument();
+});
+
+test("the code field has a visible label and a description", () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  expect(codeField()).toHaveAccessibleDescription(
+    /Introduza o código associado ao QR Code/
+  );
+  expect(screen.getByText(/Sem câmara ou sem permissão/)).toBeInTheDocument();
+});
+
+test("the camera box is named for screen readers", () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  expect(
+    screen.getByRole("group", { name: "Câmara do leitor de QR Code" })
+  ).toContainElement(screen.getByRole("button", { name: "Scan QR" }));
+});
+
+test("keyboard focus keeps the code field and buttons clear of the fixed top bar", () => {
+  render(<CompanySavedProfilesSection history={SAVED} />);
+
+  for (const control of [
+    codeField(),
+    screen.getByRole("button", { name: "Validar" }),
+    screen.getByRole("button", { name: "Download CVs" }),
+  ])
+    expect(control).toHaveClass("field-focus-target");
+});
+
+test("an empty code shows one message, however many times Validar is pressed", async () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Validar" }));
+  await waitFor(() => expect(toastErrorMock).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByRole("button", { name: "Validar" }));
+  await waitFor(() => expect(toastErrorMock).toHaveBeenCalledTimes(2));
+
+  // Same toast id both times, so react-toastify shows a single toast.
+  const ids = toastErrorMock.mock.calls.map(([, options]) => options.toastId);
+  expect(ids[0]).toBe(ids[1]);
+  expect(toastErrorMock).toHaveBeenCalledWith(
+    "Sem código inserido.",
+    expect.objectContaining({ toastId: expect.any(String) })
+  );
+  expect(getTokenMock).not.toHaveBeenCalled();
+});
+
+test("an unknown typed code is reported as invalid", async () => {
+  getTokenMock.mockResolvedValue(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  typeCode("ZZZZ");
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "O código introduzido é inválido.",
+      expect.anything()
+    )
+  );
+  expect(postMock).not.toHaveBeenCalled();
+});
+
+test("a malformed typed code is reported as invalid, not as a save failure", async () => {
+  getTokenMock.mockRejectedValue(await httpError(400, "Invalid student code"));
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  typeCode("ZZ");
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "O código introduzido é inválido.",
+      expect.anything()
+    )
+  );
+});
+
+test("too many typed attempts get a Portuguese rate-limit message", async () => {
+  getTokenMock.mockRejectedValue(await httpError(429, "Too Many Requests"));
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  typeCode("Z101");
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Demasiadas tentativas. Aguarde um momento.",
+      expect.anything()
+    )
+  );
+  expect(postMock).not.toHaveBeenCalled();
+});
+
+test.each([
+  ["four", "Z104", "Z104"],
+  ["six", " ab12cd ", "AB12CD"],
+])(
+  "a typed %s-character code saves the student and opens the saved preview",
+  async (_, typed, code) => {
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    // The field fits the longest code, so a six-character code is not cut short.
+    expect(codeField()).toHaveAttribute("maxLength", "6");
+    typeCode(typed);
+
+    await waitFor(() =>
+      expect(pushMock).toHaveBeenCalledWith(
+        "/student/signed-preview-token/preview"
+      )
+    );
+    expect(getTokenMock).toHaveBeenCalledWith(code);
+    expect(postMock).toHaveBeenCalledWith("/saved", {
+      token: "signed-preview-token",
+    });
+    expect(refreshMock).toHaveBeenCalled();
+  }
+);
+
+test("a duplicate save is a warning and does not navigate", async () => {
+  postMock.mockRejectedValue(await httpError(409, "Student already saved"));
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  typeCode("Z101");
+
+  await waitFor(() =>
+    expect(toastWarningMock).toHaveBeenCalledWith(
+      "Este estudante já foi guardado anteriormente.",
+      expect.anything()
+    )
+  );
+  expect(pushMock).not.toHaveBeenCalled();
+});
+
+test.each([
+  ["an invalid", () => getTokenMock.mockResolvedValue(null)],
+  [
+    "a duplicate",
+    async () =>
+      postMock.mockRejectedValue(await httpError(409, "Student already saved")),
+  ],
+])(
+  "after %s code, keyboard focus returns to the code field",
+  async (_, arrange) => {
+    await arrange();
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    // The field and button are disabled while the code is checked, which in
+    // a browser drops keyboard focus to the page body.
+    typeCode("Z101");
+    expect(screen.getByRole("button", { name: "A validar..." })).toBeDisabled();
+    expect(document.body).toHaveFocus();
+
+    await waitFor(() => expect(codeField()).toHaveFocus());
+  }
+);
+
+test("other save failures show one Portuguese message instead of the server text", async () => {
+  postMock.mockRejectedValue(await httpError(400, "Student already saved"));
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  typeCode("Z101");
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Não foi possível guardar o perfil. Tenta novamente.",
+      expect.anything()
+    )
+  );
+  expect(toastErrorMock).not.toHaveBeenCalledWith(
+    "Student already saved",
+    expect.anything()
+  );
+  expect(pushMock).not.toHaveBeenCalled();
+});
+
+test("CV export is unavailable, with a reason, until something is saved", () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  const download = screen.getByRole("button", { name: "Download CVs" });
+  expect(download).toBeDisabled();
+  expect(download).toHaveAccessibleDescription(
+    "Guarde perfis para poder exportar os CVs."
+  );
+});
+
+test("a failed CV export shows a Portuguese message and re-enables the button", async () => {
+  rawMock.mockRejectedValue(await httpError(500, "Internal Server Error"));
+  render(<CompanySavedProfilesSection history={SAVED} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Download CVs" }));
+
+  await waitFor(() =>
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Não foi possível exportar os CVs. Tenta novamente.",
+      expect.anything()
+    )
+  );
+  expect(screen.getByRole("button", { name: "Download CVs" })).toBeEnabled();
 });
