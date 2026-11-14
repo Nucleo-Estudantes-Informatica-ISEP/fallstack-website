@@ -83,7 +83,11 @@ test("staff policy allows nei-members and admins but not students", () => {
 
 test("admin policy accepts either admin tier", () => {
   assert.equal(
-    passesAuthPolicy("admin", { ...studentSession, adminRole: "ADMIN" }),
+    passesAuthPolicy("admin", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     true
   );
   assert.equal(
@@ -105,7 +109,11 @@ test("superadmin policy requires SUPER_ADMIN specifically", () => {
     true
   );
   assert.equal(
-    passesAuthPolicy("superadmin", { ...studentSession, adminRole: "ADMIN" }),
+    passesAuthPolicy("superadmin", {
+      ...studentSession,
+      adminRole: "ADMIN",
+      attendanceExpiresAt: Date.now() + 300000,
+    }),
     false
   );
   assert.equal(passesAuthPolicy("superadmin", studentSession), false);
@@ -136,4 +144,45 @@ test("every non-public policy rejects a missing session", () => {
   ] as const) {
     assert.equal(passesAuthPolicy(policy, null), false);
   }
+});
+
+test.each([null, "ADMIN", "SUPER_ADMIN"] as const)(
+  "bounds attendance freshness for %s",
+  (adminRole) => {
+    const session = {
+      ...studentSession,
+      adminRole,
+      neiMember: adminRole === null,
+    };
+    for (const attendanceExpiresAt of [
+      undefined,
+      0,
+      Date.now() - 1,
+      Date.now(),
+    ]) {
+      assert.equal(
+        passesAuthPolicy("staff", { ...session, attendanceExpiresAt }),
+        false
+      );
+    }
+    assert.equal(
+      passesAuthPolicy("staff", {
+        ...session,
+        attendanceExpiresAt: Date.now() + 10000,
+      }),
+      true
+    );
+    assert.equal(passesAuthPolicy("session", session), true);
+    if (adminRole) assert.equal(passesAuthPolicy("admin", session), true);
+  }
+);
+
+test("missing admin role does not grant staff or admin access", () => {
+  const session = {
+    ...studentSession,
+    adminRole: undefined,
+    attendanceExpiresAt: Date.now() + 300000,
+  } as unknown as Parameters<typeof passesAuthPolicy>[1];
+  assert.equal(passesAuthPolicy("staff", session), false);
+  assert.equal(passesAuthPolicy("admin", session), false);
 });

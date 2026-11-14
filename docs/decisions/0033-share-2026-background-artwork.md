@@ -45,3 +45,14 @@ references. Historic ADR 0012 retains its original optimization measurements.
 Transfer budgets are regression-tested; rendering cost, authenticated routes
 and visual approval still require measured browser evidence, not asset-size
 inference alone. Shared component states/palette remain owned by #515.
+
+## Company and privacy layout (#488)
+
+Place the public company identity, social links, description, permitted video,
+interests and contact inside one responsive opaque panel over this artwork.
+Contain uploaded logos within a circular white border without stretching them.
+Use the company website for contact when present: the profile has no public
+contact email field, and employee account emails must not become public contact
+information. Omit missing media and contact sections without placeholder space.
+The privacy page keeps its versioned policy text, including attendance changes,
+under a shallow artwork identity banner; content determines page height.

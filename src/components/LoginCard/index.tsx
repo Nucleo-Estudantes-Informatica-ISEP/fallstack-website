@@ -10,9 +10,13 @@ import EmployeeSignUpForm from "@/components/EmployeeSignUpForm";
 
 interface LoginCardProps {
   initialView?: "employee";
+  offseason?: boolean;
 }
 
-const LoginCard: React.FC<LoginCardProps> = ({ initialView }) => {
+const LoginCard: React.FC<LoginCardProps> = ({
+  initialView,
+  offseason = false,
+}) => {
   const { user, fetchSession } = useSession();
   const router = useRouter();
   const [registeringEmployee, setRegisteringEmployee] = useState(
@@ -37,7 +41,20 @@ const LoginCard: React.FC<LoginCardProps> = ({ initialView }) => {
       </h1>
 
       {registeringEmployee ? (
-        user ? (
+        offseason ? (
+          <>
+            <p className="mb-6 text-base leading-relaxed text-gray-300">
+              As inscrições de colaboradores estão encerradas.
+            </p>
+            <button
+              type="button"
+              onClick={closeEmployeeSignup}
+              className="mt-4 min-h-11 w-full text-center text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              Voltar ao início de sessão
+            </button>
+          </>
+        ) : user ? (
           <>
             <p className="mb-6 text-base leading-relaxed text-gray-300">
               A tua identidade já foi confirmada pelo AuthNEI. Introduz o código
@@ -73,23 +90,28 @@ const LoginCard: React.FC<LoginCardProps> = ({ initialView }) => {
             Esqueceste-te da palavra-passe? A recuperação é feita no próprio
             AuthNEI.
           </p>
-          <p className="mt-8 mb-3 text-center text-sm text-gray-300">
-            Ainda não tens uma conta?
-          </p>
-          <PrimaryLinkButton
-            href="/signup"
-            variant="form"
-            className="h-12 w-full font-semibold lg:h-16 lg:text-xl"
-          >
-            Criar uma conta
-          </PrimaryLinkButton>
-          <button
-            type="button"
-            onClick={() => setRegisteringEmployee(true)}
-            className="mt-6 min-h-11 w-full text-center text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Tens um código de empresa? Regista-te como colaborador
-          </button>
+
+          {!offseason && (
+            <>
+              <p className="mt-8 mb-3 text-center text-sm text-gray-300">
+                Ainda não tens uma conta?
+              </p>
+              <PrimaryLinkButton
+                href="/signup"
+                variant="form"
+                className="h-12 w-full font-semibold lg:h-16 lg:text-xl"
+              >
+                Criar uma conta
+              </PrimaryLinkButton>
+              <button
+                type="button"
+                onClick={() => setRegisteringEmployee(true)}
+                className="mt-6 min-h-11 w-full text-center text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                Tens um código de empresa? Regista-te como colaborador
+              </button>
+            </>
+          )}
         </>
       )}
     </section>
