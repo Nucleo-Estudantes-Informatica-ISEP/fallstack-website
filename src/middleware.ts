@@ -44,9 +44,11 @@ export const config = {
      * - public asset extensions (svg, png, jpg, jpeg, gif, webp, woff, woff2, ttf)
      * - PWA service worker and manifest files (sw.js, workbox-*, manifest.webmanifest)
      *
-     * API routes are matched so they carry `x-instance-id`; `needsCsp` keeps
+     * Upload routes bypass middleware body cloning; defineHandler adds their
+     * instance header without buffering or truncating the stream.
+     * Other API routes are matched for `x-instance-id`; `needsCsp` keeps
      * the CSP nonce off them and off prefetch requests.
      */
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|workbox-|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf)$).*)",
+    "/((?!api/storage/(?:cv|avatar)/?$|api/admin/storage/(?:avatar|logo|video)/?$|_next/static|_next/image|favicon.ico|sw.js|workbox-|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|woff|woff2|ttf)$).*)",
   ],
 };

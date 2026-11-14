@@ -157,7 +157,25 @@ function homepage() {
       ? accounts[Math.floor(visit / 2) % accounts.length].studentCookie
       : null;
   const start = Date.now();
-  const page = request("GET", "/", "homepage", cookie);
+  const language = visit % 2 ? "en" : "pt";
+  const redirect = request(
+    "GET",
+    `/?lang=${language}`,
+    "homepage_redirect",
+    cookie,
+    null,
+    307
+  );
+  if (
+    !redirect.ok ||
+    !check(redirect.response, {
+      "homepage redirect stays on the selected language": (r) =>
+        r.headers.Location === `/event/${language}` ||
+        r.headers.Location === `${base}/event/${language}`,
+    })
+  )
+    return;
+  const page = request("GET", `/event/${language}`, "homepage", cookie);
   if (!page.ok) return;
   const refs = ["/assets/optimized/theme-clean.a9aad2a7a171.webp"];
   const elements = page.response

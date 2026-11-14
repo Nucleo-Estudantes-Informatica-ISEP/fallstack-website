@@ -24,7 +24,10 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: "standalone",
+  // Bound the ISR cache header's stale-while-revalidate period.
+  expireTime: 120,
   experimental: {
+    globalNotFound: true,
     // PWA/Sentry add webpack hooks, disabling Next's default build worker.
     webpackBuildWorker: true,
     optimizePackageImports: ["@mynaui/icons-react"],

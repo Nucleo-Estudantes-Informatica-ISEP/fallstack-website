@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+
 import { e2eEnv } from "../env";
 import { expect, test } from "./fixtures";
 
@@ -31,6 +34,50 @@ test.describe("authenticated student event flow", () => {
     });
     expect(response.status()).toBe(201);
     await expect(response.json()).resolves.toEqual({ id: expect.any(String) });
+  });
+
+  test("near-limit and exact 10-MiB CVs survive multipart overhead and round-trip unchanged", async ({
+    request,
+  }) => {
+    test.skip(
+      !e2eEnv.allowUploads || !e2eEnv.verifyUploadLimits,
+      "Opt in to upload and boundary checks."
+    );
+    test.skip(test.info().project.name !== "chromium", "Check once per run.");
+    const session = await request.get("/api/auth/session");
+    expect(session.status()).toBe(200);
+    const { student } = await session.json();
+    const pdf = readFileSync(join(__dirname, "../fixtures/cv.pdf"));
+    const trailer = pdf.indexOf("trailer");
+    for (const size of [10 * 1024 * 1024 - 1024, 10 * 1024 * 1024]) {
+      const buffer = Buffer.concat([
+        pdf.subarray(0, trailer),
+        Buffer.from("%"),
+        Buffer.alloc(size - pdf.length - 2, 0x50),
+        Buffer.from("\n"),
+        pdf.subarray(trailer),
+      ]);
+      expect(buffer.length).toBe(size);
+      const upload = await request.post("/api/storage/cv", {
+        multipart: {
+          file: { name: "boundary.pdf", mimeType: "application/pdf", buffer },
+        },
+      });
+      expect(upload.status()).toBe(201);
+      const { id } = await upload.json();
+      expect(
+        (
+          await request.post(`/api/students/${student.code}/cv`, {
+            data: { id },
+          })
+        ).status()
+      ).toBe(200);
+      const download = await request.get(
+        `/api/students/${student.code}/cv/file`
+      );
+      expect(download.status()).toBe(200);
+      expect(await download.body()).toEqual(buffer);
+    }
   });
 
   test("CV upload rejects mismatched type and oversize content", async ({

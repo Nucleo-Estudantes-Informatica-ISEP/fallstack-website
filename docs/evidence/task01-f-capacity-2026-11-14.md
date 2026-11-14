@@ -254,7 +254,13 @@ existing staging pool. The new CDN alias remains available with strict TLS,
 HTTP-to-HTTPS redirect and observed health 200. No shared staging/production
 container was stopped or reconfigured.
 
-Compressed raw samples, summaries, operator scripts and a SHA-256 manifest
-are retained locally under ignored `test-results/capacity453/` with private
-permissions. Public hashes refer to the decompressed bytes. Synthetic session
-files and task-only environment secrets were deleted after teardown.
+The initial export retained compressed raw samples, summaries, operator scripts
+and a SHA-256 manifest under ignored `test-results/capacity453/`. During the
+subsequent candidate browser checks, Playwright's default output-directory cleanup
+removed that archive. The committed measurements and hashes remain unchanged;
+the original summary, run metadata, resource logs and generator logs were
+recovered from the operator directory. The original full HTTP sample files are
+currently unavailable and cannot be independently reprocessed. Candidate browser
+outputs now use `test-results/playwright/` to protect performance archives.
+Synthetic session files and task-only environment secrets were deleted after
+the baseline teardown.

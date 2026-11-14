@@ -183,7 +183,7 @@ For example, a new source would be added in the `sources` object and then only w
 
 #### Policy enforcement
 
-- The project enforces the policy using `Content-Security-Policy` as the production header.
+- The project enforces `Content-Security-Policy` on dynamic HTML documents. The public HTML allowlist in [ADR 0038](decisions/0038-cache-public-html-by-language.md) omits CSP and retains the baseline security headers.
 - The `Content-Security-Policy-Report-Only` header has been removed; the policy is fully enforced (see [ADR 0008](decisions/0008-enforce-content-security-policy.md)).
 - The policy was tuned and validated in Report-Only mode (#343) before being promoted to enforced mode (#346).
 - SVG logo support (#282) uses the existing same-origin image policy without additional SVG exceptions; see the audit below.

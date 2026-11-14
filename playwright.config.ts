@@ -6,6 +6,8 @@ const baseURL = (e2eEnv.baseUrl ?? "http://127.0.0.1:3000").replace(/\/$/, "");
 
 export default defineConfig({
   testDir: "./tests/e2e/playwright",
+  // Keep browser cleanup away from retained performance evidence.
+  outputDir: "./test-results/playwright",
   fullyParallel: true,
   forbidOnly: e2eEnv.ci,
   retries: e2eEnv.ci ? 2 : 0,

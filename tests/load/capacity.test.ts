@@ -56,6 +56,7 @@ function load(workload = "heavy", status = 200, env = {}, vu = 1) {
     open: (_path: string, mode?: string) =>
       mode ? new ArrayBuffer(5) : JSON.stringify(accounts),
     sleep() {},
+    URLSearchParams,
     check(
       value: unknown,
       predicates: Record<string, (value: unknown) => boolean>
@@ -83,14 +84,16 @@ function load(workload = "heavy", status = 200, env = {}, vu = 1) {
         return {
           status:
             status === 200
-              ? params.tags.name.startsWith("cv_upload") ||
-                params.tags.name === "booth_scan"
-                ? 201
-                : params.tags.name === "session"
-                  ? 401
-                  : 200
+              ? params.tags.name === "homepage_redirect"
+                ? 307
+                : params.tags.name.startsWith("cv_upload") ||
+                    params.tags.name === "booth_scan"
+                  ? 201
+                  : params.tags.name === "session"
+                    ? 401
+                    : 200
               : status,
-          headers: {},
+          headers: { Location: "/event/pt" },
           body: new ArrayBuffer(5),
           json: (key: string) =>
             key === "qrCode" ? "action-token" : "fixture",
@@ -173,4 +176,15 @@ test("refuses production, missing upload opt-in and invalid load", () => {
     /opt-in/
   );
   expect(() => load("heavy", 200, { VUS: "601" })).toThrow(/VUS/);
+});
+
+test("follows only the explicit same-origin language redirect with redirects disabled", () => {
+  const run = load("homepage-target");
+  run.runCapacity();
+  expect(run.options.maxRedirects).toBe(0);
+  expect(run.requests.slice(0, 2).map((r) => r.path)).toEqual([
+    "https://staging.example.org/?lang=pt",
+    "https://staging.example.org/event/pt",
+  ]);
+  expect(run.samples.completed_visits).toEqual([1]);
 });

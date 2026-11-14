@@ -64,3 +64,4 @@ implementation PR needs an ADR.
 | [0035](0035-gate-fixable-image-vulnerabilities.md)               | Gate fixable image vulnerabilities               | Accepted             |
 | [0036](0036-sanitize-svg-logo-pipeline.md)                       | Sanitize SVG only in the logo pipeline           | Accepted             |
 | [0037](0037-use-split-layout-for-login-and-signup.md)            | Use the split layout for login and signup        | Accepted             |
+| [0038](0038-cache-public-html-by-language.md)                    | Cache public HTML by language                    | Accepted             |

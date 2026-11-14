@@ -133,6 +133,11 @@ composite primary key `(studentId, employeeId)` plus a separate unique key
 `(studentId, companyId)`; `ActionCompletion` has a unique key
 `(actionId, studentId)`; `ScheduleEvent` has a unique key `(day, order)`.
 
+Company history pages use the index `(companyId, createdAt DESC, studentId DESC)`
+and a value cursor containing the timestamp and student ID. Each query returns
+at most 16 rows (15 displayed plus a lookahead); deleting the cursor row does
+not invalidate the next page. Full exports retain their complete query.
+
 ## Design notes
 
 ### Saved students: employee attribution, company grain

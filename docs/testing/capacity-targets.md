@@ -87,9 +87,16 @@ boundary; the gate requires at least 1,200 completed visits and zero drops.
 6. Verify TLS without disabling certificate validation, redirects, all expected
    `x-instance-id` values, real sessions, one entire heavy iteration and CV
    bytes. Confirm `cf-ray`/`cf-cache-status` for CDN traffic, including static
-   HITs and uncached HTML. Warm-up and cold-cache runs must be distinguished.
+   HITs and the exact public HTML allowlist. Warm-up and cold-cache runs must be distinguished.
 
 ## Run and retain evidence
+
+The homepage workload checks the uncached `/` language redirect explicitly,
+then requests `/event/pt` or `/event/en`; automatic redirects remain disabled.
+Language documents share public HTML even with synthetic session cookies; the
+private session API is measured separately. Apply the narrow staging cache rule
+in [the cache runbook](../operations/public-data-cache.md) and verify HITs and
+RSC/authentication bypasses before describing a run as CDN HTML caching.
 
 With the private environment loaded, run each matrix cell separately:
 

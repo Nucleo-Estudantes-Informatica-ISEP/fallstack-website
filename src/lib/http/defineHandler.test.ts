@@ -124,3 +124,21 @@ test("ownership denial and JSON validation retain their status codes", async () 
     ).status
   ).toBe(400);
 });
+
+test.each(["success", "unauthorized", "error"])(
+  "sets an instance header on %s responses without middleware",
+  async (kind) => {
+    const route = defineHandler({
+      auth: kind === "unauthorized" ? "session" : "none",
+      handler: () => {
+        if (kind === "error") throw new Error("test failure");
+        return NextResponse.json({ ok: true });
+      },
+    });
+    const response = await route(request(), { params: Promise.resolve({}) });
+    expect(response.status).toBe(
+      kind === "success" ? 200 : kind === "error" ? 500 : 401
+    );
+    expect(response.headers.get("x-instance-id")).toMatch(/^[0-9a-f]{8}$/);
+  }
+);

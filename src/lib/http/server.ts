@@ -8,6 +8,7 @@ import { HttpError } from "@/types/HttpError";
 import { reportError } from "@/lib/logger";
 import getServerSession from "@/application/services/sessionService";
 import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
+import { INSTANCE_ID_HEADER, instanceId } from "@/security/instanceId";
 
 export const httpErrorResponse = (error: unknown) => {
   if (error instanceof HttpError)
@@ -98,7 +99,10 @@ export function defineHandler<
   if (auth === "none" && config.authorize)
     throw new Error("auth:none cannot use authorize");
 
-  return async (req: NextRequest, routeContext: RouteContext<Params>) => {
+  const handle = async (
+    req: NextRequest,
+    routeContext: RouteContext<Params>
+  ) => {
     try {
       const session = auth === "none" ? null : await getServerSession();
 
@@ -133,5 +137,10 @@ export function defineHandler<
     } catch (error) {
       return httpErrorResponse(error);
     }
+  };
+  return async (req: NextRequest, context: RouteContext<Params>) => {
+    const response = await handle(req, context);
+    response.headers.set(INSTANCE_ID_HEADER, instanceId);
+    return response;
   };
 }
