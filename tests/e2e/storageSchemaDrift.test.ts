@@ -49,6 +49,7 @@ test("SQL-owned cleanup objects survive migration replay and Prisma schema drift
   );
   const statements = sql
     .replace(/^--.*$/gm, "")
+    .replace(/^WARN\b.*$/gm, "")
     .split(";")
     .map((statement) => statement.trim())
     .filter(Boolean)

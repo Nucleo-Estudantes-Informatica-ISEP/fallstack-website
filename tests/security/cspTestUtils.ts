@@ -28,4 +28,5 @@ export function getAllSources(csp: string): string[] {
 export function setDefaultTrustedEnv() {
   vi.stubEnv("NODE_ENV", "development");
   vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", TEST_SENTRY_DSN);
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
 }
