@@ -37,7 +37,10 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
       </section>
 
       <section className="artwork-clean artwork-readable flex w-full flex-col items-center bg-cover bg-center bg-no-repeat pb-12 text-center">
-        <HeadingText className="font-normal!" text="Speed Interviews" />
+        <HeadingText
+          className="font-normal! lg:text-4xl!"
+          text="Speed Interviews"
+        />
         <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
           Este ano podes experienciar a modalidade de speed interviews com
           algumas das empresas presentes.

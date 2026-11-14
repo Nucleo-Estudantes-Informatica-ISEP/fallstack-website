@@ -45,9 +45,6 @@ function toContentValue(
     videoHref: content.profile?.videoHref ?? null,
     socialLinks: parseSocialLinks(content.profile?.socialLinks),
     facts: parseFacts(content.profile?.facts),
-    logoWidth: content.displayStyle?.logoWidth ?? null,
-    logoHeight: content.displayStyle?.logoHeight ?? null,
-    className: content.displayStyle?.className ?? null,
     interestIds: content.interests.map((interest) => interest.id),
   };
 }
