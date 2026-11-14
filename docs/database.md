@@ -144,7 +144,8 @@ service checks for an existing company save before inserting and maps a database
 uniqueness race to an error. An admin save still needs an employee from the
 chosen company for attribution. The separate foreign keys do **not** prove that
 `savedBy.companyId` equals `SavedStudent.companyId`; callers must supply a
-matching pair. The save and optional booth-action completion share a transaction,
+matching pair. The descending index on `(companyId, createdAt, studentId)`
+supports company history pagination. The save and optional booth-action completion share a transaction,
 so a failed completion rolls back the save. See
 [data ownership](architecture.md#data-ownership).
 

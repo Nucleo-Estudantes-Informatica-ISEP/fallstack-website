@@ -4,6 +4,7 @@ const publicDataRuntimeCaching = [
     urlPattern: ({ url, sameOrigin }) =>
       sameOrigin &&
       (url.pathname === "/" ||
+        /^\/event\/(?:pt|en)\/?$/.test(url.pathname) ||
         /^\/api\/(?:faqs|schedule|sponsors|companies\/roster)\/?$/.test(
           url.pathname
         )),

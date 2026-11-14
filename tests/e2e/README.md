@@ -298,7 +298,7 @@ Explicit `K6_PROFILE=peak` enables the existing ramping/boundary scenarios. Ever
 profile applies the staging target guard above, including direct `test:load`.
 
 - `health` — safe liveness baseline.
-- `homepage` — GET the rendered homepage, its same-origin Next.js scripts,
+- `homepage` — GET `/event/pt`, its same-origin Next.js scripts,
   styles, images and landing artwork, then the public schedule, FAQs, sponsors
   and company roster APIs. The current landing page server-loads its featured
   roster; the four API reads are additional representative public traffic,
