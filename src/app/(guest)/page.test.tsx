@@ -5,10 +5,14 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import Page from "./page";
 
-const config = vi.hoisted(() => ({ SHOWCASE_FULL_WEBSITE: false }));
+const config = vi.hoisted(() => ({
+  SHOWCASE_FULL_WEBSITE: false,
+  EVENT_MODE: "active" as "active" | "offseason",
+}));
 vi.mock("@/config/env.server", () => ({ serverEnv: config }));
 afterEach(() => {
   config.SHOWCASE_FULL_WEBSITE = false;
+  config.EVENT_MODE = "active";
 });
 vi.mock("next/headers", () => ({
   headers: async () => new Headers({ "accept-language": "en-GB" }),
@@ -44,6 +48,11 @@ vi.mock("@/components/HomepageSection", () => ({
     </span>
   ),
 }));
+vi.mock("@/components/OffseasonLanding", () => ({
+  default: ({ language }: { language: string }) => (
+    <main>Offseason landing {language}</main>
+  ),
+}));
 
 test.each([
   [{ lang: "PT" }, "PT"],
@@ -67,5 +76,20 @@ test("showcase renders the full website in the resolved language", async () => {
   for (const section of ["schedule", "companies", "sponsors", "faqs"]) {
     expect(html).toContain(`${section} PT`);
   }
+  expect(html).not.toContain("Countdown");
+});
+
+test("offseason mode takes priority over the full website", async () => {
+  config.EVENT_MODE = "offseason";
+  config.SHOWCASE_FULL_WEBSITE = true;
+
+  const page = await Page({
+    searchParams: Promise.resolve({ lang: "PT" }),
+  });
+
+  const html = renderToStaticMarkup(page);
+
+  expect(html).toContain("Offseason landing PT");
+  expect(html).not.toContain("Full website");
   expect(html).not.toContain("Countdown");
 });

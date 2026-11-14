@@ -88,3 +88,27 @@ test("rejects an ambiguous single-connection deletion opt-in", async () => {
     "GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE"
   );
 });
+
+test.each([
+  [undefined, "active"],
+  ["active", "active"],
+  ["offseason", "offseason"],
+])("parses EVENT_MODE=%s as %s", async (value, expected) => {
+  if (value === undefined) {
+    delete process.env.EVENT_MODE;
+  } else {
+    process.env.EVENT_MODE = value;
+  }
+
+  const { serverEnv } = await import("./env.server");
+
+  expect(serverEnv.EVENT_MODE).toBe(expected);
+});
+
+test("rejects invalid EVENT_MODE values", async () => {
+  process.env.EVENT_MODE = "maintenance";
+
+  const { serverEnv } = await import("./env.server");
+
+  expect(() => serverEnv.EVENT_MODE).toThrow("EVENT_MODE");
+});

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { serverEnv } from "@/config/env.server";
 import { defineHandler } from "@/lib/http/server";
 import { toStudentSummaryDto } from "@/application/dto/studentDto";
 import { createStudentProfile } from "@/application/services/studentService";
@@ -10,6 +11,13 @@ export const POST = defineHandler({
   schema: postStudentSchema,
   authorize: (session) => session.role === "STUDENT",
   handler: async ({ session, body }) => {
+    if (serverEnv.EVENT_MODE === "offseason") {
+      return NextResponse.json(
+        { error: "As inscrições estão encerradas." },
+        { status: 403 }
+      );
+    }
+
     const studentSession = session!;
     if (studentSession.student)
       return NextResponse.json(
