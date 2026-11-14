@@ -253,6 +253,12 @@ model ActionCompletion {
 }
 
 model SessionCheckIn {
+  // SQL trigger captures these at insert and preserves them on update.
+  sessionDay       Int    @default(0)
+  sessionStartTime String @default("")
+  sessionEndTime   String @default("")
+  sessionActivity  Json   @default("{}")
+
   id          String   @id @default(uuid()) @db.Uuid
   checkedInAt DateTime @default(now())
 
@@ -266,6 +272,7 @@ model SessionCheckIn {
 
   @@unique([sessionId, studentId])
   @@index([studentId])
+  @@index([sessionDay])
 }
 
 model Interest {

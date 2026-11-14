@@ -225,3 +225,8 @@ with model changes; this page does not replace the schema or migrations.
 A session with check-ins cannot be deleted while those records exist. Deleting
 an individual student removes their check-ins; deleting the scanning user keeps
 attendance and clears the nullable scanner reference.
+
+Attendance exports use the immutable session day, times and activity captured in
+`SessionCheckIn` by the `session_attendance_snapshot` database trigger. Its
+migration backfills existing rows from the current schedule; it cannot recover
+older edits. Keep that trigger when restoring or recreating the schema.
