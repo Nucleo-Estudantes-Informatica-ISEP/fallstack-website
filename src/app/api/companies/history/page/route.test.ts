@@ -65,3 +65,22 @@ test("passes a validated cursor and the session company", async () => {
     createdAt: new Date("2026-11-14T12:00:00.123Z"),
   });
 });
+
+test("accepts PostgreSQL UUID values without RFC version and variant bits", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({
+    role: "EMPLOYEE",
+    employee: { company: { id: "company" } },
+    adminRole: null,
+  } as never);
+  vi.mocked(getCompanyHistoryPage).mockResolvedValue({
+    items: [],
+    hasMore: false,
+  });
+  const query =
+    "?studentId=12345678-1234-1234-1234-123456789abc&createdAt=2026-11-14T12%3A00%3A00.123Z";
+  expect((await request(query)).status).toBe(200);
+  expect(getCompanyHistoryPage).toHaveBeenCalledWith("company", {
+    studentId: "12345678-1234-1234-1234-123456789abc",
+    createdAt: new Date("2026-11-14T12:00:00.123Z"),
+  });
+});
