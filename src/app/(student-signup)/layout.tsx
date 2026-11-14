@@ -5,5 +5,5 @@ export default function StudentSignupLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <AuthPageLayout studentSignup>{children}</AuthPageLayout>;
+  return <AuthPageLayout>{children}</AuthPageLayout>;
 }

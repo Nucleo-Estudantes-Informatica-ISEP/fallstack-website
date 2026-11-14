@@ -54,6 +54,7 @@ export default async function FeaturedCompanies({
               >
                 {company.avatar ? (
                   <Image
+                    unoptimized={company.avatar.startsWith("/api/media/logo/")}
                     src={company.avatar}
                     alt={company.name}
                     width={120}
