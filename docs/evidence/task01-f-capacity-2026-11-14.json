@@ -9888,5 +9888,13 @@
     },
     "local_dev_postgres_redis_and_samplers_stopped": true
   },
-  "finalized_utc": "2026-11-14T16:28:57.622566+00:00"
+  "finalized_utc": "2026-11-14T16:28:57.622566+00:00",
+  "artifact_retention_update": {
+    "date": "2026-11-14",
+    "status": "Original ignored raw-sample archive removed by Playwright default output cleanup during candidate checks.",
+    "recovered_files": 50,
+    "recovered": "Summaries, run metadata, resource/generator logs and selected diagnostic artifacts recompressed from operator files.",
+    "full_http_samples": "No remaining local copy; committed measurements and original hashes unchanged.",
+    "prevention": "Browser output moved to test-results/playwright and an actual subsequent run preserved recovered performance artifacts."
+  }
 }
