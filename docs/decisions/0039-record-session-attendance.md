@@ -59,8 +59,8 @@ Check-in POSTs share a Redis-backed limit of 60 attempts per staff user per
 minute across all sessions and credential forms. Exhaustion returns 429 with
 Retry-After; a limiter outage fails closed with 503. Unknown student credentials
 emit a structured warning with scanner and session IDs, never the code or token,
-so repeated misses can be investigated. The 404 remains useful for staff input
-correction; authorized staff can still learn code existence within this budget.
+so repeated misses can be investigated. Unknown credentials return the same
+generic error as other invalid credentials.
 
 ## Attendance export snapshots — 14 November 2026
 

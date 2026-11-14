@@ -100,7 +100,7 @@ test("rejects an unknown student code", async () => {
 
   await expect(
     recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
-  ).rejects.toMatchObject(new HttpError("Student code not found.", 404));
+  ).rejects.toMatchObject(new HttpError("Invalid student credential.", 400));
 });
 
 test("maps a concurrent duplicate check-in to a clear conflict", async () => {
@@ -164,7 +164,7 @@ test("logs unknown student attempts without exposing credentials", async () => {
   vi.mocked(findStudentForCheckIn).mockResolvedValueOnce(null);
   await expect(
     recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
-  ).rejects.toMatchObject({ status: 404 });
+  ).rejects.toMatchObject({ status: 400 });
   expect(logger.warn).toHaveBeenCalledWith(
     {
       event: "attendance_student_miss",
