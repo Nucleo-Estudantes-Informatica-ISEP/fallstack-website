@@ -106,6 +106,30 @@ test("an unsaved student can be saved with a labelled, bounded comment", async (
   vi.useRealTimers();
 });
 
+// 409 comes from the duplicate check, 400 from a concurrent save's race.
+test.each([409, 400])(
+  "an already-saved student (%i) is a warning, not an error",
+  async (status) => {
+    const { HttpClientError } = await import("@/lib/http/client");
+    const Err = HttpClientError as unknown as new (
+      m: string,
+      s: number
+    ) => Error;
+    patchMock.mockRejectedValueOnce(new Err("Student already saved", status));
+    renderView(false);
+
+    fireEvent.click(screen.getByRole("button", { name: "+ Salvar perfil" }));
+
+    await waitFor(() =>
+      expect(toastWarning).toHaveBeenCalledWith(
+        "Perfil já salvo!",
+        expect.anything()
+      )
+    );
+    expect(toastError).not.toHaveBeenCalled();
+  }
+);
+
 test("a failed save shows a Portuguese message", async () => {
   patchMock.mockRejectedValue(new Error("Request failed"));
   renderView(false);

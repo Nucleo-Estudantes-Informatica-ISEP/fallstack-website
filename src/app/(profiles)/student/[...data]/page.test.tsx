@@ -314,6 +314,24 @@ test("an employee opening a plain-code preview of an unsaved student is blocked"
   assert.equal(isBlocked(result), true);
 });
 
+test("a student opening a plain-code preview of another student is blocked", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "u2",
+    role: "STUDENT",
+    adminRole: null,
+    student: { id: "s2", code: "S999", name: "Bea" },
+    employee: null,
+  } as never);
+  await withSignedToken(null);
+
+  const result = await renderPreviewFor("S123");
+
+  assert.equal(isBlocked(result), true);
+});
+
 test("an employee opening an invalid or expired preview token is blocked", async () => {
   await asEmployee({ saved: false });
   await withSignedToken(null);

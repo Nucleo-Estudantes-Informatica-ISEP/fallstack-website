@@ -76,6 +76,12 @@ const StudentPage = async (props: ProfileProps) => {
   // companies may access if they saved the profile
   if (session.employee && !isSavedStudent && !isPreview) return Custom404();
 
+  // A preview without a valid signed token is the saved-students list's link
+  // back to a profile, so only an employee whose company saved the student
+  // may open one. Anyone else, such as another student, is blocked.
+  if (isPreview && !decodedPreviewCode && !(session.employee && isSavedStudent))
+    return Custom404();
+
   const studentInterests = student.interests.map(({ id, name }) => ({
     id,
     name: name[language],
@@ -117,9 +123,6 @@ const StudentPage = async (props: ProfileProps) => {
       : new Set(history.map((h) => h.savedBy.companyId)).size;
 
   const companiesLeft = totalCompanies - uniqueCompaniesSaved;
-
-  if (isPreview && !decodedPreviewCode && session.employee && !isSavedStudent)
-    return Custom404();
 
   if (isPreview) {
     return (

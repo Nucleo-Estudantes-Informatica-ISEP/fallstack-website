@@ -54,7 +54,12 @@ const PreviewProfileSectionContainer: React.FC<
       try {
         await httpClient.patch("/saved", { token });
       } catch (error) {
-        if (error instanceof HttpClientError && error.status === 400) {
+        // Already saved: 409 from the duplicate check, or 400 when a
+        // concurrent save wins the race (saveStudent in savedStudentService).
+        if (
+          error instanceof HttpClientError &&
+          (error.status === 409 || error.status === 400)
+        ) {
           toast.warning("Perfil já salvo!", { toastId: "preview-saved" });
           return;
         }

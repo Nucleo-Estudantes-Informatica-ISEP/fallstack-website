@@ -227,20 +227,32 @@ test("saving sends the preview token and confirms", async () => {
   vi.useRealTimers();
 });
 
-test("an already-saved student is a warning; other failures are in Portuguese", async () => {
+// 409 comes from the duplicate check, 400 from a concurrent save's race.
+test.each([409, 400])(
+  "an already-saved student (%i) is a warning, not an error",
+  async (status) => {
+    const { HttpClientError } = await import("@/lib/http/client");
+    const Err = HttpClientError as unknown as new (
+      m: string,
+      s: number
+    ) => Error;
+
+    patchMock.mockRejectedValueOnce(new Err("Student already saved", status));
+    renderPreview({ isSavedStudent: false });
+    fireEvent.click(screen.getByRole("button", { name: "+ Salvar perfil" }));
+    await waitFor(() =>
+      expect(toastWarning).toHaveBeenCalledWith(
+        "Perfil já salvo!",
+        expect.anything()
+      )
+    );
+    expect(toastError).not.toHaveBeenCalled();
+  }
+);
+
+test("other save failures show one Portuguese message", async () => {
   const { HttpClientError } = await import("@/lib/http/client");
   const Err = HttpClientError as unknown as new (m: string, s: number) => Error;
-
-  patchMock.mockRejectedValueOnce(new Err("Student already saved", 400));
-  const { unmount } = renderPreview({ isSavedStudent: false });
-  fireEvent.click(screen.getByRole("button", { name: "+ Salvar perfil" }));
-  await waitFor(() =>
-    expect(toastWarning).toHaveBeenCalledWith(
-      "Perfil já salvo!",
-      expect.anything()
-    )
-  );
-  unmount();
 
   patchMock.mockRejectedValueOnce(new Err("Internal Server Error", 500));
   renderPreview({ isSavedStudent: false });
