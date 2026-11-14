@@ -69,10 +69,17 @@ Common commands: `pnpm dev`, `pnpm test`, `pnpm test:watch`, `pnpm lint`,
 `pnpm typecheck`, `pnpm build`, `pnpm generate`. See the contribution and
 database guides for checks and migration commands.
 
-Before database-backed checks, start or reuse a confirmed isolated local test
-database and apply its migrations. Configure the checks to use it, and stop any
-database started for the task afterward. Never run destructive checks against
-shared or production services.
+Before starting application checks (including commit/push hooks), prepare a
+confirmed task-owned isolated local PostgreSQL database. Set both `DATABASE_URL`
+and `DIRECT_URL` to that database, verify connectivity, apply migrations with
+`pnpm migrate:deploy`, and run `pnpm exec prisma validate` before lint, tests,
+typecheck, or build. Keep these variables set for every check and Git hook
+process; do not start an unconfigured run and wait for database failures. Reuse
+a prepared task-owned database when safe. If preparation fails, fix it before
+continuing; do not skip database tests. Stop task-owned database processes after
+verification. Never run destructive checks against shared or production
+services. Documentation-only tasks retain the contribution workflow's
+lighter documentation checks.
 
 Do not run destructive local data commands against shared services. `pnpm wipe`
 requires `NODE_ENV=development`; check the target database first.
