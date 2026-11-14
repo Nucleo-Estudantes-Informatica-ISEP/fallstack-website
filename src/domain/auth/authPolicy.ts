@@ -24,6 +24,7 @@ export interface AuthPolicySession {
   // Null means not an admin at all. Orthogonal to role, not a narrowing of it.
   adminRole: "ADMIN" | "SUPER_ADMIN" | null;
   neiMember?: boolean;
+  attendanceExpiresAt?: number;
   student: unknown;
   employee: { company: unknown } | null;
 }
@@ -55,7 +56,10 @@ export function passesAuthPolicy(
   if (policy === "employee")
     return session.role === "EMPLOYEE" && !!session.employee?.company;
   if (policy === "staff")
-    return session.adminRole !== null || session.neiMember === true;
+    return (
+      (session.adminRole !== null || session.neiMember === true) &&
+      (session.attendanceExpiresAt ?? 0) > Date.now()
+    );
   if (policy === "admin") return session.adminRole !== null;
   if (policy === "superadmin") return session.adminRole === "SUPER_ADMIN";
   return false;

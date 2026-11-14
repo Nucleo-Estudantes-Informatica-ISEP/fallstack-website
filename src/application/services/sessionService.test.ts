@@ -168,6 +168,7 @@ test("carries the signed NEI member grant into the resolved session", async () =
     employee: false,
     admin: false,
     neiMember: true,
+    iat: 1000,
   });
   vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
     id: "member",
@@ -177,5 +178,7 @@ test("carries the signed NEI member grant into the resolved session", async () =
     student: { id: "member" },
     employee: null,
   } as never);
-  expect((await getServerSession())?.neiMember).toBe(true);
+  const session = await getServerSession();
+  expect(session?.neiMember).toBe(true);
+  expect(session?.attendanceExpiresAt).toBe(1300000);
 });
