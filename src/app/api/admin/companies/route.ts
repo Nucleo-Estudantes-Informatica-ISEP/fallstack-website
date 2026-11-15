@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { serverEnv } from "@/config/env.server";
 import { defineHandler } from "@/lib/http/server";
 import { toAdminCompanyDto } from "@/application/dto/companyDto";
 import {
@@ -30,6 +31,13 @@ export const POST = defineHandler({
   auth: "admin",
   schema: createAdminCompanySchema,
   handler: async ({ body }) => {
+    if (serverEnv.EVENT_MODE === "offseason") {
+      return NextResponse.json(
+        { error: "As inscrições estão encerradas." },
+        { status: 403 }
+      );
+    }
+
     const company = await createCompanyForAdmin(body);
     return NextResponse.json(toAdminCompanyDto(company), { status: 201 });
   },

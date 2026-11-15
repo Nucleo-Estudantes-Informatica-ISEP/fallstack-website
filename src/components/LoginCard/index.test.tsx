@@ -139,3 +139,62 @@ test("successful employee onboarding refreshes the session and opens dashboard",
   expect(pushMock).toHaveBeenCalledWith("/dashboard");
   expect(refreshMock).toHaveBeenCalled();
 });
+
+test("offseason hides student and employee registration links", () => {
+  render(<LoginCard offseason />);
+
+  expect(screen.getByText("Continuar com AuthNEI")).toBeInTheDocument();
+
+  expect(
+    screen.queryByRole("link", { name: "Criar uma conta" })
+  ).not.toBeInTheDocument();
+
+  expect(
+    screen.queryByRole("button", {
+      name: "Tens um código de empresa? Regista-te como colaborador",
+    })
+  ).not.toBeInTheDocument();
+});
+
+test("offseason employee deep-link shows closure before authentication", () => {
+  render(<LoginCard initialView="employee" offseason />);
+
+  expect(
+    screen.getByText("As inscrições de colaboradores estão encerradas.")
+  ).toBeInTheDocument();
+
+  expect(screen.queryByText("Continuar com AuthNEI")).not.toBeInTheDocument();
+  expect(screen.queryByText("Completar associação")).not.toBeInTheDocument();
+});
+
+test("offseason employee deep-link blocks the form for authenticated users", () => {
+  sessionState.user = {
+    role: "STUDENT",
+    adminRole: null,
+    student: null,
+  };
+
+  render(<LoginCard initialView="employee" offseason />);
+
+  expect(
+    screen.getByText("As inscrições de colaboradores estão encerradas.")
+  ).toBeInTheDocument();
+
+  expect(screen.queryByText("Completar associação")).not.toBeInTheDocument();
+});
+
+test("offseason employee closure allows returning to the login page", () => {
+  render(<LoginCard initialView="employee" offseason />);
+
+  fireEvent.click(
+    screen.getByRole("button", { name: "Voltar ao início de sessão" })
+  );
+
+  expect(replaceMock).toHaveBeenCalledWith("/login");
+
+  expect(
+    screen.getByRole("heading", { name: "Iniciar Sessão" })
+  ).toBeInTheDocument();
+
+  expect(screen.getByText("Continuar com AuthNEI")).toBeInTheDocument();
+});

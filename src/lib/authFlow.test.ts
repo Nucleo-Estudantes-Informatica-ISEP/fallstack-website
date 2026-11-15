@@ -17,7 +17,7 @@ test("authentication and password recovery no longer depend on Supabase Auth", a
     read("prisma/schema.prisma"),
     read("src/app/api/auth/login/route.ts"),
     read("src/app/api/auth/password-reset/route.ts"),
-    read("src/app/(auth)/password-reset/confirm/page.tsx"),
+    read("src/app/(protected)/(auth)/password-reset/confirm/page.tsx"),
     read("src/app/auth/confirm/route.ts"),
   ]);
 
@@ -49,7 +49,7 @@ test("authentication and password recovery no longer depend on Supabase Auth", a
   );
 
   for (const legacyPath of [
-    "src/app/(admin)/change-password/page.tsx",
+    "src/app/(protected)/(admin)/change-password/page.tsx",
     "src/app/api/auth/password-change/route.ts",
     "src/components/ChangePasswordForm/index.tsx",
   ]) {

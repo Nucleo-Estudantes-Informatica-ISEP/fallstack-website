@@ -15,7 +15,8 @@ import type {
   RateLimitStore,
 } from "@/domain/rateLimit";
 
-export type LimitedEndpoint = "upload_cv" | "upload_avatar";
+export type LimitedEndpoint =
+  "upload_cv" | "upload_avatar" | "session_check_in";
 
 export function createRateLimitService(store: RateLimitStore) {
   return async (

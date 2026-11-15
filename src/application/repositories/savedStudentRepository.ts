@@ -89,6 +89,31 @@ export const findCompanyHistory = (companyId: string) =>
     orderBy: { createdAt: "desc" },
   });
 
+export const findCompanyHistoryPage = (
+  companyId: string,
+  cursor?: { createdAt: Date; studentId: string }
+) =>
+  prisma.savedStudent.findMany({
+    where: {
+      companyId,
+      ...(cursor && {
+        OR: [
+          { createdAt: { lt: cursor.createdAt } },
+          { createdAt: cursor.createdAt, studentId: { lt: cursor.studentId } },
+        ],
+      }),
+    },
+    orderBy: [{ createdAt: "desc" }, { studentId: "desc" }],
+    take: 16,
+    select: {
+      studentId: true,
+      createdAt: true,
+      comment: true,
+      student: { select: { code: true, name: true } },
+      savedBy: { select: { name: true, company: { select: { name: true } } } },
+    },
+  });
+
 export const findCompanyHistoryWithInterests = (companyId: string) =>
   prisma.savedStudent
     .findMany({
