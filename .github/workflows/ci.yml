@@ -43,8 +43,6 @@ jobs:
   quality:
     name: Test, typecheck, lint & build
     runs-on: [self-hosted, Linux, X64, fallstack-david]
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
 
     services:
       postgres:
@@ -139,10 +137,13 @@ jobs:
         run: pnpm exec vitest run tests/e2e/googleWalletCapacity.test.ts --maxWorkers=1
 
       - name: Install Chromium
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
         run: pnpm exec playwright install chromium
 
       - name: Test staging redirect safety
         env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
           E2E_BASE_URL: http://127.0.0.1
         run: pnpm test:e2e --project=chromium tests/e2e/playwright/staging-redirects.spec.ts
 
