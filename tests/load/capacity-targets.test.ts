@@ -1,6 +1,12 @@
 // @vitest-environment node
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
@@ -61,3 +67,95 @@ test("runner selects one topology, runs canary first and keeps cookies out of ar
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test.each([
+  {
+    count: 40,
+    duplicate: false,
+    cells: "3c-homepage-80,3c-homepage-160",
+    expectedCalls: 0,
+  },
+  {
+    count: 80,
+    duplicate: false,
+    cells: "3c-homepage-80,3c-homepage-200",
+    expectedCalls: 0,
+  },
+  {
+    count: 100,
+    duplicate: true,
+    cells: "3c-homepage-1200,3c-homepage-200",
+    expectedCalls: 0,
+  },
+  {
+    count: 2,
+    duplicate: true,
+    cells: "3c-homepage-1200,3c-heavy-200",
+    expectedCalls: 0,
+  },
+  {
+    count: 2,
+    duplicate: true,
+    cells: "3c-homepage-1200,3c-failure-boundary",
+    expectedCalls: 0,
+  },
+  { count: 0, duplicate: false, cells: "3c-homepage-80", expectedCalls: 0 },
+  {
+    count: 100,
+    duplicate: false,
+    cells: "3c-homepage-80,3c-homepage-160,3c-homepage-200,3c-homepage-1200",
+    expectedCalls: 5,
+  },
+  {
+    count: 2,
+    duplicate: false,
+    cells: "3c-failure-boundary",
+    expectedCalls: 2,
+  },
+])(
+  "validates session pools before traffic: $cells ($count, duplicate=$duplicate)",
+  ({ count, duplicate, cells, expectedCalls }) => {
+    const dir = mkdtempSync(join(tmpdir(), "capacity-sessions-"));
+    try {
+      const log = join(dir, "calls");
+      const binary = join(dir, "k6");
+      writeFileSync(
+        binary,
+        '#!/bin/bash\nprintf "%s\\n" "$*" >> "$CALL_LOG"\n',
+        { mode: 0o700 }
+      );
+      const cookies = Array.from(
+        { length: count },
+        (_, i) => `session=synthetic-${i}`
+      );
+      if (duplicate) cookies[cookies.length - 1] = ` ${cookies[0]} `;
+      const result = spawnSync("bash", ["tests/load/capacity-targets.sh"], {
+        env: {
+          ...process.env,
+          E2E_BASE_URL: "https://staging.example.org",
+          STAGING_BASE_URL: "https://staging.example.org",
+          CONFIRM_NON_PRODUCTION: "yes",
+          CAPACITY_COPIES: "3",
+          CAPACITY_CELLS: cells,
+          CAPACITY_CANARY: "yes",
+          CAPACITY_RESULT_DIR: dir,
+          K6_BIN: binary,
+          CALL_LOG: log,
+          STUDENT_COOKIES: ` , ${cookies.join(", ")}, , `,
+        },
+        encoding: "utf8",
+      });
+      expect(result.status).toBe(expectedCalls ? 0 : 2);
+      const calls = existsSync(log)
+        ? readFileSync(log, "utf8").trim().split("\n")
+        : [];
+      expect(calls).toHaveLength(expectedCalls);
+      if (!expectedCalls) expect(result.stderr).toContain("STUDENT_COOKIES");
+      if (cells === "3c-failure-boundary")
+        expect(calls.at(-1)).toContain("VUS=2");
+      expect(result.stderr).not.toContain("session=");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }
+);

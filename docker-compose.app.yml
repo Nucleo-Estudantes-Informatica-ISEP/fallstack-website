@@ -54,11 +54,6 @@ services:
     # No env scaling knob until #419 verifies Coolify and shared-state safety.
     deploy:
       replicas: 1
-      resources:
-        # Bound every replica so web load cannot starve the co-hosted login service.
-        limits:
-          cpus: ${WEB_CPU_LIMIT:-1.0}
-          memory: ${WEB_MEMORY_LIMIT:-768M}
     labels:
       metrics_enabled: ${METRICS_ENABLED:-false}
       metrics_environment: ${METRICS_ENVIRONMENT:-disabled}

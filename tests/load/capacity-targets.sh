@@ -47,6 +47,30 @@ run() {
 }
 
 IFS=, read -r -a cell_list <<< "$cells"
+session_count=
+validate_sessions() {
+  if [[ -z $session_count ]]; then
+    if ! session_count=$(awk '
+      BEGIN { RS = "," }
+      {
+        gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+        if ($0 != "") {
+          if (seen[$0]++) duplicate = 1
+          count++
+        }
+      }
+      END { if (duplicate) exit 2; print count + 0 }
+    ' <<< "${STUDENT_COOKIES:-}"); then
+      echo 'STUDENT_COOKIES must contain distinct student sessions.' >&2
+      exit 2
+    fi
+  fi
+  if (( session_count < $1 )); then
+    echo "STUDENT_COOKIES needs at least $1 distinct student sessions for $cell." >&2
+    exit 2
+  fi
+}
+
 # Validate every cell before sending any traffic.
 seen_cells=,
 for cell in "${cell_list[@]}"; do
@@ -58,10 +82,10 @@ for cell in "${cell_list[@]}"; do
   case "$cell" in
     "${CAPACITY_COPIES}c-"homepage-1200) ;;
     "${CAPACITY_COPIES}c-"homepage-80|"${CAPACITY_COPIES}c-"homepage-160|"${CAPACITY_COPIES}c-"homepage-200)
-      : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES}"
+      validate_sessions "$(( ${cell##*-} / 2 ))"
       ;;
     "${CAPACITY_COPIES}c-"heavy-200|"${CAPACITY_COPIES}c-"failure-boundary)
-      : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES}"
+      validate_sessions 1
       ;;
     "${CAPACITY_COPIES}c-"failure-qr) : "${ACTION_ID:?Set ACTION_ID}" ;;
     *) echo "Unknown cell or mismatched CAPACITY_COPIES: $cell" >&2; exit 2 ;;
@@ -90,7 +114,7 @@ for cell in "${cell_list[@]}"; do
       ;;
     *-failure-boundary)
       : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES for the boundary probe}"
-      run "$cell" upload-tickets-boundary "$(awk -F, '{print NF}' <<< "$STUDENT_COOKIES")"
+      run "$cell" upload-tickets-boundary "$session_count"
       ;;
     *-failure-qr)
       : "${ACTION_ID:?Set ACTION_ID for the QR failure probe}"

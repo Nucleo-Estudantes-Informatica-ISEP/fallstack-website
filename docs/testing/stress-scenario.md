@@ -30,8 +30,13 @@ Run `pnpm test:load:capacity` from the repository root against isolated staging.
 Verify and set the actual deployment count first: `CAPACITY_COPIES=2` or `3`.
 The runner does not scale Coolify or prove routing; never relabel the same
 unchanged deployment as both topologies. Inspect replica inventory, routing and
-limits before each topology. Web defaults are 1 CPU / 768 MiB per copy via
-`WEB_CPU_LIMIT` / `WEB_MEMORY_LIMIT`; validate host headroom for co-hosted AuthNEI.
+limits before each topology. On isolated staging only, explicitly add
+`-f docker-compose.capacity.yml` after `-f docker-compose.app.yml` in the
+deployment's Compose configuration to opt into 1 CPU / 768 MiB per web copy.
+Override these test budgets with `CAPACITY_WEB_CPU_LIMIT` /
+`CAPACITY_WEB_MEMORY_LIMIT` after validating host headroom for co-hosted AuthNEI.
+The normal Coolify definition has no new resource limits; never include the
+capacity override in production. This runner does not apply either file.
 
 With staging URL and synthetic `STUDENT_COOKIES` already exported securely:
 
@@ -58,7 +63,11 @@ requires at least 1,200 completed iterations and zero dropped iterations, and
 uses `TARGET_PREALLOCATED_VUS` (default 200 in the runner) as the worker budget.
 Each iteration requests HTML, assets, public APIs and a session check. Without
 cookies the target is guest-only; record visitor mix explicitly. The concurrency
-scenario retains its existing distinct synthetic student session requirement.
+scenario requires at least 40/80/100 distinct synthetic student sessions for
+80/160/200 VUs. The runner trims entries, ignores empty entries and rejects
+duplicates and undersized pools for every selected cell before the canary or
+any k6 call. Upload cells also require nonempty, distinct sessions; boundary
+probes use the trimmed nonempty session count as their VU count.
 `HOMEPAGE_PATH` defaults to `/event/pt` to avoid the root language redirect.
 Canary overrides `TARGET_RATE`, `TARGET_DURATION`, `TARGET_VISITS` and the worker
 budget only for its own run; selected target cells retain the caller's settings.
