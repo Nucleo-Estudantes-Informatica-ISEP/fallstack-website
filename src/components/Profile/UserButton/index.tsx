@@ -5,30 +5,17 @@ import { LiaUser } from "react-icons/lia";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 
 import type { SessionDto } from "@/application/dto/sessionDto";
+import { resolveAccountDestination } from "@/domain/auth/accountDestination";
 
 interface UserButtonProps {
   user: SessionDto;
 }
 
 const UserButton: React.FC<UserButtonProps> = ({ user }) => {
-  // A STUDENT-role session can exist with no Student row yet - e.g. AuthNEI
-  // established the account but the signup wizard was abandoned or
-  // interrupted before the profile step. Route back into the wizard to
-  // finish it instead of a dead link. An admin account has role: null and
-  // no student profile either, but for an entirely different reason (it
-  // isn't a STUDENT/EMPLOYEE at all) - checked first so it doesn't fall
-  // into that same "unfinished student signup" branch.
-  const profileUrl = user.adminRole
-    ? "/overview"
-    : user.role === "EMPLOYEE"
-      ? "/dashboard"
-      : user.student
-        ? "/student/" + user.student.code
-        : // NEI staff accounts (e.g. @nei-isep.org) have no student profile
-          // and cannot complete student signup; their place is the scanner.
-          user.neiMember
-          ? "/attendance/scan"
-          : "/signup";
+  // Shares its routing with the homepage call to action, so both always lead
+  // the same account to the same place. An account without a usable role
+  // keeps the previous /signup fallback.
+  const profileUrl = resolveAccountDestination(user).href ?? "/signup";
 
   return (
     <Link

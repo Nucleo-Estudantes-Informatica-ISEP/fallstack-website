@@ -208,12 +208,6 @@ export const options = {
             },
 };
 
-const samplePdf = http.file(
-  "%PDF-1.4\n% event-readiness\n%%EOF\n",
-  "event-readiness.pdf",
-  "application/pdf"
-);
-
 function visitHomepage() {
   // Alternate VUs so each identity remains stable throughout the run. Smoke
   // has one VU, so alternate iterations to exercise both visitor types.
@@ -307,10 +301,16 @@ function visitHomepage() {
 }
 
 function uploadCv(cookie) {
+  // These scenarios measure shared authorization allowance, not file transfer.
+  // Full direct uploads and mixed business traffic live in direct-cv.js.
   return http.post(
     `${baseUrl}/api/storage/cv`,
-    { file: samplePdf },
-    { headers: { Cookie: cookie } }
+    JSON.stringify({
+      filename: "readiness.pdf",
+      contentType: "application/pdf",
+      size: 32,
+    }),
+    { headers: { Cookie: cookie, "Content-Type": "application/json" } }
   );
 }
 
@@ -397,7 +397,8 @@ export default function runScenario() {
     const response = uploadCv(cookie);
     check(response, {
       "CV upload returns 201": (res) => res.status === 201,
-      "CV upload returns a file id": (res) => Boolean(res.json("id")),
+      "CV authorization returns an upload id": (res) =>
+        Boolean(res.json("uploadId")),
     });
   }
 

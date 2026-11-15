@@ -37,6 +37,8 @@ function getSources() {
 
     // Supabase project origin.
     supabase: getOriginFromDsn(process.env.NEXT_PUBLIC_SUPABASE_URL),
+    // Runtime public S3 origin; only fetch uploads need it (no scripts/forms).
+    storage: getOriginFromDsn(process.env.S3_PUBLIC_ENDPOINT),
 
     // External Inter font stylesheet and font files.
     rsms: "https://rsms.me",
@@ -84,7 +86,12 @@ export function buildCsp(options = {}) {
 
     "font-src": ["'self'", sources.rsms],
 
-    "connect-src": ["'self'", sources.sentry, sources.supabase],
+    "connect-src": [
+      "'self'",
+      sources.sentry,
+      sources.supabase,
+      sources.storage,
+    ],
 
     "worker-src": ["'self'"],
 

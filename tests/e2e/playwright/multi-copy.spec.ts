@@ -10,6 +10,7 @@ import {
 } from "../copyUtils";
 import { e2eEnv } from "../env";
 import { createRoleContext, hasRoleStates } from "../roleTestUtils";
+import { directCvUpload } from "./directCvUpload";
 import { expect, test } from "./fixtures";
 
 // Proves that successive requests behave the same on every web copy (#456).
@@ -171,16 +172,8 @@ test.describe("requests behave the same on every web copy", () => {
       const { body } = await sessionOn(student, "STUDENT");
       const code = encodeURIComponent(body.student!.code);
 
-      const upload = await student.post("/api/storage/cv", {
-        multipart: {
-          file: {
-            name: "multi-copy.pdf",
-            mimeType: "application/pdf",
-            buffer: pdf,
-          },
-        },
-      });
-      expect(upload.status()).toBe(201);
+      const upload = await directCvUpload(student, pdf);
+      expect(upload.status()).toBe(200);
       const { id } = (await upload.json()) as { id: string };
 
       // Attaching the same object is idempotent, so repeat it until another
