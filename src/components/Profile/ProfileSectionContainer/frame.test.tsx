@@ -183,8 +183,15 @@ test("the header shows the student's name, email and avatar", () => {
   expect(screen.getByText("Avatar /api/media/avatar/z100")).toBeInTheDocument();
 });
 
+test("the menu has no settings entry", () => {
+  renderFrame();
+
+  expect(screen.queryByText(/Definições/)).toBeNull();
+});
+
 test("the CV-removed notice shows only when the CV was purged", () => {
-  const notice = /O teu CV foi removido após o período de retenção\./;
+  const notice =
+    /O teu CV foi removido após o período de retenção\. Envia um novo em Informações pessoais\./;
 
   const { unmount } = renderFrame();
   expect(screen.queryByText(notice)).toBeNull();

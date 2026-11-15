@@ -14,7 +14,6 @@ vi.mock("../ActionsSection", () => ({
   default: () => <p>Challenges content</p>,
 }));
 vi.mock("../ProfileSection", () => ({ default: () => null }));
-vi.mock("../SettingsSection", () => ({ default: () => null }));
 vi.mock("../UserImage", () => ({ default: () => null }));
 vi.mock("../AvatarCropper", () => ({ default: () => null }));
 vi.mock("@/components/PassSection/PassMenuContent", () => ({

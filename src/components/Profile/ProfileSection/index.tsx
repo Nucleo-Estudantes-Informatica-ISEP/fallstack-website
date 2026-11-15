@@ -24,9 +24,7 @@ interface ProfileSectionProps {
   student: StudentDto;
   profile: ProfileData;
   setProfile: Dispatch<SetStateAction<ProfileData>>;
-  setActiveTab: Dispatch<
-    SetStateAction<"Sumário" | "Perfil" | "Desafios" | "Definições">
-  >;
+  setActiveTab: Dispatch<SetStateAction<"Sumário" | "Perfil" | "Desafios">>;
   availableInterests: InterestDto[];
 }
 

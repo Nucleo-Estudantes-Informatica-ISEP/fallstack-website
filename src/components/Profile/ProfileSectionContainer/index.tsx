@@ -31,12 +31,11 @@ import { getCroppedImg } from "@/utils/canvas";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
-import SettingsSection from "../SettingsSection";
 import StatsSection from "../StatsSection";
 
 import { IconType } from "react-icons";
 
-type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
+type TabValue = "Sumário" | "Perfil" | "Desafios";
 
 interface ProfileSectionContainerProps {
   student: StudentDto;
@@ -53,7 +52,6 @@ const menuMap: Record<TabValue, MenuKey> = {
   Sumário: "sumario",
   Perfil: "info",
   Desafios: "desafios",
-  Definições: "definicoes",
 };
 
 const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
@@ -210,16 +208,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             <ActionsSection actions={actions} />
           </>
         );
-      case "Definições":
-        return (
-          <SettingsSection
-            student={student}
-            profile={profile}
-            setProfile={setProfile}
-            setActiveTab={setActiveTab}
-            availableInterests={availableInterests}
-          />
-        );
       default:
         return null;
     }
@@ -284,7 +272,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
-              Definições.
+              Informações pessoais.
             </span>
           </div>
         )}
@@ -363,8 +351,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   );
 };
 
-type MenuKey =
-  "sumario" | "passe" | "desafios" | "info" | "definicoes" | "logout";
+type MenuKey = "sumario" | "passe" | "desafios" | "info" | "logout";
 
 interface SidebarItem {
   key: MenuKey;
