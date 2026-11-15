@@ -41,7 +41,7 @@ vi.mock("./actionService", () => actionMocks);
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.deleteObject.mockResolvedValue(undefined);
-  mocks.releaseCvUpload.mockResolvedValue(undefined);
+  mocks.releaseCvUpload.mockResolvedValue({ count: 1 });
   mocks.findCvUpload.mockResolvedValue({
     id: "ticket",
     size: 20,
@@ -204,3 +204,59 @@ test("fences out older tickets: rejects with 409 and discards quarantine when su
     expect.any(AbortSignal)
   );
 });
+
+test("expired lease superseded by overlapping attempt does not discard quarantine", async () => {
+  mocks.finishCvValidation.mockRejectedValueOnce(
+    new HttpError("Upload finalization superseded", 409)
+  );
+  mocks.releaseCvUpload.mockResolvedValueOnce({ count: 0 });
+
+  await expect(finalizeCvUpload("owner", "ticket")).rejects.toMatchObject({
+    status: 409,
+    message: "Upload finalization superseded",
+  });
+  expect(mocks.releaseCvUpload).toHaveBeenCalledWith(
+    "ticket",
+    expect.any(String),
+    false
+  );
+  expect(mocks.deleteObject).not.toHaveBeenCalled();
+});
+
+test("invalid signature by superseded attempt does not discard quarantine when lease lost", async () => {
+  mocks.readCvRange.mockResolvedValue(Buffer.from("fake PDF"));
+  mocks.releaseCvUpload.mockResolvedValueOnce({ count: 0 });
+
+  await expect(finalizeCvUpload("owner", "ticket")).rejects.toMatchObject({
+    status: 400,
+  });
+  expect(mocks.releaseCvUpload).toHaveBeenCalledWith(
+    "ticket",
+    expect.any(String),
+    true
+  );
+  expect(mocks.deleteObject).not.toHaveBeenCalled();
+});
+
+test("superseded older ticket does not discard quarantine if lease was lost before release", async () => {
+  studentMocks.findStudentProfileById.mockResolvedValue({
+    id: "owner",
+    code: "std-123",
+  });
+  mocks.consumeCvUpload.mockRejectedValue(
+    new HttpError("CV upload superseded", 409)
+  );
+  mocks.releaseCvUpload.mockResolvedValueOnce({ count: 0 });
+
+  await expect(finalizeCvUpload("owner", "ticket")).rejects.toMatchObject({
+    status: 409,
+    message: "CV upload superseded",
+  });
+  expect(mocks.releaseCvUpload).toHaveBeenCalledWith(
+    "ticket",
+    expect.any(String),
+    true
+  );
+  expect(mocks.deleteObject).not.toHaveBeenCalled();
+});
+

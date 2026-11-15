@@ -659,3 +659,66 @@ test.skipIf(!enabled)(
     ).toBe(doneB.id);
   }
 );
+
+test.skipIf(!enabled)(
+  "overlapping attempts with expired lease: superseded attempt does not delete quarantine while retry is validating",
+  async () => {
+    const post = await ticket();
+    await transfer(post);
+
+    const repository =
+      await import("@/application/repositories/cvUploadRepository");
+
+    // Intercept promoteCvObject to simulate attempt A outliving its lease before finishCvValidation
+    const originalPromote = storage.promoteCvObject;
+    let attemptBClaimed = false;
+    const promoteSpy = vi.spyOn(storage, "promoteCvObject").mockImplementation(
+      async (...args) => {
+        const result = await originalPromote(...args);
+        if (!attemptBClaimed) {
+          attemptBClaimed = true;
+          // Expire attempt A's lease
+          await prisma.cvUpload.update({
+            where: { id: post.uploadId },
+            data: { leaseUntil: new Date(0) },
+          });
+          // Attempt B claims the same ticket under the expired lease
+          const attemptB = randomUUID();
+          await repository.claimCvUpload(
+            post.uploadId,
+            owner.id,
+            attemptB,
+            new Date()
+          );
+        }
+        return result;
+      }
+    );
+
+    try {
+      // Attempt A runs finalizeCvUpload - will fail finishCvValidation with 409 and run catch block
+      await expect(
+        service.finalizeCvUpload(owner.id, post.uploadId)
+      ).rejects.toMatchObject({
+        status: 409,
+        message: "Upload finalization superseded",
+      });
+    } finally {
+      promoteSpy.mockRestore();
+    }
+
+    // Attempt A's catch block must NOT have deleted the quarantine object.
+    // Reset attempt B back to pending so service.finalizeCvUpload can execute the full flow:
+    await prisma.cvUpload.update({
+      where: { id: post.uploadId },
+      data: { status: "pending", attemptId: null, leaseUntil: null },
+    });
+
+    // The retry succeeds because quarantine was not deleted by superseded attempt A
+    const done = await service.finalizeCvUpload(owner.id, post.uploadId);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(done.id);
+  }
+);
+

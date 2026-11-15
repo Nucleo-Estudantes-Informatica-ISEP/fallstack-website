@@ -104,9 +104,17 @@ export async function finalizeCvUpload(ownerId: string, uploadId: string) {
     });
   } catch (error) {
     const invalid = error instanceof HttpError && error.status === 400;
-    await releaseCvUpload(uploadId, attemptId, invalid).catch(() => {});
-    if (invalid || (error instanceof HttpError && error.status === 409))
-      await discardQuarantine(uploadId);
+    const superseded =
+      error instanceof HttpError &&
+      error.status === 409 &&
+      error.message === "CV upload superseded";
+    const terminal = invalid || superseded;
+    const released = (await releaseCvUpload(
+      uploadId,
+      attemptId,
+      terminal
+    ).catch(() => ({ count: 0 }))) as { count: number } | undefined;
+    if (terminal && released?.count === 1) await discardQuarantine(uploadId);
     // Never delete the candidate here: a DB commit response could be lost.
     // Existing orphan reconciliation safely reclaims unpublished destinations.
     if (error instanceof HttpError) throw error;
