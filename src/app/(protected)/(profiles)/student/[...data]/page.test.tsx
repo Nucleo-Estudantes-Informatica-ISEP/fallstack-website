@@ -262,9 +262,13 @@ async function asEmployee({ saved }: { saved: boolean }) {
   vi.mocked(isSaved).mockResolvedValue(saved);
 }
 
+// Shaped like a real student-pass token (studentTokenService): the page only
+// accepts tokens signed for that purpose.
 async function withSignedToken(code: string | null) {
   const { verifyJwt } = await import("@/application/services/authService");
-  vi.mocked(verifyJwt).mockReturnValue(code ? ({ code } as never) : null);
+  vi.mocked(verifyJwt).mockReturnValue(
+    code ? ({ code, purpose: "student-pass" } as never) : null
+  );
 }
 
 test("an employee with a valid signed token sees the not-yet-saved preview", async () => {
