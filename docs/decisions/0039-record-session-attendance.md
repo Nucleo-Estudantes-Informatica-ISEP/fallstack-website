@@ -76,3 +76,39 @@ from the currently stored schedule. Earlier schedule values cannot be recovered
 from data that was never captured. The original attendance migration must not
 have been deployed from an obsolete PR snapshot; verify its checksum before
 updating an environment. Production rollout remains separate from local checks.
+
+## Staff attendance scanner — 15 November 2026
+
+For the scanner page `/attendance/scan`, gate the page on role only:
+`canAccessAttendanceScanner` admits admins and the AuthNEI `nei-member` grant,
+and everyone else receives 403. The five-minute attendance bound stays on the
+check-in and count endpoints, which use the `staff` policy. A member past that
+bound can therefore still open the page and reach the sign-in prompt, instead
+of being refused before the UI can explain why.
+
+The selected session is kept in `?session=` and carried through the AuthNEI
+sign-in return destination, so re-authentication resumes the same session. An
+unknown or stale id falls back to the session running now. Responses that
+arrive after the staff member switches session are discarded, so a check-in or
+count from the previous session is never shown under the new one.
+
+A successful check-in (201) and a duplicate (409) both return the student's
+name, so staff can confirm the person in front of them. This applies to typed
+codes as well as QR scans: a staff account can resolve a four-character code to
+a name for any student while a session is open, bounded by the shared limit of
+60 check-in attempts per minute. This is accepted because typed codes are an
+in-person fallback for a student whose pass will not scan, and confirming the
+name is how staff detect a mistyped code. A name is only returned with a
+check-in: a new one attributed to the scanner, which leaves an audit trail, or
+an existing one for a student already present in that session. It is never
+returned outside the check-in endpoint or an open session.
+
+AuthNEI sign-in sends a `nei-member` account without a student profile to the
+scanner rather than to student signup, which such staff accounts cannot
+complete. The shared account destination used by the top-bar profile link and
+the homepage call to action follows the same order: admin, employee, student
+profile, NEI staff, then signup.
+
+The count endpoint polled by the scanner sits outside the check-in rate limit,
+so reading the count never consumes scan attempts. It reveals only the number
+of check-ins for a session and is still gated by the `staff` policy.
