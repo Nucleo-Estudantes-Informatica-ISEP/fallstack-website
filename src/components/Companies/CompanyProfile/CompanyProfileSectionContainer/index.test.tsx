@@ -136,6 +136,42 @@ test("selecting an entry moves keyboard focus to its content", () => {
   expect(within(summaryRegion).getByTestId("summary-tab")).toBeInTheDocument();
 });
 
+test("a new selection jumps to the panel's start only when it is out of view", () => {
+  // jsdom has no layout or scrolling: stub where the panel starts.
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  let panelTop = 0;
+  const rect = vi
+    .spyOn(Element.prototype, "getBoundingClientRect")
+    .mockImplementation(() => ({ top: panelTop }) as DOMRect);
+  renderDashboard();
+
+  // Phone: the menu is under a long panel, so the panel starts above the
+  // screen when an entry is tapped.
+  panelTop = -900;
+  fireEvent.click(screen.getByRole("button", { name: "Scan de Perfil" }));
+
+  expect(screen.getByRole("region", { name: "Scan de Perfil" })).toHaveFocus();
+  expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: "start",
+    behavior: "instant",
+  });
+  // The jump keeps the label clear of the fixed top bar.
+  expect(
+    screen.getByRole("region", { name: "Scan de Perfil" }).parentElement
+  ).toHaveClass("field-focus-target");
+
+  // Desktop: the panel starts beside the menu, already in view.
+  scrollIntoView.mockClear();
+  panelTop = 300;
+  fireEvent.click(screen.getByRole("button", { name: "Sumário" }));
+
+  expect(screen.getByRole("region", { name: "Sumário" })).toHaveFocus();
+  expect(scrollIntoView).not.toHaveBeenCalled();
+  rect.mockRestore();
+});
+
 test("pressing the current entry again leaves focus on it", () => {
   renderDashboard();
 

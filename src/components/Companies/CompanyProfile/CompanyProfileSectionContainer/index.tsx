@@ -61,6 +61,7 @@ const CompanyProfileSectionContainer: React.FC<
   availableInterests,
 }) => {
   const { handleLogout, ConfirmDialog } = useLogout();
+  const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const previousMenu = useRef<MenuKey>("sumario");
   const [items, setItems] = useState(history);
@@ -128,11 +129,21 @@ const CompanyProfileSectionContainer: React.FC<
     useState<Exclude<MenuKey, "logout">>("sumario");
 
   // A new selection moves focus to its content, so keyboard users do not
-  // tab through the rest of the menu.
+  // tab through the rest of the menu. Focusing alone would leave a phone
+  // user at the end of a tall panel (the menu sits under it below lg), or
+  // with its top under the fixed top bar, so jump to the panel's start
+  // when that is out of view.
   useEffect(() => {
     if (previousMenu.current === selectedMenu) return;
     previousMenu.current = selectedMenu;
-    contentRef.current?.focus();
+    contentRef.current?.focus({ preventScroll: true });
+
+    const section = sectionRef.current;
+    if (!section) return;
+    const top = section.getBoundingClientRect().top;
+    const topBar = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
+    if (top < topBar || top > window.innerHeight)
+      section.scrollIntoView({ block: "start", behavior: "instant" });
   }, [selectedMenu]);
 
   const handleMenuClick = (item: SidebarItem) => {
@@ -256,7 +267,10 @@ const CompanyProfileSectionContainer: React.FC<
       >
         {/* Below lg the selected content comes first, under a label naming
             it, and its menu entry is hidden; the menu follows. */}
-        <div className="min-w-0 flex-1 lg:order-2">
+        <div
+          ref={sectionRef}
+          className="min-w-0 flex-1 field-focus-target lg:order-2"
+        >
           <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
             {selectedLabel}
           </p>
