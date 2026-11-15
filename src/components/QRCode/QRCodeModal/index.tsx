@@ -48,7 +48,7 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
 
   return !hidden ? (
     <div
-      className="animate-fade-imm fixed inset-6 inset-s-4 inset-e-4 z-40 overflow-y-hidden rounded-lg transition-opacity sm:inset-4 sm:inset-s-6 sm:inset-e-6 md:inset-14 md:inset-s-8 md:inset-e-12 lg:inset-16 lg:inset-s-10 lg:inset-e-14"
+      className="animate-fade-imm fixed inset-6 inset-s-4 inset-e-4 z-40 overflow-y-auto overscroll-contain rounded-lg transition-opacity sm:inset-4 sm:inset-s-6 sm:inset-e-6 md:inset-14 md:inset-s-8 md:inset-e-12 lg:inset-16 lg:inset-s-10 lg:inset-e-14"
       aria-labelledby="modal-title"
       role="dialog"
       aria-modal="true"
@@ -66,7 +66,10 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
             </button>
             <div className="flex min-h-screen items-start justify-center">
               <div className="w-full">
-                <div className="relative h-screen p-10 text-center shadow-xl sm:p-0 md:p-0 lg:p-6">
+                {/* The body is locked while the modal is open, so the dialog
+                    scrolls itself; the content grows with the scanner and
+                    the typed-code entry instead of clipping at one screen. */}
+                <div className="relative min-h-screen p-10 text-center shadow-xl sm:p-0 md:p-0 lg:p-6">
                   <h1 className="mt-3 mb-6 text-3xl font-bold text-black sm:mt-6 sm:mb-0 sm:text-3xl md:text-4xl lg:text-6xl">
                     {user.role === "STUDENT"
                       ? modalTitle[titleIndex]

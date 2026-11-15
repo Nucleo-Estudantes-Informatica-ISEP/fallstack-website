@@ -61,7 +61,12 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
           <div className="ml-6" />
         )}
         <div className="flex items-center gap-x-4">
-          {!session.user ? (
+          {!session.ready ? (
+            // Statically generated pages resolve the session in the browser;
+            // keep the slot's size without offering sign-in to someone who
+            // may already be signed in.
+            <span aria-hidden="true" className="min-h-11 min-w-11" />
+          ) : !session.user ? (
             <Link
               href={isAuthPage ? "/" : "/login"}
               aria-label={isAuthPage ? "Página inicial" : "Iniciar sessão"}

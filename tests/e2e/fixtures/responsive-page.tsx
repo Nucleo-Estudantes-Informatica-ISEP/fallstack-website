@@ -8,6 +8,7 @@ import HomePage from "@/components/HomePage";
 import ProfileSectionContainer from "@/components/Profile/ProfileSectionContainer";
 import Schedule from "@/components/Schedule";
 import StudentSignUp from "@/components/StudentSignUp";
+import { Language } from "@/domain/i18n/translations";
 
 const student = {
   id: "test",
@@ -64,6 +65,7 @@ export default function Fixture() {
       </nav>
       {view === "home" ? (
         <HomePage
+          language={Language.PT}
           sections={{ schedule, companies: null, sponsors: null, faqs: null }}
         />
       ) : view === "signup" ? (

@@ -1,0 +1,8 @@
+# Opt in only on isolated staging; never include in a production rollout.
+services:
+  web:
+    deploy:
+      resources:
+        limits:
+          cpus: ${CAPACITY_WEB_CPU_LIMIT:-1.0}
+          memory: ${CAPACITY_WEB_MEMORY_LIMIT:-768M}

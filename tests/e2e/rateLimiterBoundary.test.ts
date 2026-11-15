@@ -10,6 +10,9 @@ import { POST as avatar } from "../../src/app/api/storage/avatar/route";
 import { POST as cv } from "../../src/app/api/storage/cv/route";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/application/services/directCvUploadService", () => ({
+  initiateCvUpload: vi.fn(async () => ({ uploadId: "test" })),
+}));
 vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
 vi.mock("@/application/services/rateLimitService", () => ({
   checkRateLimit: vi.fn(),
@@ -78,7 +81,16 @@ test.each([
     const success = await route(
       new NextRequest(`http://localhost/api/storage/${kind}`, {
         method: "POST",
-        body: form,
+        ...(kind === "cv"
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                filename: "cv.pdf",
+                contentType: "application/pdf",
+                size: 20,
+              }),
+            }
+          : { body: form }),
       }),
       { params: Promise.resolve({}) }
     );
@@ -88,7 +100,7 @@ test.each([
       "student",
       { max: 5, windowMs: 60000 }
     );
-    expect(putObjectStream).toHaveBeenCalledTimes(1);
+    expect(putObjectStream).toHaveBeenCalledTimes(kind === "cv" ? 0 : 1);
   }
 );
 test("unauthenticated requests never consume Redis capacity", async () => {

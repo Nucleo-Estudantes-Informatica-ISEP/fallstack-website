@@ -2,6 +2,7 @@ import { vi } from "vitest";
 
 export const TEST_SENTRY_DSN = "https://public@example.ingest.sentry.io/123";
 export const TEST_SENTRY_ORIGIN = new URL(TEST_SENTRY_DSN).origin;
+export const TEST_STORAGE_ORIGIN = "https://files.example.test";
 export const UNTRUSTED_ORIGIN = "https://untrusted.example";
 
 export function parseCsp(csp: string): Record<string, string[]> {
@@ -28,4 +29,6 @@ export function getAllSources(csp: string): string[] {
 export function setDefaultTrustedEnv() {
   vi.stubEnv("NODE_ENV", "development");
   vi.stubEnv("NEXT_PUBLIC_SENTRY_DSN", TEST_SENTRY_DSN);
+  vi.stubEnv("S3_PUBLIC_ENDPOINT", TEST_STORAGE_ORIGIN);
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", undefined);
 }
