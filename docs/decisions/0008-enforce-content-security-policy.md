@@ -82,24 +82,11 @@ through the proxy before any `img-src` change is considered.
 
 ## Trade-offs: Dynamic Rendering and CDN Caching
 
-To apply a cryptographically unique nonce per request without `'unsafe-inline'`
-in `script-src`, Next.js App Router requires dynamic server rendering (`await headers()`
-in `src/app/layout.tsx`).
-
-- **Full-page HTML rendering**: All HTML pages are server-rendered dynamically per request
-  rather than pre-rendered as static HTML files cached at the CDN edge.
-- **Static assets**: All static assets (`/_next/static/*`, CSS, JS bundles, fonts, images)
-  remain fully static with immutable cache headers and continue to be served directly from
-  CDN/browser caches.
-- **PWA Service Worker**: PWA service worker files (`sw.js`, `workbox-*`) and the web
-  manifest (`manifest.webmanifest`) are excluded from the middleware matcher so the service
-  worker installs and caches assets offline without nonce friction.
-- **API routes**: the matcher also covers `/api/*` so every response carries
-  `x-instance-id` (an opaque per-process value used by multi-copy tests, #456).
-  `needsCsp` in `src/security/instanceId.ts` keeps the nonce and
-  `Content-Security-Policy` off API and prefetch responses, as before.
-- **Performance impact**: Dynamic rendering of guest pages introduces negligible overhead
-  (sub-10ms render time) while completely eliminating `'unsafe-inline'` from `script-src`.
+Next.js App Router requires dynamic rendering to attach a per-request nonce to
+its inline scripts. Routes in the nonce-bearing root layout render dynamically.
+[ADR 0038](0038-cache-public-html-by-language.md) documents the five public
+documents that use static rendering and omit the nonce policy. Static assets,
+PWA files, API responses and prefetch responses also omit that policy.
 
 ## Rollback plan
 

@@ -11,6 +11,13 @@ export const POST = defineHandler({
   auth: "session",
   schema: employeeSignUpSchema,
   handler: async ({ body, session }) => {
+    if (serverEnv.EVENT_MODE === "offseason") {
+      return NextResponse.json(
+        { error: "As inscrições estão encerradas." },
+        { status: 403 }
+      );
+    }
+
     if (!session?.zitadelUserId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -19,6 +26,8 @@ export const POST = defineHandler({
       zitadelUserId: session.zitadelUserId,
       email: Email.create(session.email),
       ...body,
+      isNeiMember: session.neiMember,
+      attendanceExpiresAt: session.attendanceExpiresAt,
     });
 
     const response = NextResponse.json(

@@ -3,14 +3,17 @@ import { beforeEach, expect, test, vi } from "vitest";
 import {
   bulkUpdateScheduleOrder,
   createScheduleEvent,
+  deleteScheduleEvent,
   findAllScheduleEvents,
   findScheduleEventById,
+  isScheduleDeletionConflict,
   isUniqueSchedulePositionError,
   updateScheduleEvent,
 } from "../repositories/scheduleRepository";
 import { withTransaction } from "../repositories/transaction";
 import {
   createScheduleEventForAdmin,
+  deleteScheduleEventForAdmin,
   updateScheduleEventForAdmin,
   updateScheduleOrder,
 } from "./scheduleService";
@@ -20,6 +23,8 @@ vi.mock("../repositories/scheduleRepository", () => ({
   findAllScheduleEvents: vi.fn(),
   findScheduleEventById: vi.fn(),
   createScheduleEvent: vi.fn(),
+  deleteScheduleEvent: vi.fn(),
+  isScheduleDeletionConflict: vi.fn(),
   updateScheduleEvent: vi.fn(),
   bulkUpdateScheduleOrder: vi.fn(),
   isUniqueSchedulePositionError: vi.fn(),
@@ -297,4 +302,24 @@ test("surfaces a concurrent schedule position collision as a retryable 409", asy
       { id: "b", day: 1, order: 1 },
     ])
   ).rejects.toMatchObject({ status: 409 });
+});
+
+test("returns a clear conflict when attendance prevents session deletion", async () => {
+  vi.mocked(findScheduleEventById).mockResolvedValue(existing[0] as never);
+  vi.mocked(deleteScheduleEvent).mockRejectedValueOnce(
+    new Error("foreign key")
+  );
+  vi.mocked(isScheduleDeletionConflict).mockReturnValueOnce(true);
+  await expect(deleteScheduleEventForAdmin("a")).rejects.toMatchObject({
+    status: 409,
+    message: "Cannot delete a session with attendance records.",
+  });
+});
+
+test("preserves unexpected deletion errors", async () => {
+  vi.mocked(findScheduleEventById).mockResolvedValue(existing[0] as never);
+  const error = new Error("database unavailable");
+  vi.mocked(deleteScheduleEvent).mockRejectedValueOnce(error);
+  vi.mocked(isScheduleDeletionConflict).mockReturnValueOnce(false);
+  await expect(deleteScheduleEventForAdmin("a")).rejects.toBe(error);
 });
