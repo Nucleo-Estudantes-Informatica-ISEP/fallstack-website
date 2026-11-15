@@ -24,6 +24,7 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudent } from "@/application/services/studentService";
+import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface ProfileProps {
@@ -177,6 +178,7 @@ const StudentPage = async (props: ProfileProps) => {
             availableInterests={interests.map((interest) =>
               toInterestDto(interest, language)
             )}
+            canRecordAttendance={canAccessAttendanceScanner(session)}
           />
         )}
       </section>

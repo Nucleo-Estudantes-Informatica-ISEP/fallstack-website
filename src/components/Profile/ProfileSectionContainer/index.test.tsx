@@ -47,3 +47,26 @@ test("menu changes focus the selected content and preserve navigation labels", (
     screen.getByRole("navigation", { name: "Perfil" })
   ).toBeInTheDocument();
 });
+
+const baseProps = {
+  student: { name: "Student", user: { email: "1234567@isep.ipp.pt" } } as never,
+  interestIds: [],
+  globalStats: { totalScans: 0, totalSaves: 0 },
+  todayStats: 0,
+  companiesLeft: 0,
+  historyData: [],
+  actions: [],
+  availableInterests: [],
+};
+
+test("shows the staff attendance card only when allowed", () => {
+  const { rerender } = render(<ProfileSectionContainer {...baseProps} />);
+  expect(
+    screen.queryByRole("link", { name: "Abrir leitor de presenças" })
+  ).toBeNull();
+
+  rerender(<ProfileSectionContainer {...baseProps} canRecordAttendance />);
+  expect(
+    screen.getByRole("link", { name: "Abrir leitor de presenças" })
+  ).toBeTruthy();
+});

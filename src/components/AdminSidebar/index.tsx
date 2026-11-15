@@ -53,6 +53,7 @@ const baseSections: AdminNavSection[] = [
     items: [
       { label: "Overview", href: "/statistics" },
       { label: "Attendance", href: "/attendance" },
+      { label: "Attendance scanner", href: "/attendance/scan" },
     ],
   },
 ];
