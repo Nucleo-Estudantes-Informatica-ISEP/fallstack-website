@@ -34,6 +34,7 @@ const bucket = `direct-cv-${randomUUID()}`;
 let client: S3Client;
 let owner: Awaited<ReturnType<typeof fixtures.student>>;
 let other: Awaited<ReturnType<typeof fixtures.student>>;
+let third: Awaited<ReturnType<typeof fixtures.student>>;
 let service: typeof import("@/application/services/directCvUploadService");
 let storage: typeof import("@/application/services/objectStorageService");
 let initiate: typeof import("@/app/api/storage/cv/route");
@@ -114,6 +115,7 @@ beforeAll(async () => {
   await client.send(new CreateBucketCommand({ Bucket: bucket }));
   owner = await fixtures.student();
   other = await fixtures.student();
+  third = await fixtures.student();
   service = await import("@/application/services/directCvUploadService");
   storage = await import("@/application/services/objectStorageService");
   initiate = await import("@/app/api/storage/cv/route");
@@ -395,8 +397,9 @@ test.skipIf(!enabled)(
     expect(ids.length).toBeGreaterThan(0);
     for (const result of results)
       if (result.status === "rejected") expect(result.reason.status).toBe(409);
+    const users = [owner, other, third];
     const posts = await Promise.all(
-      [owner, owner, other].map((user) =>
+      users.map((user) =>
         service.initiateCvUpload(user.id, {
           filename: "cv.pdf",
           contentType: "application/pdf",
@@ -407,12 +410,18 @@ test.skipIf(!enabled)(
     await Promise.all(posts.map((p) => transfer(p)));
     const done = await Promise.all(
       posts.map((p, i) =>
-        service.finalizeCvUpload(i === 2 ? other.id : owner.id, p.uploadId)
+        service.finalizeCvUpload(users[i].id, p.uploadId)
       )
     );
     expect(new Set(done.map((r) => r.id)).size).toBe(3);
     expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(done[0].id);
+    expect(
       (await prisma.student.findUniqueOrThrow({ where: { id: other.id } })).cv
+    ).toBe(done[1].id);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: third.id } })).cv
     ).toBe(done[2].id);
   }
 );
