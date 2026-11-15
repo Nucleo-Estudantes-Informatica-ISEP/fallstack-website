@@ -9,7 +9,7 @@ export default async function AttendancePage({
   searchParams,
 }: {
   searchParams?: Promise<{ day?: string }>;
-} = {}) {
+}) {
   const session = await getServerSession();
   if (!session?.adminRole) notFound();
   const requestedDay = Number((await searchParams)?.day);

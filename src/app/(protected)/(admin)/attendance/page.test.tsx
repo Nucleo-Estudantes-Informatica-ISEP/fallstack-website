@@ -20,7 +20,7 @@ test.each([null, { adminRole: null, authRoles: ["nei-member"] }])(
   "rejects non-admin before reading attendance",
   async (session) => {
     vi.mocked(getServerSession).mockResolvedValue(session as never);
-    await expect(AttendancePage()).rejects.toThrow("not found");
+    await expect(AttendancePage({})).rejects.toThrow("not found");
     expect(getAttendanceExport).not.toHaveBeenCalled();
   }
 );
