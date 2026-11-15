@@ -14,6 +14,7 @@ import {
 import { branding } from "@/edition/branding";
 
 import {
+  countSessionCheckIns,
   createSessionCheckIn,
   findScheduleEventForCheckIn,
   findStudentForCheckIn,
@@ -95,4 +96,10 @@ export async function recordSessionCheckIn(
       );
     throw error;
   }
+}
+
+export async function getSessionCheckInCount(sessionId: string) {
+  const session = await findScheduleEventForCheckIn(sessionId);
+  if (!session) throw new HttpError("Session not found.", 404);
+  return countSessionCheckIns(sessionId);
 }

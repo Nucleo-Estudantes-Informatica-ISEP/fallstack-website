@@ -27,6 +27,11 @@ export const createSessionCheckIn = (
     },
   });
 
+export const countSessionCheckIns = (
+  sessionId: string,
+  db: DbClient = prisma
+) => db.sessionCheckIn.count({ where: { sessionId } });
+
 export const isSessionCheckInUniqueError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === "P2002";

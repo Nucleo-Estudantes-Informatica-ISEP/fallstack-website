@@ -3,12 +3,16 @@ import { expect, test, vi } from "vitest";
 import { HttpError } from "@/types/HttpError";
 
 import {
+  countSessionCheckIns,
   createSessionCheckIn,
   findScheduleEventForCheckIn,
   findStudentForCheckIn,
   isSessionCheckInUniqueError,
 } from "../repositories/sessionCheckInRepository";
-import { recordSessionCheckIn } from "./sessionCheckInService";
+import {
+  getSessionCheckInCount,
+  recordSessionCheckIn,
+} from "./sessionCheckInService";
 
 vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn() } }));
 vi.mock("server-only", () => ({}));
@@ -16,6 +20,7 @@ vi.mock("@/application/services/authService", () => ({
   verifyJwt: vi.fn(),
 }));
 vi.mock("../repositories/sessionCheckInRepository", () => ({
+  countSessionCheckIns: vi.fn(),
   createSessionCheckIn: vi.fn(),
   findScheduleEventForCheckIn: vi.fn(),
   findStudentForCheckIn: vi.fn(),
@@ -205,4 +210,18 @@ test("an unknown credential exposes no details", async () => {
   await expect(
     recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
   ).rejects.toMatchObject({ status: 400, details: undefined });
+});
+
+test("counts check-ins for an existing session", async () => {
+  vi.mocked(countSessionCheckIns).mockResolvedValue(7);
+  await expect(getSessionCheckInCount("session-1")).resolves.toBe(7);
+  expect(countSessionCheckIns).toHaveBeenCalledWith("session-1");
+});
+
+test("counting an unknown session is a 404", async () => {
+  vi.mocked(findScheduleEventForCheckIn).mockResolvedValue(null);
+  await expect(getSessionCheckInCount("missing")).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(countSessionCheckIns).not.toHaveBeenCalled();
 });
