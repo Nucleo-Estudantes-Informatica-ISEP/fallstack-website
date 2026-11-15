@@ -15,6 +15,10 @@ export const isUniqueSchedulePositionError = (error: unknown) =>
   error instanceof Prisma.PrismaClientKnownRequestError &&
   error.code === "P2002";
 
+export const isScheduleDeletionConflict = (error: unknown) =>
+  error instanceof Prisma.PrismaClientKnownRequestError &&
+  error.code === "P2003";
+
 export const findAllScheduleEvents = (db: DbClient = prisma) =>
   db.scheduleEvent
     .findMany({

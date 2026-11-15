@@ -10,8 +10,11 @@ import { savedCommentSchema, saveSchema } from "@/schemas/saveSchema";
 
 function studentCodeFromToken(token: string | undefined) {
   if (!token) return undefined;
-  const decoded = verifyJwt(token) as unknown as { code: string } | null;
-  return decoded?.code;
+  const decoded = verifyJwt(token) as unknown as {
+    code?: string;
+    purpose?: string;
+  } | null;
+  return decoded?.purpose === "student-pass" ? decoded.code : undefined;
 }
 
 export const PUT = defineHandler({
