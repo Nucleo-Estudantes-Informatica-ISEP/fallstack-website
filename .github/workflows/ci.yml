@@ -42,7 +42,7 @@ env:
 jobs:
   quality:
     name: Test, typecheck, lint & build
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, fallstack-david]
 
     services:
       postgres:
@@ -86,6 +86,7 @@ jobs:
 
       - name: Start isolated authenticated Redis for shared limiter tests
         run: |
+          docker rm -f limiter-redis 2>/dev/null || true
           limiter_password="$(openssl rand -hex 32)"
           echo "::add-mask::$limiter_password"
           echo "TEST_REDIS_URL=redis://default:${limiter_password}@127.0.0.1:6379" >> "$GITHUB_ENV"
@@ -155,9 +156,13 @@ jobs:
       - name: Validate Prisma schema
         run: pnpm exec prisma validate
 
+      - name: Remove shared limiter test container
+        if: always()
+        run: docker rm -f limiter-redis 2>/dev/null || true
+
   docker:
     name: Production Docker image
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, fallstack-david]
     steps:
       - name: Checkout
         uses: actions/checkout@v7

@@ -66,3 +66,4 @@ implementation PR needs an ADR.
 | [0037](0037-use-split-layout-for-login-and-signup.md)            | Use the split layout for login and signup        | Accepted             |
 | [0038](0038-cache-public-html-by-language.md)                    | Cache public HTML by language                    | Accepted             |
 | [0039](0039-record-session-attendance.md)                        | Record session attendance                        | Accepted             |
+| [0040](0040-run-ci-on-a-dedicated-runner.md)                     | Run CI on a dedicated runner                     | Accepted             |
