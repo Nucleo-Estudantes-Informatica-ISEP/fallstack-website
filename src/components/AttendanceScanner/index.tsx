@@ -183,7 +183,9 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
               className="my-2 text-center text-3xl font-bold text-gray-900"
               aria-live="polite"
             >
-              {count === null ? "–" : `${count} check-ins`}
+              {count === null
+                ? "–"
+                : `${count} ${count === 1 ? "check-in" : "check-ins"}`}
             </p>
             <button
               type="button"

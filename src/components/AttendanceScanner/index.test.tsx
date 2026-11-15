@@ -277,3 +277,10 @@ test("result cards set explicit dark text", async () => {
   await flush();
   expect(screen.getByRole("status").className).toContain("text-gray-900");
 });
+
+test("uses the singular for one check-in", async () => {
+  vi.mocked(getCheckInCount).mockResolvedValue({ kind: "count", count: 1 });
+  renderScanner();
+  await flush();
+  expect(screen.getByText("1 check-in")).toBeTruthy();
+});
