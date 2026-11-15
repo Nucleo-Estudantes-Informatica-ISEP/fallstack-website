@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useZxing } from "react-zxing";
 
@@ -8,12 +8,27 @@ type DecodedQrResult = { getText(): string };
 
 interface QRCodeScannerProps {
   handleScan: (data: string) => void | Promise<void>;
+  // Shows the scanner's own errors in the page instead of as toasts, so a
+  // caller can keep them off the camera. Without it they are toasts.
+  onMessage?: (message: string) => void;
 }
 
-const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
+const QRCodeScanner: React.FC<QRCodeScannerProps> = ({
+  handleScan,
+  onMessage,
+}) => {
   const [loading, setLoading] = useState(true);
   const handlingResult = useRef(false);
   const reportedCameraError = useRef(false);
+  const onMessageRef = useRef(onMessage);
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
+
+  const report = useCallback((message: string) => {
+    if (onMessageRef.current) onMessageRef.current(message);
+    else toast.error(message);
+  }, []);
 
   const { ref } = useZxing({
     constraints: { video: { facingMode: { ideal: "environment" } } },
@@ -24,7 +39,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
         const decodedText = result.getText();
 
         if (!decodedText) {
-          toast.error(
+          report(
             "Ocorreu um erro a obter o perfil do estudante a partir do QR Code..."
           );
           return;
@@ -37,7 +52,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
           handlingResult.current = false;
         }
       },
-      [handleScan]
+      [handleScan, report]
     ),
     onError: useCallback(() => {
       setLoading(false);
@@ -46,10 +61,10 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({ handleScan }) => {
       // Some mobile browsers report a camera setup error even while the video
       // stream continues to work. Keep the scanner available in that case.
       reportedCameraError.current = true;
-      toast.error(
+      report(
         "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
       );
-    }, []),
+    }, [report]),
   });
 
   return (
