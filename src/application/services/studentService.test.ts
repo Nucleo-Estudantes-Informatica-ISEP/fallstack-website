@@ -1,12 +1,15 @@
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { HttpError } from "@/types/HttpError";
 import { actionNames } from "@/edition/actions";
 
+import { consumeCvUpload } from "../repositories/cvUploadRepository";
 import { countInterestsByIds } from "../repositories/interestRepository";
 import {
   createStudent,
   findStudentByCode,
   setStudentInterests,
+  updateStudentCv,
   updateStudentFields,
   updateStudentMedia,
   updateStudentProfile,
@@ -18,6 +21,7 @@ import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
 import {
   createStudentProfile,
   deleteStudentForAdmin,
+  setStudentCv,
   updateStudent,
   updateStudentForAdmin,
 } from "./studentService";
@@ -25,6 +29,9 @@ import {
 const tx = {} as never;
 
 vi.mock("server-only", () => ({}));
+vi.mock("../repositories/cvUploadRepository", () => ({
+  consumeCvUpload: vi.fn(),
+}));
 vi.mock("../repositories/interestRepository", () => ({
   countInterestsByIds: vi.fn(),
 }));
@@ -36,6 +43,7 @@ vi.mock("../repositories/studentRepository", () => ({
   createStudent: vi.fn(),
   findStudentByCode: vi.fn(),
   setStudentInterests: vi.fn(),
+  updateStudentCv: vi.fn(),
   updateStudentFields: vi.fn(),
   updateStudentMedia: vi.fn(),
   updateStudentProfile: vi.fn(),
@@ -209,3 +217,106 @@ test("signup persists consent versions and a server-generated acceptance time", 
   expect(input.consentAcceptedAt!.getTime()).toBeGreaterThanOrEqual(before);
   expect(input.consentAcceptedAt!.getTime()).toBeLessThanOrEqual(Date.now());
 });
+
+test("createStudentProfile consumes CV upload and marks action complete when cvId is provided", async () => {
+  vi.mocked(consumeCvUpload).mockResolvedValue(true);
+  await createStudentProfile("u1", {
+    name: "Student",
+    year: "3º Ano Licenciatura",
+    course: "Engenharia Informática",
+    interests: [],
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
+    cvId: "cv-uuid-1",
+  });
+
+  expect(consumeCvUpload).toHaveBeenCalledWith("u1", "cv-uuid-1", tx);
+  expect(completeAction).toHaveBeenCalledWith(
+    expect.any(String),
+    actionNames.uploadCv,
+    tx
+  );
+  expect(updateStudentMedia).toHaveBeenCalledWith(
+    "s1",
+    { avatar: null, cv: "cv-uuid-1" },
+    tx
+  );
+});
+
+test("createStudentProfile rolls back transaction when createStudent fails", async () => {
+  vi.mocked(createStudent).mockRejectedValueOnce(
+    new Error("DB constraint violation")
+  );
+  await expect(
+    createStudentProfile("u1", {
+      name: "Student",
+      year: "3º Ano Licenciatura",
+      course: "Engenharia Informática",
+      interests: [],
+      privacyPolicyAccepted: true,
+      termsAccepted: true,
+      privacyPolicyVersion: "2026-10-31",
+      termsVersion: "2026-11-11",
+      cvId: "cv-uuid-1",
+    })
+  ).rejects.toThrow("DB constraint violation");
+
+  expect(consumeCvUpload).toHaveBeenCalledWith("u1", "cv-uuid-1", tx);
+  expect(updateStudentMedia).not.toHaveBeenCalled();
+});
+
+test("setStudentCv returns early without transaction if student already has this CV", async () => {
+  vi.mocked(findStudentByCode).mockResolvedValueOnce({
+    id: "s1",
+    code: "ABC123",
+    cv: "existing-cv-id",
+  } as never);
+
+  await setStudentCv("ABC123", "existing-cv-id");
+
+  expect(withTransaction).not.toHaveBeenCalled();
+  expect(consumeCvUpload).not.toHaveBeenCalled();
+});
+
+test("setStudentCv propagates 409 when consumeCvUpload throws superseded error", async () => {
+  vi.mocked(findStudentByCode).mockResolvedValueOnce({
+    id: "s1",
+    code: "ABC123",
+    cv: "older-cv-id",
+  } as never);
+  vi.mocked(consumeCvUpload).mockRejectedValueOnce(
+    new HttpError("CV upload superseded", 409)
+  );
+
+  await expect(
+    setStudentCv("ABC123", "candidate-cv-id")
+  ).rejects.toMatchObject({
+    status: 409,
+    message: "CV upload superseded",
+  });
+
+  expect(updateStudentCv).not.toHaveBeenCalled();
+  expect(completeAction).not.toHaveBeenCalled();
+});
+
+test("setStudentCv updates student CV and completes action when consumeCvUpload attaches", async () => {
+  vi.mocked(findStudentByCode).mockResolvedValueOnce({
+    id: "s1",
+    code: "ABC123",
+    cv: null,
+  } as never);
+  vi.mocked(consumeCvUpload).mockResolvedValueOnce(true);
+
+  await setStudentCv("ABC123", "new-cv-id");
+
+  expect(consumeCvUpload).toHaveBeenCalledWith("s1", "new-cv-id", tx);
+  expect(updateStudentCv).toHaveBeenCalledWith("ABC123", "new-cv-id", tx);
+  expect(completeAction).toHaveBeenCalledWith(
+    "ABC123",
+    actionNames.uploadCv,
+    tx
+  );
+});
+
