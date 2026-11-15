@@ -240,7 +240,7 @@ private raw resource artifact retains the operator inventory.
   a JSON array. The task-owned dev server, local PostgreSQL and test Redis
   were stopped after validation. No application runtime source was changed.
 
-The measurement work satisfies #453: both targets were exercised on two and
+The baseline measurement work does not complete #453: both targets were exercised on two and
 three copies; the required 80/160/200 cases and all three real faults ran;
 p95/p99, errors, resource limits and resource observations were retained.
 **Execution complete does not mean capacity approved:** the measured targets
@@ -355,3 +355,12 @@ A baseline dry-run plan was not retained; this historical limitation is explicit
 The candidate adds a committed ownership-checked dry-run/apply teardown script
 and requires retaining its actual plan and removal output. The external shared proxy
 network is excluded from its selection.
+
+## Threshold flag semantics
+
+In the baseline JSON, `thresholds_failed` preserves the original exported
+failure flags: `true` means the threshold failed; `false` means it passed.
+For example, 200 completed check-ins have `count==200: false`, while zero
+verified large CVs have `count>0: true`. Only the field name changed; measured
+values, flags, run outcomes and source hashes remain unchanged. This historical
+baseline does not establish completion of the candidate performance gates.
