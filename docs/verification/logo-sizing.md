@@ -88,3 +88,67 @@ not pass and is not used as validation evidence. Development navigation
 returned HTTP 200, but stalled under memory pressure; the completed visual
 checks used the production build. This verifies components, not deployment of
 the full homepage on production.
+
+## Integrated-head verification — 15 November 2026
+
+Rechecked application revision `c9b9e8654e8f6a4feae03bea53e07d22f4845eda`
+(the integrated PR #557 head, including the SVG changes). This follow-up adds
+only this report and screenshots; the application files are unchanged.
+
+Environment: local Next.js 15.5.29 development server on macOS, Node 26.13.1,
+and T3's managed Chromium browser. A temporary `/qa-logos` route rendered the
+unchanged `HomePage`, `CompaniesSection` and `SponsorsSection` components with
+the public production roster retrieved that day: 18 partners across all five
+active ranks and three sponsors. Schedule and FAQ slots were empty. The 21
+uploaded PNGs were copied unchanged into task-owned local MinIO and served
+through the unchanged application media route. No production records or
+uploads were modified.
+
+The production roster contained no SVGs. To check the integrated SVG path,
+`tests/fixtures/svg/logo.svg` was submitted as multipart data to the real
+`uploadFile("logo", request)` service and stored in that isolated MinIO. Its
+sanitized 300-byte result was rendered through the real media route in an
+additional, explicitly local partner tier and sponsor cell. This checks the
+upload service, storage, media response and both rendering components; it does
+not claim an authenticated admin-form or production SVG upload. The media
+response returned HTTP 200, `image/svg+xml`, `nosniff` and the SVG sandbox CSP.
+Both SVG images loaded directly from the media API, without an optimizer URL
+or `srcset`, and retained their square artwork inside `object-contain` bounds.
+
+| CSS viewport width | Document width | Hero width | Tier cell height | Images loaded |
+| ------------------ | -------------- | ---------- | ---------------- | ------------- |
+| 360 px             | 345 px         | 156.5 px   | 96 px            | 25 / 25       |
+| 768 px             | 753 px         | 224 px     | 112 px           | 25 / 25       |
+| 1440 px            | 1425 px        | 224 px     | 112 px           | 25 / 25       |
+| 1920 px            | 1905 px        | 224 px     | 112 px           | 25 / 25       |
+
+The browser's vertical scrollbar occupies 15 px. DOM assertions found no
+horizontal overflow at any width. Every tier had equal cell widths and
+heights; complete rows contained two cells at 360 px and four at the other
+widths. Incomplete rows were centered (measured center error 0 px). All
+uploaded images loaded, partner image bounds remained at most 160 px wide,
+and artwork used `object-contain`. All seven footer social/install/privacy
+controls measured 44 × 44 px. A synthetic `beforeinstallprompt` event exposed
+the install control for measurement; installation itself was not exercised.
+
+Screenshots were inspected at each width, including every production partner,
+the three production sponsors and both SVG cells. Wide, tall and transparent
+artwork remained contained without stretching or clipping. Existing dark
+artwork remains low contrast on the dark background; supplied colors were
+preserved. The screenshots use a 1100 px viewport height and cover successive
+scroll positions:
+
+| Width   | Upper partner tiers     | Remaining partner tiers       | SVG, sponsors and footer      |
+| ------- | ----------------------- | ----------------------------- | ----------------------------- |
+| 360 px  | [Top](557/360-top.png)  | [Middle](557/360-middle.png)  | [Bottom](557/360-bottom.png)  |
+| 768 px  | [Top](557/768-top.png)  | [Middle](557/768-middle.png)  | [Bottom](557/768-bottom.png)  |
+| 1440 px | [Top](557/1440-top.png) | [Middle](557/1440-middle.png) | [Bottom](557/1440-bottom.png) |
+| 1920 px | [Top](557/1920-top.png) | [Middle](557/1920-middle.png) | [Bottom](557/1920-bottom.png) |
+
+The temporary route, scripts and downloaded media were removed; the local
+server, MinIO container and task-created browser tab were stopped/closed.
+This is fresh local component/media integration evidence, not evidence of
+full-homepage deployment or a real-device PWA check. No application-wide checks
+were rerun for this documentation-only follow-up: GitHub quality (tests, lint,
+typecheck and build), production Docker, security and CodeQL checks were
+inspected as successful for the unchanged application revision `c9b9e865`.
