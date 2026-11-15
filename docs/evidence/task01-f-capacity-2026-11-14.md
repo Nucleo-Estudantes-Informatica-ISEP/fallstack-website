@@ -19,7 +19,7 @@ The task-owned `capacity453` Compose project reused
 three identical web containers; each routed copy was capped at **1 CPU and
 768 MiB**, verified with Docker inspect and cgroup samples. The two-copy cases
 routed to copies 1 and 2 only; copy 3 remained idle and is included in host
-resource accounting. Existing shared-staging copies also remained idle.
+resource accounting. Existing shared-staging copies remained running and were excluded from this test pool; other traffic to those copies was not classified.
 
 PostgreSQL 16, authenticated Redis 7.4.12 and the deployment's MinIO image ran in
 separate task-owned containers and volumes with no published dependency ports.
@@ -34,6 +34,9 @@ sessions used a new isolated `AUTH_SECRET`; they did not mint or modify real
 AuthNEI identities. PDF fixtures contained a readable one-page synthetic CV,
 with byte sizes 262,144, 1,048,576 and 10,485,760. `pdfinfo`/`pdftotext` validated
 the final fixtures. Exact-limit bodies were assigned to every tenth heavy VU.
+The baseline did not alternate near-limit bodies under load: its near-limit
+success was an idle functional probe. The candidate alternates near/exact
+boundary files with separate completion gates; fresh reruns remain pending.
 
 The existing Traefik 3.7 proxy routed both staging hostnames to the isolated
 copies, with `/api/proxy-ready` checks every five seconds, two-second probe
@@ -264,3 +267,91 @@ currently unavailable and cannot be independently reprocessed. Candidate browser
 outputs now use `test-results/playwright/` to protect performance archives.
 Synthetic session files and task-only environment secrets were deleted after
 the baseline teardown.
+
+## Retained attempts and diagnostic error attribution
+
+The complete arrival rows above use `two-target-cdn` and `three-target-warm-cdn`.
+The heavy rows use `2-heavy-headroom-cdn` and `3-heavy-headroom-cdn`. Earlier
+heavy attempts and all incomplete arrival attempts remain explicit below.
+Exit status is the original k6 result; passing one sub-gate does not make a run pass.
+
+| Run                         | Class                  | Users/workers | Visits | Dropped | Unexpected errors | HTML p95 (s) | Exit |
+| --------------------------- | ---------------------- | ------------: | -----: | ------: | ----------------: | -----------: | ---: |
+| `2-heavy-final-cdn`         | Exploratory/incomplete |           200 |      — |       — |           4.4593% |            — |   99 |
+| `2-heavy-headroom-cdn`      | Canonical              |           200 |      — |       — |           4.7027% |            — |   99 |
+| `3-heavy-final-cdn`         | Exploratory/incomplete |           200 |      — |       — |           2.5275% |            — |   99 |
+| `3-heavy-headroom-cdn`      | Canonical              |           200 |      — |       — |           1.5421% |            — |   99 |
+| `failure-copy-drained`      | Canonical              |            10 |      — |       — |   See phase gates |            — |    0 |
+| `failure-copy-removed`      | Canonical              |            10 |      — |       — |   See phase gates |            — |    0 |
+| `failure-redis-unavailable` | Canonical              |            10 |      — |       — |   See phase gates |            — |    0 |
+| `three-10-cdn`              | Canonical              |            10 |    702 |       — |           0.0000% |        0.306 |    0 |
+| `three-120-cdn`             | Canonical              |           120 |   4263 |       — |           0.0000% |        2.553 |   99 |
+| `three-160-cdn`             | Canonical              |           160 |   4608 |       — |           0.0000% |        3.798 |   99 |
+| `three-200-cdn`             | Canonical              |           200 |   4350 |       — |           0.0000% |        5.779 |   99 |
+| `three-40-cdn`              | Canonical              |            40 |   2533 |       — |           0.0000% |        0.691 |    0 |
+| `three-80-cdn`              | Canonical              |            80 |   3491 |       — |           0.0008% |        1.629 |   99 |
+| `three-heavy-cdn`           | Exploratory/incomplete |           200 |      — |       — |           1.4439% |            — |   99 |
+| `three-target-cdn`          | Exploratory/incomplete |           200 |   1184 |      17 |           0.0000% |        4.427 |   99 |
+| `three-target-origin`       | Exploratory/incomplete |            80 |    688 |     512 |           0.0000% |        3.927 |   99 |
+| `three-target-warm-cdn`     | Canonical              |           200 |   1200 |       0 |           0.0000% |        0.967 |   99 |
+| `two-80-cdn`                | Canonical              |            80 |   3051 |       — |           0.0071% |        2.233 |   99 |
+| `two-80-origin`             | Canonical              |            80 |   1417 |       — |           0.0000% |        6.261 |   99 |
+| `two-heavy-cdn`             | Exploratory/incomplete |           200 |      — |       — |           3.0281% |            — |   99 |
+| `two-target-cdn`            | Canonical              |           200 |   1201 |       0 |           0.0023% |        3.022 |   99 |
+| `two-target-final-cdn`      | Exploratory/incomplete |           200 |    956 |     245 |           0.1951% |       12.554 |   99 |
+
+The next table separates exact-limit defect 400s from admission/storage 503s,
+proxy 502s and transport failures. The 503 source was not individually traced;
+do not attribute every 503 to storage or Redis. These are diagnostic categories,
+not a replacement for the unchanged full-workload error gate.
+
+| Run                    | Operation          | Exact-limit 400 | 503 | 502 | Transport (0) |
+| ---------------------- | ------------------ | --------------: | --: | --: | ------------: |
+| `2-heavy-headroom-cdn` | `cv_attach`        |               0 |   0 |  12 |             0 |
+| `2-heavy-headroom-cdn` | `cv_upload_large`  |              60 |  11 |   2 |             4 |
+| `2-heavy-headroom-cdn` | `cv_upload_medium` |               0 |  66 |   0 |             0 |
+| `2-heavy-headroom-cdn` | `cv_upload_small`  |               0 | 136 |   4 |             0 |
+| `3-heavy-headroom-cdn` | `cv_attach`        |               0 |   0 |   1 |             0 |
+| `3-heavy-headroom-cdn` | `cv_upload_large`  |              82 |   3 |   0 |             5 |
+| `3-heavy-headroom-cdn` | `cv_upload_medium` |               0 |  11 |   1 |             0 |
+| `3-heavy-headroom-cdn` | `cv_upload_small`  |               0 |  26 |   0 |             0 |
+
+For `2-heavy-headroom-cdn`, 60 of 295 unexpected outcomes were the deterministic
+exact-limit defect. Other unexpected outcomes were 235/6273
+(3.75%). This subtraction is diagnostic only; valid
+exact-limit files were still required to succeed.
+
+For `3-heavy-headroom-cdn`, 82 of 129 unexpected outcomes were the deterministic
+exact-limit defect. Other unexpected outcomes were 47/8365
+(0.56%). This subtraction is diagnostic only; valid
+exact-limit files were still required to succeed.
+
+The two-copy run therefore also had a material residual capacity/admission
+failure rate. The three-copy run’s residual rate was below 1%, but its full
+workload still failed because the exact-limit defect and required CV completion
+gate remained unresolved. Fresh candidate reruns are required after the fix.
+
+## Baseline window, impact and teardown scope
+
+The recorded workload window was **15:18:47–16:21:17 UTC on 14 November 2026**.
+The test override was installed before that window; its exact installation
+timestamp was not retained. Restoration was confirmed at **16:26:33 UTC** with
+CDN health HTTP 200. Both staging hostnames served disposable data during this
+window: ordinary shared-staging users could see synthetic content or have
+their shared sessions rejected. This was staging impact, not a zero-impact claim.
+
+The user authorized completing the testing in this session. A separate scheduled
+maintenance window and additional operator sign-off were not recorded. Production
+hostname routing, AuthNEI DNS and shared service credentials were not changed.
+
+The retained teardown log names only the test project’s containers, the network
+`capacity453_default`, and these removed data volumes:
+
+- `capacity453_postgres_data`
+- `capacity453_redis_data`
+- `capacity453_minio_data`
+
+A baseline dry-run plan was not retained; this historical limitation is explicit.
+The candidate adds a committed ownership-checked dry-run/apply teardown script
+and requires retaining its actual plan and removal output. The external shared proxy
+network is excluded from its selection.

@@ -2,8 +2,8 @@
 
 The whole `nei-isep.org` domain uses Cloudflare DNS since 24 Oct 2026, so a change
 here affects every NEI service. `fallstack.nei-isep.org` and its explicit test hostnames
-go through the CDN. AuthNEI production is also proxied as observed on 14 November 2026;
-development login and mail remain DNS only. The
+go through the CDN. AuthNEI and mail settings are managed by their operators;
+this capacity task does not propose changes to those services. The
 cPanel server no longer manages this DNS.
 
 ## Owners
@@ -25,32 +25,36 @@ include credentials.
 
 ## Settings
 
-Last checked: 28 Oct 2026. Keep this table in sync with the dashboard.
+The general settings below were last checked on 28 October 2026. The scoped
+staging cache exception was added for the 14 November capacity tests.
 
-| Setting                       | Value                      | Where                            |
-| ----------------------------- | -------------------------- | -------------------------------- |
-| SSL/TLS mode                  | Full (strict)              | SSL/TLS → Overview               |
-| Rocket Loader                 | Off                        | Speed → Optimization             |
-| Email Address Obfuscation     | Off                        | Scrape Shield                    |
-| Web Analytics automatic setup | Off                        | Analytics & Logs → Web Analytics |
-| Cache Rules and Page Rules    | None. Default caching only | Caching → Cache Rules            |
+| Setting                       | Value                                    | Where                            |
+| ----------------------------- | ---------------------------------------- | -------------------------------- |
+| SSL/TLS mode                  | Full (strict)                            | SSL/TLS → Overview               |
+| Rocket Loader                 | Off                                      | Speed → Optimization             |
+| Email Address Obfuscation     | Off                                      | Scrape Shield                    |
+| Web Analytics automatic setup | Off                                      | Analytics & Logs → Web Analytics |
+| Cache Rules and Page Rules    | Default caching; staging exception below | Caching → Cache Rules            |
 
 Script injection stays off because the Content Security Policy only allows
 scripts with the per-request nonce (`script-src 'self' 'nonce-…' 'strict-dynamic'`).
-Never add a rule that caches the HTML either: its nonce changes on every request.
+Protected HTML with per-request nonces must never enter the shared cache.
+The public language-document allowlist from ADR 0038 has a narrow staging-only
+cache rule; follow [its rollout checks](public-data-cache.md) before enabling it.
+Keep production settings outside the capacity test unchanged.
 
 ### Proxied records
 
-Proxy only what the site needs. Everything else stays DNS only.
+Proxy only the explicitly approved Fallstack hostnames. Other NEI services
+remain outside this capacity test's configuration scope.
 
-| Record                                       | Mode     |
-| -------------------------------------------- | -------- |
-| `fallstack.nei-isep.org`                     | Proxied  |
-| `fallstack-cdn.nei-isep.org`                 | Proxied  |
-| `staging-fallstack.nei-isep.org`             | Proxied  |
-| `nei-isep.org`, `www.nei-isep.org`           | DNS only |
-| `auth.nei-isep.org`                          | Proxied  |
-| `auth.dev.nei-isep.org`, mail and MX records | DNS only |
+| Record                             | Mode                                          |
+| ---------------------------------- | --------------------------------------------- |
+| `fallstack.nei-isep.org`           | Proxied                                       |
+| `fallstack-cdn.nei-isep.org`       | Proxied                                       |
+| `staging-fallstack.nei-isep.org`   | Proxied                                       |
+| `nei-isep.org`, `www.nei-isep.org` | DNS only                                      |
+| AuthNEI, mail and MX records       | Outside this capacity task; no setting change |
 
 The explicit `staging-fallstack.nei-isep.org` record was added for #453 on
 14 November 2026. Its hostname is covered by Cloudflare Universal SSL; the

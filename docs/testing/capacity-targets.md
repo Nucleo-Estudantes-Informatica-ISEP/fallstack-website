@@ -146,6 +146,18 @@ Start `tests/performance/capacity-sampler.py` on the event host before any run
 (with privileges to read Docker/cgroups), using the task directory
 `/tmp/fallstack-capacity-v3/`. It discovers both AuthNEI containers' private
 addresses and records readiness status/latency with the resource samples.
+Copy it to `/tmp/fallstack-capacity-v3/sample.py` and start one owned transient
+unit on the host so SSH disconnection does not stop sampling:
+
+```sh
+sudo -n systemd-run --unit=capacity453v3-sampler --collect \
+  --property=CPUQuota=20% --property=MemoryMax=192M \
+  /usr/bin/python3 /tmp/fallstack-capacity-v3/sample.py
+```
+
+Confirm the unit is active and its latest sample is fresh before running load.
+Coordinate the test window with other staging operators: the namespace, volumes,
+proxy override and sampler must remain intact until evidence export completes.
 The supervisor checks fresh samples before starting k6 and every two seconds.
 It stops its own workload on either private readiness status other than 200,
 latency at or above 1,000 ms, a sample older than 15 seconds, missing task
