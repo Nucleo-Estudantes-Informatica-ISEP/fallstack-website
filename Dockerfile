@@ -58,8 +58,9 @@ RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local
 COPY tsconfig.json ./
 COPY src/config/env.storage.ts src/config/env.database.ts ./src/config/
 COPY src/domain/company/companyVideo.ts ./src/domain/company/companyVideo.ts
+COPY src/types/HttpError.ts ./src/types/HttpError.ts
 COPY src/application/repositories/storageCleanupDatabase.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/
-COPY src/application/services/objectStorageService.ts src/application/services/storageCleanupService.ts ./src/application/services/
+COPY src/application/services/objectStorageService.ts src/application/services/storageCleanupService.ts src/application/services/cvQuarantineCleanupService.ts ./src/application/services/
 COPY scripts/storage-cleanup.ts ./scripts/storage-cleanup.ts
 ENV NODE_ENV=production
 USER nextjs
