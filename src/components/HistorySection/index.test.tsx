@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 
 import type { SavedStudentDto } from "@/application/dto/historyDto";
@@ -48,12 +48,54 @@ test("shows the empty text when there are no scans", () => {
   expect(screen.queryByText("SALVO")).toBeNull();
 });
 
-test("keeps the column headers", () => {
+test("is a captioned table with the Nome, Data and Ação column headers", () => {
   render(<HistorySection historyData={[]} />);
 
-  expect(screen.getByText("Nome")).toBeInTheDocument();
-  expect(screen.getByText("Data")).toBeInTheDocument();
-  expect(screen.getByText("Ação")).toBeInTheDocument();
+  const table = screen.getByRole("table", { name: "Histórico de scans" });
+  expect(
+    within(table)
+      .getAllByRole("columnheader")
+      .map((header) => header.textContent)
+  ).toEqual(["Nome", "Data", "Ação"]);
+});
+
+test("each row is a table row with the date in a time element", () => {
+  render(<HistorySection historyData={rows} />);
+
+  const [, first] = screen.getAllByRole("row");
+  const cells = within(first).getAllByRole("cell");
+  expect(cells.map((cell) => cell.textContent)).toEqual([
+    "Empresa Alfa",
+    formatDateDDStrMonthHourMin(rows[0].createdAt),
+    "SALVO",
+  ]);
+  expect(cells[1].querySelector("time")).toHaveAttribute(
+    "datetime",
+    rows[0].createdAt
+  );
+});
+
+test("the empty text spans the whole table", () => {
+  render(<HistorySection historyData={[]} />);
+
+  expect(screen.getByRole("cell")).toHaveAttribute("colspan", "3");
+});
+
+test("a long company name wraps inside its column", () => {
+  const longName =
+    "Empresa Sintética com um Nome Extremamente Comprido para Testar Quebras de Linha em Ecrãs Estreitos SA";
+  render(
+    <HistorySection
+      historyData={[
+        { ...rows[0], savedBy: { name: "R", company: { name: longName } } },
+      ]}
+    />
+  );
+
+  expect(screen.getByRole("table")).toHaveClass("table-fixed");
+  expect(screen.getByRole("cell", { name: longName })).toHaveClass(
+    "wrap-break-word"
+  );
 });
 
 test("the company variant links each student to their preview", () => {

@@ -62,3 +62,61 @@ test("passes every history row to the scan history", () => {
 
   expect(screen.getByText("2 history rows")).toBeInTheDocument();
 });
+
+test("has one section heading in the shared style and no second h1", () => {
+  render(
+    <StatsSection
+      stats={{ totalScans: 0, totalSaves: 0 }}
+      companiesLeft={3}
+      historyData={[]}
+    />
+  );
+
+  const heading = screen.getByRole("heading", {
+    name: "Sumário do teu perfil",
+  });
+  expect(heading.tagName).toBe("H2");
+  expect(heading).toHaveClass(
+    "font-sans",
+    "text-2xl",
+    "lg:text-[1.75rem]",
+    "text-center",
+    "lg:text-left"
+  );
+  // The stat labels are text, not headings.
+  expect(screen.getAllByRole("heading")).toHaveLength(1);
+  expect(screen.getByText("Scans").tagName).toBe("P");
+});
+
+test("uses the singular for one company left", () => {
+  render(
+    <StatsSection
+      stats={{ totalScans: 0, totalSaves: 0 }}
+      companiesLeft={1}
+      historyData={[]}
+    />
+  );
+
+  expect(screen.getByText("Empresa restante")).toBeInTheDocument();
+  expect(screen.queryByText("Empresas restantes")).toBeNull();
+});
+
+test("separates the stats with thin token lines, not the old white borders", () => {
+  const { container } = render(
+    <StatsSection
+      stats={{ totalScans: 0, totalSaves: 0 }}
+      companiesLeft={0}
+      historyData={[]}
+    />
+  );
+
+  const stats = screen.getByText("Scans").parentElement!.parentElement!;
+  expect(stats).toHaveClass(
+    "divide-y",
+    "divide-ui-border",
+    "md:divide-x",
+    "md:divide-y-0"
+  );
+  expect(container.querySelector(".md\:border-x-4")).toBeNull();
+  expect(container.querySelector(".rounded-t-3xl")).toBeNull();
+});
