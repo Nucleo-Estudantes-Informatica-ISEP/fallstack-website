@@ -133,6 +133,10 @@ const CompanySavedProfilesSection = ({
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
       const path = new URL(data).pathname;
+      if (path === window.location.pathname) {
+        setProcessing(false);
+        return;
+      }
       router.push(path);
     } else window.open(data, "_self");
     // Processing stays on until the page changes; see handleScan.

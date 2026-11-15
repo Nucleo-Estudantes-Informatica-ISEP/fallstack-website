@@ -54,11 +54,13 @@ const PreviewProfileSectionContainer: React.FC<
       try {
         await httpClient.patch("/saved", { token });
       } catch (error) {
-        // Already saved: 409 from the duplicate check, or 400 when a
-        // concurrent save wins the race (saveStudent in savedStudentService).
+        // Already saved: 409 from the duplicate check, or 400 with
+        // "Student already saved" when a concurrent save wins the race.
+        // Other 400s (e.g. invalid or expired tokens) show the generic error.
         if (
           error instanceof HttpClientError &&
-          (error.status === 409 || error.status === 400)
+          (error.status === 409 ||
+            (error.status === 400 && error.message === "Student already saved"))
         ) {
           toast.warning("Perfil já salvo!", { toastId: "preview-saved" });
           return;

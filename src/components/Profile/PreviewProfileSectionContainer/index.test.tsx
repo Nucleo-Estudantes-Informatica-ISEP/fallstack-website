@@ -227,17 +227,20 @@ test("saving sends the preview token and confirms", async () => {
   vi.useRealTimers();
 });
 
-// 409 comes from the duplicate check, 400 from a concurrent save's race.
-test.each([409, 400])(
-  "an already-saved student (%i) is a warning, not an error",
-  async (status) => {
+// 409 comes from the duplicate check, 400 "Student already saved" from a concurrent save's race.
+test.each([
+  { status: 409, message: "Student already saved by your company" },
+  { status: 400, message: "Student already saved" },
+])(
+  "an already-saved student ($status: $message) is a warning, not an error",
+  async ({ status, message }) => {
     const { HttpClientError } = await import("@/lib/http/client");
     const Err = HttpClientError as unknown as new (
       m: string,
       s: number
     ) => Error;
 
-    patchMock.mockRejectedValueOnce(new Err("Student already saved", status));
+    patchMock.mockRejectedValueOnce(new Err(message, status));
     renderPreview({ isSavedStudent: false });
     fireEvent.click(screen.getByRole("button", { name: "+ Salvar perfil" }));
     await waitFor(() =>
@@ -249,6 +252,22 @@ test.each([409, 400])(
     expect(toastError).not.toHaveBeenCalled();
   }
 );
+
+test("other 400 errors (e.g. invalid token) show generic save error", async () => {
+  const { HttpClientError } = await import("@/lib/http/client");
+  const Err = HttpClientError as unknown as new (m: string, s: number) => Error;
+
+  patchMock.mockRejectedValueOnce(new Err("Invalid token", 400));
+  renderPreview({ isSavedStudent: false });
+  fireEvent.click(screen.getByRole("button", { name: "+ Salvar perfil" }));
+  await waitFor(() =>
+    expect(toastError).toHaveBeenCalledWith(
+      "Não foi possível guardar o perfil. Tenta novamente.",
+      expect.anything()
+    )
+  );
+  expect(toastWarning).not.toHaveBeenCalled();
+});
 
 test("other save failures show one Portuguese message", async () => {
   const { HttpClientError } = await import("@/lib/http/client");
