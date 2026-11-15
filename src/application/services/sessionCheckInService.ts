@@ -80,16 +80,18 @@ export async function recordSessionCheckIn(
   }
 
   try {
-    return await createSessionCheckIn({
+    const checkIn = await createSessionCheckIn({
       sessionId,
       studentId: student.id,
       scannedById,
     });
+    return { ...checkIn, student: { name: student.name } };
   } catch (error) {
     if (isSessionCheckInUniqueError(error))
       throw new HttpError(
         "This student has already checked in for this session.",
-        409
+        409,
+        { student: { name: student.name } }
       );
     throw error;
   }

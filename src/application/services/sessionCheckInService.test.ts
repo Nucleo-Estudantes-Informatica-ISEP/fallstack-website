@@ -28,7 +28,7 @@ const session = {
   startTime: "10:00",
   endTime: "11:00",
 };
-const student = { id: "student-1", code: "AB12" };
+const student = { id: "student-1", code: "AB12", name: "Maria Silva" };
 const now = new Date("2026-11-17T10:30:00.000Z");
 
 function setup() {
@@ -110,7 +110,11 @@ test("maps a concurrent duplicate check-in to a clear conflict", async () => {
   await expect(
     recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
   ).rejects.toMatchObject(
-    new HttpError("This student has already checked in for this session.", 409)
+    new HttpError(
+      "This student has already checked in for this session.",
+      409,
+      { student: { name: "Maria Silva" } }
+    )
   );
 });
 
@@ -173,4 +177,32 @@ test("logs unknown student attempts without exposing credentials", async () => {
     },
     "Attendance credential did not match a student"
   );
+});
+
+test("returns the student's name with a recorded check-in", async () => {
+  const result = await recordSessionCheckIn(
+    "session-1",
+    "staff-1",
+    { code: "AB12" },
+    now
+  );
+  expect(result.student).toEqual({ name: "Maria Silva" });
+});
+
+test("a duplicate check-in carries the student's name", async () => {
+  vi.mocked(createSessionCheckIn).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isSessionCheckInUniqueError).mockReturnValue(true);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject({
+    status: 409,
+    details: { student: { name: "Maria Silva" } },
+  });
+});
+
+test("an unknown credential exposes no details", async () => {
+  vi.mocked(findStudentForCheckIn).mockResolvedValue(null);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
+  ).rejects.toMatchObject({ status: 400, details: undefined });
 });
