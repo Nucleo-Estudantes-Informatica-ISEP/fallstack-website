@@ -183,6 +183,47 @@ test("the header shows the student's name, email and avatar", () => {
   expect(screen.getByText("Avatar /api/media/avatar/z100")).toBeInTheDocument();
 });
 
+test("name and email use the font tokens, not inline styles", () => {
+  renderFrame();
+
+  const name = screen.getByRole("heading", { level: 1 });
+  const email = screen.getByText("carolina@example.com");
+  expect(name).not.toHaveAttribute("style");
+  expect(email).not.toHaveAttribute("style");
+  expect(name).toHaveClass("font-title");
+  expect(email).toHaveClass("font-sans");
+  // The email may break only where it overflows, not anywhere.
+  expect(email).not.toHaveClass("break-all");
+});
+
+test("the Desafios heading uses the shared section heading style", () => {
+  renderFrame();
+
+  fireEvent.click(within(menu()).getByRole("button", { name: "Desafios" }));
+
+  const heading = screen.getByRole("heading", { name: "Desafios" });
+  expect(heading.tagName).toBe("H2");
+  expect(heading).not.toHaveAttribute("style");
+  expect(heading).toHaveClass(
+    "font-sans",
+    "text-2xl",
+    "lg:text-[1.75rem]",
+    "text-center",
+    "lg:text-left"
+  );
+});
+
+test("Logout sits a small gap below the other entries", () => {
+  renderFrame();
+
+  expect(within(menu()).getByRole("button", { name: "Logout" })).toHaveClass(
+    "mt-1"
+  );
+  expect(
+    within(menu()).getByRole("button", { name: "Informações pessoais" })
+  ).not.toHaveClass("mt-1");
+});
+
 test("the menu has no settings entry", () => {
   renderFrame();
 
@@ -199,4 +240,12 @@ test("the CV-removed notice shows only when the CV was purged", () => {
 
   renderFrame({ cvPurgedAt: "2026-11-13T10:00:00.000Z" });
   expect(screen.getByText(notice)).toBeInTheDocument();
+});
+
+test("the CV-removed notice uses the highlight token, not inline colours", () => {
+  renderFrame({ cvPurgedAt: "2026-11-13T10:00:00.000Z" });
+
+  const box = screen.getByText(/O teu CV foi removido/).parentElement!;
+  expect(box).not.toHaveAttribute("style");
+  expect(box).toHaveClass("border-ui-highlight");
 });

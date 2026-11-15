@@ -159,7 +159,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         }
         type="button"
         aria-current={isCurrent ? "true" : undefined}
-        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
+        className={`${isCurrent ? "hidden lg:flex" : "flex"} ${item.key === "logout" ? "mt-1" : ""} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" />
@@ -171,6 +171,12 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   };
 
   const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
+
+  // Let a long email wrap before the "@" rather than at any character.
+  const atIndex = student.user.email.lastIndexOf("@");
+  const emailLocalPart =
+    atIndex > 0 ? student.user.email.slice(0, atIndex) : student.user.email;
+  const emailDomain = atIndex > 0 ? student.user.email.slice(atIndex + 1) : "";
 
   const renderContent = () => {
     if (selectedMenu === "passe") return <PassMenuContent student={student} />;
@@ -197,12 +203,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       case "Desafios":
         return (
           <>
-            <h2
-              className="text-3xl font-bold text-white"
-              style={{
-                marginBottom: "clamp(13px, 1.22vw, 13px)",
-              }}
-            >
+            <h2 className="mb-5 text-center font-sans text-2xl text-white lg:text-left lg:text-[1.75rem]">
               Desafios
             </h2>
             <ActionsSection actions={actions} />
@@ -237,38 +238,19 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             }}
           />
         </div>
-        <h1
-          className="mb-2 max-w-full text-center wrap-break-word text-white"
-          style={{
-            fontFamily: '"Coolvetica", sans-serif',
-            fontWeight: 400,
-            fontSize: "clamp(2rem, 5vw, 2.8125rem)",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
+        <h1 className="mb-2 max-w-full text-center font-title text-[clamp(2rem,5vw,2.8125rem)] leading-none font-normal tracking-normal wrap-break-word text-white">
           {student.name}
         </h1>
-        <p
-          className="max-w-full text-center break-all text-gray-100"
-          style={{
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 400,
-            fontSize: "20px",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
-          {student.user.email}
+        <p className="max-w-full text-center font-sans text-xl leading-none font-normal tracking-normal wrap-break-word text-gray-100">
+          {emailLocalPart}
+          {emailDomain && (
+            <>
+              <wbr />@{emailDomain}
+            </>
+          )}
         </p>
         {student.cvPurgedAt && (
-          <div
-            className="mb-6 flex items-center gap-3 px-4 py-3 text-sm text-white"
-            style={{
-              border: "1px solid #ED8326",
-              backgroundColor: "rgba(237,131,38,0.1)",
-            }}
-          >
+          <div className="mb-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
             <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
