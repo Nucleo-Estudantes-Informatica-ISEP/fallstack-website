@@ -41,39 +41,78 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const failed = !loading && !qrToken;
+  const secondaryButton =
+    "ui-focus inline-flex min-h-11 items-center gap-2 rounded-md border border-ui-border px-4 text-sm text-white transition-colors hover:border-ui-highlight hover:text-ui-highlight";
+
   return (
-    <div className="flex w-full flex-col items-center pt-4">
-      <h2
-        className="mb-6 text-center text-3xl font-bold text-white"
-        style={{ fontFamily: "Coolvetica, sans-serif" }}
-      >
+    <section className="flex w-full flex-col">
+      <h2 className="mb-5 text-center font-sans text-2xl text-white lg:text-left lg:text-[1.75rem]">
         Passe do FallStack
       </h2>
-      <p className="mb-8 max-w-xl text-center text-sm text-gray-200">
-        Apresenta este passe às empresas para que possam guardar o teu perfil e
-        contabilizar as tuas interações.
+      <p className="mb-8 text-center text-sm text-white md:text-base lg:text-left">
+        Passa o teu passe na entrada para as palestras, junto a um elemento do
+        staff para ficares registado para os vários giveaways que o NEI irá
+        fazer!
       </p>
-      {/* New styled card design */}
-      <StyledPassCard
-        name={student.name}
-        qrValue={qrToken}
-        loading={loading}
-        code={student.code}
-      />
-      {student.code && (
-        <button
-          onClick={handleCopy}
-          className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-ui-highlight hover:text-ui-highlight"
-        >
-          <Clipboard className="size-4" />
-          <span className="font-mono">{student.code}</span>
-          {copied && <span className="ml-1 text-green-400">Copiado!</span>}
-        </button>
-      )}
-      <GoogleWalletButton />
-      {/* Keep old card below (optional) - can remove later */}
-      {/* <div className="mt-10"><QRCodeCard name={user.name} subtitle={user.email} qrValue={qrToken} code={user.student?.code ?? undefined} loading={loading} onCopy={handleCopy} isCopied={copied} onRefresh={handleRefresh} /></div> */}
-    </div>
+      <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start">
+        <div className="flex w-full max-w-87 shrink-0 flex-col items-center gap-3">
+          <StyledPassCard
+            name={student.name}
+            qrValue={qrToken}
+            loading={loading}
+            code={student.code}
+          />
+          {failed && (
+            <>
+              <p className="text-center text-sm text-white">
+                Não foi possível carregar o QR Code.
+              </p>
+              <button
+                type="button"
+                onClick={fetchToken}
+                className={secondaryButton}
+              >
+                Tentar novamente
+              </button>
+            </>
+          )}
+        </div>
+        <div className="flex w-full min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
+          {student.code && (
+            <>
+              <p className="text-sm text-ui-muted md:text-base">
+                O teu passe tem o código:
+              </p>
+              <div className="mt-2 flex max-w-full flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <p className="min-w-0 font-mono text-3xl font-bold tracking-wider wrap-anywhere text-white">
+                  {student.code}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label={`Copiar o código ${student.code}`}
+                  className={secondaryButton}
+                >
+                  <Clipboard className="size-4" aria-hidden="true" />
+                  <span>Copiar</span>
+                </button>
+              </div>
+              <p
+                role="status"
+                className="mt-1 min-h-5 text-sm text-ui-highlight"
+              >
+                {copied ? "Copiado!" : ""}
+              </p>
+            </>
+          )}
+          {/* Wallet actions; #406 adds the pass download here. */}
+          <div className="mt-4 flex flex-col items-center gap-2 lg:items-start">
+            <GoogleWalletButton />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
