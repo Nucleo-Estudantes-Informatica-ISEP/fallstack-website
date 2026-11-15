@@ -18,14 +18,16 @@ test("an error keeps the parsed JSON body and the response headers", async () =>
         })
     )
   );
-  const error = await httpClient.post("/x", {}).catch((caught) => caught);
+  const error = await httpClient
+    .post<never>("/x", {})
+    .catch((caught: HttpClientError) => caught);
   expect(error).toBeInstanceOf(HttpClientError);
   expect(error).toMatchObject({
     message: "dup",
     status: 409,
     body: { error: "dup", student: { name: "A" } },
   });
-  expect(error.headers.get("Retry-After")).toBe("3");
+  expect(error.headers?.get("Retry-After")).toBe("3");
 });
 
 test("a non-JSON error still reports the status text", async () => {
