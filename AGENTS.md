@@ -64,6 +64,10 @@ for procedure and rationale.
   timestamp freshness; they have no one-time nonce. See
   [data ownership](docs/architecture.md#data-ownership) and
   [authentication](docs/architecture.md#authentication-and-short-lived-tokens).
+- The attendance scanner page `/attendance/scan` is role-gated with
+  `canAccessAttendanceScanner` (admin or the AuthNEI `nei-member` grant) and
+  returns 403 to everyone else. Its check-in and count endpoints use the
+  `staff` policy, which adds the five-minute attendance bound from ADR 0039.
 - Keep unit tests next to code. Put performance measurements under
   `tests/performance/`, and integration and smoke tests under `tests/e2e/`.
   Vitest auto-discovers `*.test.ts` and `*.test.tsx`.
