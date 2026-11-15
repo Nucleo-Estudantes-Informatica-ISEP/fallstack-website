@@ -10,10 +10,20 @@ set -euo pipefail
   exit 2
 }
 
+case ${CAPACITY_COPIES:-} in
+  2|3) ;;
+  *) echo 'Set CAPACITY_COPIES=2 or 3 after verifying the deployment.' >&2; exit 2 ;;
+esac
+
+case ${CAPACITY_CANARY:-yes} in
+  yes|no) ;;
+  *) echo 'Set CAPACITY_CANARY=yes or no.' >&2; exit 2 ;;
+esac
+
 k6_bin=${K6_BIN:-k6}
 result_dir=${CAPACITY_RESULT_DIR:-test-results/capacity}
 homepage_path=${HOMEPAGE_PATH:-/event/pt}
-cells=${CAPACITY_CELLS:-"2c-homepage-80,2c-homepage-160,2c-homepage-1200,2c-heavy-200,2c-failure-boundary,2c-failure-qr,3c-homepage-80,3c-homepage-160,3c-homepage-1200,3c-heavy-200,3c-failure-boundary,3c-failure-qr"}
+cells=${CAPACITY_CELLS:-"${CAPACITY_COPIES}c-homepage-80,${CAPACITY_COPIES}c-homepage-160,${CAPACITY_COPIES}c-homepage-200,${CAPACITY_COPIES}c-homepage-1200"}
 mkdir -p "$result_dir"
 
 run() {
@@ -32,16 +42,47 @@ run() {
     -e "HOMEPAGE_PATH=$homepage_path"
     -e "REQUEST_INTERVAL_SECONDS=${REQUEST_INTERVAL_SECONDS:-1}"
   )
-  [[ -n ${STUDENT_COOKIES:-} ]] && args+=(-e "STUDENT_COOKIES=$STUDENT_COOKIES")
-  [[ -n ${ACTION_ID:-} ]] && args+=(-e "ACTION_ID=$ACTION_ID")
+  # Session values stay in the inherited environment, never process arguments.
   "$k6_bin" "${args[@]}"
 }
 
 IFS=, read -r -a cell_list <<< "$cells"
+# Validate every cell before sending any traffic.
+seen_cells=,
+for cell in "${cell_list[@]}"; do
+  [[ $seen_cells != *",$cell,"* ]] || {
+    echo "Duplicate capacity cell: $cell" >&2
+    exit 2
+  }
+  seen_cells+="$cell,"
+  case "$cell" in
+    "${CAPACITY_COPIES}c-"homepage-1200) ;;
+    "${CAPACITY_COPIES}c-"homepage-80|"${CAPACITY_COPIES}c-"homepage-160|"${CAPACITY_COPIES}c-"homepage-200)
+      : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES}"
+      ;;
+    "${CAPACITY_COPIES}c-"heavy-200|"${CAPACITY_COPIES}c-"failure-boundary)
+      : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES}"
+      ;;
+    "${CAPACITY_COPIES}c-"failure-qr) : "${ACTION_ID:?Set ACTION_ID}" ;;
+    *) echo "Unknown cell or mismatched CAPACITY_COPIES: $cell" >&2; exit 2 ;;
+  esac
+  [[ ! -e "$result_dir/$cell.json" ]] || {
+    echo "Result already exists: $cell; choose a fresh CAPACITY_RESULT_DIR." >&2
+    exit 2
+  }
+done
+
+# Read-only canary fails fast before the selected load, with its own summary.
+if [[ ${CAPACITY_CANARY:-yes} == yes ]]; then
+  TARGET_RATE=2 TARGET_DURATION=30s TARGET_VISITS=60 TARGET_PREALLOCATED_VUS=20 \
+    run "canary-$(date -u +%Y%m%dT%H%M%SZ)" homepage-target 20
+fi
+
 for cell in "${cell_list[@]}"; do
   case "$cell" in
     *-homepage-80) run "$cell" homepage 80 ;;
     *-homepage-160) run "$cell" homepage 160 ;;
+    *-homepage-200) run "$cell" homepage 200 ;;
     *-homepage-1200) run "$cell" homepage-target "${TARGET_PREALLOCATED_VUS:-200}" ;;
     *-heavy-200)
       : "${STUDENT_COOKIES:?Set synthetic STUDENT_COOKIES for the heavy-user run}"

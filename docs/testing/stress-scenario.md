@@ -24,43 +24,62 @@ Users wait for their page. Worst case, all 1,200 arrive in the same second and t
 - CDN, proxy and Coolify timeouts must be at least 30 s.
 - Revisit only if the heavy-user test (Task01-C2) fails.
 
-## Task01-F multi-copy run
+## Task01-F multi-copy runner
 
-Run the target matrix against an isolated staging deployment. Set the web
-service to two copies, then three copies, and keep the CDN URL in
-`E2E_BASE_URL` (the staging URL must match it). Each web copy is capped at
-`WEB_CPU_LIMIT` (default `1.0`) and `WEB_MEMORY_LIMIT` (default `768M`) by
-`docker-compose.app.yml`; record the effective values because the login service
-shares the host.
+Run `pnpm test:load:capacity` from the repository root against isolated staging.
+Verify and set the actual deployment count first: `CAPACITY_COPIES=2` or `3`.
+The runner does not scale Coolify or prove routing; never relabel the same
+unchanged deployment as both topologies. Inspect replica inventory, routing and
+limits before each topology. Web defaults are 1 CPU / 768 MiB per copy via
+`WEB_CPU_LIMIT` / `WEB_MEMORY_LIMIT`; validate host headroom for co-hosted AuthNEI.
+
+With staging URL and synthetic `STUDENT_COOKIES` already exported securely:
 
 ```sh
 CONFIRM_NON_PRODUCTION=yes \
 E2E_BASE_URL=https://staging.example.org \
 STAGING_BASE_URL=https://staging.example.org \
-STUDENT_COOKIES='session=<synthetic-1>,session=<synthetic-2>,...' \
-ACTION_ID=<staging-action-id> \
-CAPACITY_RESULT_DIR=test-results/capacity-<utc> \
-./tests/load/capacity-targets.sh
+CAPACITY_COPIES=3 \
+CAPACITY_CELLS=3c-homepage-1200 \
+CAPACITY_RESULT_DIR=test-results/capacity-fresh-run \
+pnpm test:load:capacity
 ```
 
-The runner produces one k6 summary JSON per topology and scenario. The JSON
-contains p95 and p99 latency, request error rates and check results. The matrix
-covers 80, 160 and 1,200 homepage users, 200 heavy users, and the upload
-rate-limit and QR failure probes on both two-copy and three-copy deployments.
-Run the failure probes while one copy is drained or stopped, and record the
-expected degraded response separately; restore the copy before the next target.
+A 30-second, two-visits/second read-only canary runs first; a failed canary
+stops execution. `CAPACITY_CANARY=no` skips it when an unchanged deployment
+already has valid canary evidence. Each selected cell writes a separate JSON
+summary with p95/p99 and errors; existing cell summaries are never overwritten.
+Session values remain in the inherited environment, outside process arguments.
 
-Use `CAPACITY_CELLS` to rerun only selected cells, for example
-`CAPACITY_CELLS=3c-homepage-1200` after a canary. The 1,200-user cell uses a
-constant arrival rate of 20 homepage visits per second for 60 seconds, with
-`TARGET_PREALLOCATED_VUS` controlling the k6 worker pool. Set
-`TARGET_DURATION=30s`, a smaller `TARGET_RATE`, and a matching
-`TARGET_VISITS` value for a short canary before a full cell.
-`HOMEPAGE_PATH` defaults to `/event/pt` so a language redirect does not turn a
-valid homepage run into a redirect failure.
+Default cells are homepage concurrency at 80/160/200 VUs and the 1,200-arrival
+target for the selected topology. Choose comma-separated `CAPACITY_CELLS` to
+avoid redundant runs. The arrival target offers 20 visits/second for 60 seconds,
+requires at least 1,200 completed iterations and zero dropped iterations, and
+uses `TARGET_PREALLOCATED_VUS` (default 200 in the runner) as the worker budget.
+Each iteration requests HTML, assets, public APIs and a session check. Without
+cookies the target is guest-only; record visitor mix explicitly. The concurrency
+scenario retains its existing distinct synthetic student session requirement.
+`HOMEPAGE_PATH` defaults to `/event/pt` to avoid the root language redirect.
+Canary overrides `TARGET_RATE`, `TARGET_DURATION`, `TARGET_VISITS` and the worker
+budget only for its own run; selected target cells retain the caller's settings.
 
-For each run, retain the UTC interval, commit, CDN hostname, copy count, CPU and
-memory limits, offered VUs, p95, p99, HTTP 4xx/5xx/aborted counts, and the
-per-copy CPU, memory, restart and OOM series from Prometheus. The first copy
-count where the 1,200-user or 200-user target exceeds the error/latency budget
-is the measured capacity boundary. Do not infer it from configuration alone.
+Optional cells are `<copies>c-heavy-200`, `<copies>c-failure-boundary` and
+`<copies>c-failure-qr`. Heavy currently means the existing CV-upload probe only,
+not the complete scan/check-in/upload/attach/download target. It needs synthetic
+cookies and `REQUEST_INTERVAL_SECONDS=12` or longer with 200 distinct accounts
+to stay within the five-uploads/minute budget. QR needs `ACTION_ID`. Boundary
+probes check rate limiting; these probes do not themselves inject copy or
+dependency failures. Kill/drain/Redis fault injection and the full heavy flow
+remain outside this runner.
+
+Run cells sequentially: overlapping traffic against the same deployment
+changes offered load and invalidates isolated capacity comparisons. k6 can run
+on a separate nearby generator with the same repository and private environment;
+record generator CPU/memory and location. Running it on the application host
+adds contention and must be reported. No host deployment or scheduler is added.
+
+Retain UTC interval, source revision, CDN hostname/cache state, actual replica
+count, verified CPU/memory limits, visitor mix, latency/errors and per-copy
+CPU/memory/restart/OOM series from [the metrics runbook](../operations/capacity-metrics.md).
+Resource collection and AuthNEI supervision require verified infrastructure;
+this runner alone cannot establish capacity or complete #453.
