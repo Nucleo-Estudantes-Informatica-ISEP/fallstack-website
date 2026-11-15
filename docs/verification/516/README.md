@@ -5,6 +5,8 @@ that company employees reach.
 
 - **Before:** `dev` at 773f0fc and 991638f (12 November 2026).
 - **After:** this branch at 569818c (13 November 2026).
+- **Review fixes:** rechecked on 15 November 2026 after the fixes for
+  Dinis's review of 06423ba (mobile layout and focus, scanner messages).
 
 What changed: the dashboard and every student profile view now use the
 shared artwork and dark panels instead of the old `bgHero` artwork and white
@@ -20,7 +22,9 @@ in its own code. Routes, tokens and permissions are unchanged.
   emails appear in the captures.
 - Before captures: Zen/Firefox, real AuthNEI login. After captures and the
   sweep: headless Chrome with the `pnpm dev:session` identities and a fake
-  camera. All at DPR 1.
+  camera. Review rechecks: headless Edge with the same identities, the
+  built-in fake camera, and fake camera feeds showing generated QR codes.
+  All at DPR 1.
 - Viewports: 360 × 800, 400 × 900, 768 × 1024, 1440 × 900 and 1920 × 1080.
 
 ## Inventory
@@ -80,8 +84,28 @@ not part of this inventory.
 - **Typed-code messages covered the controls.** At 360 the message sat over
   the code field and Validar; at 1440 it covered the right end of the field.
   Validar also overlapped the typed text at 360, and repeated clicks stacked
-  identical messages. Now no message covers the field, Validar or the
-  camera, and repeats replace the message instead of stacking.
+  identical messages. See the next point for where messages show now.
+- **Messages over the camera.** The camera error toast covered part of the
+  camera box for 5 seconds, and scan errors would show in the same place.
+  Camera, scan and typed-code messages now show in one place under the
+  camera box, above the code field, instead of as toasts. See
+  [Messages](#messages-over-the-camera-and-controls).
+- **Mobile layout and focus.** Below `lg` the menu sat above the selected
+  panel, and choosing an entry left focus on the menu. The selected panel
+  now comes first with the menu under it, as on the student dashboard;
+  choosing an entry moves focus to the panel and, when the panel's start is
+  out of view, jumps to it.
+- **Admin employees saw the generic save error for a duplicate.** The
+  server answers 400 “Student already saved” for them instead of 409 (see
+  below); the scanner and typed code now show “Este estudante já foi
+  guardado anteriormente.” for both.
+- **“Already saved” flashed after a new scan.** The camera came back while
+  the preview loaded, read the same code again and got a duplicate. The
+  camera now stays off until the preview opens.
+- **Scan de Perfil scrolled past its end.** The scan history's
+  screen-reader labels were not clipped by its scroll box, adding the
+  list's full height below the page (3883 px of scroll for 1898 px of page
+  at 360). The page now ends at its content.
 - **Server errors appeared in English.** Save failures other than a
   duplicate now show one Portuguese message instead of the server's text.
 - **Student-addressed empty interests text.** The company-facing views said
@@ -91,22 +115,21 @@ not part of this inventory.
 
 ### Open, outside this task
 
-- **Six-character codes.** The typed-code field in
-  `CompanySavedProfilesSection` has `maxLength={4}`, so #514's six-character
-  codes cannot be entered. #514 (PR #555) changes that line.
-- **Duplicate saves by admin accounts.** `/api/saved` skips the duplicate
-  check for sessions with an admin role (`allowDuplicate`), so the database
-  answers 400 instead of the 409 that the scanner turns into “Este estudante
-  já foi guardado anteriormente.”. An employee who is also an admin sees the
-  generic save error. Tracked as a separate bug; duplicate checks here use an
-  employee without an admin role.
+- **Duplicate saves by admin accounts (server).** `/api/saved` skips the
+  duplicate check for sessions with an admin role (`allowDuplicate`), so the
+  database's one-save-per-company rule answers 400 instead of 409. The
+  company views now treat both as a duplicate; the server's status is
+  unchanged.
+- **Unknown Wallet passes use up the code lookup limit.** The scanner reads
+  a code in view again every few hundred milliseconds. Each read of an
+  unknown pass counts towards the 5-per-minute unknown-code limit, so about
+  a second in front of the camera refuses every lookup, valid codes
+  included, for the rest of the minute. Scans then show the generic scan
+  error; typed codes say “Demasiadas tentativas”.
 - **Access check on the student route.** A possible access-control gap on
   `/student/[...data]` was reported privately to the Infraestruturas
   Informáticas coordinators, as [`docs/SECURITY.md`](../../SECURITY.md)
   asks.
-- **Camera message over the camera box.** See
-  [Messages over the camera and controls](#messages-over-the-camera-and-controls).
-  Decision pending.
 - **404 digits below 3:1 on the artwork.** The orange `404` on the shared
   not-found page (`src/app/not-found.tsx`) averages 3.5–3.9:1 against the
   artwork but drops to 2.8:1 over its lightest areas (1.8:1 at 360). S2, S5
@@ -186,14 +209,16 @@ or white on dark panels (at least 6.5:1).
 Tab and Shift+Tab through every screen above at 360 and 1440, waiting for
 scrolling to finish after each key.
 
-| Check                          | Result                                                                                                                        |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Order                          | Follows the reading order: top bar, menu, tab content, list rows (name, then its comment button), footer.                     |
-| Visible focus                  | Every stop in `<main>` matches `:focus-visible` and shows an outline.                                                         |
-| Traps                          | None. Every walk leaves `<main>` for the footer, and Shift+Tab returns to the top bar.                                        |
-| Hidden under the fixed top bar | Fixed. Shift+Tab used to hide the code field and Validar (360) and Download CVs (1440) under the bar; they now keep a margin. |
-| Focus after a typed-code error | Fixed. Invalid and duplicate codes used to drop focus to the page; it now returns to the code field.                          |
-| Comment editor                 | Opening moves focus to the comment field; Escape closes it and returns focus to “Editar comentário sobre …”.                  |
+| Check                          | Result                                                                                                                                                                                                                                                                                             |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Order                          | Follows the reading order: top bar, selected panel, list rows (name, then its comment button), menu, footer. The menu shows beside the panel from `lg`, but comes after it in the tab order, as on the student dashboard.                                                                          |
+| Visible focus                  | Every stop in `<main>` matches `:focus-visible` and shows an outline.                                                                                                                                                                                                                              |
+| Traps                          | None. Every walk leaves `<main>` for the footer, and Shift+Tab returns to the top bar.                                                                                                                                                                                                             |
+| Hidden under the fixed top bar | Fixed. Shift+Tab used to hide the code field and Validar (360) and Download CVs (1440) under the bar; they now keep a margin.                                                                                                                                                                      |
+| Focus after a typed-code error | Fixed. Invalid and duplicate codes used to drop focus to the page; it now returns to the code field.                                                                                                                                                                                               |
+| Comment editor                 | Opening moves focus to the comment field; Escape closes it and returns focus to “Editar comentário sobre …”.                                                                                                                                                                                       |
+| Choosing a menu entry          | Focus moves to the selected panel, so the next Tab is its first control. At 360, choosing Scan de Perfil from the menu under a long Sumário leaves the panel's start just under the top bar; at 1440 the page does not move. Pressing the current entry again leaves focus on it (component test). |
+| Carregar mais                  | Focus returns to the button after a page loads or fails, and moves to the panel after the last page (component tests).                                                                                                                                                                             |
 
 ### Accessible names
 
@@ -206,26 +231,29 @@ Code”, since the video itself has no name.
 
 ### Messages over the camera and controls
 
-Typed-code messages, triggered twice each to check that copies do not stack:
+All camera, scan and typed-code messages show in one place under the camera
+box and above the code field: one message at a time, announced as an alert,
+with no toast. Checked on 15 November 2026 at 360, 768 and 1440:
 
-| Message                       | 360 | 400 | 768 | 1440 | 1920 |
-| ----------------------------- | --- | --- | --- | ---- | ---- |
-| Empty: “Sem código inserido.” | ✓   | ✓   | ✓   | ✓    | ✓    |
-| Invalid: `ZZZZ`               | ✓   | ✓   | ✓   | ✓    | ✓    |
-| Duplicate: `Z101`             | ✓   | ✓   | ✓   | ✓    | ✓    |
+| Message                                            | From                         | 360 | 768 | 1440 |
+| -------------------------------------------------- | ---------------------------- | --- | --- | ---- |
+| Camera denied: “Não foi possível aceder à câmara…” | Camera                       | ✓   | ✓   | ✓    |
+| Unknown pass: “O código de estudante deste passe…” | Scan of `Z999`               | ✓   | ✓   | ✓    |
+| Already saved: “Este estudante já foi guardado…”   | Scan of `Z101`; typed `A123` | ✓   | ✓   | ✓    |
+| Save failed: “Não foi possível guardar o perfil…”  | Scan of a bad token          | ✓   | ✓   | ✓    |
+| Empty and invalid: “Sem código inserido.”, `ZZZZ`  | Typed code                   | ✓   | –   | –    |
 
-✓: one message, announced as an alert, covering none of the code field,
-Validar or the camera, with focus back in the code field.
+✓: the message starts 12 px below the camera box at every width, so it
+cannot cover the live preview, the code field or Validar. Typed codes
+return focus to the field; if the message is off screen when Validar is
+pressed, the page scrolls just enough to show it. While a code stays in
+front of the camera, its message stays put instead of blinking. A
+successful scan opens the preview with no message.
 
-Camera message: with the camera denied, “Não foi possível aceder à câmara…”
-covers the bottom of the empty camera box (78 px at 360; a 132 × 102 px
-corner at 1440) until it closes after 5 seconds. A QR scan error while the
-camera is running would appear in the same place. Decision pending.
-
-Other messages, checked at 360 and 1440: interests saved and not saved (D3)
-and the CV export error (D7) each show one toast; the export button is usable
-again afterwards. CV export success downloads `cvs-guardados.zip` with the
-Z101 and Z103 CVs and `dados.csv`.
+Other messages, checked at 360 and 1440 on 13 November: interests saved and
+not saved (D3) and the CV export error (D7) each show one toast; the export
+button is usable again afterwards. CV export success downloads
+`cvs-guardados.zip` with the Z101 and Z103 CVs and `dados.csv`.
 
 ## Checks
 
@@ -263,6 +291,11 @@ none of the student's data in the response:
 In a production build (`pnpm start`), the `/student/Z104` 404 and its
 client-navigation response also contain none of Z104's data, and Student and
 Admin get the 404 on `/dashboard`.
+
+Review fixes, 15 November 2026: Prettier, ESLint, `pnpm typecheck` and the
+component tests (`vitest run src/components`) pass on Windows; each fix has
+a test that fails without it. The full `pnpm test` with the database runs
+in CI.
 
 Not exercised here: a real camera and a real phone.
 
@@ -314,6 +347,10 @@ Not exercised here: a real camera and a real phone.
 
 ## After captures
 
+D2 and D4–D6 were retaken on 15 November 2026 for the new mobile layout.
+Armis now also has three saves from #487's synthetic data at the top of the
+lists (`Y403`, `Y4Q7K2`, `Z100`).
+
 ### D2: Sumário with saved students
 
 ![Sumário at 360](after-D2-360.png)
@@ -360,7 +397,7 @@ Not exercised here: a real camera and a real phone.
 
 - S1 and S6 look the same as S4 (S6 without “Voltar ao painel”). S5 and D8
   show the same 404 page.
-- Messages (D3, D4 denied, D5, D7) were checked at 360 and 1440; see
+- Messages (D3, D4 denied, D5, D7, scan errors) were checked in text; see
   [Messages over the camera and controls](#messages-over-the-camera-and-controls).
 - D1 and the empty scan history need Armis's `A123` and `A456` saves
   removed; the empty-list text is covered by the component tests.
