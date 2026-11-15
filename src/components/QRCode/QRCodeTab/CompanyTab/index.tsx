@@ -71,7 +71,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
                   className={`z-10 ml-2 bg-slate-100 p-2 text-center text-xl font-bold text-black uppercase`}
                   ref={inputRef}
                   onKeyUp={handleKeyUp}
-                  maxLength={4}
+                  maxLength={6}
                   disabled={isPending}
                 />
               </div>
