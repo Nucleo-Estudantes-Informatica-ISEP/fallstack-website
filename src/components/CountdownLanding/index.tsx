@@ -8,6 +8,15 @@ import HeroContainer from "@/components/HeroContainer";
 import { Language } from "@/domain/i18n/translations";
 import { branding } from "@/edition/branding";
 
+// The artwork is cover-scaled, so on wide screens its identity sits lower in
+// the banner. With a call to action the bottom column (countdown + action)
+// is taller, so the banner must be tall enough for that column to clear the
+// identity: roughly 20.5vw for where the identity ends, twice the countdown
+// height (it scales with vw up to 5.9375rem) and 19rem for the action and
+// spacing. Below the cover crossover the 40rem floor already suffices.
+export const HERO_WITH_ACTION_MIN_HEIGHT =
+  "min-h-[max(40rem,calc(20.5vw_+_2.15*min(6.3vw,5.9375rem)_+_19rem))]";
+
 interface CountdownLandingProps {
   language: Language;
   // Rendered inside the banner, below the identity and the countdown, so it
@@ -45,7 +54,11 @@ const CountdownLanding: FunctionComponent<CountdownLandingProps> = ({
   return (
     <HeroContainer>
       {/* shortcut: artwork includes the 2026 logo; export a fresh frame for a later edition. */}
-      <section className="relative h-svh min-h-160 w-full bg-background bg-[url('/assets/images/landing-2026.png')] bg-cover bg-center">
+      <section
+        className={`relative h-svh w-full bg-background bg-[url('/assets/images/landing-2026.png')] bg-cover bg-center ${
+          callToAction ? HERO_WITH_ACTION_MIN_HEIGHT : "min-h-160"
+        }`}
+      >
         <div className="sr-only">
           <h1>
             {branding.name} {branding.year}

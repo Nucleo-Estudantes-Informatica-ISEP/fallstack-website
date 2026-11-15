@@ -2,7 +2,9 @@ import { act, render, screen, within } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
-import CountdownLanding from "@/components/CountdownLanding";
+import CountdownLanding, {
+  HERO_WITH_ACTION_MIN_HEIGHT,
+} from "@/components/CountdownLanding";
 import { Language } from "@/domain/i18n/translations";
 import { branding } from "@/edition/branding";
 
@@ -115,4 +117,24 @@ test("places the call to action in the banner, after the countdown and before th
   expect(
     cta.compareDocumentPosition(partners) & Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
+});
+
+test("with a call to action the banner grows on wide, short screens so the column clears the identity", () => {
+  // The artwork is cover-scaled; on wide screens the identity sits lower, so
+  // the countdown plus the action need a taller banner (checked in a browser
+  // at 1280x600, 1366x768, 1920x1080 and 2560x1080).
+  const { rerender } = render(
+    <CountdownLanding
+      language={Language.PT}
+      callToAction={<a href="/signup">Quero registar-me no evento</a>}
+    />
+  );
+  const banner = () => screen.getByRole("timer").closest("section");
+
+  expect(banner()).toHaveClass(HERO_WITH_ACTION_MIN_HEIGHT);
+  expect(banner()).not.toHaveClass("min-h-160");
+
+  rerender(<CountdownLanding language={Language.PT} />);
+  expect(banner()).toHaveClass("min-h-160");
+  expect(banner()).not.toHaveClass(HERO_WITH_ACTION_MIN_HEIGHT);
 });
