@@ -24,7 +24,11 @@ const UserButton: React.FC<UserButtonProps> = ({ user }) => {
       ? "/dashboard"
       : user.student
         ? "/student/" + user.student.code
-        : "/signup";
+        : // NEI staff accounts (e.g. @nei-isep.org) have no student profile
+          // and cannot complete student signup; their place is the scanner.
+          user.neiMember
+          ? "/attendance/scan"
+          : "/signup";
 
   return (
     <Link
