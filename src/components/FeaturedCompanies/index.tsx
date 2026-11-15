@@ -1,21 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import {
-  getPublicCompanyRoster,
-  readHomepageSection,
-} from "@/application/services/publicEditionService";
+import type { HomepageDto } from "@/application/dto/homepageDto";
 import { companyProfileHref } from "@/domain/company/services/rank-access";
 import { Language } from "@/domain/i18n/translations";
 
-export default async function FeaturedCompanies({
+export default function FeaturedCompanies({
   language,
+  companies,
 }: {
   language: Language;
+  companies: HomepageDto["companies"];
 }) {
-  const companies = (
-    await readHomepageSection(getPublicCompanyRoster(language))
-  )
+  const featured = companies
     .filter((company) => company.rank.style?.isFeatured)
     .sort(
       (a, b) =>
@@ -24,7 +21,7 @@ export default async function FeaturedCompanies({
         a.name.localeCompare(b.name)
     );
 
-  if (!companies.length) return null;
+  if (!featured.length) return null;
 
   return (
     <section
@@ -34,7 +31,7 @@ export default async function FeaturedCompanies({
       className="bg-background px-6 py-8"
     >
       <ul className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-8 gap-y-6 sm:gap-x-12">
-        {companies.map((company) => {
+        {featured.map((company) => {
           const href = companyProfileHref(
             company.rank.style?.hasInternalPage ?? false,
             company.name,

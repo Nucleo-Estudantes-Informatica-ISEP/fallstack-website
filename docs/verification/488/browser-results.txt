@@ -1,0 +1,6 @@
+company 390 HTTP 200; no horizontal overflow
+company-video 390 HTTP 200; no horizontal overflow
+privacy 390 HTTP 200; no horizontal overflow
+company 1512 HTTP 200; no horizontal overflow
+company-video 1512 HTTP 200; no horizontal overflow
+privacy 1512 HTTP 200; no horizontal overflow

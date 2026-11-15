@@ -52,3 +52,18 @@ test("keeps YouTube playback and suppresses unsupported or disabled video", () =
   );
   expect(container.querySelector("video,iframe")).toBeNull();
 });
+
+test("omits missing video section and keeps interests", () => {
+  const { container } = render(
+    <CompanyInfo
+      bodyText="About the company"
+      videoHref={undefined}
+      videoTitle={undefined}
+      showsPromoVideo
+      interests={["Software Development"]}
+    />
+  );
+  expect(container.querySelector("video,iframe")).toBeNull();
+  expect(screen.queryByRole("heading", { name: "Vídeo" })).toBeNull();
+  expect(screen.getByText("Software Development")).toBeVisible();
+});

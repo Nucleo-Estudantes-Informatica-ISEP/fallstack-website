@@ -30,4 +30,4 @@ remain independent. A company-data failure hides only the partner row while
 the landing page remains available.
 
 Logo sizing and compatibility are recorded separately in
-[ADR 0038](0038-use-uniform-partner-logo-bounds.md).
+[ADR 0040](0040-use-uniform-partner-logo-bounds.md).

@@ -1,4 +1,4 @@
-# 0038: Use uniform partner logo bounds
+# 0040: Use uniform partner logo bounds
 
 Status: Accepted
 Date: 2026-11-14
