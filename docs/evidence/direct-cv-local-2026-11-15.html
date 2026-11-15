@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="pt">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><style>
+    :root {
+      color: var(--foreground);
+      font-family: var(--font-sans);
+    }
+    body {
+      margin: 0;
+    }
+    .controls {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 13px;
+    }
+    select {
+      color: var(--foreground);
+      background: var(--secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: 280px;
+    }
+    svg text {
+      font-family: var(--font-sans);
+      fill: var(--foreground);
+      font-size: 12px;
+    }
+    .note {
+      font-size: 12px;
+      color: var(--muted-foreground);
+      line-height: 1.5;
+    }
+    .legend {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+  </style>
+  <div class="controls">
+    <label
+      >Latência
+      <select id="metric">
+        <option value="p(95)">p95</option>
+        <option value="p(99)">p99</option>
+        <option value="avg">Média</option>
+        <option value="med">Mediana</option>
+      </select></label
+    ><span class="legend"
+      ><i class="dot" style="background: var(--chart-1)"></i>Sem uploads</span
+    ><span class="legend"
+      ><i class="dot" style="background: var(--chart-2)"></i>20 × 10 MiB</span
+    >
+  </div>
+  <svg
+    id="chart"
+    viewBox="0 0 680 280"
+    role="img"
+    aria-label="Latências de negócio com e sem uploads"
+  ></svg>
+  <p class="note">
+    Laboratório local: 1 processo Next.js, PostgreSQL e MinIO em Docker. 20/20
+    uploads e 560/560 operações concluídos. Sobreposição comprovada das 20
+    transferências: 932 ms. Amostra curta; resultados não representam capacidade
+    da VPS.
+  </p>
+  <script>
+    const d = {
+      labels: ["Todas operações", "Scans", "Check-ins"],
+      baseline: [
+        {
+          avg: 26.0475098214286,
+          med: 23.9315,
+          min: 7.3352,
+          "p(95)": 45.436454999999995,
+          "p(99)": 61.23073399999995,
+          max: 73.5681,
+        },
+        {
+          "p(95)": 62.49113,
+          "p(99)": 68.76110799999996,
+          max: 73.5681,
+          avg: 42.143710000000006,
+          med: 39.56055,
+          min: 29.4941,
+        },
+        {
+          med: 36.5634,
+          min: 24.6398,
+          "p(95)": 46.77896,
+          "p(99)": 53.64237299999995,
+          max: 60.5717,
+          avg: 36.575892499999995,
+        },
+      ],
+      mixed: [
+        {
+          avg: 26.579824464285718,
+          med: 19.10625,
+          min: 6.6506,
+          "p(95)": 81.12608499999989,
+          "p(99)": 148.5455289999991,
+          max: 194.7548,
+        },
+        {
+          avg: 44.25675124999999,
+          med: 31.2438,
+          min: 16.8402,
+          "p(95)": 114.28670499999997,
+          "p(99)": 190.02957299999997,
+          max: 194.7548,
+        },
+        {
+          med: 22.2227,
+          min: 11.5074,
+          "p(95)": 81.12608499999999,
+          "p(99)": 94.45153499999984,
+          max: 114.4729,
+          avg: 30.826857499999996,
+        },
+      ],
+    };
+    function render() {
+      const metric = document.querySelector("#metric").value;
+      const all = [...d.baseline, ...d.mixed].map((x) => x[metric]);
+      const max = Math.ceil(Math.max(...all) / 50) * 50;
+      let svg = "";
+      for (let i = 0; i < 3; i++) {
+        let y = 28 + i * 78;
+        svg += '<text x="0" y="' + y + '">' + d.labels[i] + "</text>";
+        for (let j = 0; j < 2; j++) {
+          const value = (j ? d.mixed : d.baseline)[i][metric];
+          const yy = y + 8 + j * 23;
+          svg +=
+            '<rect x="135" y="' +
+            yy +
+            '" width="' +
+            (value / max) * 445 +
+            '" height="17" rx="3" fill="var(--chart-' +
+            (j + 1) +
+            ')"><title>' +
+            value.toFixed(2) +
+            ' ms</title></rect><text x="' +
+            (143 + (value / max) * 445) +
+            '" y="' +
+            (yy + 13) +
+            '">' +
+            value.toFixed(1) +
+            " ms</text>";
+        }
+      }
+      svg +=
+        '<text x="135" y="274">0</text><text x="540" y="274">' +
+        max +
+        " ms</text>";
+      document.querySelector("#chart").innerHTML = svg;
+    }
+    document.querySelector("#metric").onchange = render;
+    render();
+  </script>
+</html>

@@ -54,6 +54,12 @@ authorization before the handler streams the multipart body with bounded memory
 probes that must avoid a session lookup use plain route exports. Keep their
 exceptions local and documented.
 
+CVs use JSON authorization at `/api/storage/cv`, browser-to-MinIO presigned
+POST, and `/api/storage/cv/finalize`. Metadata parsing follows the shared rate
+limit in the authorization route. Quarantine, conditional promotion and durable
+owner-bound state are described in [ADR 0040](decisions/0040-direct-private-cv-uploads.md).
+The legacy multipart transport remains for avatars/logos only.
+
 ## Authentication and short-lived tokens
 
 Login uses AuthNEI/ZITADEL OIDC. The app signs its own session cookie, and

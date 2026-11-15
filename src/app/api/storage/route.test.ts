@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { HttpError } from "@/types/HttpError";
+import { initiateCvUpload } from "@/application/services/directCvUploadService";
 import getServerSession from "@/application/services/sessionService";
 import {
   checkUploadRateLimit,
@@ -12,6 +13,9 @@ import { POST as avatarPost } from "./avatar/route";
 import { POST as cvPost } from "./cv/route";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/application/services/directCvUploadService", () => ({
+  initiateCvUpload: vi.fn(),
+}));
 vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
 vi.mock("@/application/services/uploadService", () => ({
   checkUploadRateLimit: vi.fn(),
@@ -35,6 +39,16 @@ describe.each([
   { name: "cv", post: cvPost, url: "http://localhost/api/storage/cv" },
 ] as const)("$name upload", ({ name, post, url }) => {
   function request(withFile = true) {
+    if (name === "cv")
+      return new NextRequest(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          withFile
+            ? { filename: "cv.pdf", contentType: "application/pdf", size: 20 }
+            : {}
+        ),
+      });
     const form = new FormData();
     if (withFile)
       form.append("file", new File(["bytes"], "file", { type: "image/png" }));
@@ -49,6 +63,12 @@ describe.each([
     vi.mocked(getServerSession).mockResolvedValue(student);
     vi.mocked(checkUploadRateLimit).mockResolvedValue({
       status: "allowed",
+    });
+    vi.mocked(initiateCvUpload).mockResolvedValue({
+      uploadId: "00000000-0000-4000-8000-000000000001",
+      url: "https://storage.test/cvs",
+      fields: {},
+      expiresAt: "2026-11-15T00:05:00Z",
     });
     vi.mocked(uploadFile).mockResolvedValue({
       id: "file-id",
@@ -80,10 +100,21 @@ describe.each([
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual(
       name === "cv"
-        ? { id: "file-id" }
+        ? {
+            uploadId: "00000000-0000-4000-8000-000000000001",
+            url: "https://storage.test/cvs",
+            fields: {},
+            expiresAt: "2026-11-15T00:05:00Z",
+          }
         : { id: "file-id", url: "/media/avatar/file-id" }
     );
-    expect(uploadFile).toHaveBeenCalledWith(name, expect.any(NextRequest));
+    if (name === "cv")
+      expect(initiateCvUpload).toHaveBeenCalledWith(student!.id, {
+        filename: "cv.pdf",
+        contentType: "application/pdf",
+        size: 20,
+      });
+    else expect(uploadFile).toHaveBeenCalledWith(name, expect.any(NextRequest));
   });
 
   test("rejects missing file", async () => {

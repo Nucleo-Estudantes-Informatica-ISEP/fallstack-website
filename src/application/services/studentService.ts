@@ -16,6 +16,7 @@ import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 
+import { consumeCvUpload } from "../repositories/cvUploadRepository";
 import { countInterestsByIds } from "../repositories/interestRepository";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
@@ -75,6 +76,7 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
   const cv = body.cvId ?? null;
 
   return withTransaction(async (tx) => {
+    if (cv) await consumeCvUpload(userId, cv, tx);
     const student = await createStudent(
       {
         userId,
@@ -138,9 +140,10 @@ export const setStudentAvatar = (code: string, url: string) =>
   updateStudentAvatar(code, url);
 
 export async function setStudentCv(code: string, id: string) {
-  if (!(await objectExists("cv", cvKey(id))))
-    throw new HttpError("Invalid upload id", 400);
+  const student = await findStudentByCode(code);
+  if (!student) throw new HttpError("Student not found", 404);
   await withTransaction(async (tx) => {
+    if (!(await consumeCvUpload(student.id, id, tx))) return;
     await updateStudentCv(code, id, tx);
     await completeAction(code, actionNames.uploadCv, tx);
   });

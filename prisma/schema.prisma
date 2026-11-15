@@ -33,6 +33,25 @@ model User {
   student         Student?
   employee        Employee?
   sessionCheckIns SessionCheckIn[]
+  cvUploads       CvUpload[]
+}
+
+// Each validation attempt writes a fresh destination. Only its fenced commit
+// publishes that id. Ownership survives retries and all web replicas.
+model CvUpload {
+  id         String    @id @db.Uuid
+  ownerId    String    @db.Uuid
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  size       Int
+  status     String    @default("pending")
+  expiresAt  DateTime
+  leaseUntil DateTime?
+  attemptId  String?   @db.Uuid
+  cvId       String?   @unique @db.Uuid
+  createdAt  DateTime  @default(now())
+
+  @@index([ownerId, status])
+  @@index([createdAt])
 }
 
 model Student {

@@ -1,6 +1,10 @@
 {
   "indexes": ["StorageDeletion_kind_lower_key_idx"],
-  "constraints": ["StorageDeletion_kind_check"],
+  "constraints": [
+    "StorageDeletion_kind_check",
+    "CvUpload_size_check",
+    "CvUpload_status_check"
+  ],
   "functions": [
     "storage_object_key",
     "storage_reference_path_is_ambiguous",
