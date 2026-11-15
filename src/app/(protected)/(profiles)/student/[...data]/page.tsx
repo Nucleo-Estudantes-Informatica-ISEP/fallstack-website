@@ -86,7 +86,9 @@ const StudentPage = async (props: ProfileProps) => {
 
   // A preview without a valid signed token is the saved-students list's link
   // back to a profile, so only an employee whose company saved the student
-  // may open one. Anyone else, such as another student, is blocked.
+  // may open one. Anyone else is blocked: another student, and on purpose an
+  // admin without an employee profile, who has the same profile at
+  // /student/<code> and cannot use the preview's employee-only save.
   if (isPreview && !decodedPreviewCode && !(session.employee && isSavedStudent))
     return Custom404();
 

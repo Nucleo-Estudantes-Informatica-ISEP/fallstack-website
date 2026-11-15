@@ -376,3 +376,44 @@ test("an admin without a profile sees the public view of /student/<code>", async
   assert.ok(findByType(result, Public), "expected the public view");
   assert.equal(findByType(result, CompanyView), null);
 });
+
+const ADMIN_SESSION = {
+  id: "u5",
+  role: null,
+  adminRole: "ADMIN",
+  student: null,
+  employee: null,
+};
+
+async function asAdmin() {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(ADMIN_SESSION as never);
+}
+
+// Intended: without a signed token, only an employee whose company saved the
+// student may open a preview. An admin without a profile already has that
+// student's profile at /student/<code>, and the preview's save button is for
+// employees.
+test("an admin without a profile opening a plain-code preview is blocked, but still sees /student/<code>", async () => {
+  await asAdmin();
+  await withSignedToken(null);
+
+  assert.equal(isBlocked(await renderPreviewFor("S123")), true);
+
+  const profile = await renderFor("S123");
+  assert.equal(isBlocked(profile), false);
+  assert.ok(findByType(profile, (await views()).Public));
+});
+
+test("an admin without a profile with a valid signed token sees the preview", async () => {
+  await asAdmin();
+  await withSignedToken("S123");
+
+  const result = await renderPreviewFor("signed-token");
+
+  const preview = findByType(result, (await views()).Preview);
+  assert.ok(preview, "expected the preview view");
+  assert.equal(preview.props.isCompanyView, false);
+});
