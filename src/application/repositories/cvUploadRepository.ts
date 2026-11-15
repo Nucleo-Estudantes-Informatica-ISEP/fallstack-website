@@ -92,17 +92,42 @@ export async function consumeCvUpload(
   const ticket = await db.cvUpload.findFirst({ where: { cvId, ownerId } });
   if (!ticket || !["ready", "attached"].includes(ticket.status))
     throw new HttpError("Invalid CV upload id", 400);
+
+  if (typeof db.$queryRaw === "function") {
+    await db.$queryRaw`SELECT id FROM "Student" WHERE id = ${ownerId}::uuid FOR UPDATE`;
+  }
+  const student =
+    typeof db.student?.findUnique === "function"
+      ? await db.student.findUnique({
+          where: { id: ownerId },
+          select: { cv: true },
+        })
+      : null;
+
   if (ticket.status === "attached") {
-    const student = await db.student.findUnique({
-      where: { id: ownerId },
-      select: { cv: true },
-    });
     if (student?.cv !== cvId)
       throw new HttpError("CV upload already consumed", 409);
     return false;
   }
   if (ticket.createdAt.getTime() < Date.now() - 24 * 60 * 60 * 1000)
     throw new HttpError("CV upload expired", 410);
+
+  if (student?.cv) {
+    if (student.cv === cvId) return false;
+    const currentTicket = await db.cvUpload.findFirst({
+      where: { cvId: student.cv, ownerId },
+      select: { id: true, createdAt: true },
+    });
+    if (
+      currentTicket &&
+      (currentTicket.createdAt > ticket.createdAt ||
+        (currentTicket.createdAt.getTime() === ticket.createdAt.getTime() &&
+          currentTicket.id !== ticket.id))
+    ) {
+      return false;
+    }
+  }
+
   if (
     (
       await db.cvUpload.updateMany({

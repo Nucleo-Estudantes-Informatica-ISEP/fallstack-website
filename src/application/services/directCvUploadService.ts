@@ -95,9 +95,11 @@ export async function finalizeCvUpload(ownerId: string, uploadId: string) {
     await withTransaction(async (tx) => {
       await finishCvValidation(uploadId, ownerId, attemptId, cvId, tx);
       if (student) {
-        await consumeCvUpload(ownerId, cvId, tx);
-        await updateStudentMedia(ownerId, { cv: cvId }, tx);
-        await completeAction(student.code, actionNames.uploadCv, tx);
+        const attached = await consumeCvUpload(ownerId, cvId, tx);
+        if (attached) {
+          await updateStudentMedia(ownerId, { cv: cvId }, tx);
+          await completeAction(student.code, actionNames.uploadCv, tx);
+        }
       }
     });
   } catch (error) {

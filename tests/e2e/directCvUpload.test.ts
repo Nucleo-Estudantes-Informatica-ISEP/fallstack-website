@@ -555,3 +555,30 @@ test.skipIf(!enabled)(
     ).toBe(done.id);
   }
 );
+
+test.skipIf(!enabled)(
+  "reversed completion order: older finalizer cannot overwrite newer profile CV",
+  async () => {
+    const postA = await ticket();
+    await new Promise((r) => setTimeout(r, 20));
+    const postB = await ticket();
+
+    await transfer(postA);
+    await transfer(postB);
+
+    // Finalize B first (the newer ticket)
+    const doneB = await service.finalizeCvUpload(owner.id, postB.uploadId);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneB.id);
+
+    // Finalize A second (the older ticket) out-of-order
+    const doneA = await service.finalizeCvUpload(owner.id, postA.uploadId);
+    expect(doneA.id).not.toBe(doneB.id);
+
+    // Profile CV must remain B, fenced from older ticket A
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneB.id);
+  }
+);

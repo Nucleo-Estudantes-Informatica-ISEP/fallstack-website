@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { actionNames } from "@/edition/actions";
+
 import { finalizeCvUpload, initiateCvUpload } from "./directCvUploadService";
 
 vi.mock("server-only", () => ({}));
@@ -19,15 +21,22 @@ const mocks = vi.hoisted(() => ({
   deleteObject: vi.fn(),
   cvKey: (id: string) => `distribution/cv/${id}.pdf`,
 }));
+const studentMocks = vi.hoisted(() => ({
+  findStudentProfileById: vi.fn(
+    async (): Promise<{ id: string; code: string } | null> => null
+  ),
+  updateStudentMedia: vi.fn(),
+}));
+const actionMocks = vi.hoisted(() => ({
+  completeAction: vi.fn(),
+}));
 vi.mock("../repositories/cvUploadRepository", () => mocks);
 vi.mock("./objectStorageService", () => mocks);
-vi.mock("../repositories/studentRepository", () => ({
-  findStudentProfileById: vi.fn(async () => null),
-}));
+vi.mock("../repositories/studentRepository", () => studentMocks);
 vi.mock("../repositories/transaction", () => ({
   withTransaction: (fn: (tx: object) => unknown) => fn({}),
 }));
-vi.mock("./actionService", () => ({ completeAction: vi.fn() }));
+vi.mock("./actionService", () => actionMocks);
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.deleteObject.mockResolvedValue(undefined);
@@ -148,4 +157,45 @@ test("busy or expired ticket cannot start another promotion", async () => {
     status: 410,
   });
   expect(mocks.promoteCvObject).not.toHaveBeenCalled();
+});
+test("updates student media and completes action when student exists and ticket is attached", async () => {
+  studentMocks.findStudentProfileById.mockResolvedValue({
+    id: "owner",
+    code: "std-123",
+  });
+  mocks.consumeCvUpload.mockResolvedValue(true);
+
+  const result = await finalizeCvUpload("owner", "ticket");
+  expect(mocks.consumeCvUpload).toHaveBeenCalledWith(
+    "owner",
+    result.id,
+    expect.anything()
+  );
+  expect(studentMocks.updateStudentMedia).toHaveBeenCalledWith(
+    "owner",
+    { cv: result.id },
+    expect.anything()
+  );
+  expect(actionMocks.completeAction).toHaveBeenCalledWith(
+    "std-123",
+    actionNames.uploadCv,
+    expect.anything()
+  );
+});
+test("fences out older tickets: skips updateStudentMedia and completeAction when consumeCvUpload returns false", async () => {
+  studentMocks.findStudentProfileById.mockResolvedValue({
+    id: "owner",
+    code: "std-123",
+  });
+  mocks.consumeCvUpload.mockResolvedValue(false);
+
+  const result = await finalizeCvUpload("owner", "ticket");
+  expect(result.id).toBeDefined();
+  expect(mocks.consumeCvUpload).toHaveBeenCalledWith(
+    "owner",
+    result.id,
+    expect.anything()
+  );
+  expect(studentMocks.updateStudentMedia).not.toHaveBeenCalled();
+  expect(actionMocks.completeAction).not.toHaveBeenCalled();
 });
