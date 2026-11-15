@@ -38,6 +38,8 @@ vi.mock(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // jsdom does not scroll; a new selection calls window.scrollTo.
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 
 function renderDashboard(company: { avatar?: string | null } = {}) {
@@ -170,6 +172,19 @@ test("a new selection jumps to the panel's start only when it is out of view", (
   expect(screen.getByRole("region", { name: "Sumário" })).toHaveFocus();
   expect(scrollIntoView).not.toHaveBeenCalled();
   rect.mockRestore();
+});
+
+test("a new selection stops a smooth scroll still on its way to the menu", () => {
+  // Focusing a menu entry starts a smooth scroll to it; if it were left to
+  // finish after the panel changes, it would carry the page past the panel.
+  renderDashboard();
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan de Perfil" }));
+
+  expect(window.scrollTo).toHaveBeenCalledWith({
+    top: window.scrollY,
+    behavior: "instant",
+  });
 });
 
 test("pressing the current entry again leaves focus on it", () => {

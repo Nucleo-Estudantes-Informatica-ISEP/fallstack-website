@@ -140,6 +140,10 @@ const CompanyProfileSectionContainer: React.FC<
 
     const section = sectionRef.current;
     if (!section) return;
+    // The page scrolls smoothly, so the scroll that brought the menu entry
+    // into view can still be running. Left alone, it carries on past the new
+    // panel after this check. Stop it where it is first.
+    window.scrollTo({ top: window.scrollY, behavior: "instant" });
     const top = section.getBoundingClientRect().top;
     const topBar = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
     if (top < topBar || top > window.innerHeight)
