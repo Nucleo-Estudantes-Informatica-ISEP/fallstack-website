@@ -586,6 +586,10 @@ test.skipIf(!enabled)(
 test.skipIf(!enabled)(
   "equal timestamps in normal completion order: later ticket supersedes earlier ticket",
   async () => {
+    await prisma.student.update({
+      where: { id: owner.id },
+      data: { cv: null },
+    });
     const postA = await ticket();
     const postB = await ticket();
 
@@ -619,6 +623,10 @@ test.skipIf(!enabled)(
 test.skipIf(!enabled)(
   "equal timestamps in reversed completion order: earlier finalizer cannot overwrite later ticket",
   async () => {
+    await prisma.student.update({
+      where: { id: owner.id },
+      data: { cv: null },
+    });
     const postA = await ticket();
     const postB = await ticket();
 
