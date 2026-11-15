@@ -233,7 +233,7 @@ test.each([
   }
 );
 
-test("reading the same failing code again keeps its message steady", async () => {
+test("reading the same failing code again suppresses repeated lookups", async () => {
   getTokenMock.mockResolvedValue(null);
   render(<CompanySavedProfilesSection history={[]} />);
 
@@ -241,26 +241,26 @@ test("reading the same failing code again keeps its message steady", async () =>
   const message = await screen.findByText(/inválido/);
 
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
-  // Not cleared while the repeat read is checked, so it does not blink.
+  // Suppressed: does not call getStudentPreviewToken again while the same code is in view.
   expect(message).toBeInTheDocument();
-
-  await waitFor(() => expect(getTokenMock).toHaveBeenCalledTimes(2));
-  await waitFor(() =>
-    expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument()
-  );
-  expect(screen.getByText(/inválido/)).toBe(message);
+  expect(getTokenMock).toHaveBeenCalledTimes(1);
 });
 
-test("a successful scan clears an earlier scan message", async () => {
+test("a failure followed by a different valid scan processes successfully", async () => {
   getTokenMock.mockResolvedValueOnce(null);
   render(<CompanySavedProfilesSection history={[]} />);
 
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
   await waitFor(() => expect(messageArea()).toHaveTextContent(/inválido/));
+  expect(getTokenMock).toHaveBeenCalledTimes(1);
 
+  // Present a different valid code to the camera
+  scan.value = "cd34";
+  getTokenMock.mockResolvedValueOnce("signed-preview-token-cd34");
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
 
-  await waitFor(() => expect(pushMock).toHaveBeenCalled());
+  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/student/signed-preview-token-cd34/preview"));
+  expect(getTokenMock).toHaveBeenCalledTimes(2);
   expect(messageArea()).toBeEmptyDOMElement();
 });
 

@@ -174,17 +174,23 @@ const CompanySavedProfilesSection = ({
     return "saved";
   }
 
+  const lastFailedScanRef = useRef<string | null>(null);
+
   const handleScan = async (data: string) => {
+    if (data === lastFailedScanRef.current) return;
+
     try {
       setProcessing(true);
 
       if (data.match("^https?://.*")) {
         setMessage(null);
+        lastFailedScanRef.current = null;
         handleStudentProfileOpen(data);
         return;
       }
 
       if (data.match("^action-.*")) {
+        lastFailedScanRef.current = null;
         await handleActionScan(data);
         return;
       }
@@ -194,6 +200,7 @@ const CompanySavedProfilesSection = ({
         : data;
 
       if (!token) {
+        lastFailedScanRef.current = data;
         showScanError("O código de estudante deste passe é inválido.");
         setProcessing(false);
         return;
@@ -204,13 +211,16 @@ const CompanySavedProfilesSection = ({
         // Keep the spinner up until the preview opens. Bringing the camera
         // back would read the same code again, and that second save would
         // briefly show "already saved" before the page changes.
+        lastFailedScanRef.current = null;
         setMessage(null);
         return;
       }
+      lastFailedScanRef.current = data;
       if (result === "duplicate") showScanMessage(DUPLICATE, "warning");
       else showScanError(SAVE_FAILED);
       setProcessing(false);
     } catch {
+      lastFailedScanRef.current = data;
       setProcessing(false);
       showScanError("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
