@@ -282,3 +282,98 @@ test("a refresh discards an older pending page and permits loading from the refr
     "studentId=Refreshed"
   );
 });
+
+function renderWithMore() {
+  return render(
+    <CompanyProfileSectionContainer
+      company={{} as never}
+      employeeName="Employee"
+      globalStats={{ totalScans: 0, totalSaves: 0 }}
+      totalStudents={0}
+      history={[student("First")]}
+      historyHasMore
+      interestIds={[]}
+      availableInterests={[]}
+    />
+  );
+}
+
+// The button is disabled while a page loads, which in a browser drops
+// keyboard focus to the page body.
+function startLoading() {
+  const button = screen.getByRole("button", { name: "Carregar mais" });
+  button.focus();
+  fireEvent.click(button);
+  const busy = screen.getByRole("button", { name: "A carregar..." });
+  expect(busy).toBeDisabled();
+  expect(busy).toHaveAttribute("aria-busy", "true");
+  (document.activeElement as HTMLElement | null)?.blur();
+}
+
+test("Carregar mais uses the shared action style", () => {
+  renderWithMore();
+
+  expect(screen.getByRole("button", { name: "Carregar mais" })).toHaveClass(
+    "ui-action"
+  );
+});
+
+test("after a page loads, focus returns to Carregar mais", async () => {
+  vi.mocked(httpClient.get).mockResolvedValueOnce({
+    items: [student("Second")],
+    hasMore: true,
+  });
+  renderWithMore();
+
+  startLoading();
+
+  await screen.findByText("Second");
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Carregar mais" })).toHaveFocus()
+  );
+});
+
+test("a failed page keeps focus on Carregar mais and says why", async () => {
+  vi.mocked(httpClient.get).mockRejectedValueOnce(new Error("offline"));
+  renderWithMore();
+
+  startLoading();
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Não foi possível carregar mais perfis."
+  );
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Carregar mais" })).toHaveFocus()
+  );
+});
+
+test("after the last page, focus moves to the panel instead of the page", async () => {
+  vi.mocked(httpClient.get).mockResolvedValueOnce({
+    items: [student("Last")],
+    hasMore: false,
+  });
+  renderWithMore();
+
+  startLoading();
+
+  await screen.findByText("Last");
+  expect(screen.queryByRole("button", { name: /Carregar mais/ })).toBeNull();
+  await waitFor(() =>
+    expect(screen.getByRole("region", { name: "Sumário" })).toHaveFocus()
+  );
+});
+
+test("focus the user moved elsewhere while loading is left alone", async () => {
+  vi.mocked(httpClient.get).mockResolvedValueOnce({
+    items: [student("Second")],
+    hasMore: true,
+  });
+  renderWithMore();
+
+  startLoading();
+  const scan = screen.getByRole("button", { name: "Scan de Perfil" });
+  scan.focus();
+
+  await screen.findByText("Second");
+  expect(scan).toHaveFocus();
+});

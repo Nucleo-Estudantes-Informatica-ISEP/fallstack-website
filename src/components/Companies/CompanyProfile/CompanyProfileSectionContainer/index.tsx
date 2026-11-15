@@ -68,6 +68,8 @@ const CompanyProfileSectionContainer: React.FC<
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(false);
   const historyGeneration = useRef(0);
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const wasLoadingHistory = useRef(false);
 
   useLayoutEffect(() => {
     historyGeneration.current += 1;
@@ -110,6 +112,17 @@ const CompanyProfileSectionContainer: React.FC<
       if (generation === historyGeneration.current) setLoadingHistory(false);
     }
   };
+
+  // Loading disables "Carregar mais", which drops keyboard focus to the
+  // page. Put it back on the button, or on the panel once the last page
+  // has loaded and the button is gone.
+  useEffect(() => {
+    const finished = wasLoadingHistory.current && !loadingHistory;
+    wasLoadingHistory.current = loadingHistory;
+    const active = document.activeElement;
+    if (!finished || (active && active !== document.body)) return;
+    (loadMoreRef.current ?? contentRef.current)?.focus();
+  }, [loadingHistory]);
 
   const [selectedMenu, setSelectedMenu] =
     useState<Exclude<MenuKey, "logout">>("sumario");
@@ -162,10 +175,12 @@ const CompanyProfileSectionContainer: React.FC<
       )}
       {hasMore && (
         <button
+          ref={loadMoreRef}
           type="button"
           onClick={loadMore}
           disabled={loadingHistory}
-          className="bg-primary px-4 py-2 disabled:opacity-60"
+          aria-busy={loadingHistory}
+          className="ui-action field-focus-target text-sm"
         >
           {loadingHistory ? "A carregar..." : "Carregar mais"}
         </button>
