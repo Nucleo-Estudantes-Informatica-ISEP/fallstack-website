@@ -77,3 +77,85 @@ test("the done mark appears only on done challenges", () => {
   expect(within(todo).getByText("Por fazer")).toBeInTheDocument();
   expect(todo.querySelector("svg")).toBeNull();
 });
+
+test("uses the singular for one point and the plural otherwise", () => {
+  render(
+    <ActionsSection
+      actions={[
+        action({ id: "one", name: "Um", points: 1 }),
+        action({ id: "zero", name: "Zero", points: 0 }),
+        action({ id: "many", name: "Muitos", points: 15 }),
+      ]}
+    />
+  );
+
+  const [one, zero, many] = screen.getAllByRole("listitem");
+  expect(within(one).getByText("1 ponto")).toBeInTheDocument();
+  expect(within(zero).getByText("0 pontos")).toBeInTheDocument();
+  expect(within(many).getByText("15 pontos")).toBeInTheDocument();
+  expect(screen.queryByText("1 pontos")).toBeNull();
+});
+
+test("says in words whether each challenge is done", () => {
+  render(
+    <ActionsSection
+      actions={[
+        action({ id: "done", name: "Feito", done: true }),
+        action({ id: "todo", name: "Por fazer", done: false }),
+      ]}
+    />
+  );
+
+  const [done, todo] = screen.getAllByRole("listitem");
+  expect(within(done).getByText("Concluído")).toHaveClass("sr-only");
+  expect(within(todo).getByText("Por concluir")).toHaveClass("sr-only");
+  expect(within(done).queryByText("Por concluir")).toBeNull();
+});
+
+test("a hidden description is masked for sight and explained to screen readers", () => {
+  render(<ActionsSection actions={[action(hidden)]} />);
+
+  expect(screen.getByText("???????? ? ????? ???????")).toHaveAttribute(
+    "aria-hidden",
+    "true"
+  );
+  expect(
+    screen.getByText("Descrição revelada quando concluíres o desafio.")
+  ).toHaveClass("sr-only");
+});
+
+test("a done hidden challenge has no masking label", () => {
+  render(<ActionsSection actions={[action({ ...hidden, done: true })]} />);
+
+  expect(
+    screen.queryByText("Descrição revelada quando concluíres o desafio.")
+  ).toBeNull();
+});
+
+test("rows are rounded token surfaces with no orange border, inline style or hover", () => {
+  render(<ActionsSection actions={[action({})]} />);
+
+  const row = screen.getByRole("listitem");
+  expect(row).not.toHaveAttribute("style");
+  expect(row).toHaveClass("bg-ui-surface-raised", "rounded-[1.875rem]");
+  expect(row.className).not.toMatch(/border-ui-highlight|hover:/);
+  expect(row.querySelector("[style]")).toBeNull();
+});
+
+test("long text wraps beside the points instead of pushing them below", () => {
+  const long = "palavra".repeat(40);
+  render(
+    <ActionsSection
+      actions={[action({ name: long, description: `${long} ${long}` })]}
+    />
+  );
+
+  const row = screen.getByRole("listitem");
+  expect(row).not.toHaveClass("flex-wrap");
+  expect(screen.getByText(long).parentElement).toHaveClass(
+    "min-w-0",
+    "flex-1",
+    "wrap-break-word"
+  );
+  expect(screen.getByText("5 pontos").parentElement).toHaveClass("shrink-0");
+});
