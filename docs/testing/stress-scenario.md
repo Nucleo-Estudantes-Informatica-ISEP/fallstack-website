@@ -76,7 +76,11 @@ Optional cells are `<copies>c-heavy-200`, `<copies>c-failure-boundary` and
 `<copies>c-failure-qr`. Heavy currently means the existing CV-upload probe only,
 not the complete scan/check-in/upload/attach/download target. It needs synthetic
 cookies and `REQUEST_INTERVAL_SECONDS=12` or longer with 200 distinct accounts
-to stay within the five-uploads/minute budget. QR needs `ACTION_ID`. Boundary
+to stay within the five-uploads/minute budget. Preflight rejects non-finite or
+non-positive intervals and checks `ceil(200 / sessions) * (60 / interval) <= 5`
+for every selected heavy cell before the canary or any earlier cell runs.
+The runner uses Node.js (the project runtime) for the same numeric parsing as k6.
+QR needs `ACTION_ID`. Boundary
 probes check rate limiting; these probes do not themselves inject copy or
 dependency failures. Kill/drain/Redis fault injection and the full heavy flow
 remain outside this runner.

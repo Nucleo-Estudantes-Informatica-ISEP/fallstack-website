@@ -99,6 +99,20 @@ test.each([
     cells: "3c-homepage-1200,3c-failure-boundary",
     expectedCalls: 0,
   },
+  ...[
+    { count: 200, interval: undefined, expectedCalls: 0 },
+    { count: 200, interval: "12", expectedCalls: 3 },
+    { count: 199, interval: "12", expectedCalls: 0 },
+    { count: 100, interval: "24", expectedCalls: 3 },
+    { count: 100, interval: "23.99", expectedCalls: 0 },
+    ...["0", "-1", "NaN", "Infinity", "abc", "12seconds", " "].map(
+      (interval) => ({ count: 200, interval, expectedCalls: 0 })
+    ),
+  ].map((entry) => ({
+    ...entry,
+    duplicate: false,
+    cells: "3c-homepage-1200,3c-heavy-200",
+  })),
   { count: 0, duplicate: false, cells: "3c-homepage-80", expectedCalls: 0 },
   {
     count: 100,
@@ -114,7 +128,7 @@ test.each([
   },
 ])(
   "validates session pools before traffic: $cells ($count, duplicate=$duplicate)",
-  ({ count, duplicate, cells, expectedCalls }) => {
+  ({ count, duplicate, cells, expectedCalls, ...settings }) => {
     const dir = mkdtempSync(join(tmpdir(), "capacity-sessions-"));
     try {
       const log = join(dir, "calls");
@@ -142,6 +156,8 @@ test.each([
           K6_BIN: binary,
           CALL_LOG: log,
           STUDENT_COOKIES: ` , ${cookies.join(", ")}, , `,
+          REQUEST_INTERVAL_SECONDS:
+            "interval" in settings ? settings.interval : undefined,
         },
         encoding: "utf8",
       });
@@ -150,7 +166,10 @@ test.each([
         ? readFileSync(log, "utf8").trim().split("\n")
         : [];
       expect(calls).toHaveLength(expectedCalls);
-      if (!expectedCalls) expect(result.stderr).toContain("STUDENT_COOKIES");
+      if (!expectedCalls)
+        expect(result.stderr).toMatch(
+          /STUDENT_COOKIES|REQUEST_INTERVAL_SECONDS/
+        );
       if (cells === "3c-failure-boundary")
         expect(calls.at(-1)).toContain("VUS=2");
       expect(result.stderr).not.toContain("session=");

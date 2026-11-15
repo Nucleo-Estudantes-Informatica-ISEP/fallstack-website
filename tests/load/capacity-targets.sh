@@ -73,6 +73,7 @@ validate_sessions() {
 
 # Validate every cell before sending any traffic.
 seen_cells=,
+heavy_selected=no
 for cell in "${cell_list[@]}"; do
   [[ $seen_cells != *",$cell,"* ]] || {
     echo "Duplicate capacity cell: $cell" >&2
@@ -84,7 +85,11 @@ for cell in "${cell_list[@]}"; do
     "${CAPACITY_COPIES}c-"homepage-80|"${CAPACITY_COPIES}c-"homepage-160|"${CAPACITY_COPIES}c-"homepage-200)
       validate_sessions "$(( ${cell##*-} / 2 ))"
       ;;
-    "${CAPACITY_COPIES}c-"heavy-200|"${CAPACITY_COPIES}c-"failure-boundary)
+    "${CAPACITY_COPIES}c-"heavy-200)
+      validate_sessions 1
+      heavy_selected=yes
+      ;;
+    "${CAPACITY_COPIES}c-"failure-boundary)
       validate_sessions 1
       ;;
     "${CAPACITY_COPIES}c-"failure-qr) : "${ACTION_ID:?Set ACTION_ID}" ;;
@@ -95,6 +100,19 @@ for cell in "${cell_list[@]}"; do
     exit 2
   }
 done
+
+# Match event-readiness.js numeric parsing and upload budget before any k6 call.
+node -e '
+  const interval = Number(process.argv[1]);
+  if (!Number.isFinite(interval) || interval <= 0) {
+    console.error("REQUEST_INTERVAL_SECONDS must be a positive number.");
+    process.exit(2);
+  }
+  if (process.argv[3] === "yes" && Math.ceil(200 / Number(process.argv[2])) * (60 / interval) > 5) {
+    console.error("Upload-ticket load exceeds five tickets/minute per student. Add STUDENT_COOKIES or raise REQUEST_INTERVAL_SECONDS.");
+    process.exit(2);
+  }
+' -- "${REQUEST_INTERVAL_SECONDS:-1}" "${session_count:-0}" "$heavy_selected"
 
 # Read-only canary fails fast before the selected load, with its own summary.
 if [[ ${CAPACITY_CANARY:-yes} == yes ]]; then
