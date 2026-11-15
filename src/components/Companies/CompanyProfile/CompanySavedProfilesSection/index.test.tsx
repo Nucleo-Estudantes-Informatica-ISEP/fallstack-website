@@ -121,3 +121,26 @@ test("accepts a six-character code through manual entry", async () => {
     });
   });
 });
+
+test.each(["AB1", "AB12C", "AB12CD7", "AB-2CD"])(
+  "manual entry rejects %s as invalid without asking the server",
+  async (typed) => {
+    // The field no longer caps the length at four characters; a malformed
+    // code must get the Portuguese "invalid code" message, not the server's
+    // 400 text.
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    fireEvent.change(screen.getByPlaceholderText("código"), {
+      target: { value: typed },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Validar" }));
+
+    await waitFor(() =>
+      expect(toastErrorMock).toHaveBeenCalledWith(
+        "O código introduzido é inválido."
+      )
+    );
+    expect(getTokenMock).not.toHaveBeenCalled();
+    expect(postMock).not.toHaveBeenCalled();
+  }
+);

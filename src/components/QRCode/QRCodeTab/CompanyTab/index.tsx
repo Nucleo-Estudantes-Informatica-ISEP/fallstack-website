@@ -10,6 +10,10 @@ import useIsMobile from "@/hooks/useIsMobile";
 import { useMutation } from "@/hooks/useMutation";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 import { getStudentPreviewToken } from "@/client/api/studentToken";
+import {
+  isStudentCode,
+  normalizeStudentCode,
+} from "@/domain/student/studentCode";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 
@@ -35,7 +39,14 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         return;
       }
 
-      const code = inputRef.current?.value;
+      const code = normalizeStudentCode(inputRef.current.value);
+      // The field no longer caps the length, so check it here: the server
+      // would answer 400 and the user would only see a generic error.
+      if (!isStudentCode(code)) {
+        toast.error("O código introduzido é inválido.");
+        return;
+      }
+
       const token = await getStudentPreviewToken(code);
 
       if (!token) {

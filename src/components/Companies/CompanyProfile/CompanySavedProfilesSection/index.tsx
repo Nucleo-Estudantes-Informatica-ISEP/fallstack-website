@@ -103,7 +103,11 @@ const CompanySavedProfilesSection = ({
       }
 
       const code = normalizeStudentCode(inputRef.current.value);
-      const token = await getStudentPreviewToken(code);
+      // The field no longer caps the length, so check it before asking the
+      // server, which would answer 400 for a malformed code.
+      const token = isStudentCode(code)
+        ? await getStudentPreviewToken(code)
+        : null;
 
       if (!token) {
         toast.error("O código introduzido é inválido.");
