@@ -90,8 +90,49 @@ labelled; `UserImage` alt text is English.
 - `Profile/Input` is unused. Until #516 merges, the company summary on `dev`
   also shows the new history table.
 
+## Checks
+
+On bcb42a3e, with the task's own local database:
+
+- `pnpm lint`, `pnpm typecheck`, `pnpm exec prisma validate`,
+  `git diff --check` and Prettier on the changed Markdown pass.
+- `pnpm test`: 1,359 passed, 12 skipped, 3 failed. The 3 are the same as on
+  `dev` before this work: two Windows-only `pnpm` spawn tests and one timeout
+  on a slow machine.
+- `pnpm build` compiles and generates all 51 pages, then fails only at the
+  standalone copy, which needs symlinks on Windows. CI builds on Linux.
+
+**Student flow** (Z100, 1440 and 360): every tab opens; copy puts the code on
+the clipboard and announces it; the QR enlarges and closes; biography and an
+interest are saved, survive a reload and are restored; Logout asks first and
+Cancelar keeps the session.
+
+**Who else opens `/student/Z100`:** signed out and another student get the
+404 page; the company that saved Z100 and an admin get the profile view. No
+one but Z100 gets the dashboard.
+
+**Company scanner, as on `dev`:** Chrome's fake camera, fed the restyled
+pass, reads the right code for Y402 and for the six-character Y4Q7K2. The
+save that follows is rejected by the server on current `dev`, which this
+branch does not change; raised separately. The typed code (Y401) saves, and
+the company then appears in Y401's Sumário. Test saves were removed.
+
+**Real device:** pending (a phone showing the pass, a second device
+scanning it, and the Google Wallet button on Android).
+
 ## Scanner pages
 
 Students show their pass; companies scan it. Scan de Perfil belongs to #516
-and Scan de Palestras to #470. This task edits no scanner file; it checks
-that the company scanner still reads the restyled pass.
+and Scan de Palestras to #470, which has no page yet. Scan de Perfil as #516
+leaves it (its after captures), against the Figma "Profile scan and history"
+frame:
+
+| Item                 | Figma                                                | #516                                                               | Result                          |
+| -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------- |
+| Heading, intro       | "Scan", the stand sentence                           | Same text                                                          | Same                            |
+| Order                | Intro, camera, code, history                         | Same                                                               | Same                            |
+| Camera box           | Full panel width                                     | About 92% wide, centred; camera hint under it                      | Narrower; hint intended         |
+| Typed code           | Bordered field, Validar inside, placeholder "código" | Same shape; label added, "CÓDIGO", Validar in `ui-action`          | Label intended; case, colour    |
+| Hint                 | "ou introduza o código…", small grey                 | "Introduza o código…", larger and lighter                          | Wording follows the camera hint |
+| History              | Nome, Data; centred white header, white line         | Adds Comentário, Download CVs and Carregar mais; header left, grey | Additions intended; alignment   |
+| Against student tabs | One style                                            | Same panel and fonts; headings left at 360; heavier table header   | Differs (D6, company files)     |
