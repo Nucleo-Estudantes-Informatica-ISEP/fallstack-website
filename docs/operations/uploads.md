@@ -2,7 +2,7 @@
 
 CVs now use JSON authorization, direct MinIO POST and server finalization. See
 the [direct CV runbook](direct-cv-uploads.md) and
-[ADR 0040](../decisions/0040-direct-private-cv-uploads.md).
+[ADR 0041](../decisions/0041-direct-private-cv-uploads.md).
 Avatar/admin logo uploads retain the multipart lifecycle below. CV measurements
 and smoke results later in this document describe the historical proxy transport,
 not the current CV path. See [ADR 0026](../decisions/0026-bound-upload-memory-streaming-transport.md).

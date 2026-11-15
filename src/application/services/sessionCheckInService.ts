@@ -76,7 +76,7 @@ export async function recordSessionCheckIn(
       { event: "attendance_student_miss", scannedById, sessionId },
       "Attendance credential did not match a student"
     );
-    throw new HttpError("Student code not found.", 404);
+    throw new HttpError("Invalid student credential.", 400);
   }
 
   try {

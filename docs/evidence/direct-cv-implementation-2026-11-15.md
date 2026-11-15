@@ -230,7 +230,7 @@ Modified:
 
 Created:
 
-- docs/decisions/0040-direct-private-cv-uploads.md
+- docs/decisions/0041-direct-private-cv-uploads.md
 - docs/evidence/direct-cv-implementation-2026-11-15.md
 - docs/evidence/direct-cv-local-2026-11-15.html
 - docs/evidence/direct-cv-local-2026-11-15.json

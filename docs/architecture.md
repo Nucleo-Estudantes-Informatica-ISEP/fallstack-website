@@ -57,7 +57,7 @@ exceptions local and documented.
 CVs use JSON authorization at `/api/storage/cv`, browser-to-MinIO presigned
 POST, and `/api/storage/cv/finalize`. Metadata parsing follows the shared rate
 limit in the authorization route. Quarantine, conditional promotion and durable
-owner-bound state are described in [ADR 0040](decisions/0040-direct-private-cv-uploads.md).
+owner-bound state are described in [ADR 0041](decisions/0041-direct-private-cv-uploads.md).
 The legacy multipart transport remains for avatars/logos only.
 
 ## Authentication and short-lived tokens
