@@ -146,12 +146,20 @@ Start `tests/performance/capacity-sampler.py` on the event host before any run
 (with privileges to read Docker/cgroups), using the task directory
 `/tmp/fallstack-capacity-v3/`. It discovers both AuthNEI containers' private
 addresses and records readiness status/latency with the resource samples.
+Set `CAPACITY_AUTH_DEV_CONTAINER_PREFIX` and
+`CAPACITY_AUTH_PROD_CONTAINER_PREFIX` in the operator shell to the exact
+Docker name prefixes for the respective AuthNEI deployments (including the
+leading `/zitadel-` and deployment-specific suffix). Obtain them from the
+current host inventory; do not commit deployment identifiers. Missing or
+generic prefixes stop the sampler before it writes samples.
 Copy it to `/tmp/fallstack-capacity-v3/sample.py` and start one owned transient
 unit on the host so SSH disconnection does not stop sampling:
 
 ```sh
 sudo -n systemd-run --unit=capacity453v3-sampler --collect \
   --property=CPUQuota=20% --property=MemoryMax=192M \
+  --setenv="CAPACITY_AUTH_DEV_CONTAINER_PREFIX=$CAPACITY_AUTH_DEV_CONTAINER_PREFIX" \
+  --setenv="CAPACITY_AUTH_PROD_CONTAINER_PREFIX=$CAPACITY_AUTH_PROD_CONTAINER_PREFIX" \
   /usr/bin/python3 /tmp/fallstack-capacity-v3/sample.py
 ```
 

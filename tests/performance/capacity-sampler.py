@@ -1,5 +1,8 @@
 """Host-side cgroup/AuthNEI sampler for the isolated capacity453v3 stack."""
-import json,time,pathlib,subprocess,urllib.request,datetime,signal
+import json,time,pathlib,subprocess,urllib.request,datetime,signal,os
+auth_origins=[('auth_dev_origin',os.environ['CAPACITY_AUTH_DEV_CONTAINER_PREFIX']),('auth_prod_origin',os.environ['CAPACITY_AUTH_PROD_CONTAINER_PREFIX'])]
+if any(not prefix.startswith('/zitadel-') or prefix == '/zitadel-' for _,prefix in auth_origins):
+ raise ValueError('AuthNEI container prefixes must identify each deployment under /zitadel-')
 out=pathlib.Path('/tmp/fallstack-capacity-v3/resources.jsonl').open('a',buffering=1)
 while True:
  started=time.monotonic(); row={'utc':datetime.datetime.now(datetime.timezone.utc).isoformat()}
@@ -29,7 +32,7 @@ while True:
    row['postgres']=json.loads(subprocess.check_output(['docker','exec','capacity453v3-postgres-1','psql','-U','postgres','-d','postgres','-Atc',"SELECT row_to_json(s) FROM (SELECT numbackends,xact_commit,xact_rollback,deadlocks,temp_bytes,blk_read_time,blk_write_time FROM pg_stat_database WHERE datname='postgres') s;"],text=True))
   except Exception: row['postgres']=None
   origins=[]
-  for role,prefix in [('auth_dev_origin','/zitadel-x13x0b0xscm6klv80nqpy4qa-'),('auth_prod_origin','/zitadel-skoc4c8c4o4cwcos0gws4ckc-')]:
+  for role,prefix in auth_origins:
    container=next(c for c in cs if c['Name'].startswith(prefix) and c['State']['Running'])
    ip=next(n['IPAddress'] for n in container['NetworkSettings']['Networks'].values() if n.get('IPAddress'))
    origins.append((role,'http://'+ip+':8080/debug/ready'))
