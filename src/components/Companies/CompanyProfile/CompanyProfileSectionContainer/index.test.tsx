@@ -97,14 +97,62 @@ test("the current menu entry is marked and moves with the selection", () => {
   );
 });
 
-test("selecting an entry keeps keyboard focus on it", () => {
+test("selecting an entry moves keyboard focus to its content", () => {
   renderDashboard();
+
+  // Opening the dashboard does not move focus.
+  expect(document.body).toHaveFocus();
 
   const scan = screen.getByRole("button", { name: "Scan de Perfil" });
   scan.focus();
   fireEvent.click(scan);
 
-  expect(screen.getByRole("button", { name: "Scan de Perfil" })).toHaveFocus();
+  const scanRegion = screen.getByRole("region", { name: "Scan de Perfil" });
+  expect(scanRegion).toHaveFocus();
+  expect(within(scanRegion).getByTestId("scan-tab")).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("button", { name: "Sumário" }));
+
+  const summaryRegion = screen.getByRole("region", { name: "Sumário" });
+  expect(summaryRegion).toHaveFocus();
+  expect(within(summaryRegion).getByTestId("summary-tab")).toBeInTheDocument();
+});
+
+test("pressing the current entry again leaves focus on it", () => {
+  renderDashboard();
+
+  const summary = screen.getByRole("button", { name: "Sumário" });
+  summary.focus();
+  fireEvent.click(summary);
+
+  expect(summary).toHaveFocus();
+});
+
+test("below lg the selected content comes before the menu", () => {
+  renderDashboard();
+  fireEvent.click(screen.getByRole("button", { name: "Scan de Perfil" }));
+
+  const region = screen.getByRole("region", { name: "Scan de Perfil" });
+  const nav = screen.getByRole("navigation", { name: "Painel da empresa" });
+  // Content first in reading and tab order; lg:order puts the menu on the
+  // left from lg up.
+  expect(
+    region.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(region.parentElement).toHaveClass("lg:order-2");
+  expect(nav.parentElement).toHaveClass("lg:order-1");
+
+  // A label names the open section, and its menu entry is hidden there.
+  const label = region.previousElementSibling;
+  expect(label).toHaveTextContent("Scan de Perfil");
+  expect(label).toHaveClass("lg:hidden");
+  expect(screen.getByRole("button", { name: "Scan de Perfil" })).toHaveClass(
+    "hidden",
+    "lg:flex"
+  );
+  expect(screen.getByRole("button", { name: "Sumário" })).not.toHaveClass(
+    "hidden"
+  );
 });
 
 test("the menu is a labelled navigation landmark", () => {

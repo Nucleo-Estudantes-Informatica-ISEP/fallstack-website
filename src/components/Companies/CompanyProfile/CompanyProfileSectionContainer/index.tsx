@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BiScan } from "react-icons/bi";
 import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 
@@ -58,16 +58,25 @@ const CompanyProfileSectionContainer: React.FC<
   availableInterests,
 }) => {
   const { handleLogout, ConfirmDialog } = useLogout();
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousMenu = useRef<MenuKey>("sumario");
 
   const [selectedMenu, setSelectedMenu] =
     useState<Exclude<MenuKey, "logout">>("sumario");
+
+  // A new selection moves focus to its content, so keyboard users do not
+  // tab through the rest of the menu.
+  useEffect(() => {
+    if (previousMenu.current === selectedMenu) return;
+    previousMenu.current = selectedMenu;
+    contentRef.current?.focus();
+  }, [selectedMenu]);
 
   const handleMenuClick = (item: SidebarItem) => {
     if (item.key === "logout") {
       handleLogout();
       return;
     }
-    // Focus stays on the pressed entry and the page does not move.
     setSelectedMenu(item.key);
   };
 
@@ -80,7 +89,7 @@ const CompanyProfileSectionContainer: React.FC<
         onClick={() => handleMenuClick(item)}
         type="button"
         aria-current={isCurrent ? "true" : undefined}
-        className={`flex min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
+        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" aria-hidden />
@@ -90,6 +99,9 @@ const CompanyProfileSectionContainer: React.FC<
       </button>
     );
   };
+
+  const selectedLabel =
+    sidebarItems.find((item) => item.key === selectedMenu)?.label ?? "Sumário";
 
   const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 
@@ -151,15 +163,27 @@ const CompanyProfileSectionContainer: React.FC<
       <div
         className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="w-full shrink-0 lg:w-64 xl:w-88.5">
+        {/* Below lg the selected content comes first, under a label naming
+            it, and its menu entry is hidden; the menu follows. */}
+        <div className="min-w-0 flex-1 lg:order-2">
+          <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
+            {selectedLabel}
+          </p>
+          <div
+            ref={contentRef}
+            tabIndex={-1}
+            role="region"
+            aria-label={selectedLabel}
+            className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
+          >
+            {renderContent()}
+          </div>
+        </div>
+        <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
           <nav aria-label="Painel da empresa" className="flex flex-col gap-1">
             {sidebarItems.map(renderButton)}
             {secondaryItems.map(renderButton)}
           </nav>
-        </div>
-
-        <div className="min-w-0 flex-1 border border-secondary bg-background p-4 sm:p-6 xl:p-11">
-          {renderContent()}
         </div>
       </div>
       {ConfirmDialog}
