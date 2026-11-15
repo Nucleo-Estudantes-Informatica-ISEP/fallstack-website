@@ -24,6 +24,55 @@ scrolls horizontally.
 
 Design: Figma exports in #487.
 
+## Accessibility and overflow
+
+Checked on the restyled branch with Playwright, Chrome and axe-core 4.14
+(WCAG 2.2 AA tags), as Z100, Y402 (long name, email and texts) and Y403 (CV
+removed). The header was sampled pixel by pixel over the artwork, and its
+worst pixel is the one in the table.
+
+**Keyboard.** At 360 and at 1440, every stop on every tab shows a focus
+outline. The enlarged QR, avatar and Logout dialogs keep focus inside, close on
+Escape (Logout also on Cancelar) and return focus to the control that opened
+them. The scan history box is focusable when it scrolls. From `lg` the
+content comes before the menu in the focus order, as #582 laid it out.
+
+| Text                                   | Background                        | Ratio        |
+| -------------------------------------- | --------------------------------- | ------------ |
+| White (headings, values, rows, fields) | `#141414` panel                   | 18.4:1       |
+| `#F3F4F6` field labels, header email   | `#141414` / artwork with overlay  | 16.7 / 7.3:1 |
+| `ui-muted` stat labels, table headers  | `#141414`                         | 12.3:1       |
+| White name, CV notice                  | artwork with overlay, worst pixel | 7.1:1        |
+| White challenge names                  | `ui-surface-raised` `#2C2C2C`     | 14.0:1       |
+| `ui-muted` descriptions, points        | `#2C2C2C`                         | 9.3:1        |
+| `#99A1AF` field hints                  | `#141414`                         | 7.1:1        |
+| `#F97316` SALVO                        | `#141414`                         | 6.6:1        |
+| `ui-highlight` "Copiado!"              | `#141414`                         | 6.3:1        |
+| `#FF6467` counter over the limit       | `#141414`                         | 6.4:1        |
+| White on the pass card                 | card gradient, worst pixel        | 7.5:1        |
+| White Guardar / Confirmar              | `#82360D` / `ui-action`           | 8.5 / 5.7:1  |
+
+**Overflow.** `scrollWidth` equals `clientWidth` at 360, 400, 768, 1440 and
+1920 for every state: header and CV notice, each tab, long name and email,
+long company name, six-character code, QR loading, failed and enlarged,
+empty challenges, Logout confirmation and the 404 page. That is 160
+measurements, none scrolling.
+
+**Fixed in the sweep.** Informações pessoais now has the same dark overlay
+over its artwork as the other tabs; without it the long name, email and CV
+notice fell to 2.5–2.8:1 at 1440 and 1920. The CV notice no longer touches
+the email. The scan history box is keyboard-focusable and labelled.
+
+**Open, in shared components (not changed here):**
+
+- Footer copyright `#484848` on `#141414`: 2.0:1.
+- Logout confirmation (`ConfirmDialog`, also used by admin, company and the
+  top bar): white, and "Sair" is black on `#B1440A`, 3.7:1.
+- `Modal` puts `role="dialog"` on an element axe does not allow it on.
+- The QR `svg` has `role="img"` with no title; its button is labelled. The
+  pass card is left as it is (D3).
+- `UserImage` alt text is English ("profile image").
+
 ## Findings before the restyle
 
 - Each tab has its own heading style; the design uses one.
