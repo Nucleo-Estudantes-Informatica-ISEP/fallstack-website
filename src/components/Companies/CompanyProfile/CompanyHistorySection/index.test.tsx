@@ -56,6 +56,22 @@ test("each entry links to the preview and has a machine-readable date", () => {
   );
 });
 
+// jsdom has no layout, so check the cause: an absolutely positioned
+// label is clipped by its scroll box only when the box is positioned.
+test("the list's scroll box contains its screen-reader labels", () => {
+  render(
+    <CompanySavesSection
+      historyData={[saved("Z101", "Ana Completa"), saved("Z102", "Rui Mínimo")]}
+    />
+  );
+
+  const labels = screen.getAllByText("Guardado em");
+  for (const label of labels) {
+    expect(label).toHaveClass("sr-only");
+    expect(label.closest(".overflow-y-auto")).toHaveClass("relative");
+  }
+});
+
 test("long names and comments wrap instead of overflowing", () => {
   const long = "x".repeat(300);
   render(

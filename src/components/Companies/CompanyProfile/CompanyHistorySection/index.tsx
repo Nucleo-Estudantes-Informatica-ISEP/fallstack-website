@@ -184,8 +184,11 @@ const CompanySavesSection = ({
 
   return (
     <div className="w-full text-white">
+      {/* `relative` makes this box clip the rows' screen-reader labels, which
+          are absolutely positioned. Without it they extend the page below
+          its end by the list's full height. */}
       <div
-        className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 scrollbar max-h-120 w-full scrollbar-thumb-slate-500 scrollbar-track-transparent overflow-y-auto pr-1"
+        className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 relative scrollbar max-h-120 w-full scrollbar-thumb-slate-500 scrollbar-track-transparent overflow-y-auto pr-1"
         style={{ scrollbarGutter: "stable" }}
       >
         {/* Visual column headings only; each entry labels its own parts. */}
