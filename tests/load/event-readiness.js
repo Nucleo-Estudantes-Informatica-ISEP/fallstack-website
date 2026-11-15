@@ -20,7 +20,14 @@ const profile = __ENV.K6_PROFILE || "smoke";
 const scenario = __ENV.K6_SCENARIO || "health";
 const actionId = __ENV.ACTION_ID;
 const landingAsset = __ENV.LANDING_ASSET || "/assets/images/landing-2026.png";
+const homepagePath = __ENV.HOMEPAGE_PATH || "/event/pt";
 const vus = Number(__ENV.VUS || 50);
+const targetVisits = Number(__ENV.TARGET_VISITS || 1200);
+const targetRate = Number(__ENV.TARGET_RATE || 20);
+const targetDuration = __ENV.TARGET_DURATION || "60s";
+const targetPreAllocatedVUs = Number(
+  __ENV.TARGET_PREALLOCATED_VUS || Math.min(Math.max(vus, 100), 600)
+);
 const requestIntervalSeconds = Number(__ENV.REQUEST_INTERVAL_SECONDS || 1);
 const studentCookies = (__ENV.STUDENT_COOKIES || "")
   .split(",")
@@ -34,6 +41,7 @@ const resetDetectionSlackMs = 5000;
 const supportedScenarios = [
   "health",
   "homepage",
+  "homepage-target",
   "qr",
   "upload-tickets",
   "upload-tickets-boundary",
@@ -49,13 +57,24 @@ if (!supportedScenarios.includes(scenario))
   throw new Error(
     `Unknown K6_SCENARIO "${scenario}". Use health, homepage, qr, upload-tickets, or upload-tickets-boundary.`
   );
+if (scenario === "homepage-target" && profile !== "peak")
+  throw new Error("Homepage target requires K6_PROFILE=peak.");
 if (
-  scenario === "homepage" &&
+  scenario === "homepage-target" &&
+  !/^\/(?:[^/?#]+\/)*[^?#]*$/.test(homepagePath)
+)
+  throw new Error("HOMEPAGE_PATH must be a same-origin path.");
+if (
+  (scenario === "homepage" || scenario === "homepage-target") &&
   profile === "peak" &&
+  scenario !== "homepage-target" &&
   studentCookies.length === 0
 )
   throw new Error("Set STUDENT_COOKIES for K6_SCENARIO=homepage.");
-if (scenario === "homepage" && homepageAssets([landingAsset]).length !== 1)
+if (
+  (scenario === "homepage" || scenario === "homepage-target") &&
+  homepageAssets([landingAsset]).length !== 1
+)
   throw new Error("LANDING_ASSET must be a permitted same-origin asset path.");
 if (scenario === "homepage" && profile === "peak" && vus < 2)
   throw new Error(
@@ -77,6 +96,12 @@ if (
   );
 if (!Number.isInteger(vus) || vus < 1)
   throw new Error("VUS must be a positive integer.");
+if (!Number.isInteger(targetVisits) || targetVisits < 1)
+  throw new Error("TARGET_VISITS must be a positive integer.");
+if (!Number.isFinite(targetRate) || targetRate <= 0)
+  throw new Error("TARGET_RATE must be a positive number.");
+if (!Number.isInteger(targetPreAllocatedVUs) || targetPreAllocatedVUs < 1)
+  throw new Error("TARGET_PREALLOCATED_VUS must be a positive integer.");
 if (scenario === "homepage" && profile === "peak") {
   if (new Set(studentCookies).size !== studentCookies.length)
     throw new Error("Homepage peak requires distinct STUDENT_COOKIES entries.");
@@ -103,12 +128,15 @@ const isBoundaryScenario = scenario === "upload-tickets-boundary";
 export const options = {
   // Never follow a staging redirect to production during any load scenario.
   maxRedirects: 0,
+  summaryTrendStats: ["avg", "min", "med", "max", "p(90)", "p(95)", "p(99)"],
   scenarios: {
     [profile === "smoke"
       ? "event_smoke"
-      : isBoundaryScenario
-        ? "boundary_probe"
-        : "event_peak"]:
+      : scenario === "homepage-target"
+        ? "homepage_target"
+        : isBoundaryScenario
+          ? "boundary_probe"
+          : "event_peak"]:
       profile === "smoke"
         ? {
             executor: "shared-iterations",
@@ -116,46 +144,68 @@ export const options = {
             iterations: 5,
             maxDuration: "30s",
           }
-        : isBoundaryScenario
+        : scenario === "homepage-target"
           ? {
-              executor: "per-vu-iterations",
-              vus: studentCookies.length,
-              iterations: 1,
-              maxDuration: `${Math.ceil(rateLimitWindowMs / 1000 + 30)}s`,
+              executor: "constant-arrival-rate",
+              rate: targetRate,
+              timeUnit: "1s",
+              duration: targetDuration,
+              preAllocatedVUs: targetPreAllocatedVUs,
+              gracefulStop: "30s",
+            }
+          : isBoundaryScenario
+            ? {
+                executor: "per-vu-iterations",
+                vus: studentCookies.length,
+                iterations: 1,
+                maxDuration: `${Math.ceil(rateLimitWindowMs / 1000 + 30)}s`,
+              }
+            : {
+                executor: "ramping-vus",
+                stages: [
+                  { duration: "30s", target: vus },
+                  { duration: "2m", target: vus },
+                  { duration: "30s", target: 0 },
+                ],
+              },
+  },
+  thresholds:
+    scenario === "homepage-target"
+      ? {
+          checks: ["rate>0.99"],
+          dropped_iterations: ["count==0"],
+          iterations: [`count>=${targetVisits}`],
+          http_req_failed: ["rate<0.01"],
+          "http_req_duration{name:homepage}": ["p(95)<750"],
+        }
+      : isBoundaryScenario
+        ? { checks: ["rate==1"] }
+        : scenario === "homepage"
+          ? {
+              "checks{kind:core}": ["rate==1"],
+              "checks{kind:asset}": ["rate>0.99"],
+              "http_req_failed{kind:core}": ["rate<0.01"],
+              "http_req_failed{kind:asset}": ["rate<0.01"],
+              "http_req_duration{name:homepage}": ["p(95)<750"],
+              "http_req_duration{name:homepage_asset}": ["p(95)<750"],
+              "http_req_duration{name:public_schedule}": ["p(95)<750"],
+              "http_req_duration{name:public_faqs}": ["p(95)<750"],
+              "http_req_duration{name:public_sponsors}": ["p(95)<750"],
+              "http_req_duration{name:public_companies_roster}": ["p(95)<750"],
+              "http_req_duration{name:session_guest}": ["p(95)<750"],
+              ...(studentCookies.length > 0
+                ? {
+                    "http_req_duration{name:session_authenticated}": [
+                      "p(95)<750",
+                    ],
+                  }
+                : {}),
             }
           : {
-              executor: "ramping-vus",
-              stages: [
-                { duration: "30s", target: vus },
-                { duration: "2m", target: vus },
-                { duration: "30s", target: 0 },
-              ],
+              checks: ["rate==1"],
+              http_req_failed: ["rate<0.01"],
+              http_req_duration: ["p(95)<750"],
             },
-  },
-  thresholds: isBoundaryScenario
-    ? { checks: ["rate==1"] }
-    : scenario === "homepage"
-      ? {
-          "checks{kind:core}": ["rate==1"],
-          "checks{kind:asset}": ["rate>0.99"],
-          "http_req_failed{kind:core}": ["rate<0.01"],
-          "http_req_failed{kind:asset}": ["rate<0.01"],
-          "http_req_duration{name:homepage}": ["p(95)<750"],
-          "http_req_duration{name:homepage_asset}": ["p(95)<750"],
-          "http_req_duration{name:public_schedule}": ["p(95)<750"],
-          "http_req_duration{name:public_faqs}": ["p(95)<750"],
-          "http_req_duration{name:public_sponsors}": ["p(95)<750"],
-          "http_req_duration{name:public_companies_roster}": ["p(95)<750"],
-          "http_req_duration{name:session_guest}": ["p(95)<750"],
-          ...(studentCookies.length > 0
-            ? { "http_req_duration{name:session_authenticated}": ["p(95)<750"] }
-            : {}),
-        }
-      : {
-          checks: ["rate==1"],
-          http_req_failed: ["rate<0.01"],
-          http_req_duration: ["p(95)<750"],
-        },
 };
 
 const samplePdf = http.file(
@@ -170,7 +220,7 @@ function visitHomepage() {
   const visitor = profile === "smoke" ? __ITER + 1 : __VU;
   const cookie = visitorCookie(visitor, studentCookies);
   const headers = cookie ? { Cookie: cookie } : {};
-  const page = http.get(`${baseUrl}/event/pt`, {
+  const page = http.get(`${baseUrl}${homepagePath}`, {
     headers,
     tags: { name: "homepage", kind: "core" },
   });
@@ -322,7 +372,8 @@ function probeWindowBoundary(cookie) {
 }
 
 export default function runScenario() {
-  if (scenario === "homepage") visitHomepage();
+  if (scenario === "homepage" || scenario === "homepage-target")
+    visitHomepage();
   if (scenario === "health") {
     const response = http.get(`${baseUrl}/api/health`);
     check(response, {

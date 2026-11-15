@@ -1,0 +1,1627 @@
+{
+  "date": "2026-11-11",
+  "revision": "1e9d0d6 plus sponsor container width correction",
+  "source": "Public production roster and media, local component QA route; temporary route removed after review",
+  "viewports": [
+    {
+      "clientWidth": 345,
+      "headings": [
+        {
+          "size": "30px",
+          "text": "Parceiros"
+        },
+        {
+          "size": "30px",
+          "text": "Parceiros Main"
+        },
+        {
+          "size": "30px",
+          "text": "Parceiros Diamond"
+        },
+        {
+          "size": "30px",
+          "text": "Parceiros Gold"
+        },
+        {
+          "size": "30px",
+          "text": "Parceiros Silver"
+        },
+        {
+          "size": "30px",
+          "text": "Parceiros Bronze"
+        },
+        {
+          "size": "30px",
+          "text": "Agradecimentos"
+        },
+        {
+          "size": "30px",
+          "text": "Precisas de ajuda?"
+        }
+      ],
+      "images": [
+        {
+          "alt": "Fallstack",
+          "fit": "fill",
+          "h": 41.7578125,
+          "loaded": true,
+          "w": 32,
+          "x": 24,
+          "y": 2722.125
+        },
+        {
+          "alt": "Fallstack 2026",
+          "fit": "contain",
+          "h": 225.09375,
+          "loaded": true,
+          "w": 172.5,
+          "x": 86.25,
+          "y": 331.453125
+        },
+        {
+          "alt": "CGI",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 98.25,
+          "y": 1328
+        },
+        {
+          "alt": "Hitachi Solutions",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 180.5,
+          "y": 1573
+        },
+        {
+          "alt": "ARMIS Group",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 1818
+        },
+        {
+          "alt": "ITSector",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 180.5,
+          "y": 1818
+        },
+        {
+          "alt": "MC Digital",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 98.25,
+          "y": 1930
+        },
+        {
+          "alt": "Glintt Global",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 2175
+        },
+        {
+          "alt": "Deloitte",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 180.5,
+          "y": 2175
+        },
+        {
+          "alt": "Virtual Campus",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 2287
+        },
+        {
+          "alt": "msg life Iberia",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 2399
+        },
+        {
+          "alt": "Retail Consult",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 180.5,
+          "y": 2399
+        },
+        {
+          "alt": "AIESEC",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 2511
+        },
+        {
+          "alt": "NBanks",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 180.5,
+          "y": 2623
+        },
+        {
+          "alt": "GILT",
+          "fit": "contain",
+          "h": 96,
+          "loaded": true,
+          "w": 148.5,
+          "x": 16,
+          "y": 2868
+        },
+        {
+          "alt": "Confeitaria Divinal",
+          "fit": "contain",
+          "h": 54.3984375,
+          "loaded": true,
+          "w": 81.59375,
+          "x": 67.703125,
+          "y": 3125.796875
+        },
+        {
+          "alt": "AEISEP",
+          "fit": "contain",
+          "h": 54.3984375,
+          "loaded": true,
+          "w": 81.59375,
+          "x": 195.703125,
+          "y": 3125.796875
+        },
+        {
+          "alt": "Churrascaria Campos - As Campinhas",
+          "fit": "contain",
+          "h": 54.3984375,
+          "loaded": true,
+          "w": 81.59375,
+          "x": 131.703125,
+          "y": 3205.796875
+        },
+        {
+          "alt": "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)",
+          "fit": "fill",
+          "h": 61.0078125,
+          "loaded": true,
+          "w": 160,
+          "x": 92.5,
+          "y": 3558
+        }
+      ],
+      "ranks": [
+        {
+          "cells": [
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 98.25,
+              "y": 1328
+            }
+          ],
+          "name": "Parceiros Main"
+        },
+        {
+          "cells": [
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 1573
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 1573
+            }
+          ],
+          "name": "Parceiros Diamond"
+        },
+        {
+          "cells": [
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 1818
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 1818
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 98.25,
+              "y": 1930
+            }
+          ],
+          "name": "Parceiros Gold"
+        },
+        {
+          "cells": [
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2175
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2175
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2287
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2287
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2399
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2399
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2511
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2511
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2623
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2623
+            }
+          ],
+          "name": "Parceiros Silver"
+        },
+        {
+          "cells": [
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 16,
+              "y": 2868
+            },
+            {
+              "h": 96,
+              "w": 148.5,
+              "x": 180.5,
+              "y": 2868
+            }
+          ],
+          "name": "Parceiros Bronze"
+        }
+      ],
+      "scrollWidth": 345,
+      "targets": [
+        {
+          "h": 61.0078125,
+          "name": null,
+          "w": 160,
+          "x": 92.5,
+          "y": 3558
+        },
+        {
+          "h": 44,
+          "name": "LinkedIn",
+          "w": 44,
+          "x": 46.5,
+          "y": 3651.0078125
+        },
+        {
+          "h": 44,
+          "name": "Facebook",
+          "w": 44,
+          "x": 98.5,
+          "y": 3651.0078125
+        },
+        {
+          "h": 44,
+          "name": "Instagram",
+          "w": 44,
+          "x": 150.5,
+          "y": 3651.0078125
+        },
+        {
+          "h": 44,
+          "name": "Twitter",
+          "w": 44,
+          "x": 202.5,
+          "y": 3651.0078125
+        },
+        {
+          "h": 44,
+          "name": "Linktree do NEI",
+          "w": 44,
+          "x": 254.5,
+          "y": 3651.0078125
+        },
+        {
+          "h": 44,
+          "name": "Instalar aplicação",
+          "w": 44,
+          "x": 124.5,
+          "y": 3719.0078125
+        },
+        {
+          "h": 44,
+          "name": "Política de Privacidade",
+          "w": 44,
+          "x": 176.5,
+          "y": 3719.0078125
+        }
+      ],
+      "width": 360
+    },
+    {
+      "clientWidth": 753,
+      "headings": [
+        {
+          "size": "36px",
+          "text": "Parceiros"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Main"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Diamond"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Gold"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Silver"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Bronze"
+        },
+        {
+          "size": "36px",
+          "text": "Agradecimentos"
+        },
+        {
+          "size": "36px",
+          "text": "Precisas de ajuda?"
+        }
+      ],
+      "images": [
+        {
+          "alt": "Fallstack",
+          "fit": "fill",
+          "h": 41.7578125,
+          "loaded": true,
+          "w": 32,
+          "x": 24,
+          "y": 2722.125
+        },
+        {
+          "alt": "Fallstack 2026",
+          "fit": "contain",
+          "h": 256,
+          "loaded": true,
+          "w": 320.5,
+          "x": 216.25,
+          "y": 292
+        },
+        {
+          "alt": "CGI",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 296.5,
+          "y": 1329.5
+        },
+        {
+          "alt": "Hitachi Solutions",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 386.625,
+          "y": 1626.5
+        },
+        {
+          "alt": "ARMIS Group",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 116.25,
+          "y": 1923.5
+        },
+        {
+          "alt": "ITSector",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 296.5,
+          "y": 1923.5
+        },
+        {
+          "alt": "MC Digital",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 476.75,
+          "y": 1923.5
+        },
+        {
+          "alt": "Glintt Global",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 26.125,
+          "y": 2220.5
+        },
+        {
+          "alt": "Deloitte",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 206.375,
+          "y": 2220.5
+        },
+        {
+          "alt": "Virtual Campus",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 386.625,
+          "y": 2220.5
+        },
+        {
+          "alt": "msg life Iberia",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 26.125,
+          "y": 2348.5
+        },
+        {
+          "alt": "Retail Consult",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 206.375,
+          "y": 2348.5
+        },
+        {
+          "alt": "AIESEC",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 386.625,
+          "y": 2348.5
+        },
+        {
+          "alt": "NBanks",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 386.625,
+          "y": 2476.5
+        },
+        {
+          "alt": "GILT",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 206.375,
+          "y": 2773.5
+        },
+        {
+          "alt": "Confeitaria Divinal",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 142.8984375,
+          "y": 3067.296875
+        },
+        {
+          "alt": "AEISEP",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 318.8984375,
+          "y": 3067.296875
+        },
+        {
+          "alt": "Churrascaria Campos - As Campinhas",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 494.8984375,
+          "y": 3067.296875
+        },
+        {
+          "alt": "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)",
+          "fit": "fill",
+          "h": 67.1015625,
+          "loaded": true,
+          "w": 176,
+          "x": 288.5,
+          "y": 3467.5
+        }
+      ],
+      "ranks": [
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 294.375,
+              "y": 1329.5
+            }
+          ],
+          "name": "Parceiros Main"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 204.25,
+              "y": 1626.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 384.5,
+              "y": 1626.5
+            }
+          ],
+          "name": "Parceiros Diamond"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 114.125,
+              "y": 1923.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 294.375,
+              "y": 1923.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 474.625,
+              "y": 1923.5
+            }
+          ],
+          "name": "Parceiros Gold"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 24,
+              "y": 2220.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 204.25,
+              "y": 2220.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 384.5,
+              "y": 2220.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 564.75,
+              "y": 2220.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 24,
+              "y": 2348.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 204.25,
+              "y": 2348.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 384.5,
+              "y": 2348.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 564.75,
+              "y": 2348.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 204.25,
+              "y": 2476.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 384.5,
+              "y": 2476.5
+            }
+          ],
+          "name": "Parceiros Silver"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 204.25,
+              "y": 2773.5
+            },
+            {
+              "h": 112,
+              "w": 164.25,
+              "x": 384.5,
+              "y": 2773.5
+            }
+          ],
+          "name": "Parceiros Bronze"
+        }
+      ],
+      "scrollWidth": 753,
+      "targets": [
+        {
+          "h": 67.1015625,
+          "name": null,
+          "w": 176,
+          "x": 288.5,
+          "y": 3467.5
+        },
+        {
+          "h": 44,
+          "name": "LinkedIn",
+          "w": 44,
+          "x": 190.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Facebook",
+          "w": 44,
+          "x": 242.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Instagram",
+          "w": 44,
+          "x": 294.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Twitter",
+          "w": 44,
+          "x": 346.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Linktree do NEI",
+          "w": 44,
+          "x": 398.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Instalar aplicação",
+          "w": 44,
+          "x": 466.5,
+          "y": 3566.6015625
+        },
+        {
+          "h": 44,
+          "name": "Política de Privacidade",
+          "w": 44,
+          "x": 518.5,
+          "y": 3566.6015625
+        }
+      ],
+      "width": 768
+    },
+    {
+      "clientWidth": 1425,
+      "headings": [
+        {
+          "size": "36px",
+          "text": "Parceiros"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Main"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Diamond"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Gold"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Silver"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Bronze"
+        },
+        {
+          "size": "36px",
+          "text": "Agradecimentos"
+        },
+        {
+          "size": "36px",
+          "text": "Precisas de ajuda?"
+        }
+      ],
+      "images": [
+        {
+          "alt": "Fallstack",
+          "fit": "fill",
+          "h": 41.7578125,
+          "loaded": true,
+          "w": 32,
+          "x": 24,
+          "y": 2634.625
+        },
+        {
+          "alt": "Fallstack 2026",
+          "fit": "contain",
+          "h": 320,
+          "loaded": true,
+          "w": 288,
+          "x": 568.5,
+          "y": 260
+        },
+        {
+          "alt": "CGI",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 632.5,
+          "y": 1337
+        },
+        {
+          "alt": "Hitachi Solutions",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 760.5,
+          "y": 1650
+        },
+        {
+          "alt": "ARMIS Group",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 376.5,
+          "y": 1963
+        },
+        {
+          "alt": "ITSector",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 632.5,
+          "y": 1963
+        },
+        {
+          "alt": "MC Digital",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 888.5,
+          "y": 1963
+        },
+        {
+          "alt": "Glintt Global",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 248.5,
+          "y": 2276
+        },
+        {
+          "alt": "Deloitte",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 504.5,
+          "y": 2276
+        },
+        {
+          "alt": "Virtual Campus",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 760.5,
+          "y": 2276
+        },
+        {
+          "alt": "msg life Iberia",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 248.5,
+          "y": 2404
+        },
+        {
+          "alt": "Retail Consult",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 504.5,
+          "y": 2404
+        },
+        {
+          "alt": "AIESEC",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 760.5,
+          "y": 2404
+        },
+        {
+          "alt": "NBanks",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 760.5,
+          "y": 2532
+        },
+        {
+          "alt": "GILT",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 504.5,
+          "y": 2845
+        },
+        {
+          "alt": "Confeitaria Divinal",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 478.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "AEISEP",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 654.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "Churrascaria Campos - As Campinhas",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 830.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)",
+          "fit": "fill",
+          "h": 67.1015625,
+          "loaded": true,
+          "w": 176,
+          "x": 223.25,
+          "y": 3539
+        }
+      ],
+      "ranks": [
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 592.5,
+              "y": 1337
+            }
+          ],
+          "name": "Parceiros Main"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 464.5,
+              "y": 1650
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 720.5,
+              "y": 1650
+            }
+          ],
+          "name": "Parceiros Diamond"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 336.5,
+              "y": 1963
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 592.5,
+              "y": 1963
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 848.5,
+              "y": 1963
+            }
+          ],
+          "name": "Parceiros Gold"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 208.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 464.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 720.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 976.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 208.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 464.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 720.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 976.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 464.5,
+              "y": 2532
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 720.5,
+              "y": 2532
+            }
+          ],
+          "name": "Parceiros Silver"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 464.5,
+              "y": 2845
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 720.5,
+              "y": 2845
+            }
+          ],
+          "name": "Parceiros Bronze"
+        }
+      ],
+      "scrollWidth": 1425,
+      "targets": [
+        {
+          "h": 67.1015625,
+          "name": null,
+          "w": 176,
+          "x": 223.25,
+          "y": 3539
+        },
+        {
+          "h": 44,
+          "name": "LinkedIn",
+          "w": 44,
+          "x": 829.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Facebook",
+          "w": 44,
+          "x": 881.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Instagram",
+          "w": 44,
+          "x": 933.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Twitter",
+          "w": 44,
+          "x": 985.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Linktree do NEI",
+          "w": 44,
+          "x": 1037.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Instalar aplicação",
+          "w": 44,
+          "x": 1105.75,
+          "y": 3550.546875
+        },
+        {
+          "h": 44,
+          "name": "Política de Privacidade",
+          "w": 44,
+          "x": 1157.75,
+          "y": 3550.546875
+        }
+      ],
+      "width": 1440
+    },
+    {
+      "clientWidth": 1905,
+      "headings": [
+        {
+          "size": "36px",
+          "text": "Parceiros"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Main"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Diamond"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Gold"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Silver"
+        },
+        {
+          "size": "36px",
+          "text": "Parceiros Bronze"
+        },
+        {
+          "size": "36px",
+          "text": "Agradecimentos"
+        },
+        {
+          "size": "36px",
+          "text": "Precisas de ajuda?"
+        }
+      ],
+      "images": [
+        {
+          "alt": "Fallstack",
+          "fit": "fill",
+          "h": 41.7578125,
+          "loaded": true,
+          "w": 32,
+          "x": 24,
+          "y": 2722.125
+        },
+        {
+          "alt": "Fallstack 2026",
+          "fit": "contain",
+          "h": 320,
+          "loaded": true,
+          "w": 288,
+          "x": 808.5,
+          "y": 260
+        },
+        {
+          "alt": "CGI",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 872.5,
+          "y": 1337
+        },
+        {
+          "alt": "Hitachi Solutions",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 1000.5,
+          "y": 1650
+        },
+        {
+          "alt": "ARMIS Group",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 616.5,
+          "y": 1963
+        },
+        {
+          "alt": "ITSector",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 872.5,
+          "y": 1963
+        },
+        {
+          "alt": "MC Digital",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 1128.5,
+          "y": 1963
+        },
+        {
+          "alt": "Glintt Global",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 488.5,
+          "y": 2276
+        },
+        {
+          "alt": "Deloitte",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 744.5,
+          "y": 2276
+        },
+        {
+          "alt": "Virtual Campus",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 1000.5,
+          "y": 2276
+        },
+        {
+          "alt": "msg life Iberia",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 488.5,
+          "y": 2404
+        },
+        {
+          "alt": "Retail Consult",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 744.5,
+          "y": 2404
+        },
+        {
+          "alt": "AIESEC",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 1000.5,
+          "y": 2404
+        },
+        {
+          "alt": "NBanks",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 1000.5,
+          "y": 2532
+        },
+        {
+          "alt": "GILT",
+          "fit": "contain",
+          "h": 112,
+          "loaded": true,
+          "w": 160,
+          "x": 744.5,
+          "y": 2845
+        },
+        {
+          "alt": "Confeitaria Divinal",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 718.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "AEISEP",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 894.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "Churrascaria Campos - As Campinhas",
+          "fit": "contain",
+          "h": 86.3984375,
+          "loaded": true,
+          "w": 115.1953125,
+          "x": 1070.8984375,
+          "y": 3138.796875
+        },
+        {
+          "alt": "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)",
+          "fit": "fill",
+          "h": 73.203125,
+          "loaded": true,
+          "w": 192,
+          "x": 339.25,
+          "y": 3539
+        }
+      ],
+      "ranks": [
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 832.5,
+              "y": 1337
+            }
+          ],
+          "name": "Parceiros Main"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 704.5,
+              "y": 1650
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 960.5,
+              "y": 1650
+            }
+          ],
+          "name": "Parceiros Diamond"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 576.5,
+              "y": 1963
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 832.5,
+              "y": 1963
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 1088.5,
+              "y": 1963
+            }
+          ],
+          "name": "Parceiros Gold"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 448.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 704.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 960.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 1216.5,
+              "y": 2276
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 448.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 704.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 960.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 1216.5,
+              "y": 2404
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 704.5,
+              "y": 2532
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 960.5,
+              "y": 2532
+            }
+          ],
+          "name": "Parceiros Silver"
+        },
+        {
+          "cells": [
+            {
+              "h": 112,
+              "w": 240,
+              "x": 704.5,
+              "y": 2845
+            },
+            {
+              "h": 112,
+              "w": 240,
+              "x": 960.5,
+              "y": 2845
+            }
+          ],
+          "name": "Parceiros Bronze"
+        }
+      ],
+      "scrollWidth": 1905,
+      "targets": [
+        {
+          "h": 73.203125,
+          "name": null,
+          "w": 192,
+          "x": 339.25,
+          "y": 3539
+        },
+        {
+          "h": 44,
+          "name": "LinkedIn",
+          "w": 44,
+          "x": 1193.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Facebook",
+          "w": 44,
+          "x": 1245.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Instagram",
+          "w": 44,
+          "x": 1297.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Twitter",
+          "w": 44,
+          "x": 1349.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Linktree do NEI",
+          "w": 44,
+          "x": 1401.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Instalar aplicação",
+          "w": 44,
+          "x": 1469.75,
+          "y": 3553.6015625
+        },
+        {
+          "h": 44,
+          "name": "Política de Privacidade",
+          "w": 44,
+          "x": 1521.75,
+          "y": 3553.6015625
+        }
+      ],
+      "width": 1920
+    }
+  ]
+}
