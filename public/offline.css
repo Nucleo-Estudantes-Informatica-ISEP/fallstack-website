@@ -10,6 +10,10 @@
   font-display: swap;
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   display: grid;
   min-height: 100vh;
@@ -18,7 +22,7 @@ body {
   place-items: center;
   background: #141414;
   color: white;
-  font-family: Inter, sans-serif;
+  font-family: Inter, system-ui, sans-serif;
 }
 
 main {
@@ -31,24 +35,33 @@ main {
 
 h1,
 h2 {
-  font-family: Coolvetica, sans-serif;
+  font-family: Coolvetica, system-ui, sans-serif;
   font-weight: normal;
+}
+
+main p:last-child {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
 }
 
 a {
   display: inline-block;
+  min-height: 44px;
   padding: 12px 20px;
   border-radius: 8px;
-  background: #f97316;
+  background: #b1440a;
   color: white;
+  text-decoration: none;
   transition: background 0.2s ease-in-out;
 }
 
-a:focus-visible {
-  outline: 3px solid white;
-  outline-offset: 3px;
+a:hover {
+  background: #8d3508;
 }
 
-a:hover {
-  background: #d14c05;
+a:focus-visible {
+  outline: 2px solid #ffb347;
+  outline-offset: 2px;
 }
