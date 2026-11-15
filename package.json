@@ -26,7 +26,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "storage:cleanup": "node --conditions=react-server --import tsx scripts/storage-cleanup.ts",
     "postinstall": "prisma generate",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:load:capacity": "bash tests/load/capacity-targets.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1163.0",

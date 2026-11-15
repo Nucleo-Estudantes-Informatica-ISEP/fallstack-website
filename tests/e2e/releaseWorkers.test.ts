@@ -4,6 +4,16 @@ import { parse } from "yaml";
 
 const { services } = parse(readFileSync("docker-compose.app.yml", "utf8"));
 
+test("capacity resource budgets require an explicit staging override", () => {
+  expect(services.web.deploy.resources).toBeUndefined();
+  const override = parse(readFileSync("docker-compose.capacity.yml", "utf8"));
+  expect(override.services.web.deploy.resources.limits).toEqual({
+    cpus: "${CAPACITY_WEB_CPU_LIMIT:-1.0}",
+    memory: "${CAPACITY_WEB_MEMORY_LIMIT:-768M}",
+  });
+  expect(Object.keys(override.services)).toEqual(["web"]);
+});
+
 test("Coolify configuration pins web and release jobs to one without env overrides", () => {
   for (const name of ["web", "migrate", "storage-cleanup"]) {
     expect(services[name].deploy.replicas).toBe(1);
