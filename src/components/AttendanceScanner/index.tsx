@@ -26,6 +26,8 @@ export type { AttendanceSessionDto };
 
 export const RESULT_CARD_MS = 3500;
 export const COUNT_POLL_MS = 5000;
+// Re-evaluates session status pills (upcoming / running / ended) over time.
+const CLOCK_TICK_MS = 15_000;
 
 interface AttendanceScannerProps {
   sessions: AttendanceSessionDto[];
@@ -99,6 +101,12 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
 
   useEffect(() => () => clearTimeout(cardTimer.current), []);
 
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const tick = setInterval(() => setNow(new Date()), CLOCK_TICK_MS);
+    return () => clearInterval(tick);
+  }, []);
+
   const submit = useCallback(
     async (credential: CheckInCredential) => {
       if (!selectedId || busy.current || paused) return false;
@@ -144,7 +152,6 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
     router.replace(scanPath(id));
   };
 
-  const now = new Date();
   const loginHref = selected
     ? `/api/auth/login?next=${encodeURIComponent(scanPath(selected.session.id))}`
     : "/api/auth/login";

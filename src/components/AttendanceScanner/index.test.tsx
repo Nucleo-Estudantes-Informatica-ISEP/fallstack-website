@@ -284,3 +284,14 @@ test("uses the singular for one check-in", async () => {
   await flush();
   expect(screen.getByText("1 check-in")).toBeTruthy();
 });
+
+test("the status pill follows the clock without a count change", async () => {
+  vi.setSystemTime(new Date("2026-11-17T09:55:00.000Z"));
+  renderScanner();
+  await flush();
+  expect(screen.getByText("Ainda não começou")).toBeTruthy();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(6 * 60_000);
+  });
+  expect(screen.getByText("A DECORRER")).toBeTruthy();
+});
