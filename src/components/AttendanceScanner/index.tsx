@@ -81,13 +81,22 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
   // Blocks new scans while a request is in flight or a card is showing.
   const busy = useRef(false);
   const cardTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Bumped on every session switch; responses from an older generation are
+  // dropped so they never show up under the newly selected session.
+  const generation = useRef(0);
 
   const selected = windows.find(({ session }) => session.id === selectedId);
 
   const refreshCount = useCallback(async (sessionId: string) => {
+    const requestGeneration = generation.current;
     const result = await getCheckInCount(sessionId);
-    if (result.kind === "count") setCount(result.count);
-    else if (result.kind === "unauthorized") setPaused(true);
+    // Expired staff auth applies to every session, so it pauses regardless.
+    if (result.kind === "unauthorized") setPaused(true);
+    else if (
+      result.kind === "count" &&
+      requestGeneration === generation.current
+    )
+      setCount(result.count);
   }, []);
 
   useEffect(() => {
@@ -111,13 +120,17 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
     async (credential: CheckInCredential) => {
       if (!selectedId || busy.current || paused) return false;
       busy.current = true;
+      const requestGeneration = generation.current;
       const result = await recordCheckIn(selectedId, credential);
-      setOutcome(result);
       if (result.kind === "unauthorized") {
         // Paused until the staff member signs in again; never retried.
         setPaused(true);
         return false;
       }
+      // The session changed while the request was in flight: the new session
+      // already owns busy and the card, so this result is discarded.
+      if (requestGeneration !== generation.current) return false;
+      setOutcome(result);
       if (result.kind === "recorded") void refreshCount(selectedId);
       cardTimer.current = setTimeout(() => {
         setOutcome(null);
@@ -143,6 +156,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
   };
 
   const chooseSession = (id: string) => {
+    generation.current += 1;
     clearTimeout(cardTimer.current);
     busy.current = false;
     setOutcome(null);

@@ -261,6 +261,76 @@ test("switching session updates the URL", async () => {
   expect(getCheckInCount).toHaveBeenLastCalledWith("ws");
 });
 
+function deferred<T>() {
+  let resolve!: (value: T) => void;
+  const promise = new Promise<T>((done) => {
+    resolve = done;
+  });
+  return { promise, resolve };
+}
+
+const switchTo = (title: RegExp) => {
+  fireEvent.click(screen.getByRole("button", { name: "Trocar sessão" }));
+  fireEvent.click(screen.getByRole("button", { name: title }));
+};
+
+test("discards a check-in result that resolves after a session switch", async () => {
+  const pending = deferred<Awaited<ReturnType<typeof recordCheckIn>>>();
+  vi.mocked(recordCheckIn).mockReturnValueOnce(pending.promise);
+  vi.mocked(getCheckInCount).mockImplementation(async (id) => ({
+    kind: "count",
+    count: id === "ws" ? 7 : 42,
+  }));
+  renderScanner();
+  await flush();
+  scan();
+  await flush();
+  switchTo(/Workshop Git/);
+  await flush();
+  pending.resolve({
+    kind: "recorded",
+    name: "Maria Silva",
+    checkedInAt: "2026-11-17T10:34:00.000Z",
+  });
+  await flush();
+  expect(screen.queryByText("Maria Silva")).toBeNull();
+  expect(screen.getByText("7 check-ins")).toBeTruthy();
+  expect(getCheckInCount).not.toHaveBeenLastCalledWith("talk");
+
+  vi.mocked(recordCheckIn).mockResolvedValue({
+    kind: "recorded",
+    name: "Joao Costa",
+    checkedInAt: "2026-11-17T10:35:00.000Z",
+  });
+  scan();
+  await flush();
+  expect(recordCheckIn).toHaveBeenLastCalledWith("ws", { token: "TOKEN" });
+  expect(screen.getByText("Joao Costa")).toBeTruthy();
+  // The stale request must not arm a timer that unblocks scans early.
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(RESULT_CARD_MS - 1);
+  });
+  scan();
+  await flush();
+  expect(recordCheckIn).toHaveBeenCalledTimes(2);
+});
+
+test("discards a count that resolves after a session switch", async () => {
+  const stale = deferred<Awaited<ReturnType<typeof getCheckInCount>>>();
+  vi.mocked(getCheckInCount).mockImplementation((id) =>
+    id === "talk" ? stale.promise : Promise.resolve({ kind: "count", count: 7 })
+  );
+  renderScanner();
+  await flush();
+  switchTo(/Workshop Git/);
+  await flush();
+  expect(screen.getByText("7 check-ins")).toBeTruthy();
+  stale.resolve({ kind: "count", count: 42 });
+  await flush();
+  expect(screen.getByText("7 check-ins")).toBeTruthy();
+  expect(screen.queryByText("42 check-ins")).toBeNull();
+});
+
 test("shows the empty state without sessions", async () => {
   renderScanner({ sessions: [] });
   await flush();
