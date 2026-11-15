@@ -1,8 +1,11 @@
 # Upload transport and validation
 
-CV and avatar uploads remain authenticated same-origin multipart POSTs at
-`/api/storage/cv` and `/api/storage/avatar`. Admin avatar/logo uploads use the
-same lifecycle after admin authorization. See [ADR 0026](../decisions/0026-bound-upload-memory-streaming-transport.md).
+CVs now use JSON authorization, direct MinIO POST and server finalization. See
+the [direct CV runbook](direct-cv-uploads.md) and
+[ADR 0041](../decisions/0041-direct-private-cv-uploads.md).
+Avatar/admin logo uploads retain the multipart lifecycle below. CV measurements
+and smoke results later in this document describe the historical proxy transport,
+not the current CV path. See [ADR 0026](../decisions/0026-bound-upload-memory-streaming-transport.md).
 
 ## Limits and failure behavior
 

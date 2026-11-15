@@ -6,6 +6,7 @@ import {
   recordStorageDeletion,
   type CleanupObject,
 } from "../repositories/storageCleanupRepository";
+import { listExpiredCvQuarantine } from "./cvQuarantineCleanupService";
 import {
   assertUnversionedBucket,
   deleteObject,
@@ -46,6 +47,7 @@ export async function runStorageCleanup({
     }
   }
   signal?.throwIfAborted();
+  const quarantine = await listExpiredCvQuarantine(now, signal);
   const plan = await planStorageCleanup(now, objects, apply);
   for (const row of plan.expired)
     audit({ action: apply ? "cv-detached" : "cv-would-detach", key: row.key });
@@ -117,7 +119,29 @@ export async function runStorageCleanup({
       error,
     });
   }
+  if (apply) {
+    for (const key of quarantine) {
+      try {
+        await deleteObject("cv", key, signal);
+        deleted++;
+        audit({ level: "info", action: "quarantine-deleted", kind: "cv", key });
+      } catch (cause) {
+        signal?.throwIfAborted();
+        failed++;
+        const error =
+          cause instanceof Error ? cause.name.slice(0, 100) : "UnknownError";
+        audit({
+          level: "error",
+          action: "quarantine-delete-failed",
+          kind: "cv",
+          key,
+          error,
+        });
+      }
+    }
+  }
   return {
+    quarantine: quarantine.length,
     mode: apply ? "apply" : "dry-run",
     expired: plan.expired.length,
     orphans: plan.orphans.length,

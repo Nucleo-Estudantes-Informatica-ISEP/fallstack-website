@@ -179,3 +179,45 @@ test("staged uploads older than 48h remain attachable for seven days", async () 
   await runStorageCleanup({ now, apply: true });
   expect(mocks.planStorageCleanup).toHaveBeenCalledWith(now, [], true);
 });
+
+test("quarantine cleanup deletes expired objects with per-key error handling and audit events", async () => {
+  const audit = vi.fn();
+  const qKey1 = "quarantine/cv/00000000-0000-4000-8000-000000000001";
+  const qKey2 = "quarantine/cv/00000000-0000-4000-8000-000000000002";
+  const expiredDate = new Date(now.getTime() - 25 * 60 * 60 * 1000);
+
+  mocks.pendingStorageDeletions.mockResolvedValue([]);
+  mocks.listObjects.mockImplementation(async (_kind: string, prefix: string) => {
+    if (prefix === "quarantine/cv") {
+      return [
+        { Key: qKey1, LastModified: expiredDate },
+        { Key: qKey2, LastModified: expiredDate },
+      ];
+    }
+    return [];
+  });
+
+  mocks.deleteObject
+    .mockRejectedValueOnce(new Error("Storage unavailable"))
+    .mockResolvedValueOnce(undefined);
+
+  const result = await runStorageCleanup({ now, apply: true, audit });
+  expect(result.quarantine).toBe(2);
+  expect(result.failed).toBe(1);
+  expect(result.deleted).toBe(1);
+
+  expect(audit).toHaveBeenCalledWith({
+    level: "error",
+    action: "quarantine-delete-failed",
+    kind: "cv",
+    key: qKey1,
+    error: "Error",
+  });
+  expect(audit).toHaveBeenCalledWith({
+    level: "info",
+    action: "quarantine-deleted",
+    kind: "cv",
+    key: qKey2,
+  });
+});
+

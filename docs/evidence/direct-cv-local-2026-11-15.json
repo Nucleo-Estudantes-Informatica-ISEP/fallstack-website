@@ -1,0 +1,2812 @@
+{
+  "environment": {
+    "date": "2026-11-15",
+    "node": "24.21.0",
+    "k6": "2.4.0",
+    "web": "one production Next.js 15.5.29 process on Windows",
+    "storage": "Docker Desktop, pinned MinIO RELEASE.2025-10-15T17-29-55Z, private local volume",
+    "minioDigest": "sha256:69b55a1c1c5dc285ce04db96689f5b2102317fc77a50680a1874ca6efd1c87f9",
+    "postgres": "16, isolated task database",
+    "otherVerificationContainer": "paused throughout recorded matrix",
+    "sampling": "approximately every 3 seconds; CPU/RSS peaks are observed samples",
+    "limitations": [
+      "one short wave per case; p99 interpolated from small upload samples",
+      "Windows host and Docker VM differ from the VPS",
+      "diskstats describe all active Docker VM devices, not physical VPS disk",
+      "PostgreSQL probe includes round-trip; no pg_stat_statements query distribution",
+      "total upload duration excludes explicit load-generator alignment wait",
+      "historical 200-VU heavy run is not a controlled comparison"
+    ]
+  },
+  "cases": [
+    {
+      "label": "baseline",
+      "exit": 0,
+      "uploadVus": 0,
+      "businessVus": 4,
+      "sizeMiB": 10,
+      "metrics": {
+        "http_reqs": {
+          "count": 560,
+          "rate": 64.33793814509266
+        },
+        "iterations": {
+          "count": 80,
+          "rate": 9.191134020727525
+        },
+        "http_req_duration{expected_response:true}": {
+          "avg": 26.0475098214286,
+          "med": 23.9315,
+          "min": 7.3352,
+          "p(95)": 45.436454999999995,
+          "p(99)": 61.23073399999995,
+          "max": 73.5681
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 560
+        },
+        "http_req_duration": {
+          "avg": 26.0475098214286,
+          "med": 23.9315,
+          "min": 7.3352,
+          "p(95)": 45.436454999999995,
+          "p(99)": 61.23073399999995,
+          "max": 73.5681
+        },
+        "business_success": {
+          "rate": 1,
+          "passes": 560,
+          "fails": 0
+        },
+        "data_received": {
+          "count": 626020,
+          "rate": 71922.92149569806
+        },
+        "http_req_sending": {
+          "max": 1.0044,
+          "avg": 0.01727482142857143,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0.5238329999999999
+        },
+        "business_ms{operation:stand_scan}": {
+          "p(95)": 62.49113,
+          "p(99)": 68.76110799999996,
+          "max": 73.5681,
+          "avg": 42.143710000000006,
+          "med": 39.56055,
+          "min": 29.4941
+        },
+        "data_sent": {
+          "count": 333200,
+          "rate": 38281.07319633014
+        },
+        "http_req_receiving": {
+          "max": 1.5072,
+          "avg": 0.15484410714285718,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.5334099999999999,
+          "p(99)": 0.8539329999999962
+        },
+        "business_ms{operation:action_checkin}": {
+          "med": 36.5634,
+          "min": 24.6398,
+          "p(95)": 46.77896,
+          "p(99)": 53.64237299999995,
+          "max": 60.5717,
+          "avg": 36.575892499999995
+        },
+        "http_req_tls_handshaking": {
+          "p(95)": 0,
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0
+        },
+        "vus": {
+          "value": 4,
+          "min": 4,
+          "max": 4
+        },
+        "vus_max": {
+          "value": 4,
+          "min": 4,
+          "max": 4
+        },
+        "http_req_waiting": {
+          "p(95)": 45.436454999999995,
+          "p(99)": 61.23073399999995,
+          "max": 73.0421,
+          "avg": 25.875390892857162,
+          "med": 23.82085,
+          "min": 7.3352
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 560,
+          "fails": 0
+        },
+        "http_req_connecting": {
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0
+        },
+        "iteration_duration": {
+          "med": 430.76985,
+          "min": 400.4643,
+          "p(95)": 476.37243499999994,
+          "p(99)": 504.675845,
+          "max": 508.0764,
+          "avg": 434.5834937499999
+        },
+        "http_req_blocked": {
+          "p(99)": 0.2111499999999836,
+          "max": 14.3711,
+          "avg": 0.10451714285714286,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0
+        },
+        "business_ms": {
+          "avg": 26.0475098214286,
+          "med": 23.9315,
+          "min": 7.3352,
+          "p(95)": 45.436454999999995,
+          "p(99)": 61.23073399999995,
+          "max": 73.5681
+        }
+      },
+      "checks": [
+        {
+          "name": "student_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "stand_scan",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_checkin",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_profile",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "company_history",
+          "passes": 80,
+          "fails": 0
+        }
+      ],
+      "durationMs": 8704.0402,
+      "resources": {
+        "samples": 5,
+        "elapsedSeconds": 11.301,
+        "web": {
+          "observedMaxRssMiB": 380.5078125,
+          "cpuSeconds": 6.109375,
+          "meanSingleCoreCpuPercent": 54.06048137332979
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.303899999999885,
+            "median": 1.5005000000001019,
+            "max": 18.704499999999996,
+            "mean": 4.87261999999995
+          },
+          "counterDeltas": {
+            "xact_commit": 3121,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 15877,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 2.6,
+            "observedMaxRssMiB": 198.5,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [0, 100000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 9.22,
+            "observedMaxRssMiB": 71.78,
+            "blockIoByteDeltas": [0, 2000000],
+            "networkByteDeltas": [1700000, 1500000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.3,
+            "observedMaxRssMiB": 10.43,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [0, 100]
+          }
+        },
+        "minio": {
+          "requestDeltas": {},
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {}
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdd",
+            "operations": 511,
+            "readBytes": 188416,
+            "writtenBytes": 2756608,
+            "meanReadWriteMs": 0.6457925636007827,
+            "busyPercent": 1.4158039111583045
+          }
+        ]
+      }
+    },
+    {
+      "label": "storage5",
+      "exit": 0,
+      "uploadVus": 5,
+      "businessVus": 0,
+      "sizeMiB": 10,
+      "metrics": {
+        "cv_authorization_ms": {
+          "avg": 36.386939999999996,
+          "med": 36.15,
+          "min": 33.5253,
+          "p(95)": 39.10814,
+          "p(99)": 39.387147999999996,
+          "max": 39.4569
+        },
+        "http_req_failed": {
+          "fails": 15,
+          "rate": 0,
+          "passes": 0
+        },
+        "iteration_duration": {
+          "max": 3493.2941,
+          "avg": 3482.09764,
+          "med": 3476.7122,
+          "min": 3473.589,
+          "p(95)": 3492.98274,
+          "p(99)": 3493.231828
+        },
+        "iterations": {
+          "count": 5,
+          "rate": 1.4313137848885955
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "cv_transfer_started_ms": {
+          "avg": 3000.3368,
+          "med": 3000.3368,
+          "min": 3000.3368,
+          "p(95)": 3000.3368,
+          "p(99)": 3000.3368,
+          "max": 3000.3368
+        },
+        "cv_transfer_ms": {
+          "med": 257.6323,
+          "min": 257.6323,
+          "p(95)": 259.76296,
+          "p(99)": 259.84835200000003,
+          "max": 259.8697,
+          "avg": 258.42052
+        },
+        "http_req_sending": {
+          "max": 169.0162,
+          "avg": 50.56578,
+          "med": 0,
+          "min": 0,
+          "p(95)": 166.48437,
+          "p(99)": 168.50983399999998
+        },
+        "vus": {
+          "value": 5,
+          "min": 5,
+          "max": 5
+        },
+        "http_req_waiting": {
+          "avg": 120.4822,
+          "med": 94.2344,
+          "min": 33.5253,
+          "p(95)": 228.54584,
+          "p(99)": 229.417648,
+          "max": 229.6356
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 15,
+          "fails": 0
+        },
+        "cv_completed": {
+          "count": 5,
+          "rate": 1.4313137848885955
+        },
+        "data_received": {
+          "count": 14335,
+          "rate": 4103.576621275603
+        },
+        "http_req_duration{expected_response:true}": {
+          "p(95)": 259.49611,
+          "p(99)": 259.794982,
+          "max": 259.8697,
+          "avg": 171.08219999999997,
+          "med": 213.0537,
+          "min": 33.5253
+        },
+        "http_req_tls_handshaking": {
+          "p(95)": 0,
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0
+        },
+        "vus_max": {
+          "min": 5,
+          "max": 5,
+          "value": 5
+        },
+        "cv_finalization_ms": {
+          "p(99)": 229.92,
+          "max": 230,
+          "avg": 218.6,
+          "med": 213,
+          "min": 210,
+          "p(95)": 229.6
+        },
+        "http_req_duration": {
+          "avg": 171.08219999999997,
+          "med": 213.0537,
+          "min": 33.5253,
+          "p(95)": 259.49611,
+          "p(99)": 259.794982,
+          "max": 259.8697
+        },
+        "cv_transfer_ended_ms": {
+          "avg": 3263.6585,
+          "med": 3263.6585,
+          "min": 3263.6585,
+          "p(95)": 3263.6585,
+          "p(99)": 3263.6585,
+          "max": 3263.6585
+        },
+        "data_sent": {
+          "count": 52445298,
+          "rate": 15013135.595998058
+        },
+        "http_req_connecting": {
+          "p(95)": 1.7296099999999994,
+          "p(99)": 2.028482,
+          "max": 2.1032,
+          "avg": 0.6011933333333332,
+          "med": 0.5207,
+          "min": 0
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 5,
+          "fails": 0
+        },
+        "http_req_blocked": {
+          "max": 14.756,
+          "avg": 5.3817933333333325,
+          "med": 1.0914,
+          "min": 0,
+          "p(95)": 14.756,
+          "p(99)": 14.756
+        },
+        "cv_total_ms": {
+          "avg": 536.6,
+          "med": 532,
+          "min": 528,
+          "p(95)": 547.8,
+          "p(99)": 548.76,
+          "max": 549
+        },
+        "http_reqs": {
+          "count": 15,
+          "rate": 4.293941354665787
+        },
+        "http_req_receiving": {
+          "p(95)": 0.15398999999999943,
+          "p(99)": 0.44143799999999966,
+          "max": 0.5133,
+          "avg": 0.03422,
+          "med": 0,
+          "min": 0
+        }
+      },
+      "checks": [
+        {
+          "name": "CV authorized",
+          "passes": 5,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 5,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 5,
+          "fails": 0
+        }
+      ],
+      "durationMs": 3493.2941,
+      "allTransfersOverlapMs": 263.32169999999996,
+      "resources": {
+        "samples": 3,
+        "elapsedSeconds": 6.198,
+        "web": {
+          "observedMaxRssMiB": 225.80078125,
+          "cpuSeconds": 0.28125,
+          "meanSingleCoreCpuPercent": 4.537754114230397
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.3906999999999243,
+            "median": 1.5492999999996755,
+            "max": 20.154500000000013,
+            "mean": 7.698166666666538
+          },
+          "counterDeltas": {
+            "xact_commit": 292,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 2220,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 2.56,
+            "observedMaxRssMiB": 230.2,
+            "blockIoByteDeltas": [0, 105000000],
+            "networkByteDeltas": [53000000, 200000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 0.04,
+            "observedMaxRssMiB": 71.91,
+            "blockIoByteDeltas": [0, 1000000],
+            "networkByteDeltas": [0, 0]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.3,
+            "observedMaxRssMiB": 10.43,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [3000, 300]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 5,
+            "deleteobject": 5,
+            "getobject": 10,
+            "headobject": 5,
+            "postpolicybucket": 5
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.25,
+              "p95UpperBoundSeconds": 0.25,
+              "p99UpperBoundSeconds": 0.25
+            },
+            "deleteobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "getobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "headobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.5,
+              "p95UpperBoundSeconds": 0.5,
+              "p99UpperBoundSeconds": 0.5
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdd",
+            "operations": 89,
+            "readBytes": 0,
+            "writtenBytes": 105697280,
+            "meanReadWriteMs": 17.93258426966292,
+            "busyPercent": 3.8076798967408845
+          }
+        ]
+      }
+    },
+    {
+      "label": "storage10",
+      "exit": 0,
+      "uploadVus": 10,
+      "businessVus": 0,
+      "sizeMiB": 10,
+      "metrics": {
+        "http_reqs": {
+          "count": 30,
+          "rate": 7.259851903377082
+        },
+        "cv_transfer_ms": {
+          "min": 682.6795,
+          "p(95)": 688.323,
+          "p(99)": 688.323,
+          "max": 688.323,
+          "avg": 686.6331900000001,
+          "med": 687.2720999999999
+        },
+        "http_req_sending": {
+          "min": 0,
+          "p(95)": 351.35825,
+          "p(99)": 351.87645299999997,
+          "max": 351.9328,
+          "avg": 112.92539000000001,
+          "med": 0
+        },
+        "data_sent": {
+          "count": 104890524,
+          "rate": 25382989.01025398
+        },
+        "http_req_blocked": {
+          "p(99)": 15.9421,
+          "max": 15.9421,
+          "avg": 5.701983333333332,
+          "med": 0.9998,
+          "min": 0,
+          "p(95)": 15.9421
+        },
+        "http_req_waiting": {
+          "avg": 266.2445166666667,
+          "med": 344.71185,
+          "min": 43.3499,
+          "p(95)": 422.703515,
+          "p(99)": 433.71423400000003,
+          "max": 435.8763
+        },
+        "http_req_tls_handshaking": {
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0
+        },
+        "cv_completed": {
+          "count": 10,
+          "rate": 2.419950634459027
+        },
+        "iteration_duration": {
+          "p(99)": 4108.9115249999995,
+          "max": 4109.5809,
+          "avg": 4073.61521,
+          "med": 4071.7068,
+          "min": 4037.0207,
+          "p(95)": 4106.234025
+        },
+        "vus": {
+          "value": 10,
+          "min": 10,
+          "max": 10
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 10,
+          "fails": 0
+        },
+        "http_req_connecting": {
+          "med": 0.9998,
+          "min": 0,
+          "p(95)": 1.0263,
+          "p(99)": 1.099501,
+          "max": 1.1294,
+          "avg": 0.6796866666666668
+        },
+        "cv_transfer_started_ms": {
+          "med": 3000.2779,
+          "min": 3000.2779,
+          "p(95)": 3002.896505,
+          "p(99)": 3004.610501,
+          "max": 3005.039,
+          "avg": 3000.7540100000006
+        },
+        "iterations": {
+          "count": 10,
+          "rate": 2.419950634459027
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 30
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 30,
+          "fails": 0
+        },
+        "http_req_duration": {
+          "max": 688.323,
+          "avg": 379.27515999999997,
+          "med": 399.0531,
+          "min": 43.3499,
+          "p(95)": 688.0874249999999,
+          "p(99)": 688.323
+        },
+        "cv_finalization_ms": {
+          "med": 398.5,
+          "min": 366,
+          "p(95)": 432.84999999999997,
+          "p(99)": 435.37,
+          "max": 436,
+          "avg": 401.2
+        },
+        "http_req_duration{expected_response:true}": {
+          "avg": 379.27515999999997,
+          "med": 399.0531,
+          "min": 43.3499,
+          "p(95)": 688.0874249999999,
+          "p(99)": 688.323,
+          "max": 688.323
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "http_req_receiving": {
+          "min": 0,
+          "p(95)": 0.528055,
+          "p(99)": 0.537543,
+          "max": 0.5414,
+          "avg": 0.10525333333333334,
+          "med": 0
+        },
+        "cv_transfer_ended_ms": {
+          "med": 3695.3885,
+          "min": 3693.4734,
+          "p(95)": 3696.4394,
+          "p(99)": 3696.4394,
+          "max": 3696.4394,
+          "avg": 3695.0965600000004
+        },
+        "cv_total_ms": {
+          "avg": 1164.3,
+          "med": 1165,
+          "min": 1123,
+          "p(95)": 1195.65,
+          "p(99)": 1196.73,
+          "max": 1197
+        },
+        "data_received": {
+          "count": 28670,
+          "rate": 6937.998468994031
+        },
+        "cv_authorization_ms": {
+          "p(95)": 54.498355,
+          "p(99)": 54.882871,
+          "max": 54.979,
+          "avg": 49.991350000000004,
+          "med": 50.72385,
+          "min": 43.3499
+        },
+        "vus_max": {
+          "max": 10,
+          "value": 10,
+          "min": 10
+        }
+      },
+      "checks": [
+        {
+          "name": "CV authorized",
+          "passes": 10,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 10,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 10,
+          "fails": 0
+        }
+      ],
+      "durationMs": 4132.3157,
+      "allTransfersOverlapMs": 688.4343999999996,
+      "resources": {
+        "samples": 4,
+        "elapsedSeconds": 8.299,
+        "web": {
+          "observedMaxRssMiB": 237.08984375,
+          "cpuSeconds": 0.515625,
+          "meanSingleCoreCpuPercent": 6.213097963610074
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.4599000000007436,
+            "median": 1.5010000000002037,
+            "max": 23.930800000000005,
+            "mean": 7.092525000000229
+          },
+          "counterDeltas": {
+            "xact_commit": 89,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 1286,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 3.67,
+            "observedMaxRssMiB": 311.9,
+            "blockIoByteDeltas": [3000000, 210000000],
+            "networkByteDeltas": [105000000, 300000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 0.04,
+            "observedMaxRssMiB": 71.49,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [100000, 100000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.33,
+            "observedMaxRssMiB": 10.66,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [6000, 400]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "deleteobject": 15
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "deleteobject": {
+              "count": 15,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdd",
+            "operations": 183,
+            "readBytes": 3190784,
+            "writtenBytes": 211427328,
+            "meanReadWriteMs": 56.78688524590164,
+            "busyPercent": 7.9527653934208935
+          }
+        ]
+      }
+    },
+    {
+      "label": "storage20",
+      "exit": 0,
+      "uploadVus": 20,
+      "businessVus": 0,
+      "sizeMiB": 10,
+      "metrics": {
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "http_req_duration{expected_response:true}": {
+          "p(95)": 995.70508,
+          "p(99)": 1018.928165,
+          "max": 1018.9497,
+          "avg": 659.8277183333333,
+          "med": 942.5843,
+          "min": 78.6771
+        },
+        "http_reqs": {
+          "count": 60,
+          "rate": 11.934919124711332
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 60,
+          "fails": 0
+        },
+        "http_req_blocked": {
+          "min": 0,
+          "p(95)": 15.7934,
+          "p(99)": 15.7934,
+          "max": 15.7934,
+          "avg": 6.068566666666667,
+          "med": 1.4171999999999998
+        },
+        "http_req_waiting": {
+          "max": 1018.9497,
+          "avg": 435.57006166666673,
+          "med": 291.36379999999997,
+          "min": 78.1519,
+          "p(95)": 995.70508,
+          "p(99)": 1018.620657
+        },
+        "cv_transfer_ended_ms": {
+          "med": 4004.5941,
+          "min": 3907.9052,
+          "p(95)": 4013.5715,
+          "p(99)": 4013.5715,
+          "max": 4013.5715,
+          "avg": 3987.2256400000015
+        },
+        "data_received": {
+          "count": 57340,
+          "rate": 11405.80437684913
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 20,
+          "fails": 0
+        },
+        "cv_finalization_ms": {
+          "p(95)": 1019.05,
+          "p(99)": 1019.81,
+          "max": 1020,
+          "avg": 921.3,
+          "med": 977.5,
+          "min": 355
+        },
+        "cv_total_ms": {
+          "p(95)": 2126.95,
+          "p(99)": 2141.39,
+          "max": 2145,
+          "avg": 2019.15,
+          "med": 2087,
+          "min": 1385
+        },
+        "cv_transfer_ms": {
+          "med": 978.28105,
+          "min": 886.6027,
+          "p(95)": 986.0608950000001,
+          "p(99)": 986.8223389999999,
+          "max": 987.0127,
+          "avg": 963.6365099999999
+        },
+        "data_sent": {
+          "count": 209781156,
+          "rate": 41728685.512474194
+        },
+        "http_req_connecting": {
+          "min": 0,
+          "p(95)": 2.248,
+          "p(99)": 2.248,
+          "max": 2.248,
+          "avg": 0.909203333333333,
+          "med": 0.9989
+        },
+        "vus": {
+          "value": 9,
+          "min": 9,
+          "max": 20
+        },
+        "cv_completed": {
+          "count": 20,
+          "rate": 3.9783063749037777
+        },
+        "iteration_duration": {
+          "max": 5027.2649,
+          "avg": 4908.50536,
+          "med": 4969.42095,
+          "min": 4263.2522,
+          "p(95)": 5025.72267,
+          "p(99)": 5026.956454
+        },
+        "iterations": {
+          "count": 20,
+          "rate": 3.9783063749037777
+        },
+        "http_req_sending": {
+          "p(99)": 695.238344,
+          "max": 695.8569,
+          "avg": 224.11428500000005,
+          "med": 0,
+          "min": 0,
+          "p(95)": 690.90241
+        },
+        "http_req_failed": {
+          "passes": 0,
+          "fails": 60,
+          "rate": 0
+        },
+        "http_req_duration": {
+          "p(99)": 1018.928165,
+          "max": 1018.9497,
+          "avg": 659.8277183333333,
+          "med": 942.5843,
+          "min": 78.6771,
+          "p(95)": 995.70508
+        },
+        "http_req_receiving": {
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.535525,
+          "p(99)": 0.6768669999999996,
+          "max": 0.7528,
+          "avg": 0.1433716666666667
+        },
+        "cv_authorization_ms": {
+          "p(99)": 108.458977,
+          "max": 108.6588,
+          "avg": 94.81116499999999,
+          "med": 96.0974,
+          "min": 78.6771,
+          "p(95)": 107.65968500000001
+        },
+        "http_req_tls_handshaking": {
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0
+        },
+        "cv_transfer_started_ms": {
+          "avg": 3004.4306399999996,
+          "med": 3000.397,
+          "min": 3000.397,
+          "p(95)": 3020.3036,
+          "p(99)": 3020.3036,
+          "max": 3020.3036
+        },
+        "vus_max": {
+          "value": 20,
+          "min": 20,
+          "max": 20
+        }
+      },
+      "checks": [
+        {
+          "name": "CV authorized",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 20,
+          "fails": 0
+        }
+      ],
+      "durationMs": 5027.2649,
+      "allTransfersOverlapMs": 887.6016,
+      "resources": {
+        "samples": 4,
+        "elapsedSeconds": 8.214,
+        "web": {
+          "observedMaxRssMiB": 251.57421875,
+          "cpuSeconds": 0.875,
+          "meanSingleCoreCpuPercent": 10.652544436328219
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.0441000000000713,
+            "median": 1.484899999999925,
+            "max": 20.701899999999995,
+            "mean": 6.147675000000042
+          },
+          "counterDeltas": {
+            "xact_commit": 342,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 2966,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 2.24,
+            "observedMaxRssMiB": 474.8,
+            "blockIoByteDeltas": [15000000, 423000000],
+            "networkByteDeltas": [210000000, 600000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 0.51,
+            "observedMaxRssMiB": 71.55,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [200000, 200000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.33,
+            "observedMaxRssMiB": 10.95,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [12000, 500]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 10,
+            "deleteobject": 40,
+            "getobject": 20,
+            "headobject": 10,
+            "postpolicybucket": 10
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.25,
+              "p95UpperBoundSeconds": 0.5,
+              "p99UpperBoundSeconds": 0.5
+            },
+            "deleteobject": {
+              "count": 40,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "getobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "headobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 10,
+              "p50UpperBoundSeconds": 1,
+              "p95UpperBoundSeconds": 1,
+              "p99UpperBoundSeconds": 1
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdd",
+            "operations": 625,
+            "readBytes": 15007744,
+            "writtenBytes": 422985728,
+            "meanReadWriteMs": 88.0272,
+            "busyPercent": 17.677136596055515
+          }
+        ]
+      }
+    },
+    {
+      "label": "storage40",
+      "exit": 0,
+      "uploadVus": 40,
+      "businessVus": 0,
+      "sizeMiB": 10,
+      "metrics": {
+        "cv_authorization_ms": {
+          "med": 243.7635,
+          "min": 182.2988,
+          "p(95)": 267.4988,
+          "p(99)": 267.805935,
+          "max": 268.0023,
+          "avg": 236.83061499999994
+        },
+        "vus_max": {
+          "value": 40,
+          "min": 40,
+          "max": 40
+        },
+        "cv_total_ms": {
+          "avg": 3655.775,
+          "med": 3915.5,
+          "min": 789,
+          "p(95)": 4091.15,
+          "p(99)": 4103.15,
+          "max": 4109
+        },
+        "http_req_duration{expected_response:true}": {
+          "p(95)": 2733.25754,
+          "p(99)": 2913.316699,
+          "max": 2913.9307,
+          "avg": 1148.9046258333328,
+          "med": 1250.62435,
+          "min": 89.5913
+        },
+        "cv_transfer_started_ms": {
+          "avg": 3042.7913849999995,
+          "med": 3011.62095,
+          "min": 3000.1325,
+          "p(95)": 3169.69,
+          "p(99)": 3169.69,
+          "max": 3169.69
+        },
+        "cv_completed": {
+          "count": 40,
+          "rate": 5.843553379494192
+        },
+        "iteration_duration": {
+          "p(95)": 6832.019445,
+          "p(99)": 6840.453723,
+          "max": 6844.6284,
+          "avg": 6422.826575,
+          "med": 6715.8017,
+          "min": 3490.0855
+        },
+        "http_req_receiving": {
+          "avg": 0.228785,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.8333999999999996,
+          "p(99)": 1.4096710000000012,
+          "max": 2.0065
+        },
+        "vus": {
+          "value": 33,
+          "min": 33,
+          "max": 40
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 120
+        },
+        "http_req_tls_handshaking": {
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0
+        },
+        "cv_finalization_ms": {
+          "avg": 1231.175,
+          "med": 1370,
+          "min": 293,
+          "p(95)": 1813.5499999999997,
+          "p(99)": 1992.1999999999998,
+          "max": 2039
+        },
+        "http_req_duration": {
+          "p(99)": 2913.316699,
+          "max": 2913.9307,
+          "avg": 1148.9046258333328,
+          "med": 1250.62435,
+          "min": 89.5913,
+          "p(95)": 2733.25754
+        },
+        "iterations": {
+          "count": 40,
+          "rate": 5.843553379494192
+        },
+        "http_req_connecting": {
+          "avg": 15.484465,
+          "med": 1.6432,
+          "min": 0,
+          "p(95)": 160.59893499999998,
+          "p(99)": 191.88821100000007,
+          "max": 202.8427
+        },
+        "data_received": {
+          "count": 114680,
+          "rate": 16753.467539009845
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "http_req_blocked": {
+          "p(95)": 160.59893499999998,
+          "p(99)": 194.3139180000001,
+          "max": 202.8427,
+          "avg": 20.80226583333334,
+          "med": 2.21665,
+          "min": 0
+        },
+        "data_sent": {
+          "count": 419562300,
+          "rate": 61293367.40183389
+        },
+        "cv_transfer_ended_ms": {
+          "p(99)": 6176.594384,
+          "max": 6176.7989,
+          "avg": 5191.830437499999,
+          "med": 5138.2302500000005,
+          "min": 3196.607,
+          "p(95)": 6176.2745
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 120,
+          "fails": 0
+        },
+        "http_req_sending": {
+          "avg": 463.75688000000014,
+          "med": 0,
+          "min": 0,
+          "p(95)": 1546.39433,
+          "p(99)": 1563.023197,
+          "max": 1564.9121
+        },
+        "cv_transfer_ms": {
+          "avg": 1978.8102224999998,
+          "med": 1898.12525,
+          "min": 89.5913,
+          "p(95)": 2912.945895,
+          "p(99)": 2913.727393,
+          "max": 2913.9307
+        },
+        "http_reqs": {
+          "count": 120,
+          "rate": 17.530660138482574
+        },
+        "http_req_waiting": {
+          "avg": 684.9189608333337,
+          "med": 477.74635,
+          "min": 41.1732,
+          "p(95)": 1626.249375,
+          "p(99)": 1896.6380200000003,
+          "max": 2039.6293
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 40,
+          "fails": 0
+        }
+      },
+      "checks": [
+        {
+          "name": "CV authorized",
+          "passes": 40,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 40,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 40,
+          "fails": 0
+        }
+      ],
+      "durationMs": 6845.1501,
+      "allTransfersOverlapMs": 26.916999999999916,
+      "resources": {
+        "samples": 5,
+        "elapsedSeconds": 11.406,
+        "web": {
+          "observedMaxRssMiB": 290.10546875,
+          "cpuSeconds": 2.015625,
+          "meanSingleCoreCpuPercent": 17.671620199894793
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.2617999999984022,
+            "median": 1.5318999999999505,
+            "max": 19.174299999999988,
+            "mean": 5.85079999999977
+          },
+          "counterDeltas": {
+            "xact_commit": 450,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 4737,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 123.29,
+            "observedMaxRssMiB": 769.3,
+            "blockIoByteDeltas": [119000000, 840000000],
+            "networkByteDeltas": [421000000, 1800000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 6.09,
+            "observedMaxRssMiB": 71.65,
+            "blockIoByteDeltas": [0, 1000000],
+            "networkByteDeltas": [400000, 300000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.44,
+            "observedMaxRssMiB": 11.76,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [24000, 700]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 20,
+            "deleteobject": 80,
+            "getobject": 40,
+            "headobject": 20,
+            "postpolicybucket": 20
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 1,
+              "p95UpperBoundSeconds": 1,
+              "p99UpperBoundSeconds": 1
+            },
+            "deleteobject": {
+              "count": 80,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.1
+            },
+            "getobject": {
+              "count": 40,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.25
+            },
+            "headobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 20,
+              "p50UpperBoundSeconds": 1,
+              "p95UpperBoundSeconds": 1,
+              "p99UpperBoundSeconds": 1
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdd",
+            "operations": 2388,
+            "readBytes": 129253376,
+            "writtenBytes": 847466496,
+            "meanReadWriteMs": 53.26381909547739,
+            "busyPercent": 26.863054532702087
+          }
+        ]
+      }
+    },
+    {
+      "label": "storage20x5",
+      "exit": 0,
+      "uploadVus": 20,
+      "businessVus": 0,
+      "sizeMiB": 5,
+      "metrics": {
+        "http_req_connecting": {
+          "min": 0,
+          "p(95)": 2.00961,
+          "p(99)": 2.218543999999999,
+          "max": 2.312,
+          "avg": 1.0169566666666665,
+          "med": 0.9996
+        },
+        "cv_completed": {
+          "count": 20,
+          "rate": 4.755622358311226
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 20,
+          "fails": 0
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 60
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 60,
+          "fails": 0
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "http_req_duration{expected_response:true}": {
+          "max": 635.3172,
+          "avg": 389.2435066666667,
+          "med": 468.56955,
+          "min": 97.0739,
+          "p(95)": 624.311205,
+          "p(99)": 632.8098769999999
+        },
+        "cv_total_ms": {
+          "min": 913,
+          "p(95)": 1336,
+          "p(99)": 1351.2,
+          "max": 1355,
+          "avg": 1203.15,
+          "med": 1255
+        },
+        "data_sent": {
+          "count": 104923436,
+          "rate": 24948811.90762185
+        },
+        "http_req_sending": {
+          "p(99)": 333.797515,
+          "max": 336.2469,
+          "avg": 102.9549716666667,
+          "med": 0,
+          "min": 0,
+          "p(95)": 330.052935
+        },
+        "http_req_waiting": {
+          "avg": 286.1915233333333,
+          "med": 297.8682,
+          "min": 96.5506,
+          "p(95)": 539.91802,
+          "p(99)": 554.1051259999999,
+          "max": 555.3315
+        },
+        "cv_authorization_ms": {
+          "min": 97.0739,
+          "p(95)": 137.314945,
+          "p(99)": 138.110589,
+          "max": 138.3095,
+          "avg": 118.07239,
+          "med": 116.6028
+        },
+        "vus": {
+          "min": 15,
+          "max": 20,
+          "value": 15
+        },
+        "http_req_duration": {
+          "avg": 389.2435066666667,
+          "med": 468.56955,
+          "min": 97.0739,
+          "p(95)": 624.311205,
+          "p(99)": 632.8098769999999,
+          "max": 635.3172
+        },
+        "iterations": {
+          "count": 20,
+          "rate": 4.755622358311226
+        },
+        "http_reqs": {
+          "count": 60,
+          "rate": 14.266867074933677
+        },
+        "http_req_tls_handshaking": {
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0
+        },
+        "vus_max": {
+          "value": 20,
+          "min": 20,
+          "max": 20
+        },
+        "cv_transfer_ms": {
+          "avg": 612.5551449999999,
+          "med": 620.49975,
+          "min": 543.105,
+          "p(95)": 631.279985,
+          "p(99)": 634.5097569999999,
+          "max": 635.3172
+        },
+        "data_received": {
+          "count": 57260,
+          "rate": 13615.346811845038
+        },
+        "iteration_duration": {
+          "min": 3760.4137,
+          "p(95)": 4198.98801,
+          "p(99)": 4203.817202,
+          "max": 4205.0245,
+          "avg": 4066.5104699999997,
+          "med": 4111.8921
+        },
+        "http_req_blocked": {
+          "min": 0,
+          "p(95)": 15.9369,
+          "p(99)": 15.9369,
+          "max": 15.9369,
+          "avg": 5.997938333333332,
+          "med": 1.0587499999999999
+        },
+        "cv_transfer_started_ms": {
+          "avg": 3002.0429049999993,
+          "med": 3000.9575,
+          "min": 3000.4936,
+          "p(95)": 3012.2739,
+          "p(99)": 3012.2739,
+          "max": 3012.2739
+        },
+        "http_req_receiving": {
+          "avg": 0.09701166666666666,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.5326949999999999,
+          "p(99)": 0.5494819999999999,
+          "max": 0.5673
+        },
+        "cv_transfer_ended_ms": {
+          "p(99)": 3649.1764,
+          "max": 3649.1764,
+          "avg": 3629.19582,
+          "med": 3640.95,
+          "min": 3546.8192,
+          "p(95)": 3649.1764
+        },
+        "cv_finalization_ms": {
+          "p(99)": 554.81,
+          "max": 555,
+          "avg": 437.15,
+          "med": 469,
+          "min": 200,
+          "p(95)": 554.05
+        }
+      },
+      "checks": [
+        {
+          "name": "CV authorized",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 20,
+          "fails": 0
+        }
+      ],
+      "durationMs": 4205.5484,
+      "allTransfersOverlapMs": 534.5452999999998,
+      "resources": {
+        "samples": 4,
+        "elapsedSeconds": 8.211,
+        "web": {
+          "observedMaxRssMiB": 328.078125,
+          "cpuSeconds": 0.9375,
+          "meanSingleCoreCpuPercent": 11.417610522469857
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.0183999999999287,
+            "median": 1.4505000000008295,
+            "max": 19.67320000000001,
+            "mean": 5.888100000000193
+          },
+          "counterDeltas": {
+            "xact_commit": 189,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 2397,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 2.51,
+            "observedMaxRssMiB": 768.6,
+            "blockIoByteDeltas": [5000000, 210000000],
+            "networkByteDeltas": [110000000, 500000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 0.02,
+            "observedMaxRssMiB": 71.34,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [300000, 200000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.33,
+            "observedMaxRssMiB": 11.73,
+            "blockIoByteDeltas": [0, 12310],
+            "networkByteDeltas": [12000, 700]
+          }
+        },
+        "minio": {
+          "requestDeltas": {},
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {}
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdc",
+            "operations": 4,
+            "readBytes": 0,
+            "writtenBytes": 20480,
+            "meanReadWriteMs": 11.5,
+            "busyPercent": 0.6332967969796615
+          },
+          {
+            "device": "sdd",
+            "operations": 381,
+            "readBytes": 9207808,
+            "writtenBytes": 214142976,
+            "meanReadWriteMs": 24.73228346456693,
+            "busyPercent": 9.499451954694921
+          }
+        ]
+      }
+    },
+    {
+      "label": "mixed5",
+      "exit": 0,
+      "uploadVus": 5,
+      "businessVus": 4,
+      "sizeMiB": 10,
+      "metrics": {
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 575
+        },
+        "cv_authorization_ms": {
+          "avg": 48.39144,
+          "med": 48.6217,
+          "min": 45.3459,
+          "p(95)": 50.94636,
+          "p(99)": 51.198952,
+          "max": 51.2621
+        },
+        "vus": {
+          "min": 4,
+          "max": 9,
+          "value": 4
+        },
+        "iteration_duration": {
+          "max": 1551.0865,
+          "avg": 491.2071317647061,
+          "med": 421.5144,
+          "min": 336.8701,
+          "p(95)": 1347.9393799999975,
+          "p(99)": 1549.816756
+        },
+        "http_req_duration": {
+          "p(99)": 257.38831799999997,
+          "max": 290.2462,
+          "avg": 29.2214615652174,
+          "med": 21.8846,
+          "min": 7.7934,
+          "p(95)": 51.36952999999998
+        },
+        "data_received": {
+          "rate": 74476.19833837787,
+          "count": 640355
+        },
+        "vus_max": {
+          "value": 9,
+          "min": 9,
+          "max": 9
+        },
+        "cv_completed": {
+          "count": 5,
+          "rate": 0.5815227361258822
+        },
+        "http_reqs": {
+          "count": 575,
+          "rate": 66.87511465447646
+        },
+        "http_req_tls_handshaking": {
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0
+        },
+        "http_req_waiting": {
+          "avg": 27.624592521739146,
+          "med": 21.7263,
+          "min": 7.1953,
+          "p(95)": 50.855119999999985,
+          "p(99)": 138.4620899999999,
+          "max": 259.8049
+        },
+        "cv_total_ms": {
+          "min": 588,
+          "p(95)": 604.2,
+          "p(99)": 604.84,
+          "max": 605,
+          "avg": 594.4,
+          "med": 589
+        },
+        "checks": {
+          "passes": 575,
+          "fails": 0,
+          "rate": 1
+        },
+        "cv_finalization_ms": {
+          "p(95)": 259.2,
+          "p(99)": 259.84,
+          "max": 260,
+          "avg": 247.8,
+          "med": 243,
+          "min": 239
+        },
+        "business_ms{operation:action_checkin}": {
+          "med": 32.644099999999995,
+          "min": 12.8409,
+          "p(95)": 50.90557499999992,
+          "p(99)": 84.556972,
+          "max": 84.8597,
+          "avg": 33.81939625
+        },
+        "data_sent": {
+          "count": 52778498,
+          "rate": 6138379.313114881
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 5,
+          "fails": 0
+        },
+        "business_ms": {
+          "med": 21.69315,
+          "min": 7.7934,
+          "p(95)": 47.934094999999985,
+          "p(99)": 80.83192199999995,
+          "max": 135.8136,
+          "avg": 24.78294285714288
+        },
+        "http_req_sending": {
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0.6894659999999968,
+          "max": 176.4464,
+          "avg": 1.4330060869565218
+        },
+        "cv_timeouts": {
+          "rate": 0,
+          "count": 0
+        },
+        "business_ms{operation:stand_scan}": {
+          "p(95)": 68.54449999999997,
+          "p(99)": 107.15350599999977,
+          "max": 135.8136,
+          "avg": 41.43975374999998,
+          "med": 38.69545,
+          "min": 17.9204
+        },
+        "http_req_receiving": {
+          "avg": 0.16386295652173918,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.5325799999999999,
+          "p(99)": 0.6394339999999998,
+          "max": 1.0062
+        },
+        "http_req_blocked": {
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 1.4951079999999881,
+          "max": 14.6648,
+          "avg": 0.127076,
+          "med": 0
+        },
+        "http_req_connecting": {
+          "p(99)": 1.0909239999999991,
+          "max": 1.2154,
+          "avg": 0.022455304347826093,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0
+        },
+        "iterations": {
+          "count": 85,
+          "rate": 9.885886514139997
+        },
+        "business_success": {
+          "rate": 1,
+          "passes": 560,
+          "fails": 0
+        },
+        "cv_transfer_started_ms": {
+          "max": 3000.2081,
+          "avg": 3000.2081,
+          "med": 3000.2081,
+          "min": 3000.2081,
+          "p(95)": 3000.2081,
+          "p(99)": 3000.2081
+        },
+        "cv_transfer_ms": {
+          "avg": 288.32806,
+          "med": 288.657,
+          "min": 284.8967,
+          "p(95)": 290.03364,
+          "p(99)": 290.203688,
+          "max": 290.2462
+        },
+        "cv_transfer_ended_ms": {
+          "min": 3289.5321,
+          "p(95)": 3295.0901599999997,
+          "p(99)": 3295.344432,
+          "max": 3295.408,
+          "avg": 3293.2792999999997,
+          "med": 3293.8188
+        },
+        "http_req_duration{expected_response:true}": {
+          "p(95)": 51.36952999999998,
+          "p(99)": 257.38831799999997,
+          "max": 290.2462,
+          "avg": 29.2214615652174,
+          "med": 21.8846,
+          "min": 7.7934
+        }
+      },
+      "checks": [
+        {
+          "name": "student_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "stand_scan",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_checkin",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_profile",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "company_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "CV authorized",
+          "passes": 5,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 5,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 5,
+          "fails": 0
+        }
+      ],
+      "durationMs": 8598.1161,
+      "allTransfersOverlapMs": 289.32400000000007,
+      "resources": {
+        "samples": 5,
+        "elapsedSeconds": 11.318,
+        "web": {
+          "observedMaxRssMiB": 369.10546875,
+          "cpuSeconds": 6.234375,
+          "meanSingleCoreCpuPercent": 55.08371620427638
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.3114000000005035,
+            "median": 1.5365999999999076,
+            "max": 19.936800000000005,
+            "mean": 5.162380000000314
+          },
+          "counterDeltas": {
+            "xact_commit": 3340,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 18288,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 0.32,
+            "observedMaxRssMiB": 778.7,
+            "blockIoByteDeltas": [3000000, 100000000],
+            "networkByteDeltas": [50000000, 300000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 9.7,
+            "observedMaxRssMiB": 70.73,
+            "blockIoByteDeltas": [0, 2000000],
+            "networkByteDeltas": [1700000, 1600000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.37,
+            "observedMaxRssMiB": 11.11,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [3000, 200]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 5,
+            "deleteobject": 5,
+            "getobject": 10,
+            "headobject": 5,
+            "postpolicybucket": 5
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.25,
+              "p95UpperBoundSeconds": 0.25,
+              "p99UpperBoundSeconds": 0.25
+            },
+            "deleteobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "getobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "headobject": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 5,
+              "p50UpperBoundSeconds": 0.5,
+              "p95UpperBoundSeconds": 0.5,
+              "p99UpperBoundSeconds": 0.5
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdc",
+            "operations": 12,
+            "readBytes": 0,
+            "writtenBytes": 446464,
+            "meanReadWriteMs": 1.5,
+            "busyPercent": 0.10602579961123874
+          },
+          {
+            "device": "sdd",
+            "operations": 617,
+            "readBytes": 17678336,
+            "writtenBytes": 108277760,
+            "meanReadWriteMs": 5.319286871961102,
+            "busyPercent": 4.629793249690758
+          }
+        ]
+      }
+    },
+    {
+      "label": "mixed10",
+      "exit": 0,
+      "uploadVus": 10,
+      "businessVus": 4,
+      "sizeMiB": 10,
+      "metrics": {
+        "data_received": {
+          "count": 654690,
+          "rate": 72019.07668945371
+        },
+        "vus_max": {
+          "value": 14,
+          "min": 14,
+          "max": 14
+        },
+        "business_ms{operation:stand_scan}": {
+          "p(99)": 193.12655999999998,
+          "max": 195.209,
+          "avg": 50.56957999999999,
+          "med": 39.9297,
+          "min": 26.9195,
+          "p(95)": 131.82950999999997
+        },
+        "cv_success": {
+          "passes": 10,
+          "fails": 0,
+          "rate": 1
+        },
+        "http_req_connecting": {
+          "avg": 0.04566355932203389,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 1.267617,
+          "max": 1.7731
+        },
+        "cv_transfer_ended_ms": {
+          "p(99)": 3636.7238,
+          "max": 3636.7238,
+          "avg": 3632.92747,
+          "med": 3631.923,
+          "min": 3628.756,
+          "p(95)": 3636.7238
+        },
+        "http_req_sending": {
+          "p(95)": 0.278244999999977,
+          "p(99)": 355.5645110000001,
+          "max": 373.7376,
+          "avg": 6.030745593220337,
+          "med": 0,
+          "min": 0
+        },
+        "business_success": {
+          "rate": 1,
+          "passes": 560,
+          "fails": 0
+        },
+        "cv_authorization_ms": {
+          "avg": 94.79035,
+          "med": 94.25399999999999,
+          "min": 74.2826,
+          "p(95)": 112.465085,
+          "p(99)": 112.850537,
+          "max": 112.9469
+        },
+        "cv_transfer_ms": {
+          "min": 622.2999,
+          "p(95)": 630.04,
+          "p(99)": 630.22216,
+          "max": 630.2677,
+          "avg": 626.31957,
+          "med": 625.2139
+        },
+        "data_sent": {
+          "count": 105223784,
+          "rate": 11575126.807268342
+        },
+        "iteration_duration": {
+          "p(95)": 2042.137265,
+          "p(99)": 2081.99888,
+          "max": 2138.8948,
+          "avg": 631.3670477777781,
+          "med": 437.35275,
+          "min": 392.1806
+        },
+        "cv_completed": {
+          "rate": 1.1000485220402587,
+          "count": 10
+        },
+        "http_reqs": {
+          "count": 590,
+          "rate": 64.90286280037527
+        },
+        "http_req_duration{expected_response:true}": {
+          "min": 7.9992,
+          "p(95)": 98.03117499999995,
+          "p(99)": 624.9237870000001,
+          "max": 630.2677,
+          "avg": 46.62668237288131,
+          "med": 24.46195
+        },
+        "http_req_duration": {
+          "max": 630.2677,
+          "avg": 46.62668237288131,
+          "med": 24.46195,
+          "min": 7.9992,
+          "p(95)": 98.03117499999995,
+          "p(99)": 624.9237870000001
+        },
+        "iterations": {
+          "rate": 9.900436698362329,
+          "count": 90
+        },
+        "http_req_waiting": {
+          "avg": 40.39991101694914,
+          "med": 24.275550000000003,
+          "min": 7.4791,
+          "p(95)": 97.52588999999999,
+          "p(99)": 405.50807699999996,
+          "max": 503.0672
+        },
+        "cv_transfer_started_ms": {
+          "med": 3000.1342,
+          "min": 3000.1342,
+          "p(95)": 3000.1342,
+          "p(99)": 3000.1342,
+          "max": 3000.1342,
+          "avg": 3000.1342
+        },
+        "http_req_blocked": {
+          "avg": 0.1381835593220339,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 1.3227600000000068,
+          "max": 14.9185
+        },
+        "http_req_tls_handshaking": {
+          "med": 0,
+          "min": 0,
+          "p(95)": 0,
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0
+        },
+        "http_req_receiving": {
+          "min": 0,
+          "p(95)": 0.5433499999999997,
+          "p(99)": 0.8007860000000008,
+          "max": 1.5066,
+          "avg": 0.19602576271186448,
+          "med": 0
+        },
+        "business_ms": {
+          "avg": 28.82754339285716,
+          "med": 24.0713,
+          "min": 7.9992,
+          "p(95)": 54.43326,
+          "p(99)": 97.98087299999995,
+          "max": 195.209
+        },
+        "vus": {
+          "value": 4,
+          "min": 4,
+          "max": 14
+        },
+        "cv_total_ms": {
+          "avg": 1148.8,
+          "med": 1135,
+          "min": 1088,
+          "p(95)": 1217.55,
+          "p(99)": 1246.71,
+          "max": 1254
+        },
+        "business_ms{operation:action_checkin}": {
+          "min": 22.3917,
+          "p(95)": 72.03398499999999,
+          "p(99)": 81.96555099999999,
+          "max": 82.6316,
+          "avg": 38.74353750000001,
+          "med": 35.91155
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 590,
+          "fails": 0
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "cv_finalization_ms": {
+          "max": 504,
+          "avg": 415.9,
+          "med": 410,
+          "min": 369,
+          "p(95)": 474.74999999999994,
+          "p(99)": 498.15
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 590
+        }
+      },
+      "checks": [
+        {
+          "name": "student_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "stand_scan",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_checkin",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_profile",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "company_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "CV authorized",
+          "passes": 10,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 10,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 10,
+          "fails": 0
+        }
+      ],
+      "durationMs": 9090.5081,
+      "allTransfersOverlapMs": 628.6217999999999,
+      "resources": {
+        "samples": 5,
+        "elapsedSeconds": 12.332,
+        "web": {
+          "observedMaxRssMiB": 384.62890625,
+          "cpuSeconds": 6.96875,
+          "meanSingleCoreCpuPercent": 56.50948751216347
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.0084999999999127,
+            "median": 1.2502999999996973,
+            "max": 20.216700000000003,
+            "mean": 4.99997999999988
+          },
+          "counterDeltas": {
+            "xact_commit": 3622,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 15496,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 2.65,
+            "observedMaxRssMiB": 750.7,
+            "blockIoByteDeltas": [13000000, 210000000],
+            "networkByteDeltas": [100000000, 400000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 8.03,
+            "observedMaxRssMiB": 70.42,
+            "blockIoByteDeltas": [0, 2000000],
+            "networkByteDeltas": [1800000, 1500000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.31,
+            "observedMaxRssMiB": 10.68,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [6000, 400]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 10,
+            "deleteobject": 18,
+            "getobject": 20,
+            "headobject": 10,
+            "postpolicybucket": 10
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.25,
+              "p95UpperBoundSeconds": 0.5,
+              "p99UpperBoundSeconds": 0.5
+            },
+            "deleteobject": {
+              "count": 18,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "getobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "headobject": {
+              "count": 10,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 10,
+              "p50UpperBoundSeconds": 1,
+              "p95UpperBoundSeconds": 1,
+              "p99UpperBoundSeconds": 1
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdc",
+            "operations": 1,
+            "readBytes": 0,
+            "writtenBytes": 4096,
+            "meanReadWriteMs": 0,
+            "busyPercent": 0
+          },
+          {
+            "device": "sdd",
+            "operations": 752,
+            "readBytes": 25186304,
+            "writtenBytes": 213282816,
+            "meanReadWriteMs": 17.997340425531913,
+            "busyPercent": 6.097956535841713
+          },
+          {
+            "device": "sde",
+            "operations": 15,
+            "readBytes": 2639872,
+            "writtenBytes": 0,
+            "meanReadWriteMs": 4.133333333333334,
+            "busyPercent": 0.09730781706130393
+          }
+        ]
+      }
+    },
+    {
+      "label": "mixed20",
+      "exit": 0,
+      "uploadVus": 20,
+      "businessVus": 4,
+      "sizeMiB": 10,
+      "metrics": {
+        "http_reqs": {
+          "count": 620,
+          "rate": 69.55909541044151
+        },
+        "cv_finalization_ms": {
+          "min": 565,
+          "p(95)": 816.1,
+          "p(99)": 817.62,
+          "max": 818,
+          "avg": 752.3,
+          "med": 760
+        },
+        "cv_transfer_ms": {
+          "p(95)": 1013.9769,
+          "p(99)": 1013.9769,
+          "max": 1013.9769,
+          "avg": 995.2375700000002,
+          "med": 1003.5396000000001,
+          "min": 932.0458
+        },
+        "http_req_sending": {
+          "p(99)": 707.7269849999999,
+          "max": 719.6119,
+          "avg": 22.520898870967738,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.5236449999999999
+        },
+        "checks": {
+          "rate": 1,
+          "passes": 620,
+          "fails": 0
+        },
+        "http_req_connecting": {
+          "avg": 0.0786282258064516,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.8069149999999888,
+          "p(99)": 1.4635,
+          "max": 1.8952
+        },
+        "cv_transfer_ended_ms": {
+          "avg": 4008.1156449999994,
+          "med": 4017.79225,
+          "min": 3941.75,
+          "p(95)": 4024.9142,
+          "p(99)": 4024.9142,
+          "max": 4024.9142
+        },
+        "http_req_failed": {
+          "rate": 0,
+          "passes": 0,
+          "fails": 620
+        },
+        "cv_success": {
+          "rate": 1,
+          "passes": 20,
+          "fails": 0
+        },
+        "cv_authorization_ms": {
+          "avg": 128.62982000000002,
+          "med": 132.32505,
+          "min": 106.9491,
+          "p(95)": 143.42063000000002,
+          "p(99)": 143.813246,
+          "max": 143.9114
+        },
+        "business_ms": {
+          "avg": 26.579824464285718,
+          "med": 19.10625,
+          "min": 6.6506,
+          "p(95)": 81.12608499999989,
+          "p(99)": 148.5455289999991,
+          "max": 194.7548
+        },
+        "http_req_tls_handshaking": {
+          "p(99)": 0,
+          "max": 0,
+          "avg": 0,
+          "med": 0,
+          "min": 0,
+          "p(95)": 0
+        },
+        "cv_completed": {
+          "count": 20,
+          "rate": 2.243841787433597
+        },
+        "cv_timeouts": {
+          "count": 0,
+          "rate": 0
+        },
+        "business_ms{operation:action_checkin}": {
+          "med": 22.2227,
+          "min": 11.5074,
+          "p(95)": 81.12608499999999,
+          "p(99)": 94.45153499999984,
+          "max": 114.4729,
+          "avg": 30.826857499999996
+        },
+        "http_req_duration{expected_response:true}": {
+          "max": 1013.9769,
+          "avg": 84.52236096774192,
+          "med": 20.4925,
+          "min": 6.6506,
+          "p(95)": 752.5730199999999,
+          "p(99)": 1005.2573979999999
+        },
+        "data_received": {
+          "rate": 76667.58619303115,
+          "count": 683360
+        },
+        "cv_total_ms": {
+          "avg": 1892.9,
+          "med": 1907,
+          "min": 1623,
+          "p(95)": 1969.2,
+          "p(99)": 1987.44,
+          "max": 1992
+        },
+        "http_req_waiting": {
+          "med": 20.147,
+          "min": 6.6506,
+          "p(95)": 294.2720299999999,
+          "p(99)": 783.007117,
+          "max": 818.6934,
+          "avg": 61.815106935483826
+        },
+        "business_ms{operation:stand_scan}": {
+          "avg": 44.25675124999999,
+          "med": 31.2438,
+          "min": 16.8402,
+          "p(95)": 114.28670499999997,
+          "p(99)": 190.02957299999997,
+          "max": 194.7548
+        },
+        "iteration_duration": {
+          "max": 2843.0679,
+          "avg": 902.7895149999999,
+          "med": 423.62120000000004,
+          "min": 330.2122,
+          "p(95)": 2818.21294,
+          "p(99)": 2840.889306
+        },
+        "http_req_receiving": {
+          "med": 0,
+          "min": 0,
+          "p(95)": 0.5388249999999999,
+          "p(99)": 1.0038019999999996,
+          "max": 2.0339,
+          "avg": 0.18635516129032254
+        },
+        "vus": {
+          "value": 4,
+          "min": 4,
+          "max": 24
+        },
+        "iterations": {
+          "rate": 11.219208937167988,
+          "count": 100
+        },
+        "vus_max": {
+          "value": 24,
+          "min": 24,
+          "max": 24
+        },
+        "business_success": {
+          "rate": 1,
+          "passes": 560,
+          "fails": 0
+        },
+        "cv_transfer_started_ms": {
+          "p(99)": 3009.7042,
+          "max": 3009.7042,
+          "avg": 3002.9780350000005,
+          "med": 3000.194,
+          "min": 3000.194,
+          "p(95)": 3009.7042
+        },
+        "http_req_duration": {
+          "min": 6.6506,
+          "p(95)": 752.5730199999999,
+          "p(99)": 1005.2573979999999,
+          "max": 1013.9769,
+          "avg": 84.52236096774192,
+          "med": 20.4925
+        },
+        "data_sent": {
+          "rate": 23573164.567709744,
+          "count": 210114320
+        },
+        "http_req_blocked": {
+          "med": 0,
+          "min": 0,
+          "p(95)": 1.1237,
+          "p(99)": 1.8952,
+          "max": 14.3558,
+          "avg": 0.1716677419354839
+        }
+      },
+      "checks": [
+        {
+          "name": "student_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "stand_scan",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_qr",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "action_checkin",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "student_profile",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "company_history",
+          "passes": 80,
+          "fails": 0
+        },
+        {
+          "name": "CV authorized",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "MinIO accepted direct POST",
+          "passes": 20,
+          "fails": 0
+        },
+        {
+          "name": "CV verified and associated",
+          "passes": 20,
+          "fails": 0
+        }
+      ],
+      "durationMs": 8913.2844,
+      "allTransfersOverlapMs": 932.0457999999999,
+      "resources": {
+        "samples": 5,
+        "elapsedSeconds": 12.393,
+        "web": {
+          "observedMaxRssMiB": 399.01171875,
+          "cpuSeconds": 7.28125,
+          "meanSingleCoreCpuPercent": 58.75292503832809
+        },
+        "postgres": {
+          "probeMs": {
+            "min": 1.23279999999977,
+            "median": 1.4436000000005151,
+            "max": 19.127499999999998,
+            "mean": 4.905280000000028
+          },
+          "counterDeltas": {
+            "xact_commit": 3447,
+            "xact_rollback": 0,
+            "deadlocks": 0,
+            "blks_read": 0,
+            "blks_hit": 15293,
+            "blk_read_time": 0,
+            "blk_write_time": 0
+          }
+        },
+        "containers": {
+          "fallstack-direct-minio": {
+            "observedMaxCpuPercent": 105.71,
+            "observedMaxRssMiB": 793.5,
+            "blockIoByteDeltas": [8000000, 420000000],
+            "networkByteDeltas": [210000000, 600000]
+          },
+          "fallstack-direct-postgres": {
+            "observedMaxCpuPercent": 12.94,
+            "observedMaxRssMiB": 68.96,
+            "blockIoByteDeltas": [0, 2000000],
+            "networkByteDeltas": [1900000, 1700000]
+          },
+          "fallstack-direct-redis": {
+            "observedMaxCpuPercent": 0.32,
+            "observedMaxRssMiB": 10.45,
+            "blockIoByteDeltas": [0, 0],
+            "networkByteDeltas": [12000, 400]
+          }
+        },
+        "minio": {
+          "requestDeltas": {
+            "copyobject": 20,
+            "deleteobject": 20,
+            "getobject": 40,
+            "headobject": 20,
+            "postpolicybucket": 20
+          },
+          "errors4xxDeltas": {},
+          "errors5xxDeltas": {},
+          "ttfbHistogramDelta": {
+            "copyobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.5,
+              "p95UpperBoundSeconds": 0.5,
+              "p99UpperBoundSeconds": 0.5
+            },
+            "deleteobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "getobject": {
+              "count": 40,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.1
+            },
+            "headobject": {
+              "count": 20,
+              "p50UpperBoundSeconds": 0.05,
+              "p95UpperBoundSeconds": 0.05,
+              "p99UpperBoundSeconds": 0.05
+            },
+            "postpolicybucket": {
+              "count": 20,
+              "p50UpperBoundSeconds": 1,
+              "p95UpperBoundSeconds": 1,
+              "p99UpperBoundSeconds": 1
+            }
+          }
+        },
+        "dockerVmDisks": [
+          {
+            "device": "sdc",
+            "operations": 2,
+            "readBytes": 12288,
+            "writtenBytes": 0,
+            "meanReadWriteMs": 5,
+            "busyPercent": 0.03227628499959655
+          },
+          {
+            "device": "sdd",
+            "operations": 1141,
+            "readBytes": 8364032,
+            "writtenBytes": 424660992,
+            "meanReadWriteMs": 18.090271691498685,
+            "busyPercent": 10.618897764867263
+          },
+          {
+            "device": "sde",
+            "operations": 398,
+            "readBytes": 6377472,
+            "writtenBytes": 0,
+            "meanReadWriteMs": 10.984924623115578,
+            "busyPercent": 0.16138142499798272
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -5,6 +5,7 @@ import encoding from "k6/encoding";
 import http from "k6/http";
 
 import { assertStagingTarget } from "../stagingTarget.js";
+import { minioPost } from "./minioPost.js";
 
 const base = assertStagingTarget(
   __ENV.E2E_BASE_URL,
@@ -83,6 +84,55 @@ export default function runInteractions() {
     ["cv", pdf],
     ["avatar", png],
   ]) {
+    if (kind === "cv") {
+      const authorized = http.post(
+        `${base}/api/storage/cv`,
+        JSON.stringify({
+          filename: "limiter-check.pdf",
+          contentType: "application/pdf",
+          size: 15,
+        }),
+        {
+          headers: {
+            Cookie: students[index],
+            "Content-Type": "application/json",
+          },
+          tags: { name: "cv_authorize" },
+        }
+      );
+      check(authorized, {
+        "CV authorization returns 201": (r) => r.status === 201,
+      });
+      if (authorized.status === 201) {
+        const post = authorized.json();
+        const pdfBytes = Uint8Array.from("%PDF-1.4\n%%EOF\n", (char) =>
+          char.charCodeAt(0)
+        );
+        const multipart = minioPost(post.fields, pdfBytes.buffer);
+        const transfer = http.post(post.url, multipart.body, {
+          headers: { "Content-Type": multipart.contentType },
+          tags: { name: "cv_direct_transfer" },
+        });
+        check(transfer, {
+          "direct CV transfer returns 204": (r) => r.status === 204,
+        });
+        const finalized = http.post(
+          `${base}/api/storage/cv/finalize`,
+          JSON.stringify({ uploadId: post.uploadId }),
+          {
+            headers: {
+              Cookie: students[index],
+              "Content-Type": "application/json",
+            },
+            tags: { name: "cv_finalize" },
+          }
+        );
+        check(finalized, {
+          "CV finalization returns 200": (r) => r.status === 200,
+        });
+      }
+      continue;
+    }
     const response = http.post(
       `${base}/api/storage/${kind}`,
       { file },

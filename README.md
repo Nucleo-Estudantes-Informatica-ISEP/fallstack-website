@@ -81,6 +81,10 @@ as its callback. Use development credentials and data only.
 
 ## Docker Compose files
 
+CV uploads use direct signed MinIO POSTs. Configure the public S3 API origin,
+CORS and cleanup before enabling them; see the
+[upload runbook](docs/operations/direct-cv-uploads.md).
+
 Use `docker-compose.app.yml` in Coolify. `docker-compose.local.yml` is a
 separate, self-contained development stack: it provisions local PostgreSQL,
 Redis and MinIO, creates the app buckets, and uses Compose-managed networking
