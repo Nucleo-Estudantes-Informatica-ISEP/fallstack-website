@@ -11,11 +11,11 @@ vi.mock("@/application/services/sessionService", () => ({
   default: vi.fn(),
 }));
 vi.mock("@/application/services/savedStudentService", () => ({
-  getCompanyHistory: vi.fn(),
+  getCompanyHistoryPage: vi.fn(),
   getCompanyStats: vi.fn(),
 }));
 vi.mock("@/application/services/studentService", () => ({
-  getStudents: vi.fn(),
+  getStudentCount: vi.fn(),
 }));
 vi.mock("@/application/services/companyService", () => ({
   getCompanyInterestIds: vi.fn(),
@@ -49,15 +49,19 @@ afterAll(() => {
 
 beforeEach(async () => {
   vi.clearAllMocks();
-  const { getCompanyHistory, getCompanyStats } =
+  const { getCompanyHistoryPage, getCompanyStats } =
     await import("@/application/services/savedStudentService");
   vi.mocked(getCompanyStats).mockResolvedValue({
     totalScans: 3,
     totalSaves: 2,
   });
-  vi.mocked(getCompanyHistory).mockResolvedValue([]);
-  const { getStudents } = await import("@/application/services/studentService");
-  vi.mocked(getStudents).mockResolvedValue([{}, {}, {}, {}] as never);
+  vi.mocked(getCompanyHistoryPage).mockResolvedValue({
+    items: [],
+    hasMore: true,
+  } as never);
+  const { getStudentCount } =
+    await import("@/application/services/studentService");
+  vi.mocked(getStudentCount).mockResolvedValue(4);
   const { getCompanyInterestIds } =
     await import("@/application/services/companyService");
   vi.mocked(getCompanyInterestIds).mockResolvedValue(["i1"]);
@@ -164,9 +168,11 @@ test("an employee with a company gets their own company dashboard", async () => 
   assert.deepEqual(dashboard.props.company, { id: "c1", name: "Armis" });
   assert.equal(dashboard.props.employeeName, "Rui");
   assert.equal(dashboard.props.totalStudents, 4);
-  const { getCompanyHistory, getCompanyStats } =
+  assert.deepEqual(dashboard.props.history, []);
+  assert.equal(dashboard.props.historyHasMore, true);
+  const { getCompanyHistoryPage, getCompanyStats } =
     await import("@/application/services/savedStudentService");
   // Data is always scoped to the session's own company.
   assert.deepEqual(vi.mocked(getCompanyStats).mock.calls, [["c1"]]);
-  assert.deepEqual(vi.mocked(getCompanyHistory).mock.calls, [["c1"]]);
+  assert.deepEqual(vi.mocked(getCompanyHistoryPage).mock.calls, [["c1"]]);
 });

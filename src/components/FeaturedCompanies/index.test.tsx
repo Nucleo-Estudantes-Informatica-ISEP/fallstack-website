@@ -1,16 +1,10 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
 
 import type { CompanyRosterDto } from "@/application/dto/companyDto";
-import { getPublicCompanyRoster } from "@/application/services/publicEditionService";
 import { Language } from "@/domain/i18n/translations";
 
 import FeaturedCompanies from ".";
-
-vi.mock("@/application/services/publicEditionService", () => ({
-  getPublicCompanyRoster: vi.fn(),
-  readHomepageSection: (read: Promise<unknown>) => read.catch(() => []),
-}));
 
 const company = (id: number, isFeatured = true): CompanyRosterDto => ({
   id: String(id),
@@ -39,16 +33,14 @@ const company = (id: number, isFeatured = true): CompanyRosterDto => ({
   interests: [],
 });
 
-beforeEach(() => vi.clearAllMocks());
-
 test.each([1, 3, 5])(
   "renders all %s featured partners with bounded logos and tier links",
-  async (count) => {
-    vi.mocked(getPublicCompanyRoster).mockResolvedValue([
+  (count) => {
+    const companies = [
       ...Array.from({ length: count }, (_, i) => company(i)),
       company(99, false),
-    ]);
-    render(await FeaturedCompanies({ language: Language.PT }));
+    ];
+    render(<FeaturedCompanies language={Language.PT} companies={companies} />);
     expect(screen.getAllByRole("img")).toHaveLength(count);
     expect(screen.queryByRole("img", { name: "Partner 99" })).toBeNull();
     expect(screen.getByRole("link", { name: "Partner 0" })).toHaveAttribute(
@@ -62,19 +54,19 @@ test.each([1, 3, 5])(
   }
 );
 
-test("uses rank flag, orders ranks/companies, reuses internal links and keeps missing-logo names", async () => {
+test("uses rank flag, orders ranks/companies, reuses internal links and keeps missing-logo names", () => {
   const internal = company(2);
   internal.rank.style!.hasInternalPage = true;
   const noLogo = company(1);
   noLogo.avatar = null;
   const earlierRank = company(3);
   earlierRank.rank = { ...earlierRank.rank, order: -1 };
-  vi.mocked(getPublicCompanyRoster).mockResolvedValue([
-    internal,
-    noLogo,
-    earlierRank,
-  ]);
-  render(await FeaturedCompanies({ language: Language.EN }));
+  render(
+    <FeaturedCompanies
+      language={Language.EN}
+      companies={[internal, noLogo, earlierRank]}
+    />
+  );
   expect(
     screen.getByRole("region", { name: "Featured partners" })
   ).toBeInTheDocument();
@@ -92,13 +84,10 @@ test("uses rank flag, orders ranks/companies, reuses internal links and keeps mi
 
 test.each([[[]], [[company(1, false)]]])(
   "omits empty featured rows",
-  async (companies) => {
-    vi.mocked(getPublicCompanyRoster).mockResolvedValue(companies);
-    expect(await FeaturedCompanies({ language: Language.PT })).toBeNull();
+  (companies) => {
+    const { container } = render(
+      <FeaturedCompanies language={Language.PT} companies={companies} />
+    );
+    expect(container.firstChild).toBeNull();
   }
 );
-
-test("company-data outage leaves landing available", async () => {
-  vi.mocked(getPublicCompanyRoster).mockRejectedValue(new Error("DB offline"));
-  expect(await FeaturedCompanies({ language: Language.PT })).toBeNull();
-});
