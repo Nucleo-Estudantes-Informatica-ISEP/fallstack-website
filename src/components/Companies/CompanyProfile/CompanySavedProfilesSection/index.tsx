@@ -222,6 +222,10 @@ const CompanySavedProfilesSection = ({
       setMessage(null);
 
       const code = normalizeStudentCode(inputRef.current.value);
+      if (!isStudentCode(code)) {
+        showCodeMessage("O código introduzido é inválido.");
+        return;
+      }
       let token: string | null;
       try {
         token = await getStudentPreviewToken(code);
@@ -340,7 +344,6 @@ const CompanySavedProfilesSection = ({
               className="ui-field h-14 field-focus-target pr-32 text-lg uppercase"
               ref={inputRef}
               onKeyUp={handleKeyUp}
-              maxLength={6}
               disabled={isSubmittingManualEntry}
             />
             <button

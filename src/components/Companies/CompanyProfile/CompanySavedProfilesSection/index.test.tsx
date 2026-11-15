@@ -377,8 +377,6 @@ test.each([
   async (_, typed, code) => {
     render(<CompanySavedProfilesSection history={[]} />);
 
-    // The field fits the longest code, so a six-character code is not cut short.
-    expect(codeField()).toHaveAttribute("maxLength", "6");
     typeCode(typed);
 
     await waitFor(() =>
@@ -391,6 +389,17 @@ test.each([
       token: "signed-preview-token",
     });
     expect(refreshMock).toHaveBeenCalled();
+  }
+);
+
+test.each(["ABC", "ABCDEFG", "AB!2"])(
+  "rejects malformed code %s without a request",
+  async (code) => {
+    render(<CompanySavedProfilesSection history={[]} />);
+    typeCode(code);
+    await waitFor(() => expect(messageArea()).toHaveTextContent("O código introduzido é inválido."));
+    expect(getTokenMock).not.toHaveBeenCalled();
+    expect(postMock).not.toHaveBeenCalled();
   }
 );
 
