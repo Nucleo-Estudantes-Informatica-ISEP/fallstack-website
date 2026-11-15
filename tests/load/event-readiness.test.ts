@@ -201,3 +201,36 @@ test.each([4, 5, 50])(
     expect(new Set(assigned).size).toBe(Math.floor(vus / 2));
   }
 );
+
+test("homepage target uses an exact constant-arrival budget without sessions", () => {
+  const { options } = runInNewContext(
+    `${nodeSource(scenarioSource)}\n({ options });`,
+    {
+      __ENV: {
+        E2E_BASE_URL: "https://staging.example.org",
+        STAGING_BASE_URL: "https://staging.example.org",
+        CONFIRM_NON_PRODUCTION: "yes",
+        K6_PROFILE: "peak",
+        K6_SCENARIO: "homepage-target",
+        HOMEPAGE_PATH: "/event/pt",
+        TARGET_RATE: "20",
+        TARGET_DURATION: "60s",
+        TARGET_VISITS: "1200",
+        TARGET_PREALLOCATED_VUS: "200",
+      },
+      assertStagingTarget,
+      homepageAssets,
+      Trend: class {},
+      http: { file: () => null },
+    }
+  );
+  expect(options.scenarios.homepage_target).toMatchObject({
+    executor: "constant-arrival-rate",
+    rate: 20,
+    timeUnit: "1s",
+    duration: "60s",
+    preAllocatedVUs: 200,
+  });
+  expect(options.thresholds.iterations).toEqual(["count>=1200"]);
+  expect(options.thresholds.dropped_iterations).toEqual(["count==0"]);
+});
