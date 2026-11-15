@@ -29,7 +29,7 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
           width={256}
           height={296}
           alt={`${branding.name} ${branding.year}`}
-          className="mt-20 h-auto w-1/2 max-w-80 object-contain"
+          className="mt-20 h-auto w-1/2 max-w-56 object-contain"
         />
         <motion.div
           initial={{
