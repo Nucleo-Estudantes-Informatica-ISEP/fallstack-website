@@ -50,12 +50,22 @@ vi.mock("react-toastify", () => ({
     warning: toastWarningMock,
   },
 }));
+const CAMERA_ERROR =
+  "Não foi possível aceder à câmara. Confirma permissão e tenta novamente.";
+
 vi.mock("@/components/QRCode/QRCodeScanner", () => ({
   default: ({
     handleScan,
+    onMessage,
   }: {
     handleScan: (data: string) => Promise<void>;
-  }) => <button onClick={() => void handleScan(scan.value)}>Scan QR</button>,
+    onMessage?: (message: string) => void;
+  }) => (
+    <>
+      <button onClick={() => void handleScan(scan.value)}>Scan QR</button>
+      <button onClick={() => onMessage?.(CAMERA_ERROR)}>Camera fails</button>
+    </>
+  ),
 }));
 vi.mock("@/components/Companies/CompanyProfile/CompanyHistorySection", () => ({
   default: () => null,
@@ -86,6 +96,10 @@ beforeEach(() => {
 
 function codeField() {
   return screen.getByLabelText("Código do estudante");
+}
+
+function messageArea() {
+  return screen.getByRole("alert");
 }
 
 function typeCode(value: string) {
@@ -139,14 +153,139 @@ test("rejects an unknown Wallet code without saving it as a JWT", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
 
   await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith(
-      "O código de estudante deste passe é inválido.",
-      expect.anything()
+    expect(messageArea()).toHaveTextContent(
+      "O código de estudante deste passe é inválido."
     )
   );
   expect(postMock).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument();
 });
+
+// A toast can land over the live preview or the controls wherever the page
+// is scrolled, so camera, scan and typed-code messages show in the page, in
+// one place under the camera box and above the code field.
+function expectMessageUnderCamera(text: string) {
+  const alert = messageArea();
+  const camera = screen.getByRole("group", {
+    name: "Câmara do leitor de QR Code",
+  });
+  expect(alert).toHaveTextContent(text);
+  expect(camera).not.toContainElement(alert);
+  expect(
+    camera.compareDocumentPosition(alert) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(
+    alert.compareDocumentPosition(codeField()) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(toastErrorMock).not.toHaveBeenCalled();
+  expect(toastWarningMock).not.toHaveBeenCalled();
+}
+
+test("a camera error shows under the camera box, not as a toast", () => {
+  render(<CompanySavedProfilesSection history={[]} />);
+  expect(messageArea()).toBeEmptyDOMElement();
+
+  fireEvent.click(screen.getByRole("button", { name: "Camera fails" }));
+
+  expectMessageUnderCamera(CAMERA_ERROR);
+});
+
+test.each([
+  [
+    "an unknown Wallet code",
+    () => getTokenMock.mockResolvedValue(null),
+    "O código de estudante deste passe é inválido.",
+  ],
+  [
+    "a lookup failure",
+    () => getTokenMock.mockRejectedValue(new Error("offline")),
+    "Ocorreu um erro a dar scan no QR Code do estudante...",
+  ],
+  [
+    "an already-saved student",
+    async () =>
+      postMock.mockRejectedValue(await httpError(409, "Student already saved")),
+    "Este estudante já foi guardado anteriormente.",
+  ],
+  [
+    "an admin's repeat save",
+    async () =>
+      postMock.mockRejectedValue(await httpError(400, "Student already saved")),
+    "Este estudante já foi guardado anteriormente.",
+  ],
+  [
+    "a failed save",
+    async () => postMock.mockRejectedValue(await httpError(500)),
+    "Não foi possível guardar o perfil. Tenta novamente.",
+  ],
+])(
+  "%s from a scan shows under the camera box, not as a toast",
+  async (_, arrange, text) => {
+    await arrange();
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+    await waitFor(() => expect(messageArea()).toHaveTextContent(text));
+    expectMessageUnderCamera(text);
+    expect(pushMock).not.toHaveBeenCalled();
+  }
+);
+
+test("reading the same failing code again keeps its message steady", async () => {
+  getTokenMock.mockResolvedValue(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+  const message = await screen.findByText(/inválido/);
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+  // Not cleared while the repeat read is checked, so it does not blink.
+  expect(message).toBeInTheDocument();
+
+  await waitFor(() => expect(getTokenMock).toHaveBeenCalledTimes(2));
+  await waitFor(() =>
+    expect(screen.getByRole("button", { name: "Scan QR" })).toBeInTheDocument()
+  );
+  expect(screen.getByText(/inválido/)).toBe(message);
+});
+
+test("a successful scan clears an earlier scan message", async () => {
+  getTokenMock.mockResolvedValueOnce(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+  await waitFor(() => expect(messageArea()).toHaveTextContent(/inválido/));
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+  await waitFor(() => expect(pushMock).toHaveBeenCalled());
+  expect(messageArea()).toBeEmptyDOMElement();
+});
+
+// The camera coming back would read the same code again before the page
+// changes, and that second save would flash "already saved".
+test.each([
+  ["a saved student", () => "ab12"],
+  ["a link to this site", () => `${window.location.origin}/student/x/preview`],
+])(
+  "after %s, the camera stays off until the page changes",
+  async (_, scanned) => {
+    scan.value = scanned();
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+    await waitFor(() => expect(pushMock).toHaveBeenCalledTimes(1));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(screen.getByRole("status")).toHaveTextContent("A processar...");
+    expect(
+      screen.queryByRole("button", { name: "Scan QR" })
+    ).not.toBeInTheDocument();
+    expect(messageArea()).toBeEmptyDOMElement();
+  }
+);
 
 test("the code field has a visible label and a description", () => {
   render(<CompanySavedProfilesSection history={[]} />);
@@ -180,63 +319,55 @@ test("an empty code shows one message, however many times Validar is pressed", a
   render(<CompanySavedProfilesSection history={[]} />);
 
   fireEvent.click(screen.getByRole("button", { name: "Validar" }));
-  await waitFor(() => expect(toastErrorMock).toHaveBeenCalledTimes(1));
+  await waitFor(() => expectMessageUnderCamera("Sem código inserido."));
   fireEvent.click(screen.getByRole("button", { name: "Validar" }));
-  await waitFor(() => expect(toastErrorMock).toHaveBeenCalledTimes(2));
 
-  // Same toast id both times, so react-toastify shows a single toast.
-  const ids = toastErrorMock.mock.calls.map(([, options]) => options.toastId);
-  expect(ids[0]).toBe(ids[1]);
-  expect(toastErrorMock).toHaveBeenCalledWith(
-    "Sem código inserido.",
-    expect.objectContaining({ toastId: expect.any(String) })
-  );
+  await waitFor(() => expect(codeField()).toHaveFocus());
+  expect(screen.getAllByText("Sem código inserido.")).toHaveLength(1);
   expect(getTokenMock).not.toHaveBeenCalled();
 });
 
-test("an unknown typed code is reported as invalid", async () => {
-  getTokenMock.mockResolvedValue(null);
-  render(<CompanySavedProfilesSection history={[]} />);
+test.each([
+  [
+    "an unknown code",
+    () => getTokenMock.mockResolvedValue(null),
+    "O código introduzido é inválido.",
+  ],
+  [
+    "a malformed code",
+    async () =>
+      getTokenMock.mockRejectedValue(
+        await httpError(400, "Invalid student code")
+      ),
+    "O código introduzido é inválido.",
+  ],
+  [
+    "too many attempts",
+    async () =>
+      getTokenMock.mockRejectedValue(await httpError(429, "Too Many Requests")),
+    "Demasiadas tentativas. Aguarde um momento.",
+  ],
+  [
+    "a lookup failure",
+    async () =>
+      getTokenMock.mockRejectedValue(
+        await httpError(500, "Internal Server Error")
+      ),
+    "Não foi possível guardar o perfil. Tenta novamente.",
+  ],
+])(
+  "%s, when typed, is reported under the camera box and saves nothing",
+  async (_, arrange, text) => {
+    await arrange();
+    render(<CompanySavedProfilesSection history={[]} />);
 
-  typeCode("ZZZZ");
+    typeCode("Z101");
 
-  await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith(
-      "O código introduzido é inválido.",
-      expect.anything()
-    )
-  );
-  expect(postMock).not.toHaveBeenCalled();
-});
-
-test("a malformed typed code is reported as invalid, not as a save failure", async () => {
-  getTokenMock.mockRejectedValue(await httpError(400, "Invalid student code"));
-  render(<CompanySavedProfilesSection history={[]} />);
-
-  typeCode("ZZ");
-
-  await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith(
-      "O código introduzido é inválido.",
-      expect.anything()
-    )
-  );
-});
-
-test("too many typed attempts get a Portuguese rate-limit message", async () => {
-  getTokenMock.mockRejectedValue(await httpError(429, "Too Many Requests"));
-  render(<CompanySavedProfilesSection history={[]} />);
-
-  typeCode("Z101");
-
-  await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith(
-      "Demasiadas tentativas. Aguarde um momento.",
-      expect.anything()
-    )
-  );
-  expect(postMock).not.toHaveBeenCalled();
-});
+    await waitFor(() => expect(messageArea()).toHaveTextContent(text));
+    expectMessageUnderCamera(text);
+    expect(postMock).not.toHaveBeenCalled();
+  }
+);
 
 test.each([
   ["four", "Z104", "Z104"],
@@ -263,20 +394,27 @@ test.each([
   }
 );
 
-test("a duplicate save is a warning and does not navigate", async () => {
-  postMock.mockRejectedValue(await httpError(409, "Student already saved"));
-  render(<CompanySavedProfilesSection history={[]} />);
+// 409 from the duplicate check; 400 "Student already saved" when an admin
+// employee, who skips that check, hits the one-save-per-company rule.
+test.each([409, 400])(
+  "a typed already-saved student (%i) is a warning and does not navigate",
+  async (status) => {
+    postMock.mockRejectedValue(
+      await httpError(status, "Student already saved")
+    );
+    render(<CompanySavedProfilesSection history={[]} />);
 
-  typeCode("Z101");
+    typeCode("A123");
 
-  await waitFor(() =>
-    expect(toastWarningMock).toHaveBeenCalledWith(
-      "Este estudante já foi guardado anteriormente.",
-      expect.anything()
-    )
-  );
-  expect(pushMock).not.toHaveBeenCalled();
-});
+    await waitFor(() =>
+      expect(messageArea()).toHaveTextContent(
+        "Este estudante já foi guardado anteriormente."
+      )
+    );
+    expectMessageUnderCamera("Este estudante já foi guardado anteriormente.");
+    expect(pushMock).not.toHaveBeenCalled();
+  }
+);
 
 test.each([
   ["an invalid", () => getTokenMock.mockResolvedValue(null)],
@@ -301,23 +439,72 @@ test.each([
   }
 );
 
-test("other save failures show one Portuguese message instead of the server text", async () => {
-  postMock.mockRejectedValue(await httpError(400, "Student already saved"));
+test.each([
+  ["a server error", 500, "Internal Server Error"],
+  ["a bad token", 400, "Invalid token"],
+])(
+  "%s on save shows one Portuguese message instead of the server text",
+  async (_, status, serverText) => {
+    postMock.mockRejectedValue(await httpError(status, serverText));
+    render(<CompanySavedProfilesSection history={[]} />);
+
+    typeCode("Z101");
+
+    await waitFor(() =>
+      expect(messageArea()).toHaveTextContent(
+        "Não foi possível guardar o perfil. Tenta novamente."
+      )
+    );
+    expect(screen.queryByText(serverText)).not.toBeInTheDocument();
+    expect(pushMock).not.toHaveBeenCalled();
+  }
+);
+
+test("a typed-code message is scrolled into view without taking focus", async () => {
+  // jsdom has no layout, so stand in for the browser's scrolling.
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  getTokenMock.mockResolvedValue(null);
   render(<CompanySavedProfilesSection history={[]} />);
 
-  typeCode("Z101");
+  typeCode("ZZZZ");
+
+  await waitFor(() => expect(messageArea()).toHaveTextContent(/inválido/));
+  expect(scrollIntoView.mock.contexts).toContain(messageArea());
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: "nearest",
+    behavior: "instant",
+  });
+  await waitFor(() => expect(codeField()).toHaveFocus());
+  delete (Element.prototype as Partial<Element>).scrollIntoView;
+});
+
+test("a typed code's message replaces an earlier scan message", async () => {
+  getTokenMock.mockResolvedValueOnce(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+  await waitFor(() => expect(messageArea()).toHaveTextContent(/passe/));
+
+  getTokenMock.mockResolvedValueOnce(null);
+  typeCode("ZZZZ");
 
   await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith(
-      "Não foi possível guardar o perfil. Tenta novamente.",
-      expect.anything()
-    )
+    expect(messageArea()).toHaveTextContent("O código introduzido é inválido.")
   );
-  expect(toastErrorMock).not.toHaveBeenCalledWith(
-    "Student already saved",
-    expect.anything()
-  );
-  expect(pushMock).not.toHaveBeenCalled();
+  expect(messageArea()).not.toHaveTextContent(/passe/);
+});
+
+test("a scan message does not scroll the page away from the camera", async () => {
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  getTokenMock.mockResolvedValue(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+
+  await waitFor(() => expect(messageArea()).toHaveTextContent(/passe/));
+  expect(scrollIntoView).not.toHaveBeenCalled();
+  delete (Element.prototype as Partial<Element>).scrollIntoView;
 });
 
 test("CV export is unavailable, with a reason, until something is saved", () => {

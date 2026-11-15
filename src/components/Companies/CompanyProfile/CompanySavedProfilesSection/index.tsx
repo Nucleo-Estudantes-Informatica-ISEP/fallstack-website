@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useId, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -20,25 +20,83 @@ interface CompanySavedProfilesSectionProps {
 }
 
 // One toast per message: repeated clicks replace it instead of stacking
-// copies over the code field.
-const TOAST = {
-  emptyCode: "scan-empty-code",
-  invalidCode: "scan-invalid-code",
-  duplicate: "scan-duplicate",
-  saveFailed: "scan-save-failed",
-  scanFailed: "scan-failed",
-  exportFailed: "scan-export-failed",
-  tooMany: "scan-too-many",
-} as const;
+// copies.
+const EXPORT_FAILED_TOAST = "scan-export-failed";
 
 const SAVE_FAILED = "Não foi possível guardar o perfil. Tenta novamente.";
 const DUPLICATE = "Este estudante já foi guardado anteriormente.";
+
+// Camera, scan and typed-code messages all show in one place under the
+// camera box, not as toasts: a toast can land over the live preview or the
+// controls wherever the page is scrolled. Only the latest message shows.
+// The CV export error stays a toast.
+type MessageTone = "error" | "warning" | "success";
+type PageMessage = {
+  text: string;
+  tone: MessageTone;
+  source: "scan" | "code";
+};
+
+const MESSAGE_TONE: Record<MessageTone, string> = {
+  error: "border-l-ui-error",
+  warning: "border-l-ui-highlight",
+  success: "border-l-ui-success",
+};
+
+type SaveResult = "saved" | "duplicate" | "failed";
+
+// 409 comes from the duplicate check. An admin employee skips that check, so
+// their repeat save hits the database's one-save-per-company rule and comes
+// back as 400 "Student already saved" (saveStudent in savedStudentService).
+function isAlreadySaved(error: unknown) {
+  return (
+    error instanceof HttpClientError &&
+    (error.status === 409 ||
+      (error.status === 400 && error.message === "Student already saved"))
+  );
+}
+
+function MessagePanel({ message }: { message: PageMessage }) {
+  return (
+    <p
+      className={`mt-3 rounded-md border border-l-4 border-ui-border bg-ui-surface px-4 py-3 text-center text-sm text-ui-text ${MESSAGE_TONE[message.tone]}`}
+    >
+      {message.text}
+    </p>
+  );
+}
 
 const CompanySavedProfilesSection = ({
   history,
 }: CompanySavedProfilesSectionProps) => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [message, setMessage] = useState<PageMessage | null>(null);
+  // While a scan is processed the camera gives way to a spinner, so a code
+  // held in view is read again every few hundred milliseconds. Keep an
+  // unchanged message as it is: clearing or replacing it on every read made
+  // it blink and repeated it to screen readers.
+  const showMessage = useCallback(
+    (source: PageMessage["source"], text: string, tone: MessageTone) =>
+      setMessage((current) =>
+        current?.text === text &&
+        current.tone === tone &&
+        current.source === source
+          ? current
+          : { text, tone, source }
+      ),
+    []
+  );
+  const showScanMessage = useCallback(
+    (text: string, tone: MessageTone) => showMessage("scan", text, tone),
+    [showMessage]
+  );
+  const showScanError = useCallback(
+    (text: string) => showScanMessage(text, "error"),
+    [showScanMessage]
+  );
+  const showCodeMessage = (text: string, tone: MessageTone = "error") =>
+    showMessage("code", text, tone);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const codeFieldId = useId();
@@ -47,6 +105,20 @@ const CompanySavedProfilesSection = ({
   const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
     useMutation(SAVE_FAILED);
   const wasSubmittingRef = useRef(false);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // The message sits above the code field, so a typed-code message can be
+  // off screen when the field is scrolled to the top. Scroll just enough to
+  // show it; focus stays in the field. Instant, because returning focus to
+  // the field cancels a smooth scroll partway. Scan messages never scroll
+  // the page, so the camera stays where it is.
+  useEffect(() => {
+    if (message?.source === "code")
+      messageRef.current?.scrollIntoView?.({
+        block: "nearest",
+        behavior: "instant",
+      });
+  }, [message]);
 
   // The field and Validar are disabled while a typed code is checked, which
   // drops keyboard focus to the page. Put it back on the field afterwards.
@@ -63,7 +135,7 @@ const CompanySavedProfilesSection = ({
       const path = new URL(data).pathname;
       router.push(path);
     } else window.open(data, "_self");
-    setProcessing(false);
+    // Processing stays on until the page changes; see handleScan.
   }
 
   async function handleActionScan(data: string) {
@@ -71,30 +143,31 @@ const CompanySavedProfilesSection = ({
 
     try {
       await httpClient.post(`/actions/${actionId}`);
-      toast.success("Os teus pontos foram adicionados com sucesso!");
+      showScanMessage(
+        "Os teus pontos foram adicionados com sucesso!",
+        "success"
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro inesperado");
+      showScanError(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
       setProcessing(false);
     }
   }
 
   // Saves the student for this company, then opens the saved preview.
-  // A duplicate (409) is a warning; anything else is one Portuguese error,
-  // since server and network messages arrive in English.
-  async function saveAndOpen(token: string) {
+  // A duplicate is a warning; anything else is one Portuguese error, since
+  // server and network messages arrive in English. The caller shows the
+  // message: under the code field for a typed code, under the camera for a
+  // scan.
+  async function saveAndOpen(token: string): Promise<SaveResult> {
     try {
       await httpClient.post("/saved", { token });
     } catch (error) {
-      if (error instanceof HttpClientError && error.status === 409) {
-        toast.warning(DUPLICATE, { toastId: TOAST.duplicate });
-      } else {
-        toast.error(SAVE_FAILED, { toastId: TOAST.saveFailed });
-      }
-      return;
+      return isAlreadySaved(error) ? "duplicate" : "failed";
     }
     router.refresh();
     router.push(`/student/${token}/preview`);
+    return "saved";
   }
 
   const handleScan = async (data: string) => {
@@ -102,6 +175,7 @@ const CompanySavedProfilesSection = ({
       setProcessing(true);
 
       if (data.match("^https?://.*")) {
+        setMessage(null);
         handleStudentProfileOpen(data);
         return;
       }
@@ -116,30 +190,36 @@ const CompanySavedProfilesSection = ({
         : data;
 
       if (!token) {
-        toast.error("O código de estudante deste passe é inválido.", {
-          toastId: TOAST.invalidCode,
-        });
+        showScanError("O código de estudante deste passe é inválido.");
         setProcessing(false);
         return;
       }
 
-      await saveAndOpen(token);
+      const result = await saveAndOpen(token);
+      if (result === "saved") {
+        // Keep the spinner up until the preview opens. Bringing the camera
+        // back would read the same code again, and that second save would
+        // briefly show "already saved" before the page changes.
+        setMessage(null);
+        return;
+      }
+      if (result === "duplicate") showScanMessage(DUPLICATE, "warning");
+      else showScanError(SAVE_FAILED);
       setProcessing(false);
     } catch {
       setProcessing(false);
-      toast.error("Ocorreu um erro a dar scan no QR Code do estudante...", {
-        toastId: TOAST.scanFailed,
-      });
+      showScanError("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
   };
 
   const handleManualEntry = () =>
     mutateManualEntry(async () => {
       if (!inputRef.current?.value) {
-        toast.error("Sem código inserido.", { toastId: TOAST.emptyCode });
+        showCodeMessage("Sem código inserido.");
         inputRef.current?.focus();
         return;
       }
+      setMessage(null);
 
       const code = normalizeStudentCode(inputRef.current.value);
       let token: string | null;
@@ -148,13 +228,11 @@ const CompanySavedProfilesSection = ({
       } catch (error) {
         const status = error instanceof HttpClientError ? error.status : 0;
         if (status === 429) {
-          toast.error("Demasiadas tentativas. Aguarde um momento.", {
-            toastId: TOAST.tooMany,
-          });
+          showCodeMessage("Demasiadas tentativas. Aguarde um momento.");
           return;
         }
         if (status !== 400) {
-          toast.error(SAVE_FAILED, { toastId: TOAST.saveFailed });
+          showCodeMessage(SAVE_FAILED);
           return;
         }
         // A malformed code gets the same message as an unknown one.
@@ -162,13 +240,13 @@ const CompanySavedProfilesSection = ({
       }
 
       if (!token) {
-        toast.error("O código introduzido é inválido.", {
-          toastId: TOAST.invalidCode,
-        });
+        showCodeMessage("O código introduzido é inválido.");
         return;
       }
 
-      await saveAndOpen(token);
+      const result = await saveAndOpen(token);
+      if (result === "duplicate") showCodeMessage(DUPLICATE, "warning");
+      else if (result === "failed") showCodeMessage(SAVE_FAILED);
     });
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -190,7 +268,7 @@ const CompanySavedProfilesSection = ({
       window.URL.revokeObjectURL(url);
     } catch {
       toast.error("Não foi possível exportar os CVs. Tenta novamente.", {
-        toastId: TOAST.exportFailed,
+        toastId: EXPORT_FAILED_TOAST,
       });
     } finally {
       setDownloading(false);
@@ -229,8 +307,16 @@ const CompanySavedProfilesSection = ({
               <span className="sr-only">A processar...</span>
             </div>
           ) : (
-            <QRCodeScanner handleScan={handleScan} />
+            <QRCodeScanner handleScan={handleScan} onMessage={showScanError} />
           )}
+        </div>
+        {/* Always rendered, so screen readers announce each new message. */}
+        <div
+          ref={messageRef}
+          role="alert"
+          className="w-full max-w-2xl field-focus-target"
+        >
+          {message && <MessagePanel message={message} />}
         </div>
         <p className="mt-3 max-w-2xl text-center text-sm text-ui-muted">
           Sem câmara ou sem permissão? Introduza o código abaixo.
