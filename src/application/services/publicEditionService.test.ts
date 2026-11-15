@@ -152,11 +152,11 @@ test("warm homepage reads share frozen datasets without cloning and still serial
   expect(JSON.parse(JSON.stringify(second))).toEqual(first);
 });
 
-test("homepage isolates failed sections; API preserves failure status instead of caching empty success", async () => {
+test("homepage generation and the public API surface data failures", async () => {
   reads.faqs.mockRejectedValue(new Error("unavailable"));
-  const data = await readHomepageDatasets(Language.PT);
-  expect(data.faqs).toEqual([]);
-  expect(data.schedule).toHaveLength(1);
+  await expect(readHomepageDatasets(Language.PT)).rejects.toThrow(
+    "Something went wrong"
+  );
   const { GET } = await import("@/app/api/faqs/route");
   const response = await GET(new NextRequest("http://localhost/api/faqs"), {
     params: Promise.resolve({}),
@@ -172,7 +172,9 @@ test.each(["faqs", "schedule", "sponsors", "companies"] as const)(
     reads[section].mockRejectedValueOnce(error);
 
     for (let visitor = 0; visitor < 2; visitor++) {
-      expect((await readHomepageDatasets(Language.PT))[section]).toEqual([]);
+      await expect(readHomepageDatasets(Language.PT)).rejects.toThrow(
+        "Something went wrong"
+      );
       expect(Sentry.captureException).toHaveBeenLastCalledWith(error, {
         extra: { operation: `homepage_${section}` },
       });
@@ -198,22 +200,23 @@ test("a hung section bounds homepage latency, reports once, and recovers after c
         rejectLoad = reject;
       })
   );
-  const visitors = Promise.all(
+  const visitors = Promise.allSettled(
     Array.from({ length: 100 }, () => readHomepageDatasets(Language.PT))
   );
   await vi.advanceTimersByTimeAsync(PUBLIC_DATA_LOAD_TIMEOUT_MS);
-  for (const data of await visitors) {
-    expect(data.faqs).toEqual([]);
-    expect(data.schedule).toHaveLength(1);
-    expect(data.sponsors).toHaveLength(1);
-    expect(data.companies).toHaveLength(1);
-  }
+  expect((await visitors).every((read) => read.status === "rejected")).toBe(
+    true
+  );
   expect(reads.faqs).toHaveBeenCalledOnce();
   expect(Sentry.captureException).toHaveBeenCalledOnce();
-  expect((await readHomepageDatasets(Language.PT)).faqs).toEqual([]);
+  await expect(readHomepageDatasets(Language.PT)).rejects.toThrow(
+    "Something went wrong"
+  );
   expect(Sentry.captureException).toHaveBeenCalledOnce();
   await vi.advanceTimersByTimeAsync(1000);
-  expect((await readHomepageDatasets(Language.PT)).faqs).toEqual([]);
+  await expect(readHomepageDatasets(Language.PT)).rejects.toThrow(
+    "Something went wrong"
+  );
   expect(reads.faqs).toHaveBeenCalledOnce();
   expect(Sentry.captureException).toHaveBeenCalledOnce();
   rejectLoad(new Error("late DB failure"));
@@ -234,7 +237,9 @@ test("concurrent API and homepage failures produce one Sentry event per load", a
     )
   );
   expect(responses.every((response) => response.status === 500)).toBe(true);
-  expect((await readHomepageDatasets(Language.PT)).faqs).toEqual([]);
+  await expect(readHomepageDatasets(Language.PT)).rejects.toThrow(
+    "Something went wrong"
+  );
   expect(reads.faqs).toHaveBeenCalledOnce();
   expect(Sentry.captureException).toHaveBeenCalledOnce();
 });

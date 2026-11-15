@@ -72,8 +72,14 @@ test("returns a token embedding the student's own code, verifiable with a ~30 mi
   assert.equal(res.status, 200);
 
   const { data } = (await res.json()) as { data: string };
-  const decoded = verifyJwt(data) as { code: string; exp: number; iat: number };
+  const decoded = verifyJwt(data) as {
+    code: string;
+    purpose: string;
+    exp: number;
+    iat: number;
+  };
 
   assert.equal(decoded.code, "S123");
+  assert.equal(decoded.purpose, "attendance");
   assert.equal(decoded.exp - decoded.iat, 30 * 60);
 });

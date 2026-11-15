@@ -16,9 +16,6 @@ function toCompanyProps(
     websiteUrl: company.website ?? undefined,
     hasContent: company.hasContent,
     rankStyle: company.rank.style,
-    className: company.className ?? undefined,
-    logoWidth: company.logoWidth ?? undefined,
-    logoHeight: company.logoHeight ?? undefined,
   };
 }
 

@@ -1,0 +1,59 @@
+import { headers } from "next/headers";
+
+import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
+import Custom404 from "@/app/not-found";
+import { toCompanyDto } from "@/application/dto/companyDto";
+import { toInterestDto } from "@/application/dto/interestDto";
+import { getCompanyInterestIds } from "@/application/services/companyService";
+import { getInterests } from "@/application/services/interestService";
+import {
+  getCompanyHistoryPage,
+  getCompanyStats,
+} from "@/application/services/savedStudentService";
+import getServerSession from "@/application/services/sessionService";
+import { getStudentCount } from "@/application/services/studentService";
+import { resolveRequestLanguage } from "@/domain/i18n/translations";
+
+interface DashboardProps {
+  searchParams: Promise<{ lang?: string | string[] }>;
+}
+
+const Dashboard = async ({ searchParams }: DashboardProps) => {
+  const session = await getServerSession();
+  if (!session || !session.employee?.company) return Custom404();
+  const { lang } = await searchParams;
+  const language = resolveRequestLanguage(
+    lang,
+    (await headers()).get("accept-language")
+  );
+
+  const [globalStats, totalStudents, history, companyInterestIds, interests] =
+    await Promise.all([
+      getCompanyStats(session.employee.company.id),
+      getStudentCount(),
+      getCompanyHistoryPage(session.employee.company.id),
+      getCompanyInterestIds(session.employee.company.id),
+      getInterests(),
+    ]);
+
+  return (
+    <section
+      className={`bg-company flex size-full min-h-screen flex-col items-center`}
+    >
+      <CompanyProfileSectionContainer
+        company={toCompanyDto(session.employee.company)}
+        employeeName={session.employee.name}
+        globalStats={globalStats}
+        totalStudents={totalStudents}
+        history={history.items}
+        historyHasMore={history.hasMore}
+        interestIds={companyInterestIds}
+        availableInterests={interests.map((interest) =>
+          toInterestDto(interest, language)
+        )}
+      />
+    </section>
+  );
+};
+
+export default Dashboard;
