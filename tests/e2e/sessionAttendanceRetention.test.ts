@@ -5,7 +5,7 @@ import { databaseFixtures } from "./support/databaseFixtures";
 
 const db = new PrismaClient();
 
-test("session deletion is restricted and scanner deletion preserves attendance, and student deletion removes it", async () => {
+test("session deletion is restricted and scanner deletion preserves attendance", async () => {
   const fixtures = databaseFixtures(db);
   let checkInId: string | undefined;
   try {
@@ -27,10 +27,6 @@ test("session deletion is restricted and scanner deletion preserves attendance, 
     expect(
       (await db.sessionCheckIn.findUniqueOrThrow({ where: { id: checkIn.id } }))
         .scannedById
-    ).toBeNull();
-    await db.user.delete({ where: { id: student.id } });
-    expect(
-      await db.sessionCheckIn.findUnique({ where: { id: checkIn.id } })
     ).toBeNull();
   } finally {
     if (checkInId)

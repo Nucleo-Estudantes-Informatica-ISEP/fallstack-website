@@ -59,5 +59,20 @@ Check-in POSTs share a Redis-backed limit of 60 attempts per staff user per
 minute across all sessions and credential forms. Exhaustion returns 429 with
 Retry-After; a limiter outage fails closed with 503. Unknown student credentials
 emit a structured warning with scanner and session IDs, never the code or token,
-so repeated misses can be investigated. The 404 remains useful for staff input
-correction; authorized staff can still learn code existence within this budget.
+so repeated misses can be investigated. Unknown credentials return the same
+generic error as other invalid credentials.
+
+## Attendance export snapshots — 14 November 2026
+
+For #471, capture the session day, start/end times and translated activity in
+`SessionCheckIn` when inserting attendance. A database trigger owns these fields
+and preserves them on updates, including scanner-reference removal. Exports
+filter and render the captured values, so later schedule edits cannot move an
+attendance record to another day or change its session title or validity time.
+Schedule entries can still be corrected for future check-ins.
+
+Migration `20261114140000_snapshot_attendance_sessions` backfills existing rows
+from the currently stored schedule. Earlier schedule values cannot be recovered
+from data that was never captured. The original attendance migration must not
+have been deployed from an obsolete PR snapshot; verify its checksum before
+updating an environment. Production rollout remains separate from local checks.
