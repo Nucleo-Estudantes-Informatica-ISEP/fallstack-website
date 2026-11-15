@@ -110,6 +110,8 @@ export async function signUpEmployee(input: {
   name: string;
   linkedin?: string;
   companyCode: string;
+  isNeiMember?: boolean;
+  attendanceExpiresAt?: number;
 }) {
   const company = await findCompanyByInviteCodeHash(
     inviteCodeHash(input.companyCode)
@@ -146,14 +148,18 @@ export async function signUpEmployee(input: {
     throw new HttpError("Unable to create employee profile", 500);
   }
 
-  return signAppSession({
-    sub: input.zitadelUserId,
-    email: input.email,
-    name: input.name,
-    emailVerified: true,
-    isEmployee: true,
-    isGlobalAdmin: false,
-  });
+  return signAppSession(
+    {
+      sub: input.zitadelUserId,
+      email: input.email,
+      name: input.name,
+      emailVerified: true,
+      isEmployee: true,
+      isGlobalAdmin: false,
+      isNeiMember: input.isNeiMember,
+    },
+    input.attendanceExpiresAt ?? 0
+  );
 }
 
 export async function changePassword(input: {

@@ -7,22 +7,31 @@ import { getPublicCompanyRoster } from "@/application/services/publicEditionServ
 
 import Page from "./page";
 
-const config = vi.hoisted(() => ({ SHOWCASE_FULL_WEBSITE: false }));
+const config = vi.hoisted(() => ({
+  SHOWCASE_FULL_WEBSITE: false,
+  EVENT_MODE: "active" as "active" | "offseason",
+}));
+
 vi.mock("@/config/env.server", () => ({ serverEnv: config }));
+
 vi.mock("@/application/services/publicEditionService", () => ({
   getPublicCompanyRoster: vi.fn(async (language: string) => [language]),
   getPublicFaqs: async (language: string) => [language],
   getPublicSchedule: async (language: string) => [language],
   getPublicSponsors: async () => ["public"],
 }));
+
 afterEach(() => {
   config.SHOWCASE_FULL_WEBSITE = false;
+  config.EVENT_MODE = "active";
 });
+
 vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("Not found");
   },
 }));
+
 vi.mock("@/components/CountdownLanding", () => ({
   default: ({
     language,
@@ -37,16 +46,19 @@ vi.mock("@/components/CountdownLanding", () => ({
     </div>
   ),
 }));
+
 vi.mock("@/components/FeaturedCompanies", () => ({
   default: ({ language }: { language: string }) => (
     <span>Partners {language}</span>
   ),
 }));
+
 vi.mock("@/components/HomePage", () => ({
   default: ({ sections }: { sections: Record<string, ReactNode> }) => (
     <main>Full website {Object.values(sections)}</main>
   ),
 }));
+
 vi.mock("@/components/HomepageSection", () => ({
   default: ({ section, data }: { section: string; data: string[] }) => (
     <span>
@@ -55,41 +67,86 @@ vi.mock("@/components/HomepageSection", () => ({
   ),
 }));
 
+vi.mock("@/components/OffseasonLanding", () => ({
+  default: ({ language }: { language: string }) => (
+    <main>Offseason landing {language}</main>
+  ),
+}));
+
 test.each([
   ["pt", "PT"],
   ["en", "EN"],
 ])("serves countdown for %s", async (slug, language) => {
-  const page = await Page({ params: Promise.resolve({ language: slug }) });
+  const page = await Page({
+    params: Promise.resolve({ language: slug }),
+  });
+
   const html = renderToStaticMarkup(page);
+
   expect(getPublicCompanyRoster).toHaveBeenLastCalledWith(language);
   expect(html).toContain(`Countdown ${language}`);
   expect(html).toContain(`<span>Partners ${language}</span>`);
   expect(html).not.toContain("Full website");
+  expect(html).not.toContain("Offseason landing");
 });
 
 test("showcase renders the full website in the resolved language", async () => {
   config.SHOWCASE_FULL_WEBSITE = true;
-  const page = await Page({ params: Promise.resolve({ language: "pt" }) });
+
+  const page = await Page({
+    params: Promise.resolve({ language: "pt" }),
+  });
+
   const html = renderToStaticMarkup(page);
+
   expect(html).toContain("Full website");
+
   for (const section of ["schedule", "companies", "faqs"]) {
     expect(html).toContain(`${section} PT`);
   }
+
   expect(html).toContain("sponsors public");
   expect(html).not.toContain("Countdown");
+  expect(html).not.toContain("Offseason landing");
 });
 
 test("a failed refresh cannot produce a cacheable page with missing partners", async () => {
   vi.mocked(getPublicCompanyRoster).mockRejectedValueOnce(
     new Error("DB unavailable")
   );
+
   await expect(
-    Page({ params: Promise.resolve({ language: "pt" }) })
+    Page({
+      params: Promise.resolve({ language: "pt" }),
+    })
   ).rejects.toThrow("DB unavailable");
 });
 
 test("rejects paths outside the two public language variants", async () => {
   await expect(
-    Page({ params: Promise.resolve({ language: "fr" }) })
+    Page({
+      params: Promise.resolve({ language: "fr" }),
+    })
   ).rejects.toThrow("Not found");
+});
+
+test.each([
+  ["pt", "PT"],
+  ["en", "EN"],
+])("shows offseason landing for %s", async (slug, language) => {
+  config.EVENT_MODE = "offseason";
+  config.SHOWCASE_FULL_WEBSITE = true;
+
+  vi.mocked(getPublicCompanyRoster).mockClear();
+
+  const page = await Page({
+    params: Promise.resolve({ language: slug }),
+  });
+
+  const html = renderToStaticMarkup(page);
+
+  expect(html).toContain(`Offseason landing ${language}`);
+  expect(html).not.toContain("Full website");
+  expect(html).not.toContain("Countdown");
+  expect(getPublicCompanyRoster).not.toHaveBeenCalled();
 });
