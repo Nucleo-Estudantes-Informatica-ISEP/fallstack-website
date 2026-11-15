@@ -1,4 +1,4 @@
-# 0040: Run CI on a dedicated runner
+# 0041: Run CI on a dedicated runner
 
 Status: Accepted
 Date: 2026-11-15

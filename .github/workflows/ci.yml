@@ -43,6 +43,8 @@ jobs:
   quality:
     name: Test, typecheck, lint & build
     runs-on: [self-hosted, Linux, X64, fallstack-david]
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/ms-playwright
 
     services:
       postgres:
