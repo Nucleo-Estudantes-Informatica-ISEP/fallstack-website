@@ -106,3 +106,12 @@ test("the company variant links each student to their preview", () => {
   ).toHaveAttribute("href", "/student/Z100/preview");
   expect(screen.queryByText("Empresa Alfa")).toBeNull();
 });
+
+test("the scrolling history box can be reached and scrolled by keyboard", () => {
+  render(<HistorySection historyData={rows} />);
+
+  const box = screen.getByRole("region", { name: "Histórico de scans" });
+  expect(box).toHaveAttribute("tabindex", "0");
+  expect(box).toHaveClass("ui-focus");
+  expect(within(box).getByRole("table")).toBeInTheDocument();
+});

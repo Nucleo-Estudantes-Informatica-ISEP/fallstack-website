@@ -219,7 +219,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
       style={{
         backgroundImage: isPersonalInfo
-          ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
+          ? // Same 60% overlay as .artwork-readable, so header text stays >= 4.5:1.
+            "linear-gradient(#14141499, #14141499), url(/assets/optimized/profile-2026.403096771b21.webp)"
           : undefined,
       }}
     >
@@ -250,7 +251,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           )}
         </p>
         {student.cvPurgedAt && (
-          <div className="mb-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
+          <div className="mt-4 mb-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
             <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em

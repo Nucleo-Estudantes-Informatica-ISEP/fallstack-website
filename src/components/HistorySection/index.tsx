@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import Link from "next/link";
 
 import type { SavedStudentDto } from "@/application/dto/historyDto";
@@ -15,10 +16,20 @@ const headerCell =
 const bodyCell = "px-2 py-3 align-top md:py-4 md:text-center";
 
 const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
+  const captionId = useId();
+
   return (
-    <div className="firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 mt-8 scrollbar max-h-80 w-full scrollbar-thumb-slate-500 scrollbar-track-transparent scrollbar-gutter-stable overflow-y-auto md:mt-10">
+    // Focusable so keyboard users can scroll the list when it overflows.
+    <div
+      role="region"
+      aria-labelledby={captionId}
+      tabIndex={0}
+      className="ui-focus firefox-scrollbar-margin scrollbar-thumb-rounded-lg scrollbar-w-1 mt-8 scrollbar max-h-80 w-full scrollbar-thumb-slate-500 scrollbar-track-transparent scrollbar-gutter-stable overflow-y-auto md:mt-10"
+    >
       <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-white md:text-base">
-        <caption className="sr-only">Histórico de scans</caption>
+        <caption id={captionId} className="sr-only">
+          Histórico de scans
+        </caption>
         <colgroup>
           <col className="w-1/2" />
           <col className="w-1/4" />

@@ -280,3 +280,26 @@ test("the avatar dialog is dark and labelled", () => {
     within(dialog).getByRole("heading", { name: "Altera o teu avatar" })
   ).toHaveClass("font-sans");
 });
+
+test("the CV-removed notice keeps a gap below the email", () => {
+  renderFrame({ cvPurgedAt: "2026-11-13T10:00:00.000Z" });
+
+  expect(screen.getByText(/O teu CV foi removido/).parentElement).toHaveClass(
+    "mt-4"
+  );
+});
+
+test("the personal information artwork has the same readability overlay as the other tabs", () => {
+  renderFrame();
+  const page = menu().closest(".min-h-screen") as HTMLElement;
+  expect(page).toHaveClass("artwork-readable");
+
+  fireEvent.click(
+    within(menu()).getByRole("button", { name: "Informações pessoais" })
+  );
+
+  expect(page.style.backgroundImage).toContain(
+    "linear-gradient(rgba(20, 20, 20, 0.6), rgba(20, 20, 20, 0.6))"
+  );
+  expect(page.style.backgroundImage).toContain("profile-2026");
+});
