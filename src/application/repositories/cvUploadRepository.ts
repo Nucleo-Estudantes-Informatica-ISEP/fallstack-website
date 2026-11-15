@@ -116,13 +116,13 @@ export async function consumeCvUpload(
     if (student.cv === cvId) return false;
     const currentTicket = await db.cvUpload.findFirst({
       where: { cvId: student.cv, ownerId },
-      select: { id: true, createdAt: true },
+      select: { id: true, createdAt: true, seq: true },
     });
     if (
       currentTicket &&
       (currentTicket.createdAt > ticket.createdAt ||
         (currentTicket.createdAt.getTime() === ticket.createdAt.getTime() &&
-          currentTicket.id !== ticket.id))
+          currentTicket.seq > ticket.seq))
     ) {
       return false;
     }

@@ -582,3 +582,70 @@ test.skipIf(!enabled)(
     ).toBe(doneB.id);
   }
 );
+
+test.skipIf(!enabled)(
+  "equal timestamps in normal completion order: later ticket supersedes earlier ticket",
+  async () => {
+    const postA = await ticket();
+    const postB = await ticket();
+
+    const sharedTime = new Date("2026-11-15T12:00:00.000Z");
+    await prisma.cvUpload.update({
+      where: { id: postA.uploadId },
+      data: { createdAt: sharedTime },
+    });
+    await prisma.cvUpload.update({
+      where: { id: postB.uploadId },
+      data: { createdAt: sharedTime },
+    });
+
+    await transfer(postA);
+    await transfer(postB);
+
+    // Finalize earlier ticket A first
+    const doneA = await service.finalizeCvUpload(owner.id, postA.uploadId);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneA.id);
+
+    // Finalize later ticket B second - replaces A despite equal timestamps
+    const doneB = await service.finalizeCvUpload(owner.id, postB.uploadId);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneB.id);
+  }
+);
+
+test.skipIf(!enabled)(
+  "equal timestamps in reversed completion order: earlier finalizer cannot overwrite later ticket",
+  async () => {
+    const postA = await ticket();
+    const postB = await ticket();
+
+    const sharedTime = new Date("2026-11-15T12:00:00.000Z");
+    await prisma.cvUpload.update({
+      where: { id: postA.uploadId },
+      data: { createdAt: sharedTime },
+    });
+    await prisma.cvUpload.update({
+      where: { id: postB.uploadId },
+      data: { createdAt: sharedTime },
+    });
+
+    await transfer(postA);
+    await transfer(postB);
+
+    // Finalize later ticket B first
+    const doneB = await service.finalizeCvUpload(owner.id, postB.uploadId);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneB.id);
+
+    // Finalize earlier ticket A second (out of order) - must not overwrite B
+    const doneA = await service.finalizeCvUpload(owner.id, postA.uploadId);
+    expect(doneA.id).not.toBe(doneB.id);
+    expect(
+      (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
+    ).toBe(doneB.id);
+  }
+);
