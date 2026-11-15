@@ -98,6 +98,7 @@ test("has the shared section heading, not Coolvetica", () => {
   expect(heading.tagName).toBe("H2");
   expect(heading).toHaveClass(
     "font-sans",
+    "font-semibold",
     "text-2xl",
     "lg:text-[1.75rem]",
     "text-center",

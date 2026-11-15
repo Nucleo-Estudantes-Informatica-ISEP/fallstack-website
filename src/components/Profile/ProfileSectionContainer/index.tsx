@@ -203,7 +203,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       case "Desafios":
         return (
           <>
-            <h2 className="mb-5 text-center font-sans text-2xl text-white lg:text-left lg:text-[1.75rem]">
+            <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
               Desafios
             </h2>
             <ActionsSection actions={actions} />

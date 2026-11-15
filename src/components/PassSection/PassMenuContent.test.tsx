@@ -108,6 +108,7 @@ test("has the section heading and the Figma intro sentence", async () => {
   expect(heading).not.toHaveAttribute("style");
   expect(heading).toHaveClass(
     "font-sans",
+    "font-semibold",
     "text-2xl",
     "lg:text-[1.75rem]",
     "text-center",

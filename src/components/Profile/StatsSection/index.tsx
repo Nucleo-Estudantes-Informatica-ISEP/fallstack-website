@@ -31,7 +31,7 @@ const StatsSection: React.FC<StatsProps> = ({
 
   return (
     <section className="flex w-full flex-col">
-      <h2 className="mb-5 text-center font-sans text-2xl text-white lg:text-left lg:text-[1.75rem]">
+      <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
         Sumário do teu perfil
       </h2>
       <div className="mx-auto grid w-full max-w-60 grid-cols-1 divide-y divide-ui-border md:my-4 md:max-w-none md:grid-cols-3 md:divide-x md:divide-y-0">

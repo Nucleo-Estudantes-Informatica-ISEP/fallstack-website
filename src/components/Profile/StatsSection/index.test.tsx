@@ -78,6 +78,7 @@ test("has one section heading in the shared style and no second h1", () => {
   expect(heading.tagName).toBe("H2");
   expect(heading).toHaveClass(
     "font-sans",
+    "font-semibold",
     "text-2xl",
     "lg:text-[1.75rem]",
     "text-center",
