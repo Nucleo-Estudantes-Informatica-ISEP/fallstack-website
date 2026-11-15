@@ -18,11 +18,15 @@ interface PassMenuContentProps {
   googleWalletSaveUrl?: string | null;
 }
 
+const DOWNLOAD_ERROR_MESSAGE =
+  "Não foi possível gerar o passe offline. Tenta novamente antes de ficares sem internet.";
+
 const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
 
   // Ref para o QR Code SVG permanente (student.code), nunca o qrToken rotativo
   const permanentQrRef = useRef<SVGSVGElement | null>(null);
@@ -52,7 +56,13 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   };
 
   const handleDownloadOfflinePass = async () => {
-    if (!student.code || !permanentQrRef.current) return;
+    setDownloadError(null);
+
+    if (!student.code || !permanentQrRef.current) {
+      setDownloadError(DOWNLOAD_ERROR_MESSAGE);
+      return;
+    }
+
     try {
       setDownloading(true);
       await downloadOfflinePass({
@@ -61,6 +71,9 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
         permanentCode: student.code,
         qrSvgElement: permanentQrRef.current,
       });
+    } catch {
+      // O botão volta a ficar ativo no finally, por isso o retry é o próprio botão.
+      setDownloadError(DOWNLOAD_ERROR_MESSAGE);
     } finally {
       setDownloading(false);
     }
@@ -131,6 +144,16 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
 
         <GoogleWalletButton />
       </div>
+
+      {/* Erro na geração do passe offline */}
+      {downloadError && (
+        <p
+          role="alert"
+          className="mt-3 max-w-md text-center text-sm text-red-400"
+        >
+          {downloadError}
+        </p>
+      )}
     </div>
   );
 };

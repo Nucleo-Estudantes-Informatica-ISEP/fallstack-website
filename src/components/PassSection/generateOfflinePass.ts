@@ -119,16 +119,20 @@ export async function downloadOfflinePass({
 
   ctx.fillStyle = "#A1A1AA";
   ctx.font = '20px "Inter", sans-serif';
+  // Nota sobre o comportamento real do código (sem implicar expiração por data
+  // nem verificação de conta ativa): a imagem fica no dispositivo; a eliminação
+  // da conta remove a consulta do código e revoga o objeto da Google Wallet.
   ctx.fillText(
-    `Passe offline válido para ${branding.event.days.join("–")} de ${branding.event.month} de ${branding.year}.`,
+    "Esta imagem fica guardada no teu dispositivo.",
     width / 2,
     1385
   );
   ctx.fillText(
-    "Sujeito a verificação de conta ativa no check-in.",
+    "Ao eliminares a conta, o código deixa de ser reconhecido",
     width / 2,
-    1415
+    1412
   );
+  ctx.fillText("e o passe da Google Wallet é revogado.", width / 2, 1439);
 
   // 9. Descarregar PNG
   const pngUrl = canvas.toDataURL("image/png", 1.0);
