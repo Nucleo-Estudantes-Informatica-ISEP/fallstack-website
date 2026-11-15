@@ -142,8 +142,10 @@ export const setStudentAvatar = (code: string, url: string) =>
 export async function setStudentCv(code: string, id: string) {
   const student = await findStudentByCode(code);
   if (!student) throw new HttpError("Student not found", 404);
+  if (student.cv === id) return;
   await withTransaction(async (tx) => {
-    if (!(await consumeCvUpload(student.id, id, tx))) return;
+    const attached = await consumeCvUpload(student.id, id, tx);
+    if (!attached) return;
     await updateStudentCv(code, id, tx);
     await completeAction(code, actionNames.uploadCv, tx);
   });

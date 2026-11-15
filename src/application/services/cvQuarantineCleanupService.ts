@@ -25,6 +25,17 @@ export async function cleanupCvQuarantine(
   signal?: AbortSignal
 ) {
   const keys = await listExpiredCvQuarantine(now, signal);
-  if (apply) for (const key of keys) await deleteObject("cv", key, signal);
+  let deleted = 0;
+  if (apply) {
+    for (const key of keys) {
+      try {
+        await deleteObject("cv", key, signal);
+        deleted++;
+      } catch (cause) {
+        signal?.throwIfAborted();
+      }
+    }
+    return deleted;
+  }
   return keys.length;
 }

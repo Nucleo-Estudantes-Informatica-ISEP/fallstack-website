@@ -119,8 +119,27 @@ export async function runStorageCleanup({
       error,
     });
   }
-  if (apply)
-    for (const key of quarantine) await deleteObject("cv", key, signal);
+  if (apply) {
+    for (const key of quarantine) {
+      try {
+        await deleteObject("cv", key, signal);
+        deleted++;
+        audit({ level: "info", action: "quarantine-deleted", kind: "cv", key });
+      } catch (cause) {
+        signal?.throwIfAborted();
+        failed++;
+        const error =
+          cause instanceof Error ? cause.name.slice(0, 100) : "UnknownError";
+        audit({
+          level: "error",
+          action: "quarantine-delete-failed",
+          kind: "cv",
+          key,
+          error,
+        });
+      }
+    }
+  }
   return {
     quarantine: quarantine.length,
     mode: apply ? "apply" : "dry-run",

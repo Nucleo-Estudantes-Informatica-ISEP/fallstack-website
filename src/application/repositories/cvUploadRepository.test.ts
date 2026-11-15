@@ -149,8 +149,10 @@ test("fences out older tickets when student profile already has a newer ticket a
   } as unknown as DbClient;
 
   // Finalizing older ticket A while profile already holds newer ticket B
-  const attached = await consumeCvUpload("owner", "cv-A", db);
-  expect(attached).toBe(false);
+  await expect(consumeCvUpload("owner", "cv-A", db)).rejects.toMatchObject({
+    status: 409,
+    message: "CV upload superseded",
+  });
   expect(updateMany).not.toHaveBeenCalled();
 });
 
@@ -269,8 +271,10 @@ test("fences out older ticket with equal timestamp and lower sequence when highe
     },
   } as unknown as DbClient;
 
-  const attached = await consumeCvUpload("owner", "cv-1", db);
-  expect(attached).toBe(false);
+  await expect(consumeCvUpload("owner", "cv-1", db)).rejects.toMatchObject({
+    status: 409,
+    message: "CV upload superseded",
+  });
   expect(updateMany).not.toHaveBeenCalled();
 });
 

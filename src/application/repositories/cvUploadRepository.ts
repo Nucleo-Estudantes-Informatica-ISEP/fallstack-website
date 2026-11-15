@@ -124,7 +124,7 @@ export async function consumeCvUpload(
         (currentTicket.createdAt.getTime() === ticket.createdAt.getTime() &&
           currentTicket.seq > ticket.seq))
     ) {
-      return false;
+      throw new HttpError("CV upload superseded", 409);
     }
   }
 

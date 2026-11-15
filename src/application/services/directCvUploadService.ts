@@ -105,7 +105,8 @@ export async function finalizeCvUpload(ownerId: string, uploadId: string) {
   } catch (error) {
     const invalid = error instanceof HttpError && error.status === 400;
     await releaseCvUpload(uploadId, attemptId, invalid).catch(() => {});
-    if (invalid) await discardQuarantine(uploadId);
+    if (invalid || (error instanceof HttpError && error.status === 409))
+      await discardQuarantine(uploadId);
     // Never delete the candidate here: a DB commit response could be lost.
     // Existing orphan reconciliation safely reclaims unpublished destinations.
     if (error instanceof HttpError) throw error;

@@ -573,8 +573,9 @@ test.skipIf(!enabled)(
     ).toBe(doneB.id);
 
     // Finalize A second (the older ticket) out-of-order
-    const doneA = await service.finalizeCvUpload(owner.id, postA.uploadId);
-    expect(doneA.id).not.toBe(doneB.id);
+    await expect(
+      service.finalizeCvUpload(owner.id, postA.uploadId)
+    ).rejects.toMatchObject({ status: 409, message: "CV upload superseded" });
 
     // Profile CV must remain B, fenced from older ticket A
     expect(
@@ -650,8 +651,9 @@ test.skipIf(!enabled)(
     ).toBe(doneB.id);
 
     // Finalize earlier ticket A second (out of order) - must not overwrite B
-    const doneA = await service.finalizeCvUpload(owner.id, postA.uploadId);
-    expect(doneA.id).not.toBe(doneB.id);
+    await expect(
+      service.finalizeCvUpload(owner.id, postA.uploadId)
+    ).rejects.toMatchObject({ status: 409, message: "CV upload superseded" });
     expect(
       (await prisma.student.findUniqueOrThrow({ where: { id: owner.id } })).cv
     ).toBe(doneB.id);

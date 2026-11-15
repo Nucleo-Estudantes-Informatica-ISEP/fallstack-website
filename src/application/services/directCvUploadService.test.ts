@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { HttpError } from "@/types/HttpError";
 import { actionNames } from "@/edition/actions";
 
 import { finalizeCvUpload, initiateCvUpload } from "./directCvUploadService";
@@ -182,20 +183,24 @@ test("updates student media and completes action when student exists and ticket 
     expect.anything()
   );
 });
-test("fences out older tickets: skips updateStudentMedia and completeAction when consumeCvUpload returns false", async () => {
+test("fences out older tickets: rejects with 409 and discards quarantine when superseded", async () => {
   studentMocks.findStudentProfileById.mockResolvedValue({
     id: "owner",
     code: "std-123",
   });
-  mocks.consumeCvUpload.mockResolvedValue(false);
-
-  const result = await finalizeCvUpload("owner", "ticket");
-  expect(result.id).toBeDefined();
-  expect(mocks.consumeCvUpload).toHaveBeenCalledWith(
-    "owner",
-    result.id,
-    expect.anything()
+  mocks.consumeCvUpload.mockRejectedValue(
+    new HttpError("CV upload superseded", 409)
   );
+
+  await expect(finalizeCvUpload("owner", "ticket")).rejects.toMatchObject({
+    status: 409,
+    message: "CV upload superseded",
+  });
   expect(studentMocks.updateStudentMedia).not.toHaveBeenCalled();
   expect(actionMocks.completeAction).not.toHaveBeenCalled();
+  expect(mocks.deleteObject).toHaveBeenCalledWith(
+    "cv",
+    "quarantine/cv/ticket",
+    expect.any(AbortSignal)
+  );
 });
