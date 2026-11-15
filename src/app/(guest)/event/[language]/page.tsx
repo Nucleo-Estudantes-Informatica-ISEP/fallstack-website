@@ -4,6 +4,7 @@ import { serverEnv } from "@/config/env.server";
 import type { HomepageSections } from "@/components/Content";
 import CountdownLanding from "@/components/CountdownLanding";
 import FeaturedCompanies from "@/components/FeaturedCompanies";
+import HomeCallToAction from "@/components/HomeCallToAction";
 import HomePage from "@/components/HomePage";
 import HomepageSection from "@/components/HomepageSection";
 import OffseasonLanding from "@/components/OffseasonLanding";
@@ -46,10 +47,13 @@ export default async function EventPage({
       sponsors: <HomepageSection section="sponsors" data={sponsors} />,
       faqs: <HomepageSection section="faqs" data={faqs} />,
     };
-    return <HomePage sections={sections} />;
+    return <HomePage language={language} sections={sections} />;
   }
   return (
-    <CountdownLanding language={language}>
+    <CountdownLanding
+      language={language}
+      callToAction={<HomeCallToAction language={language} />}
+    >
       <FeaturedCompanies
         language={language}
         companies={await getPublicCompanyRoster(language)}

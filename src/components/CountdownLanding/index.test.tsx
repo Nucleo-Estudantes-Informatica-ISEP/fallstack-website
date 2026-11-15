@@ -89,3 +89,30 @@ test("places featured partners after the banner and before the footer", () => {
   );
   expect(row.nextElementSibling).toBe(container.querySelector("footer"));
 });
+
+test("places the call to action in the banner, after the countdown and before the partners", () => {
+  render(
+    <CountdownLanding
+      language={Language.PT}
+      callToAction={<a href="/signup">Quero registar-me no evento</a>}
+    >
+      <section aria-label="Parceiros em destaque">Partner</section>
+    </CountdownLanding>
+  );
+  const cta = screen.getByRole("link", { name: "Quero registar-me no evento" });
+  const timer = screen.getByRole("timer");
+  const banner = timer.closest("section");
+  const partners = screen.getByRole("region", {
+    name: "Parceiros em destaque",
+  });
+
+  expect(banner).toContainElement(cta);
+  // One shared column, so the action can never be drawn over the countdown.
+  expect(cta.parentElement).toBe(timer.parentElement);
+  expect(
+    timer.compareDocumentPosition(cta) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+  expect(
+    cta.compareDocumentPosition(partners) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+});
