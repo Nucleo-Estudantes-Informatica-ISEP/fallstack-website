@@ -29,8 +29,23 @@ vi.mock("../ProfileSection", () => ({
   default: () => <p>Personal information content</p>,
 }));
 vi.mock("../UserImage", () => ({
-  default: ({ imageSrc }: { imageSrc: string | null }) => (
-    <p>Avatar {imageSrc}</p>
+  default: ({
+    imageSrc,
+    editable,
+    onChange,
+  }: {
+    imageSrc: string | null;
+    editable?: boolean;
+    onChange?: (image: string) => void;
+  }) => (
+    <>
+      <p>Avatar {imageSrc}</p>
+      {editable && (
+        <button type="button" onClick={() => onChange?.("data:image/png,x")}>
+          Choose avatar
+        </button>
+      )}
+    </>
   ),
 }));
 vi.mock("../AvatarCropper", () => ({ default: () => null }));
@@ -248,4 +263,19 @@ test("the CV-removed notice uses the highlight token, not inline colours", () =>
   const box = screen.getByText(/O teu CV foi removido/).parentElement!;
   expect(box).not.toHaveAttribute("style");
   expect(box).toHaveClass("border-ui-highlight");
+});
+
+test("the avatar dialog is dark and labelled", () => {
+  renderFrame();
+
+  fireEvent.click(
+    within(menu()).getByRole("button", { name: "Informações pessoais" })
+  );
+  fireEvent.click(screen.getByRole("button", { name: "Choose avatar" }));
+
+  const dialog = screen.getByRole("dialog", { name: "Altera o teu avatar" });
+  expect(dialog).toHaveClass("bg-ui-surface!", "text-white!");
+  expect(
+    within(dialog).getByRole("heading", { name: "Altera o teu avatar" })
+  ).toHaveClass("font-sans");
 });

@@ -126,7 +126,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   return (
     <section className="student-profile-form w-full">
-      <h2 className="mb-5 text-2xl text-white lg:text-[1.75rem]">
+      <h2 className="mb-5 text-center font-sans text-2xl text-white lg:text-left lg:text-[1.75rem]">
         Informações pessoais
       </h2>
       <div className="flex flex-col gap-y-4">

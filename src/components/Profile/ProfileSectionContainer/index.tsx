@@ -313,10 +313,13 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       <Modal
         isVisible={isAvatarModalVisible}
         setIsVisible={setIsAvatarModalVisible}
-        className="flex w-full max-w-lg flex-col gap-6"
+        className="flex w-full max-w-lg flex-col gap-6 border border-ui-border bg-ui-surface! text-white!"
         aria-labelledby="avatar-modal-title"
       >
-        <h2 id="avatar-modal-title" className="text-3xl">
+        <h2
+          id="avatar-modal-title"
+          className="font-sans text-2xl text-white lg:text-[1.75rem]"
+        >
           Altera o teu avatar
         </h2>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />

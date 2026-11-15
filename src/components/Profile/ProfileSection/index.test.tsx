@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
 import type { ProfileData } from "@/types/ProfileData";
+import { httpClient } from "@/lib/http/client";
 import type { StudentDto } from "@/application/dto/studentDto";
 
 import ProfileSection from ".";
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("@/lib/http/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/http/client")>()),
+  httpClient: { patch: vi.fn().mockResolvedValue({}), post: vi.fn() },
+}));
 
 const student: StudentDto = {
   id: "student",
@@ -84,4 +89,37 @@ test("shows locked fields as read-only with short explanatory hints and readable
   expect(screen.getByLabelText("GitHub")).not.toBeDisabled();
   expect(screen.getByLabelText("CV")).toBeInTheDocument();
   expect(screen.getByRole("textbox", { name: "Biografia" })).not.toBeDisabled();
+});
+
+test("has the shared section heading, not Coolvetica", () => {
+  render(<Profile />);
+
+  const heading = screen.getByRole("heading", { name: "Informações pessoais" });
+  expect(heading.tagName).toBe("H2");
+  expect(heading).toHaveClass(
+    "font-sans",
+    "text-2xl",
+    "lg:text-[1.75rem]",
+    "text-center",
+    "lg:text-left"
+  );
+});
+
+test("Guardar still saves the profile through the same request", async () => {
+  render(<Profile />);
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Biografia" }), {
+    target: { value: "Nova bio" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "React" }));
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+  await waitFor(() =>
+    expect(httpClient.patch).toHaveBeenCalledWith("/students/123", {
+      bio: "Nova bio",
+      github: "",
+      linkedin: "",
+      interests: ["react"],
+    })
+  );
 });
