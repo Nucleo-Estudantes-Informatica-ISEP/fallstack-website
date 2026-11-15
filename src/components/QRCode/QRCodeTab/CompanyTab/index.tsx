@@ -69,11 +69,13 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
     });
 
   return (
-    <div className="mt-14 flex flex-col items-center justify-center">
+    // On mobile the scanner sits above the typed-code entry, so the spacing
+    // is kept tight there; desktop keeps its original spacing.
+    <div className="mt-6 flex flex-col items-center justify-center sm:mt-14">
       {isMobile && <ScanTab setHidden={setHidden} />}
 
-      <div className="flex flex-col items-center justify-center pt-14 pb-0 sm:py-0">
-        <div className="mt-14 rounded-xl bg-gray-200 p-2 sm:p-2 md:p-6">
+      <div className="flex flex-col items-center justify-center py-6 sm:py-0">
+        <div className="rounded-xl bg-gray-200 p-2 sm:mt-14 sm:p-2 md:p-6">
           <div className="my-2 flex items-center justify-center">
             <BsFillClipboardFill size={20} className="fill-black" />
             <input
