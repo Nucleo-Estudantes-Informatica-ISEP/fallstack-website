@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiChevronDown } from "react-icons/fi";
 
+import type { AttendanceSessionDto } from "@/types/AttendanceSession";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import {
   credentialFromScan,
@@ -21,16 +22,7 @@ import { normalizeStudentCode } from "@/domain/student/studentCode";
 
 import ResultCard from "./ResultCard";
 
-export type AttendanceSessionDto = {
-  id: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  /** ISO timestamps of the session window. */
-  start: string;
-  end: string;
-  dayTitle: string;
-};
+export type { AttendanceSessionDto };
 
 export const RESULT_CARD_MS = 3500;
 export const COUNT_POLL_MS = 5000;

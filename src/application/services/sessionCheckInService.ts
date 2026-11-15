@@ -1,9 +1,11 @@
 import "server-only";
 
+import type { AttendanceSessionDto } from "@/types/AttendanceSession";
 import { HttpError } from "@/types/HttpError";
 import logger from "@/lib/logger";
 import { verifyJwt } from "@/application/services/authService";
 import {
+  eventDayIndex,
   getSessionWindow,
   isWithinSession,
 } from "@/domain/session/sessionRules";
@@ -13,6 +15,7 @@ import {
 } from "@/domain/student/studentCode";
 import { branding } from "@/edition/branding";
 
+import { findAllScheduleEvents } from "../repositories/scheduleRepository";
 import {
   countSessionCheckIns,
   createSessionCheckIn,
@@ -102,4 +105,30 @@ export async function getSessionCheckInCount(sessionId: string) {
   const session = await findScheduleEventForCheckIn(sessionId);
   if (!session) throw new HttpError("Session not found.", 404);
   return countSessionCheckIns(sessionId);
+}
+
+/** Schedule entries of today's event day (Europe/Lisbon), in schedule order. */
+export async function getTodaysAttendanceSessions(
+  now = new Date()
+): Promise<AttendanceSessionDto[]> {
+  const { days, startsAt, scheduleDayTitles } = branding.event;
+  const day = eventDayIndex(now, days, startsAt);
+  if (day === null) return [];
+  const events = await findAllScheduleEvents();
+  return events.flatMap((event) => {
+    if (event.day !== day) return [];
+    const window = getSessionWindow(event, days, startsAt);
+    if (!window) return [];
+    return [
+      {
+        id: event.id,
+        title: event.activity.PT,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        start: window.start.toISOString(),
+        end: window.end.toISOString(),
+        dayTitle: scheduleDayTitles[day - 1] ?? "",
+      },
+    ];
+  });
 }
