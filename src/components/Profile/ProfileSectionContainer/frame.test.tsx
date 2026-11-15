@@ -95,6 +95,8 @@ const menu = () => screen.getByRole("navigation", { name: "Perfil" });
 beforeEach(() => {
   vi.clearAllMocks();
   signedInAsStudent();
+  // jsdom does not scroll; a new selection calls window.scrollTo.
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 
 test("the menu lists the four tabs and Logout, in order", () => {
@@ -302,4 +304,53 @@ test("the personal information artwork has the same readability overlay as the o
     "linear-gradient(rgba(20, 20, 20, 0.6), rgba(20, 20, 20, 0.6))"
   );
   expect(page.style.backgroundImage).toContain("profile-2026");
+});
+
+test("a new selection jumps to the panel's start only when it is out of view", () => {
+  // jsdom has no layout or scrolling: stub where the panel starts.
+  const scrollIntoView = vi.fn();
+  Element.prototype.scrollIntoView = scrollIntoView;
+  let panelTop = 0;
+  const rect = vi
+    .spyOn(Element.prototype, "getBoundingClientRect")
+    .mockImplementation(() => ({ top: panelTop }) as DOMRect);
+  renderFrame();
+
+  // Phone: the menu is under a long panel, so the panel starts above the
+  // screen when an entry is tapped.
+  panelTop = -900;
+  fireEvent.click(within(menu()).getByRole("button", { name: "Desafios" }));
+
+  expect(screen.getByRole("region", { name: "Desafios" })).toHaveFocus();
+  expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  expect(scrollIntoView).toHaveBeenCalledWith({
+    block: "start",
+    behavior: "instant",
+  });
+  // The jump keeps the label clear of the fixed top bar.
+  expect(
+    screen.getByRole("region", { name: "Desafios" }).parentElement
+  ).toHaveClass("field-focus-target");
+
+  // Desktop: the panel starts beside the menu, already in view.
+  scrollIntoView.mockClear();
+  panelTop = 300;
+  fireEvent.click(within(menu()).getByRole("button", { name: "Sumário" }));
+
+  expect(screen.getByRole("region", { name: "Sumário" })).toHaveFocus();
+  expect(scrollIntoView).not.toHaveBeenCalled();
+  rect.mockRestore();
+});
+
+test("a new selection stops a smooth scroll still on its way to the menu", () => {
+  // Focusing a menu entry starts a smooth scroll to it; if it were left to
+  // finish after the panel changes, it would carry the page past the panel.
+  renderFrame();
+
+  fireEvent.click(within(menu()).getByRole("button", { name: "Desafios" }));
+
+  expect(window.scrollTo).toHaveBeenCalledWith({
+    top: window.scrollY,
+    behavior: "instant",
+  });
 });

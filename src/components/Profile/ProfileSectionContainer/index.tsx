@@ -63,6 +63,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   actions,
   availableInterests,
 }) => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const previousMenu = useRef<MenuKey>("sumario");
   const session = useSession();
@@ -75,10 +76,26 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     setSelectedMenu(menuMap[activeTab]);
   }, [activeTab]);
 
+  // A new selection moves focus to its content, so keyboard users do not
+  // tab through the rest of the menu. Focusing alone would leave a phone
+  // user at the end of a tall panel (the menu sits under it below lg), or
+  // with its top under the fixed top bar, so jump to the panel's start
+  // when that is out of view.
   useEffect(() => {
     if (previousMenu.current === selectedMenu) return;
     previousMenu.current = selectedMenu;
-    contentRef.current?.focus();
+    contentRef.current?.focus({ preventScroll: true });
+
+    const section = sectionRef.current;
+    if (!section) return;
+    // The page scrolls smoothly, so the scroll that brought the menu entry
+    // into view can still be running. Left alone, it carries on past the new
+    // panel after this check. Stop it where it is first.
+    window.scrollTo({ top: window.scrollY, behavior: "instant" });
+    const top = section.getBoundingClientRect().top;
+    const topBar = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
+    if (top < topBar || top > window.innerHeight)
+      section.scrollIntoView({ block: "start", behavior: "instant" });
   }, [selectedMenu]);
 
   const [profile, setProfile] = useState<ProfileData>({
@@ -287,7 +304,10 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       <div
         className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="min-w-0 flex-1 lg:order-2">
+        <div
+          ref={sectionRef}
+          className="min-w-0 flex-1 field-focus-target lg:order-2"
+        >
           <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
             {sidebarItems.find((item) => item.key === selectedMenu)?.label}
           </p>
