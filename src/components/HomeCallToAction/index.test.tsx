@@ -64,6 +64,18 @@ test("students who stopped mid-onboarding can finish registering", () => {
   ).toHaveAttribute("href", "/signup");
 });
 
+test("NEI staff without a student profile are sent to the scanner", () => {
+  session.current = {
+    user: { ...student, student: null, neiMember: true },
+    ready: true,
+  };
+  render(<HomeCallToAction language={Language.PT} />);
+
+  expect(
+    screen.getByRole("link", { name: "Abrir o scanner de presenças" })
+  ).toHaveAttribute("href", "/attendance/scan");
+});
+
 test.each([
   [
     { role: "EMPLOYEE", adminRole: null, student: null },

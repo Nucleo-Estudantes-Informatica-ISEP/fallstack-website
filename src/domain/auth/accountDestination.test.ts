@@ -36,6 +36,26 @@ test("students who have not finished onboarding resume the signup wizard", () =>
   });
 });
 
+test("NEI staff without a student profile go to the attendance scanner", () => {
+  // Staff accounts cannot complete student signup, so /signup would be a
+  // dead end for them.
+  expect(
+    resolveAccountDestination(session({ role: "STUDENT", neiMember: true }))
+  ).toEqual({ kind: "staff", href: "/attendance/scan" });
+  expect(resolveAccountDestination(session({ neiMember: true }))).toEqual({
+    kind: "staff",
+    href: "/attendance/scan",
+  });
+});
+
+test("NEI staff with a student profile still go to their own dashboard", () => {
+  expect(
+    resolveAccountDestination(
+      session({ role: "STUDENT", neiMember: true, student: { code: "AB12" } })
+    )
+  ).toEqual({ kind: "student", href: "/student/AB12" });
+});
+
 test("employees go to the company dashboard", () => {
   expect(resolveAccountDestination(session({ role: "EMPLOYEE" }))).toEqual({
     kind: "employee",
