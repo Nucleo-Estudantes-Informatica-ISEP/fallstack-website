@@ -60,7 +60,6 @@ test("creating an admin rolls back the local placeholder if the DB write fails",
   await expect(
     createAdminAccount({
       email: Email.create("admin@isep.ipp.pt"),
-      password: "password123",
       name: "New Admin",
       adminRole: "ADMIN",
     })
@@ -77,14 +76,12 @@ test("creating an admin provisions only the local application row", async () => 
 
   await createAdminAccount({
     email: Email.create("admin@isep.ipp.pt"),
-    password: "password123",
     name: "New Admin",
     adminRole: "SUPER_ADMIN",
   });
 
   expect(createSupabaseAuthUserAsAdmin).toHaveBeenCalledWith(
-    "admin@isep.ipp.pt",
-    "password123",
+    Email.create("admin@isep.ipp.pt"),
     "New Admin"
   );
   expect(createAdminUser).toHaveBeenCalledWith({

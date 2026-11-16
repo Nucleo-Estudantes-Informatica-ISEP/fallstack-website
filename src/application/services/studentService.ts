@@ -208,7 +208,6 @@ export async function listStudentsForAdmin(query: AdminStudentQuery) {
 
 export async function createStudentForAdmin(input: {
   email: string;
-  password: string;
   code: string;
   name: string;
   year: StudentYear;
@@ -217,10 +216,7 @@ export async function createStudentForAdmin(input: {
   if (await findStudentByCode(input.code))
     throw new HttpError("That student code is already in use", 409);
 
-  const authUser = await createSupabaseAuthUserAsAdmin(
-    input.email,
-    input.password
-  );
+  const authUser = await createSupabaseAuthUserAsAdmin(input.email, input.name);
   try {
     return await withTransaction(async (tx) => {
       await upsertUser(
@@ -253,12 +249,10 @@ export async function updateStudentForAdmin(
     linkedin?: string | null;
     github?: string | null;
     avatar?: string | null;
-    password?: string;
     active?: boolean;
   }
 ) {
-  const { password: _password, avatar, active, ...profile } = input;
-  void _password;
+  const { avatar, active, ...profile } = input;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
   if (active !== undefined) {

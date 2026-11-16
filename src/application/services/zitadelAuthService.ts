@@ -58,6 +58,7 @@ export interface ZitadelIdentity {
   isEmployee: boolean;
   isGlobalAdmin: boolean;
   isNeiMember?: boolean;
+  idToken?: string;
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
@@ -69,6 +70,7 @@ export interface AppSessionClaims extends jwt.JwtPayload {
   employee: boolean;
   admin: boolean;
   neiMember?: boolean;
+  idToken?: string;
 }
 
 let discoveryPromise: Promise<OidcDiscovery> | undefined;
@@ -325,6 +327,7 @@ export async function completeAuthorizationCode(input: {
     loginName,
     name,
     emailVerified,
+    idToken: token.id_token,
     ...mapIdentityRoles(
       claims,
       serverEnv.AUTH_ROLE_CLAIM,
@@ -346,6 +349,7 @@ export function signAppSession(
       admin: identity.isGlobalAdmin,
       neiMember: identity.isNeiMember === true,
       attendanceExpiresAt,
+      idToken: identity.idToken,
     },
     serverEnv.AUTH_SECRET,
     {
@@ -372,10 +376,37 @@ export function verifyAppSession(token: string): AppSessionClaims | null {
   }
 }
 
-export async function getLogoutUrl(loginName?: string) {
+export interface LogoutUrlOptions {
+  idTokenHint?: string;
+  loginName?: string;
+}
+
+export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
   const discovery = await getDiscovery();
   if (!discovery.end_session_endpoint)
     return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+
+  const idTokenHint =
+    typeof hint === "object" && hint !== null
+      ? hint.idTokenHint
+      : typeof hint === "string" && hint.includes(".")
+        ? hint
+        : undefined;
+
+  const loginName =
+    typeof hint === "object" && hint !== null
+      ? hint.loginName
+      : typeof hint === "string" && !hint.includes(".")
+        ? hint
+        : undefined;
+
+  // Without an ID token hint, AuthNEI's end-session endpoint presents an
+  // interactive account picker that renders empty when browser SSO sessions
+  // cannot be resolved, stranding the user. Only redirect to AuthNEI when
+  // we have the ID token to guarantee direct session termination and return.
+  if (!idTokenHint) {
+    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+  }
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(
@@ -383,6 +414,7 @@ export async function getLogoutUrl(loginName?: string) {
     serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI
   );
   url.searchParams.set("client_id", serverEnv.AUTH_CLIENT_ID);
+  url.searchParams.set("id_token_hint", idTokenHint);
   if (loginName) url.searchParams.set("logout_hint", loginName);
   return url.toString();
 }

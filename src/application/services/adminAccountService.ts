@@ -33,7 +33,6 @@ export async function listAdminsForAdmin(query: AdminAccountQuery) {
 
 export async function createAdminAccount(input: {
   email: Email;
-  password: string;
   name: string;
   adminRole: AdminRole;
 }) {
@@ -41,7 +40,6 @@ export async function createAdminAccount(input: {
   // is granted in NEI Global/ZITADEL and becomes authoritative at login.
   const appIdentity = await createSupabaseAuthUserAsAdmin(
     input.email,
-    input.password,
     input.name
   );
   try {
@@ -73,12 +71,10 @@ export async function updateAdminAccount(
   input: {
     name?: string;
     adminRole?: AdminRole;
-    password?: string;
     active?: boolean;
   }
 ) {
-  const { password: _password, active, ...fields } = input;
-  void _password;
+  const { active, ...fields } = input;
   if (fields.adminRole === "ADMIN" || active === false)
     await assertNotLastActiveSuperAdmin(await findAdminAccountById(id));
 
