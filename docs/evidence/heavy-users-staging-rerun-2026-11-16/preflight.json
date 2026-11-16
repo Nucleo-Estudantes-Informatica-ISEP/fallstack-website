@@ -1,0 +1,38 @@
+{
+  "containers": [
+    {
+      "name": "service-a2dfefT123243",
+      "image": "fallstack-task604:cc5731c-window-16-18",
+      "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "memoryBytes": 0,
+      "nanoCpus": 0
+    },
+    {
+      "name": "service-c0c52d",
+      "image": "fallstack-task604:cc5731c-window-16-18",
+      "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "memoryBytes": 0,
+      "nanoCpus": 0
+    },
+    {
+      "name": "service-262082",
+      "image": "fallstack-task604:cc5731c-window-16-18",
+      "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "memoryBytes": 0,
+      "nanoCpus": 0
+    }
+  ],
+  "dateWindow": [16, 17, 18],
+  "storage": "MinIO",
+  "cloudflare": "proxy retained",
+  "disk": "Filesystem        1B-blocks        Used   Available Use% Mounted on\n/dev/sda1      102915489792 87935422464 14963290112  86% /\n"
+}

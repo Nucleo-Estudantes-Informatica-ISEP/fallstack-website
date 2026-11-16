@@ -1,0 +1,5 @@
+Bucket `fallstack-dev-cvs` has  quota of 0 B
+task604/fallstack-dev-cvs is un-versioned
+Access permission for `task604/fallstack-dev-cvs` is `private`
+Filesystem        1B-blocks        Used   Available Use% Mounted on
+/dev/sda1      102915489792 70213308416 32685404160  69% /
