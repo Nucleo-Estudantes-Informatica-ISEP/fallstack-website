@@ -11,11 +11,13 @@ import EmployeeSignUpForm from "@/components/EmployeeSignUpForm";
 interface LoginCardProps {
   initialView?: "employee";
   offseason?: boolean;
+  authError?: boolean;
 }
 
 const LoginCard: React.FC<LoginCardProps> = ({
   initialView,
   offseason = false,
+  authError = false,
 }) => {
   const { user, fetchSession } = useSession();
   const router = useRouter();
@@ -40,6 +42,16 @@ const LoginCard: React.FC<LoginCardProps> = ({
         {registeringEmployee ? "Registo de Colaborador" : "Iniciar Sessão"}
       </h1>
 
+      {authError && (
+        <p
+          role="alert"
+          className="mb-6 rounded-md border border-red-500/40 bg-red-950/60 px-4 py-3 text-sm text-red-100"
+        >
+          Não foi possível concluir o início de sessão com o AuthNEI. Tenta
+          novamente.
+        </p>
+      )}
+
       {registeringEmployee ? (
         offseason ? (
           <>
@@ -53,6 +65,19 @@ const LoginCard: React.FC<LoginCardProps> = ({
             >
               Voltar ao início de sessão
             </button>
+          </>
+        ) : user?.role === "EMPLOYEE" ? (
+          <>
+            <p className="mb-6 text-base leading-relaxed text-gray-300">
+              A tua conta já está associada a uma empresa.
+            </p>
+            <PrimaryLinkButton
+              href="/dashboard"
+              variant="form"
+              className="h-12 w-full font-semibold lg:h-16 lg:text-xl"
+            >
+              Ir para o dashboard da empresa
+            </PrimaryLinkButton>
           </>
         ) : user ? (
           <>
