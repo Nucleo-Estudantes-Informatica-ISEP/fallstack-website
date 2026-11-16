@@ -22,6 +22,7 @@ const LogoThumbnail: React.FC<LogoThumbnailProps> = ({
     style={{ width: size, height: size }}
   >
     <Image
+      unoptimized={src.startsWith("/api/media/logo/")}
       src={src}
       alt=""
       width={size}

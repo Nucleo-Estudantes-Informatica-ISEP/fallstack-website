@@ -88,6 +88,54 @@ test("provisions a verified ZITADEL student and sends an incomplete profile to s
   });
 });
 
+test("sends an NEI member without a student profile to the scanner", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: null,
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/attendance/scan");
+});
+
+test("an NEI member with a student profile still lands on the profile", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: { code: "AB12" },
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/student/AB12");
+});
+
+test("a safe next still wins for an NEI member", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: null,
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/attendance/scan?session=s1",
+    })
+  ).resolves.toBe("/attendance/scan?session=s1");
+});
+
 test("routes a returning employee to the dashboard", async () => {
   vi.mocked(provisionZitadelUser).mockResolvedValue({
     id: "app-user-1",
@@ -159,30 +207,40 @@ test("employee onboarding rejects an invalid company code before assigning a rol
   expect(assignEmployeeRole).not.toHaveBeenCalled();
 });
 
-test("employee onboarding assigns the project role and returns a refreshed app session", async () => {
-  vi.mocked(findCompanyByInviteCodeHash).mockResolvedValue({
-    id: "company-1",
-  } as never);
-  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
-    id: "app-user-1",
-    employee: null,
-  } as never);
+test.each([true, false])(
+  "employee onboarding preserves NEI membership %s and attendance expiry",
+  async (isNeiMember) => {
+    vi.mocked(findCompanyByInviteCodeHash).mockResolvedValue({
+      id: "company-1",
+    } as never);
+    vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+      id: "app-user-1",
+      employee: null,
+    } as never);
 
-  await expect(
-    signUpEmployee({
-      userId: "app-user-1",
-      zitadelUserId: "zitadel-user-1",
-      email: Email.create("employee@example.com"),
-      name: "Employee",
-      companyCode: "fs_emp_12345678",
-    })
-  ).resolves.toBe("new-session");
+    await expect(
+      signUpEmployee({
+        userId: "app-user-1",
+        zitadelUserId: "zitadel-user-1",
+        email: Email.create("employee@example.com"),
+        name: "Employee",
+        companyCode: "fs_emp_12345678",
+        isNeiMember,
+        attendanceExpiresAt: 123000,
+      })
+    ).resolves.toBe("new-session");
 
-  expect(assignEmployeeRole).toHaveBeenCalledWith("zitadel-user-1");
-  expect(signAppSession).toHaveBeenCalledWith(
-    expect.objectContaining({ isEmployee: true, sub: "zitadel-user-1" })
-  );
-});
+    expect(assignEmployeeRole).toHaveBeenCalledWith("zitadel-user-1");
+    expect(signAppSession).toHaveBeenCalledWith(
+      expect.objectContaining({
+        isEmployee: true,
+        sub: "zitadel-user-1",
+        isNeiMember,
+      }),
+      123000
+    );
+  }
+);
 
 test("revokes the student's pass before deleting the local account", async () => {
   vi.mocked(withLockedUser).mockImplementation(async (_id, callback) =>
@@ -230,7 +288,8 @@ test("account deletion enters shared admission before taking a DB lock", async (
   });
   expect(withGoogleWalletOperation).toHaveBeenCalledWith(
     "app-user-1",
-    expect.any(Function)
+    expect.any(Function),
+    "delete"
   );
   expect(withLockedUser).not.toHaveBeenCalled();
   expect(deleteUser).not.toHaveBeenCalled();

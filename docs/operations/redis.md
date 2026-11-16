@@ -46,7 +46,7 @@ Configure the Redis resource:
 - Pin the image to a Redis 7.4 patch tag.
 - Set a 256 MiB memory limit and a persistent volume mounted at `/data`.
 - Do not set `--label` or `--health-cmd` in Custom Docker Options. Coolify
-  v4.5.0 silently drops both, and its generated healthcheck is
+  v4.5.0 and v4.5.3 drop both, and its generated healthcheck is
   `redis-cli ping` without authentication, which exits 0 on `NOAUTH`. The
   Coolify environment must be named `development` for `dev` and `production`
   for `main`; Telegraf and the probe read that label.
@@ -85,7 +85,8 @@ UUIDs, which are the container names. Set the same UUIDs as
 resource is recreated.
 
 Every 15 seconds it runs `PING` with each container's own `REDIS_PASSWORD`
-inside the container and writes `/var/lib/fallstack-probes/redis.influx`. The
+inside the container, requires a successful command and exact `PONG`, and
+writes `/var/lib/fallstack-probes/redis.influx`. The
 password never leaves Redis. Telegraf mounts that directory read-only.
 `FallstackRedisUnhealthy` fires on `healthy=0`, and `FallstackRedisProbeStale`
 fires if the timer stops. The probe does not depend on Telegraf, so
@@ -97,9 +98,15 @@ Negative check on `dev`, after any change to the probe:
 
 ```bash
 docker exec <redis-container> sh -c \
-  'REDISCLI_AUTH=wrong redis-cli ping | grep -q PONG; echo $?'
+  'reply=$(REDISCLI_AUTH=wrong redis-cli --raw -e ping) && [ "$reply" = PONG ]; echo $?'
 # Expected: 1
 ```
+
+Replacing `monitoring/redis-probe.sh` at its installed path updates the next
+timer run without restarting Redis. Verify fresh timestamps and `healthy=1i`
+in the probe output after installation. `/api/ready` also probes authenticated
+access from each web copy; see [health checks](health-checks.md). This does not
+replace the host probe for Redis lifecycle and monitoring.
 
 ## Verification
 
@@ -169,3 +176,111 @@ After the event, for both environments:
 Before the next event, start Redis in `dev`, run the verification above, then
 repeat in `main`. Resume web only after Redis passes. Expired keys stay
 expired. If you change the key prefix, change it on every web copy.
+
+## Shared upload limits (#413)
+
+CV/avatar each consume five accepted checks per authenticated student per
+60-second window, shared by all web copies. Windows start at the first request;
+429 uses the remaining TTL rounded up in `Retry-After`. Rejected requests never
+extend the window. File validation/storage failures still consume a check.
+Employee preview issuance remains process-local under #393/ADR 0014; coordinate
+its separate adoption before claiming distributed preview protection.
+
+The server-only schema validates authenticated redis/rediss URLs and explicit
+prefixes. Only `fallstack:dev:`/`fallstack:main:` are accepted by deployed web
+flows. They must match `METRICS_ENVIRONMENT` when it is set. Native development
+uses `fallstack:local:`; automated tests use `fallstack:test:`. Non-web workers
+and builds need no connection. Limited uploads require both variables; missing
+configuration returns 503. Explicitly invalid values fail `serverEnv` validation.
+Never add per-copy IDs or change the prefix to escape an exhausted allowance.
+
+`redis://` is permitted only on the private bridge/loopback. For encrypted
+connections use `rediss://`; certificate/hostname verification is enforced.
+Provide private CA trust with a read-only CA file and `NODE_EXTRA_CA_CERTS` at
+Node startup. No insecure TLS switch or URL query option is supported. Keep the
+existing standalone resource/network; do not reintroduce an in-stack Redis.
+
+The limiter has a 200ms connection timeout and 300ms total operation deadline
+including authentication/command replies. There are no command retries,
+automatic reconnects or offline command queues. One connection attempt is shared
+by concurrent callers, with at most 128 pending checks per process. A failed
+connection is destroyed; the next connection attempt is allowed after a
+one-second cooldown. Idle disconnected clients are replaced before any command
+without cooldown. Server command replies (including OOM and corrupt key errors)
+fail only that check without destroying a healthy socket or imposing global
+cooldown. Corrupt keys remain fail-closed; repair them deliberately after the
+original window has elapsed, rather than resetting budgets automatically.
+Saturation rejects excess requests. All these failures
+return 503, `{ error: "Rate limiter unavailable" }`, and `Retry-After: 1` before
+reading/writing the upload. **No fallback upload capacity is granted**, regardless
+of replica count. Already admitted uploads may finish; a lost Redis reply can
+consume an allowance even when the app returns 503. Never replay that operation.
+
+### Observe and troubleshoot
+
+Use the existing private `:9464/metrics` listener with `METRICS_ENABLED=true`.
+`environment`, `service`, and collector `copy` identify the deployment; limiter
+labels are fixed endpoint/outcome/reason values only.
+
+- 429s: `sum by (environment, endpoint) (increase(fallstack_rate_limit_requests_total{outcome="limited"}[5m]))`.
+- Failure counts: `sum by (environment, reason) (increase(fallstack_rate_limit_requests_total{outcome="unavailable"}[5m]))`.
+- p95: `histogram_quantile(0.95, sum by (environment, le) (rate(fallstack_rate_limit_duration_seconds_bucket[5m])))`.
+- `fallstack_rate_limit_degraded` records a synthetic check every 15 seconds,
+  using the same limiter client/script and a unique per-runtime key with a
+  one-second TTL. It detects outage/recovery even with no uploads. Only one
+  probe runs at a time; closing the private metrics listener stops scheduling.
+- `fallstack_rate_limit_last_observation_timestamp_seconds` records probe
+  freshness. Individual corrupt subject keys are reported as request failures
+  with `reason="state"`; they do not change the global health gauge.
+- `fallstack_rate_limit_transitions_total{state="degraded"|"recovered"}` and
+  sanitized `rate_limit.degraded`/`rate_limit.recovered` log events show transitions.
+  No keys, identities, hashes, cookies, connection URLs or tokens are logged.
+
+`FallstackSharedLimiterDegraded` alerts after one minute degraded with a probe
+observation less than 45 seconds old. `FallstackSharedLimiterProbeStale` alerts
+after observations are older than 45 seconds for one minute;
+`FallstackSharedLimiterSlow` alerts when p95 exceeds 200ms for five minutes.
+After repairing Redis, the periodic check updates the gauge within about 15
+seconds plus the 300ms operation deadline; no real upload is needed. PING readiness alone cannot prove write/script
+permissions or recovery of the actual limiter client.
+
+For 503s check private network attachment/DNS, saved credentials, TLS trust,
+script/GET/SET/INCR/PTTL permissions, Redis noeviction capacity, AOF write status
+and disk space. A 429 is allowance exhaustion, not an infrastructure error.
+Do not flush keys, disable TLS verification or deploy a local-map fallback.
+Graceful web restarts preserve counters. Redis graceful restart retains keys
+and expiry with AOF. After suspected AOF/volume loss, prefix changes or restoring
+an older backup, stop uploads on every copy for at least 60 seconds before
+resuming. A crash can lose roughly one second of writes, admitting up to five
+extra requests per affected user/endpoint per state-loss event; repeated losses
+repeat that risk. The limiter is not durable abuse accounting.
+
+### Enablement evidence (SAD)
+
+This implementation activates on deployment; there is no permissive fallback
+flag. Before merging/deploying into each environment, stage a candidate web copy
+without public traffic and verify authenticated access with the exact runtime
+URL/prefix/network. Record copy names, commit, Redis settings, timestamps and
+sanitized status/latency results on #413. Never publish credentials/session data.
+
+1. Verify **every** candidate web copy in dev, then main, with authenticated
+   `/api/ready` and a synthetic upload check. PING is necessary, not sufficient.
+2. Alternate and concurrently send the same synthetic student's requests across
+   at least two copies: exactly five admissions total, then 429/Retry-After.
+   Confirm another endpoint/student/environment is independent.
+3. On isolated staging, pause/stop Redis: all affected upload checks must return
+   bounded 503, no storage writes and no budget inflation. Restore Redis and
+   record recovery with the pre-existing allowance. Check telemetry and alerts.
+4. Verify AOF settings and graceful restart/expiry retention. Complete the
+   normal-paced upload/preview-scan scenario in
+   [limiter validation](../rate-limiter-load-validation.md); no local result is
+   evidence of Coolify throughput or authenticated scan usability.
+5. Drain old map-based copies, quiesce uploads for 60 seconds, then route only
+   the shared-limiter version. Mixed versions do not enforce one budget.
+   Rollback requires stopping/quiescing flows first; do not route multiple
+   replicas to the older local-map limiter. Keep the existing #419 scaling gate.
+
+Off-season: stop dependent web flows/copies and automatic deployments first,
+then stop Redis gracefully while preserving `/data`. Resume Redis, verify access
+and AOF/expiry on all candidate copies, then resume traffic. Expired keys stay
+expired. No live Coolify evidence is supplied by repository tests.

@@ -25,6 +25,22 @@ export async function register() {
         "Metrics disabled: invalid configuration or private port 9464 unavailable."
       );
     }
+
+    if (process.env.NEXT_PHASE !== "phase-production-build") {
+      try {
+        const state = globalThis as typeof globalThis & {
+          fallstackShutdown?: boolean;
+        };
+        if (!state.fallstackShutdown) {
+          state.fallstackShutdown = true;
+          const { initGracefulShutdown } =
+            await import("./application/services/shutdownService");
+          initGracefulShutdown();
+        }
+      } catch {
+        console.error("Graceful shutdown handler initialization failed.");
+      }
+    }
   }
 
   if (process.env.NEXT_RUNTIME === "edge") {

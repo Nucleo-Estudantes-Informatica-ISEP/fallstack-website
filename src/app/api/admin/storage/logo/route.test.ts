@@ -2,7 +2,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import { putObject } from "@/application/services/objectStorageService";
+import { putObjectStream } from "@/application/services/objectStorageService";
 import getServerSession from "@/application/services/sessionService";
 
 import { POST } from "./route";
@@ -15,7 +15,12 @@ vi.mock("@/application/services/objectStorageService", () => ({
   cvKey: (id: string) => `distribution/cv/${id}.pdf`,
   publicAvatarUrl: (id: string) => `/api/media/avatar/${id}`,
   publicLogoUrl: (id: string) => `/api/media/logo/${id}`,
-  putObject: vi.fn(),
+  putObjectStream: vi.fn(async (_kind, _key, body) => {
+    for await (const chunk of body) {
+      void chunk;
+    }
+  }),
+  deleteObject: vi.fn(),
 }));
 
 function request(bytes: Uint8Array, type: string) {
@@ -44,7 +49,7 @@ beforeEach(() => {
 test("rejects non-admin sessions before accessing storage", async () => {
   vi.mocked(getServerSession).mockResolvedValue({ adminRole: null } as never);
   expect((await send(png, "image/png")).status).toBe(403);
-  expect(putObject).not.toHaveBeenCalled();
+  expect(putObjectStream).not.toHaveBeenCalled();
 });
 
 test("uploads valid WebP to dedicated logo bucket and prefix", async () => {
@@ -54,11 +59,13 @@ test("uploads valid WebP to dedicated logo bucket and prefix", async () => {
     url: expect.stringMatching(/^\/api\/media\/logo\//),
     contentType: "image/webp",
   });
-  expect(putObject).toHaveBeenCalledWith(
+  expect(putObjectStream).toHaveBeenCalledWith(
     "logo",
     expect.stringMatching(/^distribution\/logo\/[0-9a-f-]+$/),
-    webp,
-    "image/webp"
+    expect.anything(),
+    "image/webp",
+    webp.length,
+    expect.any(AbortSignal)
   );
 });
 
@@ -67,12 +74,12 @@ test("rejects JPEG and mismatched logo signatures", async () => {
     (await send(new Uint8Array([0xff, 0xd8, 0xff]), "image/jpeg")).status
   ).toBe(400);
   expect((await send(png, "image/webp")).status).toBe(400);
-  expect(putObject).not.toHaveBeenCalled();
+  expect(putObjectStream).not.toHaveBeenCalled();
 });
 
 test("rejects logos over the size limit", async () => {
   const oversized = new Uint8Array(5 * 1024 * 1024 + 1);
   oversized.set(png);
   expect((await send(oversized, "image/png")).status).toBe(400);
-  expect(putObject).not.toHaveBeenCalled();
+  expect(putObjectStream).not.toHaveBeenCalled();
 });

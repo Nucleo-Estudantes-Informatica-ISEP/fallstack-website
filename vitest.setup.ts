@@ -6,6 +6,14 @@ import { afterEach, vi } from "vitest";
 // Test-only values for lazy server environment validation. Individual tests
 // can override these; no test connects to this S3 endpoint by default.
 const testEnv = {
+  DATABASE_URL:
+    process.env.DATABASE_URL ??
+    process.env.DIRECT_URL ??
+    "postgresql://postgres:postgres@localhost:5432/ci",
+  DIRECT_URL:
+    process.env.DIRECT_URL ??
+    process.env.DATABASE_URL ??
+    "postgresql://postgres:postgres@localhost:5432/ci",
   GOOGLE_WALLET_NEVER_ENABLED: "true",
   JWT_SECRET: "test-only-secret-at-least-32-characters-long",
   S3_ENDPOINT: "http://127.0.0.1:9000",

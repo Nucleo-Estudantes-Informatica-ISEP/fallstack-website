@@ -49,7 +49,13 @@ const Modal: React.FC<ModalProps> = ({
       const last = focusable[focusable.length - 1];
       const active = document.activeElement;
 
-      if (e.shiftKey && (active === first || active === dialogRef.current)) {
+      if (!dialogRef.current.contains(active)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      } else if (
+        e.shiftKey &&
+        (active === first || active === dialogRef.current)
+      ) {
         e.preventDefault();
         last.focus();
       } else if (!e.shiftKey && active === last) {
@@ -79,7 +85,7 @@ const Modal: React.FC<ModalProps> = ({
         tabIndex={-1}
         ref={dialogRef}
         className={
-          "fixed top-1/2 left-1/2 z-60 w-full -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-8 text-black outline-none md:w-3/4 " +
+          "fixed top-1/2 left-1/2 z-60 max-h-[90dvh] w-full -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-lg bg-white p-6 text-black outline-none md:w-3/4 md:p-8 " +
           (className ?? "")
         }
         {...rest}

@@ -10,8 +10,11 @@ import { savedCommentSchema, saveSchema } from "@/schemas/saveSchema";
 
 function studentCodeFromToken(token: string | undefined) {
   if (!token) return undefined;
-  const decoded = verifyJwt(token) as unknown as { code: string } | null;
-  return decoded?.code;
+  const decoded = verifyJwt(token) as unknown as {
+    code?: string;
+    purpose?: string;
+  } | null;
+  return decoded?.purpose === "student-pass" ? decoded.code : undefined;
 }
 
 export const PUT = defineHandler({
@@ -37,6 +40,7 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({
       studentCode: code,
+      actorId: session!.id,
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,
@@ -56,6 +60,7 @@ export const PATCH = defineHandler({
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({
       studentCode: code,
+      actorId: session!.id,
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,

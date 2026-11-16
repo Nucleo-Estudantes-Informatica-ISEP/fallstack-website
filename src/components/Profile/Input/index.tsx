@@ -1,45 +1,13 @@
 "use client";
 
-interface InputProps {
-  name: string;
-  id?: string;
-  placeholder?: string;
-  className?: string;
-  disabled?: boolean;
-  defaultValue?: string | null;
-  inputRef?: React.Ref<HTMLInputElement>;
+import Input, { type InputProps as UiInputProps } from "@/components/ui/Input";
+
+export interface InputProps extends Omit<UiInputProps, "defaultValue"> {
+  defaultValue?: string | number | readonly string[] | null;
 }
 
-const Input: React.FC<InputProps> = ({
-  name,
-  id,
-  placeholder,
-  className,
-  disabled,
-  defaultValue,
-  inputRef,
-}) => {
-  const resolvedId = id || name || undefined;
-
-  return (
-    <div className="flex w-full flex-col">
-      {name && (
-        <label className="text-lg text-slate-700" htmlFor={resolvedId}>
-          {name}
-        </label>
-      )}
-      <input
-        type="text"
-        name={name}
-        disabled={disabled}
-        id={resolvedId}
-        placeholder={placeholder}
-        defaultValue={defaultValue ?? undefined}
-        ref={inputRef}
-        className={`w-full min-w-0 rounded-md border border-gray-300 bg-slate-200 px-4 py-2 text-black placeholder:text-gray-400 focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-100 ${className ?? ""}`}
-      />
-    </div>
-  );
+const ProfileInput: React.FC<InputProps> = ({ defaultValue, ...rest }) => {
+  return <Input defaultValue={defaultValue ?? undefined} {...rest} />;
 };
 
-export default Input;
+export default ProfileInput;

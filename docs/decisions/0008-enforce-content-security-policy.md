@@ -41,6 +41,13 @@ nonce blocks these scripts and breaks client-side hydration.
    Company video links are validated and normalized to `https://www.youtube.com/embed/<id>`
    on save and render.
 
+Browser schema validation uses Zod's `jitless` mode, configured in the client
+configuration bootstrap before its eager environment parse. Zod's dynamic-code
+capability probe otherwise emits a CSP violation even when it catches the
+blocked `Function` call. Disabling that browser optimization preserves schema
+validation and the enforced policy; server-side validation keeps its default
+configuration.
+
 ## Accepted exceptions and rationale
 
 | Exception                  | Directive               | Reason                                                                                                                                                 |
@@ -58,7 +65,8 @@ nonce blocks these scripts and breaks client-side hydration.
 ## Out of scope
 
 - SVG logo support (#282) is explicitly deferred beyond the 2026 edition. No
-  pre-emptive SVG exception is added to the enforced policy.
+  pre-emptive SVG exception is added to the enforced policy. This deferral is
+  superseded by [ADR 0036](0036-sanitize-svg-logo-pipeline.md); CSP remains unchanged.
 - A dedicated CSP `report-uri` endpoint is not added. Violations in production
   can be observed through Sentry/GlitchTip error events.
 
@@ -74,20 +82,11 @@ through the proxy before any `img-src` change is considered.
 
 ## Trade-offs: Dynamic Rendering and CDN Caching
 
-To apply a cryptographically unique nonce per request without `'unsafe-inline'`
-in `script-src`, Next.js App Router requires dynamic server rendering (`await headers()`
-in `src/app/layout.tsx`).
-
-- **Full-page HTML rendering**: All HTML pages are server-rendered dynamically per request
-  rather than pre-rendered as static HTML files cached at the CDN edge.
-- **Static assets**: All static assets (`/_next/static/*`, CSS, JS bundles, fonts, images)
-  remain fully static with immutable cache headers and continue to be served directly from
-  CDN/browser caches.
-- **PWA Service Worker**: PWA service worker files (`sw.js`, `workbox-*`) and the web
-  manifest (`manifest.webmanifest`) are excluded from the middleware matcher so the service
-  worker installs and caches assets offline without nonce friction.
-- **Performance impact**: Dynamic rendering of guest pages introduces negligible overhead
-  (sub-10ms render time) while completely eliminating `'unsafe-inline'` from `script-src`.
+Next.js App Router requires dynamic rendering to attach a per-request nonce to
+its inline scripts. Routes in the nonce-bearing root layout render dynamically.
+[ADR 0038](0038-cache-public-html-by-language.md) documents the five public
+documents that use static rendering and omit the nonce policy. Static assets,
+PWA files, API responses and prefetch responses also omit that policy.
 
 ## Rollback plan
 

@@ -19,6 +19,7 @@ const CompanyImage: React.FC<UserImageProps> = ({ company }) => {
       className="relative my-8 flex size-full flex-col items-center"
     >
       <Image
+        unoptimized={company.avatar.startsWith("/api/media/logo/")}
         width={400}
         height={400}
         src={company.avatar}

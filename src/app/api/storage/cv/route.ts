@@ -1,23 +1,31 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { tooManyRequestsResponse } from "@/lib/rateLimit";
-import {
-  checkUploadRateLimit,
-  readUploadFile,
-  uploadFile,
-} from "@/application/services/uploadService";
+import { rateLimitResponse } from "@/lib/rateLimit";
+import { initiateCvUpload } from "@/application/services/directCvUploadService";
+import { checkUploadRateLimit } from "@/application/services/uploadService";
+import { directCvUploadSchema } from "@/schemas/directCvUploadSchema";
 
-// Multipart upload: defineHandler's schema parses JSON only.
 export const POST = defineHandler({
   auth: "session",
   authorize: (session) => session.role === "STUDENT",
   handler: async ({ req, session }) => {
-    const rate = checkUploadRateLimit("cv", session!.id);
-    if (!rate.allowed) return tooManyRequestsResponse(rate.retryAfterMs);
-    const file = await readUploadFile(req, "cv");
-    return NextResponse.json(await uploadFile("cv", file), {
+    const blocked = rateLimitResponse(
+      await checkUploadRateLimit("cv", session!.id)
+    );
+    if (blocked) return blocked;
+    // Limit before parsing: shared Redis outages/429 never read the body.
+    if (!req.headers.get("content-type")?.startsWith("application/json"))
+      return NextResponse.json(
+        { error: "Use the direct upload JSON protocol" },
+        { status: 415 }
+      );
+    const body = directCvUploadSchema.parse(
+      await req.json().catch(() => undefined)
+    );
+    return NextResponse.json(await initiateCvUpload(session!.id, body), {
       status: 201,
+      headers: { "Cache-Control": "no-store" },
     });
   },
 });

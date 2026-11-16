@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useId, useState } from "react";
 
 import { ImportCv } from "@/components/ui/Icons";
 
@@ -13,34 +13,35 @@ interface ImportCvSectionProps {
 const ImportCvSection: React.FC<ImportCvSectionProps> = ({
   inputRef,
   text,
-  className = "my-4 text-black",
+  className = "text-gray-100",
 }) => {
+  const id = useId();
   const [fileName, setFileName] = useState<string | null>(null);
 
   return (
-    <div className={`flex min-w-0 flex-col space-y-2 ${className}`}>
-      <label htmlFor="inputCv">Curriculum Vitae</label>
-      <div className="flex min-w-0 items-center space-x-2 hover:cursor-pointer hover:text-primary">
-        <ImportCv className="mb-2 size-6"></ImportCv>
-        <button
-          type="button"
-          onClick={() => document.getElementById("inputCv")?.click()}
-          className="min-w-0 pl-2 text-left wrap-break-word underline"
-        >
-          {text}
-
-          <span className="ml-4 text-sm">
-            {fileName ? `(${fileName})` : null}
-          </span>
-        </button>
+    <div className={`flex min-w-0 flex-col ${className}`}>
+      <label htmlFor={id} className="field-label text-gray-100">
+        CV
+      </label>
+      <div className="relative">
         <input
-          id="inputCv"
-          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+          id={id}
+          onChange={(event) =>
+            setFileName(event.target.files?.[0]?.name ?? null)
+          }
           type="file"
-          accept=".pdf"
+          accept="application/pdf,.pdf"
           ref={inputRef}
-          className="hidden"
+          className="peer sr-only field-focus-target"
         />
+        <label
+          htmlFor={id}
+          aria-hidden="true"
+          className="flex field-height min-w-0 cursor-pointer items-center gap-2 rounded-full border field-border bg-background px-4 field-text text-gray-400 peer-focus-visible:border-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary hover:border-white/60"
+        >
+          <ImportCv className="size-5 shrink-0" />
+          <span className="truncate">{fileName ?? text}</span>
+        </label>
       </div>
     </div>
   );

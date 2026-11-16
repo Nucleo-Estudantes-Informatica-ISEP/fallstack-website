@@ -7,6 +7,8 @@ import { upsertActionCompletion } from "@/application/repositories/actionReposit
 import { findCompanyInterests } from "@/application/repositories/companyRepository";
 import prisma, { withTransaction } from "@/application/repositories/database";
 import { bulkUpdateFaqOrder } from "@/application/repositories/faqRepository";
+import readinessPrisma from "@/application/repositories/readinessDatabase";
+import { checkDatabaseReadiness } from "@/application/repositories/readinessRepository";
 import { createSavedStudent } from "@/application/repositories/savedStudentRepository";
 import {
   bulkUpdateScheduleOrder,
@@ -26,7 +28,41 @@ vi.mock("server-only", () => ({}));
 
 const fixtures = databaseFixtures(prisma);
 afterEach(() => fixtures.cleanup());
-afterAll(() => prisma.$disconnect());
+afterAll(async () => {
+  await prisma.$disconnect();
+  await readinessPrisma.$disconnect();
+});
+
+test("readiness succeeds while every request-pool connection is occupied", async () => {
+  // Test pool isolation separately from cold engine startup on slow machines.
+  await Promise.all([prisma.$connect(), readinessPrisma.$connect()]);
+  const limit = Number(process.env.PRISMA_CONNECTION_LIMIT || 3);
+  let acquired = 0;
+  let started!: () => void;
+  let release!: () => void;
+  const allStarted = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const holders = Array.from({ length: limit }, () =>
+    prisma.$transaction(
+      async () => {
+        if (++acquired === limit) started();
+        await gate;
+      },
+      { maxWait: 10_000, timeout: 20_000 }
+    )
+  );
+  try {
+    await Promise.race([allStarted, Promise.all(holders)]);
+    await expect(checkDatabaseReadiness()).resolves.toBeUndefined();
+  } finally {
+    release();
+    await Promise.all(holders);
+  }
+});
 
 function expectOneWinner(
   results: PromiseSettledResult<unknown>[],
@@ -125,6 +161,7 @@ test("save service maps a uniqueness race and awards booth points only once", as
     employees.map((employee) =>
       saveStudent({
         studentCode: student.code,
+        actorId: employee.id,
         employeeId: employee.id,
         companyId: company.id,
         // Exercise the database conflict path even if one pre-check reads after

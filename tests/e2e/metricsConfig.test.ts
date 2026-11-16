@@ -83,7 +83,7 @@ test("Redis health comes from the authenticated probe, not Coolify's default che
   );
   const probe = read("monitoring/redis-probe.sh");
   expect(probe).toContain('REDISCLI_AUTH="$REDIS_PASSWORD"');
-  expect(probe).toContain("grep -q PONG");
+  expect(probe).toContain('redis-cli --raw -e ping) && [ "$reply" = PONG ]');
   expect(probe).toContain("REDIS_DEV_CONTAINER:?");
   expect(probe).toContain("REDIS_MAIN_CONTAINER:?");
   expect(probe).not.toContain("docker ps");

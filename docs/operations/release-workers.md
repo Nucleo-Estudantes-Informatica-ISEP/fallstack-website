@@ -37,8 +37,11 @@ independent deployments or provide a distributed scheduler.
    Record the Coolify version and deployment evidence. If scaling is rejected,
    leave it at one and resolve the supported topology in #419. That task must
    also close these concrete process-local prerequisites before scaling:
-   - `src/lib/rateLimit.ts`: counters are in-process; N copies can admit N times
-     the per-key budget. Shared atomic enforcement under #413 must pass.
+   - Upload counters share Redis under [ADR 0025](../decisions/0025-share-upload-rate-limits.md);
+     SAD must record #413's per-copy rollout evidence. The employee preview
+     limiter in `src/lib/rateLimit.ts` remains process-local under #393's
+     separately owned policy; coordinate its adoption before relying on it
+     for distributed brute-force protection.
    - `src/application/services/publicDataCache.ts`: cross-copy invalidation is
      absent; public data can stay stale for its 60-second TTL. Explicitly
      accept/test this bound or add shared invalidation for stricter freshness.

@@ -28,7 +28,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Confirm automation credential
         run: |
           if [ -z "$GH_TOKEN" ]; then

@@ -31,13 +31,13 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
     .filter(Boolean);
 
   return (
-    <section className="mx-auto w-11/12 rounded-lg bg-white p-10 sm:w-3/4 lg:p-12">
+    <section className="w-full min-w-0 bg-background wrap-anywhere">
       {paragraphs.length > 0 && (
         <CompanyDescription>
-          <h1 className="mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+          <h2 className="mb-4 text-left font-title text-3xl text-white sm:text-4xl">
             Sobre
-          </h1>
-          <div className="space-y-4 text-left font-light text-black md:text-lg lg:text-xl">
+          </h2>
+          <div className="space-y-4 text-left text-base leading-relaxed text-white md:text-lg">
             {paragraphs.map((paragraph, index) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -51,10 +51,10 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           const uploadedVideo = companyVideoId(videoHref);
           if (!embedUrl && !uploadedVideo) return null;
           return (
-            <div className="mt-10 flex flex-col space-y-2 leading-8 lg:px-10 lg:text-lg">
-              <h1 className="mb-4 w-full text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+            <div className="mt-10 flex flex-col space-y-2 leading-8 lg:text-lg">
+              <h2 className="mb-4 w-full text-left font-title text-3xl text-white sm:text-4xl">
                 {videoTitle || "Vídeo"}
-              </h1>
+              </h2>
               <div className="flex w-full items-center justify-center">
                 {uploadedVideo ? (
                   <video
@@ -71,7 +71,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
                   <iframe
                     className="my-2.5 aspect-video w-full max-w-full rounded-lg"
                     src={embedUrl ?? undefined}
-                    title={videoTitle}
+                    title={videoTitle || "Vídeo promocional"}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
@@ -80,16 +80,16 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
             </div>
           );
         })()}
-      <div className="px-10">
-        <h1 className="mt-8 mb-4 text-left text-lg font-bold text-black uppercase sm:text-lg md:text-xl lg:text-2xl">
+      <div>
+        <h2 className="mt-8 mb-4 text-left font-title text-3xl text-white sm:text-4xl">
           Interesses
-        </h1>
+        </h2>
         {interests !== undefined && interests.length > 0 ? (
           <div className="flex w-full flex-wrap gap-4">
             {interests.map((interest) => (
               <div
                 key={interest}
-                className="relative rounded-xl bg-slate-200 px-3 py-1 text-black"
+                className="relative rounded-full border border-secondary px-5 py-3 text-sm text-white"
               >
                 {interest}
               </div>
@@ -97,7 +97,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           </div>
         ) : (
           <div className="flex w-full flex-wrap gap-4">
-            <div className="relative py-1 text-black">
+            <div className="relative py-1 text-white">
               Sem interesses definidos...
             </div>
           </div>

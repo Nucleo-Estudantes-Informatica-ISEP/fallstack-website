@@ -7,7 +7,7 @@ export const GET = defineHandler({
   auth: "student",
   handler: async ({ session }) => {
     const data = signJwt(
-      { code: session!.student!.code },
+      { code: session!.student!.code, purpose: "attendance" },
       { expiresIn: 30 * 60 }
     );
     return NextResponse.json({ data });

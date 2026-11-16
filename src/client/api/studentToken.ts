@@ -10,7 +10,13 @@ export async function getStudentPreviewToken(code: string) {
     );
     return token;
   } catch (error) {
-    if (error instanceof HttpClientError && error.status === 404) return null;
+    // 404: no student has this code. 400: the server rejected the code's
+    // format (e.g. a typed five-character code). Both mean "invalid code".
+    if (
+      error instanceof HttpClientError &&
+      (error.status === 404 || error.status === 400)
+    )
+      return null;
     throw error;
   }
 }

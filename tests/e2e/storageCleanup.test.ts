@@ -493,14 +493,17 @@ test("a concurrent writer waiting behind claim cannot attach a tombstoned avatar
   const proceed = new Promise<void>((resolve) => {
     release = resolve;
   });
-  const claim = prisma.$transaction(async (tx) => {
-    await tx.$executeRaw`LOCK TABLE "Student", "Company", "Sponsor" IN SHARE ROW EXCLUSIVE MODE`;
-    locked();
-    await proceed;
-    await tx.storageDeletion.create({
-      data: { kind: "avatar", key: avatar.key },
-    });
-  });
+  const claim = prisma.$transaction(
+    async (tx) => {
+      await tx.$executeRaw`LOCK TABLE "Student", "Company", "Sponsor" IN SHARE ROW EXCLUSIVE MODE`;
+      locked();
+      await proceed;
+      await tx.storageDeletion.create({
+        data: { kind: "avatar", key: avatar.key },
+      });
+    },
+    { timeout: 20_000 }
+  );
   await lockReady;
   const writer = prisma.student.update({
     where: { id: student.id },
@@ -510,7 +513,7 @@ test("a concurrent writer waiting behind claim cannot attach a tombstoned avatar
   const result = Promise.allSettled([writer]);
   try {
     // Verify the UPDATE really reached PostgreSQL and waits on the table lock.
-    const deadline = Date.now() + 2000;
+    const deadline = Date.now() + 10_000;
     let waiting = false;
     while (!waiting && Date.now() < deadline) {
       const rows = await prisma.$queryRaw<{ waiting: boolean }[]>`

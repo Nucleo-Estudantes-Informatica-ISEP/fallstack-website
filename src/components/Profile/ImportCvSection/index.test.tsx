@@ -12,19 +12,19 @@ test("renders with the provided text", () => {
   expect(screen.getByText("Import CV")).toBeInTheDocument();
 });
 
-test("shows the selected file name in parentheses after selecting a file", () => {
+test("shows the selected file name after selecting a file", () => {
   const inputRef = createRef<HTMLInputElement>();
 
   render(<ImportCvSection text="Import CV" inputRef={inputRef} />);
 
-  const input = document.getElementById("inputCv") as HTMLInputElement;
+  const input = screen.getByLabelText("CV");
   const file = new File(["content"], "resume.pdf", {
     type: "application/pdf",
   });
 
   fireEvent.change(input, { target: { files: [file] } });
 
-  expect(screen.getByText("(resume.pdf)")).toBeInTheDocument();
+  expect(screen.getByText("resume.pdf")).toBeInTheDocument();
 });
 
 test("labels the file input", () => {
@@ -36,5 +36,5 @@ test("labels the file input", () => {
       className="text-gray-100"
     />
   );
-  expect(screen.getByLabelText("Curriculum Vitae")).toBe(inputRef.current);
+  expect(screen.getByLabelText("CV")).toBe(inputRef.current);
 });

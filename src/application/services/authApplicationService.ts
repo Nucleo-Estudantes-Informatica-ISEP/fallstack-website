@@ -4,6 +4,7 @@ import { createHash, randomUUID } from "crypto";
 
 import { Email } from "@/types/Email";
 import { HttpError } from "@/types/HttpError";
+import { serverEnv } from "@/config/env.server";
 import { reportError } from "@/lib/logger";
 
 import { findCompanyByInviteCodeHash } from "../repositories/companyInviteRepository";
@@ -28,13 +29,26 @@ import {
 } from "./zitadelAuthService";
 
 export async function deleteUserAccount(userId: string) {
-  await withGoogleWalletOperation(userId, () =>
-    withLockedUser(userId, async (user, tx) => {
-      if (!user) throw new HttpError("Account not found", 404);
-      // Keep the account on upstream failure so the same deletion can be retried.
-      if (user.student) await revokeGoogleWalletPass(user.student.id, tx);
-      await deleteUser(userId, tx);
-    })
+  await withGoogleWalletOperation(
+    userId,
+    () =>
+      withLockedUser(userId, async (user, tx) => {
+        if (!user) throw new HttpError("Account not found", 404);
+        if (
+          serverEnv.PRISMA_CONNECTION_LIMIT === 1 &&
+          serverEnv.GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE
+        ) {
+          const [lock] = await tx.$queryRaw<
+            { admitted: boolean }[]
+          >`SELECT pg_try_advisory_xact_lock(540, 1) AS admitted`;
+          if (!lock.admitted)
+            throw new HttpError("Wallet capacity is busy. Retry shortly.", 429);
+        }
+        // Keep the account on upstream failure so the same deletion can be retried.
+        if (user.student) await revokeGoogleWalletPass(user.student.id, tx);
+        await deleteUser(userId, tx);
+      }),
+    "delete"
   );
 }
 
@@ -51,11 +65,9 @@ export async function setAuthUserBanned(_userId: string, _banned: boolean) {
 // AuthNEI; the row is linked by verified email on the person's first login.
 export async function createSupabaseAuthUserAsAdmin(
   _email: string,
-  _password: string,
   _displayName?: string
 ) {
   void _email;
-  void _password;
   void _displayName;
   return { id: randomUUID() };
 }
@@ -82,6 +94,9 @@ export async function completeZitadelSignIn(input: {
   if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
   if (user.role === "EMPLOYEE") return "/login?modal=employee";
   if (user.student) return `/student/${user.student.code}`;
+  // NEI staff accounts (e.g. @nei-isep.org) have no student profile and must
+  // not be pushed into creating one just to reach the attendance scanner.
+  if (input.identity.isNeiMember) return "/attendance/scan";
   return "/signup?authnei=1";
 }
 
@@ -96,6 +111,8 @@ export async function signUpEmployee(input: {
   name: string;
   linkedin?: string;
   companyCode: string;
+  isNeiMember?: boolean;
+  attendanceExpiresAt?: number;
 }) {
   const company = await findCompanyByInviteCodeHash(
     inviteCodeHash(input.companyCode)
@@ -132,14 +149,18 @@ export async function signUpEmployee(input: {
     throw new HttpError("Unable to create employee profile", 500);
   }
 
-  return signAppSession({
-    sub: input.zitadelUserId,
-    email: input.email,
-    name: input.name,
-    emailVerified: true,
-    isEmployee: true,
-    isGlobalAdmin: false,
-  });
+  return signAppSession(
+    {
+      sub: input.zitadelUserId,
+      email: input.email,
+      name: input.name,
+      emailVerified: true,
+      isEmployee: true,
+      isGlobalAdmin: false,
+      isNeiMember: input.isNeiMember,
+    },
+    input.attendanceExpiresAt ?? 0
+  );
 }
 
 export async function changePassword(input: {

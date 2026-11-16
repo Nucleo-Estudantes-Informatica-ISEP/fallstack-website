@@ -47,9 +47,18 @@ error handling in components.
 See `src/app/api/saved/route.ts` for strategies, `authorize`, and a schema in
 one route; see `src/client/api/session.ts` for expected `HttpClientError` handling.
 
-The wrapper is for JSON requests. Health probes that must avoid a session
-lookup and multipart upload routes use plain route exports. Keep their
+The wrapper is for JSON requests when `schema` is provided. Multipart upload
+routes omit `schema` so `defineHandler` performs session authentication and role
+authorization before the handler streams the multipart body with bounded memory
+([ADR 0026](decisions/0026-bound-upload-memory-streaming-transport.md)). Health
+probes that must avoid a session lookup use plain route exports. Keep their
 exceptions local and documented.
+
+CVs use JSON authorization at `/api/storage/cv`, browser-to-MinIO presigned
+POST, and `/api/storage/cv/finalize`. Metadata parsing follows the shared rate
+limit in the authorization route. Quarantine, conditional promotion and durable
+owner-bound state are described in [ADR 0041](decisions/0041-direct-private-cv-uploads.md).
+The legacy multipart transport remains for avatars/logos only.
 
 ## Authentication and short-lived tokens
 
@@ -69,11 +78,18 @@ freshness. It prevents stale QR use but has no nonce or one-time-consumption
 check: a captured code can be reused during its valid window by another
 student. A student's duplicate completion of the same action is rejected.
 
+Employee preview authorization, including the tokenless fallback and its
+company-level saved-student check, is recorded in [ADR 0042](decisions/0042-restrict-tokenless-student-previews.md).
+
 ## Data ownership
 
 `prisma/schema.prisma` is the source of truth for models and relationships.
 Use it for the current data model; the [database architecture](database.md)
 diagram and notes should be updated with schema changes.
+
+Student saves reject the caller’s own student profile with HTTP 403 before
+writing a save or awarding booth points, including admin saves. The caller’s
+user ID is checked independently of the employee attributed to the save.
 
 `SavedStudent` stores both an employee attribution and a company. Its primary
 key is `(studentId, employeeId)` and a separate unique constraint on

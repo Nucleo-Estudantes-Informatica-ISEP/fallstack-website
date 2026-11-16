@@ -42,6 +42,17 @@ test("locks the account before re-reading it and running Wallet work", async () 
   );
 });
 
+test("Wallet transaction waits as long as the pool timeout instead of Prisma's 2s default", async () => {
+  vi.stubEnv("PRISMA_POOL_TIMEOUT_SECONDS", "5");
+  findUnique.mockResolvedValue(null);
+  await withLockedUser("11111111-2222-3333-4444-555555555555", vi.fn());
+  expect(transaction.mock.calls[0]?.[1]).toEqual({
+    timeout: 60_000,
+    maxWait: 5000,
+  });
+  vi.unstubAllEnvs();
+});
+
 test("passes a deleted account as null instead of stale session data", async () => {
   findUnique.mockResolvedValue(null);
   const work = vi.fn().mockResolvedValue(undefined);

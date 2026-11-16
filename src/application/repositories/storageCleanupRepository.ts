@@ -2,7 +2,7 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 
-import prisma from "./database";
+import prisma from "./storageCleanupDatabase";
 
 export type CleanupObject = { kind: "avatar" | "cv"; key: string };
 const BATCH_SIZE = 1000;

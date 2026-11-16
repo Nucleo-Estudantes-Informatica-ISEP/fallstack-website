@@ -1,6 +1,5 @@
 // @vitest-environment node
 import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import path from "node:path";
 import type { NextConfig } from "next";
 import withPWA, { type PluginOptions } from "@ducanh2912/next-pwa";
@@ -10,7 +9,9 @@ import webpack from "webpack";
 import { publicDataRuntimeCaching } from "@/config/publicDataRuntimeCaching";
 
 test("installed PWA plugin generates the offline fallback before default routes", async () => {
-  const dest = await mkdtemp(path.join(tmpdir(), "fallstack-pwa-"));
+  // The plugin resolves its destination relative to the project directory.
+  // Keep the temporary directory on the same drive on Windows.
+  const dest = await mkdtemp(path.join(process.cwd(), ".fallstack-pwa-"));
   try {
     const config = withPWA({
       dest: path.relative(process.cwd(), dest),

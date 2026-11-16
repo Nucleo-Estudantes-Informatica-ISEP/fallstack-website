@@ -39,7 +39,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
                 : action.description}
             </p>
           </div>
-          <div className="ml-6 flex flex-shrink-0 items-center gap-2">
+          <div className="ml-6 flex shrink-0 items-center gap-2">
             <span className="text-sm text-gray-300">
               {action.points} pontos
             </span>

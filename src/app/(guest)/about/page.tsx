@@ -3,53 +3,45 @@ import Link from "next/link";
 
 import { branding } from "@/edition/branding";
 
-const about: React.FC = () => {
+const linkClass =
+  "ui-focus break-words text-primary underline underline-offset-4";
+
+const About: React.FC = () => {
   return (
-    <section className="flex h-screen w-screen flex-col items-center justify-center px-12">
-      <div className="flex flex-col items-center justify-center">
-        <h1 className="text-center text-2xl sm:text-3xl md:text-4xl">
-          Made By
-        </h1>
-        <p className="text-center text-lg">
-          <Link
-            href="https://nei.isep.ipp.pt/"
-            className="font-normal text-primary"
-          >
-            NEI-ISEP
-          </Link>
-        </p>
-      </div>
-      <div className="my-12 flex flex-col items-center justify-center">
-        <h1 className="text-center text-2xl sm:text-4xl md:text-4xl">
-          Git Repository
-        </h1>
-        <p className="my-4 text-center text-lg">
-          <Link
-            href={branding.repositoryUrl}
-            className="font-normal text-primary"
-          >
-            {branding.repositoryUrl}
-          </Link>
-        </p>
-      </div>
+    <section className="artwork-clean artwork-readable flex min-h-screen w-full items-center justify-center px-4 py-20">
+      <div className="ui-panel flex w-full max-w-3xl flex-col gap-10 rounded-lg p-6 sm:p-10">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl">Made By</h1>
+          <p className="text-lg">
+            <Link href="https://nei.isep.ipp.pt/" className={linkClass}>
+              NEI-ISEP
+            </Link>
+          </p>
+        </div>
 
-      <div className="flex flex-col items-center justify-center">
-        <h1 className="text-center text-xl font-bold sm:text-2xl md:text-3xl">
-          Precisas de ajuda? Contacta-nos!
-        </h1>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl sm:text-3xl">Git Repository</h2>
+          <p className="text-lg">
+            <Link href={branding.repositoryUrl} className={linkClass}>
+              {branding.repositoryUrl}
+            </Link>
+          </p>
+        </div>
 
-        <p className="my-2 text-center text-lg font-light">
-          Envia-nos um email para{" "}
-          <Link
-            href="mailto:support@nei-isep.org"
-            className="font-normal text-primary"
-          >
-            support@nei-isep.org
-          </Link>
-        </p>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl sm:text-3xl">
+            Precisas de ajuda? Contacta-nos!
+          </h2>
+          <p className="text-lg">
+            Envia-nos um email para{" "}
+            <Link href="mailto:support@nei-isep.org" className={linkClass}>
+              support@nei-isep.org
+            </Link>
+          </p>
+        </div>
       </div>
     </section>
   );
 };
 
-export default about;
+export default About;

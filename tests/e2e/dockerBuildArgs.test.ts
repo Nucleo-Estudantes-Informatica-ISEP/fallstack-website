@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, test } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 // The class of bug this guards against: a NEXT_PUBLIC_* var gets added to
 // src/config/env.client.ts (so it's picked up at *runtime* by anything
@@ -68,6 +69,10 @@ function extractDockerfileAppBuilderStage(): string {
 
 function readCompose(): string {
   return readFileSync(path.join(ROOT, "docker-compose.app.yml"), "utf-8");
+}
+
+function readLocalCompose(): string {
+  return readFileSync(path.join(ROOT, "docker-compose.local.yml"), "utf-8");
 }
 
 function sliceIndentedBlock(lines: string[], fromIndex: number): string[] {
@@ -198,7 +203,12 @@ test("every server environment variable is available to the runtime web service"
   for (const name of declaredVars.filter((name) =>
     name.startsWith("GOOGLE_WALLET_")
   )) {
-    const defaultValue = name === "GOOGLE_WALLET_NEVER_ENABLED" ? "false" : "";
+    const defaultValue = [
+      "GOOGLE_WALLET_NEVER_ENABLED",
+      "GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE",
+    ].includes(name)
+      ? "false"
+      : "";
     expectComposeVariable(
       webEnvironment,
       name,
@@ -264,4 +274,100 @@ test("Coolify compose keeps the migrator one-shot and avoids global container na
   expect(migrateBlock).toContain("exclude_from_hc: true");
   expect(migrateBlock).not.toMatch(/^\s*container_name:/m);
   expect(webBlock).not.toMatch(/^\s*container_name:/m);
+});
+
+test("local Compose starts an isolated full development stack", () => {
+  const source = readLocalCompose();
+  const compose = parseYaml(source) as {
+    services: Record<
+      string,
+      {
+        image?: string;
+        environment?: Record<string, string>;
+        depends_on?: Record<string, { condition?: string }>;
+        deploy?: { replicas?: number };
+      }
+    >;
+    networks?: Record<string, unknown>;
+    volumes?: Record<string, unknown>;
+  };
+
+  expect(source).not.toContain("exclude_from_hc");
+  expect(source).not.toContain("external: true");
+  expect(source).not.toContain("shared_data");
+  expect(source).not.toContain("redis_shared");
+  expect(compose.networks).toBeUndefined();
+  expect(compose.services).toEqual(
+    expect.objectContaining({
+      postgres: expect.any(Object),
+      redis: expect.any(Object),
+      minio: expect.any(Object),
+      "minio-init-avatars": expect.any(Object),
+      "minio-init-logos": expect.any(Object),
+      "minio-init-cvs": expect.any(Object),
+      migrate: expect.any(Object),
+      "storage-cleanup": expect.any(Object),
+      web: expect.any(Object),
+    })
+  );
+
+  expect(compose.services.migrate.depends_on?.postgres?.condition).toBe(
+    "service_healthy"
+  );
+  for (const service of [
+    "minio-init-avatars",
+    "minio-init-logos",
+    "minio-init-cvs",
+  ]) {
+    expect(compose.services[service].depends_on?.minio?.condition).toBe(
+      "service_healthy"
+    );
+    expect(compose.services[service].environment?.MC_HOST_local).toContain(
+      "@minio:9000"
+    );
+  }
+  expect(compose.services.web.depends_on?.migrate?.condition).toBe(
+    "service_completed_successfully"
+  );
+  expect(compose.services.web.depends_on?.redis?.condition).toBe(
+    "service_healthy"
+  );
+  for (const service of [
+    "minio-init-avatars",
+    "minio-init-logos",
+    "minio-init-cvs",
+  ]) {
+    expect(compose.services.web.depends_on?.[service]?.condition).toBe(
+      "service_completed_successfully"
+    );
+    expect(
+      compose.services["storage-cleanup"].depends_on?.[service]?.condition
+    ).toBe("service_completed_successfully");
+  }
+
+  const webEnvironment = compose.services.web.environment ?? {};
+  expect(webEnvironment.DATABASE_URL).toContain("@postgres:5432/");
+  expect(webEnvironment.REDIS_URL).toContain("@redis:6379");
+  expect(webEnvironment.REDIS_KEY_PREFIX).toBe("fallstack:dev:");
+  expect(webEnvironment.S3_ENDPOINT).toBe("http://minio:9000");
+  expect(webEnvironment.GOOGLE_WALLET_NEVER_ENABLED).toBe(
+    "${FALLSTACK_LOCAL_GOOGLE_WALLET_NEVER_ENABLED:-true}"
+  );
+  expect(compose.services.minio.environment?.MC_HOST_local).toContain(
+    "@localhost:9000"
+  );
+  expect(webEnvironment.AUTH_REDIRECT_URI).toContain(
+    "FALLSTACK_LOCAL_AUTH_REDIRECT_URI"
+  );
+  expect(compose.services["minio-init-avatars"].image).toContain(
+    "coollabsio/minio:"
+  );
+  expect(source).toContain('["CMD", "/usr/bin/mc", "ready", "local"]');
+  expect(compose.volumes).toEqual(
+    expect.objectContaining({
+      postgres_data: expect.any(Object),
+      redis_data: expect.any(Object),
+      minio_data: expect.any(Object),
+    })
+  );
 });

@@ -1,0 +1,65 @@
+import { notFound, redirect } from "next/navigation";
+
+import { serverEnv } from "@/config/env.server";
+import type { HomepageSections } from "@/components/Content";
+import CountdownLanding from "@/components/CountdownLanding";
+import FeaturedCompanies from "@/components/FeaturedCompanies";
+import HomeCallToAction from "@/components/HomeCallToAction";
+import HomePage from "@/components/HomePage";
+import HomepageSection from "@/components/HomepageSection";
+import OffseasonLanding from "@/components/OffseasonLanding";
+import {
+  getPublicCompanyRoster,
+  getPublicFaqs,
+  getPublicSchedule,
+  getPublicSponsors,
+} from "@/application/services/publicEditionService";
+import { Language } from "@/domain/i18n/translations";
+
+// Generate each language on its first request. The build has no event DB or
+// runtime showcase setting. Subsequent requests reuse the generated HTML.
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
+
+export default async function EventPage({
+  params,
+}: {
+  params: Promise<{ language: string }>;
+}) {
+  const { language: slug } = await params;
+  if (slug !== "pt" && slug !== "en") notFound();
+  const language = slug === "pt" ? Language.PT : Language.EN;
+  if (serverEnv.EVENT_MODE === "offseason") {
+    return <OffseasonLanding language={language} />;
+  }
+  if (serverEnv.SHOWCASE_FULL_WEBSITE) {
+    // The full event page has Portuguese editorial copy only.
+    if (slug !== "pt") redirect("/event/pt");
+    const [schedule, companies, sponsors, faqs] = await Promise.all([
+      getPublicSchedule(language),
+      getPublicCompanyRoster(language),
+      getPublicSponsors(),
+      getPublicFaqs(language),
+    ]);
+    const sections: HomepageSections = {
+      schedule: <HomepageSection section="schedule" data={schedule} />,
+      companies: <HomepageSection section="companies" data={companies} />,
+      sponsors: <HomepageSection section="sponsors" data={sponsors} />,
+      faqs: <HomepageSection section="faqs" data={faqs} />,
+    };
+    return <HomePage language={language} sections={sections} />;
+  }
+  return (
+    <CountdownLanding
+      language={language}
+      callToAction={<HomeCallToAction language={language} />}
+    >
+      <FeaturedCompanies
+        language={language}
+        companies={await getPublicCompanyRoster(language)}
+      />
+    </CountdownLanding>
+  );
+}

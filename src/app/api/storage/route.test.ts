@@ -2,10 +2,10 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { HttpError } from "@/types/HttpError";
+import { initiateCvUpload } from "@/application/services/directCvUploadService";
 import getServerSession from "@/application/services/sessionService";
 import {
   checkUploadRateLimit,
-  readUploadFile,
   uploadFile,
 } from "@/application/services/uploadService";
 
@@ -13,10 +13,12 @@ import { POST as avatarPost } from "./avatar/route";
 import { POST as cvPost } from "./cv/route";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/application/services/directCvUploadService", () => ({
+  initiateCvUpload: vi.fn(),
+}));
 vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
 vi.mock("@/application/services/uploadService", () => ({
   checkUploadRateLimit: vi.fn(),
-  readUploadFile: vi.fn(),
   uploadFile: vi.fn(),
 }));
 
@@ -37,6 +39,16 @@ describe.each([
   { name: "cv", post: cvPost, url: "http://localhost/api/storage/cv" },
 ] as const)("$name upload", ({ name, post, url }) => {
   function request(withFile = true) {
+    if (name === "cv")
+      return new NextRequest(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          withFile
+            ? { filename: "cv.pdf", contentType: "application/pdf", size: 20 }
+            : {}
+        ),
+      });
     const form = new FormData();
     if (withFile)
       form.append("file", new File(["bytes"], "file", { type: "image/png" }));
@@ -49,43 +61,72 @@ describe.each([
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getServerSession).mockResolvedValue(student);
-    vi.mocked(checkUploadRateLimit).mockReturnValue({
-      allowed: true,
-      retryAfterMs: 0,
+    vi.mocked(checkUploadRateLimit).mockResolvedValue({
+      status: "allowed",
     });
-    vi.mocked(readUploadFile).mockResolvedValue(
-      new File(["bytes"], "file", { type: "image/png" })
-    );
+    vi.mocked(initiateCvUpload).mockResolvedValue({
+      uploadId: "00000000-0000-4000-8000-000000000001",
+      url: "https://storage.test/cvs",
+      fields: {},
+      expiresAt: "2026-11-15T00:05:00Z",
+    });
     vi.mocked(uploadFile).mockResolvedValue({
       id: "file-id",
-      url: "/media/avatar/file-id",
+      url: name === "avatar" ? "/media/avatar/file-id" : undefined,
+      contentType: "image/png",
+      size: 5,
     });
   });
 
   test("rejects unauthenticated upload", async () => {
     vi.mocked(getServerSession).mockResolvedValue(null);
     expect((await send()).status).toBe(401);
+    expect(checkUploadRateLimit).not.toHaveBeenCalled();
+    expect(uploadFile).not.toHaveBeenCalled();
+  });
+
+  test("rejects an employee before rate limiting or reading the body", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      ...student!,
+      role: "EMPLOYEE",
+    } as Awaited<ReturnType<typeof getServerSession>>);
+    expect((await send()).status).toBe(403);
+    expect(checkUploadRateLimit).not.toHaveBeenCalled();
+    expect(uploadFile).not.toHaveBeenCalled();
   });
 
   test("accepts student account before profile exists", async () => {
     const response = await send();
     expect(response.status).toBe(201);
-    expect(uploadFile).toHaveBeenCalledWith(
-      name,
-      expect.objectContaining({ size: 5, type: "image/png" })
+    expect(await response.json()).toEqual(
+      name === "cv"
+        ? {
+            uploadId: "00000000-0000-4000-8000-000000000001",
+            url: "https://storage.test/cvs",
+            fields: {},
+            expiresAt: "2026-11-15T00:05:00Z",
+          }
+        : { id: "file-id", url: "/media/avatar/file-id" }
     );
+    if (name === "cv")
+      expect(initiateCvUpload).toHaveBeenCalledWith(student!.id, {
+        filename: "cv.pdf",
+        contentType: "application/pdf",
+        size: 20,
+      });
+    else expect(uploadFile).toHaveBeenCalledWith(name, expect.any(NextRequest));
   });
 
   test("rejects missing file", async () => {
-    vi.mocked(readUploadFile).mockRejectedValue(
+    vi.mocked(uploadFile).mockRejectedValueOnce(
       new HttpError("Missing file", 400)
     );
     expect((await send(false)).status).toBe(400);
   });
 
   test("returns retry delay on rate limit", async () => {
-    vi.mocked(checkUploadRateLimit).mockReturnValue({
-      allowed: false,
+    vi.mocked(checkUploadRateLimit).mockResolvedValue({
+      status: "limited",
       retryAfterMs: 1500,
     });
     const response = await send();

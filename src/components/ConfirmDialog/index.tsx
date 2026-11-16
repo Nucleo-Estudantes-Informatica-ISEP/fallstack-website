@@ -44,7 +44,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         type="button"
         onClick={() => setIsVisible(false)}
         disabled={isConfirming}
-        className="h-10 flex-1 border border-[#B1440A] px-4 py-1 text-center text-sm text-[#B1440A] disabled:opacity-80"
+        className="ui-focus min-h-11 flex-1 rounded-md border border-ui-action px-4 py-2 text-center text-base font-medium text-ui-action transition-colors hover:bg-ui-action/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {cancelLabel}
       </button>

@@ -44,8 +44,16 @@ export const REDACTION_PATHS = [
 function serializeError(error: unknown) {
   if (!(error instanceof Error)) return { type: "UnknownError" };
 
+  const databaseErrorCode =
+    "code" in error &&
+    typeof error.code === "string" &&
+    ["P2024", "P2028", "P2037"].includes(error.code)
+      ? error.code
+      : undefined;
+
   return {
     type: error.name || "Error",
+    databaseErrorCode,
     stack: error.stack?.split("\n").slice(1).join("\n"),
   };
 }

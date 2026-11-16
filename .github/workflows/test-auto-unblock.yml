@@ -33,7 +33,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.PROJECT_AUTOMATION_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Require configured project automation token
         shell: bash
         run: |

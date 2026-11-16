@@ -12,7 +12,7 @@ import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
 export const httpErrorResponse = (error: unknown) => {
   if (error instanceof HttpError)
     return NextResponse.json(
-      { error: error.message },
+      { ...error.details, error: error.message },
       { status: error.status }
     );
   if (error instanceof ZodError)
@@ -31,6 +31,23 @@ export const httpErrorResponse = (error: unknown) => {
       )
         return NextResponse.json({ error: message }, { status });
     }
+  }
+
+  // Pool wait (P2024) or transaction admission (P2028) timed out: the database is
+  // busy, not broken. Still logged so the documented pool alerts see the code.
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    (error.code === "P2024" || error.code === "P2028")
+  ) {
+    reportError(
+      error,
+      { operation: "database_busy" },
+      "Database connection pool busy"
+    );
+    return NextResponse.json(
+      { error: "Service busy, please retry shortly" },
+      { status: 503, headers: { "Retry-After": "5" } }
+    );
   }
 
   reportError(

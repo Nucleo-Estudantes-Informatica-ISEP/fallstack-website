@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+// Strict browser CSP rejects even Zod's caught dynamic-code capability probe.
+// Configure this before the eager client-environment parse; keep server JIT unchanged.
+if (typeof window !== "undefined") z.config({ jitless: true });
+
 // Vars read here as `process.env.NEXT_PUBLIC_*` (literal member access) so
 // Next.js can statically inline them into the browser bundle. Safe to import
 // from both Client and Server Components.

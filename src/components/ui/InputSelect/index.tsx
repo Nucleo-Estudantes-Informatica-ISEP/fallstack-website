@@ -2,6 +2,8 @@
 
 import slugifyId from "@/utils/slugifyId";
 
+export type SelectOption = string | { value: string; label: string };
+
 interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   name: string;
   center?: boolean;
@@ -9,7 +11,7 @@ interface InputSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement>
   className?: string;
   disabled?: boolean;
   inputRef?: React.Ref<HTMLSelectElement>;
-  options: string[];
+  options: SelectOption[];
 }
 
 const InputSelect: React.FC<InputSelectProps> = ({
@@ -21,6 +23,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
   inputRef,
   options,
   id,
+  defaultValue,
   ...rest
 }) => {
   const resolvedId = id || slugifyId(name) || undefined;
@@ -29,7 +32,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
     <div className="flex w-full flex-col">
       {name && (
         <label
-          className={`mb-1 text-sm font-normal text-white ${
+          className={`field-label block text-gray-100 ${
             center ? "text-left" : ""
           }`}
           htmlFor={resolvedId}
@@ -37,21 +40,58 @@ const InputSelect: React.FC<InputSelectProps> = ({
           {name}
         </label>
       )}
-      <select
-        name={name}
-        id={resolvedId}
-        disabled={disabled}
-        defaultValue={placeholder}
-        ref={inputRef}
-        className={`h-14 w-full border border-white/35 bg-background px-2 py-1 text-sm text-white placeholder:text-white/35 focus:border-primary focus:ring-0 disabled:text-gray-600 ${className}`}
-        {...rest}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+
+      <div className="relative flex w-full items-center">
+        <select
+          {...rest}
+          name={name}
+          id={resolvedId}
+          disabled={disabled}
+          defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
+          ref={inputRef}
+          className={`field-height w-full field-focus-target appearance-none rounded-full border field-border bg-background px-4 py-2 pr-10 field-text text-white focus:border-primary focus:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:border-white/20 disabled:bg-white/3 disabled:text-gray-400 disabled:opacity-100 has-[option[value=""]:checked]:text-gray-400 ${className ?? ""}`}
+        >
+          {placeholder && (
+            <option value="" disabled className="bg-background text-gray-400">
+              {placeholder}
+            </option>
+          )}
+
+          {options.map((option) => {
+            const value = typeof option === "string" ? option : option.value;
+            const label = typeof option === "string" ? option : option.label;
+
+            return (
+              <option
+                key={value}
+                value={value}
+                className="bg-neutral-900 text-white"
+              >
+                {label}
+              </option>
+            );
+          })}
+        </select>
+
+        <span
+          className="pointer-events-none absolute right-4 flex items-center text-gray-400"
+          aria-hidden="true"
+        >
+          <svg
+            className="size-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </span>
+      </div>
     </div>
   );
 };

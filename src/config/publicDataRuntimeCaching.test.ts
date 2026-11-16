@@ -36,25 +36,21 @@ test("homepage HTML/RSC and public JSON bypass Workbox cache for both languages,
 
 test("homepage navigation, language variants and RSC bypass old document caches", () => {
   const [rule] = publicDataRuntimeCaching;
-  for (const query of [
-    "",
-    "?lang=PT",
-    "?lang=EN",
-    "?_rsc=abc",
-    "?lang=EN&_rsc=abc",
-  ]) {
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://example.com/${query}`),
-        sameOrigin: true,
-      })
-    ).toBe(true);
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://elsewhere.com/${query}`),
-        sameOrigin: false,
-      })
-    ).toBe(false);
+  for (const path of ["/", "/event/pt", "/event/en"]) {
+    for (const query of ["", "?lang=EN", "?_rsc=abc"]) {
+      expect(
+        rule.urlPattern({
+          url: new URL(`${path}${query}`, "https://example.com"),
+          sameOrigin: true,
+        })
+      ).toBe(true);
+      expect(
+        rule.urlPattern({
+          url: new URL(`${path}${query}`, "https://elsewhere.com"),
+          sameOrigin: false,
+        })
+      ).toBe(false);
+    }
   }
 });
 
@@ -64,6 +60,16 @@ test("production PWA precaches a script-free document fallback without caching h
   expect(config).toContain('fallbacks: { document: "/offline.html" }');
   const offline = await readFile("public/offline.html", "utf8");
   expect(offline).toContain('href="/"');
+  expect(offline).toContain('href="/offline.css"');
   expect(offline).toContain("You are offline");
+  expect(offline).not.toContain('href=""');
   expect(offline).not.toMatch(/<script|<iframe|\bon\w+=/i);
+});
+
+test("offline fallback stylesheet is precached and has no extra cached dependencies", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const config = await readFile("next.config.js", "utf8");
+  expect(config).not.toContain("publicExcludes");
+  const css = await readFile("public/offline.css", "utf8");
+  expect(css).not.toMatch(/@font-face|@import|url\(/);
 });

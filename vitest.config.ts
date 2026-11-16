@@ -1,4 +1,7 @@
 import { fileURLToPath } from "node:url";
+
+import "dotenv/config";
+
 import { configDefaults, defineConfig } from "vitest/config";
 
 export default defineConfig({

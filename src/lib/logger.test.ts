@@ -63,3 +63,24 @@ test("filters records below configured level", () => {
   assert.equal(lines.length, 1);
   assert.equal(JSON.parse(lines[0]).msg, "Emitted");
 });
+
+test.each(["P2024", "P2028", "P2037", "STUDENT-123"])(
+  "exposes only allowlisted DB capacity codes: %s",
+  (code) => {
+    const { logger, lines } = captureLogs();
+    const error = Object.assign(
+      new Error("student@example.com SQL parameters"),
+      { code }
+    );
+    logger.error({ err: error }, "Operation failed");
+    const output = JSON.parse(lines[0]);
+    assert.equal(
+      output.err.databaseErrorCode,
+      code === "STUDENT-123" ? undefined : code
+    );
+    assert.doesNotMatch(
+      lines[0],
+      /student@example\.com|SQL parameters|STUDENT-123/
+    );
+  }
+);

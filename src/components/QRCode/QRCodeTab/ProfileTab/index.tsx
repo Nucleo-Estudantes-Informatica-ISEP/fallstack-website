@@ -5,8 +5,8 @@ import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
 import { httpClient } from "@/lib/http/client";
-import type { SessionDto } from "@/application/dto/sessionDto";
 import GoogleWalletButton from "@/components/GoogleWalletButton";
+import type { SessionDto } from "@/application/dto/sessionDto";
 
 import { BsFillClipboardFill } from "react-icons/bs";
 

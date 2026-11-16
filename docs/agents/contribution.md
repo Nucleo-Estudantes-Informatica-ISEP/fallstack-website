@@ -70,3 +70,10 @@ runs its configured checks on the PR.
 Commit Prisma migrations with schema changes. The migrator service applies
 them before the app becomes healthy; report deployment only after observing
 it. Dependency PRs use the same gates. Major upgrades need a migration plan.
+
+The pre-commit hook preserves staged files whose content and mode match `origin/dev`:
+it skips auto-formatting them and runs ESLint without fixes on code files. Other
+staged files still receive the usual formatting and lint fixes. Keep that local
+ref current; for a different PR target, set `LINT_STAGED_BASE` to its local Git
+ref when committing. If the ref is unavailable, the hook stops rather than
+risk rewriting restored files.

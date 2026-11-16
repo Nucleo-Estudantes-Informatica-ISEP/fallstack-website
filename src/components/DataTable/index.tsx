@@ -102,14 +102,14 @@ function DataTable<T>({
 
       <div className="overflow-x-auto rounded-lg bg-white shadow-md">
         <table className="min-w-full table-auto border-collapse">
-          <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
+          <thead className="bg-gray-200 text-sm text-gray-700">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className="px-6 py-3 text-left">
                   {column.sortable ? (
                     <Link
                       href={sortHref(column.key)}
-                      className="flex items-center gap-1 normal-case hover:underline"
+                      className="flex items-center gap-1 hover:underline"
                     >
                       {column.header}
                       {sort?.key === column.key && (

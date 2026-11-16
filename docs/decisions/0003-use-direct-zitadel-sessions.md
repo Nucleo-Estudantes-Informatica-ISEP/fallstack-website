@@ -12,6 +12,8 @@ The application previously depended on Supabase Auth for login while using ZITAD
 
 Use direct ZITADEL/AuthNEI OIDC login and a signed application session cookie. Keep the application `User` ID independent of the external subject, linked by `zitadelUserId` (migration `20260818150000_direct_zitadel_auth`). Resolve each session against the local user and its active state; ZITADEL grants gate roles, with local admin tiers narrowing access.
 
+Student onboarding starts after the server resolves a student session without a local profile. Its four steps collect the academic year, biography, interests and optional profile information. Profile creation takes the display name from the verified session (`authName`). When AuthNEI provides no display name, the first step asks the student for one, and the API rejects the request with a 400 if neither name exists. The name is public and read-only after creation, so the server never derives it from the account email.
+
 ## Consequences
 
 - Supabase Auth credentials and sessions are no longer part of the active login path.

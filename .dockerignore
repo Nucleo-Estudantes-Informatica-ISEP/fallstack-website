@@ -36,3 +36,5 @@ supabase/.temp
 # Optional large markdown docs (uncomment to exclude)
 # *.md
 
+
+static-output

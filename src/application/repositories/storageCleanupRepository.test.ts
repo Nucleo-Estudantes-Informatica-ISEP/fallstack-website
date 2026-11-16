@@ -8,7 +8,7 @@ const tx = vi.hoisted(() => ({
   storageDeletion: { findMany: vi.fn() },
 }));
 vi.mock("server-only", () => ({}));
-vi.mock("./database", () => ({
+vi.mock("./storageCleanupDatabase", () => ({
   default: { $transaction: (work: (db: typeof tx) => unknown) => work(tx) },
 }));
 

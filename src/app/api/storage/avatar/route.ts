@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { tooManyRequestsResponse } from "@/lib/rateLimit";
+import { rateLimitResponse } from "@/lib/rateLimit";
 import {
   checkUploadRateLimit,
-  readUploadFile,
   uploadFile,
 } from "@/application/services/uploadService";
 
@@ -13,11 +12,11 @@ export const POST = defineHandler({
   auth: "session",
   authorize: (session) => session.role === "STUDENT",
   handler: async ({ req, session }) => {
-    const rate = checkUploadRateLimit("avatar", session!.id);
-    if (!rate.allowed) return tooManyRequestsResponse(rate.retryAfterMs);
-    const file = await readUploadFile(req, "avatar");
-    return NextResponse.json(await uploadFile("avatar", file), {
-      status: 201,
-    });
+    const blocked = rateLimitResponse(
+      await checkUploadRateLimit("avatar", session!.id)
+    );
+    if (blocked) return blocked;
+    const { id, url } = await uploadFile("avatar", req);
+    return NextResponse.json({ id, url }, { status: 201 });
   },
 });

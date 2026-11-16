@@ -65,3 +65,71 @@ test("fetchSession(user) sets the context from the given value without a network
   await screen.findByText("STUDENT");
   expect(getSessionMock).not.toHaveBeenCalled();
 });
+
+test("is ready immediately when the server already resolved the session", () => {
+  let latestSession: ReturnType<typeof useSession> | undefined;
+
+  render(
+    <AuthContextProvider initialUser={null}>
+      <Probe
+        onReady={(session) => {
+          latestSession = session;
+        }}
+      />
+    </AuthContextProvider>
+  );
+
+  expect(latestSession?.ready).toBe(true);
+  expect(getSessionMock).not.toHaveBeenCalled();
+});
+
+test("is not ready until the client-side session lookup settles", async () => {
+  let resolveSession: (value: null) => void = () => {};
+  getSessionMock.mockReturnValue(
+    new Promise((resolve) => {
+      resolveSession = resolve;
+    })
+  );
+  let latestSession: ReturnType<typeof useSession> | undefined;
+
+  render(
+    <AuthContextProvider>
+      <Probe
+        onReady={(session) => {
+          latestSession = session;
+        }}
+      />
+    </AuthContextProvider>
+  );
+
+  // A pending lookup must not look like a confirmed guest, or signed-in
+  // students would briefly be offered the guest registration action.
+  expect(latestSession?.ready).toBe(false);
+  resolveSession(null);
+  await waitFor(() => expect(latestSession?.ready).toBe(true));
+  expect(latestSession?.user).toBeNull();
+});
+
+test("becomes ready even when the session lookup fails", async () => {
+  getSessionMock.mockReturnValueOnce(new Promise(() => {}));
+  let latestSession: ReturnType<typeof useSession> | undefined;
+
+  render(
+    <AuthContextProvider>
+      <Probe
+        onReady={(session) => {
+          latestSession = session;
+        }}
+      />
+    </AuthContextProvider>
+  );
+  expect(latestSession?.ready).toBe(false);
+
+  getSessionMock.mockRejectedValueOnce(new Error("Session unavailable"));
+  await expect(latestSession?.fetchSession()).rejects.toThrow(
+    "Session unavailable"
+  );
+
+  await waitFor(() => expect(latestSession?.ready).toBe(true));
+  expect(latestSession?.user).toBeNull();
+});

@@ -2,9 +2,13 @@ import { randomUUID } from "node:crypto";
 import { PrismaClient, Role, Year } from "@prisma/client";
 import { afterAll, afterEach, expect, test, vi } from "vitest";
 
+import { singleConnectionDatabaseUrl } from "@/config/env.database";
+
 vi.mock("server-only", () => ({}));
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasourceUrl: singleConnectionDatabaseUrl(),
+});
 
 const { deleteInterestForAdmin } =
   await import("../../src/application/services/interestService");

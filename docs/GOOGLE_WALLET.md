@@ -118,9 +118,14 @@ object ID from the configured class ID and student ID, so use a distinct class I
 for every environment. A separate issuer for non-production adds another layer
 of isolation when staging data is cloned from production.
 
-The class should contain only shared Fallstack 2026 presentation data (brand,
-logo/hero assets and common labels). Attendee-specific data belongs in the
-Generic Object created by the application.
+The class can stay minimal: only its ID is required. For Generic passes, `logo`,
+`heroImage` and `hexBackgroundColor` are Generic **Object** fields, not class
+fields, so the console class form has no inputs for them. The application sets
+them on every object from `edition.branding.wallet`: images are served from
+`public/google-wallet/` (`logo.png`, square; `hero.png`, 1032×344) at
+`NEXT_PUBLIC_BASE_URL`, so Google must be able to fetch them over public HTTPS.
+Create a **Generic** class; an Event ticket class ID does not work with this
+integration.
 
 Official class/object documentation:
 https://developers.google.com/wallet/generic/use-cases/create
@@ -276,7 +281,17 @@ not guarantee removal from a user's device or immediate synchronization.
 Issuance and deletion lock the same database user row and re-read the account,
 so an in-flight request cannot recreate or reactivate a deleted student's pass.
 One issuance or deletion operation per user is admitted in each application
-process before database access; PostgreSQL transaction advisory admission also
+process before database access. Combined issuance/deletion concurrency is also
+capped at two per process, or `PRISMA_CONNECTION_LIMIT - 1` when that is
+smaller, leaving one request-pool slot for other traffic during Google I/O. A
+larger pool does not raise the cap. Excess operations
+return 429 before DB access; retry after an admitted operation finishes. With a
+one-slot pool, all Wallet operations are paused by default. Explicitly setting
+`GOOGLE_WALLET_ALLOW_SINGLE_CONNECTION_DELETE=true` permits one account deletion
+at a time to use the sole connection; issuance remains paused. This can block
+other requests during Google I/O. Session lookups return null and protected
+routes respond 401/403; other database requests can return retryable 503 responses. Prefer at least two slots within the cluster budget.
+See [ADR 0032](decisions/0032-opt-in-single-connection-deletion.md). PostgreSQL transaction advisory admission also
 rejects competitors across replicas before row-lock waits. Competing operations return 429 and
 can be retried immediately after the first finishes. Database row locks still serialize admitted work across replicas. Each Google request has a ten-second
 timeout, and transport failures return 502 without logging sensitive details.
@@ -311,6 +326,29 @@ account deletion anonymizes it. This pass is an attendee identifier, not an acce
 credential. Deactivation does not invalidate the permanent code for existing
 identification flows.
 Use account deletion when the requested action is removal and revocation.
+
+### Downloadable offline pass validity and account deletion
+
+Under [Issue #406](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/406)
+and [ADR 0044](decisions/0044-issue-offline-downloadable-student-passes.md),
+attendees can also download an offline PNG pass directly from the web pass dashboard.
+
+The validity and revocation semantics align with the permanent student code model:
+
+1. **Attendee identifier:** The downloaded pass carries the permanent six-character
+   `Student.code` (both as a QR code and in a fallback text box) alongside the
+   student's name and event branding. It functions as an attendee identifier, not an
+   active credential or rotating authentication token.
+2. **On-device persistence:** Once generated, the PNG file is saved locally to the
+   attendee's device. The file cannot be programmatically deleted or recalled from
+   client storage.
+3. **Deactivation:** Account deactivation (`User.active=false`) blocks user login
+   and prevents generating new passes, but does not invalidate the permanent code
+   for in-person identification at event activities.
+4. **Account deletion:** When an account is deleted, the database removes the
+   student record and revokes/anonymizes the Google Wallet pass. As a result,
+   subsequent scans or manual lookups of the permanent code on the saved PNG fail
+   closed (the student is no longer recognized in the database).
 
 Keep the issuer, class, and authorized credentials available while any issued
 objects need revocation. Issuance first commits a `WalletPass` row containing

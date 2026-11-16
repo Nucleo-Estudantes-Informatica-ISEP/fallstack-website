@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 
@@ -32,8 +33,6 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   );
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 
-  if (pathname === "/") return null;
-
   return (
     <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
       {solid ? (
@@ -48,7 +47,10 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
       )}
       <div className="absolute top-2 right-4 flex h-12 w-full items-center justify-between space-x-4 px-4 py-2">
         {!isAuthPage ? (
-          <Link href="/" className="ml-6">
+          <Link
+            href="/"
+            className="ui-focus ml-6 inline-flex min-h-11 min-w-11 items-center justify-center rounded-md"
+          >
             <Image
               src={"/assets/images/logo_white.svg"}
               alt="Fallstack"
@@ -59,12 +61,18 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
         ) : (
           <div className="ml-6" />
         )}
-        <div className="flex items-center gap-x-4">
-          {!session.user ? (
+        <div className="flex items-center gap-x-2 sm:gap-x-4">
+          <LanguageSwitcher />
+          {!session.ready ? (
+            // Statically generated pages resolve the session in the browser;
+            // keep the slot's size without offering sign-in to someone who
+            // may already be signed in.
+            <span aria-hidden="true" className="min-h-11 min-w-11" />
+          ) : !session.user ? (
             <Link
               href={isAuthPage ? "/" : "/login"}
               aria-label={isAuthPage ? "Página inicial" : "Iniciar sessão"}
-              className="z-20 flex size-full items-center justify-center fill-white text-2xl transition-colors hover:text-primary"
+              className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md fill-white text-2xl transition-colors hover:text-primary"
             >
               <LogIn />
             </Link>

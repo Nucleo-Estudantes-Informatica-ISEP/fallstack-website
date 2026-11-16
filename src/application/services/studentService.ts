@@ -16,6 +16,8 @@ import { patchStudentSchema } from "@/schemas/patchStudentSchema";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 import generateRandomCode from "@/utils/GenerateCode";
 
+import { consumeCvUpload } from "../repositories/cvUploadRepository";
+import { countInterestsByIds } from "../repositories/interestRepository";
 import { isStudentSaved } from "../repositories/savedStudentRepository";
 import {
   connectStudentInterests,
@@ -55,7 +57,7 @@ import {
   publicAvatarUrl,
 } from "./objectStorageService";
 
-type NewStudent = z.infer<typeof postStudentSchema>;
+type NewStudent = z.infer<typeof postStudentSchema> & { name: string };
 type StudentPatch = z.infer<typeof patchStudentSchema>;
 
 export async function createStudentProfile(userId: string, body: NewStudent) {
@@ -74,18 +76,28 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
   const cv = body.cvId ?? null;
 
   return withTransaction(async (tx) => {
+    if (cv) await consumeCvUpload(userId, cv, tx);
     const student = await createStudent(
       {
         userId,
         code,
         name: body.name,
+        course: body.course,
+        privacyPolicyAccepted: body.privacyPolicyAccepted,
+        termsAccepted: body.termsAccepted,
+        privacyPolicyVersion: body.privacyPolicyVersion,
+        termsVersion: body.termsVersion,
+        consentAcceptedAt: new Date(),
         bio: body.bio,
+        linkedin: body.linkedin,
         year: parseStudentYear(body.year),
       },
       tx
     );
     await connectStudentInterests(userId, body.interests, tx);
     await completeAction(code, actionNames.createProfile, tx);
+    if (body.linkedin)
+      await completeAction(code, actionNames.updateLinkedin, tx);
     if (cv) await completeAction(code, actionNames.uploadCv, tx);
     await updateStudentMedia(student.id, { avatar: avatarUrl, cv }, tx);
     return student;
@@ -105,11 +117,21 @@ export async function updateStudent(
   code: string,
   body: StudentPatch
 ) {
+  const { interests, ...profile } = body;
+
+  // Unknown ids would make the relation `set` throw inside the transaction
+  // (Prisma P2025) and surface as a 500; reject them as a client error.
+  if (interests) {
+    const ids = new Set(interests);
+    if ((await countInterestsByIds([...ids])) !== ids.size)
+      throw new HttpError("Unknown interest id", 400);
+  }
+
   return withTransaction(async (tx) => {
-    const student = await updateStudentProfile(code, body, tx);
+    const student = await updateStudentProfile(code, profile, tx);
     if (student.linkedin)
       await completeAction(code, actionNames.updateLinkedin, tx);
-    if (body.interests) await setStudentInterests(userId, body.interests, tx);
+    if (interests) await setStudentInterests(userId, interests, tx);
     return student;
   });
 }
@@ -118,9 +140,12 @@ export const setStudentAvatar = (code: string, url: string) =>
   updateStudentAvatar(code, url);
 
 export async function setStudentCv(code: string, id: string) {
-  if (!(await objectExists("cv", cvKey(id))))
-    throw new HttpError("Invalid upload id", 400);
+  const student = await findStudentByCode(code);
+  if (!student) throw new HttpError("Student not found", 404);
+  if (student.cv === id) return;
   await withTransaction(async (tx) => {
+    const attached = await consumeCvUpload(student.id, id, tx);
+    if (!attached) return;
     await updateStudentCv(code, id, tx);
     await completeAction(code, actionNames.uploadCv, tx);
   });
@@ -165,7 +190,6 @@ export async function listStudentsForAdmin(query: AdminStudentQuery) {
 
 export async function createStudentForAdmin(input: {
   email: string;
-  password: string;
   code: string;
   name: string;
   year: StudentYear;
@@ -176,7 +200,7 @@ export async function createStudentForAdmin(input: {
 
   const authUser = await createSupabaseAuthUserAsAdmin(
     input.email,
-    input.password
+    input.name
   );
   try {
     return await withTransaction(async (tx) => {
@@ -210,12 +234,10 @@ export async function updateStudentForAdmin(
     linkedin?: string | null;
     github?: string | null;
     avatar?: string | null;
-    password?: string;
     active?: boolean;
   }
 ) {
-  const { password: _password, avatar, active, ...profile } = input;
-  void _password;
+  const { avatar, active, ...profile } = input;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
   if (active !== undefined) {
