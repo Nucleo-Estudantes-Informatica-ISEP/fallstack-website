@@ -70,3 +70,4 @@ implementation PR needs an ADR.
 | [0041](0041-direct-private-cv-uploads.md)                        | Upload private CVs directly to MinIO             | Accepted             |
 | [0042](0042-restrict-tokenless-student-previews.md)              | Restrict tokenless student previews              | Accepted             |
 | [0043](0043-independent-operational-modes.md)                    | Independent operational deployment modes         | Accepted             |
+| [0044](0044-issue-offline-downloadable-student-passes.md)        | Issue offline downloadable student passes        | Accepted             |
