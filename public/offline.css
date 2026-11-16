@@ -1,13 +1,7 @@
-@font-face {
-  font-family: Inter;
-  src: url("/assets/fonts/inter.ttf");
-  font-display: swap;
-}
-
-@font-face {
-  font-family: Coolvetica;
-  src: url("/assets/fonts/coolvetica.otf");
-  font-display: swap;
+h1,
+h2 {
+  font-family: system-ui, sans-serif;
+  font-weight: 600;
 }
 
 * {
@@ -22,7 +16,7 @@ body {
   place-items: center;
   background: #141414;
   color: white;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: system-ui, sans-serif;
 }
 
 main {

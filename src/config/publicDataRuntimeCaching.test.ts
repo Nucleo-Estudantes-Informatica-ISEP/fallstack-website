@@ -64,3 +64,11 @@ test("production PWA precaches a script-free document fallback without caching h
   expect(offline).toContain("You are offline");
   expect(offline).not.toMatch(/<script|<iframe|\bon\w+=/i);
 });
+
+test("offline fallback stylesheet is precached and has no extra cached dependencies", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const config = await readFile("next.config.js", "utf8");
+  expect(config).not.toContain("publicExcludes");
+  const css = await readFile("public/offline.css", "utf8");
+  expect(css).not.toMatch(/@font-face|@import|url\(/);
+});
