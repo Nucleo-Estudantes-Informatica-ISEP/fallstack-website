@@ -53,6 +53,7 @@ import {
   avatarKey,
   cvKey,
   getObject,
+  getObjectStream,
   objectExists,
   publicAvatarUrl,
 } from "./objectStorageService";
@@ -171,6 +172,19 @@ export async function downloadStudentCv(code: string, access: StudentAccess) {
   )
     throw new HttpError("CV not found", 404);
   const file = await getObject("cv", cvKey(student.cv));
+  if (!file) throw new HttpError("CV not found", 404);
+  return file;
+}
+
+export async function streamStudentCv(code: string, access: StudentAccess) {
+  const student = await findStudentByCode(code);
+  if (
+    !student ||
+    !(await isAllowedToViewStudent(code, access, isStudentSaved)) ||
+    !student.cv
+  )
+    throw new HttpError("CV not found", 404);
+  const file = await getObjectStream("cv", cvKey(student.cv));
   if (!file) throw new HttpError("CV not found", 404);
   return file;
 }

@@ -235,6 +235,24 @@ export async function getObject(kind: StorageBucket, key: string) {
   }
 }
 
+/** Stream large objects so CV downloads do not buffer a 10 MiB PDF per request. */
+export async function getObjectStream(kind: StorageBucket, key: string) {
+  try {
+    const response = await storageClient().send(
+      new GetObjectCommand({ Bucket: bucket(kind), Key: key })
+    );
+    if (!response.Body) return null;
+    return {
+      body: response.Body.transformToWebStream(),
+      contentType: response.ContentType ?? "application/octet-stream",
+      contentLength: response.ContentLength,
+    };
+  } catch (error) {
+    if (isMissingObject(error)) return null;
+    throw error;
+  }
+}
+
 export async function listObjects(
   kind: StorageBucket,
   prefix: string,
