@@ -51,8 +51,8 @@ Before enabling the new client:
 1. Create DNS A/AAAA for the chosen files hostname to the **existing** VPS.
 2. Configure its existing Traefik HTTPS router to MinIO **port 9000**. Keep Host
    and URL path unchanged and enable normal certificate issuance/TLS. Do not
-   route to console port 9001. Keep console private. Set an appropriate request
-   duration (e.g. 120 seconds); account for multipart overhead above 10 MiB.
+   route to console port 9001. Keep console private. Keep the existing request deadline; use the bounded multipart protocol below
+   rather than extending timeouts.
 3. Set MinIO `MINIO_API_CORS_ALLOW_ORIGIN` to the comma-separated exact web
    origins for this environment. No `*`; separate dev/main origins. Restart
    MinIO only in an approved maintenance/configuration change. Local Compose
