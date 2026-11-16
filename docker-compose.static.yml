@@ -1,0 +1,24 @@
+# Separate Coolify resource. Never combine with docker-compose.app.yml.
+services:
+  public:
+    build:
+      context: .
+      dockerfile: deployment/static/Dockerfile
+      args:
+        DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:?Select OFF-SEASON or PREPARATION}
+        EDITION_STARTS_AT: ${EDITION_STARTS_AT:-}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    expose:
+      - "8080"
+    networks:
+      - public_only
+networks:
+  public_only:
+    internal: true

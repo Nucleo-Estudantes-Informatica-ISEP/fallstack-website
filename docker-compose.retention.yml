@@ -1,0 +1,33 @@
+# One-shot batch; no web, Redis, AuthNEI or continuous worker.
+services:
+  storage-cleanup:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: storage-cleanup
+    restart: "no"
+    healthcheck:
+      disable: true
+    command:
+      [
+        "node",
+        "--conditions=react-server",
+        "--import",
+        "tsx",
+        "scripts/storage-cleanup.ts",
+      ]
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?Use restricted direct runtime DB identity}
+      DIRECT_URL: ${DATABASE_URL:?Use restricted direct runtime DB identity}
+      S3_ENDPOINT: ${S3_ENDPOINT:?Configure shared MinIO endpoint}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:?Configure restricted cleanup identity}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:?Configure restricted cleanup identity}
+      S3_BUCKET_AVATARS: ${S3_BUCKET_AVATARS:?Configure environment avatars bucket}
+      S3_BUCKET_LOGOS: ${S3_BUCKET_LOGOS:?Configure environment logos bucket}
+      S3_BUCKET_CVS: ${S3_BUCKET_CVS:?Configure environment CV bucket}
+    networks:
+      - shared_data
+networks:
+  shared_data:
+    external: true
+    name: ${SHARED_DATA_NETWORK:-gbheij1ljds8nrhfgdf9teeo}

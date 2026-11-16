@@ -23,6 +23,7 @@ export default defineConfig([
   {
     ignores: [
       ".next/**",
+      "static-output/**",
       "next-env.d.ts",
       ".claude/worktrees/**",
       "public/sw.js",

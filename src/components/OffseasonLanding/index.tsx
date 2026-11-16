@@ -1,26 +1,12 @@
+import EditionIntroduction from "@/components/EditionIntroduction";
+import { offseasonContent } from "@/edition/offseason";
+
 interface OffseasonLandingProps {
   language: "PT" | "EN";
 }
 
-const content = {
-  PT: {
-    title: "O Fallstack 2026 terminou!",
-    description:
-      "Obrigado a todos os estudantes, empresas e parceiros que fizeram parte desta edição.",
-    next: "Voltamos em breve com novidades sobre a próxima edição.",
-    contact: "Até breve!",
-  },
-  EN: {
-    title: "Fallstack 2026 has ended!",
-    description:
-      "Thank you to all students, companies and partners who took part in this edition.",
-    next: "We'll be back soon with news about the next edition.",
-    contact: "See you soon!",
-  },
-};
-
 export default function OffseasonLanding({ language }: OffseasonLandingProps) {
-  const text = content[language];
+  const text = offseasonContent[language];
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
@@ -37,7 +23,10 @@ export default function OffseasonLanding({ language }: OffseasonLandingProps) {
           {text.description}
         </p>
 
-        <p className="mb-8 text-base text-gray-400">{text.next}</p>
+        <EditionIntroduction
+          language={language}
+          className="mb-8 text-base text-gray-400"
+        />
 
         <p className="font-semibold text-white">{text.contact}</p>
       </div>
