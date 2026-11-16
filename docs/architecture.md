@@ -87,6 +87,10 @@ company-level saved-student check, is recorded in [ADR 0042](decisions/0042-rest
 Use it for the current data model; the [database architecture](database.md)
 diagram and notes should be updated with schema changes.
 
+Student saves reject the caller’s own student profile with HTTP 403 before
+writing a save or awarding booth points, including admin saves. The caller’s
+user ID is checked independently of the employee attributed to the save.
+
 `SavedStudent` stores both an employee attribution and a company. Its primary
 key is `(studentId, employeeId)` and a separate unique constraint on
 `(studentId, companyId)` enforces one save per company. The service checks the

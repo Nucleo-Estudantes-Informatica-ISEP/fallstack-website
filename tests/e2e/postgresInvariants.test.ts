@@ -161,6 +161,7 @@ test("save service maps a uniqueness race and awards booth points only once", as
     employees.map((employee) =>
       saveStudent({
         studentCode: student.code,
+        actorId: employee.id,
         employeeId: employee.id,
         companyId: company.id,
         // Exercise the database conflict path even if one pre-check reads after

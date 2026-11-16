@@ -41,6 +41,7 @@ import { completeCompanyBoothAction } from "./actionService";
 
 export async function saveStudent(input: {
   studentCode: string;
+  actorId: string;
   employeeId: string;
   companyId: string;
   comment?: string | null;
@@ -49,6 +50,8 @@ export async function saveStudent(input: {
 }) {
   const student = await findStudentByCode(input.studentCode);
   if (!student) throw new HttpError("Student not found", 404);
+  if (student.id === input.actorId)
+    throw new HttpError("You cannot scan your own QR code", 403);
   assertStudentCanBeSaved(
     await isStudentSaved(input.companyId, student.code),
     input.allowDuplicate
@@ -89,7 +92,8 @@ export async function updateSavedStudentComment(
 
 export async function saveStudentAsAdmin(
   emailOrNumber: string,
-  companyId: string
+  companyId: string,
+  actorId: string
 ) {
   let email: Email;
   try {
@@ -106,6 +110,7 @@ export async function saveStudentAsAdmin(
     throw new HttpError("Company has no employees to attribute save to", 400);
   return saveStudent({
     studentCode: student.code,
+    actorId,
     employeeId: employee.id,
     companyId,
   });
