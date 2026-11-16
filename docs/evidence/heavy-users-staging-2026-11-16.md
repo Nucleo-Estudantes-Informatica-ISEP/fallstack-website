@@ -1,7 +1,15 @@
 # Authenticated heavy-user staging run — 16 November 2026
 
-Issue: #604. The authenticated 200-user run completed and **failed** its
-performance/error limits. This is execution evidence, not a capacity pass.
+Issue: #604. The authenticated 200-user diagnostic run completed and **failed**
+its performance/error limits. **This does not complete #604:** the user requires
+a run on the existing staging deployment with its normal build, configuration
+and event dates. The temporary-date result below is diagnostic evidence only.
+
+On 16 November at 13:30 UTC, the existing staging deployment was inspected at
+`cc5731c794d4e22203375be44ef7afac8b694ae9` across three web replicas. Its normal
+event days remain 17–18 November, so a complete live-check-in run must wait
+for a live session on those dates. No replacement run has occurred. Use the
+revision actually deployed at run time and repeat quota/cleanup preflight.
 
 ## Deployment inspected
 
