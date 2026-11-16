@@ -17,10 +17,12 @@ edition timestamp at deployment. Missing, blank, invalid or elapsed values show
 generic next-edition text. Rebuild to change a date. Dates never activate routes.
 
 Create a separate Coolify resource using `docker-compose.static.yml`. Public
-DNS/proxy points only at its port 8080; attach the proxy to `public_only` if
-needed. Do not join shared-data or Redis networks, inject app credentials,
+DNS/proxy points only at its port 8080 through `public_only`; attach the reverse
+proxy to that internal network. There is no host-published port. Do not join shared-data or Redis networks, inject app credentials,
 mount app files/volumes, or add a Next fallback/upstream. Deny outbound access
-to PostgreSQL, MinIO, AuthNEI and the internet in the serving network. The
+to PostgreSQL, MinIO, AuthNEI and the internet in the serving network, including
+new connections through the reverse proxy. Apply the egress policy before
+publishing ingress and reapply it to every replacement serving instance. The
 internal network and credential-free image are deliberate. The container is
 read-only; only `/tmp` is writable. The serving config allows only `/`, two
 brand images, CSS, JS and the replacement worker; all other paths return 404,
@@ -45,8 +47,8 @@ Provision `STAFF_TLS_DIRECTORY` outside the checkout: server `tls.crt`, private
 authorized staff roster, protect/revoke keys through NEI operations. Ensure image UID 101 can read
 the mounted TLS key without making it world-readable. TLS must
 terminate at the gateway: use TCP passthrough, never an outer HTTP TLS proxy
-that bypasses client verification. Missing/untrusted client certificates fail
-the TLS handshake. App authorization remains required after this boundary.
+that bypasses client verification. Missing/untrusted client certificates are rejected before any upstream
+request. App authorization remains required after this boundary.
 Do not attach public static ingress to the staff network. Verify the actual
 web listening port (the existing image uses 4000) before deployment.
 
@@ -143,3 +145,19 @@ is assumed here. Inspect `systemctl list-timers` and the sanitized journal to
 verify the next run and successful exit before stopping the daemon.
 
 See the [dated verification and live volume inventory](../evidence/deployment-modes-2026-11-16.md). Coordinate the existing host replica-sync timer before scaling down; do not disable another task's reconciliation.
+
+### Measured isolated serving footprint — 16 November 2026
+
+Seven same-host samples over 190 seconds compared a task-owned Next seasonal
+instance with the independent static artifact. Median Docker container memory
+was **158.0 MiB for Next** and **6.309 MiB for static**, a measured serving-unit
+difference of **151.691 MiB (96.0%)**. The Next instance served the seasonal
+page with synthetic configuration and no shared backend access; private TLS
+probes occurred during sampling. Both instances used production images. The
+Next process was then stopped while static delivery remained available.
+
+This is a bounded serving-process comparison, not a host-wide or event-load
+benchmark. Existing clones, Redis and workers were preserved at the user's
+request, so no savings from those shared resources are claimed. PREPARATION
+adds the private app/gateway cost. Repeat the longer idle-window procedure
+above for production planning. [Raw samples](../evidence/deployment-footprint-2026-11-16.json).

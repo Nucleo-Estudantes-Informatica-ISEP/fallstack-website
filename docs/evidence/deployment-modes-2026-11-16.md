@@ -1,14 +1,15 @@
 # Deployment modes verification — 16 November 2026
 
-Scope: issue #418, branch `feat/deployment-modes`, based on
-`cc5731c794d4e22203375be44ef7afac8b694ae9`. This record distinguishes executed
+Scope: issue #418, branch `feat/deployment-modes`; implementation commit
+`72ff3178`, updated with upstream `9371efdd` in `46c8923c`. The final local
+application checks cover that combined revision. This record distinguishes executed
 checks from operational acceptance gates. No production deployment occurred.
 
 ## Executed
 
 - Confirmed isolated PostgreSQL 16 on loopback port 55418, database
   `fallstack418`; applied all migrations and passed Prisma validation.
-- Full application suite: 245 files passed, 3 skipped; 1,683 tests passed,
+- Full application suite: 246 files passed, 3 skipped; 1,688 tests passed,
   27 skipped by existing integration prerequisites. No shared database used.
 - Final affected tests: 12 passed across deployment builder, mode/date rules
   and event page. Both static modes built with invalid backend connection
@@ -92,6 +93,24 @@ Staging returned the same pre-existing homepage 500 after rollback. Existing
 logs identify schedule-data Zod validation as its cause. Restoring ingress does
 not claim that the unrelated event-content error was fixed.
 
+## Controlled PREPARATION boundary and serving footprint
+
+A separate task-owned Next production instance used upstream image `9371efdd`,
+synthetic credentials and an internal network without shared DB/MinIO/Redis or
+identity access. It served `/event/pt` with the seasonal copy (200). The actual
+staff gateway forwarded to that Next process: missing client certificate 400,
+untrusted self-signed certificate 400, dedicated test staff certificate 200,
+and admin API without an application session 401. The independent static
+container continued serving 200 with no network. No real AuthNEI staff session
+was fabricated or claimed. Private-network probes ran through the gateway's
+network namespace; no public staff host or credential was created.
+
+Seven samples over 190 seconds measured median Docker memory 158.0 MiB for the
+Next baseline versus 6.309 MiB for static: 151.691 MiB serving-unit reduction.
+The baseline process was stopped afterwards while static remained available.
+This is not a whole-host or production-load claim. See the raw footprint JSON
+and measured-savings section of the operations runbook for workload limits.
+
 ## Backup validation exception requested by the user
 
 The backup timer remains enabled, but the latest service result is failure:
@@ -117,3 +136,7 @@ unchanged staff routes. The independent boundary is tested with a dedicated
 client-certificate CA; no new production staff credential or identity-provider
 permission was created. Shared-clone shutdown and host-wide memory savings are
 not claimed because the user required those resources to remain running.
+
+Final cleanup verified all `fallstack-418-*` VPS containers and both rehearsal
+networks absent; temporary test certificates, synthetic env files and static
+artifact copies were removed. Existing clone resources were preserved.
