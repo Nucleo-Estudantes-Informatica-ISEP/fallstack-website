@@ -25,7 +25,6 @@ vi.mock("@/application/services/studentService", () => ({
 
 const fields = {
   email: "student@example.test",
-  password: "password123",
   code: "12345",
   name: "Estudante Teste",
   year: Object.keys(STUDENT_YEAR)[0],

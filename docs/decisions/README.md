@@ -71,3 +71,4 @@ implementation PR needs an ADR.
 | [0042](0042-restrict-tokenless-student-previews.md)              | Restrict tokenless student previews              | Accepted             |
 | [0043](0043-independent-operational-modes.md)                    | Independent operational deployment modes         | Accepted             |
 | [0044](0044-issue-offline-downloadable-student-passes.md)        | Issue offline downloadable student passes        | Accepted             |
+| [0045](0045-full-event-page-language.md)                         | Keep the full event homepage in Portuguese       | Accepted             |
