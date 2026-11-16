@@ -3,17 +3,28 @@ import { readFileSync } from "node:fs";
 import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 
+import { validCvEnvelope } from "@/domain/cvUpload";
 import {
+  cvUploadIdSchema,
+  directCvUploadSchema,
+} from "@/schemas/directCvUploadSchema";
+
+import {
+  cachedPdfLayout,
   checkInCodeFor,
   CV_MAX_BYTES,
   CV_SIZE_PLAN,
-  cvPdf,
+  cvPdfBytes,
+  cvPdfLayout,
   cvSizeFor,
   heavyUserPlan,
   isNearLimit,
   roleTable,
   workloadThresholds,
 } from "./heavyUserPlan";
+import { minioPost } from "./minioPost";
+
+const STORAGE_ORIGIN = "https://storage.staging.example.org";
 
 const accounts = (prefix: string, count: number) =>
   Array.from({ length: count }, (_, i) => `${prefix}-${i}`).join(",");
@@ -30,24 +41,51 @@ function env(overrides: Record<string, string> = {}) {
     CHECKIN_STAFF_COOKIES: accounts("staff", 1),
     CHECKIN_STUDENT_CODES: "1250101,1250102",
     CHECKIN_SESSION_ID: "session-1",
+    CV_STORAGE_ORIGIN: STORAGE_ORIGIN,
     ...overrides,
   };
 }
 
 describe("CV fixture", () => {
   test.each(CV_SIZE_PLAN)("builds a valid PDF of exactly %i bytes", (size) => {
-    const pdf = cvPdf(size);
-    expect(pdf.length).toBe(size);
-    expect(pdf.startsWith("%PDF-1.7\n")).toBe(true);
+    const bytes = new Uint8Array(cvPdfBytes(size));
+    const pdf = Buffer.from(bytes).toString("latin1");
+    expect(bytes.byteLength).toBe(size);
+    expect(pdf.startsWith("%PDF-1.7\n%synthetic CV synthetic CV ")).toBe(true);
     expect(pdf.endsWith("%%EOF\n")).toBe(true);
     const xref = Number(/startxref\n(\d+)\n/.exec(pdf)![1]);
     expect(pdf.slice(xref, xref + 4)).toBe("xref");
     const offsets = [...pdf.matchAll(/^(\d{10}) 00000 n $/gm)].map((match) =>
       Number(match[1])
     );
+    expect(offsets).toHaveLength(5);
     offsets.forEach((offset, index) =>
       expect(pdf.slice(offset).startsWith(`${index + 1} 0 obj`)).toBe(true)
     );
+    // The same envelope check the server runs when it finalizes an upload.
+    expect(
+      validCvEnvelope(bytes.subarray(0, 16), bytes.subarray(size - 1024))
+    ).toBe(true);
+  });
+
+  test("lays out the PDF without building the padding as a string", () => {
+    const { head, padding, tail } = cvPdfLayout(CV_MAX_BYTES);
+    expect(head.length + padding + tail.length).toBe(CV_MAX_BYTES);
+    expect(head.length + tail.length).toBeLessThan(1024);
+  });
+
+  test("memoizes the layout per size and renders identical bytes each time", () => {
+    for (const size of CV_SIZE_PLAN)
+      expect(cachedPdfLayout(size)).toBe(cachedPdfLayout(size));
+    const first = cvPdfBytes(CV_MAX_BYTES);
+    const second = cvPdfBytes(CV_MAX_BYTES);
+    // Fresh buffers (no per-VU cache of 10 MiB bodies), same content.
+    expect(second).not.toBe(first);
+    expect(Buffer.from(second).equals(Buffer.from(first))).toBe(true);
+  });
+
+  test("rejects a size too small to hold the PDF structure", () => {
+    expect(() => cvPdfLayout(100)).toThrow(/at least/);
   });
 
   test("mixes real sizes with uploads exactly at the 10 MiB limit", () => {
@@ -87,8 +125,24 @@ describe("heavy-user plan", () => {
     [{ CHECKIN_SESSION_ID: "" }, /CHECKIN_SESSION_ID/],
     [{ CHECKIN_INTERVAL_SECONDS: "0.5" }, /staff limit/],
     [{ QR_USERS: "-1" }, /QR_USERS/],
+    [{ CV_STORAGE_ORIGIN: "" }, /CV_STORAGE_ORIGIN/],
+    [
+      { CV_STORAGE_ORIGIN: "https://storage.staging.example.org/bucket" },
+      /CV_STORAGE_ORIGIN/,
+    ],
+    [{ CV_STORAGE_ORIGIN: "ftp://storage.example.org" }, /CV_STORAGE_ORIGIN/],
   ])("rejects %o", (overrides, message) => {
     expect(() => heavyUserPlan(env(overrides))).toThrow(message);
+  });
+
+  test("pins the storage origin only when students upload", () => {
+    expect(
+      heavyUserPlan(env({ CV_STORAGE_ORIGIN: `${STORAGE_ORIGIN}/` })).qr
+        .storageOrigin
+    ).toBe(STORAGE_ORIGIN);
+    expect(() =>
+      heavyUserPlan(env({ QR_USERS: "0", CV_STORAGE_ORIGIN: "" }))
+    ).not.toThrow();
   });
 
   test("accepts exactly five uploads per minute per student", () => {
@@ -191,6 +245,7 @@ function loadScript(
   const requests: Request[] = [];
   const checks: { name: string; passed: boolean }[] = [];
   const counters: Record<string, number> = {};
+  const sleeps: number[] = [];
   const vu = { idInTest: 1, iterationInScenario: 0 };
   const send = (method: string, url: string, body: unknown, params = {}) => {
     const request = { method, url, body, params } as Request;
@@ -208,14 +263,15 @@ function loadScript(
       },
       assertStagingTarget: (url: string) => url,
       checkInCodeFor,
-      cvPdf,
+      cvPdfBytes,
       cvSizeFor,
+      minioPost,
       heavyUserPlan,
       isNearLimit,
       roleTable,
       workloadThresholds,
       exec: { vu },
-      sleep: () => {},
+      sleep: (seconds: number) => sleeps.push(seconds),
       check: (
         value: unknown,
         predicates: Record<string, (v: unknown) => boolean>
@@ -248,7 +304,6 @@ function loadScript(
         add() {}
       },
       http: {
-        file: (data: string) => ({ data }),
         expectedStatuses: (...statuses: number[]) => statuses,
         get: (url: string, params?: object) => send("GET", url, null, params),
         post: (url: string, body: unknown, params?: object) =>
@@ -256,7 +311,7 @@ function loadScript(
       },
     }
   );
-  return { ...context, requests, checks, counters, vu };
+  return { ...context, requests, checks, counters, sleeps, vu };
 }
 
 const pdfHeaders = { "Content-Type": "application/pdf" };
@@ -273,33 +328,20 @@ describe("heavy-users k6 script", () => {
     expect(options.thresholds.http_req_failed).toEqual(["rate<0.01"]);
   });
 
-  test("student uploads, attaches and downloads the same CV", () => {
-    let uploadedSize = 0;
-    const script = loadScript((request) => {
-      if (request.url.endsWith("/api/qrcode"))
-        return respond(200, { data: "t" });
-      if (request.url.endsWith("/api/storage/cv")) {
-        uploadedSize = (request.body as { file: { data: string } }).file.data
-          .length;
-        return respond(201, { id: "file-1" });
-      }
-      if (request.method === "POST" && request.url.endsWith("/cv"))
-        return respond(200, { ok: true });
-      if (request.url.endsWith("/api/students/1250001/cv"))
-        return respond(200, { url: "/api/students/1250001/cv/file" });
-      if (request.url.endsWith("/cv/file"))
-        return respond(200, { byteLength: uploadedSize }, pdfHeaders);
-      throw new Error(`Unexpected ${request.method} ${request.url}`);
-    });
+  test("student uploads directly to storage, then attaches and downloads the CV", () => {
+    const route = stagingRoute();
+    const script = loadScript(route);
     script.runQr(0);
     expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
       "qr_pass",
-      "cv_upload",
+      "cv_authorize",
+      "cv_direct_transfer",
+      "cv_finalize",
       "cv_attach",
       "cv_lookup",
       "cv_download",
     ]);
-    expect(uploadedSize).toBe(cvSizeFor(1, 0));
+    expect(route.transfers[0].bytes.length).toBe(cvSizeFor(1, 0));
     expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
       true
     );
@@ -307,45 +349,136 @@ describe("heavy-users k6 script", () => {
     expect(script.counters.cv_upload_rate_limited_429).toBeUndefined();
   });
 
-  test("reports expected upload 429s separately, not as failures", () => {
-    const script = loadScript((request) =>
-      request.url.endsWith("/api/storage/cv")
-        ? respond(429, { error: "Too many requests" })
-        : respond(200, { data: "t" })
-    );
+  test("follows the direct upload contract at every step", () => {
+    const route = stagingRoute();
+    const script = loadScript(route);
     script.runQr(0);
-    const upload = script.requests.find(
-      (r: Request) => r.params.tags?.name === "cv_upload"
+    const step = (name: string) =>
+      script.requests.find((r: Request) => r.params.tags?.name === name)!;
+    // Authorize: JSON metadata only (the route validates it with the real
+    // schema), with the student's session.
+    expect(JSON.parse(step("cv_authorize").body as string)).toEqual({
+      filename: "cv.pdf",
+      contentType: "application/pdf",
+      size: cvSizeFor(1, 0),
+    });
+    expect(step("cv_authorize").params.headers?.Cookie).toBe("student-0");
+    // Transfer: to the signed URL, signed fields first and the file last, no
+    // application cookie, with the server-valid PDF bytes.
+    expect(step("cv_direct_transfer").url).toBe(
+      `${STORAGE_ORIGIN}/fallstack-cvs`
+    );
+    expect(route.transfers[0].cookie).toBeUndefined();
+    expect(route.transfers[0].fields).toEqual([
+      "key",
+      "Content-Type",
+      "success_action_status",
+      "Policy",
+      "file",
+    ]);
+    expect(
+      route.transfers[0].bytes.equals(Buffer.from(cvPdfBytes(cvSizeFor(1, 0))))
+    ).toBe(true);
+    // Finalize: the upload id from authorize, with the student's session.
+    expect(JSON.parse(step("cv_finalize").body as string)).toEqual({
+      uploadId: "00000000-0000-4000-8000-000000000000",
+    });
+    expect(step("cv_finalize").params.headers?.Cookie).toBe("student-0");
+  });
+
+  test("reports expected upload 429s separately, not as failures", () => {
+    const script = loadScript(stagingRoute({ upload: 429 }));
+    script.runQr(0);
+    const authorize = script.requests.find(
+      (r: Request) => r.params.tags?.name === "cv_authorize"
     )!;
-    expect(upload.params.responseCallback).toEqual([201, 429]);
+    expect(authorize.params.responseCallback).toEqual([201, 429]);
     expect(script.counters.cv_upload_rate_limited_429).toBe(1);
     expect(script.counters.cv_upload_accepted).toBeUndefined();
     expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
       true
     );
-    expect(script.requests).toHaveLength(2);
+    // Nothing is transferred, finalized or attached after a 429.
+    expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
+      "qr_pass",
+      "cv_authorize",
+    ]);
   });
 
-  test("near-limit uploads send exactly 10 MiB and are counted", () => {
-    const script = loadScript((request) => {
-      if (request.url.endsWith("/api/storage/cv"))
-        return respond(201, { id: "file-1" });
-      if (request.url.endsWith("/cv/file"))
-        return respond(200, { byteLength: CV_MAX_BYTES }, pdfHeaders);
-      if (request.url.endsWith("/1250001/cv") && request.method === "GET")
-        return respond(200, { url: "/api/students/1250001/cv/file" });
-      return respond(200, { data: "t", ok: true });
-    });
+  test("near-limit uploads transfer exactly 10 MiB and are counted", () => {
+    const route = stagingRoute();
+    const script = loadScript(route);
     script.vu.iterationInScenario = 3; // (1 + 3) % 5 selects the 10 MiB slot.
     script.runQr(0);
-    const upload = script.requests.find(
-      (r: Request) => r.params.tags?.name === "cv_upload"
-    )!;
-    expect(upload.params.tags?.size).toBe("near_limit");
-    expect((upload.body as { file: { data: string } }).file.data.length).toBe(
-      CV_MAX_BYTES
-    );
+    for (const name of ["cv_authorize", "cv_direct_transfer", "cv_finalize"])
+      expect(
+        script.requests.find((r: Request) => r.params.tags?.name === name)
+          .params.tags?.size
+      ).toBe("near_limit");
+    expect(route.transfers[0].bytes.length).toBe(CV_MAX_BYTES);
     expect(script.counters.cv_upload_near_limit_accepted).toBe(1);
+    expect(
+      script.counters["cv_download_succeeded{group:qr,size:near_limit}"]
+    ).toBe(1);
+  });
+
+  test("never sends CV bytes to a storage origin other than CV_STORAGE_ORIGIN", () => {
+    const route = stagingRoute({
+      storageUrl: "https://storage.example.org/fallstack-cvs",
+    });
+    const script = loadScript(route);
+    script.runQr(0);
+    expect(route.transfers).toEqual([]);
+    expect(
+      script.checks.find((c: { name: string }) =>
+        c.name.startsWith("CV upload authorized")
+      )?.passed
+    ).toBe(false);
+    expect(script.counters.cv_upload_accepted).toBeUndefined();
+  });
+
+  test("a storage rejection fails the transfer check and skips finalize", () => {
+    const script = loadScript(stagingRoute({ transfer: 403 }));
+    script.runQr(0);
+    expect(
+      script.checks.find((c: { name: string }) => c.name.startsWith("storage"))
+        ?.passed
+    ).toBe(false);
+    expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
+      "qr_pass",
+      "cv_authorize",
+      "cv_direct_transfer",
+    ]);
+  });
+
+  test("finalize is retried while in progress, like the student app", () => {
+    const script = loadScript(stagingRoute({ finalize: [409, 409] }));
+    script.runQr(0);
+    const finalizes = script.requests.filter(
+      (r: Request) => r.params.tags?.name === "cv_finalize"
+    );
+    expect(finalizes).toHaveLength(3);
+    expect(finalizes[0].params.responseCallback).toEqual([200, 409]);
+    expect(script.counters.cv_upload_accepted).toBe(1);
+    expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
+      true
+    );
+  });
+
+  test("a finalize that never succeeds fails its check and is not counted", () => {
+    const script = loadScript(stagingRoute({ finalize: [409, 409, 409] }));
+    script.runQr(0);
+    expect(
+      script.requests.filter(
+        (r: Request) => r.params.tags?.name === "cv_finalize"
+      )
+    ).toHaveLength(3);
+    expect(
+      script.checks.find((c: { name: string }) =>
+        c.name.startsWith("CV upload finalized")
+      )?.passed
+    ).toBe(false);
+    expect(script.counters.cv_upload_accepted).toBeUndefined();
   });
 
   test("dashboard loads the page, history and downloads saved CVs", () => {
@@ -413,6 +546,43 @@ describe("heavy-users k6 script", () => {
     ]);
   });
 
+  test("every visit waits out its group's interval from the visit start", () => {
+    const script = loadScript(stagingRoute());
+    const waits: Record<string, number> = {};
+    script.roles.forEach((role: { group: string }, slot: number) => {
+      script.vu.idInTest = slot + 1;
+      script.runHeavyUser();
+      waits[role.group] = script.sleeps.at(-1);
+    });
+    // Visits against the stand-in take milliseconds, so each wait is close
+    // to the whole interval: 10 s dashboard, 15 s QR, 3 s check-in.
+    expect(waits.dashboard).toBeGreaterThan(9.5);
+    expect(waits.dashboard).toBeLessThanOrEqual(10);
+    expect(waits.qr).toBeGreaterThan(14.5);
+    expect(waits.qr).toBeLessThanOrEqual(15);
+    expect(waits.checkIn).toBeGreaterThan(2.5);
+    expect(waits.checkIn).toBeLessThanOrEqual(3);
+  });
+
+  test("a script error still waits out the interval and fails a check", () => {
+    const route = stagingRoute();
+    const script = loadScript((request) => {
+      if (request.url.startsWith(STORAGE_ORIGIN))
+        throw new Error("connection reset");
+      return route(request);
+    });
+    script.vu.idInTest =
+      script.roles.findIndex((role: { group: string }) => role.group === "qr") +
+      1;
+    expect(() => script.runHeavyUser()).toThrow("connection reset");
+    // Without the wait, the VU would loop at once and flood authorize.
+    expect(script.sleeps.at(-1)).toBeGreaterThan(14.5);
+    expect(script.checks).toContainEqual({
+      name: "visit completes without a script error",
+      passed: false,
+    });
+  });
+
   test("check-in 201s are counted as created", () => {
     const script = loadScript(() => respond(201, { id: "check-in-1" }));
     script.runCheckIn(0);
@@ -451,41 +621,42 @@ describe("heavy-users k6 script", () => {
     expect([...cookiesByGroup.checkIn]).toEqual(["staff-0"]);
   });
 
-  test.each([413, 500])(
-    "an unexpected %i upload fails its check and is not attached",
+  // 415 is what the multipart upload now gets from the direct-upload route.
+  test.each([415, 500])(
+    "an unexpected %i authorization fails its check and sends no bytes",
     (status) => {
-      const script = loadScript((request) =>
-        request.url.endsWith("/api/storage/cv")
-          ? respond(status, { error: "upload failed" })
-          : respond(200, { data: "t" })
-      );
+      const route = stagingRoute({ upload: status });
+      const script = loadScript(route);
       script.runQr(0);
       expect(
         script.checks.find((c: { name: string }) =>
-          c.name.startsWith("CV upload")
+          c.name.startsWith("CV upload authorized")
         )?.passed
       ).toBe(false);
       expect(script.counters.cv_upload_accepted).toBeUndefined();
       expect(script.counters.cv_upload_rate_limited_429).toBeUndefined();
+      expect(route.transfers).toEqual([]);
       expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
         "qr_pass",
-        "cv_upload",
+        "cv_authorize",
       ]);
     }
   );
 
   test("a failed attach skips the download", () => {
-    const script = loadScript((request) => {
-      if (request.url.endsWith("/api/storage/cv"))
-        return respond(201, { id: "file-1" });
-      if (request.method === "POST" && request.url.endsWith("/cv"))
-        return respond(403, { error: "Forbidden" });
-      return respond(200, { data: "t" });
-    });
+    const route = stagingRoute();
+    const script = loadScript((request) =>
+      request.method === "POST" &&
+      /\/api\/students\/[^/]+\/cv$/.test(request.url)
+        ? respond(403, { error: "Forbidden" })
+        : route(request)
+    );
     script.runQr(0);
     expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
       "qr_pass",
-      "cv_upload",
+      "cv_authorize",
+      "cv_direct_transfer",
+      "cv_finalize",
       "cv_attach",
     ]);
     expect(
@@ -495,15 +666,12 @@ describe("heavy-users k6 script", () => {
   });
 
   test("a download that differs from the upload fails the check", () => {
-    const script = loadScript((request) => {
-      if (request.url.endsWith("/api/storage/cv"))
-        return respond(201, { id: "file-1" });
-      if (request.url.endsWith("/cv/file"))
-        return respond(200, { byteLength: 1 }, pdfHeaders);
-      if (request.url.endsWith("/1250001/cv") && request.method === "GET")
-        return respond(200, { url: "/api/students/1250001/cv/file" });
-      return respond(200, { data: "t", ok: true });
-    });
+    const route = stagingRoute();
+    const script = loadScript((request) =>
+      request.url.endsWith("/cv/file")
+        ? respond(200, { byteLength: 1 }, pdfHeaders)
+        : route(request)
+    );
     script.runQr(0);
     const lookup = script.requests.find(
       (r: Request) => r.params.tags?.name === "cv_lookup"
@@ -533,7 +701,7 @@ describe("heavy-users k6 script", () => {
       "qr_pass",
       "action_qr",
       "action_scan",
-      "cv_upload",
+      "cv_authorize",
     ]);
     expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
       true
@@ -627,17 +795,56 @@ function failedCountThresholds(
     .sort();
 }
 
-// A staging stand-in: uploads are stored per student and downloads return
-// what was attached; saved students who were not uploaded in the run already
-// have a 4 KiB CV.
+// Splits the S3 POST form the script sends to storage into its ordered parts.
+function parseStorageForm(body: unknown, contentType = "") {
+  const boundary = /boundary=(.+)$/.exec(contentType)?.[1];
+  if (!boundary) throw new Error("Storage transfer is not multipart");
+  const text = Buffer.from(body as ArrayBuffer).toString("latin1");
+  return text
+    .split(`--${boundary}`)
+    .slice(1, -1)
+    .map((part) => {
+      const split = part.indexOf("\r\n\r\n");
+      return {
+        name: /name="([^"]+)"/.exec(part.slice(0, split))![1],
+        value: Buffer.from(part.slice(split + 4, -2), "latin1"),
+      };
+    });
+}
+
+interface StagingOptions {
+  upload?: number;
+  nearLimitUpload?: number;
+  storageUrl?: string;
+  transfer?: number;
+  finalize?: number[];
+  lookup?: number;
+}
+
+// A staging stand-in for the direct upload contract (#595). Authorize returns
+// a signed storage form; storage keeps the bytes; finalize validates them like
+// the server and returns the CV id; downloads return what was attached. Saved
+// students who did not upload in the run already have a 4 KiB CV. `finalize`
+// lists the statuses returned on successive attempts before the 200.
 function stagingRoute({
   upload = 201,
   nearLimitUpload = upload,
+  storageUrl = `${STORAGE_ORIGIN}/fallstack-cvs`,
+  transfer = 204,
+  finalize = [],
   lookup = 200,
-}: { upload?: number; nearLimitUpload?: number; lookup?: number } = {}) {
-  const uploadedBySession = new Map<string, number>();
+}: StagingOptions = {}) {
+  const tickets = new Map<string, { cookie: string; size: number }>();
+  const stored = new Map<string, Buffer>();
+  const finalizeCalls = new Map<string, number>();
+  const cvSizes = new Map<string, number>();
   const cvBytes = new Map<string, number>();
-  return (request: Request) => {
+  const transfers: {
+    cookie?: string;
+    fields: string[];
+    bytes: Buffer;
+  }[] = [];
+  const route = (request: Request) => {
     const cookie = request.params.headers?.Cookie ?? "";
     const cv = /\/api\/students\/([^/]+)\/cv(\/file)?$/.exec(request.url);
     if (request.url.endsWith("/dashboard"))
@@ -649,15 +856,69 @@ function stagingRoute({
       ]);
     if (request.url.endsWith("/api/qrcode")) return respond(200, { data: "t" });
     if (request.url.endsWith("/api/storage/cv")) {
-      const bytes = (request.body as { file: { data: string } }).file.data
-        .length;
-      const status = bytes === CV_MAX_BYTES ? nearLimitUpload : upload;
+      // The real request schema: a JSON body the server would otherwise 415.
+      expect(request.params.headers?.["Content-Type"]).toBe("application/json");
+      const body = directCvUploadSchema.parse(
+        JSON.parse(request.body as string)
+      );
+      const status = body.size === CV_MAX_BYTES ? nearLimitUpload : upload;
       if (status !== 201) return respond(status, { error: "Too many" });
-      uploadedBySession.set(cookie, bytes);
-      return respond(201, { id: `file-${cookie}` });
+      const uploadId = `00000000-0000-4000-8000-${String(tickets.size).padStart(12, "0")}`;
+      tickets.set(uploadId, { cookie, size: body.size });
+      return respond(201, {
+        uploadId,
+        url: storageUrl,
+        fields: {
+          key: `quarantine/cv/${uploadId}`,
+          "Content-Type": "application/pdf",
+          success_action_status: "204",
+          Policy: "signed-policy",
+        },
+      });
+    }
+    if (request.url.startsWith(storageUrl)) {
+      const parts = parseStorageForm(
+        request.body,
+        request.params.headers?.["Content-Type"]
+      );
+      transfers.push({
+        cookie: request.params.headers?.Cookie,
+        fields: parts.map((part) => part.name),
+        bytes: parts.at(-1)!.value,
+      });
+      if (transfer !== 204) return respond(transfer, "<Error/>");
+      const key = parts.find((part) => part.name === "key")!.value.toString();
+      stored.set(key.replace("quarantine/cv/", ""), parts.at(-1)!.value);
+      return respond(204, "");
+    }
+    if (request.url.endsWith("/api/storage/cv/finalize")) {
+      const { uploadId } = cvUploadIdSchema.parse(
+        JSON.parse(request.body as string)
+      );
+      const attempt = finalizeCalls.get(uploadId) ?? 0;
+      finalizeCalls.set(uploadId, attempt + 1);
+      if (attempt < finalize.length)
+        return respond(finalize[attempt], { error: "In progress" });
+      const ticket = tickets.get(uploadId);
+      const bytes = stored.get(uploadId);
+      if (!ticket || ticket.cookie !== cookie)
+        return respond(404, { error: "Upload not found" });
+      if (
+        !bytes ||
+        bytes.length !== ticket.size ||
+        !validCvEnvelope(
+          bytes.subarray(0, 16),
+          bytes.subarray(bytes.length - 1024)
+        )
+      )
+        return respond(400, { error: "Invalid or truncated PDF" });
+      const id = `cv-${uploadId}`;
+      cvSizes.set(id, bytes.length);
+      return respond(200, { id });
     }
     if (cv && request.method === "POST") {
-      cvBytes.set(cv[1], uploadedBySession.get(cookie) ?? 0);
+      const { id } = JSON.parse(request.body as string);
+      cvBytes.set(cv[1], cvSizes.get(id) ?? 0);
       return respond(200, { ok: true });
     }
     if (cv && !cv[2])
@@ -673,6 +934,7 @@ function stagingRoute({
     if (request.url.endsWith("/check-ins")) return respond(201, { id: "c" });
     throw new Error(`Unexpected ${request.method} ${request.url}`);
   };
+  return Object.assign(route, { transfers });
 }
 
 // Runs every VU for five iterations, enough for each student to reach the

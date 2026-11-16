@@ -29,44 +29,97 @@ export function isNearLimit(size) {
   return size >= CV_MAX_BYTES * 0.9;
 }
 
-/** A valid one-page PDF of exactly `size` bytes (ASCII, so length == bytes). */
-export function cvPdf(size) {
-  const objects = [
-    "<< /Type /Catalog /Pages 2 0 R >>",
-    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
-    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
-  ];
-  const content = "BT /F1 12 Tf 72 720 Td (Synthetic heavy-user CV) Tj ET\n";
-  objects.push(`<< /Length ${content.length} >>\nstream\n${content}endstream`);
+const PDF_HEAD = "%PDF-1.7\n%";
+const PDF_PADDING = "synthetic CV ";
+const PDF_CONTENT = "BT /F1 12 Tf 72 720 Td (Synthetic heavy-user CV) Tj ET\n";
+const PDF_OBJECTS = [
+  "<< /Type /Catalog /Pages 2 0 R >>",
+  "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+  "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+  "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  `<< /Length ${PDF_CONTENT.length} >>\nstream\n${PDF_CONTENT}endstream`,
+];
 
-  const build = (padding) => {
-    let pdf = `%PDF-1.7\n%${"synthetic CV ".repeat(padding / 13 + 1).slice(0, padding)}\n`;
+/**
+ * Layout of a valid one-page PDF of exactly `size` bytes: `head`, a PDF
+ * comment of `padding` bytes, then `tail` (objects, xref table, trailer).
+ * Only the small head and tail are strings; offsets account for the padding.
+ */
+export function cvPdfLayout(size) {
+  const tailFor = (padding) => {
+    // The tail starts with the newline that ends the padding comment.
+    let offset = PDF_HEAD.length + padding + 1;
+    let tail = "\n";
     const offsets = [];
-    objects.forEach((object, index) => {
-      offsets.push(pdf.length);
-      pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+    PDF_OBJECTS.forEach((object, index) => {
+      const text = `${index + 1} 0 obj\n${object}\nendobj\n`;
+      offsets.push(offset);
+      tail += text;
+      offset += text.length;
     });
-    const xref = pdf.length;
-    pdf += `xref\n0 6\n0000000000 65535 f \n${offsets
-      .map((offset) => `${String(offset).padStart(10, "0")} 00000 n \n`)
+    return `${tail}xref\n0 6\n0000000000 65535 f \n${offsets
+      .map((value) => `${String(value).padStart(10, "0")} 00000 n \n`)
       .join(
         ""
-      )}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
-    return pdf;
+      )}trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n${offset}\n%%EOF\n`;
   };
-
-  const base = build(0).length;
+  const base = PDF_HEAD.length + tailFor(0).length;
   if (size < base) throw new Error(`CV size must be at least ${base} bytes.`);
   let padding = size - base;
-  let pdf = build(padding);
+  let tail = tailFor(padding);
   // The startxref digit count can grow with the padding; settle it.
-  for (let attempt = 0; pdf.length !== size && attempt < 3; attempt++) {
-    padding -= pdf.length - size;
-    pdf = build(padding);
+  for (
+    let attempt = 0;
+    PDF_HEAD.length + padding + tail.length !== size && attempt < 3;
+    attempt++
+  ) {
+    padding -= PDF_HEAD.length + padding + tail.length - size;
+    tail = tailFor(padding);
   }
-  if (pdf.length !== size) throw new Error("Could not size the CV fixture.");
-  return pdf;
+  if (PDF_HEAD.length + padding + tail.length !== size)
+    throw new Error("Could not size the CV fixture.");
+  return { head: PDF_HEAD, padding, tail };
+}
+
+function writeAscii(bytes, text, at) {
+  for (let i = 0; i < text.length; i++) bytes[at + i] = text.charCodeAt(i);
+}
+
+const layoutBySize = new Map();
+
+/** cvPdfLayout memoized per size: the five plan sizes are laid out once. */
+export function cachedPdfLayout(size) {
+  if (!layoutBySize.has(size)) layoutBySize.set(size, cvPdfLayout(size));
+  return layoutBySize.get(size);
+}
+
+/**
+ * The PDF of exactly `size` bytes as a fresh ArrayBuffer. The layout is
+ * memoized per size and the 10 MiB body is written with native copies, about
+ * 4 ms for 10 MiB in k6 (the old string builder took about 45 ms). The bytes
+ * are deliberately not cached: k6 VUs cannot share memory, so caching five
+ * sizes per QR VU held about 2 GB more on the load generator (4.4 GB peak at
+ * 200 VUs instead of 2.3 GB).
+ */
+export function cvPdfBytes(size) {
+  const { head, padding, tail } = cachedPdfLayout(size);
+  const bytes = new Uint8Array(size);
+  writeAscii(bytes, head, 0);
+  const start = head.length;
+  // Write the padding text once, then double it in place with native copies.
+  writeAscii(bytes, PDF_PADDING.slice(0, padding), start);
+  for (
+    let filled = Math.min(PDF_PADDING.length, padding);
+    filled < padding;
+    filled += Math.min(filled, padding - filled)
+  )
+    bytes.copyWithin(
+      start + filled,
+      start,
+      start + Math.min(filled, padding - filled)
+    );
+  writeAscii(bytes, tail, start + padding);
+  return bytes.buffer;
 }
 
 function numberOr(value, fallback) {
@@ -106,6 +159,7 @@ export function heavyUserPlan(env) {
       codes: parseList(env.QR_STUDENT_CODES),
       uploadIntervalSeconds: numberOr(env.UPLOAD_INTERVAL_SECONDS, 15),
       actionId: env.ACTION_ID || "",
+      storageOrigin: (env.CV_STORAGE_ORIGIN || "").replace(/\/$/, ""),
     },
     checkIn: {
       users: numberOr(env.CHECKIN_USERS, 20),
@@ -165,6 +219,12 @@ export function heavyUserPlan(env) {
     if (plan.qr.codes.length !== plan.qr.cookies.length)
       throw new Error(
         "QR_STUDENT_CODES must list each QR student's code in cookie order."
+      );
+    // CV bytes go straight to the signed storage URL. Pin its origin so a
+    // misconfigured staging cannot send gigabytes to another bucket.
+    if (!/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(plan.qr.storageOrigin))
+      throw new Error(
+        "Set CV_STORAGE_ORIGIN to the staging storage origin (scheme://host[:port]) that signed CV uploads must target."
       );
     const uploadsPerMinute = 60 / plan.qr.uploadIntervalSeconds;
     if (

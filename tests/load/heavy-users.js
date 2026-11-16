@@ -8,13 +8,14 @@ import http from "k6/http";
 import { assertStagingTarget } from "../stagingTarget.js";
 import {
   checkInCodeFor,
-  cvPdf,
+  cvPdfBytes,
   cvSizeFor,
   heavyUserPlan,
   isNearLimit,
   roleTable,
   workloadThresholds,
 } from "./heavyUserPlan.js";
+import { minioPost } from "./minioPost.js";
 
 import { Counter, Trend } from "k6/metrics";
 
@@ -36,6 +37,7 @@ const downloadsUnavailable = new Counter("cv_download_unavailable_404");
 const checkInsCreated = new Counter("checkin_created");
 const checkInsDuplicate = new Counter("checkin_duplicate_409");
 const actionAlreadyCompleted = new Counter("action_scan_already_completed_400");
+// Authorize + storage transfer + finalize, as the student waits for it.
 const uploadDuration = new Trend("cv_upload_duration", true);
 const downloadDuration = new Trend("cv_download_duration", true);
 
@@ -62,8 +64,10 @@ export const options = {
     // Pass limit: under 1% errors; expected 429/409/404 are excluded.
     http_req_failed: ["rate<0.01"],
     checks: ["rate>0.99"],
-    // File transfers are reported through the cv_* trends without a bar.
+    // Storage transfers, finalization and downloads are reported through the
+    // cv_* trends without a bar.
     "http_req_duration{name:dashboard_page}": lightEndpointP95,
+    "http_req_duration{name:cv_authorize}": lightEndpointP95,
     "http_req_duration{name:dashboard_history}": lightEndpointP95,
     "http_req_duration{name:qr_pass}": lightEndpointP95,
     "http_req_duration{name:cv_attach}": lightEndpointP95,
@@ -86,8 +90,20 @@ function json(res, path) {
   }
 }
 
-function paceFrom(startedAt, intervalSeconds) {
-  sleep(Math.max(0, intervalSeconds - (Date.now() - startedAt) / 1000));
+// Runs one visit, then waits out the rest of the interval measured from its
+// start. The wait is in `finally` so a script error can never skip it and
+// turn a VU into a tight loop that breaks the per-account limits. k6 does
+// not count exceptions as failed checks, so record one before rethrowing.
+function paced(intervalSeconds, visit) {
+  const startedAt = Date.now();
+  try {
+    visit();
+  } catch (error) {
+    check(null, { "visit completes without a script error": () => false });
+    throw error;
+  } finally {
+    sleep(Math.max(0, intervalSeconds - (Date.now() - startedAt) / 1000));
+  }
 }
 
 // Counts a success only when every check passes, including the byte count
@@ -132,7 +148,6 @@ function downloadCv(cookie, code, group, expected) {
 }
 
 export function runDashboard(index) {
-  const startedAt = Date.now();
   const cookie = plan.dashboard.cookies[index];
   const page = http.get(`${baseUrl}/dashboard`, {
     ...cookieHeaders(cookie),
@@ -166,11 +181,9 @@ export function runDashboard(index) {
         downloadCv(cookie, entry.student.code, "dashboard");
     }
   }
-  paceFrom(startedAt, plan.dashboard.intervalSeconds);
 }
 
 export function runQr(index) {
-  const startedAt = Date.now();
   const cookie = plan.qr.cookies[index];
   const code = plan.qr.codes[index];
 
@@ -216,47 +229,112 @@ export function runQr(index) {
   // One upload per iteration; pacing keeps each student at most 5 per minute.
   const size = cvSizeFor(exec.vu.idInTest, exec.vu.iterationInScenario);
   const sizeClass = isNearLimit(size) ? "near_limit" : "real";
-  const upload = http.post(
+  const id = uploadCv(cookie, size, sizeClass);
+  if (id) {
+    // The student app still posts the finalized id; it is a no-op once the
+    // finalize step has attached the CV.
+    const attach = http.post(
+      `${baseUrl}/api/students/${encodeURIComponent(code)}/cv`,
+      JSON.stringify({ id }),
+      {
+        ...cookieHeaders(cookie, { "Content-Type": "application/json" }),
+        tags: { name: "cv_attach", group: "qr" },
+      }
+    );
+    const attached = check(attach, {
+      "CV attaches to the student": (res) => res.status === 200,
+    });
+    if (attached)
+      downloadCv(cookie, code, "qr", { bytes: size, size: sizeClass });
+  }
+}
+
+// The direct upload contract (#595): authorize with the app, send the bytes
+// straight to the signed storage URL, then finalize with the app. Returns the
+// finalized CV id, or null when the upload was rate limited or failed.
+function uploadCv(cookie, size, sizeClass) {
+  const tags = { group: "qr", size: sizeClass };
+  // Render before timing starts, so generator CPU stays out of the results.
+  const pdf = cvPdfBytes(size);
+  const startedAt = Date.now();
+  const authorize = http.post(
     `${baseUrl}/api/storage/cv`,
-    { file: http.file(cvPdf(size), "cv.pdf", "application/pdf") },
+    JSON.stringify({
+      filename: "cv.pdf",
+      contentType: "application/pdf",
+      size,
+    }),
     {
-      ...cookieHeaders(cookie),
+      ...cookieHeaders(cookie, { "Content-Type": "application/json" }),
       responseCallback: http.expectedStatuses(201, 429),
-      tags: { name: "cv_upload", group: "qr", size: sizeClass },
+      tags: { name: "cv_authorize", ...tags },
     }
   );
-  uploadDuration.add(upload.timings.duration, { size: sizeClass });
-  if (upload.status === 429) {
+  if (authorize.status === 429) {
     uploadsRateLimited.add(1, { size: sizeClass });
-  } else {
-    const id = json(upload, "id");
-    const accepted = check(upload, {
-      "CV upload returns 201 with a file id": (res) =>
-        res.status === 201 && Boolean(id),
-    });
-    if (accepted) {
-      uploadsAccepted.add(1, { size: sizeClass });
-      if (sizeClass === "near_limit") nearLimitUploads.add(1);
-      const attach = http.post(
-        `${baseUrl}/api/students/${encodeURIComponent(code)}/cv`,
-        JSON.stringify({ id }),
-        {
-          ...cookieHeaders(cookie, { "Content-Type": "application/json" }),
-          tags: { name: "cv_attach", group: "qr" },
-        }
-      );
-      const attached = check(attach, {
-        "CV attaches to the student": (res) => res.status === 200,
-      });
-      if (attached)
-        downloadCv(cookie, code, "qr", { bytes: size, size: sizeClass });
-    }
+    return null;
   }
-  paceFrom(startedAt, plan.qr.uploadIntervalSeconds);
+  const ticket = json(authorize);
+  const target =
+    ticket && typeof ticket.url === "string"
+      ? (/^https?:\/\/[^/]+/.exec(ticket.url) || [""])[0]
+      : "";
+  // Never send CV bytes anywhere but the pinned staging storage origin.
+  if (
+    !check(authorize, {
+      "CV upload authorized for the staging storage origin": (res) =>
+        res.status === 201 &&
+        Boolean(ticket && ticket.uploadId && ticket.fields) &&
+        target === plan.qr.storageOrigin,
+    })
+  )
+    return null;
+
+  // No application cookies: the signed form fields are the only credential.
+  const form = minioPost(ticket.fields, pdf);
+  const transfer = http.post(ticket.url, form.body, {
+    headers: { "Content-Type": form.contentType },
+    timeout: "120s",
+    tags: { name: "cv_direct_transfer", ...tags },
+  });
+  if (
+    !check(transfer, {
+      "storage accepts the signed CV transfer": (res) => res.status === 204,
+    })
+  )
+    return null;
+
+  // Retry like the student app: 409 means finalization is still in progress;
+  // a 503 is retried too but still counts as a failed request.
+  let finalize;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    finalize = http.post(
+      `${baseUrl}/api/storage/cv/finalize`,
+      JSON.stringify({ uploadId: ticket.uploadId }),
+      {
+        ...cookieHeaders(cookie, { "Content-Type": "application/json" }),
+        responseCallback: http.expectedStatuses(200, 409),
+        tags: { name: "cv_finalize", ...tags },
+      }
+    );
+    if (finalize.status !== 409 && finalize.status !== 503) break;
+    if (attempt < 2) sleep(0.5 * 2 ** attempt);
+  }
+  uploadDuration.add(Date.now() - startedAt, { size: sizeClass });
+  const id = json(finalize, "id");
+  if (
+    !check(finalize, {
+      "CV upload finalized with a file id": (res) =>
+        res.status === 200 && Boolean(id),
+    })
+  )
+    return null;
+  uploadsAccepted.add(1, { size: sizeClass });
+  if (sizeClass === "near_limit") nearLimitUploads.add(1);
+  return id;
 }
 
 export function runCheckIn(index) {
-  const startedAt = Date.now();
   const code = checkInCodeFor(
     plan.checkIn.studentCodes,
     index,
@@ -279,13 +357,14 @@ export function runCheckIn(index) {
     check(response, { "check-in returns 201": (res) => res.status === 201 })
   )
     checkInsCreated.add(1);
-  paceFrom(startedAt, plan.checkIn.intervalSeconds);
 }
 
 export default function runHeavyUser() {
   const role = roles[exec.vu.idInTest - 1];
   if (!role) return;
-  if (role.group === "dashboard") runDashboard(role.index);
-  else if (role.group === "qr") runQr(role.index);
-  else runCheckIn(role.index);
+  if (role.group === "dashboard")
+    paced(plan.dashboard.intervalSeconds, () => runDashboard(role.index));
+  else if (role.group === "qr")
+    paced(plan.qr.uploadIntervalSeconds, () => runQr(role.index));
+  else paced(plan.checkIn.intervalSeconds, () => runCheckIn(role.index));
 }
