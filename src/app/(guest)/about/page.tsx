@@ -8,7 +8,7 @@ const linkClass =
 
 const About: React.FC = () => {
   return (
-    <section className="artwork-clean artwork-readable flex min-h-screen w-full items-start justify-center px-4 py-12 sm:py-20">
+    <section className="artwork-clean artwork-readable flex min-h-screen w-full items-center justify-center px-4 py-20">
       <div className="ui-panel flex w-full max-w-3xl flex-col gap-10 rounded-lg p-6 sm:p-10">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl sm:text-4xl">Made By</h1>

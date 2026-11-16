@@ -23,7 +23,7 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-test("uses the verified session login name as the logout hint", async () => {
+test("uses the verified session id token and login name as logout hints", async () => {
   vi.stubGlobal(
     "fetch",
     vi.fn().mockResolvedValue({
@@ -42,20 +42,55 @@ test("uses the verified session login name as the logout hint", async () => {
     sub: "user",
     email: "user@example.org",
     loginName: "user@auth.example.org",
+    idToken: "signed.id.token",
     emailVerified: true,
     isEmployee: false,
     isGlobalAdmin: false,
   });
   const claims = verifyAppSession(token);
-  const url = new URL(await getLogoutUrl(claims?.loginName));
+  const url = new URL(
+    await getLogoutUrl({
+      idTokenHint: claims?.idToken,
+      loginName: claims?.loginName,
+    })
+  );
 
+  expect(url.searchParams.get("id_token_hint")).toBe("signed.id.token");
   expect(url.searchParams.get("logout_hint")).toBe("user@auth.example.org");
   expect(url.searchParams.get("post_logout_redirect_uri")).toBe(
     "https://app.example.org"
   );
-  expect(new URL(await getLogoutUrl()).searchParams.has("logout_hint")).toBe(
-    false
-  );
+  expect(url.searchParams.get("client_id")).toBe("client");
+});
+
+test("redirects to post-logout destination directly when idToken is absent", async () => {
+  const token = signAppSession({
+    sub: "user",
+    email: "user@example.org",
+    loginName: "user@auth.example.org",
+    emailVerified: true,
+    isEmployee: false,
+    isGlobalAdmin: false,
+  });
+  const claims = verifyAppSession(token);
+  const destination = await getLogoutUrl({
+    idTokenHint: claims?.idToken,
+    loginName: claims?.loginName,
+  });
+  expect(destination).toBe("https://app.example.org");
+  expect(await getLogoutUrl()).toBe("https://app.example.org");
+});
+
+test("preserves the idToken in the signed app session", () => {
+  const token = signAppSession({
+    sub: "user",
+    email: "user@example.org",
+    idToken: "jwt.token.value",
+    emailVerified: true,
+    isEmployee: false,
+    isGlobalAdmin: false,
+  });
+  expect(verifyAppSession(token)?.idToken).toBe("jwt.token.value");
 });
 
 test.each([undefined, 123000, 0])(

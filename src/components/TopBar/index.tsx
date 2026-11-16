@@ -7,6 +7,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 
@@ -60,7 +61,8 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
         ) : (
           <div className="ml-6" />
         )}
-        <div className="flex items-center gap-x-4">
+        <div className="flex items-center gap-x-2 sm:gap-x-4">
+          <LanguageSwitcher />
           {!session.ready ? (
             // Statically generated pages resolve the session in the browser;
             // keep the slot's size without offering sign-in to someone who

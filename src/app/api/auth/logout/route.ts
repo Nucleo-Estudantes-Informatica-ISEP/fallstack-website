@@ -13,7 +13,12 @@ export const POST = defineHandler({
     const token = req.cookies.get(config.cookies.auth.name)?.value;
     const claims = token ? verifyAppSession(token) : null;
     const response = NextResponse.json(
-      { logoutUrl: await getLogoutUrl(claims?.loginName) },
+      {
+        logoutUrl: await getLogoutUrl({
+          idTokenHint: claims?.idToken,
+          loginName: claims?.loginName,
+        }),
+      },
       { status: 200 }
     );
     response.cookies.delete(config.cookies.auth.name);

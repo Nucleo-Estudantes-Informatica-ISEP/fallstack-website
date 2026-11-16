@@ -60,3 +60,5 @@ prisma/seed.prod.ts
 
 # Independent public deployment artifact
 /static-output/
+
+.mcp.json
