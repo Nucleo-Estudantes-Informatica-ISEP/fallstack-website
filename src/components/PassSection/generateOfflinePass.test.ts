@@ -40,18 +40,19 @@ describe("getPassFilename", () => {
   });
 });
 
+const fakeMeasureCtx = () =>
+  ({
+    measureText: (text: string) => ({ width: text.length * 10 }),
+  }) as unknown as CanvasRenderingContext2D;
+
 describe("truncateText", () => {
   it("returns original text when it fits within maxWidth", () => {
-    const mockCtx = {
-      measureText: (text: string) => ({ width: text.length * 10 }),
-    };
+    const mockCtx = fakeMeasureCtx();
     expect(truncateText(mockCtx, "Hello", 100)).toBe("Hello");
   });
 
   it("truncates text and appends ellipsis when exceeding maxWidth", () => {
-    const mockCtx = {
-      measureText: (text: string) => ({ width: text.length * 10 }),
-    };
+    const mockCtx = fakeMeasureCtx();
     // 10 chars = 100px. maxWidth = 60px.
     // "Hello..." is 8 chars = 80px > 60px
     // "Hel..." is 6 chars = 60px <= 60px
@@ -60,9 +61,7 @@ describe("truncateText", () => {
   });
 
   it("handles empty text gracefully", () => {
-    const mockCtx = {
-      measureText: (text: string) => ({ width: text.length * 10 }),
-    };
+    const mockCtx = fakeMeasureCtx();
     expect(truncateText(mockCtx, "", 50)).toBe("");
   });
 });
@@ -307,13 +306,14 @@ describe("downloadOfflinePass", () => {
       qrSvgElement: svgEl,
     });
 
-    expect(createdLink).not.toBeNull();
-    expect(createdLink?.download).toBe(
+    const link = createdLink as HTMLAnchorElement | null;
+    expect(link).not.toBeNull();
+    expect(link?.download).toBe(
       `passe-${branding.name.toLowerCase()}-${branding.year}-daniel-silva.png`
     );
-    expect(createdLink?.href).toBe("data:image/png;base64,mockpng");
+    expect(link?.href).toBe("data:image/png;base64,mockpng");
     expect(clickSpy).toHaveBeenCalledTimes(1);
-    expect(appendChildSpy).toHaveBeenCalledWith(createdLink);
-    expect(removeChildSpy).toHaveBeenCalledWith(createdLink);
+    expect(appendChildSpy).toHaveBeenCalledWith(link);
+    expect(removeChildSpy).toHaveBeenCalledWith(link);
   });
 });
