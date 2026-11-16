@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildCsp } from "./csp";
 
@@ -14,8 +14,19 @@ function parseDirectives(csp: string): Map<string, string[]> {
 }
 
 describe("Content Security Policy (CSP)", () => {
+  beforeEach(() => vi.stubEnv("S3_PUBLIC_ENDPOINT", ""));
   afterEach(() => {
     vi.unstubAllEnvs();
+  });
+
+  it("allows only the configured public storage origin in connect-src", () => {
+    vi.stubEnv("S3_PUBLIC_ENDPOINT", "https://files.example.test");
+    const directives = parseDirectives(buildCsp());
+    expect(directives.get("connect-src")).toContain(
+      "https://files.example.test"
+    );
+    for (const name of ["script-src", "form-action", "img-src"])
+      expect(directives.get(name)).not.toContain("https://files.example.test");
   });
 
   it("builds a valid, non-empty CSP policy string", () => {

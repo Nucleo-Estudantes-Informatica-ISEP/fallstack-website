@@ -109,6 +109,23 @@ jobs:
       - name: Apply database migrations
         run: pnpm exec prisma migrate deploy
 
+      - name: Start pinned isolated MinIO for direct CV integration
+        run: |
+          echo "TEST_MINIO_ENDPOINT=http://127.0.0.1:59000" >> "$GITHUB_ENV"
+          echo "TEST_MINIO_ACCESS_KEY=ci-direct" >> "$GITHUB_ENV"
+          echo "TEST_MINIO_SECRET_KEY=${{ github.sha }}" >> "$GITHUB_ENV"
+          echo "CONFIRM_LOCAL_STORAGE_TEST=yes" >> "$GITHUB_ENV"
+          docker run -d --name direct-cv-minio -p 127.0.0.1:59000:9000 \
+            -e MINIO_ROOT_USER=ci-direct -e MINIO_ROOT_PASSWORD=${{ github.sha }} \
+            -e MINIO_API_CORS_ALLOW_ORIGIN=http://localhost:3000 \
+            -e MC_HOST_local=http://ci-direct:${{ github.sha }}@localhost:9000 \
+            coollabsio/minio:RELEASE.2025-10-15T17-29-55Z server /data
+          for attempt in $(seq 1 15); do
+            if docker exec direct-cv-minio /usr/bin/mc ready local; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+
       - name: Verify bounded multi-process PostgreSQL pools and drain
         env:
           POOL_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/pool_test

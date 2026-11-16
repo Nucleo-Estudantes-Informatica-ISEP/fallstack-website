@@ -35,15 +35,24 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/CountdownLanding", () => ({
   default: ({
     language,
+    callToAction,
     children,
   }: {
     language: string;
+    callToAction?: ReactNode;
     children: ReactNode;
   }) => (
     <div>
       Countdown {language}
+      <div data-slot="cta">{callToAction}</div>
       {children}
     </div>
+  ),
+}));
+
+vi.mock("@/components/HomeCallToAction", () => ({
+  default: ({ language }: { language: string }) => (
+    <a href="#cta">CTA {language}</a>
   ),
 }));
 
@@ -54,8 +63,16 @@ vi.mock("@/components/FeaturedCompanies", () => ({
 }));
 
 vi.mock("@/components/HomePage", () => ({
-  default: ({ sections }: { sections: Record<string, ReactNode> }) => (
-    <main>Full website {Object.values(sections)}</main>
+  default: ({
+    language,
+    sections,
+  }: {
+    language: string;
+    sections: Record<string, ReactNode>;
+  }) => (
+    <main>
+      Full website {language} {Object.values(sections)}
+    </main>
   ),
 }));
 
@@ -85,6 +102,9 @@ test.each([
 
   expect(getPublicCompanyRoster).toHaveBeenLastCalledWith(language);
   expect(html).toContain(`Countdown ${language}`);
+  expect(html).toContain(
+    `<div data-slot="cta"><a href="#cta">CTA ${language}</a></div>`
+  );
   expect(html).toContain(`<span>Partners ${language}</span>`);
   expect(html).not.toContain("Full website");
   expect(html).not.toContain("Offseason landing");
@@ -99,7 +119,7 @@ test("showcase renders the full website in the resolved language", async () => {
 
   const html = renderToStaticMarkup(page);
 
-  expect(html).toContain("Full website");
+  expect(html).toContain("Full website PT");
 
   for (const section of ["schedule", "companies", "faqs"]) {
     expect(html).toContain(`${section} PT`);

@@ -3,6 +3,7 @@ import "server-only";
 import { createReadStream } from "node:fs";
 import { type Readable } from "node:stream";
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   GetBucketVersioningCommand,
   GetObjectCommand,
@@ -13,6 +14,7 @@ import {
   type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 
+import { HttpError } from "@/types/HttpError";
 import { storageEnv } from "@/config/env.storage";
 import { videoKey } from "@/domain/company/companyVideo";
 
@@ -29,6 +31,111 @@ function storageClient() {
       secretAccessKey: storageEnv.S3_SECRET_ACCESS_KEY,
     },
   }));
+}
+
+let signingClient: S3Client;
+export async function presignCvPost(key: string, size: number) {
+  if (!storageEnv.S3_PUBLIC_ENDPOINT)
+    throw new HttpError("Direct CV uploads are not configured", 503);
+  // Do not load the POST signer for unrelated media/public-data requests.
+  const { createPresignedPost } = await import("@aws-sdk/s3-presigned-post");
+  signingClient ??= new S3Client({
+    endpoint: storageEnv.S3_PUBLIC_ENDPOINT,
+    region: "us-east-1",
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: storageEnv.S3_ACCESS_KEY_ID,
+      secretAccessKey: storageEnv.S3_SECRET_ACCESS_KEY,
+    },
+  });
+  // Exact size is stricter than just the global ceiling. The file part MUST
+  // be last. No ACL, arbitrary key, content type or success redirect allowed.
+  return createPresignedPost(signingClient, {
+    Bucket: bucket("cv"),
+    Key: key,
+    Expires: storageEnv.CV_UPLOAD_TTL_SECONDS,
+    Fields: { "Content-Type": "application/pdf", success_action_status: "204" },
+    Conditions: [
+      ["content-length-range", size, size],
+      ["eq", "$Content-Type", "application/pdf"],
+      ["eq", "$success_action_status", "204"],
+    ],
+  });
+}
+
+export async function headCvObject(key: string, signal: AbortSignal) {
+  try {
+    return await storageClient().send(
+      new HeadObjectCommand({ Bucket: bucket("cv"), Key: key }),
+      { abortSignal: signal }
+    );
+  } catch (error) {
+    if (isMissingObject(error))
+      throw new HttpError("Upload object not found", 409);
+    throw error;
+  }
+}
+
+export async function readCvRange(
+  key: string,
+  start: number,
+  end: number,
+  etag: string,
+  signal: AbortSignal
+) {
+  const response = await storageClient().send(
+    new GetObjectCommand({
+      Bucket: bucket("cv"),
+      Key: key,
+      Range: `bytes=${start}-${end}`,
+      IfMatch: etag,
+    }),
+    { abortSignal: signal }
+  );
+  const body = response.Body as Readable | undefined;
+  if (
+    !body ||
+    response.ContentRange !==
+      `bytes ${start}-${end}/${response.ContentRange?.split("/")[1]}` ||
+    response.ContentLength !== end - start + 1
+  ) {
+    body?.destroy();
+    throw new Error("Storage did not honor bounded range");
+  }
+  const chunks: Buffer[] = [];
+  let length = 0;
+  try {
+    for await (const chunk of body) {
+      length += chunk.length;
+      if (length > end - start + 1)
+        throw new Error("Storage exceeded bounded range");
+      chunks.push(Buffer.from(chunk));
+    }
+    if (length !== end - start + 1) throw new Error("Incomplete storage range");
+    return Buffer.concat(chunks);
+  } finally {
+    body.destroy();
+  }
+}
+
+export async function promoteCvObject(
+  source: string,
+  destination: string,
+  etag: string,
+  signal: AbortSignal
+) {
+  await storageClient().send(
+    new CopyObjectCommand({
+      Bucket: bucket("cv"),
+      Key: destination,
+      CopySource: `${bucket("cv")}/${source.split("/").map(encodeURIComponent).join("/")}`,
+      CopySourceIfMatch: etag,
+      MetadataDirective: "REPLACE",
+      ContentType: "application/pdf",
+      ContentDisposition: 'attachment; filename="cv.pdf"',
+    }),
+    { abortSignal: signal }
+  );
 }
 
 function bucket(kind: StorageBucket) {
