@@ -11,6 +11,10 @@ import { POST } from "./route";
 
 vi.mock("server-only", () => ({}));
 
+vi.mock("@/application/services/sessionService", () => ({
+  default: vi.fn(),
+}));
+
 vi.mock("@/application/services/zitadelAuthService", () => ({
   getLogoutUrl: vi.fn(),
   verifyAppSession: vi.fn(),
