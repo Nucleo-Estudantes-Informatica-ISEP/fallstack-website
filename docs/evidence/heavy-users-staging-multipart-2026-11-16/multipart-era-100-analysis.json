@@ -1,0 +1,422 @@
+{
+  "label": "multipart-era-100",
+  "users": 100,
+  "revision": "11c359a2466cfbaf8f144895d9d1fd431b5a899e",
+  "requests": 2661,
+  "httpFailures": 86,
+  "httpFailureRate": 0.03231867718902668,
+  "checksPassed": 2357,
+  "checksFailed": 86,
+  "checksRate": 0.9647973802701596,
+  "endpointP95Ms": {
+    "cv_authorize": 6850.303999999999,
+    "qr_pass": 6299.5154999999995,
+    "dashboard_history": 6387.161599999998,
+    "dashboard_page": 10109.243299999998,
+    "checkin": 7936.3604499999965,
+    "cv_attach": 5564.114999999999
+  },
+  "originEndpointP95Ms": {
+    "download": 222.339,
+    "authorize": 107.441,
+    "finalize": 345.545,
+    "dashboard": 281.994,
+    "cv": 134.53,
+    "qr": 51.782,
+    "history": 94.231,
+    "checkin": 231.02
+  },
+  "originStatuses": [
+    {
+      "endpoint": "authorize",
+      "status": "201",
+      "count": 191
+    },
+    {
+      "endpoint": "checkin",
+      "status": "201",
+      "count": 140
+    },
+    {
+      "endpoint": "checkin",
+      "status": "409",
+      "count": 468
+    },
+    {
+      "endpoint": "cv",
+      "status": "200",
+      "count": 507
+    },
+    {
+      "endpoint": "cv",
+      "status": "aborted",
+      "count": 1
+    },
+    {
+      "endpoint": "dashboard",
+      "status": "200",
+      "count": 183
+    },
+    {
+      "endpoint": "download",
+      "status": "200",
+      "count": 433
+    },
+    {
+      "endpoint": "finalize",
+      "status": "200",
+      "count": 72
+    },
+    {
+      "endpoint": "history",
+      "status": "200",
+      "count": 183
+    },
+    {
+      "endpoint": "qr",
+      "status": "200",
+      "count": 192
+    }
+  ],
+  "eventLoopMaxMs": 262.406143,
+  "poolGaugeMax": {
+    "prisma_client_queries_active": 0,
+    "prisma_client_queries_wait": 0,
+    "prisma_pool_connections_busy": 3,
+    "prisma_pool_connections_idle": 3,
+    "prisma_pool_connections_open": 3
+  },
+  "cvUploads": 72,
+  "cvUploads10MiB": 0,
+  "cvDownloads": 431,
+  "checkinsCreated": 140,
+  "checkinsDuplicate": 468,
+  "sharedProxyStatusPairs": [
+    {
+      "downstream": "0",
+      "origin": "0",
+      "count": 5
+    },
+    {
+      "downstream": "200",
+      "origin": "0",
+      "count": 1
+    },
+    {
+      "downstream": "200",
+      "origin": "200",
+      "count": 7444
+    },
+    {
+      "downstream": "201",
+      "origin": "201",
+      "count": 331
+    },
+    {
+      "downstream": "204",
+      "origin": "204",
+      "count": 74
+    },
+    {
+      "downstream": "301",
+      "origin": "301",
+      "count": 2
+    },
+    {
+      "downstream": "302",
+      "origin": "302",
+      "count": 4
+    },
+    {
+      "downstream": "304",
+      "origin": "0",
+      "count": 1
+    },
+    {
+      "downstream": "304",
+      "origin": "304",
+      "count": 64
+    },
+    {
+      "downstream": "307",
+      "origin": "307",
+      "count": 13
+    },
+    {
+      "downstream": "404",
+      "origin": "0",
+      "count": 2
+    },
+    {
+      "downstream": "404",
+      "origin": "404",
+      "count": 3
+    },
+    {
+      "downstream": "409",
+      "origin": "409",
+      "count": 468
+    },
+    {
+      "downstream": "499",
+      "origin": "499",
+      "count": 19
+    },
+    {
+      "downstream": "502",
+      "origin": "502",
+      "count": 6
+    },
+    {
+      "downstream": "503",
+      "origin": "503",
+      "count": 7
+    }
+  ],
+  "proxy5xxRecords": [
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 60000484911,
+      "OriginContentSize": 11,
+      "OriginDuration": 60000324101,
+      "OriginStatus": 502,
+      "Overhead": 160810,
+      "RequestContentSize": 5947392,
+      "RequestCount": 27145,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:42:51.873071194Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:43:51Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 2632634,
+      "OriginContentSize": 3492,
+      "OriginDuration": 2392730,
+      "OriginStatus": 503,
+      "Overhead": 239904,
+      "RequestContentSize": 0,
+      "RequestCount": 28956,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:43:52.813669085Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:43:52Z"
+    },
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 60000819680,
+      "OriginContentSize": 11,
+      "OriginDuration": 60000683580,
+      "OriginStatus": 502,
+      "Overhead": 136100,
+      "RequestContentSize": 9895936,
+      "RequestCount": 27242,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:42:54.41418646Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:43:54Z"
+    },
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 60001130920,
+      "OriginContentSize": 11,
+      "OriginDuration": 60000954011,
+      "OriginStatus": 502,
+      "Overhead": 176909,
+      "RequestContentSize": 10305536,
+      "RequestCount": 27273,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:42:56.145109274Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:43:56Z"
+    },
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 60000404035,
+      "OriginContentSize": 11,
+      "OriginDuration": 60000197151,
+      "OriginStatus": 502,
+      "Overhead": 206884,
+      "RequestContentSize": 6258688,
+      "RequestCount": 27351,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:42:59.372234579Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:43:59Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 2396881,
+      "OriginContentSize": 3492,
+      "OriginDuration": 2196797,
+      "OriginStatus": 503,
+      "Overhead": 200084,
+      "RequestContentSize": 0,
+      "RequestCount": 30260,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/1.1",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:44:57.075211414Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:44:57Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 2408226,
+      "OriginContentSize": 3492,
+      "OriginDuration": 2168026,
+      "OriginStatus": 503,
+      "Overhead": 240200,
+      "RequestContentSize": 0,
+      "RequestCount": 35068,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:16.890105214Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:16Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 2038453,
+      "OriginContentSize": 3492,
+      "OriginDuration": 1839413,
+      "OriginStatus": 503,
+      "Overhead": 199040,
+      "RequestContentSize": 0,
+      "RequestCount": 35131,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:21.9164553Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:21Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 4425499,
+      "OriginContentSize": 3492,
+      "OriginDuration": 4234087,
+      "OriginStatus": 503,
+      "Overhead": 191412,
+      "RequestContentSize": 0,
+      "RequestCount": 35196,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/1.1",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:32.796369362Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:32Z"
+    },
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 2126088632,
+      "OriginContentSize": 11,
+      "OriginDuration": 2125959527,
+      "OriginStatus": 502,
+      "Overhead": 129105,
+      "RequestContentSize": 1212407,
+      "RequestCount": 35172,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:30.870638114Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:32Z"
+    },
+    {
+      "DownstreamContentSize": 11,
+      "DownstreamStatus": 502,
+      "Duration": 12022242434,
+      "OriginContentSize": 11,
+      "OriginDuration": 12022149016,
+      "OriginStatus": 502,
+      "Overhead": 93418,
+      "RequestContentSize": 1425399,
+      "RequestCount": 35136,
+      "RequestMethod": "POST",
+      "RequestProtocol": "HTTP/2.0",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:22.729732231Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:34Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 2486972,
+      "OriginContentSize": 3492,
+      "OriginDuration": 2321654,
+      "OriginStatus": 503,
+      "Overhead": 165318,
+      "RequestContentSize": 0,
+      "RequestCount": 35376,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/1.1",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:46.335177314Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:46Z"
+    },
+    {
+      "DownstreamContentSize": 3492,
+      "DownstreamStatus": 503,
+      "Duration": 5507481,
+      "OriginContentSize": 3492,
+      "OriginDuration": 5154526,
+      "OriginStatus": 503,
+      "Overhead": 352955,
+      "RequestContentSize": 0,
+      "RequestCount": 35393,
+      "RequestMethod": "GET",
+      "RequestProtocol": "HTTP/1.1",
+      "RetryAttempts": 0,
+      "StartUTC": "2026-11-16T22:47:46.642484402Z",
+      "level": "info",
+      "msg": "",
+      "time": "2026-11-16T22:47:46Z"
+    }
+  ],
+  "generatorPeakRssKiB": 336384,
+  "scenarioTransport": "original signed POST; no thresholds changed",
+  "generator": "same Mac and Wi-Fi; k6 2.4.0; sanitized failure-response wrapper only",
+  "cvDownloadGroups": {
+    "dashboard": 364,
+    "qr": 67
+  },
+  "cvUploadSizeGroups": {
+    "real": 72
+  }
+}

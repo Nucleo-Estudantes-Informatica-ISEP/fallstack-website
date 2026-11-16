@@ -1,0 +1,4 @@
+[
+  { "origin": "staging", "status": 200, "granted": true },
+  { "origin": "foreign", "status": 200, "granted": false }
+]

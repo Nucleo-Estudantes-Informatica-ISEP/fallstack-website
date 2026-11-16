@@ -12,10 +12,7 @@ import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
 
 interface PassMenuContentProps {
-  student: Pick<StudentDto, "code" | "name"> & {
-    user?: { email?: string };
-  };
-  googleWalletSaveUrl?: string | null;
+  student: Pick<StudentDto, "code" | "name"> & { user?: { email?: string } };
 }
 
 const DOWNLOAD_ERROR_MESSAGE =
@@ -25,11 +22,10 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
-  const [downloading, setDownloading] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
-
-  // Ref para o QR Code SVG permanente (student.code), nunca o qrToken rotativo
   const permanentQrRef = useRef<SVGSVGElement | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchToken = useCallback(async () => {
     try {
@@ -50,19 +46,32 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   }, [fetchToken]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(student.code).catch(() => {});
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    try {
+      const result = navigator.clipboard.writeText(student.code);
+      if (result && typeof result.then === "function") {
+        result.catch(() => setCopied(false));
+      }
+    } catch {
+      setCopied(false);
+    }
   };
+
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    },
+    []
+  );
 
   const handleDownloadOfflinePass = async () => {
     setDownloadError(null);
-
     if (!student.code || !permanentQrRef.current) {
       setDownloadError(DOWNLOAD_ERROR_MESSAGE);
       return;
     }
-
     try {
       setDownloading(true);
       await downloadOfflinePass({
@@ -72,89 +81,113 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
         qrSvgElement: permanentQrRef.current,
       });
     } catch {
-      // O botão volta a ficar ativo no finally, por isso o retry é o próprio botão.
       setDownloadError(DOWNLOAD_ERROR_MESSAGE);
     } finally {
       setDownloading(false);
     }
   };
 
+  const failed = !loading && !qrToken;
+  const secondaryButton =
+    "ui-focus inline-flex min-h-11 items-center gap-2 rounded-md border border-ui-border px-4 text-sm text-white transition-colors hover:border-ui-highlight hover:text-ui-highlight";
+
   return (
-    <div className="flex w-full flex-col items-center pt-4">
-      <h2
-        className="mb-6 text-center text-3xl font-bold text-white"
-        style={{ fontFamily: "Coolvetica, sans-serif" }}
-      >
+    <section className="flex w-full flex-col">
+      <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
         Passe do FallStack
       </h2>
-      <p className="mb-8 max-w-xl text-center text-sm text-gray-200">
-        Apresenta este passe às empresas para que possam guardar o teu perfil e
-        contabilizar as tuas interações. Podes descarregar uma cópia para usar
-        sem acesso à internet.
+      <p className="mb-8 text-center text-sm text-white md:text-base lg:text-left">
+        Passa o teu passe na entrada para as palestras, junto a um elemento do
+        staff para ficares registado para os vários giveaways que o NEI irá
+        fazer!
       </p>
-
-      {/* Cartão visual (mostra o token dinâmico online) */}
-      <StyledPassCard
-        name={student.name}
-        qrValue={qrToken}
-        loading={loading}
-        code={student.code}
-      />
-
-      {/* QR Code permanente oculto (exclusivamente para gerar o ficheiro offline) */}
-      {student.code && (
-        <div className="hidden" aria-hidden="true">
-          <QRCodeSVG
-            ref={permanentQrRef}
-            value={student.code}
-            size={400}
-            bgColor="#FFFFFF"
-            fgColor="#000000"
-            level="M"
+      <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start">
+        <div className="flex w-full max-w-87 shrink-0 flex-col items-center gap-3">
+          <StyledPassCard
+            name={student.name}
+            qrValue={qrToken}
+            loading={loading}
+            code={student.code}
           />
+          {failed && (
+            <>
+              <p className="text-center text-sm text-white">
+                Não foi possível carregar o QR Code.
+              </p>
+              <button
+                type="button"
+                onClick={fetchToken}
+                className={secondaryButton}
+              >
+                Tentar novamente
+              </button>
+            </>
+          )}
+          {student.code && (
+            <div className="hidden" aria-hidden="true">
+              <QRCodeSVG
+                ref={permanentQrRef}
+                value={student.code}
+                size={400}
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+                level="M"
+              />
+            </div>
+          )}
         </div>
-      )}
-
-      {/* Código de fallback legível e copiável */}
-      {student.code && (
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="mt-5 flex items-center gap-2 rounded-md border border-[#2A2A2A] bg-[#1E1E1E] px-3 py-2 text-sm text-white transition hover:border-ui-highlight hover:text-ui-highlight"
-        >
-          <Clipboard className="size-4" />
-          <span className="font-mono tracking-wider">{student.code}</span>
-          {copied && <span className="ml-1 text-green-400">Copiado!</span>}
-        </button>
-      )}
-
-      {/* Ações: Download Offline + Google Wallet */}
-      <div className="mt-6 flex w-full max-w-md flex-col items-center justify-center gap-3 sm:flex-row">
-        {student.code && (
-          <button
-            type="button"
-            onClick={handleDownloadOfflinePass}
-            disabled={downloading}
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white transition hover:bg-[#ea580c] disabled:opacity-50 sm:w-auto"
-          >
-            <FiDownload className="size-4" />
-            {downloading ? "A gerar passe..." : "Descarregar Passe (Offline)"}
-          </button>
-        )}
-
-        <GoogleWalletButton />
+        <div className="flex w-full min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
+          {student.code && (
+            <>
+              <p className="text-sm text-ui-muted md:text-base">
+                O teu passe tem o código:
+              </p>
+              <div className="mt-2 flex max-w-full flex-wrap items-center justify-center gap-3 lg:justify-start">
+                <p className="min-w-0 font-mono text-3xl font-bold tracking-wider wrap-anywhere text-white">
+                  {student.code}
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  aria-label={`Copiar o código ${student.code}`}
+                  className={secondaryButton}
+                >
+                  <Clipboard className="size-4" aria-hidden="true" />
+                  <span>Copiar</span>
+                </button>
+              </div>
+              <p
+                role="status"
+                className="mt-1 min-h-5 text-sm text-ui-highlight"
+              >
+                {copied ? "Copiado!" : ""}
+              </p>
+            </>
+          )}
+          <div className="mt-4 flex flex-col items-center gap-2 lg:items-start">
+            {student.code && (
+              <button
+                type="button"
+                onClick={handleDownloadOfflinePass}
+                disabled={downloading}
+                className="ui-focus inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                <FiDownload className="size-4" aria-hidden="true" />
+                {downloading
+                  ? "A gerar passe..."
+                  : "Descarregar Passe (Offline)"}
+              </button>
+            )}
+            <GoogleWalletButton />
+          </div>
+          {downloadError && (
+            <p role="alert" className="mt-3 text-sm text-red-400">
+              {downloadError}
+            </p>
+          )}
+        </div>
       </div>
-
-      {/* Erro na geração do passe offline */}
-      {downloadError && (
-        <p
-          role="alert"
-          className="mt-3 max-w-md text-center text-sm text-red-400"
-        >
-          {downloadError}
-        </p>
-      )}
-    </div>
+    </section>
   );
 };
 

@@ -53,6 +53,7 @@ import {
   avatarKey,
   cvKey,
   getObject,
+  getObjectStream,
   objectExists,
   publicAvatarUrl,
 } from "./objectStorageService";
@@ -175,6 +176,23 @@ export async function downloadStudentCv(code: string, access: StudentAccess) {
   return file;
 }
 
+export async function streamStudentCv(
+  code: string,
+  access: StudentAccess,
+  signal?: AbortSignal
+) {
+  const student = await findStudentByCode(code);
+  if (
+    !student ||
+    !(await isAllowedToViewStudent(code, access, isStudentSaved)) ||
+    !student.cv
+  )
+    throw new HttpError("CV not found", 404);
+  const file = await getObjectStream("cv", cvKey(student.cv), signal);
+  if (!file) throw new HttpError("CV not found", 404);
+  return file;
+}
+
 export const getStudent = (code: string) => findStudentProfileByCode(code);
 export const getStudentById = (id: string) => findStudentProfileById(id);
 export const getStudents = () => findAllStudents();
@@ -198,10 +216,7 @@ export async function createStudentForAdmin(input: {
   if (await findStudentByCode(input.code))
     throw new HttpError("That student code is already in use", 409);
 
-  const authUser = await createSupabaseAuthUserAsAdmin(
-    input.email,
-    input.name
-  );
+  const authUser = await createSupabaseAuthUserAsAdmin(input.email, input.name);
   try {
     return await withTransaction(async (tx) => {
       await upsertUser(

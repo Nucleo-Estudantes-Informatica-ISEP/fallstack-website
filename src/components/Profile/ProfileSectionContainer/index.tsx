@@ -32,12 +32,11 @@ import { getCroppedImg } from "@/utils/canvas";
 
 import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
-import SettingsSection from "../SettingsSection";
 import StatsSection from "../StatsSection";
 
 import { IconType } from "react-icons";
 
-type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
+type TabValue = "Sumário" | "Perfil" | "Desafios";
 
 interface ProfileSectionContainerProps {
   student: StudentDto;
@@ -56,7 +55,6 @@ const menuMap: Record<TabValue, MenuKey> = {
   Sumário: "sumario",
   Perfil: "info",
   Desafios: "desafios",
-  Definições: "definicoes",
 };
 
 const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
@@ -69,6 +67,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   availableInterests,
   canRecordAttendance = false,
 }) => {
+  const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const previousMenu = useRef<MenuKey>("sumario");
   const session = useSession();
@@ -81,10 +80,26 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     setSelectedMenu(menuMap[activeTab]);
   }, [activeTab]);
 
+  // A new selection moves focus to its content, so keyboard users do not
+  // tab through the rest of the menu. Focusing alone would leave a phone
+  // user at the end of a tall panel (the menu sits under it below lg), or
+  // with its top under the fixed top bar, so jump to the panel's start
+  // when that is out of view.
   useEffect(() => {
     if (previousMenu.current === selectedMenu) return;
     previousMenu.current = selectedMenu;
-    contentRef.current?.focus();
+    contentRef.current?.focus({ preventScroll: true });
+
+    const section = sectionRef.current;
+    if (!section) return;
+    // The page scrolls smoothly, so the scroll that brought the menu entry
+    // into view can still be running. Left alone, it carries on past the new
+    // panel after this check. Stop it where it is first.
+    window.scrollTo({ top: window.scrollY, behavior: "instant" });
+    const top = section.getBoundingClientRect().top;
+    const topBar = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
+    if (top < topBar || top > window.innerHeight)
+      section.scrollIntoView({ block: "start", behavior: "instant" });
   }, [selectedMenu]);
 
   const [profile, setProfile] = useState<ProfileData>({
@@ -165,7 +180,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         }
         type="button"
         aria-current={isCurrent ? "true" : undefined}
-        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
+        className={`${isCurrent ? "hidden lg:flex" : "flex"} ${item.key === "logout" ? "mt-1" : ""} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" />
@@ -177,6 +192,12 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   };
 
   const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
+
+  // Let a long email wrap before the "@" rather than at any character.
+  const atIndex = student.user.email.lastIndexOf("@");
+  const emailLocalPart =
+    atIndex > 0 ? student.user.email.slice(0, atIndex) : student.user.email;
+  const emailDomain = atIndex > 0 ? student.user.email.slice(atIndex + 1) : "";
 
   const renderContent = () => {
     if (selectedMenu === "passe") return <PassMenuContent student={student} />;
@@ -203,26 +224,11 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       case "Desafios":
         return (
           <>
-            <h2
-              className="text-3xl font-bold text-white"
-              style={{
-                marginBottom: "clamp(13px, 1.22vw, 13px)",
-              }}
-            >
+            <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
               Desafios
             </h2>
             <ActionsSection actions={actions} />
           </>
-        );
-      case "Definições":
-        return (
-          <SettingsSection
-            student={student}
-            profile={profile}
-            setProfile={setProfile}
-            setActiveTab={setActiveTab}
-            availableInterests={availableInterests}
-          />
         );
       default:
         return null;
@@ -234,7 +240,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
       style={{
         backgroundImage: isPersonalInfo
-          ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
+          ? // Same 60% overlay as .artwork-readable, so header text stays >= 4.5:1.
+            "linear-gradient(#14141499, #14141499), url(/assets/optimized/profile-2026.403096771b21.webp)"
           : undefined,
       }}
     >
@@ -253,42 +260,23 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             }}
           />
         </div>
-        <h1
-          className="mb-2 max-w-full text-center wrap-break-word text-white"
-          style={{
-            fontFamily: '"Coolvetica", sans-serif',
-            fontWeight: 400,
-            fontSize: "clamp(2rem, 5vw, 2.8125rem)",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
+        <h1 className="mb-2 max-w-full text-center font-title text-[clamp(2rem,5vw,2.8125rem)] leading-none font-normal tracking-normal wrap-break-word text-white">
           {student.name}
         </h1>
-        <p
-          className="max-w-full text-center break-all text-gray-100"
-          style={{
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 400,
-            fontSize: "20px",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
-          {student.user.email}
+        <p className="max-w-full text-center font-sans text-xl leading-none font-normal tracking-normal wrap-break-word text-gray-100">
+          {emailLocalPart}
+          {emailDomain && (
+            <>
+              <wbr />@{emailDomain}
+            </>
+          )}
         </p>
         {student.cvPurgedAt && (
-          <div
-            className="mb-6 flex items-center gap-3 px-4 py-3 text-sm text-white"
-            style={{
-              border: "1px solid #ED8326",
-              backgroundColor: "rgba(237,131,38,0.1)",
-            }}
-          >
+          <div className="mt-4 mb-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
             <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
               O teu CV foi removido após o período de retenção. Envia um novo em
-              Definições.
+              Informações pessoais.
             </span>
           </div>
         )}
@@ -325,7 +313,10 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       <div
         className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="min-w-0 flex-1 lg:order-2">
+        <div
+          ref={sectionRef}
+          className="min-w-0 flex-1 field-focus-target lg:order-2"
+        >
           <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
             {sidebarItems.find((item) => item.key === selectedMenu)?.label}
           </p>
@@ -352,10 +343,13 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       <Modal
         isVisible={isAvatarModalVisible}
         setIsVisible={setIsAvatarModalVisible}
-        className="flex w-full max-w-lg flex-col gap-6"
+        className="flex w-full max-w-lg flex-col gap-6 border border-ui-border bg-ui-surface! text-white!"
         aria-labelledby="avatar-modal-title"
       >
-        <h2 id="avatar-modal-title" className="text-3xl">
+        <h2
+          id="avatar-modal-title"
+          className="font-sans text-2xl text-white lg:text-[1.75rem]"
+        >
           Altera o teu avatar
         </h2>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
@@ -372,8 +366,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   );
 };
 
-type MenuKey =
-  "sumario" | "passe" | "desafios" | "info" | "definicoes" | "logout";
+type MenuKey = "sumario" | "passe" | "desafios" | "info" | "logout";
 
 interface SidebarItem {
   key: MenuKey;

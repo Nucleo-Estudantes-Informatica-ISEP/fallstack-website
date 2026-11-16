@@ -1,0 +1,25 @@
+{
+  "settingsClass": "App\\Models\\ApplicationSetting",
+  "autoDeploySettings": {
+    "is_auto_deploy_enabled": true,
+    "is_auto_cancel_queued_deployments_enabled": true,
+    "is_auto_cancel_building_deployments_enabled": false
+  },
+  "latestDeployments": [
+    {
+      "status": "finished",
+      "created_at": "2026-11-16T20:34:49.000000Z",
+      "updated_at": "2026-11-16T20:45:02.000000Z"
+    },
+    {
+      "status": "finished",
+      "created_at": "2026-11-16T20:18:38.000000Z",
+      "updated_at": "2026-11-16T20:34:55.000000Z"
+    },
+    {
+      "status": "cancelled-by-user",
+      "created_at": "2026-11-16T20:14:37.000000Z",
+      "updated_at": "2026-11-16T20:18:38.000000Z"
+    }
+  ]
+}

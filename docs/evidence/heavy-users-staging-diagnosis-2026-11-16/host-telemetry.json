@@ -1,0 +1,103 @@
+{
+  "scope": "shared host aggregate; TCP queues by dependency namespace, not per-request attribution",
+  "runs": {
+    "run-40": {
+      "samples": 139,
+      "networkPeakRxBytesPerSecond": 8119832.98981396,
+      "networkPeakTxBytesPerSecond": 13375168.039054815,
+      "diskMaxUtilPercent": 5.568193716031638,
+      "diskReadMs": 1678,
+      "diskReads": 4217,
+      "diskWriteMs": 15980,
+      "diskWrites": 14440,
+      "proxyMaxSendQueueBytes": 44851956,
+      "storageMaxSendQueueBytes": 7282112,
+      "diskMeanReadAwaitMs": 0.3979132084420204,
+      "diskMeanWriteAwaitMs": 1.1066481994459834
+    },
+    "corrected-40": {
+      "samples": 134,
+      "networkPeakRxBytesPerSecond": 9511035.200417368,
+      "networkPeakTxBytesPerSecond": 15671396.196530612,
+      "diskMaxUtilPercent": 24.86567842015678,
+      "diskReadMs": 4370,
+      "diskReads": 13363,
+      "diskWriteMs": 9984,
+      "diskWrites": 11978,
+      "proxyMaxSendQueueBytes": 29903023,
+      "storageMaxSendQueueBytes": 3303643,
+      "diskMeanReadAwaitMs": 0.3270223752151463,
+      "diskMeanWriteAwaitMs": 0.833528134914009
+    },
+    "aborted-budget-200": {
+      "samples": 89,
+      "networkPeakRxBytesPerSecond": 8006955.618876249,
+      "networkPeakTxBytesPerSecond": 9685981.229981678,
+      "diskMaxUtilPercent": 65.9126635945223,
+      "diskReadMs": 84615,
+      "diskReads": 248003,
+      "diskWriteMs": 556358,
+      "diskWrites": 200519,
+      "proxyMaxSendQueueBytes": 109369788,
+      "storageMaxSendQueueBytes": 62913036,
+      "diskMeanReadAwaitMs": 0.34118538888642475,
+      "diskMeanWriteAwaitMs": 2.7745899391080147
+    },
+    "run-200": {
+      "samples": 143,
+      "networkPeakRxBytesPerSecond": 9587687.66865579,
+      "networkPeakTxBytesPerSecond": 9864847.47624614,
+      "diskMaxUtilPercent": 29.736998110091267,
+      "diskReadMs": 2550,
+      "diskReads": 10834,
+      "diskWriteMs": 16658,
+      "diskWrites": 18305,
+      "proxyMaxSendQueueBytes": 98293154,
+      "storageMaxSendQueueBytes": 39128380,
+      "diskMeanReadAwaitMs": 0.2353701310688573,
+      "diskMeanWriteAwaitMs": 0.9100245834471455
+    },
+    "corrected-100": {
+      "samples": 141,
+      "networkPeakRxBytesPerSecond": 8826419.461868715,
+      "networkPeakTxBytesPerSecond": 16935077.27649456,
+      "diskMaxUtilPercent": 9.029294150293783,
+      "diskReadMs": 1033,
+      "diskReads": 5183,
+      "diskWriteMs": 10855,
+      "diskWrites": 13201,
+      "proxyMaxSendQueueBytes": 42619821,
+      "storageMaxSendQueueBytes": 6596747,
+      "diskMeanReadAwaitMs": 0.199305421570519,
+      "diskMeanWriteAwaitMs": 0.8222861904401182
+    },
+    "corrected-200-final": {
+      "samples": 142,
+      "networkPeakRxBytesPerSecond": 9824728.81908707,
+      "networkPeakTxBytesPerSecond": 11103486.853210164,
+      "diskMaxUtilPercent": 33.48236084126292,
+      "diskReadMs": 26096,
+      "diskReads": 65825,
+      "diskWriteMs": 35400,
+      "diskWrites": 22893,
+      "proxyMaxSendQueueBytes": 93120805,
+      "storageMaxSendQueueBytes": 10470115,
+      "diskMeanReadAwaitMs": 0.39644511963539686,
+      "diskMeanWriteAwaitMs": 1.546324203905124
+    },
+    "run-100": {
+      "samples": 144,
+      "networkPeakRxBytesPerSecond": 8012795.519333859,
+      "networkPeakTxBytesPerSecond": 12687212.927083177,
+      "diskMaxUtilPercent": 56.28746794096916,
+      "diskReadMs": 7576,
+      "diskReads": 36776,
+      "diskWriteMs": 38721,
+      "diskWrites": 23696,
+      "proxyMaxSendQueueBytes": 68017733,
+      "storageMaxSendQueueBytes": 14855659,
+      "diskMeanReadAwaitMs": 0.20600391559712855,
+      "diskMeanWriteAwaitMs": 1.6340732613099258
+    }
+  }
+}

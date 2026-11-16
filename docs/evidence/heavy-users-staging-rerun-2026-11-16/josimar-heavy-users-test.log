@@ -1,0 +1,12 @@
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.12 [local-workspace]
+
+
+ Test Files  1 passed (1)
+      Tests  64 passed (64)
+   Start at  17:30:45
+   Duration  502ms (transform 46ms, setup 130ms, import 78ms, tests 139ms, environment 0ms)
+

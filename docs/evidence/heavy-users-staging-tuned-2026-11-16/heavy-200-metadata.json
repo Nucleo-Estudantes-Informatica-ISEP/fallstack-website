@@ -1,0 +1,261 @@
+{
+  "startedAt": "2026-11-16T18:25:50.923659+00:00",
+  "revision": "809772f2444a26335a7b5eefa8cb1b7ae1803611",
+  "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+  "scenario": "unmodified #601",
+  "generator": "external Mac; official k6 2.4.0; user fast Wi-Fi; public HTTPS proxy",
+  "dateWindow": [16, 17, 18],
+  "configuration": {
+    "dashboardUsers": 40,
+    "qrUsers": 140,
+    "staffUsers": 20,
+    "rampSeconds": 60,
+    "holdSeconds": 180,
+    "rampDownSeconds": 30,
+    "uploadIntervalSeconds": 15
+  },
+  "samples": [
+    {
+      "time": "2026-11-16T18:25:50.933289+00:00",
+      "generatorRssKiBAndCpuPercent": "752   0.0"
+    },
+    {
+      "time": "2026-11-16T18:25:55.950808+00:00",
+      "generatorRssKiBAndCpuPercent": "252480  22.0"
+    },
+    {
+      "time": "2026-11-16T18:26:00.967128+00:00",
+      "generatorRssKiBAndCpuPercent": "420880   8.3"
+    },
+    {
+      "time": "2026-11-16T18:26:05.980155+00:00",
+      "generatorRssKiBAndCpuPercent": "381600  11.8"
+    },
+    {
+      "time": "2026-11-16T18:26:10.992337+00:00",
+      "generatorRssKiBAndCpuPercent": "494992  16.3"
+    },
+    {
+      "time": "2026-11-16T18:26:16.017664+00:00",
+      "generatorRssKiBAndCpuPercent": "524432  14.7"
+    },
+    {
+      "time": "2026-11-16T18:26:21.036518+00:00",
+      "generatorRssKiBAndCpuPercent": "567632  12.6"
+    },
+    {
+      "time": "2026-11-16T18:26:26.053000+00:00",
+      "generatorRssKiBAndCpuPercent": "608224  13.2"
+    },
+    {
+      "time": "2026-11-16T18:26:31.085666+00:00",
+      "generatorRssKiBAndCpuPercent": "585168  11.9"
+    },
+    {
+      "time": "2026-11-16T18:26:36.100027+00:00",
+      "generatorRssKiBAndCpuPercent": "539344   7.2"
+    },
+    {
+      "time": "2026-11-16T18:26:41.118532+00:00",
+      "generatorRssKiBAndCpuPercent": "540272  13.7"
+    },
+    {
+      "time": "2026-11-16T18:26:46.137066+00:00",
+      "generatorRssKiBAndCpuPercent": "414176  13.1"
+    },
+    {
+      "time": "2026-11-16T18:26:51.150378+00:00",
+      "generatorRssKiBAndCpuPercent": "382912  25.3"
+    },
+    {
+      "time": "2026-11-16T18:26:56.184827+00:00",
+      "generatorRssKiBAndCpuPercent": "326208  13.2"
+    },
+    {
+      "time": "2026-11-16T18:27:01.203993+00:00",
+      "generatorRssKiBAndCpuPercent": "286176  13.9"
+    },
+    {
+      "time": "2026-11-16T18:27:06.228184+00:00",
+      "generatorRssKiBAndCpuPercent": "350448  13.5"
+    },
+    {
+      "time": "2026-11-16T18:27:11.248073+00:00",
+      "generatorRssKiBAndCpuPercent": "371872  18.0"
+    },
+    {
+      "time": "2026-11-16T18:27:16.270380+00:00",
+      "generatorRssKiBAndCpuPercent": "357744   8.6"
+    },
+    {
+      "time": "2026-11-16T18:27:21.289045+00:00",
+      "generatorRssKiBAndCpuPercent": "365232  17.8"
+    },
+    {
+      "time": "2026-11-16T18:27:26.306058+00:00",
+      "generatorRssKiBAndCpuPercent": "373760  13.6"
+    },
+    {
+      "time": "2026-11-16T18:27:31.316944+00:00",
+      "generatorRssKiBAndCpuPercent": "269808  11.6"
+    },
+    {
+      "time": "2026-11-16T18:27:36.337171+00:00",
+      "generatorRssKiBAndCpuPercent": "268800  17.3"
+    },
+    {
+      "time": "2026-11-16T18:27:41.354273+00:00",
+      "generatorRssKiBAndCpuPercent": "322288  22.1"
+    },
+    {
+      "time": "2026-11-16T18:27:46.363957+00:00",
+      "generatorRssKiBAndCpuPercent": "253504  10.9"
+    },
+    {
+      "time": "2026-11-16T18:27:51.377317+00:00",
+      "generatorRssKiBAndCpuPercent": "272640  13.4"
+    },
+    {
+      "time": "2026-11-16T18:27:56.393156+00:00",
+      "generatorRssKiBAndCpuPercent": "194848   3.7"
+    },
+    {
+      "time": "2026-11-16T18:28:01.419680+00:00",
+      "generatorRssKiBAndCpuPercent": "216528  12.6"
+    },
+    {
+      "time": "2026-11-16T18:28:06.436143+00:00",
+      "generatorRssKiBAndCpuPercent": "246576   8.0"
+    },
+    {
+      "time": "2026-11-16T18:28:11.454949+00:00",
+      "generatorRssKiBAndCpuPercent": "190800   5.4"
+    },
+    {
+      "time": "2026-11-16T18:28:16.473341+00:00",
+      "generatorRssKiBAndCpuPercent": "222944  14.7"
+    },
+    {
+      "time": "2026-11-16T18:28:21.493741+00:00",
+      "generatorRssKiBAndCpuPercent": "294272   9.0"
+    },
+    {
+      "time": "2026-11-16T18:28:26.513782+00:00",
+      "generatorRssKiBAndCpuPercent": "176208   7.8"
+    },
+    {
+      "time": "2026-11-16T18:28:31.528945+00:00",
+      "generatorRssKiBAndCpuPercent": "210080   7.1"
+    },
+    {
+      "time": "2026-11-16T18:28:36.548782+00:00",
+      "generatorRssKiBAndCpuPercent": "282720   6.3"
+    },
+    {
+      "time": "2026-11-16T18:28:41.567038+00:00",
+      "generatorRssKiBAndCpuPercent": "197408  11.4"
+    },
+    {
+      "time": "2026-11-16T18:28:46.588608+00:00",
+      "generatorRssKiBAndCpuPercent": "195104  17.3"
+    },
+    {
+      "time": "2026-11-16T18:28:51.595661+00:00",
+      "generatorRssKiBAndCpuPercent": "330448  16.2"
+    },
+    {
+      "time": "2026-11-16T18:28:56.612266+00:00",
+      "generatorRssKiBAndCpuPercent": "282784   7.7"
+    },
+    {
+      "time": "2026-11-16T18:29:01.634651+00:00",
+      "generatorRssKiBAndCpuPercent": "242016  17.0"
+    },
+    {
+      "time": "2026-11-16T18:29:06.647106+00:00",
+      "generatorRssKiBAndCpuPercent": "441584  21.2"
+    },
+    {
+      "time": "2026-11-16T18:29:11.657513+00:00",
+      "generatorRssKiBAndCpuPercent": "315824   8.9"
+    },
+    {
+      "time": "2026-11-16T18:29:16.675505+00:00",
+      "generatorRssKiBAndCpuPercent": "240912  20.6"
+    },
+    {
+      "time": "2026-11-16T18:29:21.688181+00:00",
+      "generatorRssKiBAndCpuPercent": "336368  13.8"
+    },
+    {
+      "time": "2026-11-16T18:29:26.696952+00:00",
+      "generatorRssKiBAndCpuPercent": "402672  11.1"
+    },
+    {
+      "time": "2026-11-16T18:29:31.704685+00:00",
+      "generatorRssKiBAndCpuPercent": "392304  16.5"
+    },
+    {
+      "time": "2026-11-16T18:29:36.710864+00:00",
+      "generatorRssKiBAndCpuPercent": "246944   9.6"
+    },
+    {
+      "time": "2026-11-16T18:29:41.733993+00:00",
+      "generatorRssKiBAndCpuPercent": "228304  17.1"
+    },
+    {
+      "time": "2026-11-16T18:29:46.752073+00:00",
+      "generatorRssKiBAndCpuPercent": "204688   8.9"
+    },
+    {
+      "time": "2026-11-16T18:29:51.764483+00:00",
+      "generatorRssKiBAndCpuPercent": "291840  13.5"
+    },
+    {
+      "time": "2026-11-16T18:29:56.784073+00:00",
+      "generatorRssKiBAndCpuPercent": "275760  12.5"
+    },
+    {
+      "time": "2026-11-16T18:30:01.801842+00:00",
+      "generatorRssKiBAndCpuPercent": "350208  11.4"
+    },
+    {
+      "time": "2026-11-16T18:30:06.822611+00:00",
+      "generatorRssKiBAndCpuPercent": "462608  11.0"
+    },
+    {
+      "time": "2026-11-16T18:30:11.839846+00:00",
+      "generatorRssKiBAndCpuPercent": "446032  14.0"
+    },
+    {
+      "time": "2026-11-16T18:30:16.861189+00:00",
+      "generatorRssKiBAndCpuPercent": "390832  12.6"
+    },
+    {
+      "time": "2026-11-16T18:30:21.868962+00:00",
+      "generatorRssKiBAndCpuPercent": "280720  17.1"
+    },
+    {
+      "time": "2026-11-16T18:30:26.883722+00:00",
+      "generatorRssKiBAndCpuPercent": "340080  13.6"
+    },
+    {
+      "time": "2026-11-16T18:30:31.897961+00:00",
+      "generatorRssKiBAndCpuPercent": "313584  17.1"
+    },
+    {
+      "time": "2026-11-16T18:30:36.919352+00:00",
+      "generatorRssKiBAndCpuPercent": "158096  13.4"
+    },
+    {
+      "time": "2026-11-16T18:30:41.935088+00:00",
+      "generatorRssKiBAndCpuPercent": "100496   8.4"
+    },
+    {
+      "time": "2026-11-16T18:30:46.958129+00:00",
+      "generatorRssKiBAndCpuPercent": "111632  17.8"
+    }
+  ],
+  "endedAt": "2026-11-16T18:30:51.969653+00:00",
+  "exitCode": 99
+}

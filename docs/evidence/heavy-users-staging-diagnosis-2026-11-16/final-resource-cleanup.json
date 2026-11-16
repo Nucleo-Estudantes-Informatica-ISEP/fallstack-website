@@ -1,0 +1,12 @@
+{
+  "latestNormalRevision": "244b753cafb784062d843424092a02e77ee4cb72",
+  "latestNormalImageId": "sha256:781e2804a18667487f1ac4161285f69ee9a5332529d71f8529cb9ab923416583",
+  "healthyReplicas": 3,
+  "taskBackupContainersRemoved": 0,
+  "diagnosticImageRemoved": true,
+  "idleTaskBuildRecordsRemoved": 5,
+  "automaticRestoreTimerStoppedAfterManualRestoration": true,
+  "privateMcCredentialDirectoryRemoved": true,
+  "sharedVolumesPreserved": true,
+  "disk": ["102915489792", "83774021632", "19124690944", "82%"]
+}

@@ -1,0 +1,20 @@
+{
+  "samples": 358,
+  "diskAwaitMaxMs": 4.89551989301237,
+  "diskBusyMaxPct": 80.92663038922319,
+  "hostRxMaxMbps": 352.4208710018611,
+  "hostTxMaxMbps": 182.15383532136687,
+  "proxyAndMinioTcpMax": {
+    "proxy": {
+      "connectionLines": 113,
+      "unacked": 2940,
+      "retransmits": 56
+    },
+    "minio": {
+      "connectionLines": 31,
+      "unacked": 68,
+      "retransmits": 78
+    }
+  },
+  "scope": "shared host aggregate counters, not evidence that a particular application request failed"
+}

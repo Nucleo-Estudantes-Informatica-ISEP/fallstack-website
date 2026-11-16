@@ -1,0 +1,33 @@
+{
+  "time": "2026-11-16T18:47:29.931699+00:00",
+  "replicas": [
+    {
+      "replica": 1,
+      "revision": "ea26bd5c374a46bad42f760747c9afb9854cc3ab",
+      "imageId": "sha256:64d32ab1986e99cf3210f4337a9c0277fda4e57718063fc06f0c2d1159f38ce2",
+      "health": "healthy",
+      "s3PublicEndpointRetained": true
+    },
+    {
+      "replica": 2,
+      "revision": "ea26bd5c374a46bad42f760747c9afb9854cc3ab",
+      "imageId": "sha256:64d32ab1986e99cf3210f4337a9c0277fda4e57718063fc06f0c2d1159f38ce2",
+      "health": "healthy",
+      "s3PublicEndpointRetained": true
+    },
+    {
+      "replica": 3,
+      "revision": "ea26bd5c374a46bad42f760747c9afb9854cc3ab",
+      "imageId": "sha256:64d32ab1986e99cf3210f4337a9c0277fda4e57718063fc06f0c2d1159f38ce2",
+      "health": "healthy",
+      "s3PublicEndpointRetained": true
+    }
+  ],
+  "minioMemoryLimitBytes": 10737418240,
+  "minioHealth": "healthy",
+  "publicHealth": {
+    "staging": "200",
+    "production": "200"
+  },
+  "disk": ["102915489792", "78317117440", "24581595136", "77%"]
+}

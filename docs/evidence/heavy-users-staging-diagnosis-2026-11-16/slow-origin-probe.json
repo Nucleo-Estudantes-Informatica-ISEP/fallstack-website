@@ -1,0 +1,12 @@
+{
+  "startedAt": "2026-11-16T19:58:28.853Z",
+  "endedAt": "2026-11-16T19:59:29.025Z",
+  "mode": "direct origin with public Host/SNI; no Cloudflare",
+  "bytes": 10485760,
+  "rateBytesPerSecond": 131072,
+  "result": {
+    "status": 499,
+    "sentBytes": 7815168,
+    "ms": 60171
+  }
+}

@@ -18,6 +18,8 @@ import { databaseFixtures } from "./support/databaseFixtures";
 vi.mock("server-only", () => ({}));
 const storage = vi.hoisted(() => ({
   listObjects: vi.fn(),
+  expiredCvMultipart: vi.fn(),
+  abortCvMultipart: vi.fn(),
   deleteObject: vi.fn(),
   assertUnversionedBucket: vi.fn(),
 }));
@@ -36,6 +38,7 @@ const newKey = (kind: "cv" | "avatar") => {
 beforeEach(() => {
   vi.resetAllMocks();
   storage.listObjects.mockResolvedValue([]);
+  storage.expiredCvMultipart.mockResolvedValue([]);
 });
 afterEach(async () => {
   await fixtures.cleanup();

@@ -24,7 +24,10 @@ return {1, 0}
 `;
 
 export const redisLimiterTiming = {
-  deadlineMs: 300,
+  // A busy Node event loop can delay the timer without Redis being unhealthy.
+  // Keep admission bounded, but do not turn one scheduling delay into a
+  // replica-wide disconnect/cooldown storm.
+  deadlineMs: 800,
   connectTimeoutMs: 200,
   cooldownMs: 1000,
   maxPending: 128,
@@ -150,7 +153,15 @@ export function createRedisRateLimitStore(
         // A Redis command reply leaves the transport usable. In particular a
         // corrupt subject key must not deny uploads for every other subject.
         const commandError = commandSent && error instanceof ErrorReply;
-        if (!commandError) discard(current);
+        const timeout =
+          error instanceof LimiterStoreError && error.reason === "timeout";
+        const transientAdmission =
+          error instanceof LimiterStoreError &&
+          ["saturated", "cooldown"].includes(error.reason);
+        // A timed-out command must release a potentially wedged socket, but
+        // it must not impose the global cooldown that caused the load failure.
+        if (!commandError && timeout) discard(current, false);
+        else if (!commandError && !transientAdmission) discard(current);
         throw error instanceof LimiterStoreError
           ? error
           : new LimiterStoreError(

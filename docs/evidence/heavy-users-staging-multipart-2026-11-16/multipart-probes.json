@@ -1,0 +1,1396 @@
+[
+  {
+    "mode": "public",
+    "concurrency": 1,
+    "transfers": [
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 363,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 1091,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 1296,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "public",
+    "concurrency": 5,
+    "transfers": [
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 166,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 19807,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 14566,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 484,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 9790,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 10452,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 594,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 9821,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 11122,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 757,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 20843,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 12914,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 483,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 6370,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 12944,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "public",
+    "concurrency": 10,
+    "transfers": [
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 669,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 13221,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 44876,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 470,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 5750,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 12218,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 692,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 11885,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 44328,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 582,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 11779,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 21488,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 578,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 17715,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 45422,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 602,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 20909,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 41782,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 651,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 12406,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 46535,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 675,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 11907,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 33681,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 667,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 12313,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 14256,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 648,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 11554,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 45521,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "origin",
+    "concurrency": 1,
+    "transfers": [
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 374,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 1038,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 1472,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "origin",
+    "concurrency": 5,
+    "transfers": [
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 94,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 2658,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 4461,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 616,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 13812,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 2402,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 623,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 5624,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 6766,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 629,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 4875,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 5587,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 1880,
+            "sentBytes": 184320,
+            "part": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 4235,
+            "sentBytes": 5242880,
+            "part": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 3907,
+            "sentBytes": 5242880,
+            "part": 2
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "origin",
+    "concurrency": 10,
+    "transfers": [
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 397,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 9879,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 6015,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 509,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 14716,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 28505,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 551,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 11789,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 30427,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 399,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 12111,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 30788,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 484,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 14649,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 38460,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 480,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 9579,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 6967,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 483,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 11503,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 32151,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 553,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 12667,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 37711,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 521,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 13875,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 34813,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 184320,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 511,
+            "sentBytes": 184320,
+            "part": 1,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      },
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 0,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 24352,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 28836,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "public",
+    "concurrency": 1,
+    "slowRetryProbe": true,
+    "transfers": [
+      {
+        "mode": "public",
+        "size": 10485760,
+        "rateBytesPerSecond": 131072,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 40903,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 0,
+            "error": "SIMULATED_INTERRUPTION",
+            "ms": 84,
+            "sentBytes": 262144,
+            "part": 2,
+            "intentional": true
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 40932,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  },
+  {
+    "mode": "origin",
+    "concurrency": 1,
+    "slowRetryProbe": true,
+    "transfers": [
+      {
+        "mode": "origin",
+        "size": 10485760,
+        "rateBytesPerSecond": 131072,
+        "partResults": [
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": true,
+            "ms": 40909,
+            "sentBytes": 5242880,
+            "part": 1,
+            "attempt": 1
+          },
+          {
+            "status": 0,
+            "error": "SIMULATED_INTERRUPTION",
+            "ms": 90,
+            "sentBytes": 262144,
+            "part": 2,
+            "intentional": true
+          },
+          {
+            "status": 200,
+            "cloudflareHeaderPresent": false,
+            "ms": 40947,
+            "sentBytes": 5242880,
+            "part": 2,
+            "attempt": 1
+          }
+        ],
+        "downloadStatus": 200,
+        "sha256": "match"
+      }
+    ]
+  }
+]

@@ -8,8 +8,10 @@ import {
 } from "../repositories/storageCleanupRepository";
 import { listExpiredCvQuarantine } from "./cvQuarantineCleanupService";
 import {
+  abortCvMultipart,
   assertUnversionedBucket,
   deleteObject,
+  expiredCvMultipart,
   listObjects,
 } from "./objectStorageService";
 
@@ -48,6 +50,7 @@ export async function runStorageCleanup({
   }
   signal?.throwIfAborted();
   const quarantine = await listExpiredCvQuarantine(now, signal);
+  const multipart = await expiredCvMultipart(now, signal);
   const plan = await planStorageCleanup(now, objects, apply);
   for (const row of plan.expired)
     audit({ action: apply ? "cv-detached" : "cv-would-detach", key: row.key });
@@ -120,6 +123,15 @@ export async function runStorageCleanup({
     });
   }
   if (apply) {
+    for (const upload of multipart) {
+      try {
+        await abortCvMultipart(upload.key, upload.multipartId, signal);
+        deleted++;
+      } catch {
+        signal?.throwIfAborted();
+        failed++;
+      }
+    }
     for (const key of quarantine) {
       try {
         await deleteObject("cv", key, signal);
@@ -142,6 +154,7 @@ export async function runStorageCleanup({
   }
   return {
     quarantine: quarantine.length,
+    incompleteMultipart: multipart.length,
     mode: apply ? "apply" : "dry-run",
     expired: plan.expired.length,
     orphans: plan.orphans.length,

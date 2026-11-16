@@ -15,3 +15,10 @@ export const directCvUploadSchema = z
   .strict();
 
 export const cvUploadIdSchema = z.object({ uploadId: z.uuid() }).strict();
+
+export const cvUploadPartSchema = cvUploadIdSchema
+  .extend({
+    partNumber: z.number().int().min(1).max(2),
+    checksum: z.string().regex(/^[A-Za-z0-9+/]{43}=$/),
+  })
+  .strict();
