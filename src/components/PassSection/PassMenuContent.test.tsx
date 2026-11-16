@@ -8,6 +8,7 @@ import {
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { httpClient } from "@/lib/http/client";
+import * as offlinePassModule from "@/components/PassSection/generateOfflinePass";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 
 import PassMenuContent from "./PassMenuContent";
@@ -20,7 +21,11 @@ vi.mock("@/components/GoogleWalletButton", () => ({
   default: () => <p>Google Wallet button</p>,
 }));
 
-const student = { code: "Z100", name: "Carolina Referência" };
+const student = {
+  code: "Z100",
+  name: "Carolina Referência",
+  user: { email: "carolina@example.com" },
+};
 const writeText = vi.fn().mockResolvedValue(undefined);
 
 const lastCardProps = () => vi.mocked(StyledPassCard).mock.lastCall?.[0];
@@ -189,4 +194,67 @@ test("a six-character code and a 60-character name keep the card props and wrap"
     code: "Y4Q7K2",
   });
   expect(screen.getByText("Y4Q7K2")).toHaveClass("wrap-anywhere");
+});
+
+test("handles successful offline pass download", async () => {
+  vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
+  const downloadSpy = vi
+    .spyOn(offlinePassModule, "downloadOfflinePass")
+    .mockResolvedValue();
+
+  render(<PassMenuContent student={student} />);
+  await waitFor(() => expect(lastCardProps()?.loading).toBe(false));
+
+  const downloadButton = screen.getByRole("button", {
+    name: "Descarregar Passe (Offline)",
+  });
+  fireEvent.click(downloadButton);
+
+  await waitFor(() => {
+    expect(downloadSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        studentName: "Carolina Referência",
+        studentEmail: "carolina@example.com",
+        permanentCode: "Z100",
+      })
+    );
+  });
+
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(downloadButton).not.toBeDisabled();
+});
+
+test("displays error alert when offline pass download fails and allows retry", async () => {
+  vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
+  const downloadSpy = vi
+    .spyOn(offlinePassModule, "downloadOfflinePass")
+    .mockRejectedValueOnce(new Error("Canvas failure"))
+    .mockResolvedValueOnce();
+
+  render(<PassMenuContent student={student} />);
+  await waitFor(() => expect(lastCardProps()?.loading).toBe(false));
+
+  const downloadButton = screen.getByRole("button", {
+    name: "Descarregar Passe (Offline)",
+  });
+
+  fireEvent.click(downloadButton);
+
+  await waitFor(() => {
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Não foi possível gerar o passe offline. Tenta novamente antes de ficares sem internet."
+    );
+  });
+
+  expect(downloadButton).toBeEnabled();
+  expect(downloadButton).toHaveTextContent("Descarregar Passe (Offline)");
+
+  fireEvent.click(downloadButton);
+
+  await waitFor(() => {
+    expect(downloadSpy).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  expect(downloadButton).toBeEnabled();
 });

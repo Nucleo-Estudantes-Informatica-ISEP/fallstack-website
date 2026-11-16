@@ -125,7 +125,14 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
           )}
           {student.code && (
             <div className="hidden" aria-hidden="true">
-              <QRCodeSVG ref={permanentQrRef} value={student.code} size={400} />
+              <QRCodeSVG
+                ref={permanentQrRef}
+                value={student.code}
+                size={400}
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+                level="M"
+              />
             </div>
           )}
         </div>
