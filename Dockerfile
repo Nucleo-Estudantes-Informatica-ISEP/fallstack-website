@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Multi-stage build for Next.js application
-FROM node:26.13.0-alpine3.24 AS base
+FROM node:26.13.1-alpine3.24 AS base
 
 # Add required packages for Prisma, healthcheck, sharp, etc.
 RUN apk upgrade --no-cache \
