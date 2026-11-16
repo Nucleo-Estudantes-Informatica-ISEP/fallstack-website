@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { readFileSync } from "node:fs";
+import { URL } from "node:url";
 import { runInNewContext } from "node:vm";
 import { describe, expect, test } from "vitest";
 
@@ -567,7 +568,7 @@ describe("heavy-users k6 script", () => {
   test("a script error still waits out the interval and fails a check", () => {
     const route = stagingRoute();
     const script = loadScript((request) => {
-      if (request.url.startsWith(STORAGE_ORIGIN))
+      if (new URL(request.url).origin === STORAGE_ORIGIN)
         throw new Error("connection reset");
       return route(request);
     });
