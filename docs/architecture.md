@@ -78,6 +78,9 @@ freshness. It prevents stale QR use but has no nonce or one-time-consumption
 check: a captured code can be reused during its valid window by another
 student. A student's duplicate completion of the same action is rejected.
 
+Employee preview authorization, including the tokenless fallback and its
+company-level saved-student check, is recorded in [ADR 0042](decisions/0042-restrict-tokenless-student-previews.md).
+
 ## Data ownership
 
 `prisma/schema.prisma` is the source of truth for models and relationships.
