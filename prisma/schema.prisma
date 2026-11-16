@@ -49,6 +49,7 @@ model CvUpload {
   leaseUntil DateTime?
   attemptId  String?   @db.Uuid
   cvId       String?   @unique @db.Uuid
+  multipartId String?
   createdAt  DateTime  @default(now())
 
   @@index([ownerId, status])

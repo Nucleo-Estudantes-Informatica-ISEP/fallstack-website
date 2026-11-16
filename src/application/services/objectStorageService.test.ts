@@ -1,8 +1,11 @@
 // @vitest-environment node
 import { Readable } from "node:stream";
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
   GetBucketVersioningCommand,
   ListObjectsV2Command,
+  ListPartsCommand,
   PutObjectCommand,
 } from "@aws-sdk/client-s3";
 import { beforeEach, expect, test, vi } from "vitest";
@@ -10,7 +13,10 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { storageEnv } from "@/config/env.storage";
 
 import {
+  abortCvMultipart,
   assertUnversionedBucket,
+  completeCvMultipart,
+  expiredCvMultipart,
   getObjectStream,
   listObjects,
   putObjectStream,
@@ -150,4 +156,101 @@ test("CV streaming preserves length and cancellation without buffering", async (
   expect(transformToByteArray).not.toHaveBeenCalled();
   await file!.body.cancel();
   expect(cancel).toHaveBeenCalledOnce();
+});
+
+test("multipart completion trusts storage's exact part sizes/checksums, never client ETags", async () => {
+  send
+    .mockResolvedValueOnce({
+      Parts: [
+        { PartNumber: 1, Size: 5242880, ETag: '"one"', ChecksumSHA256: "sha1" },
+        { PartNumber: 2, Size: 1, ETag: '"two"', ChecksumSHA256: "sha2" },
+      ],
+    })
+    .mockResolvedValueOnce({});
+  await completeCvMultipart(
+    "quarantine/cv/ticket",
+    "server-id",
+    5242881,
+    new AbortController().signal
+  );
+  expect(send.mock.calls[0][0]).toBeInstanceOf(ListPartsCommand);
+  const command = send.mock.calls[1][0];
+  expect(command).toBeInstanceOf(CompleteMultipartUploadCommand);
+  expect(command.input.MultipartUpload.Parts).toEqual([
+    { PartNumber: 1, ETag: '"one"', ChecksumSHA256: "sha1" },
+    { PartNumber: 2, ETag: '"two"', ChecksumSHA256: "sha2" },
+  ]);
+});
+
+test.each([
+  { Parts: [] },
+  { Parts: [{ PartNumber: 1, Size: 19, ETag: "etag", ChecksumSHA256: "sha" }] },
+  { Parts: [{ PartNumber: 1, Size: 20, ETag: "etag" }] },
+  {
+    IsTruncated: true,
+    Parts: [{ PartNumber: 1, Size: 20, ETag: "etag", ChecksumSHA256: "sha" }],
+  },
+])(
+  "incomplete or wrong multipart data cannot reach completion",
+  async (listed) => {
+    send.mockResolvedValueOnce(listed);
+    await expect(
+      completeCvMultipart("key", "server-id", 20, new AbortController().signal)
+    ).rejects.toMatchObject({ status: 409 });
+    expect(send).toHaveBeenCalledTimes(1);
+  }
+);
+
+test("lost completion reply is retried against HEAD; cancelled data cannot be treated as completed", async () => {
+  send
+    .mockRejectedValueOnce(Object.assign(new Error(), { name: "NoSuchUpload" }))
+    .mockResolvedValueOnce({
+      ContentLength: 20,
+      ContentType: "application/pdf",
+    });
+  await completeCvMultipart(
+    "key",
+    "server-id",
+    20,
+    new AbortController().signal
+  );
+  send
+    .mockRejectedValueOnce(Object.assign(new Error(), { name: "NoSuchUpload" }))
+    .mockResolvedValueOnce({
+      ContentLength: 19,
+      ContentType: "application/pdf",
+    });
+  await expect(
+    completeCvMultipart("key", "server-id", 20, new AbortController().signal)
+  ).rejects.toMatchObject({ status: 400 });
+});
+
+test("multipart abort is idempotent only for NoSuchUpload, and transport failures remain visible", async () => {
+  send.mockRejectedValueOnce(
+    Object.assign(new Error(), { name: "NoSuchUpload" })
+  );
+  await abortCvMultipart("key", "server-id");
+  expect(send.mock.calls[0][0]).toBeInstanceOf(AbortMultipartUploadCommand);
+  send.mockRejectedValueOnce(new Error("unavailable"));
+  await expect(abortCvMultipart("key", "server-id")).rejects.toThrow(
+    "unavailable"
+  );
+});
+
+test("multipart cleanup retains recent uploads and rejects partial listings", async () => {
+  const now = new Date(),
+    old = new Date(now.getTime() - 86400001),
+    key = "quarantine/cv/00000000-0000-4000-8000-000000000001";
+  send.mockResolvedValueOnce({
+    Uploads: [
+      { Key: key, UploadId: "old", Initiated: old },
+      { Key: key, UploadId: "recent", Initiated: now },
+      { Key: "other", UploadId: "unrelated", Initiated: old },
+    ],
+  });
+  expect(await expiredCvMultipart(now)).toEqual([{ key, multipartId: "old" }]);
+  send.mockResolvedValueOnce({ IsTruncated: true });
+  await expect(expiredCvMultipart(now)).rejects.toThrow(
+    "Incomplete multipart listing"
+  );
 });

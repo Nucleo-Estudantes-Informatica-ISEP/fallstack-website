@@ -209,3 +209,41 @@ old transport on the same machine/fixtures/proxy. The historical 200-VU heavy
 run (36 completed 10 MB uploads, 10.96% global errors, 30s timeouts) is context,
 not a controlled baseline for these local measurements. Do not claim reduced
 VPS I/O, capacity or latency from implementation alone.
+
+## Checksummed resumable browser transport
+
+New browser clients initiate with the same metadata at
+`POST /api/storage/cv/multipart`. The 201 response contains `uploadId`,
+`partSize` (5,242,880 bytes) and `expiresAt`; it does not expose the storage upload
+identity. The original `/api/storage/cv` signed POST protocol remains available
+for existing callers and the unchanged #601 workload.
+
+For each sequential part, POST `{ uploadId, partNumber, checksum }` to
+`/api/storage/cv/multipart/parts`, where checksum is the part's base64 SHA-256.
+The server derives owner, quarantine key, part length and expiry and returns a
+signed URL plus required checksum header. PUT the exact part bytes with
+`credentials: omit` and no application cookies. Each signature binds both length
+and checksum. Retry only that part, at most twice with backoff. No page-reload
+resume, persisted PDF or signed URL storage is introduced.
+
+Finalize/cancel through the existing endpoints. Completion is server-side:
+clients cannot supply ETags, storage upload IDs, destination keys or a different
+aggregate size. Finalization lists and verifies stored parts, completes them,
+then applies the existing PDF and publication checks. Cancellation and the
+24-hour incomplete-upload sweep abort retained parts without relying on a browser
+callback. A failed sweep is reported; it never counts as successful cleanup.
+
+Before rollout, migrate the nullable `CvUpload.multipartId` column. Extend the
+private S3 identity for `ListBucketMultipartUploads` on the existing CV bucket and
+`ListMultipartUploadParts`/`AbortMultipartUpload` only on `quarantine/cv/*`, alongside
+existing read/write permissions. Extend the public proxy with a PUT/OPTIONS route
+matching only the exact canonical quarantine object path in that bucket. Keep the
+legacy POST bucket route; do not expose GET/list/delete or multipart completion
+POST routes publicly. Allow `x-amz-checksum-sha256` and PUT through the existing
+exact-origin CORS middleware; never use credentialed or wildcard CORS. Verify real
+browser preflight and authenticated end-to-end integrity before enabling clients.
+
+See [ADR 0046](../decisions/0046-resume-private-cv-uploads-in-checksummed-parts.md).
+Both this transport and the original workload need independent evidence. Faster
+part recovery does not establish a capacity pass or remove generator bandwidth
+requirements.
