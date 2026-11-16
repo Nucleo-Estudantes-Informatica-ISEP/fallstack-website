@@ -8,7 +8,7 @@ import type { Stats } from "@/types/Stats";
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import HistorySection from "@/components/HistorySection";
+import CompanySavedStudentsList from "@/components/Companies/CompanyProfile/CompanySavedStudentsList";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import type { InterestDto } from "@/application/dto/interestDto";
@@ -21,6 +21,8 @@ interface StatsProps {
   availableInterests: InterestDto[];
 }
 
+// Same layout and styles as the student summary
+// (src/components/Profile/StatsSection), kept as separate code.
 const CompanyStatsSection: React.FC<StatsProps> = ({
   stats,
   students,
@@ -29,54 +31,70 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
   availableInterests,
 }) => {
   const { totalScans, totalSaves } = stats;
-  const studentsLeft = students - totalScans;
+  const studentsLeft = Math.max(students - totalScans, 0);
   const [companyInterestIds, setCompanyInterestIds] =
     useState<string[]>(interestIds);
   const router = useRouter();
-  const { mutate, isPending } = useMutation(
-    "Ocorreu um erro ao atualizar o teu perfil..."
-  );
+  const { mutate, isPending } = useMutation();
 
   const handleSave = () =>
     mutate(async () => {
-      await httpClient.patch("/user", { interests: companyInterestIds });
-      toast.success("Perfil atualizado com sucesso!");
+      try {
+        await httpClient.patch("/user", { interests: companyInterestIds });
+      } catch {
+        // Server and network errors arrive in English; employees get one
+        // Portuguese message, and the selection stays as they left it.
+        toast.error("Não foi possível guardar os interesses. Tenta novamente.");
+        return;
+      }
+      toast.success("Interesses guardados com sucesso!");
       router.refresh();
     });
 
   return (
     <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">
-      <h1 className="mx-auto my-6 w-1/2 text-center text-2xl font-extrabold uppercase md:my-2">
+      <h2 className="mx-auto my-6 w-1/2 text-center text-2xl font-extrabold uppercase md:my-2">
         Visão Geral
-      </h1>
+      </h2>
       <div className="mb-6 grid w-full grid-cols-1 items-center justify-center gap-y-4 md:my-6 md:grid-cols-3">
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
           <p className="mt-4 text-4xl font-bold">{totalScans}</p>
-          <h2 className="text-center leading-6 font-medium text-gray-300 md:text-xl">
+          <p className="text-center font-title leading-6 font-medium text-white/70 md:text-xl">
             {totalScans === 1 ? "Scan" : "Scans"}
-          </h2>
+          </p>
         </div>
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4 md:border-x-4">
           <p className="mt-4 text-4xl font-bold">{totalSaves}</p>
-          <h2 className="text-center leading-6 font-medium text-gray-300 md:text-xl">
+          <p className="text-center font-title leading-6 font-medium text-white/70 md:text-xl">
             {totalSaves === 1 ? "Gravação de Perfil" : "Gravações de Perfil"}
-          </h2>
+          </p>
         </div>
         <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
           <p className="mt-4 text-4xl font-bold">{studentsLeft}</p>
-          <h2 className="text-center leading-6 font-medium text-gray-300 md:text-xl">
-            Alunos restantes
-          </h2>
+          <p className="text-center font-title leading-6 font-medium text-white/70 md:text-xl">
+            {studentsLeft === 1 ? "Aluno restante" : "Alunos restantes"}
+          </p>
         </div>
       </div>
-      <h1 className="mx-auto my-6 w-1/2 text-center text-2xl font-extrabold uppercase md:my-2 md:mb-4">
+      <h2
+        id="company-interests-heading"
+        className="mx-auto my-6 w-1/2 text-center text-2xl font-extrabold uppercase md:my-2 md:mb-4"
+      >
         Interesses
-      </h1>
-      <InterestSelector
-        availableInterests={availableInterests}
-        selectedInterestIds={companyInterestIds}
-        setSelectedInterestIds={setCompanyInterestIds}
-      />
+      </h2>
+      {/* The shared selector pads its tags only when left-aligned; this keeps
+          the summary centred and gives the tags the student's padding. */}
+      <div
+        role="group"
+        aria-labelledby="company-interests-heading"
+        className="w-full [&_button]:px-5 sm:[&_button]:px-7"
+      >
+        <InterestSelector
+          availableInterests={availableInterests}
+          selectedInterestIds={companyInterestIds}
+          setSelectedInterestIds={setCompanyInterestIds}
+        />
+      </div>
       <PrimaryButton
         onClick={handleSave}
         loading={isPending}
@@ -84,7 +102,7 @@ const CompanyStatsSection: React.FC<StatsProps> = ({
       >
         Guardar
       </PrimaryButton>
-      <HistorySection historyData={history} isCompany />
+      <CompanySavedStudentsList savedStudents={history} />
     </section>
   );
 };

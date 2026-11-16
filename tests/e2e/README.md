@@ -368,6 +368,10 @@ profile applies the staging target guard above, including direct `test:load`.
   concurrent `pnpm test:load` invocations against the same target to get a
   realistic mixed-traffic picture rather than an isolated probe.
 
+For the 200 heavy users scenario (dashboard, QR and check-in groups with real
+and near-limit CV uploads and downloads), run `pnpm test:load:heavy`; see
+[the stress scenario](../../docs/testing/stress-scenario.md#heavy-user-run-task01-c2-450).
+
 For local route/distributed checks and the staging mixed CV/avatar/employee
 preview-scan scenario, see [shared limiter validation](../../docs/rate-limiter-load-validation.md).
 The route check mocks limiter decisions; distributed checks run production limiter

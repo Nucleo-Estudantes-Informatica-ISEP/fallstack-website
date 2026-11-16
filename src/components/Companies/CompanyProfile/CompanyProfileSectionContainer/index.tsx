@@ -27,22 +27,27 @@ interface CompanyProfileSectionContainerProps {
   availableInterests: InterestDto[];
 }
 
-type TabValue = "Sumário" | "Scan de Perfil";
-
 type MenuKey = "sumario" | "scan_perfil" | "logout";
 
 interface SidebarItem {
   key: MenuKey;
   label: string;
   icon: IconType;
-  tabValue?: TabValue;
 }
 
-const menuMap: Record<TabValue, MenuKey> = {
-  Sumário: "sumario",
-  "Scan de Perfil": "scan_perfil",
-};
+// Employees only get their company's summary, the profile scanner and
+// logout: no student pass/challenges and no staff (attendance) actions.
+const sidebarItems: SidebarItem[] = [
+  { key: "sumario", label: "Sumário", icon: FiFileText },
+  { key: "scan_perfil", label: "Scan de Perfil", icon: BiScan },
+];
 
+const secondaryItems: SidebarItem[] = [
+  { key: "logout", label: "Logout", icon: FiLogOut },
+];
+
+// Same layout and styles as the student dashboard
+// (src/components/Profile/ProfileSectionContainer), kept as separate code.
 const CompanyProfileSectionContainer: React.FC<
   CompanyProfileSectionContainerProps
 > = ({
@@ -56,11 +61,16 @@ const CompanyProfileSectionContainer: React.FC<
   availableInterests,
 }) => {
   const { handleLogout, ConfirmDialog } = useLogout();
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousMenu = useRef<MenuKey>("sumario");
   const [items, setItems] = useState(history);
   const [hasMore, setHasMore] = useState(historyHasMore);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState(false);
   const historyGeneration = useRef(0);
+  const loadMoreRef = useRef<HTMLButtonElement>(null);
+  const wasLoadingHistory = useRef(false);
 
   useLayoutEffect(() => {
     historyGeneration.current += 1;
@@ -104,32 +114,48 @@ const CompanyProfileSectionContainer: React.FC<
     }
   };
 
-  const [activeTab, setActiveTab] = useState<TabValue>("Sumário");
-  const [selectedMenu, setSelectedMenu] = useState<MenuKey>(menuMap[activeTab]);
-
+  // Loading disables "Carregar mais", which drops keyboard focus to the
+  // page. Put it back on the button, or on the panel once the last page
+  // has loaded and the button is gone.
   useEffect(() => {
-    setSelectedMenu(menuMap[activeTab]);
-  }, [activeTab]);
+    const finished = wasLoadingHistory.current && !loadingHistory;
+    wasLoadingHistory.current = loadingHistory;
+    const active = document.activeElement;
+    if (!finished || (active && active !== document.body)) return;
+    (loadMoreRef.current ?? contentRef.current)?.focus();
+  }, [loadingHistory]);
 
-  const sidebarItems: SidebarItem[] = [
-    { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
-    {
-      key: "scan_perfil",
-      label: "Scan de Perfil",
-      icon: BiScan,
-      tabValue: "Scan de Perfil",
-    },
-  ];
+  const [selectedMenu, setSelectedMenu] =
+    useState<Exclude<MenuKey, "logout">>("sumario");
 
-  const secondaryItems: SidebarItem[] = [
-    { key: "logout", label: "Logout", icon: FiLogOut },
-  ];
+  // A new selection moves focus to its content, so keyboard users do not
+  // tab through the rest of the menu. Focusing alone would leave a phone
+  // user at the end of a tall panel (the menu sits under it below lg), or
+  // with its top under the fixed top bar, so jump to the panel's start
+  // when that is out of view.
+  useEffect(() => {
+    if (previousMenu.current === selectedMenu) return;
+    previousMenu.current = selectedMenu;
+    contentRef.current?.focus({ preventScroll: true });
+
+    const section = sectionRef.current;
+    if (!section) return;
+    // The page scrolls smoothly, so the scroll that brought the menu entry
+    // into view can still be running. Left alone, it carries on past the new
+    // panel after this check. Stop it where it is first.
+    window.scrollTo({ top: window.scrollY, behavior: "instant" });
+    const top = section.getBoundingClientRect().top;
+    const topBar = parseFloat(getComputedStyle(section).scrollMarginTop) || 0;
+    if (top < topBar || top > window.innerHeight)
+      section.scrollIntoView({ block: "start", behavior: "instant" });
+  }, [selectedMenu]);
 
   const handleMenuClick = (item: SidebarItem) => {
-    setSelectedMenu(item.key);
-    if (item.tabValue) {
-      setActiveTab(item.tabValue);
+    if (item.key === "logout") {
+      handleLogout();
+      return;
     }
+    setSelectedMenu(item.key);
   };
 
   const renderButton = (item: SidebarItem) => {
@@ -138,27 +164,24 @@ const CompanyProfileSectionContainer: React.FC<
     return (
       <button
         key={item.key}
-        onClick={() =>
-          item.key === "logout" ? handleLogout() : handleMenuClick(item)
-        }
-        className="flex h-12 w-full items-center justify-between px-6 py-3 text-left text-white transition"
-        style={{
-          border: "1px solid #484848",
-          backgroundColor: "rgba(20,20,20,1)",
-          borderLeftWidth: isCurrent ? "4px" : "1px",
-          borderLeftColor: isCurrent ? "#ED8326" : "#484848",
-        }}
+        onClick={() => handleMenuClick(item)}
+        type="button"
+        aria-current={isCurrent ? "true" : undefined}
+        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
       >
         <div className="flex items-center gap-3">
-          <item.icon className="size-5" />
+          <item.icon className="size-5" aria-hidden />
           <span>{item.label}</span>
         </div>
-        <FiChevronRight className="size-4" />
+        <FiChevronRight className="size-4" aria-hidden />
       </button>
     );
   };
 
-  const horizontalPadding = "clamp(20px, 11.11vw, 168px)";
+  const selectedLabel =
+    sidebarItems.find((item) => item.key === selectedMenu)?.label ?? "Sumário";
+
+  const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 
   const pagination = (
     <div className="flex flex-col items-center gap-2 pb-6 text-white">
@@ -167,10 +190,12 @@ const CompanyProfileSectionContainer: React.FC<
       )}
       {hasMore && (
         <button
+          ref={loadMoreRef}
           type="button"
           onClick={loadMore}
           disabled={loadingHistory}
-          className="bg-primary px-4 py-2 disabled:opacity-60"
+          aria-busy={loadingHistory}
+          className="ui-action field-focus-target text-sm"
         >
           {loadingHistory ? "A carregar..." : "Carregar mais"}
         </button>
@@ -179,8 +204,8 @@ const CompanyProfileSectionContainer: React.FC<
   );
 
   const renderContent = () => {
-    switch (activeTab) {
-      case "Sumário":
+    switch (selectedMenu) {
+      case "sumario":
         return (
           <>
             <CompanyStatsSection
@@ -193,7 +218,7 @@ const CompanyProfileSectionContainer: React.FC<
             {pagination}
           </>
         );
-      case "Scan de Perfil":
+      case "scan_perfil":
         return (
           <>
             <CompanySavedProfilesSection history={items} />
@@ -206,19 +231,17 @@ const CompanyProfileSectionContainer: React.FC<
   };
 
   return (
-    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col">
+    <div className="artwork-clean artwork-readable flex min-h-screen w-full flex-col bg-background bg-cover bg-top">
       <div
-        className="flex flex-col items-center pt-12 pb-8"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
+        className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${horizontalPadding}`}
       >
-        <div className="relative mb-6 flex items-center justify-center">
-          <CompanyImage company={company} />
-        </div>
+        {company.avatar?.trim() && (
+          <div className="relative mb-6 flex w-48 max-w-full items-center justify-center lg:w-64">
+            <CompanyImage company={company} />
+          </div>
+        )}
         <h1
-          className="mb-2 text-center text-white"
+          className="mb-2 max-w-full text-center wrap-break-word text-white"
           style={{
             fontFamily: '"Coolvetica", sans-serif',
             fontWeight: 400,
@@ -227,39 +250,49 @@ const CompanyProfileSectionContainer: React.FC<
             letterSpacing: "0%",
           }}
         >
-          {company.name} - {employeeName}
+          {company.name}
         </h1>
+        <p
+          className="max-w-full text-center wrap-break-word text-gray-100"
+          style={{
+            fontFamily: '"Inter", sans-serif',
+            fontWeight: 400,
+            fontSize: "20px",
+            lineHeight: "100%",
+            letterSpacing: "0%",
+          }}
+        >
+          {employeeName}
+        </p>
       </div>
 
       <div
-        className="flex flex-1 flex-col gap-6 pb-20 md:flex-row md:gap-2"
-        style={{
-          paddingLeft: horizontalPadding,
-          paddingRight: horizontalPadding,
-        }}
+        className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
       >
-        <div className="w-full shrink-0 md:w-96">
-          <nav className="overflow-hidden bg-background shadow-xl">
-            <div className="divide-y divide-gray-800">
-              {sidebarItems.map((item) => renderButton(item))}
-            </div>
-          </nav>
-          <div style={{ height: "8px" }} />
-          <nav className="overflow-hidden bg-background shadow-xl">
-            <div className="divide-y divide-gray-800">
-              {secondaryItems.map((item) => renderButton(item))}
-            </div>
-          </nav>
-        </div>
-
+        {/* Below lg the selected content comes first, under a label naming
+            it, and its menu entry is hidden; the menu follows. */}
         <div
-          className="flex flex-1 flex-col bg-background p-8 shadow-xl"
-          style={{
-            marginLeft: "clamp(0px, 0.26vw, 0px)",
-            border: "1px solid #484848",
-          }}
+          ref={sectionRef}
+          className="min-w-0 flex-1 field-focus-target lg:order-2"
         >
-          {renderContent()}
+          <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
+            {selectedLabel}
+          </p>
+          <div
+            ref={contentRef}
+            tabIndex={-1}
+            role="region"
+            aria-label={selectedLabel}
+            className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
+          >
+            {renderContent()}
+          </div>
+        </div>
+        <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
+          <nav aria-label="Painel da empresa" className="flex flex-col gap-1">
+            {sidebarItems.map(renderButton)}
+            {secondaryItems.map(renderButton)}
+          </nav>
         </div>
       </div>
       {ConfirmDialog}
