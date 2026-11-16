@@ -8,6 +8,7 @@ import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
+import ScanCameraFrame from "@/components/ScanCameraFrame";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { getStudentPreviewToken } from "@/client/api/studentToken";
 import {
@@ -298,10 +299,8 @@ const CompanySavedProfilesSection = ({
   return (
     <section className="flex w-full flex-col items-start justify-start text-white">
       <div className="w-full">
-        <h2 className="mb-6 font-sans text-[25px] leading-none font-semibold text-white">
-          Scan
-        </h2>
-        <p className="mb-8 text-base text-ui-muted">
+        <h2 className="mb-4 text-2xl font-semibold text-white">Scan</h2>
+        <p className="mb-6 text-base text-white">
           Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
           forma a garantir o registo das interações e a participação nos
           giveaways promovidos pelo NEI.
@@ -309,14 +308,7 @@ const CompanySavedProfilesSection = ({
       </div>
 
       <div className="flex w-full flex-col items-center justify-center">
-        {/* `relative` contains the scanner's own "A ligar a tua câmara..."
-            overlay inside this box. The label names the unlabelled camera
-            video for screen readers. */}
-        <div
-          role="group"
-          aria-label="Câmara do leitor de QR Code"
-          className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full"
-        >
+        <ScanCameraFrame>
           {processing ? (
             <div
               className="inline-block size-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
@@ -327,16 +319,16 @@ const CompanySavedProfilesSection = ({
           ) : (
             <QRCodeScanner handleScan={handleScan} onMessage={showScanError} />
           )}
-        </div>
+        </ScanCameraFrame>
         {/* Always rendered, so screen readers announce each new message. */}
         <div
           ref={messageRef}
           role="alert"
-          className="w-full max-w-2xl field-focus-target"
+          className="w-full field-focus-target"
         >
           {message && <MessagePanel message={message} />}
         </div>
-        <p className="mt-3 max-w-2xl text-center text-sm text-ui-muted">
+        <p className="mt-3 text-center text-sm text-ui-muted">
           Sem câmara ou sem permissão? Introduza o código abaixo.
         </p>
       </div>
@@ -379,9 +371,7 @@ const CompanySavedProfilesSection = ({
 
       <div className="mt-12 w-full">
         <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
-          <h2 className="font-sans text-[25px] leading-none font-semibold">
-            Histórico de scans
-          </h2>
+          <h2 className="text-2xl font-semibold">Histórico de scans</h2>
           <div className="flex flex-col items-start gap-1 md:items-end">
             <button
               type="button"

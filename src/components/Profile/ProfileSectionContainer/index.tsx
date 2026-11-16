@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Area } from "react-easy-crop";
 import {
   FiAlertTriangle,
-  FiChevronRight,
   FiFileText,
   FiGrid,
   FiLogOut,
   FiMapPin,
   FiUser,
 } from "react-icons/fi";
+import { MdOutlineQrCodeScanner } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { ProfileData } from "@/types/ProfileData";
@@ -19,10 +19,13 @@ import { useLogout } from "@/hooks/useLogout";
 import useSession from "@/hooks/useSession";
 import Modal from "@/components/ui/Modal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import DashboardShell, {
+  DashboardHeader,
+  type DashboardNavItem,
+} from "@/components/DashboardShell";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import UserImage from "@/components/Profile/UserImage";
-import StaffAttendanceCard from "@/components/StaffAttendanceCard";
 import type { StudentActionDto } from "@/application/dto/actionDto";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import type { InterestDto } from "@/application/dto/interestDto";
@@ -34,8 +37,6 @@ import ActionsSection from "../ActionsSection";
 import ProfileSection from "../ProfileSection";
 import SettingsSection from "../SettingsSection";
 import StatsSection from "../StatsSection";
-
-import { IconType } from "react-icons";
 
 type TabValue = "Sumário" | "Perfil" | "Desafios" | "Definições";
 
@@ -69,8 +70,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   availableInterests,
   canRecordAttendance = false,
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const previousMenu = useRef<MenuKey>("sumario");
   const session = useSession();
   const { handleLogout, ConfirmDialog } = useLogout();
 
@@ -80,12 +79,6 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   useEffect(() => {
     setSelectedMenu(menuMap[activeTab]);
   }, [activeTab]);
-
-  useEffect(() => {
-    if (previousMenu.current === selectedMenu) return;
-    previousMenu.current = selectedMenu;
-    contentRef.current?.focus();
-  }, [selectedMenu]);
 
   const [profile, setProfile] = useState<ProfileData>({
     interests: interestIds,
@@ -141,6 +134,16 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       icon: FiUser,
       tabValue: "Perfil",
     },
+    ...(canRecordAttendance
+      ? ([
+          {
+            key: "presencas",
+            label: "Scan de Palestras",
+            icon: MdOutlineQrCodeScanner,
+            href: "/attendance/scan",
+          },
+        ] as SidebarItem[])
+      : []),
   ];
 
   const secondaryItems: SidebarItem[] = [
@@ -148,35 +151,15 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   ];
 
   const handleMenuClick = (item: SidebarItem) => {
+    if (item.key === "logout") {
+      handleLogout();
+      return;
+    }
     setSelectedMenu(item.key);
     if (item.tabValue) {
       setActiveTab(item.tabValue);
     }
   };
-
-  const renderButton = (item: SidebarItem) => {
-    const isCurrent = selectedMenu === item.key;
-
-    return (
-      <button
-        key={item.key}
-        onClick={() =>
-          item.key === "logout" ? handleLogout() : handleMenuClick(item)
-        }
-        type="button"
-        aria-current={isCurrent ? "true" : undefined}
-        className={`${isCurrent ? "hidden lg:flex" : "flex"} min-h-12 w-full items-center justify-between gap-2 rounded-full border bg-background px-6 py-2 text-left text-sm text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${isCurrent ? "border-primary" : "border-secondary hover:border-white/60"}`}
-      >
-        <div className="flex items-center gap-3">
-          <item.icon className="size-5" />
-          <span>{item.label}</span>
-        </div>
-        <FiChevronRight className="size-4" />
-      </button>
-    );
-  };
-
-  const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 
   const renderContent = () => {
     if (selectedMenu === "passe") return <PassMenuContent student={student} />;
@@ -203,14 +186,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
       case "Desafios":
         return (
           <>
-            <h2
-              className="text-3xl font-bold text-white"
-              style={{
-                marginBottom: "clamp(13px, 1.22vw, 13px)",
-              }}
-            >
-              Desafios
-            </h2>
+            <h2 className="mb-4 text-2xl font-semibold text-white">Desafios</h2>
             <ActionsSection actions={actions} />
           </>
         );
@@ -230,125 +206,59 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   };
 
   return (
-    <div
-      className={`flex min-h-screen w-full flex-col bg-background bg-cover bg-top ${isPersonalInfo ? "lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left" : "artwork-clean artwork-readable"}`}
-      style={{
-        backgroundImage: isPersonalInfo
-          ? "url(/assets/optimized/profile-2026.403096771b21.webp)"
-          : undefined,
-      }}
-    >
-      <div
-        className={`flex flex-col items-center pt-20 pb-6 lg:pb-16 ${horizontalPadding}`}
-      >
-        <div className="relative mb-6 flex items-center justify-center">
-          <UserImage
-            imageSrc={profile.avatar ?? student.avatar}
-            className="size-32 lg:size-52"
-            editable={isPersonalInfo}
-            onChange={(image) => {
-              setImageSrc(image);
-              setCroppedAreaPixels(null);
-              setIsAvatarModalVisible(true);
-            }}
-          />
-        </div>
-        <h1
-          className="mb-2 max-w-full text-center wrap-break-word text-white"
-          style={{
-            fontFamily: '"Coolvetica", sans-serif',
-            fontWeight: 400,
-            fontSize: "clamp(2rem, 5vw, 2.8125rem)",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
-          {student.name}
-        </h1>
-        <p
-          className="max-w-full text-center break-all text-gray-100"
-          style={{
-            fontFamily: '"Inter", sans-serif',
-            fontWeight: 400,
-            fontSize: "20px",
-            lineHeight: "100%",
-            letterSpacing: "0%",
-          }}
-        >
-          {student.user.email}
-        </p>
-        {student.cvPurgedAt && (
-          <div
-            className="mb-6 flex items-center gap-3 px-4 py-3 text-sm text-white"
-            style={{
-              border: "1px solid #ED8326",
-              backgroundColor: "rgba(237,131,38,0.1)",
-            }}
-          >
-            <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
-            <span>
-              O teu CV foi removido após o período de retenção. Envia um novo em
-              Definições.
-            </span>
-          </div>
-        )}
-        {canRecordAttendance && (
-          <div className="mt-6 flex w-full justify-center">
-            <StaffAttendanceCard />
-          </div>
-        )}
-        {/*
-        <p className="p-2 text-center text-white">
-          O teu perfil já foi gravado{" "}
-          <span className="font-bold text-[#ED8326]">{todayStats} vezes</span>{" "}
-          hoje.
-        </p>
-        <p className="flex gap-x-4 pt-6">
-          {profile.github && (
-            <a href={profile.github} target="_blank" rel="noopener noreferrer">
-              <Github className="size-10 md:size-8" />
-            </a>
-          )}
-          {profile.linkedin && (
-            <a
-              href={profile.linkedin}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Linkedin className="size-10 md:size-8" />
-            </a>
-          )}
-        </p>
-        */}
-      </div>
-
-      <div
-        className={`flex flex-1 flex-col gap-6 pb-20 lg:flex-row lg:gap-1.5 ${horizontalPadding}`}
-      >
-        <div className="min-w-0 flex-1 lg:order-2">
-          <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
-            {sidebarItems.find((item) => item.key === selectedMenu)?.label}
-          </p>
-          <div
-            ref={contentRef}
-            tabIndex={-1}
-            role="region"
-            aria-label={
-              sidebarItems.find((item) => item.key === selectedMenu)?.label ??
-              "Perfil"
+    <>
+      <DashboardShell
+        className={
+          isPersonalInfo
+            ? "bg-cover bg-top lg:bg-size-[max(100%,120rem)_100%] lg:bg-top-left"
+            : "artwork-clean artwork-readable bg-cover bg-top"
+        }
+        style={
+          isPersonalInfo
+            ? {
+                backgroundImage:
+                  "url(/assets/optimized/profile-2026.403096771b21.webp)",
+              }
+            : undefined
+        }
+        header={
+          <DashboardHeader
+            avatar={
+              <div className="relative mb-6 flex items-center justify-center">
+                <UserImage
+                  imageSrc={profile.avatar ?? student.avatar}
+                  className="size-32 lg:size-52"
+                  editable={isPersonalInfo}
+                  onChange={(image) => {
+                    setImageSrc(image);
+                    setCroppedAreaPixels(null);
+                    setIsAvatarModalVisible(true);
+                  }}
+                />
+              </div>
             }
-            className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
+            title={student.name}
+            subtitle={student.user.email}
           >
-            {renderContent()}
-          </div>
-        </div>
-        <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
-          <nav aria-label="Perfil" className="flex flex-col gap-1">
-            {sidebarItems.map(renderButton)}
-            {secondaryItems.map(renderButton)}
-          </nav>
-        </div>
-      </div>
+            {student.cvPurgedAt && (
+              <div className="mt-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
+                <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
+                <span>
+                  O teu CV foi removido após o período de retenção. Envia um
+                  novo em Definições.
+                </span>
+              </div>
+            )}
+          </DashboardHeader>
+        }
+        navLabel="Perfil"
+        items={sidebarItems}
+        secondaryItems={secondaryItems}
+        selectedKey={selectedMenu}
+        onSelect={(item) => handleMenuClick(item as SidebarItem)}
+      >
+        {renderContent()}
+      </DashboardShell>
       <Modal
         isVisible={isAvatarModalVisible}
         setIsVisible={setIsAvatarModalVisible}
@@ -368,17 +278,21 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         </PrimaryButton>
       </Modal>
       {ConfirmDialog}
-    </div>
+    </>
   );
 };
 
 type MenuKey =
-  "sumario" | "passe" | "desafios" | "info" | "definicoes" | "logout";
+  | "sumario"
+  | "passe"
+  | "desafios"
+  | "info"
+  | "definicoes"
+  | "presencas"
+  | "logout";
 
-interface SidebarItem {
+interface SidebarItem extends DashboardNavItem {
   key: MenuKey;
-  label: string;
-  icon: IconType;
   tabValue?: TabValue;
 }
 

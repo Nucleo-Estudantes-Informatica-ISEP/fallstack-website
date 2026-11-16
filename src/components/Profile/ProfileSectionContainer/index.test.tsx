@@ -224,14 +224,12 @@ const baseProps = {
   availableInterests: [],
 };
 
-test("shows the staff attendance card only when allowed", () => {
+test("offers Scan de Palestras only to staff allowed to record attendance", () => {
   const { rerender } = render(<ProfileSectionContainer {...baseProps} />);
-  expect(
-    screen.queryByRole("link", { name: "Abrir leitor de presenças" })
-  ).toBeNull();
+  expect(screen.queryByRole("link", { name: "Scan de Palestras" })).toBeNull();
 
   rerender(<ProfileSectionContainer {...baseProps} canRecordAttendance />);
   expect(
-    screen.getByRole("link", { name: "Abrir leitor de presenças" })
-  ).toBeTruthy();
+    screen.getByRole("link", { name: "Scan de Palestras" }).getAttribute("href")
+  ).toBe("/attendance/scan");
 });

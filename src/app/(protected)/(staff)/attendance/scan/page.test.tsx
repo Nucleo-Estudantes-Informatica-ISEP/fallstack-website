@@ -19,7 +19,7 @@ vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
 vi.mock("@/application/services/sessionCheckInService", () => ({
   getTodaysAttendanceSessions: vi.fn(),
 }));
-vi.mock("@/components/AttendanceScanner", () => ({ default: () => null }));
+vi.mock("@/components/AttendanceDashboard", () => ({ default: () => null }));
 
 const todaySessions = [
   {

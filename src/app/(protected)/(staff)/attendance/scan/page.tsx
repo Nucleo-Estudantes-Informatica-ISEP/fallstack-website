@@ -1,6 +1,6 @@
 import { forbidden, redirect } from "next/navigation";
 
-import AttendanceScanner from "@/components/AttendanceScanner";
+import AttendanceDashboard from "@/components/AttendanceDashboard";
 import { getTodaysAttendanceSessions } from "@/application/services/sessionCheckInService";
 import getServerSession from "@/application/services/sessionService";
 import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
@@ -25,10 +25,12 @@ export default async function AttendanceScanPage({
       : null;
 
   return (
-    <AttendanceScanner
+    <AttendanceDashboard
       sessions={sessions}
       staffName={session.student?.name ?? session.authName ?? session.email}
+      staffEmail={session.email}
       initialSessionId={initialSessionId}
+      profileHref={session.student ? `/student/${session.student.code}` : null}
     />
   );
 }

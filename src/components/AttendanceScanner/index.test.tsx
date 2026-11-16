@@ -60,12 +60,7 @@ function renderScanner(
   props: Partial<Parameters<typeof AttendanceScanner>[0]> = {}
 ) {
   return render(
-    <AttendanceScanner
-      sessions={sessions}
-      staffName="Ana"
-      initialSessionId={null}
-      {...props}
-    />
+    <AttendanceScanner sessions={sessions} initialSessionId={null} {...props} />
   );
 }
 
@@ -254,7 +249,9 @@ test("normalises a lowercase typed code", async () => {
 test("switching session updates the URL", async () => {
   renderScanner();
   await flush();
-  fireEvent.click(screen.getByRole("button", { name: "Trocar sessão" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Seleciona uma palestra" })
+  );
   fireEvent.click(screen.getByRole("button", { name: /Workshop Git/ }));
   await flush();
   expect(mocks.replace).toHaveBeenCalledWith("/attendance/scan?session=ws");
@@ -270,7 +267,9 @@ function deferred<T>() {
 }
 
 const switchTo = (title: RegExp) => {
-  fireEvent.click(screen.getByRole("button", { name: "Trocar sessão" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Seleciona uma palestra" })
+  );
   fireEvent.click(screen.getByRole("button", { name: title }));
 };
 
