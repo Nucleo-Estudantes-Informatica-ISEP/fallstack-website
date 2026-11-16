@@ -13,6 +13,7 @@ import {
   heavyUserPlan,
   isNearLimit,
   roleTable,
+  workloadThresholds,
 } from "./heavyUserPlan.js";
 
 import { Counter, Trend } from "k6/metrics";
@@ -29,6 +30,8 @@ const roles = roleTable(plan);
 const uploadsAccepted = new Counter("cv_upload_accepted");
 const uploadsRateLimited = new Counter("cv_upload_rate_limited_429");
 const nearLimitUploads = new Counter("cv_upload_near_limit_accepted");
+// Only downloads that passed every check (tag: group).
+const downloadsSucceeded = new Counter("cv_download_succeeded");
 const downloadsUnavailable = new Counter("cv_download_unavailable_404");
 const checkInsCreated = new Counter("checkin_created");
 const checkInsDuplicate = new Counter("checkin_duplicate_409");
@@ -62,6 +65,8 @@ export const options = {
     "http_req_duration{name:qr_pass}": lightEndpointP95,
     "http_req_duration{name:cv_attach}": lightEndpointP95,
     "http_req_duration{name:checkin}": lightEndpointP95,
+    // Uploads and downloads of both CV sizes must each happen.
+    ...workloadThresholds(plan),
   },
 };
 
@@ -82,7 +87,9 @@ function paceFrom(startedAt, intervalSeconds) {
   sleep(Math.max(0, intervalSeconds - (Date.now() - startedAt) / 1000));
 }
 
-function downloadCv(cookie, code, group) {
+// Counts a success only when every check passes, including the byte count
+// when the caller knows what it uploaded (`expected` = {bytes, size}).
+function downloadCv(cookie, code, group, expected) {
   const lookup = http.get(
     `${baseUrl}/api/students/${encodeURIComponent(code)}/cv`,
     {
@@ -93,23 +100,32 @@ function downloadCv(cookie, code, group) {
   );
   if (lookup.status === 404) {
     downloadsUnavailable.add(1, { group });
-    return null;
+    return false;
   }
   const url = json(lookup, "url");
   if (!check(lookup, { "CV lookup returns a file URL": () => Boolean(url) }))
-    return null;
+    return false;
   const file = http.get(`${baseUrl}${url}`, {
     ...cookieHeaders(cookie),
     responseType: "binary",
     tags: { name: "cv_download", group },
   });
   downloadDuration.add(file.timings.duration, { group });
-  check(file, {
+  const checks = {
     "CV download returns a PDF": (res) =>
       res.status === 200 &&
       (res.headers["Content-Type"] || "").includes("application/pdf"),
-  });
-  return file;
+  };
+  if (expected)
+    checks["student downloads the CV just uploaded"] = (res) =>
+      Boolean(res.body) && res.body.byteLength === expected.bytes;
+  const succeeded = check(file, checks);
+  if (succeeded)
+    downloadsSucceeded.add(
+      1,
+      expected ? { group, size: expected.size } : { group }
+    );
+  return succeeded;
 }
 
 export function runDashboard(index) {
@@ -218,14 +234,8 @@ export function runQr(index) {
       const attached = check(attach, {
         "CV attaches to the student": (res) => res.status === 200,
       });
-      if (attached) {
-        const file = downloadCv(cookie, code, "qr");
-        if (file)
-          check(file, {
-            "student downloads the CV just uploaded": (res) =>
-              res.body && res.body.byteLength === size,
-          });
-      }
+      if (attached)
+        downloadCv(cookie, code, "qr", { bytes: size, size: sizeClass });
     }
   }
   paceFrom(startedAt, plan.qr.uploadIntervalSeconds);

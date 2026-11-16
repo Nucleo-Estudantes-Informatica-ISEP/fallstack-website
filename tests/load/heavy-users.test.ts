@@ -12,6 +12,7 @@ import {
   heavyUserPlan,
   isNearLimit,
   roleTable,
+  workloadThresholds,
 } from "./heavyUserPlan";
 
 const accounts = (prefix: string, count: number) =>
@@ -212,6 +213,7 @@ function loadScript(
       heavyUserPlan,
       isNearLimit,
       roleTable,
+      workloadThresholds,
       exec: { vu },
       sleep: () => {},
       check: (
@@ -226,10 +228,20 @@ function loadScript(
         }
         return all;
       },
+      // Mirrors k6 sub-metrics: a sample also counts under name{tag:value}
+      // for each tag, and under all its tags together (name{a:x,b:y}).
       Counter: class {
         constructor(private name: string) {}
-        add(value: number) {
-          counters[this.name] = (counters[this.name] ?? 0) + value;
+        add(value: number, tags: Record<string, string> = {}) {
+          const pairs = Object.entries(tags).map(
+            ([tag, tagValue]) => `${tag}:${tagValue}`
+          );
+          const keys = new Set([
+            this.name,
+            ...pairs.map((pair) => `${this.name}{${pair}}`),
+            ...(pairs.length > 1 ? [`${this.name}{${pairs.join(",")}}`] : []),
+          ]);
+          for (const key of keys) counters[key] = (counters[key] ?? 0) + value;
         }
       },
       Trend: class {
@@ -532,5 +544,199 @@ describe("heavy-users k6 script", () => {
     expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
       true
     );
+  });
+});
+
+// Evaluates count thresholds as k6 2.3.0 does: a metric that never received a
+// sample counts as 0, so "count>0" fails when nothing succeeded (checked
+// against the real k6 binary).
+function failedCountThresholds(
+  thresholds: Record<string, string[]>,
+  counters: Record<string, number>
+) {
+  return Object.entries(thresholds)
+    .filter(([metric, rules]) =>
+      rules.some((rule) => {
+        const match = /^count>(\d+)$/.exec(rule);
+        return match !== null && !((counters[metric] ?? 0) > Number(match[1]));
+      })
+    )
+    .map(([metric]) => metric)
+    .sort();
+}
+
+// A staging stand-in: uploads are stored per student and downloads return
+// what was attached; saved students who were not uploaded in the run already
+// have a 4 KiB CV.
+function stagingRoute({
+  upload = 201,
+  nearLimitUpload = upload,
+  lookup = 200,
+}: { upload?: number; nearLimitUpload?: number; lookup?: number } = {}) {
+  const uploadedBySession = new Map<string, number>();
+  const cvBytes = new Map<string, number>();
+  return (request: Request) => {
+    const cookie = request.params.headers?.Cookie ?? "";
+    const cv = /\/api\/students\/([^/]+)\/cv(\/file)?$/.exec(request.url);
+    if (request.url.endsWith("/dashboard"))
+      return respond(200, "", { "Content-Type": "text/html" });
+    if (request.url.endsWith("/api/companies/history"))
+      return respond(200, [
+        { student: { code: "1250001" } },
+        { student: { code: "SAVED1" } },
+      ]);
+    if (request.url.endsWith("/api/qrcode")) return respond(200, { data: "t" });
+    if (request.url.endsWith("/api/storage/cv")) {
+      const bytes = (request.body as { file: { data: string } }).file.data
+        .length;
+      const status = bytes === CV_MAX_BYTES ? nearLimitUpload : upload;
+      if (status !== 201) return respond(status, { error: "Too many" });
+      uploadedBySession.set(cookie, bytes);
+      return respond(201, { id: `file-${cookie}` });
+    }
+    if (cv && request.method === "POST") {
+      cvBytes.set(cv[1], uploadedBySession.get(cookie) ?? 0);
+      return respond(200, { ok: true });
+    }
+    if (cv && !cv[2])
+      return lookup === 200
+        ? respond(200, { url: `/api/students/${cv[1]}/cv/file` })
+        : respond(lookup, { error: "CV not found" });
+    if (cv)
+      return respond(
+        200,
+        { byteLength: cvBytes.get(cv[1]) ?? 4096 },
+        pdfHeaders
+      );
+    if (request.url.endsWith("/check-ins")) return respond(201, { id: "c" });
+    throw new Error(`Unexpected ${request.method} ${request.url}`);
+  };
+}
+
+// Runs every VU for five iterations, enough for each student to reach the
+// 10 MiB slot of the size plan, then evaluates the workload thresholds.
+function simulateRun(
+  route: (request: Request) => Response,
+  overrides: Record<string, string> = {}
+) {
+  const script = loadScript(route, overrides);
+  script.roles.forEach((_: unknown, slot: number) => {
+    script.vu.idInTest = slot + 1;
+    for (let iteration = 0; iteration < 5; iteration++) {
+      script.vu.iterationInScenario = iteration;
+      script.runHeavyUser();
+    }
+  });
+  return {
+    ...script,
+    failed: failedCountThresholds(script.options.thresholds, script.counters),
+    allChecksPassed: script.checks.every((c: { passed: boolean }) => c.passed),
+  };
+}
+
+const UPLOAD_REAL = "cv_upload_accepted{size:real}";
+const UPLOAD_NEAR_LIMIT = "cv_upload_accepted{size:near_limit}";
+const DOWNLOAD_REAL = "cv_download_succeeded{group:qr,size:real}";
+const DOWNLOAD_NEAR_LIMIT = "cv_download_succeeded{group:qr,size:near_limit}";
+const DOWNLOAD_DASHBOARD = "cv_download_succeeded{group:dashboard}";
+// Both CV sizes, uploaded and downloaded back, sorted as the evaluator sorts.
+const STUDENT_WORKLOAD = [
+  DOWNLOAD_NEAR_LIMIT,
+  DOWNLOAD_REAL,
+  UPLOAD_NEAR_LIMIT,
+  UPLOAD_REAL,
+];
+
+describe("required CV workload", () => {
+  test("requires both CV sizes uploaded and downloaded, plus dashboard downloads", () => {
+    const expected = Object.fromEntries(
+      [...STUDENT_WORKLOAD, DOWNLOAD_DASHBOARD].map((metric) => [
+        metric,
+        ["count>0"],
+      ])
+    );
+    expect(workloadThresholds(heavyUserPlan(env()))).toEqual(expected);
+    expect(loadScript(() => respond(200)).options.thresholds).toMatchObject(
+      expected
+    );
+  });
+
+  test.each([
+    ["QR group disabled", { QR_USERS: "0" }, [DOWNLOAD_DASHBOARD]],
+    ["dashboard group disabled", { DASHBOARD_USERS: "0" }, STUDENT_WORKLOAD],
+    [
+      "dashboard downloads switched off",
+      { DASHBOARD_DOWNLOADS_PER_VISIT: "0" },
+      STUDENT_WORKLOAD,
+    ],
+    ["check-in only", { DASHBOARD_USERS: "0", QR_USERS: "0" }, []],
+  ])("%s requires only the enabled workload", (_, overrides, metrics) => {
+    expect(
+      Object.keys(workloadThresholds(heavyUserPlan(env(overrides)))).sort()
+    ).toEqual([...metrics].sort());
+  });
+
+  test("a run with real uploads and downloads meets every workload threshold", () => {
+    const run = simulateRun(stagingRoute());
+    expect(run.failed).toEqual([]);
+    expect(run.allChecksPassed).toBe(true);
+    // 3 students x 5 iterations: each size class is uploaded and read back.
+    expect(run.counters[UPLOAD_NEAR_LIMIT]).toBe(3);
+    expect(run.counters[UPLOAD_REAL]).toBe(12);
+    expect(run.counters[DOWNLOAD_NEAR_LIMIT]).toBe(3);
+    expect(run.counters[DOWNLOAD_REAL]).toBe(12);
+  });
+
+  test("a run where every upload gets 429 fails despite passing checks", () => {
+    const run = simulateRun(stagingRoute({ upload: 429 }));
+    // Before this guard, nothing else failed: 429 is an expected status.
+    expect(run.allChecksPassed).toBe(true);
+    expect(run.counters.cv_upload_rate_limited_429).toBe(15);
+    expect(run.failed).toEqual(STUDENT_WORKLOAD);
+  });
+
+  test("a run where every CV lookup gets 404 fails despite passing checks", () => {
+    const run = simulateRun(stagingRoute({ lookup: 404 }));
+    expect(run.allChecksPassed).toBe(true);
+    expect(run.counters.cv_download_unavailable_404).toBeGreaterThan(0);
+    expect(run.failed).toEqual([
+      DOWNLOAD_DASHBOARD,
+      DOWNLOAD_NEAR_LIMIT,
+      DOWNLOAD_REAL,
+    ]);
+  });
+
+  test("a run where every upload gets 429 and every lookup gets 404 fails", () => {
+    const run = simulateRun(stagingRoute({ upload: 429, lookup: 404 }));
+    expect(run.allChecksPassed).toBe(true);
+    expect(run.failed).toEqual([DOWNLOAD_DASHBOARD, ...STUDENT_WORKLOAD]);
+  });
+
+  test("a run where only the 10 MiB uploads get 429 fails on that size", () => {
+    const run = simulateRun(stagingRoute({ nearLimitUpload: 429 }));
+    expect(run.allChecksPassed).toBe(true);
+    expect(run.counters[UPLOAD_REAL]).toBe(12);
+    expect(run.failed).toEqual([DOWNLOAD_NEAR_LIMIT, UPLOAD_NEAR_LIMIT]);
+  });
+
+  test("a download of the wrong size is not counted as a success", () => {
+    const route = stagingRoute();
+    const run = simulateRun((request) =>
+      request.url.endsWith("/cv/file") && request.url.includes("12500")
+        ? respond(200, { byteLength: 1 }, pdfHeaders)
+        : route(request)
+    );
+    expect(run.counters[DOWNLOAD_REAL]).toBeUndefined();
+    expect(run.counters[DOWNLOAD_NEAR_LIMIT]).toBeUndefined();
+    expect(run.failed).toEqual([DOWNLOAD_NEAR_LIMIT, DOWNLOAD_REAL]);
+  });
+
+  test("a check-in-only run needs no CV workload", () => {
+    const run = simulateRun(stagingRoute({ upload: 429, lookup: 404 }), {
+      DASHBOARD_USERS: "0",
+      QR_USERS: "0",
+    });
+    expect(run.failed).toEqual([]);
+    expect(run.counters.checkin_created).toBe(5);
   });
 });

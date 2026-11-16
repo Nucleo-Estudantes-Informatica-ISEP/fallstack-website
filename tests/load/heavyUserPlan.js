@@ -237,3 +237,24 @@ export function checkInCodeFor(codes, vuIndex, iteration, staffCount) {
   );
   return codes[(vuIndex * stride + iteration) % codes.length];
 }
+
+/**
+ * Thresholds that fail the run unless the CV workload really happened. Expected
+ * 429s and 404s are not errors, so without these a run where every upload is
+ * rate limited, or every CV lookup finds nothing, could still pass. Each CV
+ * size class (real and near-limit) must be both uploaded and downloaded back.
+ * k6 fails a count threshold on a metric with no samples, so zero successes
+ * fail. Groups that are disabled, or dashboards with downloads switched off,
+ * add no threshold.
+ */
+export function workloadThresholds(plan) {
+  const thresholds = {};
+  if (plan.qr.users > 0)
+    for (const size of ["real", "near_limit"]) {
+      thresholds[`cv_upload_accepted{size:${size}}`] = ["count>0"];
+      thresholds[`cv_download_succeeded{group:qr,size:${size}}`] = ["count>0"];
+    }
+  if (plan.dashboard.users > 0 && plan.dashboard.downloadsPerVisit > 0)
+    thresholds["cv_download_succeeded{group:dashboard}"] = ["count>0"];
+  return thresholds;
+}
