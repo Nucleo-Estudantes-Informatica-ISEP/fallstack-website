@@ -1,5 +1,9 @@
 # Offseason Mode — Fallstack
 
+Para entrega estática independente e PREPARATION, consultar o
+[runbook de deployment](operations/deployment-modes.md). Este documento descreve
+apenas a política de inscrições da aplicação em execução.
+
 ## Objetivo
 
 O Offseason Mode permite apresentar uma página de encerramento do Fallstack e impedir novas inscrições após o evento, mantendo os dados e os perfis dos participantes existentes.

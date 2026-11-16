@@ -1,0 +1,17 @@
+{
+  "host": "NEI VPS",
+  "start": "2026-11-16T16:53:25Z",
+  "end": "2026-11-16T16:56:35Z",
+  "samples": 7,
+  "baseline_image": "wyczj05hmzzp9gcih9vzf8th_web:9371efdd8bec4e6ee59e49ecaf3afd3ea5442ae4",
+  "baseline": "isolated Next seasonal app, dummy credentials, no shared backend access",
+  "static_image": "nginxinc/nginx-unprivileged:1.28-alpine",
+  "next_mib": [156.7, 156.1, 167.4, 157.9, 159.6, 158, 158.3],
+  "static_mib": [6.246, 6.309, 6.309, 6.309, 6.309, 6.309, 6.309],
+  "next_cpu_percent": [0, 0, 6.06, 7.08, 0.01, 0.06, 0.08],
+  "static_cpu_percent": [0, 0, 0, 0, 0, 0, 0],
+  "median_next_mib": 158,
+  "median_static_mib": 6.309,
+  "median_reduction_mib": 151.691,
+  "limitation": "Docker cgroup memory, small probe workload, not host-wide or production-load savings; private certificate probes occurred during sampling."
+}

@@ -53,6 +53,10 @@ for procedure and rationale.
   [HTTP conventions](docs/architecture.md#http-conventions).
 - Server secrets use `serverEnv`; `NEXT_PUBLIC_*` values use `clientEnv`.
   Keep `.env.example` and both schemas in sync.
+  Exception: `DEPLOYMENT_MODE` and `EDITION_STARTS_AT` are build-only inputs
+  validated by `src/config/deploymentMode.ts` for `scripts/build-deployment.tsx`.
+  They deliberately bypass runtime env loaders so static builds need no backend
+  credentials; do not add them to browser or server runtime schemas.
 - Reusable UI primitives live in `src/components/ui/`. Other components use
   `src/components/<PascalCaseName>/index.tsx`.
 - `src/edition/` currently holds action names and seed actions plus branding.
