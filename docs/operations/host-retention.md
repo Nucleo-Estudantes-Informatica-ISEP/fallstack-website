@@ -4,7 +4,9 @@ Install `deployment/maintenance/maintain.py` under
 `/opt/fallstack-maintenance/`, the service/timer under `/etc/systemd/system/`,
 and a root-owned mode-0600 configuration at `/etc/fallstack/maintenance.json`.
 Use the example JSON, replacing its repository list from inspected live image
-references. Keep internal resource names in that restricted inventory, not Git.
+references, including the same application projects' migrator and cleanup-worker
+repositories. Restrict expansion to inspected project/service labels; a web-only
+allowlist misses large worker images. Keep internal resource names in that restricted inventory, not Git.
 
 Run without `--apply` first. Review selected counts against the exact private
 inventory, then run with `--apply` and enable the timer. It runs daily at 04:20
@@ -32,3 +34,9 @@ PostgreSQL data and unidentified contents remain protected even when unattached.
 The public-safe result records only counts and disk totals. Repository names,
 image IDs, container/volume identifiers and infrastructure paths belong in the
 restricted inventory. Never include environment dumps in reports.
+
+For a separately configured, inactive BuildKit builder, inspect its last activity
+and cache records first. Bootstrap only that existing builder if its daemon is
+absent, use its native `buildx prune --builder …` API with a bounded byte budget,
+then stop it again. Preserve its state volume. Do not delete BuildKit databases
+or snapshot directories by hand, and do not prune a builder with active jobs.

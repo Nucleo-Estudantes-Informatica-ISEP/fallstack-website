@@ -1,5 +1,9 @@
 # Authenticated heavy-user staging run — 16 November 2026
 
+> Historical report: status and requirements below describe that run. The later
+> [multipart continuation](heavy-users-staging-multipart-2026-11-16.md) records the
+> user-authorized temporary staging dates, subsequent validation, cleanup and PR status.
+
 Issue: #604. The authenticated 200-user diagnostic run completed and **failed**
 its performance/error limits. **This does not complete #604:** the user requires
 a run on the existing staging deployment with its normal build, configuration

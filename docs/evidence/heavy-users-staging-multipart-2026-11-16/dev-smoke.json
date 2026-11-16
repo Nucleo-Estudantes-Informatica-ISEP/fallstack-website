@@ -1,0 +1,17 @@
+[
+  {
+    "route": "/api/storage/cv/multipart",
+    "status": 401,
+    "jsonError": true
+  },
+  {
+    "route": "/api/storage/cv/multipart/parts",
+    "status": 401,
+    "jsonError": true
+  },
+  {
+    "route": "/api/storage/cv/finalize",
+    "status": 401,
+    "jsonError": true
+  }
+]

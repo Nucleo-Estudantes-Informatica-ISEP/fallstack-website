@@ -1,5 +1,9 @@
 # Staging transfer diagnosis and controlled reruns — 16 November 2026
 
+> Historical report: status and requirements below describe that run. The later
+> [multipart continuation](heavy-users-staging-multipart-2026-11-16.md) records the
+> user-authorized temporary staging dates, subsequent validation, cleanup and PR status.
+
 Issue #604; PR #610. This continues [the earlier tuned report](heavy-users-staging-tuned-2026-11-16.md).
 **The original capacity gates remain failed.** No production load ran. All scenario runs used the existing three staging containers and their real PostgreSQL, Redis and MinIO dependencies. Storage stayed private and Cloudflare-proxied. No timeout, assertion, threshold, rate-limit policy or connection-pool ceiling was relaxed.
 

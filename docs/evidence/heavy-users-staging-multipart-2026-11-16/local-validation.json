@@ -1,0 +1,49 @@
+{
+  "sourceArchiveRevision": "11c359a2",
+  "equivalentMultipartRuntimeCommit": "740f420f",
+  "finalMergedLocalChecksRevision": "f1ac8336",
+  "localTests": {
+    "passed": 1773,
+    "skipped": 4,
+    "filesPassed": 257,
+    "filesSkipped": 1
+  },
+  "initialFullRun": {
+    "passed": 1758,
+    "failed": 7,
+    "skipped": 4,
+    "cause": "test mock omitted new multipart storage methods"
+  },
+  "affectedCleanupRerun": {
+    "passed": 26
+  },
+  "securityFixtureRerun": {
+    "passed": 17
+  },
+  "pythonMaintenanceTests": {
+    "passed": 3
+  },
+  "realMinioDirectCvTests": {
+    "passed": 17
+  },
+  "josimarScenarioTests": {
+    "passed": 64,
+    "execution": "included in successful full suite; source unchanged"
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 10
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "prismaValidation": "passed",
+  "prismaMigration": "isolated local database and existing staging migrator owner connection",
+  "devSmoke": "three protected CV APIs return JSON 401",
+  "security": {
+    "prRange": "17 commits, zero findings after correcting a harmless test literal in only unpublished task commits",
+    "historicalFullHistory": "four previous findings remain; no suppression or unrelated history rewrite"
+  },
+  "workloadSha256": "b3a5c1efe638dfa1cc90c7c2796a16cf809b974d45d94c6c7575f83874d265a1",
+  "generator": "same Mac/Wi-Fi, official k6 2.4.0; original scenario wrapped only for sanitized 5xx metadata",
+  "productionRolloutPrerequisite": "scoped multipart identity permissions and narrow PUT/CORS route before production promotion; no production load or application release"
+}
