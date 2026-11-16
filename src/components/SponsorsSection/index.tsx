@@ -8,6 +8,8 @@ import type { SponsorDto } from "@/application/dto/sponsorDto";
 const SponsorsSection: FunctionComponent<{
   sponsors: readonly SponsorDto[];
 }> = ({ sponsors }) => {
+  if (sponsors.length === 0) return null;
+
   return (
     <section className="flex flex-col items-center gap-y-10 border-b border-b-secondary bg-background text-center">
       <SponsorsContainer

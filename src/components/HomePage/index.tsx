@@ -1,7 +1,7 @@
 "use client";
 
 import { FunctionComponent, useRef } from "react";
-import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-white.png";
+import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import Content, { type HomepageSections } from "@/components/Content";
 import Footer from "@/components/Footer";
