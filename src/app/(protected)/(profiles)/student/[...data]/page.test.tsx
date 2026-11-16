@@ -200,6 +200,66 @@ test("no session at all is blocked", async () => {
   assert.equal(isBlocked(result), true);
 });
 
+// ProfileSectionContainer is the only branch element carrying globalStats.
+function findOwnProfileProps(node: unknown): Record<string, unknown> | null {
+  if (!node || typeof node !== "object") return null;
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findOwnProfileProps(child);
+      if (found) return found;
+    }
+    return null;
+  }
+  const props = (node as ReactElement).props as
+    Record<string, unknown> | undefined;
+  if (!props) return null;
+  if ("globalStats" in props) return props;
+  return findOwnProfileProps(props.children);
+}
+
+test.each([
+  ["an NEI member", { neiMember: true, adminRole: null }, true],
+  ["an admin", { neiMember: false, adminRole: "ADMIN" }, true],
+  ["a plain student", { neiMember: false, adminRole: null }, false],
+])(
+  "own profile of %s gets the expected canRecordAttendance",
+  async (_label, roles, expected) => {
+    const getServerSession = (
+      await import("@/application/services/sessionService")
+    ).default;
+    vi.mocked(getServerSession).mockResolvedValue({
+      id: "u1",
+      role: "STUDENT",
+      student: { id: "s1", code: "S123", name: "Ana" },
+      employee: null,
+      ...roles,
+    } as never);
+
+    const props = findOwnProfileProps(await renderFor("S123"));
+    assert.ok(props);
+    assert.equal(props.canRecordAttendance, expected);
+  }
+);
+
+test("an employee view never renders the staff card container", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  const { isSaved } =
+    await import("@/application/services/savedStudentService");
+  vi.mocked(isSaved).mockResolvedValue(true);
+  vi.mocked(getServerSession).mockResolvedValue({
+    id: "u2",
+    role: "EMPLOYEE",
+    adminRole: null,
+    neiMember: true,
+    student: null,
+    employee: { company: { id: "c1" } },
+  } as never);
+
+  assert.equal(findOwnProfileProps(await renderFor("S123")), null);
+});
+
 // ---------------------------------------------------------------------------
 // Which view each employee/admin case renders (pinned before the #516
 // restyle, which must not change any of these outcomes).

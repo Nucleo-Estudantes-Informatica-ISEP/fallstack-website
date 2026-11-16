@@ -106,6 +106,8 @@ test("public DTO mappers omit private database fields", () => {
     role: "STUDENT",
     adminRole: "ADMIN",
     student: { code: "ABC123", name: "Student" },
+    // Public boolean for the viewer's own UI (scanner entry point).
+    neiMember: false,
   });
   assert.deepEqual(
     toInterestDto({

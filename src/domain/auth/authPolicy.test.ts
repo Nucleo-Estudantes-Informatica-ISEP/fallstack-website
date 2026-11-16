@@ -3,6 +3,7 @@ import { test } from "vitest";
 
 import {
   AuthPolicySession,
+  canAccessAttendanceScanner,
   passesAuthPolicy,
   resolveAdminRole,
   resolveStoredAdminRole,
@@ -193,4 +194,26 @@ test("missing admin role does not grant staff or admin access", () => {
   } as unknown as Parameters<typeof passesAuthPolicy>[1];
   assert.equal(passesAuthPolicy("staff", session), false);
   assert.equal(passesAuthPolicy("admin", session), false);
+});
+
+test.each([
+  [{ adminRole: "ADMIN", neiMember: false }, true],
+  [{ adminRole: "SUPER_ADMIN" }, true],
+  [{ adminRole: null, neiMember: true }, true],
+  [{ adminRole: null, neiMember: false }, false],
+  [{ adminRole: null }, false],
+  [null, false],
+] as const)("canAccessAttendanceScanner(%o) is %s", (session, expected) => {
+  assert.equal(canAccessAttendanceScanner(session as never), expected);
+});
+
+test("scanner access ignores the five-minute attendance bound", () => {
+  assert.equal(
+    canAccessAttendanceScanner({
+      adminRole: null,
+      neiMember: true,
+      attendanceExpiresAt: 0,
+    } as never),
+    true
+  );
 });

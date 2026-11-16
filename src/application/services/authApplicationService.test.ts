@@ -88,6 +88,54 @@ test("provisions a verified ZITADEL student and sends an incomplete profile to s
   });
 });
 
+test("sends an NEI member without a student profile to the scanner", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: null,
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/attendance/scan");
+});
+
+test("an NEI member with a student profile still lands on the profile", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: { code: "AB12" },
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/",
+    })
+  ).resolves.toBe("/student/AB12");
+});
+
+test("a safe next still wins for an NEI member", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "STUDENT",
+    student: null,
+    employee: null,
+  } as never);
+
+  await expect(
+    completeZitadelSignIn({
+      identity: { ...identity, isNeiMember: true },
+      fallback: "/attendance/scan?session=s1",
+    })
+  ).resolves.toBe("/attendance/scan?session=s1");
+});
+
 test("routes a returning employee to the dashboard", async () => {
   vi.mocked(provisionZitadelUser).mockResolvedValue({
     id: "app-user-1",
