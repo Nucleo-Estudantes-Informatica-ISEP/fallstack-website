@@ -65,11 +65,9 @@ export async function setAuthUserBanned(_userId: string, _banned: boolean) {
 // AuthNEI; the row is linked by verified email on the person's first login.
 export async function createSupabaseAuthUserAsAdmin(
   _email: string,
-  _password: string,
   _displayName?: string
 ) {
   void _email;
-  void _password;
   void _displayName;
   return { id: randomUUID() };
 }
