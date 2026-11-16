@@ -603,7 +603,7 @@ test.skipIf(!enabled)(
     const postA = await ticket();
     const postB = await ticket();
 
-    const sharedTime = new Date("2026-11-15T12:00:00.000Z");
+    const sharedTime = new Date();
     await prisma.cvUpload.update({
       where: { id: postA.uploadId },
       data: { createdAt: sharedTime },
@@ -640,7 +640,7 @@ test.skipIf(!enabled)(
     const postA = await ticket();
     const postB = await ticket();
 
-    const sharedTime = new Date("2026-11-15T12:00:00.000Z");
+    const sharedTime = new Date();
     await prisma.cvUpload.update({
       where: { id: postA.uploadId },
       data: { createdAt: sharedTime },
