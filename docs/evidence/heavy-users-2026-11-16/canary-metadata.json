@@ -1,0 +1,131 @@
+{
+  "start": "2026-11-16T11:07:08.201511+00:00",
+  "k6": "k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)",
+  "source": "942870609b4c2db0ad77cf974843efe3b9a7bed5",
+  "testDate": "2026-11-16",
+  "url": "https://origin-d67e49.example.invalid",
+  "configuration": {
+    "DASHBOARD_USERS": "1",
+    "QR_USERS": "1",
+    "CHECKIN_USERS": "1",
+    "RAMP_SECONDS": "3",
+    "HOLD_SECONDS": "15",
+    "UPLOAD_INTERVAL_SECONDS": "15",
+    "DASHBOARD_INTERVAL_SECONDS": "10",
+    "CHECKIN_INTERVAL_SECONDS": "3",
+    "DASHBOARD_DOWNLOADS_PER_VISIT": "2",
+    "CONFIRM_NON_PRODUCTION": "yes",
+    "E2E_ALLOW_UPLOADS": "yes",
+    "E2E_BASE_URL": "https://origin-d67e49.example.invalid",
+    "STAGING_BASE_URL": "https://origin-d67e49.example.invalid",
+    "CV_STORAGE_ORIGIN": "https://origin-111aa7.example.invalid",
+    "CHECKIN_SESSION_ID": "79ce2d7d-0db8-4659-8895-22fb577d7974",
+    "ACTION_ID": "b8031b5d-64c6-4171-a9f4-c43d45375804"
+  },
+  "generator": "same VPS as application; linux/amd64; public HTTPS/CDN path",
+  "before": [
+    {
+      "name": "/service-a2dfefT094430",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    },
+    {
+      "name": "/service-c0c52d",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    },
+    {
+      "name": "/service-262082",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    }
+  ],
+  "exitCode": 0,
+  "end": "2026-11-16T11:08:04.841868+00:00",
+  "after": [
+    {
+      "name": "/service-a2dfefT094430",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    },
+    {
+      "name": "/service-c0c52d",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    },
+    {
+      "name": "/service-262082",
+      "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
+      "restartCount": 0,
+      "oomKilled": false,
+      "health": "healthy",
+      "memoryBytes": 0,
+      "nanoCpus": 0,
+      "cpuQuota": 0,
+      "cpuPeriod": 0
+    }
+  ],
+  "testDateSourceSha256": "1dbb9d4649ba4da008588b75df468d22e201318a77495b9cdb283660ba76aad9",
+  "scenarioSha256": "b3a5c1efe638dfa1cc90c7c2796a16cf809b974d45d94c6c7575f83874d265a1",
+  "generatorLogicalCpus": 6,
+  "resources": {
+    "sampleCount": 8,
+    "nominalSampleIntervalSeconds": 5,
+    "hostMinimumAvailableMiB": 7374,
+    "hostSwapUsedMiB": {
+      "first": 3203,
+      "max": 3203,
+      "last": 3194
+    },
+    "generatorSampledMaxRssKiB": 158308,
+    "generatorSampledMaxProcessCpuPercent": 10.1,
+    "containers": {
+      "service-a2dfefT094430": {
+        "sampledMaxCpuPercent": 39.1,
+        "sampledMaxMemoryMiB": 237.9
+      },
+      "service-c0c52d": {
+        "sampledMaxCpuPercent": 53.98,
+        "sampledMaxMemoryMiB": 217.9
+      },
+      "service-262082": {
+        "sampledMaxCpuPercent": 65.33,
+        "sampledMaxMemoryMiB": 210.1
+      },
+      "service-b7490c": {
+        "sampledMaxCpuPercent": 3.52,
+        "sampledMaxMemoryMiB": 128.6
+      }
+    }
+  }
+}
