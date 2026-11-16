@@ -27,6 +27,8 @@ const nextConfig = {
   // Bound the ISR cache header's stale-while-revalidate period.
   expireTime: 120,
   experimental: {
+    // Enables forbidden() so the attendance scanner answers HTTP 403.
+    authInterrupts: true,
     globalNotFound: true,
     // PWA/Sentry add webpack hooks, disabling Next's default build worker.
     webpackBuildWorker: true,

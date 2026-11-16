@@ -24,6 +24,10 @@ const labels: Record<LinkedDestination["kind"], Record<Language, string>> = {
     [Language.PT]: "Concluir o meu registo",
     [Language.EN]: "Finish my registration",
   },
+  staff: {
+    [Language.PT]: "Abrir o scanner de presenças",
+    [Language.EN]: "Open the attendance scanner",
+  },
   employee: {
     [Language.PT]: "Ir para o dashboard da empresa",
     [Language.EN]: "Go to the company dashboard",

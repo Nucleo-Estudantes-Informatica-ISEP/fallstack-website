@@ -5,6 +5,7 @@ export interface AccountDestinationSession {
   role: "STUDENT" | "EMPLOYEE" | null;
   adminRole: "ADMIN" | "SUPER_ADMIN" | null;
   student: { code: string } | null;
+  neiMember?: boolean;
 }
 
 export type AccountDestination =
@@ -12,6 +13,7 @@ export type AccountDestination =
   | { kind: "admin"; href: "/overview" }
   | { kind: "employee"; href: "/dashboard" }
   | { kind: "student"; href: `/student/${string}` }
+  | { kind: "staff"; href: "/attendance/scan" }
   | { kind: "onboarding"; href: "/signup" }
   | { kind: "unresolved"; href: null };
 
@@ -25,6 +27,9 @@ export function resolveAccountDestination(
     return { kind: "employee", href: "/dashboard" };
   if (session.student)
     return { kind: "student", href: `/student/${session.student.code}` };
+  // NEI staff accounts (e.g. @nei-isep.org) have no student profile and
+  // cannot complete student signup; their place is the attendance scanner.
+  if (session.neiMember) return { kind: "staff", href: "/attendance/scan" };
   // A STUDENT session without a Student row abandoned the signup wizard
   // after AuthNEI; /signup resumes it for that session.
   if (session.role === "STUDENT")

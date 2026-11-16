@@ -5,6 +5,8 @@ export interface SessionDto {
     code: string;
     name: string;
   } | null;
+  /** AuthNEI nei-member grant; routes staff without a student profile. */
+  neiMember?: boolean;
 }
 
 export const toSessionDto = (session: SessionDto): SessionDto => ({
@@ -13,4 +15,5 @@ export const toSessionDto = (session: SessionDto): SessionDto => ({
   student: session.student
     ? { code: session.student.code, name: session.student.name }
     : null,
+  neiMember: session.neiMember === true,
 });

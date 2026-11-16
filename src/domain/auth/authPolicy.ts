@@ -44,6 +44,14 @@ export function resolveStoredAdminRole(
   return configuredRole ?? "SUPER_ADMIN";
 }
 
+// Scanner page access is role-only; the five-minute attendance bound is
+// enforced by the check-in and count endpoints ("staff" policy).
+export function canAccessAttendanceScanner(
+  session: Pick<AuthPolicySession, "adminRole" | "neiMember"> | null
+): boolean {
+  return Boolean(session?.adminRole) || session?.neiMember === true;
+}
+
 export function passesAuthPolicy(
   policy: AuthPolicy,
   session: AuthPolicySession | null

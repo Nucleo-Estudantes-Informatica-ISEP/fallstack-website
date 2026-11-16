@@ -2,20 +2,30 @@ import { expect, test, vi } from "vitest";
 
 import { HttpError } from "@/types/HttpError";
 
+import { findAllScheduleEvents } from "../repositories/scheduleRepository";
 import {
+  countSessionCheckIns,
   createSessionCheckIn,
   findScheduleEventForCheckIn,
   findStudentForCheckIn,
   isSessionCheckInUniqueError,
 } from "../repositories/sessionCheckInRepository";
-import { recordSessionCheckIn } from "./sessionCheckInService";
+import {
+  getSessionCheckInCount,
+  getTodaysAttendanceSessions,
+  recordSessionCheckIn,
+} from "./sessionCheckInService";
 
 vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn() } }));
 vi.mock("server-only", () => ({}));
 vi.mock("@/application/services/authService", () => ({
   verifyJwt: vi.fn(),
 }));
+vi.mock("../repositories/scheduleRepository", () => ({
+  findAllScheduleEvents: vi.fn(),
+}));
 vi.mock("../repositories/sessionCheckInRepository", () => ({
+  countSessionCheckIns: vi.fn(),
   createSessionCheckIn: vi.fn(),
   findScheduleEventForCheckIn: vi.fn(),
   findStudentForCheckIn: vi.fn(),
@@ -28,7 +38,7 @@ const session = {
   startTime: "10:00",
   endTime: "11:00",
 };
-const student = { id: "student-1", code: "AB12" };
+const student = { id: "student-1", code: "AB12", name: "Maria Silva" };
 const now = new Date("2026-11-17T10:30:00.000Z");
 
 function setup() {
@@ -110,7 +120,11 @@ test("maps a concurrent duplicate check-in to a clear conflict", async () => {
   await expect(
     recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
   ).rejects.toMatchObject(
-    new HttpError("This student has already checked in for this session.", 409)
+    new HttpError(
+      "This student has already checked in for this session.",
+      409,
+      { student: { name: "Maria Silva" } }
+    )
   );
 });
 
@@ -173,4 +187,109 @@ test("logs unknown student attempts without exposing credentials", async () => {
     },
     "Attendance credential did not match a student"
   );
+});
+
+test("returns the student's name with a recorded check-in", async () => {
+  const result = await recordSessionCheckIn(
+    "session-1",
+    "staff-1",
+    { code: "AB12" },
+    now
+  );
+  expect(result.student).toEqual({ name: "Maria Silva" });
+});
+
+test("a duplicate check-in carries the student's name", async () => {
+  vi.mocked(createSessionCheckIn).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isSessionCheckInUniqueError).mockReturnValue(true);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject({
+    status: 409,
+    details: { student: { name: "Maria Silva" } },
+  });
+});
+
+test("an unknown credential exposes no details", async () => {
+  vi.mocked(findStudentForCheckIn).mockResolvedValue(null);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
+  ).rejects.toMatchObject({ status: 400, details: undefined });
+});
+
+test("counts check-ins for an existing session", async () => {
+  vi.mocked(countSessionCheckIns).mockResolvedValue(7);
+  await expect(getSessionCheckInCount("session-1")).resolves.toBe(7);
+  expect(countSessionCheckIns).toHaveBeenCalledWith("session-1");
+});
+
+test("counting an unknown session is a 404", async () => {
+  vi.mocked(findScheduleEventForCheckIn).mockResolvedValue(null);
+  await expect(getSessionCheckInCount("missing")).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(countSessionCheckIns).not.toHaveBeenCalled();
+});
+
+const scheduleEvent = (
+  id: string,
+  day: number,
+  startTime: string,
+  endTime: string
+) => ({
+  id,
+  day,
+  order: 0,
+  startTime,
+  endTime,
+  activity: { PT: `Atividade ${id}`, EN: `Activity ${id}` },
+});
+
+test("lists today's schedule entries as attendance sessions", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("a", 1, "10:00", "11:00"),
+    scheduleEvent("b", 1, "14:00", "15:00"),
+    scheduleEvent("c", 2, "10:00", "11:00"),
+  ] as never);
+
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-17T10:30:00Z"))
+  ).resolves.toEqual([
+    {
+      id: "a",
+      title: "Atividade a",
+      startTime: "10:00",
+      endTime: "11:00",
+      start: "2026-11-17T10:00:00.000Z",
+      end: "2026-11-17T11:00:00.000Z",
+      dayTitle: "17 de Novembro",
+    },
+    {
+      id: "b",
+      title: "Atividade b",
+      startTime: "14:00",
+      endTime: "15:00",
+      start: "2026-11-17T14:00:00.000Z",
+      end: "2026-11-17T15:00:00.000Z",
+      dayTitle: "17 de Novembro",
+    },
+  ]);
+});
+
+test("there are no attendance sessions outside event days", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("a", 1, "10:00", "11:00"),
+  ] as never);
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-16T10:00:00Z"))
+  ).resolves.toEqual([]);
+});
+
+test("schedule entries with invalid times are skipped", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("bad", 1, "1000", "11:00"),
+  ] as never);
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-17T10:00:00Z"))
+  ).resolves.toEqual([]);
 });

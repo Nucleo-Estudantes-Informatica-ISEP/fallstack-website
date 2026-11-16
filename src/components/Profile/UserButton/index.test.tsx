@@ -60,3 +60,25 @@ test("shows the generic profile icon for non-admins", () => {
     screen.getByRole("link", { name: "O meu perfil" })
   ).toBeInTheDocument();
 });
+
+test("links an NEI member without a student profile to the attendance scanner", () => {
+  const user: SessionDto = {
+    role: null,
+    adminRole: null,
+    student: null,
+    neiMember: true,
+  };
+  render(<UserButton user={user} />);
+  expect(linkHref()).toBe("/attendance/scan");
+});
+
+test("an NEI member with a student profile still links to their profile", () => {
+  const user: SessionDto = {
+    role: "STUDENT",
+    adminRole: null,
+    student: { code: "s1", name: "Jane" },
+    neiMember: true,
+  };
+  render(<UserButton user={user} />);
+  expect(linkHref()).toBe("/student/s1");
+});

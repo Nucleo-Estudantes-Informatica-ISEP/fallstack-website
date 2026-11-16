@@ -96,6 +96,9 @@ export async function completeZitadelSignIn(input: {
   if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
   if (user.role === "EMPLOYEE") return "/login?modal=employee";
   if (user.student) return `/student/${user.student.code}`;
+  // NEI staff accounts (e.g. @nei-isep.org) have no student profile and must
+  // not be pushed into creating one just to reach the attendance scanner.
+  if (input.identity.isNeiMember) return "/attendance/scan";
   return "/signup?authnei=1";
 }
 

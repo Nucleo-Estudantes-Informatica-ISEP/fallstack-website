@@ -12,7 +12,7 @@ import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
 export const httpErrorResponse = (error: unknown) => {
   if (error instanceof HttpError)
     return NextResponse.json(
-      { error: error.message },
+      { ...error.details, error: error.message },
       { status: error.status }
     );
   if (error instanceof ZodError)
