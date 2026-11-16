@@ -140,3 +140,9 @@ not claimed because the user required those resources to remain running.
 Final cleanup verified all `fallstack-418-*` VPS containers and both rehearsal
 networks absent; temporary test certificates, synthetic env files and static
 artifact copies were removed. Existing clone resources were preserved.
+
+Final timestamp review added ISO fractional-second support (including values
+produced by `Date.toISOString()`). Re-ran five affected unit/build tests, changed
+code lint and typecheck successfully. The default generated HTML was byte-for-byte
+identical to the previously verified static image; full app tests/build evidence
+was reused for unchanged application code.

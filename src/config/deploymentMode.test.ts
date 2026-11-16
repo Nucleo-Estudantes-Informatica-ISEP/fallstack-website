@@ -20,6 +20,9 @@ test("countdown requires a future timestamp with explicit timezone", () => {
     "2027-01-01T00:00:00",
   ])
     expect(futureEditionStart(date, now)).toBeNull();
+  expect(futureEditionStart("2027-01-01T00:00:00.123Z", now)).toBe(
+    Date.parse("2027-01-01T00:00:00.123Z")
+  );
   expect(futureEditionStart("2027-01-01T00:00:00+00:00", now)).toBe(
     Date.parse("2027-01-01T00:00:00Z")
   );
