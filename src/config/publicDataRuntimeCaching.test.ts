@@ -62,6 +62,7 @@ test("production PWA precaches a script-free document fallback without caching h
   expect(offline).toContain('href="/"');
   expect(offline).toContain('href="/offline.css"');
   expect(offline).toContain("You are offline");
+  expect(offline).not.toContain('href=""');
   expect(offline).not.toMatch(/<script|<iframe|\bon\w+=/i);
 });
 
