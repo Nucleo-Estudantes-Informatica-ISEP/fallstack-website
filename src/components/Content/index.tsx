@@ -53,8 +53,8 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
             text="Speed Interviews"
           />
           <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-            Este ano podes experienciar a modalidade de speed interviews com
-            algumas das empresas presentes.
+            As Speed Interviews estão de volta, proporcionando um ponto de
+            contacto direto entre empresas e estudantes finalistas.
           </p>
         </section>
       </div>

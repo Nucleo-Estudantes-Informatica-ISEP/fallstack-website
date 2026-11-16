@@ -156,6 +156,10 @@ test("homepage sections follow the design order", () => {
   expect(order.every((index) => index >= 0)).toBe(true);
   expect([...order].sort((a, b) => a - b)).toEqual(order);
   expect(html).toContain("Mais informações em breve.");
+  expect(html).toContain(
+    "As Speed Interviews estão de volta, proporcionando um ponto de contacto direto entre empresas e estudantes finalistas."
+  );
+  expect(html).not.toContain("Este ano podes experienciar");
   expect(html).toContain("17 e 18 de novembro");
   expect(html).not.toContain("2025");
 });
