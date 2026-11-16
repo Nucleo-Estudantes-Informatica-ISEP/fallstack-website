@@ -30,30 +30,26 @@ export async function downloadOfflinePass({
   ctx.fillRect(0, 0, width, height);
 
   // 2. Desenhar composite 2026 (logo já embutido — não sobrepor outro logo do evento)
-  try {
-    const bgImg = await loadImage("/assets/images/landing-2026.png");
-    const targetHeight = 420;
-    const scale = Math.max(width / bgImg.width, targetHeight / bgImg.height);
-    const drawW = bgImg.width * scale;
-    const drawH = bgImg.height * scale;
-    const drawX = (width - drawW) / 2;
+  const bgImg = await loadImage("/assets/images/landing-2026.png");
+  const targetHeight = 420;
+  const scale = Math.max(width / bgImg.width, targetHeight / bgImg.height);
+  const drawW = bgImg.width * scale;
+  const drawH = bgImg.height * scale;
+  const drawX = (width - drawW) / 2;
 
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(40, 40, width - 80, targetHeight);
-    ctx.clip();
-    ctx.drawImage(bgImg, drawX, 40, drawW, drawH);
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(40, 40, width - 80, targetHeight);
+  ctx.clip();
+  ctx.drawImage(bgImg, drawX, 40, drawW, drawH);
 
-    // Gradiente de transição suave para o painel escuro #141414
-    const grad = ctx.createLinearGradient(0, 260, 0, 460);
-    grad.addColorStop(0, "rgba(20, 20, 20, 0)");
-    grad.addColorStop(1, "#141414");
-    ctx.fillStyle = grad;
-    ctx.fillRect(40, 260, width - 80, 200);
-    ctx.restore();
-  } catch {
-    // Fallback se a imagem falhar
-  }
+  // Gradiente de transição suave para o painel escuro #141414
+  const grad = ctx.createLinearGradient(0, 260, 0, 460);
+  grad.addColorStop(0, "rgba(20, 20, 20, 0)");
+  grad.addColorStop(1, "#141414");
+  ctx.fillStyle = grad;
+  ctx.fillRect(40, 260, width - 80, 200);
+  ctx.restore();
 
   // 3. Borda do painel #484848 (Figma)
   ctx.strokeStyle = "#484848";
@@ -108,14 +104,10 @@ export async function downloadOfflinePass({
   ctx.fillText(permanentCode.toUpperCase(), width / 2, 1252);
 
   // 8. Rodapé com Logo NEI e Nota de Validade / Revogação (#394 / #405)
-  try {
-    const neiLogo = await loadImage("/assets/images/logo-simplified-white.png");
-    const logoH = 36;
-    const logoW = (neiLogo.width / neiLogo.height) * logoH;
-    ctx.drawImage(neiLogo, (width - logoW) / 2, 1315, logoW, logoH);
-  } catch {
-    // Ignora se falhar
-  }
+  const neiLogo = await loadImage("/assets/images/logo-simplified-white.png");
+  const logoH = 36;
+  const logoW = (neiLogo.width / neiLogo.height) * logoH;
+  ctx.drawImage(neiLogo, (width - logoW) / 2, 1315, logoW, logoH);
 
   ctx.fillStyle = "#A1A1AA";
   ctx.font = '20px "Inter", sans-serif';
@@ -137,30 +129,37 @@ export async function downloadOfflinePass({
   // 9. Descarregar PNG
   const pngUrl = canvas.toDataURL("image/png", 1.0);
   const link = document.createElement("a");
-  const slug = studentName
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  link.download = `passe-${branding.name.toLowerCase()}-${branding.year}-${slug || permanentCode}.png`;
+  link.download = getPassFilename(studentName, permanentCode);
   link.href = pngUrl;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+export function getPassFilename(
+  studentName: string,
+  permanentCode: string
+): string {
+  const slug = studentName
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+  return `passe-${branding.name.toLowerCase()}-${branding.year}-${slug || permanentCode}.png`;
+}
+
+export function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => resolve(img);
-    img.onerror = reject;
+    img.onerror = () => reject(new Error(`Falha ao carregar imagem: ${src}`));
     img.src = src;
   });
 }
 
-function svgToImage(
+export function svgToImage(
   svgEl: SVGSVGElement,
   width: number,
   height: number
@@ -177,9 +176,9 @@ function svgToImage(
       URL.revokeObjectURL(url);
       resolve(img);
     };
-    img.onerror = (err) => {
+    img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(err);
+      reject(new Error("Falha ao converter SVG do QR Code para imagem."));
     };
     img.width = width;
     img.height = height;
@@ -187,8 +186,8 @@ function svgToImage(
   });
 }
 
-function truncateText(
-  ctx: CanvasRenderingContext2D,
+export function truncateText(
+  ctx: Pick<CanvasRenderingContext2D, "measureText">,
   text: string,
   maxWidth: number
 ): string {
@@ -216,6 +215,6 @@ function roundRect(
   ctx.arcTo(x + w, y, x + w, y + h, r);
   ctx.arcTo(x + w, y + h, x, y + h, r);
   ctx.arcTo(x, y + h, x, y, r);
-  ctx.arcTo(x, y, x + w, y, r);
+  ctx.arcTo(x, y + w, y, r);
   ctx.closePath();
 }
