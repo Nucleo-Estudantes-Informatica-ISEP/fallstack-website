@@ -27,6 +27,9 @@ afterEach(() => {
 });
 
 vi.mock("next/navigation", () => ({
+  redirect: (path: string) => {
+    throw new Error(`Redirect: ${path}`);
+  },
   notFound: () => {
     throw new Error("Not found");
   },
@@ -169,4 +172,11 @@ test.each([
   expect(html).not.toContain("Full website");
   expect(html).not.toContain("Countdown");
   expect(getPublicCompanyRoster).not.toHaveBeenCalled();
+});
+
+test("full event page uses Portuguese consistently for English browser requests", async () => {
+  config.SHOWCASE_FULL_WEBSITE = true;
+  await expect(
+    Page({ params: Promise.resolve({ language: "en" }) })
+  ).rejects.toThrow("Redirect: /event/pt");
 });

@@ -42,7 +42,7 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef, language }) => {
           viewport={{
             once: true,
           }}
-          className="flex w-full flex-col items-center justify-center pb-20 md:px-14"
+          className="flex w-full flex-col items-center justify-center pt-8 pb-20 md:px-14"
         >
           <motion.div
             initial={{

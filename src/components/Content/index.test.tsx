@@ -163,3 +163,8 @@ test("homepage sections follow the design order", () => {
   expect(html).toContain("17 e 18 de novembro");
   expect(html).not.toContain("2025");
 });
+
+test("empty acknowledgements do not leave an orphan heading", () => {
+  render(<SponsorsSection sponsors={[]} />);
+  expect(screen.queryByText("Agradecimentos")).not.toBeInTheDocument();
+});
