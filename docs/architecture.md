@@ -78,11 +78,18 @@ freshness. It prevents stale QR use but has no nonce or one-time-consumption
 check: a captured code can be reused during its valid window by another
 student. A student's duplicate completion of the same action is rejected.
 
+Employee preview authorization, including the tokenless fallback and its
+company-level saved-student check, is recorded in [ADR 0042](decisions/0042-restrict-tokenless-student-previews.md).
+
 ## Data ownership
 
 `prisma/schema.prisma` is the source of truth for models and relationships.
 Use it for the current data model; the [database architecture](database.md)
 diagram and notes should be updated with schema changes.
+
+Student saves reject the caller’s own student profile with HTTP 403 before
+writing a save or awarding booth points, including admin saves. The caller’s
+user ID is checked independently of the employee attributed to the save.
 
 `SavedStudent` stores both an employee attribution and a company. Its primary
 key is `(studentId, employeeId)` and a separate unique constraint on

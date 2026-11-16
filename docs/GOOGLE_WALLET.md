@@ -327,6 +327,29 @@ credential. Deactivation does not invalidate the permanent code for existing
 identification flows.
 Use account deletion when the requested action is removal and revocation.
 
+### Downloadable offline pass validity and account deletion
+
+Under [Issue #406](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/406)
+and [ADR 0044](decisions/0044-issue-offline-downloadable-student-passes.md),
+attendees can also download an offline PNG pass directly from the web pass dashboard.
+
+The validity and revocation semantics align with the permanent student code model:
+
+1. **Attendee identifier:** The downloaded pass carries the permanent six-character
+   `Student.code` (both as a QR code and in a fallback text box) alongside the
+   student's name and event branding. It functions as an attendee identifier, not an
+   active credential or rotating authentication token.
+2. **On-device persistence:** Once generated, the PNG file is saved locally to the
+   attendee's device. The file cannot be programmatically deleted or recalled from
+   client storage.
+3. **Deactivation:** Account deactivation (`User.active=false`) blocks user login
+   and prevents generating new passes, but does not invalidate the permanent code
+   for in-person identification at event activities.
+4. **Account deletion:** When an account is deleted, the database removes the
+   student record and revokes/anonymizes the Google Wallet pass. As a result,
+   subsequent scans or manual lookups of the permanent code on the saved PNG fail
+   closed (the student is no longer recognized in the database).
+
 Keep the issuer, class, and authorized credentials available while any issued
 objects need revocation. Issuance first commits a `WalletPass` row containing
 student ID, class ID and object ID, before any Google write. It remains after a

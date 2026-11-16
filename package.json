@@ -28,7 +28,8 @@
     "storage:cleanup": "node --conditions=react-server --import tsx scripts/storage-cleanup.ts",
     "postinstall": "prisma generate",
     "prepare": "husky",
-    "test:load:capacity": "bash tests/load/capacity-targets.sh"
+    "test:load:capacity": "bash tests/load/capacity-targets.sh",
+    "build:deployment": "tsx scripts/build-deployment.tsx"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1168.0",

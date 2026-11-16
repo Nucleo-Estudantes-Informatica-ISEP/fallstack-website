@@ -164,6 +164,19 @@ test("long names, emails and bios wrap", () => {
   expect(screen.getByText(long)).toHaveClass("wrap-break-word");
 });
 
+test.each([false, undefined])(
+  "an unsaved preview (%s) offers saving but no unavailable CV action",
+  (isSavedStudent) => {
+    renderPreview({ isSavedStudent });
+
+    expect(screen.queryByRole("button", { name: /Abrir o CV/ })).toBeNull();
+    expect(
+      screen.getByRole("button", { name: "+ Salvar perfil" })
+    ).toBeInTheDocument();
+    expect(getMock).not.toHaveBeenCalled();
+  }
+);
+
 test("opening the CV uses the access-checked API", async () => {
   getMock.mockResolvedValue({ url: "/api/students/Z101/cv/file" });
   const open = vi.spyOn(window, "open").mockImplementation(() => null);

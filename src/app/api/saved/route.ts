@@ -40,6 +40,7 @@ export const POST = defineHandler({
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({
       studentCode: code,
+      actorId: session!.id,
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,
@@ -59,6 +60,7 @@ export const PATCH = defineHandler({
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({
       studentCode: code,
+      actorId: session!.id,
       employeeId: session!.employee!.id,
       companyId: session!.employee!.company!.id,
       comment: body.comment,
