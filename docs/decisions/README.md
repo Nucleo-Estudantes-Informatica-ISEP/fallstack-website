@@ -68,3 +68,4 @@ implementation PR needs an ADR.
 | [0039](0039-record-session-attendance.md)                        | Record session attendance                        | Accepted             |
 | [0040](0040-use-uniform-partner-logo-bounds.md)                  | Use uniform partner logo bounds                  | Accepted             |
 | [0041](0041-direct-private-cv-uploads.md)                        | Upload private CVs directly to MinIO             | Accepted             |
+| [0042](0042-bound-limiter-recovery-and-stream-private-cvs.md)    | Bound limiter recovery and stream private CVs    | Accepted             |

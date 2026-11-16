@@ -1,0 +1,378 @@
+{
+  "metrics": {
+    "http_req_sending": {
+      "p(90)": 0.3768000000000004,
+      "p(95)": 1811.827199999958,
+      "p(99)": 53076.217039999945,
+      "avg": 1595.6802601759016,
+      "min": 0,
+      "med": 0.088,
+      "max": 117848.6
+    },
+    "cv_download_succeeded{group:qr,size:real}": {
+      "count": 225,
+      "rate": 0.7503616417956743,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "iteration_duration": {
+      "p(99)": 151199.42404667995,
+      "avg": 25181.027675790814,
+      "min": 2999.34475,
+      "med": 3324.080625,
+      "max": 181852.084583,
+      "p(90)": 91500.5287666,
+      "p(95)": 124532.36307479999
+    },
+    "http_req_duration{name:checkin}": {
+      "max": 20055.886,
+      "p(90)": 6789.332200000001,
+      "p(95)": 9533.4781,
+      "p(99)": 15661.411179999997,
+      "avg": 3124.6398723958355,
+      "min": 110.021,
+      "med": 2366.9049999999997,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_blocked": {
+      "min": 0,
+      "med": 0.001,
+      "max": 25542.925,
+      "p(90)": 0.002,
+      "p(95)": 1721.4051999999986,
+      "p(99)": 5535.747119999996,
+      "avg": 236.96802597668002
+    },
+    "http_req_duration{name:qr_pass}": {
+      "avg": 2746.4120488372105,
+      "min": 61.873,
+      "med": 1760.558,
+      "max": 33133.457,
+      "p(90)": 5632.627200000001,
+      "p(95)": 9398.3426,
+      "p(99)": 17485.118389999992,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "data_received": {
+      "count": 769046320,
+      "rate": 2564723.8190760957
+    },
+    "http_req_connecting": {
+      "max": 5104.193,
+      "p(90)": 0,
+      "p(95)": 733.1025999999998,
+      "p(99)": 2812.115559999999,
+      "avg": 99.87543117201885,
+      "min": 0,
+      "med": 0
+    },
+    "cv_download_succeeded": {
+      "count": 615,
+      "rate": 2.0509884875748434
+    },
+    "checkin_duplicate_409": {
+      "count": 1133,
+      "rate": 3.778487734019996
+    },
+    "iterations": {
+      "count": 1697,
+      "rate": 5.659394249454486
+    },
+    "http_req_duration{name:dashboard_history}": {
+      "avg": 2195.070765550238,
+      "min": 87.606,
+      "med": 1597.395,
+      "max": 17868.505,
+      "p(90)": 3817.1780000000012,
+      "p(95)": 7261.100599999997,
+      "p(99)": 9674.32504,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_receiving": {
+      "avg": 2247.9338707302113,
+      "min": 0,
+      "med": 0.105,
+      "max": 59398.541,
+      "p(90)": 4611.873600000021,
+      "p(95)": 15662.639399999971,
+      "p(99)": 48452.41975999998
+    },
+    "cv_download_duration": {
+      "min": 305.1,
+      "med": 12459.606,
+      "max": 60012.497,
+      "p(90)": 47298.563400000014,
+      "p(95)": 60000.392400000004,
+      "p(99)": 60004.9628,
+      "avg": 18120.65366409861
+    },
+    "cv_upload_accepted{size:real}": {
+      "count": 253,
+      "rate": 0.8437399794413583,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "cv_upload_accepted{size:near_limit}": {
+      "count": 2,
+      "rate": 0.006669881260405994,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "checks": {
+      "passes": 3903,
+      "fails": 171,
+      "thresholds": {
+        "rate>0.99": true
+      },
+      "value": 0.9580265095729014
+    },
+    "vus_max": {
+      "value": 200,
+      "min": 200,
+      "max": 200
+    },
+    "http_req_waiting": {
+      "p(99)": 17870.184479999996,
+      "avg": 2838.3195898956924,
+      "min": 0,
+      "med": 1888.636,
+      "max": 60001.213,
+      "p(90)": 5982.328400000002,
+      "p(95)": 9272.894999999997
+    },
+    "http_req_duration{name:dashboard_page}": {
+      "avg": 5445.8405904761885,
+      "min": 190.866,
+      "med": 2462.303,
+      "max": 60000.269,
+      "p(90)": 11346.956700000012,
+      "p(95)": 25854.97644999997,
+      "p(99)": 43629.73875,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_duration{name:cv_attach}": {
+      "med": 1642.437,
+      "max": 14284.877,
+      "p(90)": 3590.2728,
+      "p(95)": 6284.127599999998,
+      "p(99)": 9318.744399999998,
+      "avg": 2137.199770750987,
+      "min": 120.02,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_tls_handshaking": {
+      "max": 21671.121,
+      "p(90)": 0,
+      "p(95)": 806.1543999999996,
+      "p(99)": 2891.9256399999977,
+      "avg": 126.79768766618936,
+      "min": 0,
+      "med": 0
+    },
+    "cv_upload_accepted": {
+      "count": 255,
+      "rate": 0.8504098607017643
+    },
+    "http_req_duration{name:cv_authorize}": {
+      "avg": 2484.5634976744177,
+      "min": 72.713,
+      "med": 1721.9445,
+      "max": 20029.446,
+      "p(90)": 4957.1082000000015,
+      "p(95)": 8146.265549999999,
+      "p(99)": 16700.469239999988,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "cv_upload_duration": {
+      "med": 34223,
+      "max": 126489,
+      "p(90)": 91147.2,
+      "p(95)": 107986.29999999997,
+      "p(99)": 122245.42,
+      "avg": 42977.294117647056,
+      "min": 747
+    },
+    "cv_upload_near_limit_accepted": {
+      "count": 2,
+      "rate": 0.006669881260405994
+    },
+    "http_req_duration{expected_response:true}": {
+      "p(95)": 29123.36704999999,
+      "p(99)": 62254.7807499999,
+      "avg": 6243.555603972938,
+      "min": 61.873,
+      "med": 2324.4269999999997,
+      "max": 118915.24,
+      "p(90)": 14689.6172
+    },
+    "action_scan_already_completed_400": {
+      "count": 130,
+      "rate": 0.43354228192638966
+    },
+    "vus": {
+      "min": 2,
+      "max": 200,
+      "value": 2
+    },
+    "cv_download_succeeded{group:qr,size:near_limit}": {
+      "count": 2,
+      "rate": 0.006669881260405994,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "cv_download_succeeded{group:dashboard}": {
+      "count": 388,
+      "rate": 1.293956964518763,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "data_sent": {
+      "count": 530292332,
+      "rate": 1768493.443871897
+    },
+    "http_req_failed": {
+      "passes": 157,
+      "fails": 4732,
+      "thresholds": {
+        "rate<0.01": true
+      },
+      "value": 0.03211290652485171
+    },
+    "http_req_duration": {
+      "p(99)": 66076.28935999998,
+      "avg": 6681.933720801789,
+      "min": 0,
+      "med": 2309.616,
+      "max": 120001.34,
+      "p(90)": 16121.509800000002,
+      "p(95)": 32960.196399999964
+    },
+    "http_reqs": {
+      "count": 4889,
+      "rate": 16.304524741062455
+    }
+  },
+  "root_group": {
+    "name": "",
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {},
+    "checks": {
+      "student QR pass returns a token": {
+        "name": "student QR pass returns a token",
+        "path": "::student QR pass returns a token",
+        "id": "a8f1c8f39e822b3610ee188f1efa1a22",
+        "passes": 430,
+        "fails": 0
+      },
+      "action QR returns a code": {
+        "name": "action QR returns a code",
+        "path": "::action QR returns a code",
+        "id": "7d4b398690f8e97e0680c9e1fb424b23",
+        "passes": 140,
+        "fails": 0
+      },
+      "CV upload authorized for the staging storage origin": {
+        "name": "CV upload authorized for the staging storage origin",
+        "path": "::CV upload authorized for the staging storage origin",
+        "id": "b8bdaf73568b8f15e10382d1d15bceba",
+        "passes": 427,
+        "fails": 3
+      },
+      "dashboard returns HTML": {
+        "fails": 1,
+        "name": "dashboard returns HTML",
+        "path": "::dashboard returns HTML",
+        "id": "11f08e3d5ac39cad821ad3dd50f90fd8",
+        "passes": 209
+      },
+      "dashboard history returns a list": {
+        "path": "::dashboard history returns a list",
+        "id": "4fa1b9e0f0265d0c723290362aaf08b8",
+        "passes": 209,
+        "fails": 0,
+        "name": "dashboard history returns a list"
+      },
+      "dashboard company has saved students to download": {
+        "name": "dashboard company has saved students to download",
+        "path": "::dashboard company has saved students to download",
+        "id": "e71f481c81b3bee0f12bbf1004e555e5",
+        "passes": 209,
+        "fails": 0
+      },
+      "CV lookup returns a file URL": {
+        "name": "CV lookup returns a file URL",
+        "path": "::CV lookup returns a file URL",
+        "id": "1235b33ed63abf7cb1c37f21c2e38cc4",
+        "passes": 666,
+        "fails": 1
+      },
+      "storage accepts the signed CV transfer": {
+        "passes": 255,
+        "fails": 99,
+        "name": "storage accepts the signed CV transfer",
+        "path": "::storage accepts the signed CV transfer",
+        "id": "a758914e6f4ea6d69648739a776be218"
+      },
+      "CV download returns a PDF": {
+        "name": "CV download returns a PDF",
+        "path": "::CV download returns a PDF",
+        "id": "cc962adc789568a8a99c5f24f81c7c1b",
+        "passes": 615,
+        "fails": 34
+      },
+      "CV upload finalized with a file id": {
+        "name": "CV upload finalized with a file id",
+        "path": "::CV upload finalized with a file id",
+        "id": "1252e562d1caf20bd6f3fb259040814a",
+        "passes": 255,
+        "fails": 0
+      },
+      "CV attaches to the student": {
+        "path": "::CV attaches to the student",
+        "id": "077d79a2809705f676bb62efe2d3ac9b",
+        "passes": 253,
+        "fails": 0,
+        "name": "CV attaches to the student"
+      },
+      "student downloads the CV just uploaded": {
+        "path": "::student downloads the CV just uploaded",
+        "id": "63c8ff3f03ccb80c442f0a4d103b1514",
+        "passes": 227,
+        "fails": 12,
+        "name": "student downloads the CV just uploaded"
+      },
+      "action QR scan completes": {
+        "path": "::action QR scan completes",
+        "id": "6fb9031acc2baa8e571c5ae127c7eea7",
+        "passes": 8,
+        "fails": 2,
+        "name": "action QR scan completes"
+      },
+      "check-in returns 201": {
+        "name": "check-in returns 201",
+        "path": "::check-in returns 201",
+        "id": "fd8209c45f7c657773f639d5c686ca48",
+        "passes": 0,
+        "fails": 19
+      }
+    }
+  }
+}

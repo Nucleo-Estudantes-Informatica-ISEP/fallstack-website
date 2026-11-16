@@ -77,20 +77,21 @@ Signed-form exception logs from the incompatible binary are not published.
 
 ## Results and restoration
 
-Pending execution and final cleanup verification.
+Historical fast-network run: 17,172 requests; 5.99% HTTP failures; 94.36% checks. All six light-endpoint p95 thresholds failed. This is failed capacity evidence, not a pass. Josimar’s scenario tests passed 64/64. See the later [tuning and final verification report](heavy-users-staging-tuned-2026-11-16.md) for code changes, subsequent runs and final restoration.
 
-## Dependency diagnosis and tuning plan
+## Historical observations and later correction
 
-The retry log contains 192 signed-upload failures, all TCP resets from Cloudflare edge addresses (`cloud-edge` and `cloud-edge`) while posting to the MinIO hostname. The load host-side five-way 10 MiB probe completed in 1.28 seconds; the Mac path before the fast-network retry took 25.5 seconds. MinIO remained healthy with no OOM/restart, so MinIO memory was not the cause of the observed resets. The valid retry still had 5.99% request failures and p95 failures across all authenticated groups.
+The retry recorded TCP resets while sending signed uploads through the proxied
+storage hostname. This identifies where the client observed the failure; it
+does not prove that the edge proxy caused it. MinIO had no observed OOM/restart.
+The valid retry still failed error and latency thresholds.
 
-A separate Traefik defect was found: the CDN alias router referenced `fallstack-staging-lb@file` while that service was unavailable to the dynamic configuration. The service definition was added to the alias file and `staging-fallstack.nei-isep.org/api/health` returned 200 afterwards. This was separate from the Cloudflare upload resets.
+An earlier workaround duplicated the staging load-balancer service in the CDN
+alias file. Later inspection found that this copy referenced an obsolete
+primary. The tuning report records its removal and the replica synchronizer
+fix. This report's earlier suggested proxy bypass was not applied: the user
+requested keeping the proxy and MinIO.
 
-Recommended fixes, in order:
-
-1. Run five-way 10 MiB probes through the public hostname and directly to the load host. If only the proxied path resets, move signed POST uploads to a dedicated Cloudflare configuration or bypass proxying for that upload hostname while retaining MinIO and TLS.
-2. Add per-request status/error metrics at the upload proxy and MinIO boundary, including Cloudflare/Traefik request IDs and upstream reset counts.
-3. Keep the fixed CDN alias service definition and validate that every file-provider router references an existing service.
-4. Re-run 40, 100 and 200 users only after the upload probe is stable; then tune PostgreSQL pool/queries, Redis limiter latency and web event-loop saturation from measured p95 data.
-5. Treat the 200-user gate as passed only with HTTP failures below 1%, checks above 99%, p95 below 750 ms for the six light endpoints, and both CV size classes present.
-
-MinIO's memory limit was raised to **10 GiB** after the run. Docker image/build-cache cleanup reclaimed approximately **11.7 GiB**; dangling-volume pruning reclaimed 0 B and shared volumes were preserved. Final staging and production health checks returned 200.
+MinIO's memory limit was raised to **10 GiB** and persisted in the deployment
+manager. Docker image/build-cache cleanup reclaimed approximately **11.7 GiB**;
+shared volumes were preserved. See the final report for current verification.

@@ -1,0 +1,146 @@
+[
+  {
+    "endpoint": "action_qr",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 140
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 8
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "400",
+    "transportErrorCode": "1400",
+    "count": 132
+  },
+  {
+    "endpoint": "checkin",
+    "status": "400",
+    "transportErrorCode": "1400",
+    "count": 17
+  },
+  {
+    "endpoint": "checkin",
+    "status": "409",
+    "transportErrorCode": "1409",
+    "count": 1133
+  },
+  {
+    "endpoint": "checkin",
+    "status": "500",
+    "transportErrorCode": "1500",
+    "count": 1
+  },
+  {
+    "endpoint": "checkin",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 1
+  },
+  {
+    "endpoint": "cv_attach",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 253
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "201",
+    "transportErrorCode": "",
+    "count": 427
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "503",
+    "transportErrorCode": "1503",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "transportErrorCode": "1000",
+    "count": 4
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 57
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "transportErrorCode": "1220",
+    "count": 6
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "204",
+    "transportErrorCode": "",
+    "count": 255
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 32
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 34
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 615
+  },
+  {
+    "endpoint": "cv_finalize",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 255
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 1
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 666
+  },
+  {
+    "endpoint": "dashboard_history",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 209
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 1
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 209
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 430
+  }
+]

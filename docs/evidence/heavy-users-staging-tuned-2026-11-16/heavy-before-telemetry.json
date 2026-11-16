@@ -1,0 +1,65 @@
+{
+  "time": "2026-11-16T18:25:48.874015+00:00",
+  "replicas": [
+    {
+      "replica": 1,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": []
+    },
+    {
+      "replica": 2,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": [
+        {
+          "endpoint": "upload_cv",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 3.0
+        },
+        {
+          "endpoint": "session_check_in",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 1.0
+        }
+      ]
+    },
+    {
+      "replica": 3,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": [
+        {
+          "endpoint": "upload_cv",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 2.0
+        },
+        {
+          "endpoint": "session_check_in",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 9.0
+        }
+      ]
+    }
+  ],
+  "storage": {
+    "memoryLimitBytes": 10737418240,
+    "restartCount": 0,
+    "oomKilled": false,
+    "health": "healthy"
+  },
+  "disk": ["102915489792", "85903757312", "16994955264", "84%"]
+}

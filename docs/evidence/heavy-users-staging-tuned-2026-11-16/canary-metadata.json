@@ -1,0 +1,65 @@
+{
+  "startedAt": "2026-11-16T18:23:31.189052+00:00",
+  "revision": "809772f2444a26335a7b5eefa8cb1b7ae1803611",
+  "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+  "scenario": "unmodified #601",
+  "generator": "external Mac; official k6 2.4.0; user fast Wi-Fi; public HTTPS proxy",
+  "dateWindow": [16, 17, 18],
+  "configuration": {
+    "dashboardUsers": 1,
+    "qrUsers": 1,
+    "staffUsers": 1,
+    "rampSeconds": 3,
+    "holdSeconds": 15,
+    "rampDownSeconds": 30,
+    "uploadIntervalSeconds": 15
+  },
+  "samples": [
+    {
+      "time": "2026-11-16T18:23:31.204406+00:00",
+      "generatorRssKiBAndCpuPercent": "896   0.0"
+    },
+    {
+      "time": "2026-11-16T18:23:36.227359+00:00",
+      "generatorRssKiBAndCpuPercent": "87840   0.4"
+    },
+    {
+      "time": "2026-11-16T18:23:41.248995+00:00",
+      "generatorRssKiBAndCpuPercent": "88064   0.3"
+    },
+    {
+      "time": "2026-11-16T18:23:46.271991+00:00",
+      "generatorRssKiBAndCpuPercent": "103904   0.2"
+    },
+    {
+      "time": "2026-11-16T18:23:51.289467+00:00",
+      "generatorRssKiBAndCpuPercent": "99248   0.1"
+    },
+    {
+      "time": "2026-11-16T18:23:56.302601+00:00",
+      "generatorRssKiBAndCpuPercent": "116752   0.2"
+    },
+    {
+      "time": "2026-11-16T18:24:01.323978+00:00",
+      "generatorRssKiBAndCpuPercent": "116272   0.3"
+    },
+    {
+      "time": "2026-11-16T18:24:06.335427+00:00",
+      "generatorRssKiBAndCpuPercent": "118224   5.2"
+    },
+    {
+      "time": "2026-11-16T18:24:11.357476+00:00",
+      "generatorRssKiBAndCpuPercent": "142816   0.0"
+    },
+    {
+      "time": "2026-11-16T18:24:16.378688+00:00",
+      "generatorRssKiBAndCpuPercent": "49648  10.3"
+    },
+    {
+      "time": "2026-11-16T18:24:21.397430+00:00",
+      "generatorRssKiBAndCpuPercent": "80480   0.1"
+    }
+  ],
+  "endedAt": "2026-11-16T18:24:26.402895+00:00",
+  "exitCode": 0
+}
