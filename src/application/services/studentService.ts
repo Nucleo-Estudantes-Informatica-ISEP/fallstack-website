@@ -176,7 +176,11 @@ export async function downloadStudentCv(code: string, access: StudentAccess) {
   return file;
 }
 
-export async function streamStudentCv(code: string, access: StudentAccess) {
+export async function streamStudentCv(
+  code: string,
+  access: StudentAccess,
+  signal?: AbortSignal
+) {
   const student = await findStudentByCode(code);
   if (
     !student ||
@@ -184,7 +188,7 @@ export async function streamStudentCv(code: string, access: StudentAccess) {
     !student.cv
   )
     throw new HttpError("CV not found", 404);
-  const file = await getObjectStream("cv", cvKey(student.cv));
+  const file = await getObjectStream("cv", cvKey(student.cv), signal);
   if (!file) throw new HttpError("CV not found", 404);
   return file;
 }

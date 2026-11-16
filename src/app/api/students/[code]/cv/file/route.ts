@@ -5,12 +5,16 @@ import { streamStudentCv } from "@/application/services/studentService";
 
 export const GET = defineHandler<{ code: string }>({
   auth: "session",
-  handler: async ({ session, params }) => {
-    const file = await streamStudentCv(params.code, {
-      studentCode: session!.student?.code,
-      companyId: session!.employee?.company?.id,
-      isAdmin: session!.adminRole !== null,
-    });
+  handler: async ({ req, session, params }) => {
+    const file = await streamStudentCv(
+      params.code,
+      {
+        studentCode: session!.student?.code,
+        companyId: session!.employee?.company?.id,
+        isAdmin: session!.adminRole !== null,
+      },
+      req.signal
+    );
     return new NextResponse(file.body, {
       status: 200,
       headers: {

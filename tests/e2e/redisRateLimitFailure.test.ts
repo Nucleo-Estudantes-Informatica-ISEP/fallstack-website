@@ -132,9 +132,7 @@ test.each([
     ).rejects.toMatchObject({
       reason: mode.startsWith("hang") ? "timeout" : "cooldown",
     });
-    expect(mutations).toBe(
-      beforeRecovery + (mode === "hang-eval" ? 1 : 0)
-    );
+    expect(mutations).toBe(beforeRecovery + (mode === "hang-eval" ? 1 : 0));
     await vi.waitFor(() => expect(sockets.size).toBe(0));
     if (mode !== "hang-handshake") expect(authenticated).toBe(true);
     const wasHangEval = mode === "hang-eval";
@@ -147,9 +145,7 @@ test.each([
       },
       { timeout: 5000, interval: 100 }
     );
-    expect(mutations).toBe(
-      beforeRecovery + (wasHangEval ? 2 : 1)
-    );
+    expect(mutations).toBe(beforeRecovery + (wasHangEval ? 2 : 1));
   }
 );
 

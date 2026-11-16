@@ -11,6 +11,7 @@ import { storageEnv } from "@/config/env.storage";
 
 import {
   assertUnversionedBucket,
+  getObjectStream,
   listObjects,
   putObjectStream,
 } from "./objectStorageService";
@@ -130,4 +131,23 @@ test("putObjectStream sends PutObjectCommand with body stream and ContentLength"
     { abortSignal: signal }
   );
   expect(send.mock.calls[0][0]).toBeInstanceOf(PutObjectCommand);
+});
+
+test("CV streaming preserves length and cancellation without buffering", async () => {
+  const cancel = vi.fn();
+  const stream = new ReadableStream({ cancel });
+  const transformToByteArray = vi.fn();
+  send.mockResolvedValueOnce({
+    Body: { transformToWebStream: () => stream, transformToByteArray },
+    ContentLength: 10485760,
+    ContentType: "application/pdf",
+  });
+  const signal = new AbortController().signal;
+  const file = await getObjectStream("cv", "distribution/cv/test.pdf", signal);
+  expect(file?.body).toBe(stream);
+  expect(file?.contentLength).toBe(10485760);
+  expect(send.mock.calls[0][1]).toEqual({ abortSignal: signal });
+  expect(transformToByteArray).not.toHaveBeenCalled();
+  await file!.body.cancel();
+  expect(cancel).toHaveBeenCalledOnce();
 });

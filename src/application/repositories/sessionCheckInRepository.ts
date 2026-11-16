@@ -10,7 +10,7 @@ export const findScheduleEventForCheckIn = (
 ) => db.scheduleEvent.findUnique({ where: { id: sessionId } });
 
 export const findStudentForCheckIn = (code: string, db: DbClient = prisma) =>
-  db.student.findUnique({ where: { code } });
+  db.student.findUnique({ where: { code }, select: { id: true, name: true } });
 
 export const createSessionCheckIn = (
   input: { sessionId: string; studentId: string; scannedById: string },
