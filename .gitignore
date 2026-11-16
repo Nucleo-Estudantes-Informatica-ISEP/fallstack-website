@@ -57,3 +57,6 @@ prisma/seed.prod.ts
 !.env.example
 !**/.env.example
 .envrc
+
+# Independent public deployment artifact
+/static-output/

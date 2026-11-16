@@ -179,6 +179,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Build independent static delivery and probe without network
+        run: |
+          docker build -f deployment/static/Dockerfile --build-arg DEPLOYMENT_MODE=OFF-SEASON -t fallstack-static-check .
+          test "$(docker inspect --format '{{.Config.User}}' fallstack-static-check)" = "101"
+          docker run -d --name fallstack-static-check --network none fallstack-static-check
+          trap 'docker rm -f fallstack-static-check' EXIT
+          for attempt in $(seq 1 30); do
+            if docker exec fallstack-static-check wget -qO /dev/null http://127.0.0.1:8080/; then break; fi
+            sleep 1
+          done
+          docker exec -i fallstack-static-check sh < deployment/static/smoke.sh
+
       - name: Build migrator stage
         run: docker build --target migrator -t fallstack-migrator-check .
 

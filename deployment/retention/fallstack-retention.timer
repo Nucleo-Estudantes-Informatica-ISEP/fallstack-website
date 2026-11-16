@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Fallstack retention even while web is stopped
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+Persistent=true
+Unit=fallstack-retention.service
+
+[Install]
+WantedBy=timers.target
