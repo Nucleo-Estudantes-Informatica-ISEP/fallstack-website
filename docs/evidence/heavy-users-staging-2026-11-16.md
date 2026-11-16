@@ -13,7 +13,7 @@ revision actually deployed at run time and repeat quota/cleanup preflight.
 
 ## Deployment inspected
 
-- deployment manager: `https://staging-host`, Fallstack development environment.
+- deployment manager: the Coolify instance, Fallstack development environment.
 - Staging application: `https://staging.example.invalid`.
 - Source and deployed staging image revision:
   `942870609b4c2db0ad77cf974843efe3b9a7bed5` (includes #601).
@@ -27,12 +27,12 @@ The user explicitly requested endpoint setup for both environments, and then
 confirmed activation of public upload routes, exact-origin CORS, runtime
 endpoint settings and the required service restarts.
 
-| Environment | Public HTTPS origin                            | Private CV bucket    |
-| ----------- | ---------------------------------------------- | -------------------- |
-| Development | `https://storage-staging.example.invalid` | `fallstack-dev-cvs`  |
-| Production  | `https://storage-production.example.invalid`         | `fallstack-prod-cvs` |
+| Environment | Public HTTPS origin                          | Private CV bucket             |
+| ----------- | -------------------------------------------- | ----------------------------- |
+| Development | `https://storage-staging.example.invalid`    | private development CV bucket |
+| Production  | `https://storage-production.example.invalid` | private production CV bucket  |
 
-Both Cloudflare A records are proxied, target `staging-host`, and use automatic
+Both Cloudflare A records are proxied, target the Cloudflare-proxied origin, and use automatic
 TTL. deployment manager stores the corresponding `S3_PUBLIC_ENDPOINT` variables.
 All three running staging web containers and the production web container were
 recreated sequentially with their existing image revisions and the new endpoint

@@ -247,3 +247,12 @@ See [ADR 0046](../decisions/0046-resume-private-cv-uploads-in-checksummed-parts.
 Both this transport and the original workload need independent evidence. Faster
 part recovery does not establish a capacity pass or remove generator bandwidth
 requirements.
+
+The staging credential also needs `s3:ListBucketMultipartUploads` for the CV
+bucket and `s3:ListMultipartUploadParts` / `s3:AbortMultipartUpload` for only
+`quarantine/cv/*`. This MinIO version rejects a prefix condition on the bucket
+multipart-list action; the application always supplies that prefix, while object
+list/abort permissions remain restricted to quarantine. No distribution-object
+write or anonymous access is added. Apply the same scoped policy and narrow
+PUT/CORS route to the production environment before promoting the new browser
+protocol; a staging rollout does not configure production automatically.

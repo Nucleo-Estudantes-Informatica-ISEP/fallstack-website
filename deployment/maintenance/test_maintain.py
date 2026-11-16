@@ -1,6 +1,8 @@
 import importlib.util
 import pathlib
 import unittest
+from unittest.mock import patch
+import subprocess
 
 spec = importlib.util.spec_from_file_location("maintain", pathlib.Path(__file__).with_name("maintain.py"))
 maintain = importlib.util.module_from_spec(spec)
@@ -8,6 +10,13 @@ spec.loader.exec_module(maintain)
 
 
 class RetentionTests(unittest.TestCase):
+    def test_disappearing_deployment_container_retries_snapshot_and_fails_closed(self):
+        with patch.object(maintain, "docker", side_effect=["old", subprocess.CalledProcessError(1, "inspect"), "new", '[{"Image":"protected"}]']):
+            self.assertEqual(maintain.inspect_snapshot(("ps", "-aq"), ("inspect",)), [{"Image": "protected"}])
+        with patch.object(maintain, "docker", side_effect=["old", subprocess.CalledProcessError(1, "inspect")] * 3):
+            with self.assertRaises(subprocess.CalledProcessError):
+                maintain.inspect_snapshot(("ps", "-aq"), ("inspect",))
+
     def test_keeps_three_latest_all_container_refs_and_unknown_repositories(self):
         images = [{"Id": str(i), "Created": str(i), "RepoTags": [f"app:{i}"]} for i in range(8)]
         images[2]["RepoTags"].append("unrelated:keep")

@@ -48,6 +48,17 @@ def cache_candidates(records, budget):
     return chosen, total
 
 
+def inspect_snapshot(list_args, inspect_args):
+    # Deployments may remove an object between list and inspect; retry before mutating.
+    for attempt in range(3):
+        ids = list(set(docker(*list_args).split()))
+        try:
+            return json.loads(docker(*inspect_args, *ids)) if ids else []
+        except subprocess.CalledProcessError:
+            if attempt == 2:
+                raise
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--config", required=True)
@@ -59,10 +70,8 @@ def main():
     assert 0 < config["max_cache_delete_bytes"] <= 8 * 1024**3
     with open("/run/lock/fallstack-maintenance.lock", "w") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        ids = docker("ps", "-aq").split()
-        containers = json.loads(docker("inspect", *ids)) if ids else []
-        ids = list(set(docker("image", "ls", "-q").split()))
-        images = json.loads(docker("image", "inspect", *ids)) if ids else []
+        containers = inspect_snapshot(("ps", "-aq"), ("inspect",))
+        images = inspect_snapshot(("image", "ls", "-q"), ("image", "inspect"))
         tags = image_candidates(images, containers, config["repositories"], config["keep_images"])
         # Docker enforces last-use age and refuses active records; do not infer idleness from creation time.
         records = [json.loads(s) for s in docker("buildx", "du", "--filter", "until=1h", "--format", "json").splitlines()]

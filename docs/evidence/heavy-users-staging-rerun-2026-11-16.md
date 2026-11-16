@@ -44,7 +44,7 @@ production application upgrade or production load/upload was performed.
 
 ## Preflight and validation
 
-MinIO reported `fallstack-dev-cvs` private, unversioned, quota `0 B` (no configured
+MinIO reported the private staging CV bucket private, unversioned, quota `0 B` (no configured
 quota limit). Free disk before load exceeded the runbook's 7.5 GiB requirement;
 see [preflight inventory](heavy-users-staging-rerun-2026-11-16/preflight.json).
 Cleanup is restricted to the unique synthetic namespace and its uploads.
