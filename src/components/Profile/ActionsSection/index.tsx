@@ -19,18 +19,17 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
     );
 
   return (
-    <ul className="flex flex-col gap-[clamp(7px,0.66vw,7px)]">
+    <ul className="flex flex-col gap-2">
       {actions.map((action) => (
         <li
           key={action.id}
-          className="group flex flex-wrap items-center justify-between bg-[rgba(44,44,44,1)] p-5 transition hover:bg-gray-800"
-          style={{ border: "1px solid #ED8326" }}
+          className="flex items-center justify-between gap-4 rounded-4xl bg-[#2c2c2c] px-7 py-3"
         >
-          <div className="flex-1">
-            <p className="mb-1 font-semibold text-white">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-white">
               {action.altText && !action.done ? action.altText : action.name}
             </p>
-            <p className="text-sm text-gray-300">
+            <p className="text-sm text-white">
               {action.altText && !action.done
                 ? action.description
                     .split(" ")
@@ -39,26 +38,18 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
                 : action.description}
             </p>
           </div>
-          <div className="ml-6 flex shrink-0 items-center gap-2">
-            <span className="text-sm text-gray-300">
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="text-xs text-ui-muted">
               {action.points} pontos
             </span>
             <span
-              className="flex items-center justify-center"
-              style={{
-                width: "30px",
-                height: "30px",
-                borderWidth: "3px",
-                borderStyle: "solid",
-                borderColor: action.done
-                  ? "#ED8326"
-                  : "rgba(255, 255, 255, 0.7)",
-                backgroundColor: "transparent",
-              }}
+              aria-hidden="true"
+              className={`flex size-7 items-center justify-center border-[3px] ${action.done ? "border-ui-highlight" : "border-white/70"}`}
             >
-              {action.done && (
-                <FiCheck className="size-5 text-[rgba(237,131,38,1)]" />
-              )}
+              {action.done && <FiCheck className="size-5 text-ui-highlight" />}
+            </span>
+            <span className="sr-only">
+              {action.done ? "Concluído" : "Por concluir"}
             </span>
           </div>
         </li>

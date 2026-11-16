@@ -80,7 +80,7 @@ test("section titles are second-level headings under the dashboard title", () =>
   renderSummary();
 
   expect(
-    screen.getByRole("heading", { level: 2, name: "Visão Geral" })
+    screen.getByRole("heading", { level: 2, name: "Sumário da empresa" })
   ).toBeInTheDocument();
   expect(
     screen.getByRole("heading", { level: 2, name: "Interesses" })

@@ -12,8 +12,8 @@ interface HistorySectionProps {
 
 const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
   return (
-    <div className="mt-12 mb-8 flex w-full flex-col items-center justify-center">
-      <div className="grid w-full grid-cols-4 border-b-2 px-1 py-3 text-center font-bold text-white/70">
+    <div className="mt-8 mb-4 flex w-full flex-col items-center justify-center">
+      <div className="grid w-full grid-cols-4 border-b border-ui-muted/50 px-1 py-3 text-center text-ui-muted/60">
         <div className="col-span-2 px-1">Nome</div>
         <div className="px-1">Data</div>
         <div className="px-1">Ação</div>
@@ -32,7 +32,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
           historyData.map((item) => (
             <div
               key={`${item.studentId}-${item.createdAt}`}
-              className="grid w-full grid-cols-4 border-t-2 py-4 text-center first:border-0"
+              className="grid w-full grid-cols-4 border-t border-ui-border py-4 text-center first:border-0"
             >
               <div className="col-span-2 min-w-0 px-1 font-bold wrap-anywhere">
                 {isCompany ? (
