@@ -1,21 +1,31 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { FiDownload } from "react-icons/fi";
 
 import { httpClient } from "@/lib/http/client";
 import { Clipboard } from "@/components/ui/Icons";
 import GoogleWalletButton from "@/components/GoogleWalletButton";
+import { downloadOfflinePass } from "@/components/PassSection/generateOfflinePass";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
 
 interface PassMenuContentProps {
-  student: Pick<StudentDto, "code" | "name">;
+  student: Pick<StudentDto, "code" | "name"> & { user?: { email?: string } };
 }
+
+const DOWNLOAD_ERROR_MESSAGE =
+  "Não foi possível gerar o passe offline. Tenta novamente antes de ficares sem internet.";
 
 const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const permanentQrRef = useRef<SVGSVGElement | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchToken = useCallback(async () => {
     try {
@@ -36,9 +46,45 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   }, [fetchToken]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(student.code).catch(() => {});
     setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    if (copyTimer.current) clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    try {
+      const result = navigator.clipboard.writeText(student.code);
+      if (result && typeof result.then === "function") {
+        result.catch(() => setCopied(false));
+      }
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+    },
+    []
+  );
+
+  const handleDownloadOfflinePass = async () => {
+    setDownloadError(null);
+    if (!student.code || !permanentQrRef.current) {
+      setDownloadError(DOWNLOAD_ERROR_MESSAGE);
+      return;
+    }
+    try {
+      setDownloading(true);
+      await downloadOfflinePass({
+        studentName: student.name,
+        studentEmail: student.user?.email,
+        permanentCode: student.code,
+        qrSvgElement: permanentQrRef.current,
+      });
+    } catch {
+      setDownloadError(DOWNLOAD_ERROR_MESSAGE);
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const failed = !loading && !qrToken;
@@ -77,6 +123,11 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
               </button>
             </>
           )}
+          {student.code && (
+            <div className="hidden" aria-hidden="true">
+              <QRCodeSVG ref={permanentQrRef} value={student.code} size={400} />
+            </div>
+          )}
         </div>
         <div className="flex w-full min-w-0 flex-col items-center text-center lg:items-start lg:text-left">
           {student.code && (
@@ -106,10 +157,27 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
               </p>
             </>
           )}
-          {/* Wallet actions; #406 adds the pass download here. */}
           <div className="mt-4 flex flex-col items-center gap-2 lg:items-start">
+            {student.code && (
+              <button
+                type="button"
+                onClick={handleDownloadOfflinePass}
+                disabled={downloading}
+                className="ui-focus inline-flex min-h-11 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                <FiDownload className="size-4" aria-hidden="true" />
+                {downloading
+                  ? "A gerar passe..."
+                  : "Descarregar Passe (Offline)"}
+              </button>
+            )}
             <GoogleWalletButton />
           </div>
+          {downloadError && (
+            <p role="alert" className="mt-3 text-sm text-red-400">
+              {downloadError}
+            </p>
+          )}
         </div>
       </div>
     </section>

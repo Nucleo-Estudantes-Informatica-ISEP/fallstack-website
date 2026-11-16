@@ -78,8 +78,9 @@ labelled; `UserImage` alt text is English.
 
 - Current `react-icons` menu icons; the current entry keeps its orange
   border and `aria-current`; mobile navigation as #582 left it (#479).
-- No scanner entries in the student menu, and no Apple Wallet or Download
-  PNG buttons (#406).
+- Scanner entry points remain role-gated and separate from the student menu.
+  Offline pass download and Google Wallet actions are provided by the pass
+  view (#406).
 - The design's `#666666` text would be 3.2:1, so text uses `ui-muted` and
   lines `ui-border`.
 - Fields are 44 px high (design 42) and 6 px further apart; interest pills
@@ -87,8 +88,9 @@ labelled; `UserImage` alt text is English.
   hints stay. Guardar uses the design's `#82360D`.
 - The pass card is unchanged (D3), so the name shows twice and the code
   appears in the card and the code block.
-- `Profile/Input` is unused. Until #516 merges, the company summary on `dev`
-  also shows the new history table.
+- `Profile/Input` is unused. Company profile scanning is supplied by #516 and
+  attendance scanning by #470; this dashboard PR consumes those existing
+  role-gated flows.
 
 ## Checks
 
@@ -122,10 +124,10 @@ scanning it, and the Google Wallet button on Android).
 
 ## Scanner pages
 
-Students show their pass; companies scan it. Scan de Perfil belongs to #516
-and Scan de Palestras to #470, which has no page yet. Scan de Perfil as #516
-leaves it (its after captures), against the Figma "Profile scan and history"
-frame:
+Students show their pass; companies scan it. Scan de Perfil is supplied by
+#516, and Scan de Palestras is supplied by #470. The attendance scanner keeps
+its phone-first light layout from #470 rather than adopting the dark desktop
+Figma frame, because it is a separate role-gated flow:
 
 | Item                 | Figma                                                | #516                                                               | Result                          |
 | -------------------- | ---------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------- |

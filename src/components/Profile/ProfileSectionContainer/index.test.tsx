@@ -46,3 +46,27 @@ test("menu changes focus the selected content and preserve navigation labels", (
     screen.getByRole("navigation", { name: "Perfil" })
   ).toBeInTheDocument();
 });
+
+test("shows the staff attendance card only when allowed", () => {
+  const props = {
+    student: {
+      name: "Student",
+      user: { email: "student@example.com" },
+    } as never,
+    interestIds: [],
+    globalStats: { totalScans: 0, totalSaves: 0 },
+    todayStats: 0,
+    companiesLeft: 0,
+    historyData: [],
+    actions: [],
+    availableInterests: [],
+  };
+  const { rerender } = render(<ProfileSectionContainer {...props} />);
+  expect(
+    screen.queryByRole("link", { name: "Abrir leitor de presenças" })
+  ).toBeNull();
+  rerender(<ProfileSectionContainer {...props} canRecordAttendance />);
+  expect(
+    screen.getByRole("link", { name: "Abrir leitor de presenças" })
+  ).toBeTruthy();
+});

@@ -57,7 +57,9 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
             </tr>
           ) : (
             historyData.map((item) => (
-              <tr key={`${item.studentId}-${item.createdAt}`}>
+              <tr
+                key={`${item.studentId}-${item.savedBy.company?.name ?? item.savedBy.name}-${item.createdAt}`}
+              >
                 <td className={`${bodyCell} font-semibold wrap-break-word`}>
                   {isCompany ? (
                     <Link
