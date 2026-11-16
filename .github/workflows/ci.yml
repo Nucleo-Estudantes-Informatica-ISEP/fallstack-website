@@ -191,6 +191,9 @@ jobs:
           done
           docker exec -i fallstack-static-check sh < deployment/static/smoke.sh
 
+      - name: Verify preparation client-certificate boundary
+        run: bash tests/e2e/preparation-boundary.sh
+
       - name: Build migrator stage
         run: docker build --target migrator -t fallstack-migrator-check .
 

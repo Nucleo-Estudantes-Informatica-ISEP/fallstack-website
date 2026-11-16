@@ -7,5 +7,5 @@ Requires=docker.service
 Type=oneshot
 WorkingDirectory=/opt/fallstack
 # Operator installs a restricted env file in this checkout. Never print it.
-ExecStart=/usr/bin/docker compose --env-file /etc/fallstack/retention.env -f docker-compose.retention.yml run --rm --no-deps storage-cleanup node --conditions=react-server --import tsx scripts/storage-cleanup.ts --apply
+ExecStart=/usr/bin/docker compose --env-file /etc/fallstack/retention.env -f docker-compose.retention.yml run --rm --no-deps storage-cleanup node --conditions=react-server --import tsx scripts/storage-cleanup.ts
 TimeoutStartSec=1h

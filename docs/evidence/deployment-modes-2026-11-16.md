@@ -146,3 +146,29 @@ produced by `Date.toISOString()`). Re-ran five affected unit/build tests, change
 code lint and typecheck successfully. The default generated HTML was byte-for-byte
 identical to the previously verified static image; full app tests/build evidence
 was reused for unchanged application code.
+
+## PR 614 review follow-up
+
+Changes based on head `2a098f815614a6d1ce335ffd0d374061852b5b33`:
+
+- Retention unit now audits by default; the documented `apply.conf` drop-in is
+  required to opt into deletion. No live timer or data was changed.
+- `bash tests/e2e/preparation-boundary.sh` passed locally on macOS with Docker
+  Compose v5.6.0 and Node v26.13.1. It renders the actual preparation overlay
+  (removing only Coolify's `exclude_from_hc` extension for stock Compose), checks
+  private routing/profile settings, validates the actual Nginx configuration,
+  and probes a synthetic upstream: trusted staff client succeeds, missing and
+  untrusted clients receive 400. Temporary containers, network and keys removed.
+  CI now runs the same test. No shared DB, storage or identity service is used.
+- `pnpm exec vitest run scripts/build-deployment.test.ts --maxWorkers=1`:
+  three tests passed, including credential-free static builds.
+- Changed Markdown/workflow Prettier checks and `git diff --check` passed.
+
+Application sources, schema, dependencies and build configuration are unchanged;
+application lint, full tests, typecheck, build and Prisma evidence recorded above
+and in the PR is reused. No new app/dev-server, installed-PWA or live deployment
+check was needed for these unit/CI/documentation changes. The test uses an
+isolated synthetic upstream, not a real staff login. A new automatic Coolify
+resource deployment was not performed: the existing staging ingress evidence
+proves explicit proxy attachment only. The runbook now states the required
+attachment/router setup and actual-hostname verification gate explicitly.

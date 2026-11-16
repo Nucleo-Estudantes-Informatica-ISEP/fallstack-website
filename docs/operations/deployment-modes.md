@@ -18,7 +18,12 @@ generic next-edition text. Rebuild to change a date. Dates never activate routes
 
 Create a separate Coolify resource using `docker-compose.static.yml`. Public
 DNS/proxy points only at its port 8080 through `public_only`; attach the reverse
-proxy to that internal network. There is no host-published port. Do not join shared-data or Redis networks, inject app credentials,
+proxy to that internal network. This template does not automatically configure
+Coolify routing: the operator must configure a hostname/router targeting port
+8080 and attach the proxy to the resolved `<project>_public_only` network.
+Verify a 200 through the actual public hostname before switching DNS. The dated
+staging evidence proves this explicit proxy attachment, not an automatic
+Coolify resource deployment; that deployment remains an activation gate. There is no host-published port. Do not join shared-data or Redis networks, inject app credentials,
 mount app files/volumes, or add a Next fallback/upstream. Deny outbound access
 to PostgreSQL, MinIO, AuthNEI and the internet in the serving network, including
 new connections through the reverse proxy. Apply the egress policy before
@@ -137,8 +142,12 @@ The [systemd timer](../../deployment/retention/fallstack-retention.timer) and
 installable schedule templates. Adjust checkout, docker binary and protected
 env-file paths to the host inventory; the env file supplies only the DB/S3 values required by
 `docker-compose.retention.yml`; it needs no event Redis or identity credentials. Restrict it to operators. Install the
-units in `/etc/systemd/system`, reload systemd and enable/start the timer only
-after the dry-run audit. `Persistent=true` catches missed runs after host
+units in `/etc/systemd/system`. The service defaults to dry-run, including timer
+runs. After reviewing a successful audit, explicitly install
+[`apply.conf`](../../deployment/retention/apply.conf) as
+`/etc/systemd/system/fallstack-retention.service.d/apply.conf`, reload systemd,
+and enable/start the timer. Remove the drop-in and reload to return to dry-run.
+The drop-in, rather than `STORAGE_CLEANUP_MODE`, opts this one-shot into deletes. `Persistent=true` catches missed runs after host
 restart and systemd prevents overlapping instances of this unit. Connect failed
 units and last-success age to existing NEI alerting; no monitoring destination
 is assumed here. Inspect `systemctl list-timers` and the sanitized journal to
