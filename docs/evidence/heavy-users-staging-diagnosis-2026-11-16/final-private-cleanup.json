@@ -1,0 +1,7 @@
+{
+  "taskTemporaryContainerFilesRemoved": 12,
+  "credentialBearingDeploymentSnapshotsRemoved": true,
+  "disposableSourceContextRemoved": true,
+  "latestNormalReplicasHealthy": 3,
+  "disk": ["102915489792", "83740438528", "19158274048", "82%"]
+}

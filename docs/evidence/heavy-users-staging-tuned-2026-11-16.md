@@ -1,5 +1,7 @@
 # Tuned staging verification — 16 November 2026
 
+Further investigation: [controlled transfer probes and reruns](heavy-users-staging-diagnosis-2026-11-16.md).
+
 Issue #604; follows #601. The user authorized the existing three staging web
 containers, a temporary 16–18 November window, and restoration after testing.
 No production load ran. MinIO remains storage behind the HTTPS proxy.

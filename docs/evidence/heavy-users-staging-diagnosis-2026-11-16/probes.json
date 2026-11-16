@@ -1,0 +1,2774 @@
+[
+  {
+    "startedAt": "2026-11-16T19:11:52.350Z",
+    "endedAt": "2026-11-16T19:11:54.135Z",
+    "mode": "public",
+    "size": 184320,
+    "concurrency": 1,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 491,
+            "connectMs": 127,
+            "tlsMs": 189,
+            "firstByteMs": 489
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 417,
+            "connectMs": 90,
+            "tlsMs": 118,
+            "firstByteMs": 417
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 349,
+            "firstByteMs": 348
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 92,
+            "firstByteMs": 91
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 145,
+            "firstByteMs": 144
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 283,
+            "firstByteMs": 143
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:54.137Z",
+    "endedAt": "2026-11-16T19:11:55.000Z",
+    "mode": "origin",
+    "size": 184320,
+    "concurrency": 1,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 256,
+            "firstByteMs": 256
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 145,
+            "firstByteMs": 144
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 127,
+            "firstByteMs": 126
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 79,
+            "firstByteMs": 78
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 74
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 176,
+            "firstByteMs": 79
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:55.001Z",
+    "endedAt": "2026-11-16T19:11:56.524Z",
+    "mode": "public",
+    "size": 184320,
+    "concurrency": 5,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 255,
+            "firstByteMs": 254
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 539,
+            "connectMs": 22,
+            "tlsMs": 58,
+            "firstByteMs": 539
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 301,
+            "firstByteMs": 297
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 92,
+            "firstByteMs": 92
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 83,
+            "firstByteMs": 83
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 250,
+            "firstByteMs": 102
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 220,
+            "connectMs": 52,
+            "tlsMs": 96,
+            "firstByteMs": 220
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 448,
+            "connectMs": 18,
+            "tlsMs": 48,
+            "firstByteMs": 447
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 336,
+            "firstByteMs": 334
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 72,
+            "firstByteMs": 70
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 72,
+            "firstByteMs": 71
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 218,
+            "firstByteMs": 86
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 241,
+            "connectMs": 50,
+            "tlsMs": 92,
+            "firstByteMs": 241
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 383,
+            "connectMs": 22,
+            "tlsMs": 70,
+            "firstByteMs": 383
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 195,
+            "firstByteMs": 195
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 116,
+            "firstByteMs": 115
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 84,
+            "firstByteMs": 82
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 246,
+            "firstByteMs": 144
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 228,
+            "connectMs": 52,
+            "tlsMs": 104,
+            "firstByteMs": 225
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 502,
+            "connectMs": 20,
+            "tlsMs": 48,
+            "firstByteMs": 502
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 312,
+            "firstByteMs": 312
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 74,
+            "firstByteMs": 73
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 74,
+            "firstByteMs": 73
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 228,
+            "firstByteMs": 91
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 204,
+            "connectMs": 50,
+            "tlsMs": 97,
+            "firstByteMs": 203
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 500,
+            "firstByteMs": 500
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 350,
+            "firstByteMs": 348
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 119,
+            "firstByteMs": 119
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 92,
+            "firstByteMs": 92
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 249,
+            "firstByteMs": 91
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:56.525Z",
+    "endedAt": "2026-11-16T19:11:57.375Z",
+    "mode": "origin",
+    "size": 184320,
+    "concurrency": 5,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 98,
+            "firstByteMs": 98
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 194,
+            "firstByteMs": 193
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 195,
+            "firstByteMs": 195
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 89,
+            "firstByteMs": 89
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 125,
+            "firstByteMs": 69
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 108,
+            "firstByteMs": 108
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 117,
+            "firstByteMs": 117
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 167,
+            "firstByteMs": 166
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 85,
+            "firstByteMs": 85
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 76
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 138,
+            "firstByteMs": 81
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 108,
+            "firstByteMs": 108
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 135,
+            "firstByteMs": 135
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 167,
+            "firstByteMs": 167
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 78,
+            "firstByteMs": 76
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 65,
+            "firstByteMs": 65
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 182,
+            "firstByteMs": 89
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 102,
+            "firstByteMs": 102
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 240,
+            "firstByteMs": 240
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 185,
+            "firstByteMs": 185
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 73,
+            "firstByteMs": 73
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 71,
+            "firstByteMs": 71
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 177,
+            "firstByteMs": 78
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 98,
+            "firstByteMs": 97
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 124,
+            "firstByteMs": 124
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 72,
+            "firstByteMs": 72
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 133,
+            "firstByteMs": 86
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:57.377Z",
+    "endedAt": "2026-11-16T19:11:58.452Z",
+    "mode": "public",
+    "size": 184320,
+    "concurrency": 10,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 95,
+            "firstByteMs": 95
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 96,
+            "firstByteMs": 96
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 133,
+            "firstByteMs": 125
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 76
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 73,
+            "firstByteMs": 73
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 237,
+            "firstByteMs": 101
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 86,
+            "firstByteMs": 86
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 201,
+            "firstByteMs": 201
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 160,
+            "firstByteMs": 159
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 97,
+            "firstByteMs": 97
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 77,
+            "firstByteMs": 77
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 245,
+            "firstByteMs": 99
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 109,
+            "firstByteMs": 109
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 105,
+            "firstByteMs": 105
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 146,
+            "firstByteMs": 146
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 106,
+            "firstByteMs": 105
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 111,
+            "firstByteMs": 111
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 244,
+            "firstByteMs": 85
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 83,
+            "firstByteMs": 83
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 243,
+            "firstByteMs": 243
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 213,
+            "firstByteMs": 212
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 73,
+            "firstByteMs": 73
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 75
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 123,
+            "firstByteMs": 65
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 112,
+            "firstByteMs": 112
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 111,
+            "firstByteMs": 111
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 139,
+            "firstByteMs": 139
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 94,
+            "firstByteMs": 93
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 90,
+            "firstByteMs": 90
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 282,
+            "firstByteMs": 138
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 186,
+            "connectMs": 52,
+            "tlsMs": 97,
+            "firstByteMs": 186
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 356,
+            "connectMs": 27,
+            "tlsMs": 70,
+            "firstByteMs": 356
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 217,
+            "firstByteMs": 215
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 66,
+            "firstByteMs": 65
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 61,
+            "firstByteMs": 61
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 183,
+            "firstByteMs": 81
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 201,
+            "connectMs": 53,
+            "tlsMs": 106,
+            "firstByteMs": 201
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 240,
+            "connectMs": 45,
+            "tlsMs": 74,
+            "firstByteMs": 240
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 264,
+            "firstByteMs": 264
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 74,
+            "firstByteMs": 74
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 68,
+            "firstByteMs": 67
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 130,
+            "firstByteMs": 76
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 198,
+            "connectMs": 50,
+            "tlsMs": 95,
+            "firstByteMs": 197
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 126,
+            "firstByteMs": 126
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 189,
+            "firstByteMs": 189
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 115,
+            "firstByteMs": 115
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 80,
+            "firstByteMs": 80
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 242,
+            "firstByteMs": 95
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 157,
+            "connectMs": 47,
+            "tlsMs": 90,
+            "firstByteMs": 157
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 227,
+            "connectMs": 30,
+            "tlsMs": 53,
+            "firstByteMs": 227
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 242,
+            "firstByteMs": 240
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 82,
+            "firstByteMs": 81
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 160,
+            "firstByteMs": 69
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 202,
+            "connectMs": 52,
+            "tlsMs": 104,
+            "firstByteMs": 202
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 227,
+            "connectMs": 41,
+            "tlsMs": 63,
+            "firstByteMs": 227
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 271,
+            "firstByteMs": 270
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 70,
+            "firstByteMs": 70
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 180,
+            "firstByteMs": 84
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:58.453Z",
+    "endedAt": "2026-11-16T19:11:59.674Z",
+    "mode": "origin",
+    "size": 184320,
+    "concurrency": 10,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 120,
+            "firstByteMs": 119
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 187,
+            "firstByteMs": 187
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 249,
+            "firstByteMs": 249
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 104,
+            "firstByteMs": 103
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 110,
+            "firstByteMs": 108
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 227,
+            "firstByteMs": 175
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 131,
+            "firstByteMs": 131
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 192,
+            "firstByteMs": 192
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 413,
+            "firstByteMs": 409
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 103,
+            "firstByteMs": 103
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 116,
+            "firstByteMs": 116
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 184,
+            "firstByteMs": 83
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 96,
+            "firstByteMs": 96
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 187,
+            "firstByteMs": 186
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 337,
+            "firstByteMs": 337
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 97,
+            "firstByteMs": 96
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 116,
+            "firstByteMs": 115
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 190,
+            "firstByteMs": 92
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 111,
+            "firstByteMs": 111
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 360,
+            "firstByteMs": 360
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 235,
+            "firstByteMs": 231
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 72,
+            "firstByteMs": 71
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 76
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 171,
+            "firstByteMs": 77
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 112,
+            "firstByteMs": 112
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 236,
+            "firstByteMs": 235
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 247,
+            "firstByteMs": 246
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 145,
+            "firstByteMs": 144
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 75,
+            "firstByteMs": 75
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 140,
+            "firstByteMs": 84
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 112,
+            "firstByteMs": 112
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 383,
+            "firstByteMs": 383
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 264,
+            "firstByteMs": 264
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 123,
+            "firstByteMs": 121
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 72,
+            "firstByteMs": 72
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 212,
+            "firstByteMs": 81
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 123,
+            "firstByteMs": 123
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 381,
+            "firstByteMs": 381
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 264,
+            "firstByteMs": 264
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 81,
+            "firstByteMs": 81
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 107,
+            "firstByteMs": 106
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 176,
+            "firstByteMs": 88
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 262,
+            "firstByteMs": 262
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 188,
+            "firstByteMs": 188
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 302,
+            "firstByteMs": 302
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 92,
+            "firstByteMs": 90
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 68,
+            "firstByteMs": 68
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 305,
+            "firstByteMs": 83
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 113,
+            "firstByteMs": 113
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 386,
+            "firstByteMs": 386
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 234,
+            "firstByteMs": 234
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 69,
+            "firstByteMs": 69
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 61,
+            "firstByteMs": 60
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 204,
+            "firstByteMs": 121
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 447,
+            "firstByteMs": 348
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 102,
+            "firstByteMs": 102
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 329,
+            "firstByteMs": 329
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 83,
+            "firstByteMs": 82
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 81,
+            "firstByteMs": 81
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 165,
+            "firstByteMs": 68
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:11:59.675Z",
+    "endedAt": "2026-11-16T19:12:07.110Z",
+    "mode": "public",
+    "size": 10485760,
+    "concurrency": 1,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 64,
+            "firstByteMs": 64
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 1223,
+            "firstByteMs": 1223
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 199,
+            "firstByteMs": 198
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 62,
+            "firstByteMs": 62
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 65,
+            "firstByteMs": 65
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5793,
+            "firstByteMs": 200
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:12:07.110Z",
+    "endedAt": "2026-11-16T19:12:12.074Z",
+    "mode": "origin",
+    "size": 10485760,
+    "concurrency": 1,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 80,
+            "firstByteMs": 79
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 1027,
+            "firstByteMs": 1027
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 161,
+            "firstByteMs": 161
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 67,
+            "firstByteMs": 66
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 59,
+            "firstByteMs": 59
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 3542,
+            "firstByteMs": 187
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:12:12.076Z",
+    "endedAt": "2026-11-16T19:12:25.513Z",
+    "mode": "public",
+    "size": 10485760,
+    "concurrency": 5,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 110,
+            "firstByteMs": 110
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 10343,
+            "firstByteMs": 10342
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 180,
+            "firstByteMs": 180
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 64,
+            "firstByteMs": 64
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 70,
+            "firstByteMs": 70
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 2648,
+            "firstByteMs": 163
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 93,
+            "firstByteMs": 93
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 7508,
+            "firstByteMs": 7508
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 240,
+            "firstByteMs": 239
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 101,
+            "firstByteMs": 101
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 94,
+            "firstByteMs": 93
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 3470,
+            "firstByteMs": 225
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 116,
+            "firstByteMs": 116
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 7008,
+            "firstByteMs": 7008
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 261,
+            "firstByteMs": 261
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 116,
+            "firstByteMs": 116
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 100,
+            "firstByteMs": 100
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5707,
+            "firstByteMs": 248
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 81,
+            "firstByteMs": 80
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 4739,
+            "firstByteMs": 4739
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 256,
+            "firstByteMs": 256
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 154,
+            "firstByteMs": 154
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 152,
+            "firstByteMs": 151
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4180,
+            "firstByteMs": 238
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 101,
+            "firstByteMs": 101
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 9471,
+            "firstByteMs": 9471
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 159,
+            "firstByteMs": 159
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 62,
+            "firstByteMs": 62
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 68,
+            "firstByteMs": 68
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 2946,
+            "firstByteMs": 192
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:12:25.515Z",
+    "endedAt": "2026-11-16T19:12:37.345Z",
+    "mode": "origin",
+    "size": 10485760,
+    "concurrency": 5,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 101,
+            "firstByteMs": 101
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 4007,
+            "firstByteMs": 4006
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 269,
+            "firstByteMs": 268
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 110,
+            "firstByteMs": 109
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 95,
+            "firstByteMs": 95
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4556,
+            "firstByteMs": 365
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 77,
+            "firstByteMs": 77
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 8002,
+            "firstByteMs": 8002
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 248,
+            "firstByteMs": 248
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 92,
+            "firstByteMs": 91
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 93,
+            "firstByteMs": 92
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 2865,
+            "firstByteMs": 228
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 67,
+            "firstByteMs": 67
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 6367,
+            "firstByteMs": 6366
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 286,
+            "firstByteMs": 286
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 147,
+            "firstByteMs": 147
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 162,
+            "firstByteMs": 161
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4778,
+            "firstByteMs": 339
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 93,
+            "firstByteMs": 93
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 4077,
+            "firstByteMs": 4077
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 208,
+            "firstByteMs": 208
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 106,
+            "firstByteMs": 106
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 96,
+            "firstByteMs": 96
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4912,
+            "firstByteMs": 306
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 110,
+            "firstByteMs": 109
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 2901,
+            "firstByteMs": 2901
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 285,
+            "firstByteMs": 285
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 215,
+            "firstByteMs": 215
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 181,
+            "firstByteMs": 181
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4417,
+            "firstByteMs": 259
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:12:37.346Z",
+    "endedAt": "2026-11-16T19:12:59.622Z",
+    "mode": "public",
+    "size": 10485760,
+    "concurrency": 10,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 189,
+            "firstByteMs": 188
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11525,
+            "firstByteMs": 11525
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 706,
+            "firstByteMs": 706
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 139,
+            "firstByteMs": 139
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 262,
+            "firstByteMs": 258
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 7243,
+            "firstByteMs": 305
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 224,
+            "firstByteMs": 224
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 10763,
+            "firstByteMs": 10763
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 368,
+            "firstByteMs": 368
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 169,
+            "firstByteMs": 168
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 189,
+            "firstByteMs": 189
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4444,
+            "firstByteMs": 445
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 316,
+            "firstByteMs": 316
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11461,
+            "firstByteMs": 11460
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 660,
+            "firstByteMs": 660
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 135,
+            "firstByteMs": 131
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 94,
+            "firstByteMs": 94
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 8395,
+            "firstByteMs": 278
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 213,
+            "firstByteMs": 213
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11401,
+            "firstByteMs": 11400
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 220,
+            "firstByteMs": 220
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 76
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 345,
+            "firstByteMs": 345
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5081,
+            "firstByteMs": 311
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 345,
+            "firstByteMs": 345
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11408,
+            "connectMs": 193,
+            "tlsMs": 395,
+            "firstByteMs": 11408
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 347,
+            "firstByteMs": 346
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 70,
+            "firstByteMs": 69
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 81,
+            "firstByteMs": 81
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5108,
+            "firstByteMs": 400
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 237,
+            "firstByteMs": 237
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11479,
+            "firstByteMs": 11479
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 341,
+            "firstByteMs": 340
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 237,
+            "firstByteMs": 237
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 150,
+            "firstByteMs": 150
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 6375,
+            "firstByteMs": 394
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 336,
+            "firstByteMs": 336
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11415,
+            "firstByteMs": 11415
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 674,
+            "firstByteMs": 674
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 233,
+            "firstByteMs": 233
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 323,
+            "firstByteMs": 323
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 6643,
+            "firstByteMs": 268
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 243,
+            "firstByteMs": 243
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11192,
+            "firstByteMs": 11192
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 293,
+            "firstByteMs": 293
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 152,
+            "firstByteMs": 150
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 112,
+            "firstByteMs": 112
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 4355,
+            "firstByteMs": 335
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 203,
+            "firstByteMs": 203
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11644,
+            "firstByteMs": 11644
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 1104,
+            "firstByteMs": 1104
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 136,
+            "firstByteMs": 135
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 104,
+            "firstByteMs": 103
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 9059,
+            "firstByteMs": 218
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 273,
+            "firstByteMs": 272
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11591,
+            "firstByteMs": 11591
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 281,
+            "firstByteMs": 280
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 150,
+            "firstByteMs": 150
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 96,
+            "firstByteMs": 96
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5503,
+            "firstByteMs": 539
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  },
+  {
+    "startedAt": "2026-11-16T19:12:59.623Z",
+    "endedAt": "2026-11-16T19:13:24.076Z",
+    "mode": "origin",
+    "size": 10485760,
+    "concurrency": 10,
+    "results": [
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 176,
+            "firstByteMs": 176
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11561,
+            "firstByteMs": 11561
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 496,
+            "firstByteMs": 490
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 91,
+            "firstByteMs": 91
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 205,
+            "firstByteMs": 205
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 11543,
+            "firstByteMs": 199
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 158,
+            "firstByteMs": 158
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 10919,
+            "firstByteMs": 10919
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 274,
+            "firstByteMs": 274
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 105,
+            "firstByteMs": 105
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 116,
+            "firstByteMs": 116
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5431,
+            "firstByteMs": 416
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 139,
+            "firstByteMs": 139
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11009,
+            "firstByteMs": 11009
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 304,
+            "firstByteMs": 304
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 100,
+            "firstByteMs": 100
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 86,
+            "firstByteMs": 86
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 11377,
+            "firstByteMs": 523
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 150,
+            "firstByteMs": 150
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11542,
+            "firstByteMs": 11541
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 544,
+            "firstByteMs": 544
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 89,
+            "firstByteMs": 89
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 86,
+            "firstByteMs": 86
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 10838,
+            "firstByteMs": 194
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 105,
+            "firstByteMs": 105
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11466,
+            "firstByteMs": 11466
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 694,
+            "firstByteMs": 694
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 76,
+            "firstByteMs": 76
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 77,
+            "firstByteMs": 77
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 6633,
+            "firstByteMs": 423
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 197,
+            "firstByteMs": 197
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 10883,
+            "firstByteMs": 10883
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 269,
+            "firstByteMs": 267
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 104,
+            "firstByteMs": 103
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 102,
+            "firstByteMs": 102
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5314,
+            "firstByteMs": 427
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 130,
+            "firstByteMs": 130
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11320,
+            "firstByteMs": 11320
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 727,
+            "firstByteMs": 725
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 94,
+            "firstByteMs": 94
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 85,
+            "firstByteMs": 82
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 5384,
+            "firstByteMs": 249
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 182,
+            "firstByteMs": 182
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11338,
+            "firstByteMs": 11338
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 589,
+            "firstByteMs": 588
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 82,
+            "firstByteMs": 82
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 86,
+            "firstByteMs": 83
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 12154,
+            "firstByteMs": 252
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 167,
+            "firstByteMs": 167
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 11531,
+            "firstByteMs": 11531
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 537,
+            "firstByteMs": 537
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 90,
+            "firstByteMs": 90
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 247,
+            "firstByteMs": 240
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 6820,
+            "firstByteMs": 466
+          }
+        ],
+        "integrity": true
+      },
+      {
+        "steps": [
+          {
+            "name": "authorize",
+            "status": 201,
+            "ms": 187,
+            "firstByteMs": 187
+          },
+          {
+            "name": "transfer",
+            "status": 204,
+            "ms": 10891,
+            "firstByteMs": 10891
+          },
+          {
+            "name": "finalize",
+            "status": 200,
+            "ms": 311,
+            "firstByteMs": 311
+          },
+          {
+            "name": "attach",
+            "status": 200,
+            "ms": 108,
+            "firstByteMs": 108
+          },
+          {
+            "name": "lookup",
+            "status": 200,
+            "ms": 89,
+            "firstByteMs": 89
+          },
+          {
+            "name": "download",
+            "status": 200,
+            "ms": 11684,
+            "firstByteMs": 407
+          }
+        ],
+        "integrity": true
+      }
+    ]
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "authorizedMaximumBytes": 8573157376,
+  "selectedUpperBoundBytes": 7791823134,
+  "selectedRecords": 74,
+  "beforeDisk": ["102915489792", "87312310272", "15586402304", "85%"],
+  "afterDisk": ["102915489792", "84073132032", "18825580544", "82%"],
+  "preserved": [
+    "all volumes",
+    "all containers",
+    "all image-referenced layers",
+    "active build records"
+  ]
+}

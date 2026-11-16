@@ -1,0 +1,25 @@
+[
+  {
+    "environment": "staging",
+    "s3FieldsPresentAtRuntime": {
+      "S3_ENDPOINT": true,
+      "S3_PUBLIC_ENDPOINT": true,
+      "S3_BUCKET_CVS": true,
+      "S3_ACCESS_KEY_ID": true,
+      "S3_SECRET_ACCESS_KEY": true
+    },
+    "publicEndpointMatchesSnapshot": true
+  },
+  {
+    "environment": "production",
+    "s3FieldsPresentAtRuntime": {
+      "S3_ENDPOINT": true,
+      "S3_PUBLIC_ENDPOINT": true,
+      "S3_BUCKET_CVS": true,
+      "S3_ACCESS_KEY_ID": true,
+      "S3_SECRET_ACCESS_KEY": true
+    },
+    "publicEndpointMatchesSnapshot": true
+  },
+  { "minioDurableMemory": "10g" }
+]
