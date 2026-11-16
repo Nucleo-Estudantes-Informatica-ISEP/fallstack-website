@@ -190,7 +190,6 @@ export async function listStudentsForAdmin(query: AdminStudentQuery) {
 
 export async function createStudentForAdmin(input: {
   email: string;
-  password: string;
   code: string;
   name: string;
   year: StudentYear;
@@ -201,7 +200,7 @@ export async function createStudentForAdmin(input: {
 
   const authUser = await createSupabaseAuthUserAsAdmin(
     input.email,
-    input.password
+    input.name
   );
   try {
     return await withTransaction(async (tx) => {
@@ -235,12 +234,10 @@ export async function updateStudentForAdmin(
     linkedin?: string | null;
     github?: string | null;
     avatar?: string | null;
-    password?: string;
     active?: boolean;
   }
 ) {
-  const { password: _password, avatar, active, ...profile } = input;
-  void _password;
+  const { avatar, active, ...profile } = input;
   const student = await updateStudentFields(id, profile);
   if (avatar !== undefined) await updateStudentMedia(id, { avatar });
   if (active !== undefined) {

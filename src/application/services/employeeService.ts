@@ -34,7 +34,6 @@ export async function listEmployeesForAdmin(query: AdminEmployeeQuery) {
 
 export async function createEmployeeForAdmin(input: {
   email: string;
-  password: string;
   name: string;
   companyId: string;
   linkedin?: string;
@@ -46,7 +45,7 @@ export async function createEmployeeForAdmin(input: {
   // their AuthNEI identity themselves and is linked by verified email.
   const appIdentity = await createSupabaseAuthUserAsAdmin(
     input.email,
-    input.password
+    input.name
   );
   try {
     return await withTransaction(async (tx) => {
@@ -80,12 +79,10 @@ export async function updateEmployeeForAdmin(
     name?: string;
     linkedin?: string | null;
     companyId?: string;
-    password?: string;
     active?: boolean;
   }
 ) {
-  const { password: _password, active, ...profile } = input;
-  void _password;
+  const { active, ...profile } = input;
   const employee = await updateEmployeeFields(id, profile);
   if (active !== undefined) await updateUserActive(id, active);
   return employee;

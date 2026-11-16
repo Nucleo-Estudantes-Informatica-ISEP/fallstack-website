@@ -29,13 +29,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           linkedin: values.linkedin || null,
           companyId: values.companyId,
         };
-        if (values.password) payload.password = values.password;
         await httpClient.patch(`/admin/employees/${employee.id}`, payload);
         toast.success("Recrutador atualizado.");
       } else {
         await httpClient.post("/admin/employees", {
           email: values.email,
-          password: values.password,
           name: values.name,
           companyId: values.companyId,
           linkedin: values.linkedin || undefined,
@@ -74,11 +72,6 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
         },
         { kind: "text", name: "linkedin", label: "LinkedIn" },
       ],
-    },
-    {
-      kind: "password",
-      title: employee ? "Alterar palavra-passe" : "Palavra-passe",
-      name: "password",
     },
   ];
 

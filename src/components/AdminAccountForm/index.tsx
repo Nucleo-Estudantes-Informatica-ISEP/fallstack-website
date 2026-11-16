@@ -29,13 +29,11 @@ const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
           name: values.name,
           adminRole: values.adminRole,
         };
-        if (values.password) payload.password = values.password;
         await httpClient.patch(`/admin/admins/${admin.id}`, payload);
         toast.success("Admin atualizado.");
       } else {
         await httpClient.post("/admin/admins", {
           email: values.email,
-          password: values.password,
           name: values.name,
           adminRole: values.adminRole,
         });
@@ -72,11 +70,6 @@ const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
           required: true,
         },
       ],
-    },
-    {
-      kind: "password",
-      title: admin ? "Alterar palavra-passe" : "Palavra-passe",
-      name: "password",
     },
   ];
 
