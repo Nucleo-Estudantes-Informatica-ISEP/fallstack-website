@@ -194,7 +194,7 @@ const PreviewProfileSectionContainer: React.FC<
                   </a>
                 </div>
               </div>
-              {student.cv && (
+              {student.cv && isSavedStudent && (
                 <button
                   type="button"
                   onClick={handleOpenCv}
