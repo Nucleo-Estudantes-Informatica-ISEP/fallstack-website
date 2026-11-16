@@ -24,6 +24,121 @@ Users wait for their page. Worst case, all 1,200 arrive in the same second and t
 - CDN, proxy and Coolify timeouts must be at least 30 s.
 - Revisit only if the heavy-user test (Task01-C2) fails.
 
+## Heavy-user run (Task01-C2, #450)
+
+`pnpm test:load:heavy` runs `tests/load/heavy-users.js` against staging. By
+default 200 heavy users arrive within 1 minute, stay for 3 minutes, then leave
+over 30 seconds. Each user owns one synthetic account, and no account is used by
+more than one group:
+
+| Group     | Default | Account            | Each visit                                                                                                    |
+| --------- | ------- | ------------------ | ------------------------------------------------------------------------------------------------------------- |
+| Dashboard | 40      | Company employee   | `/dashboard`, `/api/companies/history`, then downloads up to 2 saved students' CVs, every 10 s                |
+| QR        | 140     | Student            | QR pass (`/api/qrcode`), optional action QR scan, one CV upload, attach, then download of that CV, every 15 s |
+| Check-in  | 20      | NEI member (staff) | One session check-in by student code, every 3 s                                                               |
+
+CV uploads cycle through 180 KiB, 450 KiB, 1.2 MiB, 3 MiB and exactly 10 MiB, so
+one upload in five is at the limit. Each file is a valid PDF and the student's
+download must return the same number of bytes.
+
+Each upload follows the direct upload flow from #595, as the student app does:
+
+1. `POST /api/storage/cv` with the file name, type and size. The five per
+   minute limit applies here. The response is a signed storage form.
+2. The PDF goes straight to that signed storage URL, without application
+   cookies. The script refuses to send it unless the URL's origin is
+   `CV_STORAGE_ORIGIN`.
+3. `POST /api/storage/cv/finalize` validates the PDF and returns its id,
+   retried while it answers 409, then the student attaches and downloads it.
+
+### Before the run
+
+- Staging only. The script refuses production and needs
+  `CONFIRM_NON_PRODUCTION=yes` and `E2E_ALLOW_UPLOADS=yes`.
+- Create the synthetic accounts and export their cookies as comma-separated
+  lists: `DASHBOARD_EMPLOYEE_COOKIES`, `QR_STUDENT_COOKIES` and
+  `CHECKIN_STAFF_COOKIES`. Put the QR students' codes in `QR_STUDENT_CODES`, in
+  the same order as their cookies. Keep cookies out of shell history, logs and
+  reports.
+- Have every dashboard company save some students who already have a CV.
+  Otherwise the dashboard downloads fail their check.
+- Set `CHECKIN_SESSION_ID` to a schedule session that is live for the whole run,
+  and set `CHECKIN_STUDENT_CODES` to the students to check in. Optionally set
+  `ACTION_ID` to a live action so each QR student also scans its action QR
+  once, on their first visit. A rerun with the same accounts finds the action
+  already completed; that 400 is counted in
+  `action_scan_already_completed_400` instead of failing.
+- Leave at least a minute since the QR students' last CV upload.
+- Confirm the staging CV bucket has room for about 7.5 GiB first. Each QR
+  student uploads one CV every 15 s for up to 270 s, so 13 to 18 uploads
+  averaging 2.96 MiB. With 140 students that is roughly 5.3 to 7.3 GiB per
+  run. Each attach replaces the student's previous CV, and storage clean-up
+  only reclaims unattached objects older than seven days, so the space stays
+  used for a week after every run. Estimate it as
+  `QR_USERS × (RAMP_SECONDS + HOLD_SECONDS + 30) / UPLOAD_INTERVAL_SECONDS × 2.96 MiB`,
+  and lower `QR_USERS` or `HOLD_SECONDS` if the quota is short.
+- Staging must have direct CV uploads configured (`S3_PUBLIC_ENDPOINT`);
+  otherwise authorization answers 503. Set `CV_STORAGE_ORIGIN` to the origin of
+  that public storage endpoint, for example
+  `https://storage.staging.example.org`.
+- The k6 machine needs about 3 GB of free memory. A local 200-user run against
+  a mock server peaked at 1.5 GB: each upload builds its PDF in memory.
+
+```bash
+CONFIRM_NON_PRODUCTION=yes E2E_ALLOW_UPLOADS=yes \
+STAGING_BASE_URL=https://staging.example.org E2E_BASE_URL=https://staging.example.org \
+CV_STORAGE_ORIGIN=https://storage.staging.example.org \
+CHECKIN_SESSION_ID=<live-session-id> \
+pnpm test:load:heavy --summary-export=heavy-users.json
+```
+
+Change the mix with `DASHBOARD_USERS`, `QR_USERS` and `CHECKIN_USERS`, and the
+timing with `RAMP_SECONDS`, `HOLD_SECONDS`, `UPLOAD_INTERVAL_SECONDS`,
+`DASHBOARD_INTERVAL_SECONDS` and `CHECKIN_INTERVAL_SECONDS`. The script refuses
+settings above five CV uploads per minute per student (an interval under 12 s)
+or above the staff check-in limit.
+
+### Reading the results
+
+Expected responses are reported separately and do not count as errors:
+
+- `cv_upload_rate_limited_429`: uploads refused by the five-per-minute limit.
+  The pacing keeps students under the limit, so a high count means the limiter
+  is stricter than configured.
+- `checkin_duplicate_409`: students who were already checked in, because the
+  code list repeats during the run.
+- `cv_download_unavailable_404`: saved students without a CV.
+
+Because those responses are not errors, the run also requires the CV workload
+to have happened, for both CV sizes. `size` is `real` (180 KiB to 3 MiB) or
+`near_limit` (exactly 10 MiB). The run fails if any of these counts is zero:
+
+- `cv_upload_accepted{size:real}` and `cv_upload_accepted{size:near_limit}`:
+  uploads that returned 201 with a file id.
+- `cv_download_succeeded{group:qr,size:real}` and
+  `cv_download_succeeded{group:qr,size:near_limit}`: students who downloaded
+  the PDF they just uploaded, with the same number of bytes.
+- `cv_download_succeeded{group:dashboard}`: dashboard downloads that returned a
+  PDF.
+
+A run where every upload gets 429, every CV lookup gets 404, or only the
+10 MiB uploads are refused, therefore fails. A group set to 0 users, or
+`DASHBOARD_DOWNLOADS_PER_VISIT=0`, drops its requirements.
+`cv_upload_near_limit_accepted` still reports accepted 10 MiB uploads on its
+own line.
+
+`cv_upload_duration` (authorize, storage transfer and finalize together) and
+`cv_download_duration` show file transfer times without a pass limit; the
+`cv_direct_transfer` and `cv_finalize` request tags split the upload further.
+The run also fails if more than 1% of requests error, more than 1% of checks
+fail (a script error counts as a failed check), or the slowest 5% of
+dashboard, history, QR pass, CV authorization, CV attach or check-in requests
+take over 0.75 s. Every visit waits out its interval even after a script
+error, so a failure never turns into a burst against the per-account limits.
+
+Afterwards, remove the synthetic uploads and accounts through the supported
+storage clean-up and admin procedures.
+
 ## Task01-F multi-copy runner
 
 Run `pnpm test:load:capacity` from the repository root against isolated staging.

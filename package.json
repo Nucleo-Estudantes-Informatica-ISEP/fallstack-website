@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:load": "k6 run tests/load/event-readiness.js",
+    "test:load:heavy": "k6 run tests/load/heavy-users.js",
     "test:readiness": "tsx tests/e2e/readiness.ts",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
