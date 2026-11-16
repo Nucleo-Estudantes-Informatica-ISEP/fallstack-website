@@ -1,4 +1,4 @@
-# 0038: Issue offline downloadable student passes
+# 0043: Issue offline downloadable student passes
 
 Status: Accepted
 Date: 2026-11-16
@@ -29,12 +29,18 @@ authenticated pass view (`PassMenuContent`).
 2. **Offline validity model:**
    - The downloaded PNG is an attendee identifier, not an access credential or
      session token. It resides statically on the student's device storage.
-   - Company and staff interactions verify the permanent code against the
-     database at `/api/students/token` or lookup endpoints.
-   - Deactivation (`User.active=false`) blocks active web sessions and new pass
-     downloads, but intentionally does not invalidate the permanent code for
-     attendee identification (consistent with Google Wallet semantics in
-     [ADR 0010](0010-expire-and-revoke-wallet-passes.md)).
+   - Company and staff interactions resolve the permanent code at
+     `/api/students/token` or lookup endpoints. The lookup
+     (`findStudentByCode`) checks only that the student exists. It does not
+     check `User.active`.
+   - Deactivation (`User.active=false`) blocks sessions and new pass downloads.
+     It does not invalidate the permanent code, so a deactivated student's
+     saved image still resolves to a student. This is accepted because the
+     code is an attendee identifier, deactivation is a reversible access gate,
+     and the existing Wallet contract
+     ([ADR 0010](0010-expire-and-revoke-wallet-passes.md),
+     [Google Wallet](../GOOGLE_WALLET.md)) already allows identification after
+     deactivation. Use account deletion when removal is required.
    - Account deletion removes the student record from the database. When the
      account is deleted, code lookups will fail to recognize the student, and the
      Google Wallet pass is revoked. The downloaded image cannot be purged
