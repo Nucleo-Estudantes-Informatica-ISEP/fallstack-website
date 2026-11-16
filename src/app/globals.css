@@ -30,6 +30,7 @@
 
   /* Surfaces and borders */
   --color-ui-surface: #141414;
+  --color-ui-surface-raised: #2c2c2c;
   --color-ui-border: #484848;
   --color-ui-text: #ffffff;
   --color-ui-muted: #d1d3d4;

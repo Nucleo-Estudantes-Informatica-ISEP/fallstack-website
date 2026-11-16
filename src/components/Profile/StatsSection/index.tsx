@@ -17,30 +17,37 @@ const StatsSection: React.FC<StatsProps> = ({
 }) => {
   const { totalScans, totalSaves } = stats;
 
+  const items = [
+    { value: totalScans, label: totalScans === 1 ? "Scan" : "Scans" },
+    {
+      value: totalSaves,
+      label: totalSaves === 1 ? "Gravação de Perfil" : "Gravações de Perfil",
+    },
+    {
+      value: companiesLeft,
+      label: companiesLeft === 1 ? "Empresa restante" : "Empresas restantes",
+    },
+  ];
+
   return (
-    <section className="flex w-full flex-col items-center justify-center rounded-t-3xl p-4 md:rounded-md md:p-8">
-      <h1 className="mx-auto my-6 w-full text-center text-2xl font-extrabold uppercase md:my-2">
-        Visão Geral
-      </h1>
-      <div className="mb-6 grid w-full grid-cols-1 items-center justify-center gap-y-4 md:my-6 md:grid-cols-3">
-        <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
-          <p className="mt-4 text-4xl font-bold">{totalScans}</p>
-          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
-            {totalScans === 1 ? "Scan" : "Scans"}
-          </h2>
-        </div>
-        <div className="flex flex-col items-center gap-y-2 md:gap-y-4 md:border-x-4">
-          <p className="mt-4 text-4xl font-bold">{totalSaves}</p>
-          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
-            {totalSaves === 1 ? "Gravação de Perfil" : "Gravações de Perfil"}
-          </h2>
-        </div>
-        <div className="flex flex-col items-center gap-y-2 md:gap-y-4">
-          <p className="mt-4 text-4xl font-bold">{companiesLeft}</p>
-          <h2 className="text-center leading-6 font-medium text-white/70 md:text-xl">
-            Empresas restantes
-          </h2>
-        </div>
+    <section className="flex w-full flex-col">
+      <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
+        Sumário do teu perfil
+      </h2>
+      <div className="mx-auto grid w-full max-w-60 grid-cols-1 divide-y divide-ui-border md:my-4 md:max-w-none md:grid-cols-3 md:divide-x md:divide-y-0">
+        {items.map(({ value, label }) => (
+          <div
+            key={label}
+            className="flex flex-col items-center gap-y-2 py-4 md:gap-y-3 md:px-2 md:py-1"
+          >
+            <p className="text-4xl leading-none font-bold text-white">
+              {value}
+            </p>
+            <p className="text-center text-lg leading-6 text-ui-muted md:text-xl">
+              {label}
+            </p>
+          </div>
+        ))}
       </div>
       <HistorySection historyData={historyData} />
     </section>
