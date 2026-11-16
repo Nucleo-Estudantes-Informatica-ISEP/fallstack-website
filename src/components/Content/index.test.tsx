@@ -135,3 +135,31 @@ test("hydrated sections retain day tabs, FAQ interaction and updated localized p
   expect(screen.getByRole("button", { name: "Onde?" })).toBeInTheDocument();
   expect(httpClient.get).not.toHaveBeenCalled();
 });
+
+test("homepage sections follow the design order", () => {
+  const html = renderToString(
+    <Content
+      contentRef={createRef<HTMLDivElement>()}
+      sections={sections(data)}
+    />
+  );
+  const order = [
+    "Como chegar?",
+    "Opening",
+    "Jantar Empresarial",
+    "Speed Interviews",
+    "Passe do FallStack",
+    "Company 1",
+    "Agradecimentos",
+    "Where?",
+  ].map((text) => html.indexOf(text));
+  expect(order.every((index) => index >= 0)).toBe(true);
+  expect([...order].sort((a, b) => a - b)).toEqual(order);
+  expect(html).toContain("Mais informações em breve.");
+  expect(html).toContain(
+    "As Speed Interviews estão de volta, proporcionando um ponto de contacto direto entre empresas e estudantes finalistas."
+  );
+  expect(html).not.toContain("Este ano podes experienciar");
+  expect(html).toContain("17 e 18 de novembro");
+  expect(html).not.toContain("2025");
+});
