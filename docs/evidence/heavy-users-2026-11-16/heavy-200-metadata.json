@@ -3,7 +3,7 @@
   "k6": "k6 v2.4.0 (commit/dd9395906d, go1.26.11, linux/amd64)",
   "source": "942870609b4c2db0ad77cf974843efe3b9a7bed5",
   "testDate": "2026-11-16",
-  "url": "https://origin-d67e49.example.invalid",
+  "url": "https://staging.example.invalid",
   "configuration": {
     "DASHBOARD_USERS": "40",
     "QR_USERS": "140",
@@ -16,16 +16,16 @@
     "DASHBOARD_DOWNLOADS_PER_VISIT": "2",
     "CONFIRM_NON_PRODUCTION": "yes",
     "E2E_ALLOW_UPLOADS": "yes",
-    "E2E_BASE_URL": "https://origin-d67e49.example.invalid",
-    "STAGING_BASE_URL": "https://origin-d67e49.example.invalid",
-    "CV_STORAGE_ORIGIN": "https://origin-111aa7.example.invalid",
+    "E2E_BASE_URL": "https://staging.example.invalid",
+    "STAGING_BASE_URL": "https://staging.example.invalid",
+    "CV_STORAGE_ORIGIN": "https://storage-staging.example.invalid",
     "CHECKIN_SESSION_ID": "79ce2d7d-0db8-4659-8895-22fb577d7974",
     "ACTION_ID": "b8031b5d-64c6-4171-a9f4-c43d45375804"
   },
-  "generator": "same VPS as application; linux/amd64; public HTTPS/CDN path",
+  "generator": "same load host as application; linux/amd64; public HTTPS/CDN path",
   "before": [
     {
-      "name": "/service-a2dfefT094430",
+      "name": "/staging-web-replicaT094430",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -36,7 +36,7 @@
       "cpuPeriod": 0
     },
     {
-      "name": "/service-c0c52d",
+      "name": "/staging-web-replica",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -47,7 +47,7 @@
       "cpuPeriod": 0
     },
     {
-      "name": "/service-262082",
+      "name": "/staging-web-replica",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -62,7 +62,7 @@
   "end": "2026-11-16T11:13:33.233219+00:00",
   "after": [
     {
-      "name": "/service-a2dfefT094430",
+      "name": "/staging-web-replicaT094430",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -73,7 +73,7 @@
       "cpuPeriod": 0
     },
     {
-      "name": "/service-c0c52d",
+      "name": "/staging-web-replica",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -84,7 +84,7 @@
       "cpuPeriod": 0
     },
     {
-      "name": "/service-262082",
+      "name": "/staging-web-replica",
       "imageId": "sha256:9111ed2184b5947c65fcad9af9e9947798cd01f7c67aa29e5e755d41e3cf573c",
       "restartCount": 0,
       "oomKilled": false,
@@ -110,15 +110,15 @@
     "generatorSampledMaxRssKiB": 2431124,
     "generatorSampledMaxProcessCpuPercent": 76.2,
     "containers": {
-      "service-a2dfefT094430": {
+      "staging-web-replicaT094430": {
         "sampledMaxCpuPercent": 122.9,
         "sampledMaxMemoryMiB": 428.7
       },
-      "service-c0c52d": {
+      "staging-web-replica": {
         "sampledMaxCpuPercent": 128.75,
         "sampledMaxMemoryMiB": 451.1
       },
-      "service-262082": {
+      "staging-web-replica": {
         "sampledMaxCpuPercent": 125.18,
         "sampledMaxMemoryMiB": 414.1
       },

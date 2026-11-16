@@ -2,12 +2,12 @@
 
 Issue #604. This replaces the temporary-date diagnostic run at revision
 `9428706…` as the requested deployment verification. The user explicitly selected
-the existing `https://origin-d67e49.example.invalid` deployment, then authorized
+the existing `https://staging.example.invalid` deployment, then authorized
 changing its dates to 16–18 November for the run and reverting afterwards.
 
 ## Target and temporary changes
 
-Source revision: `cc5731c794d4e22203375be44ef7afac8b694ae9`. The existing Coolify
+Source revision: `cc5731c794d4e22203375be44ef7afac8b694ae9`. The existing deployment manager
 development resource `resource-cb7e0b` retained its three web replicas,
 networks, public routing, database, MinIO, Redis and resource settings. No separate
 application resource or parallel test deployment was created. The build was
@@ -30,12 +30,12 @@ Production retained revision `04324637320f2fb200c46f14de5a3beb6e109cc6`.
 Storage is the existing MinIO server. Cloudflare remains the DNS/HTTPS proxy;
 Cloudflare R2 is not used. The user explicitly requested keeping S3 configured
 in both environments after reverting dates. The newer staging redeployment had
-reset Coolify's saved dev `S3_PUBLIC_ENDPOINT` to null; this was corrected in
-Coolify's encrypted environment-variable model and verified on a fresh read.
+reset deployment manager's saved dev `S3_PUBLIC_ENDPOINT` to null; this was corrected in
+deployment manager's encrypted environment-variable model and verified on a fresh read.
 Both dev and prod have saved runtime values:
 
-- Dev: `https://origin-111aa7.example.invalid`.
-- Prod: `https://origin-7b176b.example.invalid`.
+- Dev: `https://storage-staging.example.invalid`.
+- Prod: `https://storage-production.example.invalid`.
 
 The approved POST/OPTIONS-only MinIO routes and exact-origin CORS remain in
 place. Staging's generated runtime `.env` and all three running web environments
@@ -81,13 +81,13 @@ Pending execution and final cleanup verification.
 
 ## Dependency diagnosis and tuning plan
 
-The retry log contains 192 signed-upload failures, all TCP resets from Cloudflare edge addresses (`104.21.x.x` and `172.67.x.x`) while posting to the MinIO hostname. The VPS-side five-way 10 MiB probe completed in 1.28 seconds; the Mac path before the fast-network retry took 25.5 seconds. MinIO remained healthy with no OOM/restart, so MinIO memory was not the cause of the observed resets. The valid retry still had 5.99% request failures and p95 failures across all authenticated groups.
+The retry log contains 192 signed-upload failures, all TCP resets from Cloudflare edge addresses (`cloud-edge` and `cloud-edge`) while posting to the MinIO hostname. The load host-side five-way 10 MiB probe completed in 1.28 seconds; the Mac path before the fast-network retry took 25.5 seconds. MinIO remained healthy with no OOM/restart, so MinIO memory was not the cause of the observed resets. The valid retry still had 5.99% request failures and p95 failures across all authenticated groups.
 
 A separate Traefik defect was found: the CDN alias router referenced `fallstack-staging-lb@file` while that service was unavailable to the dynamic configuration. The service definition was added to the alias file and `staging-fallstack.nei-isep.org/api/health` returned 200 afterwards. This was separate from the Cloudflare upload resets.
 
 Recommended fixes, in order:
 
-1. Run five-way 10 MiB probes through the public hostname and directly to the VPS. If only the proxied path resets, move signed POST uploads to a dedicated Cloudflare configuration or bypass proxying for that upload hostname while retaining MinIO and TLS.
+1. Run five-way 10 MiB probes through the public hostname and directly to the load host. If only the proxied path resets, move signed POST uploads to a dedicated Cloudflare configuration or bypass proxying for that upload hostname while retaining MinIO and TLS.
 2. Add per-request status/error metrics at the upload proxy and MinIO boundary, including Cloudflare/Traefik request IDs and upstream reset counts.
 3. Keep the fixed CDN alias service definition and validate that every file-provider router references an existing service.
 4. Re-run 40, 100 and 200 users only after the upload probe is stable; then tune PostgreSQL pool/queries, Redis limiter latency and web event-loop saturation from measured p95 data.

@@ -1,28 +1,28 @@
 {
   "restoredContainers": [
     {
-      "name": "service-a2dfefT094430",
+      "name": "staging-web-replicaT094430",
       "image": "wyczj05hmzzp9gcih9vzf8th_web:942870609b4c2db0ad77cf974843efe3b9a7bed5",
       "health": "healthy",
       "restarts": 0,
       "oomKilled": false
     },
     {
-      "name": "service-c0c52d",
+      "name": "staging-web-replica",
       "image": "wyczj05hmzzp9gcih9vzf8th_web:942870609b4c2db0ad77cf974843efe3b9a7bed5",
       "health": "healthy",
       "restarts": 0,
       "oomKilled": false
     },
     {
-      "name": "service-262082",
+      "name": "staging-web-replica",
       "image": "wyczj05hmzzp9gcih9vzf8th_web:942870609b4c2db0ad77cf974843efe3b9a7bed5",
       "health": "healthy",
       "restarts": 0,
       "oomKilled": false
     },
     {
-      "name": "service-978eb9T084056",
+      "name": "staging-web-replicaT084056",
       "image": "vkkw880k40kwk8s8c8800404_web:04324637320f2fb200c46f14de5a3beb6e109cc6",
       "health": "healthy",
       "restarts": 0,

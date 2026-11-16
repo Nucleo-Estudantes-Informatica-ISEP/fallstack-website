@@ -13,8 +13,8 @@ revision actually deployed at run time and repeat quota/cleanup preflight.
 
 ## Deployment inspected
 
-- Coolify: `https://origin-891c90.example.invalid`, Fallstack development environment.
-- Staging application: `https://origin-d67e49.example.invalid`.
+- deployment manager: `https://staging-host`, Fallstack development environment.
+- Staging application: `https://staging.example.invalid`.
 - Source and deployed staging image revision:
   `942870609b4c2db0ad77cf974843efe3b9a7bed5` (includes #601).
 - Existing proxy routes reference three web containers at that revision.
@@ -29,19 +29,19 @@ endpoint settings and the required service restarts.
 
 | Environment | Public HTTPS origin                            | Private CV bucket    |
 | ----------- | ---------------------------------------------- | -------------------- |
-| Development | `https://origin-111aa7.example.invalid` | `fallstack-dev-cvs`  |
-| Production  | `https://origin-7b176b.example.invalid`         | `fallstack-prod-cvs` |
+| Development | `https://storage-staging.example.invalid` | `fallstack-dev-cvs`  |
+| Production  | `https://storage-production.example.invalid`         | `fallstack-prod-cvs` |
 
-Both Cloudflare A records are proxied, target `[redacted-address]`, and use automatic
-TTL. Coolify stores the corresponding `S3_PUBLIC_ENDPOINT` variables.
+Both Cloudflare A records are proxied, target `staging-host`, and use automatic
+TTL. deployment manager stores the corresponding `S3_PUBLIC_ENDPOINT` variables.
 All three running staging web containers and the production web container were
 recreated sequentially with their existing image revisions and the new endpoint
 variable. Post-change inspection confirmed healthy status, identical network
 membership, identical image references and unchanged other environment values.
 Runtime `.env` files were updated too. Production's existing application image
 predates the direct-upload feature; configuring its endpoint does not release
-that feature. Private rollback configuration snapshots remain on the VPS under
-`[private-directory]`; stopped replacement backups were removed after validation.
+that feature. Private rollback configuration snapshots remain on the load host under
+`[private server snapshot]`; stopped replacement backups were removed after validation.
 
 Traefik dynamic configuration `fallstack-cv-uploads.yaml` routes only HTTPS
 POST/OPTIONS at the exact environment bucket path to the existing private
@@ -49,10 +49,10 @@ MinIO API on port 9000. Host and path are preserved. Console access and bucket
 policies were not changed. No public GET/list/delete route was added.
 
 Allowed development browser origins are the existing
-`https://origin-d67e49.example.invalid`,
-`https://origin-c4d979.example.invalid`, and
+`https://staging.example.invalid`,
+`https://staging-web.example.invalid`, and
 `https://origin-85a4f3.example.invalid`.
-Production allows `https://origin-937bc4.example.invalid` only.
+Production allows `https://production.example.invalid` only.
 Proxy CORS permits POST/OPTIONS and Content-Type, without credentials, with a
 300-second preflight cache. MinIO's Compose configuration also sets
 `MINIO_API_CORS_ALLOW_ORIGIN` to this explicit union. Only MinIO was recreated
@@ -148,7 +148,7 @@ visit downloads up to two saved CVs every 10 seconds. QR students upload every
 10 MiB. Staff submit check-ins every 3 seconds. Expected duplicate check-ins
 are reported separately. The three account pools do not overlap.
 
-k6 v2.4.0 (`dd9395906d`, Linux/amd64) ran on the application VPS through the
+k6 v2.4.0 (`dd9395906d`, Linux/amd64) ran on the application load host through the
 public HTTPS/CDN hostname. Its official archive checksum was verified. The
 shared generator adds host contention, so this is not an independent-generator
 capacity certification. The three web containers have no explicit CPU or memory
@@ -207,7 +207,7 @@ returned 201; its pending ticket was included in cleanup. No limits or security
 checks were relaxed, and no second heavy run was used to replace this failure.
 
 Forty resource samples were collected, nominally every five seconds plus
-collection time. On the six-logical-CPU VPS, sampled maxima were 2,431,124 KiB
+collection time. On the six-logical-CPU load host, sampled maxima were 2,431,124 KiB
 RSS for k6; 428.7, 451.1 and 414.1 MiB for the three web replicas; and 611 MiB
 for MinIO (1 GiB limit). Web CPU samples peaked at approximately 123–129%
 per replica. Minimum host available memory was 4,082 MiB. Swap usage rose from

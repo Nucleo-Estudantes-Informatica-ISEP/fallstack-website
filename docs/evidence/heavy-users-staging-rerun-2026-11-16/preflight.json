@@ -1,7 +1,7 @@
 {
   "containers": [
     {
-      "name": "service-a2dfefT123243",
+      "name": "staging-web-replicaT123243",
       "image": "fallstack-task604:cc5731c-window-16-18",
       "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
       "health": "healthy",
@@ -11,7 +11,7 @@
       "nanoCpus": 0
     },
     {
-      "name": "service-c0c52d",
+      "name": "staging-web-replica",
       "image": "fallstack-task604:cc5731c-window-16-18",
       "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
       "health": "healthy",
@@ -21,7 +21,7 @@
       "nanoCpus": 0
     },
     {
-      "name": "service-262082",
+      "name": "staging-web-replica",
       "image": "fallstack-task604:cc5731c-window-16-18",
       "imageId": "sha256:7fd8f08ea680a2010b1bd4a48800ba907d62374bff8cd4576a26b6cc86ae1af7",
       "health": "healthy",
