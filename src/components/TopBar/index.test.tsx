@@ -56,3 +56,12 @@ test("offers neither sign in nor profile while the session is unresolved", () =>
   expect(screen.queryByRole("link", { name: "Iniciar sessão" })).toBeNull();
   expect(screen.queryByText("O meu perfil")).toBeNull();
 });
+
+test("renders language switcher button", () => {
+  vi.mocked(usePathname).mockReturnValue("/");
+  render(<TopBar />);
+  expect(
+    screen.getByRole("button", { name: /selecionar idioma/i })
+  ).toBeInTheDocument();
+});
+
