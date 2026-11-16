@@ -32,7 +32,9 @@ test("shared artwork uses cover and a contrast-safe scrim without fixed attachme
   const channel = (20 * 0.6 + 255 * 0.4) / 255;
   const luminance = ((channel + 0.055) / 1.055) ** 2.4;
   expect(1.05 / (luminance + 0.05)).toBeGreaterThan(4.5);
-  expect(source("src/app/layout.tsx")).not.toContain("rsms.me");
+  expect(source("src/components/DocumentLayout/index.tsx")).not.toContain(
+    "rsms.me"
+  );
   expect(css).not.toContain("InterVariable");
 });
 

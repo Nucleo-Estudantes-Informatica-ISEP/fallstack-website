@@ -89,3 +89,12 @@ test("uses shared focus styles and accessible target sizes", () => {
     expect(link).toHaveClass("ui-focus", "min-h-11");
   });
 });
+
+test("links admins to the attendance scanner", () => {
+  render(<AdminSidebar isSuperAdmin={false} />);
+  expect(
+    screen
+      .getAllByRole("link", { name: "Attendance scanner" })
+      .map((link) => link.getAttribute("href"))
+  ).toContain("/attendance/scan");
+});

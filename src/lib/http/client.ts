@@ -4,10 +4,20 @@ import { BASE_URL } from "@/config/api";
 
 export class HttpClientError extends Error {
   status: number;
+  /** Parsed JSON error body, when the response had one. */
+  readonly body?: unknown;
+  readonly headers?: Headers;
 
-  constructor(message: string, status: number) {
+  constructor(
+    message: string,
+    status: number,
+    body?: unknown,
+    headers?: Headers
+  ) {
     super(message);
     this.status = status;
+    this.body = body;
+    this.headers = headers;
   }
 }
 
@@ -21,11 +31,15 @@ export interface HttpClient {
   raw(path: string, init?: RequestInit): Promise<Response>;
 }
 
-async function extractErrorMessage(response: Response): Promise<string> {
+async function toHttpClientError(response: Response) {
   const json = await response.json().catch(() => undefined);
-  if (typeof json?.error === "string") return json.error;
-  if (typeof json?.message === "string") return json.message;
-  return response.statusText || "Request failed";
+  const message =
+    typeof json?.error === "string"
+      ? json.error
+      : typeof json?.message === "string"
+        ? json.message
+        : response.statusText || "Request failed";
+  return new HttpClientError(message, response.status, json, response.headers);
 }
 
 class FetchHttpClient implements HttpClient {
@@ -33,11 +47,7 @@ class FetchHttpClient implements HttpClient {
 
   async raw(path: string, init: RequestInit = {}): Promise<Response> {
     const response = await fetch(`${this.baseUrl}${path}`, init);
-    if (!response.ok)
-      throw new HttpClientError(
-        await extractErrorMessage(response),
-        response.status
-      );
+    if (!response.ok) throw await toHttpClientError(response);
     return response;
   }
 

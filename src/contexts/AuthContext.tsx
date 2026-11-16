@@ -7,6 +7,10 @@ import getSession from "@/client/api/session";
 
 export interface AuthContextData {
   user: SessionDto | null;
+  // False while the first client-side session lookup is still pending, so a
+  // null user can be told apart from "not known yet". Statically generated
+  // pages cannot resolve the session on the server and start out not ready.
+  ready: boolean;
   clear: () => void;
   // Refreshes the context's user. With no argument, fetches it from the
   // session endpoint. Pass an already-fetched user (e.g. right after
@@ -29,11 +33,18 @@ export function AuthContextProvider({
   ...props
 }: AuthContextProviderProps) {
   const [user, setUser] = useState<SessionDto | null>(initialUser ?? null);
+  const [ready, setReady] = useState(initialUser !== undefined);
 
   const fetchSession = async (preFetchedUser?: SessionDto | null) => {
-    const user =
-      preFetchedUser !== undefined ? preFetchedUser : await getSession();
-    setUser(user);
+    try {
+      const user =
+        preFetchedUser !== undefined ? preFetchedUser : await getSession();
+      setUser(user);
+    } finally {
+      // A failed lookup still settles the state: callers fall back to the
+      // signed-out experience instead of waiting forever.
+      setReady(true);
+    }
   };
 
   const clear = () => setUser(null);
@@ -43,7 +54,10 @@ export function AuthContextProvider({
   }, [initialUser]);
 
   return (
-    <AuthContext.Provider value={{ user, clear, fetchSession }} {...props}>
+    <AuthContext.Provider
+      value={{ user, ready, clear, fetchSession }}
+      {...props}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -78,3 +78,26 @@ test("unrelated check constraints remain server errors", async () => {
   assert.equal(response.status, 500);
   assert.equal(vi.mocked(reportError).mock.calls.length, 1);
 });
+
+test("httpErrorResponse merges details next to error", async () => {
+  const response = httpErrorResponse(
+    new HttpError("dup", 409, { student: { name: "A" } })
+  );
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), {
+    error: "dup",
+    student: { name: "A" },
+  });
+});
+
+test("httpErrorResponse details cannot override the error message", async () => {
+  const response = httpErrorResponse(
+    new HttpError("real", 409, { error: "spoofed" })
+  );
+  assert.deepEqual(await response.json(), { error: "real" });
+});
+
+test("httpErrorResponse without details keeps the plain shape", async () => {
+  const response = httpErrorResponse(new HttpError("x", 400));
+  assert.deepEqual(await response.json(), { error: "x" });
+});

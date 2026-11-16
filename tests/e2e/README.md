@@ -298,7 +298,7 @@ Explicit `K6_PROFILE=peak` enables the existing ramping/boundary scenarios. Ever
 profile applies the staging target guard above, including direct `test:load`.
 
 - `health` — safe liveness baseline.
-- `homepage` — GET the rendered homepage, its same-origin Next.js scripts,
+- `homepage` — GET `/event/pt`, its same-origin Next.js scripts,
   styles, images and landing artwork, then the public schedule, FAQs, sponsors
   and company roster APIs. The current landing page server-loads its featured
   roster; the four API reads are additional representative public traffic,
@@ -367,6 +367,10 @@ profile applies the staging target guard above, including direct `test:load`.
   scenario alongside `qr` (and optionally `upload-tickets`) in separate
   concurrent `pnpm test:load` invocations against the same target to get a
   realistic mixed-traffic picture rather than an isolated probe.
+
+For the 200 heavy users scenario (dashboard, QR and check-in groups with real
+and near-limit CV uploads and downloads), run `pnpm test:load:heavy`; see
+[the stress scenario](../../docs/testing/stress-scenario.md#heavy-user-run-task01-c2-450).
 
 For local route/distributed checks and the staging mixed CV/avatar/employee
 preview-scan scenario, see [shared limiter validation](../../docs/rate-limiter-load-validation.md).

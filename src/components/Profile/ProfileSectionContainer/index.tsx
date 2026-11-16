@@ -22,6 +22,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import UserImage from "@/components/Profile/UserImage";
+import StaffAttendanceCard from "@/components/StaffAttendanceCard";
 import type { StudentActionDto } from "@/application/dto/actionDto";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import type { InterestDto } from "@/application/dto/interestDto";
@@ -47,6 +48,8 @@ interface ProfileSectionContainerProps {
   historyData: SavedStudentDto[];
   actions: StudentActionDto[];
   availableInterests: InterestDto[];
+  /** Admin or nei-member: shows the attendance scanner entry point. */
+  canRecordAttendance?: boolean;
 }
 
 const menuMap: Record<TabValue, MenuKey> = {
@@ -64,6 +67,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   historyData,
   actions,
   availableInterests,
+  canRecordAttendance = false,
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const previousMenu = useRef<MenuKey>("sumario");
@@ -286,6 +290,11 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
               O teu CV foi removido após o período de retenção. Envia um novo em
               Definições.
             </span>
+          </div>
+        )}
+        {canRecordAttendance && (
+          <div className="mt-6 flex w-full justify-center">
+            <StaffAttendanceCard />
           </div>
         )}
         {/*

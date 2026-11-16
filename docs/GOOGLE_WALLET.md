@@ -330,7 +330,7 @@ Use account deletion when the requested action is removal and revocation.
 ### Downloadable offline pass validity and account deletion
 
 Under [Issue #406](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/406)
-and [ADR 0038](decisions/0038-issue-offline-downloadable-student-passes.md),
+and [ADR 0043](decisions/0043-issue-offline-downloadable-student-passes.md),
 attendees can also download an offline PNG pass directly from the web pass dashboard.
 
 The validity and revocation semantics align with the permanent student code model:

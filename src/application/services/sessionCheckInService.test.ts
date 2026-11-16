@@ -1,0 +1,295 @@
+import { expect, test, vi } from "vitest";
+
+import { HttpError } from "@/types/HttpError";
+
+import { findAllScheduleEvents } from "../repositories/scheduleRepository";
+import {
+  countSessionCheckIns,
+  createSessionCheckIn,
+  findScheduleEventForCheckIn,
+  findStudentForCheckIn,
+  isSessionCheckInUniqueError,
+} from "../repositories/sessionCheckInRepository";
+import {
+  getSessionCheckInCount,
+  getTodaysAttendanceSessions,
+  recordSessionCheckIn,
+} from "./sessionCheckInService";
+
+vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn() } }));
+vi.mock("server-only", () => ({}));
+vi.mock("@/application/services/authService", () => ({
+  verifyJwt: vi.fn(),
+}));
+vi.mock("../repositories/scheduleRepository", () => ({
+  findAllScheduleEvents: vi.fn(),
+}));
+vi.mock("../repositories/sessionCheckInRepository", () => ({
+  countSessionCheckIns: vi.fn(),
+  createSessionCheckIn: vi.fn(),
+  findScheduleEventForCheckIn: vi.fn(),
+  findStudentForCheckIn: vi.fn(),
+  isSessionCheckInUniqueError: vi.fn(),
+}));
+
+const session = {
+  id: "session-1",
+  day: 1,
+  startTime: "10:00",
+  endTime: "11:00",
+};
+const student = { id: "student-1", code: "AB12", name: "Maria Silva" };
+const now = new Date("2026-11-17T10:30:00.000Z");
+
+function setup() {
+  vi.mocked(findScheduleEventForCheckIn).mockResolvedValue(session as never);
+  vi.mocked(findStudentForCheckIn).mockResolvedValue(student as never);
+  vi.mocked(createSessionCheckIn).mockResolvedValue({
+    id: "check-in-1",
+    sessionId: "session-1",
+    studentId: "student-1",
+    scannedById: "staff-1",
+    checkedInAt: now,
+  });
+  vi.mocked(isSessionCheckInUniqueError).mockReturnValue(false);
+}
+
+test.beforeEach(() => {
+  vi.clearAllMocks();
+  setup();
+});
+
+test("records a check-in from a pass token", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "attendance",
+    exp: 1900000000,
+  } as never);
+
+  await recordSessionCheckIn(
+    "session-1",
+    "staff-1",
+    { token: "valid-pass-token" },
+    now
+  );
+
+  expect(createSessionCheckIn).toHaveBeenCalledWith({
+    sessionId: "session-1",
+    studentId: "student-1",
+    scannedById: "staff-1",
+  });
+});
+
+test.each([
+  ["permanent code", { permanentCode: "ab12" }],
+  ["typed code", { typedCode: "AB12" }],
+  ["generic code", { code: "AB12" }],
+])("records a check-in from a %s", async (_label, input) => {
+  await recordSessionCheckIn("session-1", "staff-1", input, now);
+  expect(findStudentForCheckIn).toHaveBeenCalledWith("AB12");
+});
+
+test("rejects an expired or invalid pass token", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue(null);
+
+  await expect(
+    recordSessionCheckIn(
+      "session-1",
+      "staff-1",
+      { token: "expired-token" },
+      now
+    )
+  ).rejects.toMatchObject(new HttpError("Invalid or expired pass token.", 400));
+  expect(findStudentForCheckIn).not.toHaveBeenCalled();
+});
+
+test("rejects an unknown student code", async () => {
+  vi.mocked(findStudentForCheckIn).mockResolvedValue(null);
+
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
+  ).rejects.toMatchObject(new HttpError("Invalid student credential.", 400));
+});
+
+test("maps a concurrent duplicate check-in to a clear conflict", async () => {
+  vi.mocked(createSessionCheckIn).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isSessionCheckInUniqueError).mockReturnValue(true);
+
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject(
+    new HttpError(
+      "This student has already checked in for this session.",
+      409,
+      { student: { name: "Maria Silva" } }
+    )
+  );
+});
+
+test.each([
+  ["before", new Date("2026-11-17T09:59:59.999Z")],
+  ["after", new Date("2026-11-17T11:00:00.001Z")],
+])("rejects a check-in %s the session", async (_label, outsideTime) => {
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, outsideTime)
+  ).rejects.toMatchObject(
+    new HttpError("Check-in is not available outside this session.", 400)
+  );
+  expect(createSessionCheckIn).not.toHaveBeenCalled();
+});
+
+test("rejects tokens without the attendance purpose", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({ code: "AB12" } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "other" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+  expect(verifyJwt).toHaveBeenCalledWith("other", { algorithms: ["HS256"] });
+});
+
+test("rejects a pass token without an expiry", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "attendance",
+  } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "no-expiry" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+});
+
+test("rejects profile-preview tokens for attendance", async () => {
+  const { verifyJwt } = await import("@/application/services/authService");
+  vi.mocked(verifyJwt).mockReturnValue({
+    code: "AB12",
+    purpose: "student-pass",
+    exp: 1900000000,
+  } as never);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { token: "preview" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+  expect(createSessionCheckIn).not.toHaveBeenCalled();
+});
+
+test("logs unknown student attempts without exposing credentials", async () => {
+  const logger = (await import("@/lib/logger")).default;
+  vi.mocked(findStudentForCheckIn).mockResolvedValueOnce(null);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject({ status: 400 });
+  expect(logger.warn).toHaveBeenCalledWith(
+    {
+      event: "attendance_student_miss",
+      scannedById: "staff-1",
+      sessionId: "session-1",
+    },
+    "Attendance credential did not match a student"
+  );
+});
+
+test("returns the student's name with a recorded check-in", async () => {
+  const result = await recordSessionCheckIn(
+    "session-1",
+    "staff-1",
+    { code: "AB12" },
+    now
+  );
+  expect(result.student).toEqual({ name: "Maria Silva" });
+});
+
+test("a duplicate check-in carries the student's name", async () => {
+  vi.mocked(createSessionCheckIn).mockRejectedValue(new Error("P2002"));
+  vi.mocked(isSessionCheckInUniqueError).mockReturnValue(true);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "AB12" }, now)
+  ).rejects.toMatchObject({
+    status: 409,
+    details: { student: { name: "Maria Silva" } },
+  });
+});
+
+test("an unknown credential exposes no details", async () => {
+  vi.mocked(findStudentForCheckIn).mockResolvedValue(null);
+  await expect(
+    recordSessionCheckIn("session-1", "staff-1", { code: "ZZ99" }, now)
+  ).rejects.toMatchObject({ status: 400, details: undefined });
+});
+
+test("counts check-ins for an existing session", async () => {
+  vi.mocked(countSessionCheckIns).mockResolvedValue(7);
+  await expect(getSessionCheckInCount("session-1")).resolves.toBe(7);
+  expect(countSessionCheckIns).toHaveBeenCalledWith("session-1");
+});
+
+test("counting an unknown session is a 404", async () => {
+  vi.mocked(findScheduleEventForCheckIn).mockResolvedValue(null);
+  await expect(getSessionCheckInCount("missing")).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(countSessionCheckIns).not.toHaveBeenCalled();
+});
+
+const scheduleEvent = (
+  id: string,
+  day: number,
+  startTime: string,
+  endTime: string
+) => ({
+  id,
+  day,
+  order: 0,
+  startTime,
+  endTime,
+  activity: { PT: `Atividade ${id}`, EN: `Activity ${id}` },
+});
+
+test("lists today's schedule entries as attendance sessions", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("a", 1, "10:00", "11:00"),
+    scheduleEvent("b", 1, "14:00", "15:00"),
+    scheduleEvent("c", 2, "10:00", "11:00"),
+  ] as never);
+
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-17T10:30:00Z"))
+  ).resolves.toEqual([
+    {
+      id: "a",
+      title: "Atividade a",
+      startTime: "10:00",
+      endTime: "11:00",
+      start: "2026-11-17T10:00:00.000Z",
+      end: "2026-11-17T11:00:00.000Z",
+      dayTitle: "17 de Novembro",
+    },
+    {
+      id: "b",
+      title: "Atividade b",
+      startTime: "14:00",
+      endTime: "15:00",
+      start: "2026-11-17T14:00:00.000Z",
+      end: "2026-11-17T15:00:00.000Z",
+      dayTitle: "17 de Novembro",
+    },
+  ]);
+});
+
+test("there are no attendance sessions outside event days", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("a", 1, "10:00", "11:00"),
+  ] as never);
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-16T10:00:00Z"))
+  ).resolves.toEqual([]);
+});
+
+test("schedule entries with invalid times are skipped", async () => {
+  vi.mocked(findAllScheduleEvents).mockResolvedValue([
+    scheduleEvent("bad", 1, "1000", "11:00"),
+  ] as never);
+  await expect(
+    getTodaysAttendanceSessions(new Date("2026-11-17T10:00:00Z"))
+  ).resolves.toEqual([]);
+});

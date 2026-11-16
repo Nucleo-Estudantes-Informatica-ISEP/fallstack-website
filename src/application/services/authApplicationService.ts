@@ -96,6 +96,9 @@ export async function completeZitadelSignIn(input: {
   if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
   if (user.role === "EMPLOYEE") return "/login?modal=employee";
   if (user.student) return `/student/${user.student.code}`;
+  // NEI staff accounts (e.g. @nei-isep.org) have no student profile and must
+  // not be pushed into creating one just to reach the attendance scanner.
+  if (input.identity.isNeiMember) return "/attendance/scan";
   return "/signup?authnei=1";
 }
 
@@ -110,6 +113,8 @@ export async function signUpEmployee(input: {
   name: string;
   linkedin?: string;
   companyCode: string;
+  isNeiMember?: boolean;
+  attendanceExpiresAt?: number;
 }) {
   const company = await findCompanyByInviteCodeHash(
     inviteCodeHash(input.companyCode)
@@ -146,14 +151,18 @@ export async function signUpEmployee(input: {
     throw new HttpError("Unable to create employee profile", 500);
   }
 
-  return signAppSession({
-    sub: input.zitadelUserId,
-    email: input.email,
-    name: input.name,
-    emailVerified: true,
-    isEmployee: true,
-    isGlobalAdmin: false,
-  });
+  return signAppSession(
+    {
+      sub: input.zitadelUserId,
+      email: input.email,
+      name: input.name,
+      emailVerified: true,
+      isEmployee: true,
+      isGlobalAdmin: false,
+      isNeiMember: input.isNeiMember,
+    },
+    input.attendanceExpiresAt ?? 0
+  );
 }
 
 export async function changePassword(input: {

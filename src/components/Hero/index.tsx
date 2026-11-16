@@ -4,17 +4,16 @@ import { FunctionComponent } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-import useSession from "@/hooks/useSession";
-import PrimaryLinkButton from "@/components/ui/PrimaryLinkButton";
+import HomeCallToAction from "@/components/HomeCallToAction";
+import { Language } from "@/domain/i18n/translations";
 import { branding } from "@/edition/branding";
 
 interface HeaderProps {
   contentRef: React.RefObject<HTMLDivElement>;
+  language: Language;
 }
 
-const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
-  const { user } = useSession();
-
+const Hero: FunctionComponent<HeaderProps> = ({ contentRef, language }) => {
   return (
     <>
       <section
@@ -29,7 +28,7 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
           width={256}
           height={296}
           alt={`${branding.name} ${branding.year}`}
-          className="mt-20 h-auto w-1/2 max-w-80 object-contain"
+          className="mt-20 h-auto w-1/2 max-w-56 object-contain"
         />
         <motion.div
           initial={{
@@ -59,11 +58,7 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef }) => {
             }}
             className="flex w-full flex-col items-center justify-center gap-10 pb-10 md:px-5"
           >
-            {!user && (
-              <PrimaryLinkButton loading={false} href="/signup">
-                Quero registar-me no evento
-              </PrimaryLinkButton>
-            )}
+            <HomeCallToAction language={language} />
           </motion.div>
         </motion.div>
 

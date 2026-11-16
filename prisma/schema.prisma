@@ -30,8 +30,29 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  student  Student?
-  employee Employee?
+  student         Student?
+  employee        Employee?
+  sessionCheckIns SessionCheckIn[]
+  cvUploads       CvUpload[]
+}
+
+// Each validation attempt writes a fresh destination. Only its fenced commit
+// publishes that id. Ownership survives retries and all web replicas.
+model CvUpload {
+  id         String    @id @db.Uuid
+  seq        Int       @unique @default(autoincrement())
+  ownerId    String    @db.Uuid
+  owner      User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  size       Int
+  status     String    @default("pending")
+  expiresAt  DateTime
+  leaseUntil DateTime?
+  attemptId  String?   @db.Uuid
+  cvId       String?   @unique @db.Uuid
+  createdAt  DateTime  @default(now())
+
+  @@index([ownerId, status])
+  @@index([createdAt])
 }
 
 model Student {
@@ -68,6 +89,7 @@ model Student {
 
   walletPass        WalletPass?
   actionCompletions ActionCompletion[]
+  sessionCheckIns   SessionCheckIn[]
   savedByEmployees  SavedStudent[]
   interests         Interest[]
 }
@@ -250,6 +272,29 @@ model ActionCompletion {
   @@unique([actionId, studentId])
 }
 
+model SessionCheckIn {
+  // SQL trigger captures these at insert and preserves them on update.
+  sessionDay       Int    @default(0)
+  sessionStartTime String @default("")
+  sessionEndTime   String @default("")
+  sessionActivity  Json   @default("{}")
+
+  id          String   @id @default(uuid()) @db.Uuid
+  checkedInAt DateTime @default(now())
+
+  session   ScheduleEvent @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  student   Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  scannedBy User?         @relation(fields: [scannedById], references: [id], onDelete: SetNull)
+
+  sessionId   String  @db.Uuid
+  studentId   String  @db.Uuid
+  scannedById String? @db.Uuid
+
+  @@unique([sessionId, studentId])
+  @@index([studentId])
+  @@index([sessionDay])
+}
+
 model Interest {
   id   String @id @default(uuid()) @db.Uuid
   name Json
@@ -292,6 +337,8 @@ model ScheduleEvent {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  sessionCheckIns SessionCheckIn[]
+
   @@unique([day, order], map: "ScheduleEvent_day_order_key")
 }
 
@@ -320,6 +367,7 @@ model SavedStudent {
 
   @@id([studentId, employeeId])
   @@unique([studentId, companyId])
+  @@index([companyId, createdAt(sort: Desc), studentId(sort: Desc)])
 }
 
 enum Role {
