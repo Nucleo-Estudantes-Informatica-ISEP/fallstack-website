@@ -54,8 +54,19 @@ download must return the same number of bytes.
   Otherwise the dashboard downloads fail their check.
 - Set `CHECKIN_SESSION_ID` to a schedule session that is live for the whole run,
   and set `CHECKIN_STUDENT_CODES` to the students to check in. Optionally set
-  `ACTION_ID` to a live action so QR users also scan an action QR.
+  `ACTION_ID` to a live action so each QR student also scans its action QR
+  once, on their first visit. A rerun with the same accounts finds the action
+  already completed; that 400 is counted in
+  `action_scan_already_completed_400` instead of failing.
 - Leave at least a minute since the QR students' last CV upload.
+- Confirm the staging CV bucket has room for about 7.5 GiB first. Each QR
+  student uploads one CV every 15 s for up to 270 s, so 13 to 18 uploads
+  averaging 2.96 MiB. With 140 students that is roughly 5.3 to 7.3 GiB per
+  run. Each attach replaces the student's previous CV, and storage clean-up
+  only reclaims unattached objects older than seven days, so the space stays
+  used for a week after every run. Estimate it as
+  `QR_USERS × (RAMP_SECONDS + HOLD_SECONDS + 30) / UPLOAD_INTERVAL_SECONDS × 2.96 MiB`,
+  and lower `QR_USERS` or `HOLD_SECONDS` if the quota is short.
 - The k6 machine needs about 4 GB of free memory. A local 200-user run against
   a mock server peaked at 2.3 GB, because the 10 MiB files are built in memory.
 
@@ -83,9 +94,26 @@ Expected responses are reported separately and do not count as errors:
   code list repeats during the run.
 - `cv_download_unavailable_404`: saved students without a CV.
 
-`cv_upload_accepted` and `cv_upload_near_limit_accepted` count successful
-uploads. `cv_upload_duration` and `cv_download_duration` show file transfer
-times without a pass limit. The run fails if more than 1% of requests error,
+Because those responses are not errors, the run also requires the CV workload
+to have happened, for both CV sizes. `size` is `real` (180 KiB to 3 MiB) or
+`near_limit` (exactly 10 MiB). The run fails if any of these counts is zero:
+
+- `cv_upload_accepted{size:real}` and `cv_upload_accepted{size:near_limit}`:
+  uploads that returned 201 with a file id.
+- `cv_download_succeeded{group:qr,size:real}` and
+  `cv_download_succeeded{group:qr,size:near_limit}`: students who downloaded
+  the PDF they just uploaded, with the same number of bytes.
+- `cv_download_succeeded{group:dashboard}`: dashboard downloads that returned a
+  PDF.
+
+A run where every upload gets 429, every CV lookup gets 404, or only the
+10 MiB uploads are refused, therefore fails. A group set to 0 users, or
+`DASHBOARD_DOWNLOADS_PER_VISIT=0`, drops its requirements.
+`cv_upload_near_limit_accepted` still reports accepted 10 MiB uploads on its
+own line.
+
+`cv_upload_duration` and `cv_download_duration` show file transfer times
+without a pass limit. The run also fails if more than 1% of requests error,
 more than 1% of checks fail, or the slowest 5% of dashboard, history, QR pass,
 CV attach or check-in requests take over 0.75 s.
 
