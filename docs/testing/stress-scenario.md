@@ -41,6 +41,16 @@ CV uploads cycle through 180 KiB, 450 KiB, 1.2 MiB, 3 MiB and exactly 10 MiB, so
 one upload in five is at the limit. Each file is a valid PDF and the student's
 download must return the same number of bytes.
 
+Each upload follows the direct upload flow from #595, as the student app does:
+
+1. `POST /api/storage/cv` with the file name, type and size. The five per
+   minute limit applies here. The response is a signed storage form.
+2. The PDF goes straight to that signed storage URL, without application
+   cookies. The script refuses to send it unless the URL's origin is
+   `CV_STORAGE_ORIGIN`.
+3. `POST /api/storage/cv/finalize` validates the PDF and returns its id,
+   retried while it answers 409, then the student attaches and downloads it.
+
 ### Before the run
 
 - Staging only. The script refuses production and needs
@@ -67,12 +77,17 @@ download must return the same number of bytes.
   used for a week after every run. Estimate it as
   `QR_USERS × (RAMP_SECONDS + HOLD_SECONDS + 30) / UPLOAD_INTERVAL_SECONDS × 2.96 MiB`,
   and lower `QR_USERS` or `HOLD_SECONDS` if the quota is short.
-- The k6 machine needs about 4 GB of free memory. A local 200-user run against
-  a mock server peaked at 2.3 GB, because the 10 MiB files are built in memory.
+- Staging must have direct CV uploads configured (`S3_PUBLIC_ENDPOINT`);
+  otherwise authorization answers 503. Set `CV_STORAGE_ORIGIN` to the origin of
+  that public storage endpoint, for example
+  `https://storage.staging.example.org`.
+- The k6 machine needs about 3 GB of free memory. A local 200-user run against
+  a mock server peaked at 1.5 GB: each upload builds its PDF in memory.
 
 ```bash
 CONFIRM_NON_PRODUCTION=yes E2E_ALLOW_UPLOADS=yes \
 STAGING_BASE_URL=https://staging.example.org E2E_BASE_URL=https://staging.example.org \
+CV_STORAGE_ORIGIN=https://storage.staging.example.org \
 CHECKIN_SESSION_ID=<live-session-id> \
 pnpm test:load:heavy --summary-export=heavy-users.json
 ```
@@ -112,10 +127,14 @@ A run where every upload gets 429, every CV lookup gets 404, or only the
 `cv_upload_near_limit_accepted` still reports accepted 10 MiB uploads on its
 own line.
 
-`cv_upload_duration` and `cv_download_duration` show file transfer times
-without a pass limit. The run also fails if more than 1% of requests error,
-more than 1% of checks fail, or the slowest 5% of dashboard, history, QR pass,
-CV attach or check-in requests take over 0.75 s.
+`cv_upload_duration` (authorize, storage transfer and finalize together) and
+`cv_download_duration` show file transfer times without a pass limit; the
+`cv_direct_transfer` and `cv_finalize` request tags split the upload further.
+The run also fails if more than 1% of requests error, more than 1% of checks
+fail (a script error counts as a failed check), or the slowest 5% of
+dashboard, history, QR pass, CV authorization, CV attach or check-in requests
+take over 0.75 s. Every visit waits out its interval even after a script
+error, so a failure never turns into a burst against the per-account limits.
 
 Afterwards, remove the synthetic uploads and accounts through the supported
 storage clean-up and admin procedures.
