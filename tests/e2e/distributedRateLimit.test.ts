@@ -7,7 +7,10 @@ import { createClient } from "@redis/client";
 import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 import { rateLimitRegistry } from "@/lib/rateLimitMetrics";
-import { createRedisRateLimitStore } from "@/application/repositories/redisRateLimitRepository";
+import {
+  createRedisRateLimitStore,
+  redisLimiterTiming,
+} from "@/application/repositories/redisRateLimitRepository";
 import { startRateLimitHealthMonitor } from "@/application/services/rateLimitHealthService";
 
 import { getRedisTestUrl } from "./support/redisTestConfig";
@@ -101,7 +104,12 @@ test.skipIf(!url)(
     const subject = identity();
     for (let i = 0; i < 4; i++)
       expect((await request(bases[i % 2], subject)).status).toBe(200);
-    await admin.sendCommand(["CLIENT", "PAUSE", "650", "ALL"]);
+    await admin.sendCommand([
+      "CLIENT",
+      "PAUSE",
+      String(redisLimiterTiming.deadlineMs + 350),
+      "ALL",
+    ]);
     const started = performance.now();
     const responses = await Promise.all(
       bases.map((base) => request(base, subject))
@@ -266,7 +274,12 @@ test.skipIf(!url)(
         ).toBe(1);
         expect(await health()).toBe(0);
       });
-      await admin.sendCommand(["CLIENT", "PAUSE", "650", "ALL"]);
+      await admin.sendCommand([
+        "CLIENT",
+        "PAUSE",
+        String(redisLimiterTiming.deadlineMs + 350),
+        "ALL",
+      ]);
       await vi.waitFor(async () => expect(await health()).toBe(1), {
         timeout: 3000,
       });
