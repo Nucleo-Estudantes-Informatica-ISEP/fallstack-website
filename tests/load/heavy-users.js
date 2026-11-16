@@ -35,10 +35,13 @@ const downloadsSucceeded = new Counter("cv_download_succeeded");
 const downloadsUnavailable = new Counter("cv_download_unavailable_404");
 const checkInsCreated = new Counter("checkin_created");
 const checkInsDuplicate = new Counter("checkin_duplicate_409");
+const actionAlreadyCompleted = new Counter("action_scan_already_completed_400");
 const uploadDuration = new Trend("cv_upload_duration", true);
 const downloadDuration = new Trend("cv_download_duration", true);
 
 const lightEndpointP95 = ["p(95)<750"];
+// completeActionById's error for a student who already completed the action.
+const ACTION_ALREADY_COMPLETED = "Já completaste esta ação";
 
 export const options = {
   // Never follow a staging redirect to production.
@@ -180,22 +183,33 @@ export function runQr(index) {
       res.status === 200 && Boolean(json(res, "data")),
   });
 
-  if (plan.qr.actionId) {
+  // An action completes once per student, so only the first iteration scans.
+  if (plan.qr.actionId && exec.vu.iterationInScenario === 0) {
     const action = http.get(
       `${baseUrl}/api/actions/${encodeURIComponent(plan.qr.actionId)}`,
       { tags: { name: "action_qr", group: "qr" } }
     );
     const qrCode = json(action, "qrCode");
     if (check(action, { "action QR returns a code": () => Boolean(qrCode) })) {
+      // The QR encodes "action-<jwt>"; the student app posts the bare JWT.
+      const token = String(qrCode).replace(/^action-/, "");
       const scan = http.post(
-        `${baseUrl}/api/actions/${encodeURIComponent(qrCode)}`,
+        `${baseUrl}/api/actions/${encodeURIComponent(token)}`,
         null,
         {
           ...cookieHeaders(cookie),
+          // A rerun with the same accounts finds the action already done.
+          responseCallback: http.expectedStatuses(200, 400),
           tags: { name: "action_scan", group: "qr" },
         }
       );
-      check(scan, { "action QR scan completes": (res) => res.status === 200 });
+      const alreadyCompleted =
+        scan.status === 400 && json(scan, "error") === ACTION_ALREADY_COMPLETED;
+      if (alreadyCompleted) actionAlreadyCompleted.add(1);
+      else
+        check(scan, {
+          "action QR scan completes": (res) => res.status === 200,
+        });
     }
   }
 

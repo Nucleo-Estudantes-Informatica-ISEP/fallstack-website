@@ -517,24 +517,18 @@ describe("heavy-users k6 script", () => {
   });
 
   test("ACTION_ID adds a fresh action QR scan by the student", () => {
-    const script = loadScript(
-      (request) => {
-        if (request.url.endsWith("/api/actions/action-1"))
-          return respond(200, { qrCode: "signed.qr.token" });
-        if (request.url.endsWith("/api/storage/cv")) return respond(429);
-        return respond(200, { data: "t" });
-      },
-      { ACTION_ID: "action-1" }
-    );
+    const script = loadScript(actionRoute(), { ACTION_ID: "action-1" });
     script.runQr(0);
     const scan = script.requests.find(
       (r: Request) => r.params.tags?.name === "action_scan"
     )!;
     expect(scan.method).toBe("POST");
+    // The QR carries "action-<jwt>"; like the student app, post the bare JWT.
     expect(scan.url).toBe(
       "https://staging.example.org/api/actions/signed.qr.token"
     );
     expect(scan.params.headers?.Cookie).toBe("student-0");
+    expect(scan.params.responseCallback).toEqual([200, 400]);
     expect(script.requests.map((r: Request) => r.params.tags?.name)).toEqual([
       "qr_pass",
       "action_qr",
@@ -545,7 +539,75 @@ describe("heavy-users k6 script", () => {
       true
     );
   });
+
+  test("each student scans the action once, on the first iteration", () => {
+    const script = loadScript(actionRoute(), { ACTION_ID: "action-1" });
+    for (let iteration = 0; iteration < 5; iteration++) {
+      script.vu.iterationInScenario = iteration;
+      script.runQr(0);
+    }
+    const names = script.requests.map((r: Request) => r.params.tags?.name);
+    expect(names.filter((name: string) => name === "action_scan")).toHaveLength(
+      1
+    );
+    expect(names.filter((name: string) => name === "action_qr")).toHaveLength(
+      1
+    );
+    expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
+      true
+    );
+  });
+
+  test("a rerun finding the action already completed is counted, not failed", () => {
+    const script = loadScript(actionRoute({ completed: ["student-0"] }), {
+      ACTION_ID: "action-1",
+    });
+    script.runQr(0);
+    expect(script.counters.action_scan_already_completed_400).toBe(1);
+    expect(script.checks.every((c: { passed: boolean }) => c.passed)).toBe(
+      true
+    );
+  });
+
+  test("any other 400 from the action scan fails its check", () => {
+    const script = loadScript(actionRoute({ scanError: "QR Code expirado." }), {
+      ACTION_ID: "action-1",
+    });
+    script.runQr(0);
+    expect(script.counters.action_scan_already_completed_400).toBeUndefined();
+    expect(
+      script.checks.find(
+        (c: { name: string }) => c.name === "action QR scan completes"
+      )?.passed
+    ).toBe(false);
+  });
 });
+
+// The action endpoints as the server answers them: the QR is "action-<jwt>",
+// only the bare JWT verifies, and a second completion by the same student is
+// refused with completeActionById's 400.
+function actionRoute({
+  completed = [] as string[],
+  scanError = "",
+}: { completed?: string[]; scanError?: string } = {}) {
+  const done = new Set(completed);
+  return (request: Request) => {
+    const cookie = request.params.headers?.Cookie ?? "";
+    if (request.url.endsWith("/api/actions/action-1"))
+      return respond(200, { qrCode: "action-signed.qr.token" });
+    if (request.method === "POST" && request.url.includes("/api/actions/")) {
+      if (!request.url.endsWith("/api/actions/signed.qr.token"))
+        return respond(400, { error: "Erro inesperado." });
+      if (scanError) return respond(400, { error: scanError });
+      if (done.has(cookie))
+        return respond(400, { error: "Já completaste esta ação" });
+      done.add(cookie);
+      return respond(200, { message: "Action completed" });
+    }
+    if (request.url.endsWith("/api/storage/cv")) return respond(429);
+    return respond(200, { data: "t" });
+  };
+}
 
 // Evaluates count thresholds as k6 2.3.0 does: a metric that never received a
 // sample counts as 0, so "count>0" fails when nothing succeeded (checked
