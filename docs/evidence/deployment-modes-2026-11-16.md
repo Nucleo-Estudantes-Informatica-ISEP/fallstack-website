@@ -181,3 +181,72 @@ PostgreSQL 16 container, the full suite passed at the same revision:
 `pnpm exec vitest run --maxWorkers=1` (182.63 seconds). The task-owned database
 container and anonymous volume were removed afterwards. Build/Prisma validation
 and live app/PWA evidence remain reused as described above.
+
+## Second review follow-up
+
+Based on PR head `d5dcb3681b4f10366e96d3dea3f35ba86e475cad`. All four inline
+threads were already resolved and all nine check results were successful. The
+newer general review comment identified two remaining configuration defects:
+audit-only scheduled retention could report success, and the staff gateway
+forwarded every app route without checking certificate revocation.
+
+- The base retention unit still performs a safe dry-run, then its
+  `ExecStartPost` prints an audit-only error and exits 1. The explicit apply
+  drop-in clears that guard. Runbook instructions require failed-unit alerting
+  and a verified applying schedule before stopping the existing daemon; no
+  retention suspension or owner sign-off is invented.
+- The gateway now allowlists existing backoffice/staff routes and their required
+  API/assets. Guest, student/company profile, signup, dashboard and unrelated API
+  requests are rejected, including Server Action POSTs. Existing backoffice QR
+  refresh/toggle, staff check-ins and authorized CV downloads remain reachable.
+- A current dedicated-CA PEM CRL is required; TLS session tickets are disabled.
+  The runbook names the revocation/renewal owner and requires a gateway restart
+  when revoking access to close existing TLS connections.
+- `bash -n tests/e2e/preparation-boundary.sh`, ShellCheck and the expanded boundary smoke
+  passed locally on macOS, Node v26.13.1, with disposable Docker Nginx containers
+  and synthetic certificates. The smoke renders actual Compose settings,
+  executes the audit-only failure guard, validates Nginx, rejects a missing CRL
+  at startup, checks allowed/denied paths and methods, rejects missing/untrusted
+  clients, then revokes a previously accepted client and verifies rejection
+  after CRL reload while a retained client still connects.
+- Replaying the expanded smoke in temporary fixture directories against each
+  original configuration reproduced its defect: the old retention unit lacks
+  the failure guard; the old gateway accepts startup without a CRL. Both
+  regression checks failed as expected. All temporary containers, networks,
+  directories and synthetic credentials were removed.
+- Changed Markdown Prettier checks and `git diff --check` passed. Unchanged
+  application lint, full tests, typecheck, production build and Prisma evidence
+  is reused from the successful CI run for `d5dcb368` (Linux/Node 24) and the
+  local revisions recorded above. No app source, schema, dependency or app build
+  configuration changed; no new application checks or hooks were started
+  against an unconfigured database.
+
+### Completion concern and live sign-in attempt
+
+`Closes #418` and its verified Development relationship are retained under the
+requester's full-issue policy; this is not a partial contribution or a new
+follow-up issue. Full operational completion is not claimed while the gates
+below remain unverified. The recorded backup exception still applies. The
+real-phone result remains explicitly user-reported; the issue does not require
+assistant-operated screenshots or an automatic Coolify router provisioner.
+Existing staging evidence proves a manual ingress switch and restoration of
+the previous routing, including its pre-existing homepage error; it does not
+prove a healthy EVENT recovery.
+
+At the requester's direction, Helium computer use inspected the authenticated
+Coolify development environment: the web resource, two clones and Redis were
+running, with no dedicated staff resource listed. No resource configuration,
+deployment, account role, backup or data was changed. The staging login reached
+AuthNEI DEV. One saved identity failed authentication; the alternate existing
+development identity passed its password step and reached MFA. The browser's
+suggested OTP was rejected, retries stopped, and a secure MFA-code request timed
+out. No completed staff sign-in or application authorization result is claimed.
+The task-created sign-in tab was closed and the existing Coolify tab preserved.
+
+Remaining completion evidence needs a valid factor for an existing authorized
+staff identity, a restricted staff deployment with its actual callback/CRL
+configuration, and the coordinated full staging transition/recovery exercise
+while preserving the active clones. The public Coolify resource's actual-hostname
+activation check remains a deployment gate. These limitations must be cleared
+before claiming full issue verification or readiness for activation; no backup
+repair or destructive data/service operation is authorized by this follow-up.

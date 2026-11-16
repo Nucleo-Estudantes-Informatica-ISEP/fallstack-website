@@ -48,12 +48,27 @@ loopback. Use a distinct staff hostname, with OIDC callback/logout URIs updated
 and allowlisted in AuthNEI. Do not reuse public cookies/domain settings.
 
 Provision `STAFF_TLS_DIRECTORY` outside the checkout: server `tls.crt`, private
-`tls.key`, and dedicated `staff-ca.crt`. Issue client certificates only to the
-authorized staff roster, protect/revoke keys through NEI operations. Ensure image UID 101 can read
+`tls.key`, dedicated `staff-ca.crt`, and its current PEM `staff-ca.crl` (including
+an empty signed CRL before the first revocation). Missing CRLs fail gateway
+startup; expired CRLs reject clients. Issue client certificates only to the
+authorized staff roster. NEI identity operators own issuance and revocation:
+revoke compromised/departed staff certificates in that dedicated CA, regenerate
+the CRL, replace the mounted file and restart the gateway to terminate existing
+TLS connections as well as load the CRL. TLS session tickets are disabled.
+Renew the CRL before its `nextUpdate`; monitor expiry and verify a revoked client
+is rejected while a retained staff client can connect. Ensure image UID 101 can read
 the mounted TLS key without making it world-readable. TLS must
 terminate at the gateway: use TCP passthrough, never an outer HTTP TLS proxy
 that bypasses client verification. Missing/untrusted client certificates are rejected before any upstream
 request. App authorization remains required after this boundary.
+Sign in through `/api/auth/login?next=%2Foverview`. The gateway allowlists the
+existing admin page roots and staff attendance scanner, `/api/admin/`, required
+OIDC/session calls, scanner check-in calls, and backoffice media/assets. Shared
+action QR endpoints permit GET/HEAD/PATCH, blocking student completion POSTs;
+student CV download is GET/HEAD only and retains app authorization. `/` redirects
+to `/overview`. Guest pages, student/company profiles, dashboards, signup, Wallet,
+and other APIs return 404, including Server Action POSTs to those paths. New
+backoffice routes must explicitly extend this allowlist and its boundary probes.
 Do not attach public static ingress to the staff network. Verify the actual
 web listening port (the existing image uses 4000) before deployment.
 
@@ -143,11 +158,18 @@ installable schedule templates. Adjust checkout, docker binary and protected
 env-file paths to the host inventory; the env file supplies only the DB/S3 values required by
 `docker-compose.retention.yml`; it needs no event Redis or identity credentials. Restrict it to operators. Install the
 units in `/etc/systemd/system`. The service defaults to dry-run, including timer
-runs. After reviewing a successful audit, explicitly install
+runs. Its `ExecStartPost` emits an audit-only error and exits 1: a dry-run must
+never count as successful retention. Connect this failed unit to existing NEI
+alerting before enabling the timer. To audit without this intentional service
+failure, run the documented one-shot without `--apply` directly. After reviewing
+a successful audit, explicitly install
 [`apply.conf`](../../deployment/retention/apply.conf) as
 `/etc/systemd/system/fallstack-retention.service.d/apply.conf`, reload systemd,
-and enable/start the timer. Remove the drop-in and reload to return to dry-run.
-The drop-in, rather than `STORAGE_CLEANUP_MODE`, opts this one-shot into deletes. `Persistent=true` catches missed runs after host
+and enable/start the timer. The drop-in enables deletion and clears the audit-only
+failure guard. Remove it and reload to return to dry-run with failed-unit alerts;
+keep or restore the verified daemon until apply is active. No retention suspension
+is approved by installing these templates. The drop-in, rather than
+`STORAGE_CLEANUP_MODE`, opts this one-shot into deletes. `Persistent=true` catches missed runs after host
 restart and systemd prevents overlapping instances of this unit. Connect failed
 units and last-success age to existing NEI alerting; no monitoring destination
 is assumed here. Inspect `systemctl list-timers` and the sanitized journal to

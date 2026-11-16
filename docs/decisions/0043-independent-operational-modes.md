@@ -22,12 +22,18 @@ build time; never ship live MinIO URLs or credentials.
 
 PREPARATION keeps that public artifact and runs the existing app on a private
 staff host behind a client-certificate gateway, plus existing app authorization.
+Allowlist backoffice/staff routes and their required assets/API calls; deny other
+application surfaces. Require a current dedicated-CA CRL and disable TLS session
+tickets so revoked staff credentials cannot resume a previously accepted session.
 EVENT restores the application public origin explicitly. Preserve ADR 0001's
 single repository and ADR 0006's database ownership of editable content.
 
 Retain shared services, persistent data, backups, and daily one-shot cleanup
 instead of an idle daemon. Operational transitions require staging evidence and
 real installed-PWA checks before production activation.
+The scheduled cleanup unit audits safely by default but fails explicitly until
+the reviewed apply drop-in is installed; an audit must not report successful
+retention or justify stopping an existing cleanup daemon.
 
 ## Consequences
 
