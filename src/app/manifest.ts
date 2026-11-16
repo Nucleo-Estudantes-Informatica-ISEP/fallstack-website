@@ -6,8 +6,8 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: branding.metadata.applicationName,
     short_name: branding.metadata.applicationName,
-    theme_color: "#FFFFFF",
-    background_color: "#FFFFFF",
+    theme_color: "#141414",
+    background_color: "#141414",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
