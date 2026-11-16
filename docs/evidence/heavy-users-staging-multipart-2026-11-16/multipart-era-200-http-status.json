@@ -1,0 +1,142 @@
+[
+  {
+    "endpoint": "action_qr",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 140
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 140
+  },
+  {
+    "endpoint": "checkin",
+    "status": "201",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 140
+  },
+  {
+    "endpoint": "checkin",
+    "status": "409",
+    "errorCode": "1409",
+    "protocol": "HTTP/2.0",
+    "count": 904
+  },
+  {
+    "endpoint": "cv_attach",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 21
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "201",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 431
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "errorCode": "1000",
+    "protocol": "",
+    "count": 33
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "errorCode": "1050",
+    "protocol": "",
+    "count": 120
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "errorCode": "1211",
+    "protocol": "",
+    "count": 10
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "errorCode": "1220",
+    "protocol": "",
+    "count": 171
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "204",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 21
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "502",
+    "errorCode": "1502",
+    "protocol": "HTTP/2.0",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "0",
+    "errorCode": "1050",
+    "protocol": "",
+    "count": 17
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 297
+  },
+  {
+    "endpoint": "cv_finalize",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 21
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "0",
+    "errorCode": "1050",
+    "protocol": "",
+    "count": 1
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 333
+  },
+  {
+    "endpoint": "dashboard_history",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 171
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 171
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "200",
+    "errorCode": "",
+    "protocol": "HTTP/2.0",
+    "count": 431
+  }
+]

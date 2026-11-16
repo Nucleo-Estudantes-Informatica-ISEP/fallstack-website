@@ -1,0 +1,7 @@
+{
+  "stoppedPriorTaskContainersRemoved": 3,
+  "priorTaskImageRemoved": true,
+  "normalSnapshotImagePreserved": true,
+  "sharedVolumesPreserved": true,
+  "disk": ["102915489792", "86888960000", "16009752576", "85%"]
+}

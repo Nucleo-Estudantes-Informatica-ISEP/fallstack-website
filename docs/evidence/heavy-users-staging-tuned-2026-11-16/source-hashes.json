@@ -1,0 +1,10 @@
+{
+  "revision": "809772f2444a26335a7b5eefa8cb1b7ae1803611",
+  "runtimeFileSha256": {
+    "src/application/repositories/redisRateLimitRepository.ts": "536b66b797559e037006d42571fc9ede6db6295fcae3af65e872a331339c4870",
+    "src/application/repositories/sessionCheckInRepository.ts": "c781c65cf284bdc6efcad232154f9681a09da0f4c2f266149b285ab13f38bf68",
+    "src/application/services/objectStorageService.ts": "020a68ab4de291dadd6573417e0c3348e4018be2b7042ccab95e16923fe822b2",
+    "src/application/services/studentService.ts": "18900826bd554e6989f8eb80b08b3ce277045be053164aed93d6c97e180cd1ad",
+    "src/app/api/students/[code]/cv/file/route.ts": "3ff806fa194e77a4ec1b1b6bbe355c34bc2e74203b53334bba375b4d158f155c"
+  }
+}

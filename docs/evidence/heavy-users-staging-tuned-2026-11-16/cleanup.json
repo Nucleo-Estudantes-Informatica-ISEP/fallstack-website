@@ -1,0 +1,11 @@
+{
+  "syntheticUsersRemoved": 200,
+  "ownedTicketKeysVerifiedAbsent": 3508,
+  "unreferencedSyntheticOrphansRemoved": 0,
+  "allKeysHead404": true,
+  "remainingSyntheticUsers": 0,
+  "scheduleDaysAfterRestoration": [
+    { "_count": 9, "day": 1 },
+    { "_count": 7, "day": 2 }
+  ]
+}

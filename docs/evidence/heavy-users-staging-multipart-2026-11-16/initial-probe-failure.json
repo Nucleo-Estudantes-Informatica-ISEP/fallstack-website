@@ -1,0 +1,15 @@
+{
+  "mode": "origin",
+  "concurrency": 10,
+  "completedRoundtrips": null,
+  "outcome": "aborted when a second part returned transport status 0 before the probe used the browser's bounded retry policy",
+  "partDeadlineMs": 55000,
+  "completedGroupsBeforeFailure": [
+    "public/1",
+    "public/5",
+    "public/10",
+    "origin/1",
+    "origin/5"
+  ],
+  "noCapacityPassClaimed": true
+}

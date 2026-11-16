@@ -1,0 +1,542 @@
+{
+  "label": "aborted-budget-200",
+  "validity": "aborted after disk preflight failure; not a capacity result",
+  "revision": "783afa3fe79e713654e61d969c816bb3459a76cd",
+  "users": 200,
+  "startedAt": "2026-11-16T20:17:48.527087+00:00",
+  "endedAt": "2026-11-16T20:20:59.540454+00:00",
+  "exitCode": 105,
+  "generator": "Mac; official k6 2.4.0; public web HTTPS and Cloudflare-proxied storage",
+  "generatorChange": "Sanitized failure-response logging wrapper; original scenario, timing, size plan, assertions and thresholds unchanged",
+  "metrics": {
+    "http_req_duration{name:dashboard_history}": {
+      "med": 952.108,
+      "max": 4789.985,
+      "p(90)": 1577.9922000000001,
+      "p(95)": 2739.948999999998,
+      "p(99)": 4282.433799999999,
+      "avg": 1068.045133333333,
+      "min": 107.021,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "vus": {
+      "value": 200,
+      "min": 3,
+      "max": 200
+    },
+    "http_req_duration": {
+      "avg": 5362.913918109501,
+      "min": 1.797,
+      "med": 1172.9075,
+      "max": 70701.596,
+      "p(90)": 13501.388500000008,
+      "p(95)": 31727.553849999957,
+      "p(99)": 60004.183320000004
+    },
+    "data_received": {
+      "count": 771326202,
+      "rate": 4099458.934447302
+    },
+    "http_req_duration{name:checkin}": {
+      "p(99)": 5144.07244,
+      "avg": 1504.1629341974071,
+      "min": 123.435,
+      "med": 1148.034,
+      "max": 10242.193,
+      "p(90)": 2558.2342000000003,
+      "p(95)": 4123.710399999999,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_blocked": {
+      "min": 0,
+      "med": 0.001,
+      "max": 33352.837,
+      "p(90)": 0.002,
+      "p(95)": 1607.017949999996,
+      "p(99)": 2612.2188599999995,
+      "avg": 163.93084323819775
+    },
+    "http_req_duration{name:cv_authorize}": {
+      "p(95)": 3938.5773999999997,
+      "p(99)": 6046.004179999999,
+      "avg": 1385.1108665105385,
+      "min": 90.776,
+      "med": 1078.603,
+      "max": 28776.496,
+      "p(90)": 2213.4744,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_reqs": {
+      "count": 4274,
+      "rate": 22.715535191721347
+    },
+    "data_sent": {
+      "count": 995276252,
+      "rate": 5289712.851612195
+    },
+    "cv_download_succeeded{group:qr,size:real}": {
+      "count": 228,
+      "rate": 1.2117786672233195,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_duration{name:cv_attach}": {
+      "p(90)": 2536.555700000001,
+      "p(95)": 3950.5823999999993,
+      "p(99)": 5232.550999999999,
+      "avg": 1400.4030361111113,
+      "min": 119.847,
+      "med": 1088.623,
+      "max": 9812.206,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "cv_upload_accepted{size:real}": {
+      "count": 345,
+      "rate": 1.8336124569826544,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "iterations": {
+      "count": 1344,
+      "rate": 7.143116354158515
+    },
+    "http_req_duration{name:dashboard_page}": {
+      "med": 1837.796,
+      "max": 31877.308,
+      "p(90)": 4569.598400000001,
+      "p(95)": 12487.473799999983,
+      "p(99)": 29009.000659999998,
+      "avg": 3297.939093333333,
+      "min": 228.808,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "cv_download_succeeded{group:dashboard}": {
+      "count": 52,
+      "rate": 0.2763705732263711,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_duration{expected_response:true}": {
+      "p(90)": 9458.280200000001,
+      "p(95)": 20783.806599999993,
+      "p(99)": 46942.47293999999,
+      "avg": 3976.5115755013235,
+      "min": 74.094,
+      "med": 1163.834,
+      "max": 70701.596
+    },
+    "cv_upload_duration": {
+      "med": 12922,
+      "max": 83409,
+      "p(90)": 31188,
+      "p(95)": 39853.2,
+      "p(99)": 59770.43999999999,
+      "avg": 16236.853994490359,
+      "min": 1296
+    },
+    "http_req_receiving": {
+      "max": 59342.774,
+      "p(90)": 1161.1520000000003,
+      "p(95)": 18055.67374999999,
+      "p(99)": 58866.11257,
+      "avg": 2530.5856700982745,
+      "min": 0,
+      "med": 0.093
+    },
+    "checkin_created": {
+      "count": 140,
+      "rate": 0.7440746202248453
+    },
+    "checkin_duplicate_409": {
+      "count": 862,
+      "rate": 4.58137373309869
+    },
+    "cv_upload_accepted": {
+      "count": 363,
+      "rate": 1.929279193868706
+    },
+    "http_req_failed": {
+      "passes": 135,
+      "fails": 4139,
+      "thresholds": {
+        "rate<0.01": true
+      },
+      "value": 0.031586335985025735
+    },
+    "cv_download_succeeded": {
+      "count": 281,
+      "rate": 1.4934640591655823
+    },
+    "cv_upload_accepted{size:near_limit}": {
+      "count": 18,
+      "rate": 0.09566673688605154,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "vus_max": {
+      "value": 200,
+      "min": 200,
+      "max": 200
+    },
+    "http_req_duration{name:qr_pass}": {
+      "min": 75.451,
+      "med": 1062.347,
+      "max": 60001.33,
+      "p(90)": 4620.5744,
+      "p(95)": 10285.980599999999,
+      "p(99)": 46045.42619999997,
+      "avg": 3095.463667436489,
+      "thresholds": {
+        "p(95)<750": true
+      }
+    },
+    "http_req_tls_handshaking": {
+      "p(95)": 779.6974999999996,
+      "p(99)": 1239.58956,
+      "avg": 101.32210248011232,
+      "min": 0,
+      "med": 0,
+      "max": 32119.052,
+      "p(90)": 0
+    },
+    "cv_download_duration": {
+      "avg": 29447.559231182815,
+      "min": 143.8,
+      "med": 23920.495000000003,
+      "max": 60014.865,
+      "p(90)": 60004.2564,
+      "p(95)": 60005.3343,
+      "p(99)": 60009.811760000004
+    },
+    "http_req_sending": {
+      "max": 66496.742,
+      "p(90)": 0.5564000000000002,
+      "p(95)": 4905.193399999988,
+      "p(99)": 22211.506439999986,
+      "avg": 880.0527653252228,
+      "min": 0,
+      "med": 0.092
+    },
+    "checks": {
+      "fails": 181,
+      "passes": 3581,
+      "thresholds": {
+        "rate>0.99": true
+      },
+      "value": 0.9518872939925571
+    },
+    "cv_upload_near_limit_accepted": {
+      "count": 18,
+      "rate": 0.09566673688605154
+    },
+    "http_req_waiting": {
+      "max": 60002.094,
+      "p(90)": 2925.2563000000005,
+      "p(95)": 4383.973099999999,
+      "p(99)": 27320.254799999966,
+      "avg": 1952.275482686009,
+      "min": 0,
+      "med": 1115.6505
+    },
+    "http_req_connecting": {
+      "p(90)": 0,
+      "p(95)": 686.6055999999984,
+      "p(99)": 1151.7870699999999,
+      "avg": 62.584766495086576,
+      "min": 0,
+      "med": 0,
+      "max": 3032.681
+    },
+    "iteration_duration": {
+      "p(90)": 64255.946479500024,
+      "p(95)": 86066.72513125,
+      "p(99)": 126704.57637481998,
+      "avg": 16844.6231085893,
+      "min": 2999.378,
+      "med": 3001.6014165,
+      "max": 148966.26975
+    },
+    "cv_download_succeeded{group:qr,size:near_limit}": {
+      "count": 1,
+      "rate": 0.005314818715891752,
+      "thresholds": {
+        "count>0": false
+      }
+    }
+  },
+  "checks": [
+    {
+      "name": "check-in returns 201",
+      "passes": 140,
+      "fails": 1
+    },
+    {
+      "name": "student QR pass returns a token",
+      "passes": 430,
+      "fails": 3
+    },
+    {
+      "name": "action QR returns a code",
+      "passes": 140,
+      "fails": 0
+    },
+    {
+      "name": "action QR scan completes",
+      "passes": 140,
+      "fails": 0
+    },
+    {
+      "name": "dashboard returns HTML",
+      "passes": 75,
+      "fails": 0
+    },
+    {
+      "name": "CV upload authorized for the staging storage origin",
+      "passes": 427,
+      "fails": 0
+    },
+    {
+      "name": "dashboard history returns a list",
+      "passes": 75,
+      "fails": 0
+    },
+    {
+      "name": "dashboard company has saved students to download",
+      "passes": 75,
+      "fails": 0
+    },
+    {
+      "name": "CV lookup returns a file URL",
+      "passes": 482,
+      "fails": 11
+    },
+    {
+      "name": "CV download returns a PDF",
+      "passes": 281,
+      "fails": 91
+    },
+    {
+      "name": "storage accepts the signed CV transfer",
+      "passes": 364,
+      "fails": 29
+    },
+    {
+      "name": "CV upload finalized with a file id",
+      "passes": 363,
+      "fails": 0
+    },
+    {
+      "name": "CV attaches to the student",
+      "passes": 360,
+      "fails": 0
+    },
+    {
+      "name": "student downloads the CV just uploaded",
+      "passes": 229,
+      "fails": 46
+    }
+  ],
+  "cvCounts": [
+    {
+      "metric": "cv_download_succeeded",
+      "group": "dashboard",
+      "size": "",
+      "count": 52
+    },
+    {
+      "metric": "cv_download_succeeded",
+      "group": "qr",
+      "size": "near_limit",
+      "count": 1
+    },
+    {
+      "metric": "cv_download_succeeded",
+      "group": "qr",
+      "size": "real",
+      "count": 228
+    },
+    {
+      "metric": "cv_upload_accepted",
+      "group": "",
+      "size": "near_limit",
+      "count": 18
+    },
+    {
+      "metric": "cv_upload_accepted",
+      "group": "",
+      "size": "real",
+      "count": 345
+    }
+  ],
+  "httpStatuses": [
+    {
+      "endpoint": "action_qr",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 140
+    },
+    {
+      "endpoint": "action_scan",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 140
+    },
+    {
+      "endpoint": "checkin",
+      "status": "201",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 140
+    },
+    {
+      "endpoint": "checkin",
+      "status": "409",
+      "errorCode": "1409",
+      "protocol": "HTTP/2.0",
+      "count": 862
+    },
+    {
+      "endpoint": "checkin",
+      "status": "502",
+      "errorCode": "1502",
+      "protocol": "HTTP/2.0",
+      "count": 1
+    },
+    {
+      "endpoint": "cv_attach",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 360
+    },
+    {
+      "endpoint": "cv_authorize",
+      "status": "201",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 427
+    },
+    {
+      "endpoint": "cv_direct_transfer",
+      "status": "204",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 364
+    },
+    {
+      "endpoint": "cv_direct_transfer",
+      "status": "502",
+      "errorCode": "1502",
+      "protocol": "HTTP/2.0",
+      "count": 29
+    },
+    {
+      "endpoint": "cv_download",
+      "status": "0",
+      "errorCode": "1050",
+      "protocol": "",
+      "count": 91
+    },
+    {
+      "endpoint": "cv_download",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 281
+    },
+    {
+      "endpoint": "cv_finalize",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 363
+    },
+    {
+      "endpoint": "cv_lookup",
+      "status": "0",
+      "errorCode": "1050",
+      "protocol": "",
+      "count": 11
+    },
+    {
+      "endpoint": "cv_lookup",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 482
+    },
+    {
+      "endpoint": "dashboard_history",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 75
+    },
+    {
+      "endpoint": "dashboard_page",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 75
+    },
+    {
+      "endpoint": "qr_pass",
+      "status": "0",
+      "errorCode": "1050",
+      "protocol": "",
+      "count": 3
+    },
+    {
+      "endpoint": "qr_pass",
+      "status": "200",
+      "errorCode": "",
+      "protocol": "HTTP/2.0",
+      "count": 430
+    }
+  ],
+  "originAnalysis": {
+    "label": "aborted-budget-200",
+    "users": 200,
+    "revision": "783afa3fe79e713654e61d969c816bb3459a76cd",
+    "requests": 4274,
+    "httpFailures": 135,
+    "httpFailureRate": 0.031586335985025735,
+    "checksPassed": 3581,
+    "checksFailed": 181,
+    "checksRate": 0.9518872939925571,
+    "endpointP95Ms": {
+      "dashboard_history": 2739.948999999998,
+      "checkin": 4123.710399999999,
+      "cv_authorize": 3938.5773999999997,
+      "cv_attach": 3950.5823999999993,
+      "dashboard_page": 12487.473799999983,
+      "qr_pass": 10285.980599999999
+    },
+    "originEndpointP95Ms": {},
+    "originStatuses": [],
+    "eventLoopMaxMs": 0,
+    "poolGaugeMax": {},
+    "generatorPeakRssKiB": 977200,
+    "cvUploads": 363,
+    "cvUploads10MiB": 18,
+    "cvDownloads": 281,
+    "checkinsCreated": 140,
+    "checkinsDuplicate": 862
+  }
+}

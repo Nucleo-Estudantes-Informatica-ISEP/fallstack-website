@@ -1,0 +1,13 @@
+{
+  "revision": "783afa3fe79e713654e61d969c816bb3459a76cd",
+  "sha256": {
+    "tests/load/heavy-users.js": "b3a5c1efe638dfa1cc90c7c2796a16cf809b974d45d94c6c7575f83874d265a1",
+    "tests/load/heavyUserPlan.js": "51162bacbef8345384b55057b235eff19d0ec0ec0954cf677703586978ac6d11",
+    "tests/load/minioPost.js": "acc37b3a10f5825b2cadc7715bae920bb916ed3d95c6097148318b9c8bde2d2d",
+    "src/application/repositories/redisRateLimitRepository.ts": "536b66b797559e037006d42571fc9ede6db6295fcae3af65e872a331339c4870",
+    "src/application/repositories/sessionCheckInRepository.ts": "c781c65cf284bdc6efcad232154f9681a09da0f4c2f266149b285ab13f38bf68",
+    "src/application/services/objectStorageService.ts": "020a68ab4de291dadd6573417e0c3348e4018be2b7042ccab95e16923fe822b2",
+    "src/application/services/studentService.ts": "18900826bd554e6989f8eb80b08b3ce277045be053164aed93d6c97e180cd1ad",
+    "src/app/api/students/[code]/cv/file/route.ts": "3ff806fa194e77a4ec1b1b6bbe355c34bc2e74203b53334bba375b4d158f155c"
+  }
+}

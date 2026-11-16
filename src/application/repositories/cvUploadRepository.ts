@@ -9,6 +9,7 @@ export const createCvUpload = (data: {
   ownerId: string;
   size: number;
   expiresAt: Date;
+  multipartId?: string;
 }) => prisma.cvUpload.create({ data });
 
 export const findCvUpload = (

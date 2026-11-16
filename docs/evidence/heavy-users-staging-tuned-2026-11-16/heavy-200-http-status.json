@@ -1,0 +1,200 @@
+[
+  {
+    "endpoint": "action_qr",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 135
+  },
+  {
+    "endpoint": "action_qr",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 5
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 131
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "400",
+    "transportErrorCode": "1400",
+    "count": 1
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 3
+  },
+  {
+    "endpoint": "checkin",
+    "status": "201",
+    "transportErrorCode": "",
+    "count": 131
+  },
+  {
+    "endpoint": "checkin",
+    "status": "400",
+    "transportErrorCode": "1400",
+    "count": 17
+  },
+  {
+    "endpoint": "checkin",
+    "status": "409",
+    "transportErrorCode": "1409",
+    "count": 1151
+  },
+  {
+    "endpoint": "checkin",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 28
+  },
+  {
+    "endpoint": "cv_attach",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 464
+  },
+  {
+    "endpoint": "cv_attach",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 7
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "201",
+    "transportErrorCode": "",
+    "count": 564
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 17
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "503",
+    "transportErrorCode": "1503",
+    "count": 4
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "0",
+    "transportErrorCode": "1220",
+    "count": 1
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "204",
+    "transportErrorCode": "",
+    "count": 484
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 63
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 148
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 500
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 12
+  },
+  {
+    "endpoint": "cv_finalize",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 472
+  },
+  {
+    "endpoint": "cv_finalize",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 9
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 5
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 713
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 23
+  },
+  {
+    "endpoint": "dashboard_history",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 141
+  },
+  {
+    "endpoint": "dashboard_history",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 2
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 1
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 138
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 4
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "0",
+    "transportErrorCode": "1050",
+    "count": 10
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 552
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "502",
+    "transportErrorCode": "1502",
+    "count": 23
+  }
+]

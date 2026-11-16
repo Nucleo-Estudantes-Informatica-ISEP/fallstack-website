@@ -1,0 +1,400 @@
+{
+  "run-40": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 244,
+      "maxDurationMs": 72.879,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 244,
+      "maxDurationMs": 5.849,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 522,
+      "maxDurationMs": 199.678,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 488,
+      "maxDurationMs": 19.073,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 244,
+      "maxDurationMs": 19.348,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    }
+  ],
+  "run-100": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 333,
+      "maxDurationMs": 97.239,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 333,
+      "maxDurationMs": 10.061,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 646,
+      "maxDurationMs": 898.903,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 666,
+      "maxDurationMs": 14.94,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 333,
+      "maxDurationMs": 5.171,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 334,
+      "maxDurationMs": 55949.888,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487935
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 65,
+      "maxDurationMs": 60012.322,
+      "minReceivedBytes": 1933517,
+      "maxReceivedBytes": 10289366
+    }
+  ],
+  "run-200": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 411,
+      "maxDurationMs": 117.935,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 411,
+      "maxDurationMs": 11.599,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 735,
+      "maxDurationMs": 1089.819,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 822,
+      "maxDurationMs": 16.294,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 411,
+      "maxDurationMs": 6.071,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 414,
+      "maxDurationMs": 59993.592,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487924
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 114,
+      "maxDurationMs": 60014.784,
+      "minReceivedBytes": 1130710,
+      "maxReceivedBytes": 9601238
+    }
+  ],
+  "corrected-40": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 227,
+      "maxDurationMs": 111.01,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 227,
+      "maxDurationMs": 13.783,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 531,
+      "maxDurationMs": 197.79,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 454,
+      "maxDurationMs": 11.573,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 227,
+      "maxDurationMs": 16.066,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 227,
+      "maxDurationMs": 59006.595,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487935
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 16,
+      "maxDurationMs": 60010.851,
+      "minReceivedBytes": 2179277,
+      "maxReceivedBytes": 9650390
+    }
+  ],
+  "corrected-100": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 255,
+      "maxDurationMs": 141.504,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 255,
+      "maxDurationMs": 7.388,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 849,
+      "maxDurationMs": 199.342,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 510,
+      "maxDurationMs": 23.959,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 255,
+      "maxDurationMs": 16.139,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 257,
+      "maxDurationMs": 59171.806,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487924
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 55,
+      "maxDurationMs": 60011.779,
+      "minReceivedBytes": 1097942,
+      "maxReceivedBytes": 9650390
+    }
+  ],
+  "aborted-budget-200": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 364,
+      "maxDurationMs": 309.026,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 364,
+      "maxDurationMs": 31.368,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 481,
+      "maxDurationMs": 30252.92,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 728,
+      "maxDurationMs": 103.08,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 364,
+      "maxDurationMs": 22.339,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 367,
+      "maxDurationMs": 58806.5,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487935
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 49,
+      "maxDurationMs": 60057.807,
+      "minReceivedBytes": 1081549,
+      "maxReceivedBytes": 10469590
+    }
+  ],
+  "corrected-200-final": [
+    {
+      "api": "s3.CopyObject",
+      "status": 200,
+      "count": 467,
+      "maxDurationMs": 330.332,
+      "minReceivedBytes": 267,
+      "maxReceivedBytes": 267
+    },
+    {
+      "api": "s3.DeleteObject",
+      "status": 204,
+      "count": 467,
+      "maxDurationMs": 12.0,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 200,
+      "count": 774,
+      "maxDurationMs": 30252.526,
+      "minReceivedBytes": 184,
+      "maxReceivedBytes": 184
+    },
+    {
+      "api": "s3.GetObject",
+      "status": 206,
+      "count": 934,
+      "maxDurationMs": 31.5,
+      "minReceivedBytes": 199,
+      "maxReceivedBytes": 199
+    },
+    {
+      "api": "s3.HeadObject",
+      "status": 200,
+      "count": 467,
+      "maxDurationMs": 14.08,
+      "minReceivedBytes": 164,
+      "maxReceivedBytes": 164
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 204,
+      "count": 469,
+      "maxDurationMs": 57651.46,
+      "minReceivedBytes": 186454,
+      "maxReceivedBytes": 10487935
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 499,
+      "count": 87,
+      "maxDurationMs": 60027.567,
+      "minReceivedBytes": 2080973,
+      "maxReceivedBytes": 9912525
+    },
+    {
+      "api": "s3.PostPolicyBucket",
+      "status": 503,
+      "count": 3,
+      "maxDurationMs": 56134.901,
+      "minReceivedBytes": 1474774,
+      "maxReceivedBytes": 6488278
+    }
+  ]
+}

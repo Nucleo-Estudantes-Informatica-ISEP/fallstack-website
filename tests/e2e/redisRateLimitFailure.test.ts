@@ -129,10 +129,13 @@ test.each([
     }
     await expect(
       store.check("synthetic", { max: 5, windowMs: 60000 })
-    ).rejects.toMatchObject({ reason: "cooldown" });
-    expect(mutations).toBe(beforeRecovery);
+    ).rejects.toMatchObject({
+      reason: mode.startsWith("hang") ? "timeout" : "cooldown",
+    });
+    expect(mutations).toBe(beforeRecovery + (mode === "hang-eval" ? 1 : 0));
     await vi.waitFor(() => expect(sockets.size).toBe(0));
     if (mode !== "hang-handshake") expect(authenticated).toBe(true);
+    const wasHangEval = mode === "hang-eval";
     mode = "ready";
     await vi.waitFor(
       async () => {
@@ -142,7 +145,7 @@ test.each([
       },
       { timeout: 5000, interval: 100 }
     );
-    expect(mutations).toBe(beforeRecovery + 1);
+    expect(mutations).toBe(beforeRecovery + (wasHangEval ? 2 : 1));
   }
 );
 

@@ -57,6 +57,7 @@ FROM builder AS storage-cleanup
 RUN rm -rf /root/.cache/node/corepack /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 COPY tsconfig.json ./
 COPY src/config/env.storage.ts src/config/env.database.ts ./src/config/
+COPY src/domain/cvMultipart.ts ./src/domain/cvMultipart.ts
 COPY src/domain/company/companyVideo.ts ./src/domain/company/companyVideo.ts
 COPY src/types/HttpError.ts ./src/types/HttpError.ts
 COPY src/application/repositories/storageCleanupDatabase.ts src/application/repositories/storageCleanupRepository.ts ./src/application/repositories/

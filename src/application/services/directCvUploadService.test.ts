@@ -4,11 +4,21 @@ import { beforeEach, expect, test, vi } from "vitest";
 import { HttpError } from "@/types/HttpError";
 import { actionNames } from "@/edition/actions";
 
-import { finalizeCvUpload, initiateCvUpload } from "./directCvUploadService";
+import {
+  cancelCvUpload,
+  finalizeCvUpload,
+  initiateCvMultipartUpload,
+  initiateCvUpload,
+  signCvUploadPart,
+} from "./directCvUploadService";
 
 vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({
   createCvUpload: vi.fn(),
+  beginCvMultipart: vi.fn(),
+  abortCvMultipart: vi.fn(),
+  completeCvMultipart: vi.fn(),
+  presignCvPart: vi.fn(),
   findCvUpload: vi.fn(),
   claimCvUpload: vi.fn(),
   consumeCvUpload: vi.fn(),
@@ -41,6 +51,7 @@ vi.mock("./actionService", () => actionMocks);
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.deleteObject.mockResolvedValue(undefined);
+  mocks.abortCvMultipart.mockResolvedValue(undefined);
   mocks.releaseCvUpload.mockResolvedValue({ count: 1 });
   mocks.findCvUpload.mockResolvedValue({
     id: "ticket",
@@ -260,3 +271,100 @@ test("superseded older ticket does not discard quarantine if lease was lost befo
   expect(mocks.deleteObject).not.toHaveBeenCalled();
 });
 
+test("multipart initiation persists only server-derived storage identity and aborts failed persistence", async () => {
+  mocks.beginCvMultipart.mockResolvedValue("storage-upload");
+  const result = await initiateCvMultipartUpload("owner", {
+    filename: "cv.pdf",
+    size: 10485760,
+    contentType: "application/pdf",
+  });
+  expect(result).toMatchObject({ partSize: 5242880 });
+  expect(mocks.createCvUpload).toHaveBeenCalledWith(
+    expect.objectContaining({
+      ownerId: "owner",
+      multipartId: "storage-upload",
+      size: 10485760,
+    })
+  );
+  mocks.createCvUpload.mockRejectedValueOnce(new Error("DB failed"));
+  await expect(
+    initiateCvMultipartUpload("owner", {
+      filename: "cv.pdf",
+      size: 20,
+      contentType: "application/pdf",
+    })
+  ).rejects.toThrow("DB failed");
+  expect(mocks.abortCvMultipart).toHaveBeenCalledWith(
+    expect.stringMatching(/^quarantine\/cv\//),
+    "storage-upload"
+  );
+});
+
+test("part signatures require an owned, live, pending ticket and derive exact size from it", async () => {
+  mocks.findCvUpload.mockResolvedValueOnce(null);
+  await expect(
+    signCvUploadPart("other", "ticket", 1, "sha")
+  ).rejects.toMatchObject({ status: 404 });
+  mocks.findCvUpload.mockResolvedValue({
+    status: "pending",
+    multipartId: "storage-upload",
+    size: 5242881,
+    expiresAt: new Date(Date.now() + 60000),
+  });
+  await signCvUploadPart("owner", "ticket", 2, "sha");
+  expect(mocks.presignCvPart).toHaveBeenCalledWith(
+    "quarantine/cv/ticket",
+    "storage-upload",
+    2,
+    1,
+    "sha",
+    expect.any(Number)
+  );
+  await expect(
+    signCvUploadPart("owner", "ticket", 3, "sha")
+  ).rejects.toMatchObject({ status: 400 });
+  mocks.findCvUpload.mockResolvedValueOnce({
+    status: "cancelled",
+    expiresAt: new Date(Date.now() + 60000),
+    multipartId: "storage-upload",
+  });
+  await expect(
+    signCvUploadPart("owner", "ticket", 1, "sha")
+  ).rejects.toMatchObject({ status: 409 });
+  mocks.findCvUpload.mockResolvedValueOnce({ expiresAt: new Date(0) });
+  await expect(
+    signCvUploadPart("owner", "ticket", 1, "sha")
+  ).rejects.toMatchObject({ status: 410 });
+});
+
+test("multipart completion precedes existing envelope validation and publication", async () => {
+  mocks.findCvUpload.mockResolvedValue({
+    id: "ticket",
+    size: 20,
+    status: "pending",
+    multipartId: "storage-upload",
+    expiresAt: new Date(Date.now() + 60000),
+  });
+  await finalizeCvUpload("owner", "ticket");
+  expect(mocks.completeCvMultipart).toHaveBeenCalledWith(
+    "quarantine/cv/ticket",
+    "storage-upload",
+    20,
+    expect.any(AbortSignal)
+  );
+  expect(mocks.completeCvMultipart.mock.invocationCallOrder[0]).toBeLessThan(
+    mocks.headCvObject.mock.invocationCallOrder[0]
+  );
+});
+
+test("cancellation aborts pending parts even when replayed", async () => {
+  mocks.findCvUpload.mockResolvedValue({
+    status: "cancelled",
+    multipartId: "storage-upload",
+  });
+  await cancelCvUpload("owner", "ticket");
+  expect(mocks.abortCvMultipart).toHaveBeenCalledWith(
+    "quarantine/cv/ticket",
+    "storage-upload"
+  );
+});

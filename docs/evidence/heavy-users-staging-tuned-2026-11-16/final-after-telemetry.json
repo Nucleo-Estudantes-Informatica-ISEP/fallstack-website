@@ -1,0 +1,100 @@
+{
+  "time": "2026-11-16T18:45:18.434588+00:00",
+  "replicas": [
+    {
+      "replica": 1,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": [
+        {
+          "endpoint": "session_check_in",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 821.0
+        },
+        {
+          "endpoint": "upload_cv",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 291.0
+        }
+      ]
+    },
+    {
+      "replica": 2,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": [
+        {
+          "endpoint": "upload_cv",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 577.0
+        },
+        {
+          "endpoint": "session_check_in",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 1425.0
+        }
+      ]
+    },
+    {
+      "replica": 3,
+      "imageId": "sha256:e342add504c5e16c850861fff17d2827844c94ef353c12cac6573ef69d3644e7",
+      "health": "healthy",
+      "restartCount": 0,
+      "oomKilled": false,
+      "limiterMetricsAvailable": true,
+      "limiter": [
+        {
+          "endpoint": "upload_cv",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 588.0
+        },
+        {
+          "endpoint": "session_check_in",
+          "outcome": "allowed",
+          "reason": "none",
+          "count": 1465.0
+        }
+      ]
+    }
+  ],
+  "sampledResources": [
+    {
+      "replica": 1,
+      "cpu": "4.28%",
+      "memory": "241.2MiB / 11.4GiB"
+    },
+    {
+      "replica": 2,
+      "cpu": "4.22%",
+      "memory": "266.8MiB / 11.4GiB"
+    },
+    {
+      "replica": 3,
+      "cpu": "5.32%",
+      "memory": "273.6MiB / 11.4GiB"
+    },
+    {
+      "replica": "storage",
+      "cpu": "0.05%",
+      "memory": "745.3MiB / 10GiB"
+    }
+  ],
+  "storage": {
+    "memoryLimitBytes": 10737418240,
+    "restartCount": 0,
+    "oomKilled": false,
+    "health": "healthy"
+  },
+  "disk": ["102915489792", "87479697408", "15419015168", "86%"]
+}

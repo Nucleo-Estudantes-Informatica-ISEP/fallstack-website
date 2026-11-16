@@ -1,0 +1,14 @@
+{
+  "filteredAccessRecordsObserved": 75,
+  "onlyApprovedFields": true,
+  "queryAndHeaderCanariesAbsent": true,
+  "originStatusAndTimingPresent": true,
+  "proxyHealth": "healthy",
+  "logRotation": {
+    "Type": "json-file",
+    "Config": {
+      "max-file": "3",
+      "max-size": "10m"
+    }
+  }
+}

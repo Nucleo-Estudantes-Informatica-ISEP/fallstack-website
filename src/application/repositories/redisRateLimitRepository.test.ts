@@ -108,3 +108,21 @@ test("authentication errors still close the connection and impose cooldown", asy
   });
   expect(clients[0].eval).not.toHaveBeenCalled();
 });
+
+test("a command timeout reconnects without imposing cooldown", async () => {
+  const store = createRedisRateLimitStore(
+    () => ({ url: "redis://localhost", prefix: "fallstack:test:" }),
+    { deadlineMs: 5, connectTimeoutMs: 200, cooldownMs: 1000, maxPending: 8 }
+  );
+  stores.push(store);
+  await store.check("healthy", policy);
+  clients[0].eval.mockImplementationOnce(() => new Promise(() => {}));
+  await expect(store.check("slow", policy)).rejects.toMatchObject({
+    reason: "timeout",
+  });
+  await expect(store.check("other-user", policy)).resolves.toEqual({
+    status: "allowed",
+  });
+  expect(clients).toHaveLength(2);
+  expect(clients[0].destroy).toHaveBeenCalled();
+});

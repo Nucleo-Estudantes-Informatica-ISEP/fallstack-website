@@ -1,0 +1,108 @@
+[
+  {
+    "label": "run-40",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 555,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "relationsAbsent": true,
+    "allKeysHead404": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "run-100",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 756,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "run-200",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 959,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "corrected-40",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 475,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "corrected-100",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 615,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "aborted-budget-200",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 798,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "corrected-200-final",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 1052,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  },
+  {
+    "label": "deferred-final-200",
+    "usersRemoved": 200,
+    "keysVerifiedAbsent": 4,
+    "syntheticOrphans": 0,
+    "scheduleRestored": true,
+    "revocation": {
+      "sessions": 200,
+      "statusCounts": {
+        "401": 200
+      }
+    }
+  }
+]

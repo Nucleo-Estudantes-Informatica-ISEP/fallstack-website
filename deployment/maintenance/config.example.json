@@ -1,0 +1,7 @@
+{
+  "repositories": ["replace-with-verified-application-image-repository"],
+  "keep_images": 3,
+  "max_cache_delete_bytes": 4294967296,
+  "min_free_bytes": 21474836480,
+  "disk_path": "/data"
+}

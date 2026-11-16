@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   pendingStorageDeletions: vi.fn(),
   recordStorageDeletion: vi.fn(),
   listObjects: vi.fn(),
+  expiredCvMultipart: vi.fn(),
+  abortCvMultipart: vi.fn(),
   deleteObject: vi.fn(),
   assertUnversionedBucket: vi.fn(),
 }));
@@ -19,6 +21,7 @@ const now = new Date("2026-10-08T03:00:00Z");
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.listObjects.mockResolvedValue([]);
+  mocks.expiredCvMultipart.mockResolvedValue([]);
   mocks.planStorageCleanup.mockResolvedValue({
     expired: [],
     orphans: [],
@@ -187,15 +190,17 @@ test("quarantine cleanup deletes expired objects with per-key error handling and
   const expiredDate = new Date(now.getTime() - 25 * 60 * 60 * 1000);
 
   mocks.pendingStorageDeletions.mockResolvedValue([]);
-  mocks.listObjects.mockImplementation(async (_kind: string, prefix: string) => {
-    if (prefix === "quarantine/cv") {
-      return [
-        { Key: qKey1, LastModified: expiredDate },
-        { Key: qKey2, LastModified: expiredDate },
-      ];
+  mocks.listObjects.mockImplementation(
+    async (_kind: string, prefix: string) => {
+      if (prefix === "quarantine/cv") {
+        return [
+          { Key: qKey1, LastModified: expiredDate },
+          { Key: qKey2, LastModified: expiredDate },
+        ];
+      }
+      return [];
     }
-    return [];
-  });
+  );
 
   mocks.deleteObject
     .mockRejectedValueOnce(new Error("Storage unavailable"))
@@ -221,3 +226,18 @@ test("quarantine cleanup deletes expired objects with per-key error handling and
   });
 });
 
+test("incomplete multipart uploads are counted in dry run and aborted only in apply", async () => {
+  const key = "quarantine/cv/00000000-0000-4000-8000-000000000001";
+  mocks.expiredCvMultipart.mockResolvedValue([
+    { key, multipartId: "server-id" },
+  ]);
+  const dry = await runStorageCleanup({ now });
+  expect(dry.incompleteMultipart).toBe(1);
+  expect(mocks.abortCvMultipart).not.toHaveBeenCalled();
+  await runStorageCleanup({ now, apply: true });
+  expect(mocks.abortCvMultipart).toHaveBeenCalledWith(
+    key,
+    "server-id",
+    undefined
+  );
+});
