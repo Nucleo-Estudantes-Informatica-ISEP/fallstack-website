@@ -172,3 +172,12 @@ isolated synthetic upstream, not a real staff login. A new automatic Coolify
 resource deployment was not performed: the existing staging ingress evidence
 proves explicit proxy attachment only. The runbook now states the required
 attachment/router setup and actual-hostname verification gate explicitly.
+
+The pre-push hook additionally reran lint (0 errors, 25 existing warnings) and
+typecheck successfully at `40a44a77`. Its initial full test attempt lacked a
+local database and failed; that attempt was stopped. After migrating a dedicated
+PostgreSQL 16 container, the full suite passed at the same revision:
+246 files passed, 3 skipped; 1,688 tests passed, 27 skipped, using
+`pnpm exec vitest run --maxWorkers=1` (182.63 seconds). The task-owned database
+container and anonymous volume were removed afterwards. Build/Prisma validation
+and live app/PWA evidence remain reused as described above.
