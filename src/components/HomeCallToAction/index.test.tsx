@@ -116,3 +116,18 @@ test("renders nothing for an account without a usable destination", () => {
 
   expect(container).toBeEmptyDOMElement();
 });
+
+test("admins also get a direct link to the attendance scanner on the homepage", () => {
+  session.current = {
+    user: { role: null, adminRole: "ADMIN", student: null },
+    ready: true,
+  };
+  render(<HomeCallToAction language={Language.PT} />);
+
+  expect(
+    screen.getByRole("link", { name: "Abrir a área de administração" })
+  ).toHaveAttribute("href", "/overview");
+  expect(
+    screen.getByRole("link", { name: "Abrir o scanner de presenças" })
+  ).toHaveAttribute("href", "/attendance/scan");
+});

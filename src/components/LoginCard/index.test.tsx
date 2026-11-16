@@ -198,3 +198,26 @@ test("offseason employee closure allows returning to the login page", () => {
 
   expect(screen.getByText("Continuar com AuthNEI")).toBeInTheDocument();
 });
+
+test("shows an error alert when auth callback fails", () => {
+  render(<LoginCard authError />);
+
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Não foi possível concluir o início de sessão com o AuthNEI"
+  );
+});
+
+test("existing employees are routed to the dashboard instead of the company-code form", () => {
+  sessionState.user = {
+    role: "EMPLOYEE",
+    adminRole: null,
+    student: null,
+  };
+
+  render(<LoginCard initialView="employee" />);
+
+  expect(screen.queryByText("Completar associação")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Ir para o dashboard da empresa" })
+  ).toHaveAttribute("href", "/dashboard");
+});

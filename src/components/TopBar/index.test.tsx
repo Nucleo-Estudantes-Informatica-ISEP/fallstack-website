@@ -65,3 +65,26 @@ test("renders language switcher button", () => {
   ).toBeInTheDocument();
 });
 
+test("shows attendance scanner shortcut in topbar for admins", () => {
+  vi.mocked(usePathname).mockReturnValue("/");
+  session.user = { role: null, adminRole: "ADMIN", student: null };
+  render(<TopBar />);
+  expect(
+    screen.getByRole("link", { name: "Scanner de presenças" })
+  ).toHaveAttribute("href", "/attendance/scan");
+});
+
+test("does not duplicate attendance scanner shortcut when primary destination is already staff", () => {
+  vi.mocked(usePathname).mockReturnValue("/");
+  session.user = {
+    role: null,
+    adminRole: null,
+    student: null,
+    neiMember: true,
+  };
+  render(<TopBar />);
+  expect(
+    screen.queryByRole("link", { name: "Scanner de presenças" })
+  ).toBeNull();
+});
+
