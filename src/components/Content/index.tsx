@@ -18,16 +18,6 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
 
   return (
     <>
-      <section
-        ref={contentRef}
-        className="flex w-full flex-col items-center bg-background px-6 py-16 text-center"
-      >
-        <p className="w-full max-w-3xl text-lg leading-relaxed text-balance sm:text-xl">
-          O {branding.name} {branding.year} acontece no {branding.event.venue} a{" "}
-          {branding.event.days.join(" e ")} de {branding.event.month}, com
-          organização do NEI-ISEP.
-        </p>
-      </section>
       <section className="artwork-clean artwork-readable w-full bg-cover bg-center bg-no-repeat py-12">
         <InfoText
           days={branding.event.days}
@@ -37,7 +27,10 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
           endTime={branding.event.endTime}
         />
       </section>
-      <section className="flex flex-col items-center bg-background py-16">
+      <section
+        ref={contentRef}
+        className="flex flex-col items-center bg-background py-16"
+      >
         {sections.schedule}
       </section>
 
