@@ -34,12 +34,12 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 
   return (
-    <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
+    <nav className="fixed z-40 h-16 w-full">
       {solid ? (
-        <div className="absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background" />
+        <div className="absolute top-0 left-0 flex h-16 w-full items-center justify-between bg-background" />
       ) : (
         <motion.div
-          className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
+          className="absolute top-0 left-0 flex h-16 w-full items-center justify-between bg-background"
           style={{
             opacity,
           }}
