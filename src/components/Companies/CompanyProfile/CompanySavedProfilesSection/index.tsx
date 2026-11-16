@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
@@ -19,22 +19,127 @@ interface CompanySavedProfilesSectionProps {
   history: SavedStudentDto[];
 }
 
+// One toast per message: repeated clicks replace it instead of stacking
+// copies.
+const EXPORT_FAILED_TOAST = "scan-export-failed";
+
+const SAVE_FAILED = "Não foi possível guardar o perfil. Tenta novamente.";
+const DUPLICATE = "Este estudante já foi guardado anteriormente.";
+
+// Camera, scan and typed-code messages all show in one place under the
+// camera box, not as toasts: a toast can land over the live preview or the
+// controls wherever the page is scrolled. Only the latest message shows.
+// The CV export error stays a toast.
+type MessageTone = "error" | "warning" | "success";
+type PageMessage = {
+  text: string;
+  tone: MessageTone;
+  source: "scan" | "code";
+};
+
+const MESSAGE_TONE: Record<MessageTone, string> = {
+  error: "border-l-ui-error",
+  warning: "border-l-ui-highlight",
+  success: "border-l-ui-success",
+};
+
+type SaveResult = "saved" | "duplicate" | "failed";
+
+// 409 comes from the duplicate check. An admin employee skips that check, so
+// their repeat save hits the database's one-save-per-company rule and comes
+// back as 400 "Student already saved" (saveStudent in savedStudentService).
+function isAlreadySaved(error: unknown) {
+  return (
+    error instanceof HttpClientError &&
+    (error.status === 409 ||
+      (error.status === 400 && error.message === "Student already saved"))
+  );
+}
+
+function MessagePanel({ message }: { message: PageMessage }) {
+  return (
+    <p
+      className={`mt-3 rounded-md border border-l-4 border-ui-border bg-ui-surface px-4 py-3 text-center text-sm text-ui-text ${MESSAGE_TONE[message.tone]}`}
+    >
+      {message.text}
+    </p>
+  );
+}
+
 const CompanySavedProfilesSection = ({
   history,
 }: CompanySavedProfilesSectionProps) => {
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
+  const [message, setMessage] = useState<PageMessage | null>(null);
+  // While a scan is processed the camera gives way to a spinner, so a code
+  // held in view is read again every few hundred milliseconds. Keep an
+  // unchanged message as it is: clearing or replacing it on every read made
+  // it blink and repeated it to screen readers.
+  const showMessage = useCallback(
+    (source: PageMessage["source"], text: string, tone: MessageTone) =>
+      setMessage((current) =>
+        current?.text === text &&
+        current.tone === tone &&
+        current.source === source
+          ? current
+          : { text, tone, source }
+      ),
+    []
+  );
+  const showScanMessage = useCallback(
+    (text: string, tone: MessageTone) => showMessage("scan", text, tone),
+    [showMessage]
+  );
+  const showScanError = useCallback(
+    (text: string) => showScanMessage(text, "error"),
+    [showScanMessage]
+  );
+  const showCodeMessage = (text: string, tone: MessageTone = "error") =>
+    showMessage("code", text, tone);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const codeFieldId = useId();
+  const codeHintId = useId();
+  const exportHintId = useId();
   const { mutate: mutateManualEntry, isPending: isSubmittingManualEntry } =
-    useMutation("Ocorreu um erro.");
+    useMutation(SAVE_FAILED);
+  const wasSubmittingRef = useRef(false);
+  const messageRef = useRef<HTMLDivElement>(null);
+
+  // The message sits above the code field, so a typed-code message can be
+  // off screen when the field is scrolled to the top. Scroll just enough to
+  // show it; focus stays in the field. Instant, because returning focus to
+  // the field cancels a smooth scroll partway. Scan messages never scroll
+  // the page, so the camera stays where it is.
+  useEffect(() => {
+    if (message?.source === "code")
+      messageRef.current?.scrollIntoView?.({
+        block: "nearest",
+        behavior: "instant",
+      });
+  }, [message]);
+
+  // The field and Validar are disabled while a typed code is checked, which
+  // drops keyboard focus to the page. Put it back on the field afterwards.
+  useEffect(() => {
+    const finished = wasSubmittingRef.current && !isSubmittingManualEntry;
+    wasSubmittingRef.current = isSubmittingManualEntry;
+    const active = document.activeElement;
+    if (finished && (!active || active === document.body))
+      inputRef.current?.focus();
+  }, [isSubmittingManualEntry]);
 
   function handleStudentProfileOpen(data: string) {
     if (data.startsWith(window.location.origin)) {
       const path = new URL(data).pathname;
+      if (path === window.location.pathname) {
+        setProcessing(false);
+        return;
+      }
       router.push(path);
     } else window.open(data, "_self");
-    setProcessing(false);
+    // Processing stays on until the page changes; see handleScan.
   }
 
   async function handleActionScan(data: string) {
@@ -42,24 +147,50 @@ const CompanySavedProfilesSection = ({
 
     try {
       await httpClient.post(`/actions/${actionId}`);
-      toast.success("Os teus pontos foram adicionados com sucesso!");
+      showScanMessage(
+        "Os teus pontos foram adicionados com sucesso!",
+        "success"
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro inesperado");
+      showScanError(error instanceof Error ? error.message : "Erro inesperado");
     } finally {
       setProcessing(false);
     }
   }
 
+  // Saves the student for this company, then opens the saved preview.
+  // A duplicate is a warning; anything else is one Portuguese error, since
+  // server and network messages arrive in English. The caller shows the
+  // message: under the code field for a typed code, under the camera for a
+  // scan.
+  async function saveAndOpen(token: string): Promise<SaveResult> {
+    try {
+      await httpClient.post("/saved", { token });
+    } catch (error) {
+      return isAlreadySaved(error) ? "duplicate" : "failed";
+    }
+    router.refresh();
+    router.push(`/student/${token}/preview`);
+    return "saved";
+  }
+
+  const lastFailedScanRef = useRef<string | null>(null);
+
   const handleScan = async (data: string) => {
+    if (data === lastFailedScanRef.current) return;
+
     try {
       setProcessing(true);
 
       if (data.match("^https?://.*")) {
+        setMessage(null);
+        lastFailedScanRef.current = null;
         handleStudentProfileOpen(data);
         return;
       }
 
       if (data.match("^action-.*")) {
+        lastFailedScanRef.current = null;
         await handleActionScan(data);
         return;
       }
@@ -69,64 +200,71 @@ const CompanySavedProfilesSection = ({
         : data;
 
       if (!token) {
-        toast.error("O código de estudante deste passe é inválido.");
+        lastFailedScanRef.current = data;
+        showScanError("O código de estudante deste passe é inválido.");
         setProcessing(false);
         return;
       }
 
-      try {
-        await httpClient.post("/saved", { token });
-        router.refresh();
-        router.push(`/student/${token}/preview`);
-      } catch (error) {
-        if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
-        } else if (error instanceof HttpClientError) {
-          toast.error(error.message || "Erro ao guardar perfil");
-        } else {
-          throw error;
-        }
+      const result = await saveAndOpen(token);
+      if (result === "saved") {
+        // Keep the spinner up until the preview opens. Bringing the camera
+        // back would read the same code again, and that second save would
+        // briefly show "already saved" before the page changes.
+        lastFailedScanRef.current = null;
+        setMessage(null);
+        return;
       }
-
+      lastFailedScanRef.current = data;
+      if (result === "duplicate") showScanMessage(DUPLICATE, "warning");
+      else showScanError(SAVE_FAILED);
       setProcessing(false);
     } catch {
+      lastFailedScanRef.current = data;
       setProcessing(false);
-      toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
+      showScanError("Ocorreu um erro a dar scan no QR Code do estudante...");
     }
   };
 
   const handleManualEntry = () =>
     mutateManualEntry(async () => {
       if (!inputRef.current?.value) {
-        toast.error("Sem código inserido.");
+        showCodeMessage("Sem código inserido.");
+        inputRef.current?.focus();
         return;
       }
+      setMessage(null);
 
       const code = normalizeStudentCode(inputRef.current.value);
-      // The field no longer caps the length, so check it before asking the
-      // server, which would answer 400 for a malformed code.
-      const token = isStudentCode(code)
-        ? await getStudentPreviewToken(code)
-        : null;
+      if (!isStudentCode(code)) {
+        showCodeMessage("O código introduzido é inválido.");
+        return;
+      }
+      let token: string | null;
+      try {
+        token = await getStudentPreviewToken(code);
+      } catch (error) {
+        const status = error instanceof HttpClientError ? error.status : 0;
+        if (status === 429) {
+          showCodeMessage("Demasiadas tentativas. Aguarde um momento.");
+          return;
+        }
+        if (status !== 400) {
+          showCodeMessage(SAVE_FAILED);
+          return;
+        }
+        // A malformed code gets the same message as an unknown one.
+        token = null;
+      }
 
       if (!token) {
-        toast.error("O código introduzido é inválido.");
+        showCodeMessage("O código introduzido é inválido.");
         return;
       }
 
-      try {
-        await httpClient.post("/saved", { token });
-        router.refresh();
-        router.push(`/student/${token}/preview`);
-      } catch (error) {
-        if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
-        } else {
-          toast.error(
-            error instanceof Error ? error.message : "Failed to save profile"
-          );
-        }
-      }
+      const result = await saveAndOpen(token);
+      if (result === "duplicate") showCodeMessage(DUPLICATE, "warning");
+      else if (result === "failed") showCodeMessage(SAVE_FAILED);
     });
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -146,41 +284,24 @@ const CompanySavedProfilesSection = ({
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Não foi possível exportar os CVs. Tenta novamente.", {
+        toastId: EXPORT_FAILED_TOAST,
+      });
+    } finally {
       setDownloading(false);
-    } catch (error) {
-      setDownloading(false);
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível exportar os CVs."
-      );
     }
   };
 
+  const hasSaves = history.length > 0;
+
   return (
-    <section className="flex w-full flex-col items-start justify-start px-4 pt-2 pb-4 text-white md:px-8 md:pt-4 md:pb-8">
+    <section className="flex w-full flex-col items-start justify-start text-white">
       <div className="w-full">
-        <h1
-          className="mb-6 text-white"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 600,
-            fontSize: "25px",
-            lineHeight: "100%",
-          }}
-        >
+        <h2 className="mb-6 font-sans text-[25px] leading-none font-semibold text-white">
           Scan
-        </h1>
-        <p
-          className="mb-8 text-gray-300"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 400,
-            fontSize: "15px",
-            lineHeight: "100%",
-            textAlign: "justify",
-          }}
-        >
+        </h2>
+        <p className="mb-8 text-base text-ui-muted">
           Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
           forma a garantir o registo das interações e a participação nos
           giveaways promovidos pelo NEI.
@@ -188,97 +309,95 @@ const CompanySavedProfilesSection = ({
       </div>
 
       <div className="flex w-full flex-col items-center justify-center">
-        {processing ? (
-          <div
-            className="mt-12 inline-block size-24 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
-            role="status"
-          >
-            <span className="absolute! -m-px! size-px overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
-              A processar...
-            </span>
-          </div>
-        ) : (
-          <div className="w-full max-w-2xl overflow-hidden bg-gray-300">
-            <QRCodeScanner handleScan={handleScan} />
-          </div>
-        )}
+        {/* `relative` contains the scanner's own "A ligar a tua câmara..."
+            overlay inside this box. The label names the unlabelled camera
+            video for screen readers. */}
+        <div
+          role="group"
+          aria-label="Câmara do leitor de QR Code"
+          className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full"
+        >
+          {processing ? (
+            <div
+              className="inline-block size-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              role="status"
+            >
+              <span className="sr-only">A processar...</span>
+            </div>
+          ) : (
+            <QRCodeScanner handleScan={handleScan} onMessage={showScanError} />
+          )}
+        </div>
+        {/* Always rendered, so screen readers announce each new message. */}
+        <div
+          ref={messageRef}
+          role="alert"
+          className="w-full max-w-2xl field-focus-target"
+        >
+          {message && <MessagePanel message={message} />}
+        </div>
+        <p className="mt-3 max-w-2xl text-center text-sm text-ui-muted">
+          Sem câmara ou sem permissão? Introduza o código abaixo.
+        </p>
       </div>
 
       <div className="mt-8 flex w-full flex-col items-center justify-center">
-        <div className="relative flex w-full max-w-142 items-center">
-          <input
-            type="text"
-            placeholder="código"
-            className="h-14 w-full border border-white bg-transparent px-6 text-lg text-white placeholder-white outline-none focus:border-primary"
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 400,
-            }}
-            ref={inputRef}
-            onKeyUp={handleKeyUp}
-            disabled={isSubmittingManualEntry}
-          />
-          <button
-            onClick={handleManualEntry}
-            disabled={isSubmittingManualEntry}
-            className="absolute inset-y-2 right-2 flex w-26 items-center justify-center bg-[#82360D] text-base text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 400,
-              lineHeight: "100%",
-            }}
-          >
-            {isSubmittingManualEntry ? "..." : "Validar"}
-          </button>
+        <div className="w-full max-w-142">
+          <label htmlFor={codeFieldId} className="mb-2 block text-sm">
+            Código do estudante
+          </label>
+          <div className="relative flex w-full items-center">
+            <input
+              id={codeFieldId}
+              type="text"
+              placeholder="código"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              aria-describedby={codeHintId}
+              className="ui-field h-14 field-focus-target pr-32 text-lg uppercase"
+              ref={inputRef}
+              onKeyUp={handleKeyUp}
+              disabled={isSubmittingManualEntry}
+            />
+            <button
+              type="button"
+              onClick={handleManualEntry}
+              disabled={isSubmittingManualEntry}
+              aria-busy={isSubmittingManualEntry}
+              className="ui-action absolute inset-y-2 right-2 min-h-0 w-28 field-focus-target"
+            >
+              {isSubmittingManualEntry ? "A validar..." : "Validar"}
+            </button>
+          </div>
+          <p id={codeHintId} className="mt-2 text-center text-sm text-ui-muted">
+            Introduza o código associado ao QR Code do aluno para que o seu
+            perfil fique registado.
+          </p>
         </div>
-        <p
-          className="mt-2 text-gray-500"
-          style={{
-            fontFamily: "Inter",
-            fontWeight: 400,
-            fontSize: "11px",
-            lineHeight: "100%",
-            textAlign: "center",
-          }}
-        >
-          ou introduza o código associado ao QR Code do aluno para que o seu
-          perfil fique registado.
-        </p>
       </div>
 
       <div className="mt-12 w-full">
         <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
-          <h2
-            style={{
-              fontFamily: "Inter",
-              fontWeight: 600,
-              fontSize: "25px",
-              lineHeight: "100%",
-            }}
-          >
+          <h2 className="font-sans text-[25px] leading-none font-semibold">
             Histórico de scans
           </h2>
-          <button
-            onClick={handleDownloadAllCvs}
-            disabled={downloading}
-            className="inline-flex items-center justify-center bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {downloading ? "A preparar..." : "Download CVs"}
-          </button>
-        </div>
-        <div className="w-full border-b border-white pb-2">
-          <div
-            className="flex w-full justify-between px-4 text-white"
-            style={{
-              fontFamily: "Inter", // Assuming Font 1 is Inter
-              fontWeight: 700,
-              fontSize: "15.63px",
-              lineHeight: "24px",
-              letterSpacing: "-0.48px",
-            }}
-          >
-            <span className="flex-1 text-center">Nome</span>
-            <span className="flex-1 text-center">Data</span>
+          <div className="flex flex-col items-start gap-1 md:items-end">
+            <button
+              type="button"
+              onClick={handleDownloadAllCvs}
+              disabled={downloading || !hasSaves}
+              aria-busy={downloading}
+              aria-describedby={hasSaves ? undefined : exportHintId}
+              className="ui-action field-focus-target text-sm"
+            >
+              {downloading ? "A preparar..." : "Download CVs"}
+            </button>
+            {!hasSaves && (
+              <p id={exportHintId} className="text-sm text-ui-muted">
+                Guarde perfis para poder exportar os CVs.
+              </p>
+            )}
           </div>
         </div>
         <CompanySavesSection historyData={history} />
