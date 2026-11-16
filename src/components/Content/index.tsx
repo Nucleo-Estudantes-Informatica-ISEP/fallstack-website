@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import HeadingText from "@/components/ui/HeadingText";
 import InfoText from "@/components/InfoText";
+import PassSection from "@/components/PassSection";
 import type { HomepageDto } from "@/application/dto/homepageDto";
 import { edition } from "@/edition";
 
@@ -19,8 +20,15 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
     <>
       <section
         ref={contentRef}
-        className="artwork-clean artwork-readable w-full bg-cover bg-center bg-no-repeat pt-14 pb-12"
+        className="flex w-full flex-col items-center bg-background px-6 py-16 text-center"
       >
+        <p className="w-full max-w-3xl text-lg leading-relaxed text-balance sm:text-xl">
+          O {branding.name} {branding.year} acontece no {branding.event.venue} a{" "}
+          {branding.event.days.join(" e ")} de {branding.event.month}, com
+          organização do NEI-ISEP.
+        </p>
+      </section>
+      <section className="artwork-clean artwork-readable w-full bg-cover bg-center bg-no-repeat py-12">
         <InfoText
           days={branding.event.days}
           month={branding.event.month}
@@ -29,27 +37,38 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
           endTime={branding.event.endTime}
         />
       </section>
-      <section
-        ref={contentRef}
-        className="flex flex-col items-center bg-background pb-20"
-      >
+      <section className="flex flex-col items-center bg-background py-16">
         {sections.schedule}
       </section>
 
-      <section className="artwork-clean artwork-readable flex w-full flex-col items-center bg-cover bg-center bg-no-repeat pb-12 text-center">
-        <HeadingText
-          className="font-normal! lg:text-4xl!"
-          text="Speed Interviews"
-        />
-        <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-          Este ano podes experienciar a modalidade de speed interviews com
-          algumas das empresas presentes.
-        </p>
-      </section>
+      <div className="artwork-clean artwork-readable flex w-full flex-col items-center gap-16 bg-cover bg-center bg-no-repeat px-6 py-16 text-center">
+        <section className="flex w-full flex-col items-center">
+          <HeadingText
+            className="font-normal! lg:text-4xl!"
+            text="Jantar Empresarial"
+          />
+          <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
+            O Jantar Empresarial está confirmado para o FallStack 2026.
+          </p>
+          <p className="mt-2 w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
+            Mais informações em breve.
+          </p>
+        </section>
+        <section className="flex w-full flex-col items-center">
+          <HeadingText
+            className="font-normal! lg:text-4xl!"
+            text="Speed Interviews"
+          />
+          <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
+            Este ano podes experienciar a modalidade de speed interviews com
+            algumas das empresas presentes.
+          </p>
+        </section>
+      </div>
 
-      {/* <section className="w-full bg-background !px-0">
+      <section className="w-full bg-background px-0!">
         <PassSection />
-      </section>*/}
+      </section>
 
       <section className="w-full bg-background px-0!">
         {sections.companies}
