@@ -1,16 +1,29 @@
-import { render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import NeiLogo from "~/public/assets/images/logo-white.png";
 import { expect, test, vi } from "vitest";
 
+import InstallableContext from "@/contexts/InstallableContext";
 import Footer from "@/components/Footer";
+import { Language } from "@/domain/i18n/translations";
 
 vi.mock("next/image", () => ({ default: () => null }));
-vi.mock("@/components/InstallButton", () => ({
-  default: () => <button>Install</button>,
-}));
+vi.mock("@/hooks/useIsMobile", () => ({ default: () => false }));
+
+function renderFooter(props: ComponentProps<typeof Footer>) {
+  const handleConfirm = vi.fn();
+  render(
+    <InstallableContext.Provider
+      value={{ isInstallable: true, installInstructions: null, handleConfirm }}
+    >
+      <Footer {...props} />
+    </InstallableContext.Provider>
+  );
+  return handleConfirm;
+}
 
 test("landing footer retains social links without application controls", () => {
-  render(<Footer neiLogoSrc={NeiLogo} landing />);
+  renderFooter({ neiLogoSrc: NeiLogo, landing: true });
   expect(screen.getByRole("link", { name: "Instagram" })).toHaveAttribute(
     "href",
     "https://www.instagram.com/nei_isep"
@@ -19,14 +32,26 @@ test("landing footer retains social links without application controls", () => {
     screen.queryByRole("link", { name: "Política de Privacidade" })
   ).not.toBeInTheDocument();
   expect(
-    screen.queryByRole("button", { name: "Install" })
+    screen.queryByRole("button", { name: "Instalar aplicação" })
   ).not.toBeInTheDocument();
 });
 
 test("profile footer keeps the existing application controls", () => {
-  render(<Footer neiLogoSrc={NeiLogo} />);
+  renderFooter({ neiLogoSrc: NeiLogo });
   expect(
     screen.getByRole("link", { name: "Política de Privacidade" })
   ).toHaveAttribute("href", "/privacy-policy");
-  expect(screen.getByRole("button", { name: "Install" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Instalar aplicação" })
+  ).toBeInTheDocument();
+});
+
+test.each([
+  [Language.PT, "Instalar aplicação"],
+  [Language.EN, "Install app"],
+])("%s footer passes its language to the install button", (language, label) => {
+  const handleConfirm = renderFooter({ neiLogoSrc: NeiLogo, language });
+  const button = screen.getByRole("button", { name: label });
+  fireEvent.click(button);
+  expect(handleConfirm).toHaveBeenCalledOnce();
 });

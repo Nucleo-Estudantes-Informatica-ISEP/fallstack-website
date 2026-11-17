@@ -97,7 +97,10 @@ const Footer: FunctionComponent<FooterProps> = ({
           </div>
           {!landing && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <InstallButton className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110" />
+              <InstallButton
+                language={language}
+                className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
+              />
 
               <Link
                 href="/privacy-policy"
