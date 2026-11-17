@@ -113,8 +113,8 @@ const Hero: FunctionComponent<HeaderProps> = ({ contentRef, language }) => {
           className="text-2xl leading-tight text-balance text-white md:text-3xl lg:text-4xl"
         >
           {language === Language.EN
-            ? "The event bringing together technology companies is back for its eighth edition at ISEP."
-            : "O evento que reúne empresas do setor informático está de volta para a sua oitava edição no ISEP."}
+            ? "The event bringing together technology companies is back for its ninth edition at ISEP."
+            : "O evento que reúne empresas do setor informático está de volta para a sua nona edição no ISEP."}
         </motion.p>
       </div>
     </>

@@ -34,3 +34,58 @@ test("ignores unsupported saved languages", () => {
     "pt-PT"
   );
 });
+
+test("staging request receives X-Robots-Tag noindex, nofollow, noarchive header", () => {
+  const response = middleware(
+    new NextRequest("https://staging.fallstack.nei-isep.org/event/pt", {
+      headers: {
+        host: "staging.fallstack.nei-isep.org",
+      },
+    })
+  );
+  expect(response.headers.get("X-Robots-Tag")).toBe(
+    "noindex, nofollow, noarchive"
+  );
+});
+
+test("staging proxy request via x-forwarded-host receives X-Robots-Tag noindex header", () => {
+  const response = middleware(
+    new NextRequest("http://127.0.0.1:4000/event/pt", {
+      headers: {
+        "x-forwarded-host": "staging.fallstack.nei-isep.org",
+      },
+    })
+  );
+  expect(response.headers.get("X-Robots-Tag")).toBe(
+    "noindex, nofollow, noarchive"
+  );
+});
+
+test("production request NEVER receives X-Robots-Tag noindex header", () => {
+  const response = middleware(
+    new NextRequest("https://fallstack.nei-isep.org/event/pt", {
+      headers: {
+        host: "fallstack.nei-isep.org",
+      },
+    })
+  );
+  expect(response.headers.get("X-Robots-Tag")).toBeNull();
+});
+
+test("production guard: production hostname prevents noindex even with staging env variable", () => {
+  process.env.APP_ENV = "staging";
+  process.env.IS_STAGING = "true";
+
+  const response = middleware(
+    new NextRequest("https://fallstack.nei-isep.org/event/pt", {
+      headers: {
+        host: "fallstack.nei-isep.org",
+      },
+    })
+  );
+  expect(response.headers.get("X-Robots-Tag")).toBeNull();
+
+  delete process.env.APP_ENV;
+  delete process.env.IS_STAGING;
+});
+

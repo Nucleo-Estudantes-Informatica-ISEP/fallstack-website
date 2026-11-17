@@ -6,7 +6,10 @@ import { z } from "zod";
 export const metricsEnv = z
   .object({
     METRICS_ENABLED: z.enum(["true", "false"]).default("false"),
-    METRICS_HOST: z.enum(["127.0.0.1", "0.0.0.0"]).default("127.0.0.1"),
+    METRICS_HOST: z.preprocess(
+      (value) => (!value || value === "undefined" ? undefined : value),
+      z.enum(["127.0.0.1", "0.0.0.0"]).default("127.0.0.1")
+    ),
     METRICS_ENVIRONMENT: z.preprocess(
       (value) => (value === "" ? undefined : value),
       z.enum(["dev", "main"]).optional()

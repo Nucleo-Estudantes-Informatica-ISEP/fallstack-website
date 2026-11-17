@@ -8,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 
 import { InstallableContextProvider } from "@/contexts/InstallableContext";
 import InstallPopUp from "@/components/InstallPopUp";
+import LanguageSync from "./LanguageSync";
 
 export default function DocumentLayout({
   children,
@@ -17,6 +18,7 @@ export default function DocumentLayout({
   return (
     <html lang="pt" className="h-svh">
       <body>
+        <LanguageSync />
         <a
           href="#main-content"
           className="sr-only z-50 bg-primary p-3 text-black focus:not-sr-only focus:fixed focus:top-2 focus:left-2"

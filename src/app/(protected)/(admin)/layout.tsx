@@ -1,9 +1,18 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import AdminSidebar from "@/components/AdminSidebar";
 import SessionAuthLayout from "@/components/SessionAuthLayout";
 import Topbar from "@/components/TopBar";
 import getServerSession from "@/application/services/sessionService";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
+};
 
 export const dynamic = "force-dynamic";
 

@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 
 import { PRIVACY_POLICY_VERSION } from "@/domain/student/signupPolicy";
+import { createPublicPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicPageMetadata({
+  title: "Política de Privacidade | Fallstack 2026",
+  description:
+    "Política de Privacidade da aplicação Fallstack 2026 em conformidade com o RGPD. Tratamento de dados pessoais pelo NEI-ISEP.",
+  path: "/privacy-policy",
+});
 
 export default function PrivacyPolicyPage() {
   return (
