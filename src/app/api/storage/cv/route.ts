@@ -4,11 +4,12 @@ import { defineHandler } from "@/lib/http/server";
 import { rateLimitResponse } from "@/lib/rateLimit";
 import { initiateCvUpload } from "@/application/services/directCvUploadService";
 import { checkUploadRateLimit } from "@/application/services/uploadService";
+import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 import { directCvUploadSchema } from "@/schemas/directCvUploadSchema";
 
 export const POST = defineHandler({
   auth: "session",
-  authorize: (session) => session.role === "STUDENT",
+  authorize: canCreateStudentProfile,
   handler: async ({ req, session }) => {
     const blocked = rateLimitResponse(
       await checkUploadRateLimit("cv", session!.id)

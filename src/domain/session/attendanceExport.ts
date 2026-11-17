@@ -11,7 +11,11 @@ function dateAtEventOffset(date: Date, startsAt: string) {
 export function attendanceExportRow(
   checkIn: {
     checkedInAt: Date;
-    student: { name: string; user: { email: string } };
+    student: {
+      name: string;
+      institutionalEmail?: string | null;
+      user: { email: string };
+    };
     day: number;
     period: "MORNING" | "AFTERNOON";
   },
@@ -23,8 +27,9 @@ export function attendanceExportRow(
   );
   if (!period || !days[checkIn.day - 1])
     throw new Error("Invalid attendance period");
-  const email = checkIn.student.user.email;
-  // Student numbers are verified institutional email local parts; staff have none.
+  const email =
+    checkIn.student.institutionalEmail ?? checkIn.student.user.email;
+  // Student numbers come from the profile contact email, not the AuthNEI identity.
   const number = email.match(/^(\d{7})@isep\.ipp\.pt$/i)?.[1] ?? "";
   return {
     Name: checkIn.student.name,

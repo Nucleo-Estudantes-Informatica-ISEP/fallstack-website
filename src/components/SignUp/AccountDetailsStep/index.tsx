@@ -12,13 +12,13 @@ import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { STUDENT_YEAR } from "@/domain/student/year";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 interface AccountDetailsStepProps {
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
-  institutionalEmail: string;
   /** True when AuthNEI gave no display name, so the student must enter one. */
   needsName?: boolean;
 }
@@ -28,11 +28,11 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
   setCurrentStep,
   data,
   setData,
-  institutionalEmail,
   needsName = false,
 }) => {
   const [error, setError] = useState<string | null>(null);
   const yearRef = useRef<HTMLSelectElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
@@ -44,8 +44,12 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
       return setError("Por favor, seleciona o teu ano.");
     }
     if (!data.course?.trim()) return setError("Por favor, indica o teu curso.");
+    const email = emailRef.current?.value.trim().toLowerCase() ?? "";
+    if (!isIsepEmail(email))
+      return setError("Insere um email institucional válido.");
     setData({
       ...data,
+      email,
       name: needsName ? name : data.name,
       course: data.course.trim(),
       year: yearRef.current.value,
@@ -109,9 +113,15 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           id="signup-institutional-email"
           name="institutional-email"
           label="Email institucional"
-          value={institutionalEmail}
-          readOnly
-          hint="Confirmado pelo AuthNEI."
+          type="email"
+          inputRef={emailRef}
+          defaultValue={data.email ?? ""}
+          required
+          maxLength={254}
+          hint="Indica o teu email do ISEP."
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? "signup-year-error" : undefined}
+          onChange={() => setError(null)}
         />
       </div>
 

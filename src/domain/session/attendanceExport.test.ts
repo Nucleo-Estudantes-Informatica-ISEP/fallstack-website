@@ -36,3 +36,16 @@ test("does not invent student numbers for staff", () => {
 test("rejects invalid session days", () => {
   expect(() => attendanceExportRow(row, [], "2026-11-17T08:30:00Z")).toThrow();
 });
+
+test("exports the edited contact independently from the login identity", () => {
+  const exported = attendanceExportRow(
+    {
+      ...row,
+      student: { ...row.student, institutionalEmail: "7654321@isep.ipp.pt" },
+    },
+    [17, 18],
+    "2026-11-17T08:30:00Z"
+  );
+  expect(exported.Email).toBe("7654321@isep.ipp.pt");
+  expect(exported["Student number"]).toBe("7654321");
+});

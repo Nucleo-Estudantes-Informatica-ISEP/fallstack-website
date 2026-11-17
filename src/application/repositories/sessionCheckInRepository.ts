@@ -48,6 +48,12 @@ export const findAttendanceForExport = (day: number) =>
       checkedInAt: true,
       day: true,
       period: true,
-      student: { select: { name: true, user: { select: { email: true } } } },
+      student: {
+        select: {
+          name: true,
+          institutionalEmail: true,
+          user: { select: { email: true } },
+        },
+      },
     },
   });

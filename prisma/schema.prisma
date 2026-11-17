@@ -66,6 +66,7 @@ model Student {
   bio                   String?
   year                  Year
   course                String?
+  institutionalEmail    String?
   // Cleanup queues unreferenced objects; DB triggers reject tombstoned keys.
   cv                    String?
   // Set on every successful CV upload - updatedAt isn't CV-specific (bumped
@@ -95,6 +96,8 @@ model Student {
   attendanceCheckIns AttendanceCheckIn[]
   savedByEmployees   SavedStudent[]
   interests          Interest[]
+
+  @@index([institutionalEmail])
 }
 
 // Durable retry queue and deletion audit. Keep completed rows: triggers reject

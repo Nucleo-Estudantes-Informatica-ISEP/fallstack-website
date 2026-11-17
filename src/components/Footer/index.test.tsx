@@ -30,3 +30,15 @@ test("profile footer keeps the existing application controls", () => {
   ).toHaveAttribute("href", "/privacy-policy");
   expect(screen.getByRole("button", { name: "Install" })).toBeInTheDocument();
 });
+
+test("footer icons inherit white instead of interpreting theme names as SVG colours", () => {
+  const { container } = render(<Footer neiLogoSrc={NeiLogo} />);
+  expect(container.querySelector("footer")).toHaveClass("text-white");
+  const icons = container.querySelectorAll("footer a svg");
+  expect(icons).toHaveLength(6);
+  for (const icon of icons) {
+    expect(icon).toHaveAttribute("fill", "currentColor");
+    expect(icon).not.toHaveAttribute("color");
+    expect(icon).not.toHaveAttribute("style");
+  }
+});

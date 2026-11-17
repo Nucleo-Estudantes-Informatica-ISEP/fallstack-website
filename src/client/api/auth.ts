@@ -13,6 +13,7 @@ export async function createStudentProfile(
   try {
     await httpClient.post("/students", {
       name: data.name?.trim() || undefined,
+      institutionalEmail: data.email,
       bio: data.bio ?? undefined,
       linkedin: data.linkedin?.trim() || undefined,
       year: data.year,

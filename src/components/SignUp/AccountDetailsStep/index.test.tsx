@@ -8,7 +8,7 @@ import AccountDetailsStep from ".";
 
 const data: StudentSignUpData = {
   name: null,
-  email: null,
+  email: "1234567@isep.ipp.pt",
   password: null,
   bio: "",
   interests: [],
@@ -28,7 +28,6 @@ function renderStep(needsName: boolean) {
       setCurrentStep={setCurrentStep}
       data={data}
       setData={setData}
-      institutionalEmail="student@example.test"
       needsName={needsName}
     />
   );
@@ -78,7 +77,6 @@ test("requires a course independently of the year before proceeding", () => {
         setCurrentStep={setCurrentStep}
         data={value}
         setData={setValue}
-        institutionalEmail="student@example.test"
       />
     );
   }
@@ -96,4 +94,19 @@ test("requires a course independently of the year before proceeding", () => {
   });
   fireEvent.click(screen.getByRole("button", { name: "Seguinte" }));
   expect(setCurrentStep).toHaveBeenCalledWith(2);
+});
+
+test("accepts an institutional email independent from AuthNEI", () => {
+  const { setData, setCurrentStep } = renderStep(false);
+  const email = screen.getByLabelText("Email institucional");
+  expect(email).not.toHaveAttribute("readonly");
+  fireEvent.change(email, { target: { value: "1234568@isep.ipp.pt" } });
+  fireEvent.change(screen.getByRole("combobox"), {
+    target: { value: "1º Ano Licenciatura" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Seguinte" }));
+  expect(setData).toHaveBeenCalledWith(
+    expect.objectContaining({ email: "1234568@isep.ipp.pt" })
+  );
+  expect(setCurrentStep).toHaveBeenCalledWith(1);
 });

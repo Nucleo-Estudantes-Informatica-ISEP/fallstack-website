@@ -25,6 +25,7 @@ import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
 import { uploadAvatar, uploadCv } from "@/client/api/upload";
+import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 import {
   isValidLinkedinUrl,
   LINKEDIN_FORMAT_ERROR,
@@ -122,7 +123,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       }
 
       // The active account may have changed in another tab.
-      if (existingSession.role !== "STUDENT") {
+      if (!canCreateStudentProfile(existingSession)) {
         toast.error("Já tens sessão iniciada como outro tipo de conta.");
         return setLoading(false);
       }

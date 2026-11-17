@@ -7,6 +7,7 @@ import StudentSignUp from "@/components/StudentSignUp";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { getInterests } from "@/application/services/interestService";
 import getServerSession from "@/application/services/sessionService";
+import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   const session = await getServerSession();
 
   // Students who already have a profile retain access during offseason.
-  if (session?.role === "STUDENT" && session.student) {
+  if (session?.student) {
     redirect(`/student/${session.student.code}`);
   }
 
@@ -57,7 +58,7 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
     );
   }
 
-  if (session.role !== "STUDENT") redirect("/");
+  if (!canCreateStudentProfile(session)) redirect("/");
 
   const { lang } = await searchParams;
   const interests = await getInterests();
@@ -69,7 +70,6 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
 
   return (
     <StudentSignUp
-      institutionalEmail={session.email}
       authName={session.authName}
       interests={interests.map((interest) => toInterestDto(interest, language))}
     />

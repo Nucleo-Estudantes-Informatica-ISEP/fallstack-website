@@ -55,7 +55,17 @@ export const findStudentWithUserByCode = (code: string) =>
   prisma.student.findUnique({ where: { code }, include: { user: true } });
 
 export const findStudentByEmail = (email: Email) =>
-  prisma.student.findFirst({ where: { user: { email } } });
+  prisma.student
+    .findMany({
+      where: {
+        OR: [
+          { institutionalEmail: email },
+          { institutionalEmail: null, user: { email } },
+        ],
+      },
+      take: 2,
+    })
+    .then((students) => (students.length === 1 ? students[0] : null));
 
 export const findStudentAction = (studentId: string, actionId: string) =>
   prisma.student.findUnique({
@@ -72,6 +82,7 @@ export const createStudent = (
     year: StudentYear;
     linkedin?: string | null;
     course?: string;
+    institutionalEmail?: string;
     privacyPolicyAccepted?: boolean;
     termsAccepted?: boolean;
     privacyPolicyVersion?: string;
@@ -86,6 +97,7 @@ export const createStudent = (
       code: input.code,
       name: input.name,
       course: input.course,
+      institutionalEmail: input.institutionalEmail,
       privacyPolicyAccepted: input.privacyPolicyAccepted,
       termsAccepted: input.termsAccepted,
       privacyPolicyVersion: input.privacyPolicyVersion,
@@ -99,7 +111,13 @@ export const createStudent = (
 
 export const updateStudentProfile = (
   code: string,
-  data: { bio?: string; linkedin?: string; github?: string },
+  data: {
+    bio?: string;
+    linkedin?: string;
+    github?: string;
+    institutionalEmail?: string;
+    course?: string;
+  },
   db: DbClient = prisma
 ) =>
   db.student.update({

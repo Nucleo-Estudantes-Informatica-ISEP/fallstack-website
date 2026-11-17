@@ -19,6 +19,7 @@ import {
   isValidLinkedinUrl,
   LINKEDIN_FORMAT_ERROR,
 } from "@/schemas/linkedinSchema";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 interface ProfileSectionProps {
   student: StudentDto;
@@ -38,6 +39,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   const LIMIT = 255;
   const router = useRouter();
 
+  const courseRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const githubRef = useRef<HTMLInputElement>(null);
   const linkedinRef = useRef<HTMLInputElement>(null);
   const cvRef = useRef<HTMLInputElement>(null);
@@ -55,8 +58,19 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   }
 
   const handleSave = () => {
+    const course = courseRef.current?.value.trim() ?? "";
+    const courseChanged = course !== (student.course ?? "");
+    if (courseChanged && !course) {
+      toast.error("Por favor, indica o teu curso.");
+      return;
+    }
     if (profile.bio && profile.bio?.length > LIMIT) {
       toast.error(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
+      return;
+    }
+
+    if (!isIsepEmail(emailRef.current?.value ?? "")) {
+      toast.error("Insere um email institucional válido.");
       return;
     }
 
@@ -106,6 +120,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         github: githubRef.current?.value,
         linkedin: linkedinRef.current?.value,
         interests: profile.interests,
+        institutionalEmail: emailRef.current?.value,
+        ...(courseChanged ? { course } : {}),
       });
 
       if (profile.avatar) {
@@ -145,9 +161,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           name="course"
           id="profile-course"
           label="Curso"
-          value={student.course ?? "Não indicado"}
-          readOnly
-          hint="Definido no registo."
+          defaultValue={student.course ?? ""}
+          inputRef={courseRef}
+          maxLength={100}
+          placeholder="Ex.: Engenharia Informática"
         />
 
         {/* ANO */}
@@ -164,10 +181,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         <Input
           name="email"
           id="profile-email"
-          label="Email"
-          value={student.user.email}
-          readOnly
-          hint="Associado à tua conta institucional."
+          label="Email institucional"
+          type="email"
+          inputRef={emailRef}
+          defaultValue={student.user.email}
+          maxLength={254}
+          hint="Email do ISEP para o teu perfil."
         />
 
         {/* LINKEDIN */}

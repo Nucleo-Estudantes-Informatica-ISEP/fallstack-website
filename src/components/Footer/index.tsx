@@ -28,7 +28,7 @@ const Footer: FunctionComponent<FooterProps> = ({
 
   return (
     <footer
-      className={`flex w-full flex-col items-center gap-10 bg-background px-6 text-center ${landing ? "pt-24" : "pt-12"}`}
+      className={`flex w-full flex-col items-center gap-10 bg-background px-6 text-center text-white ${landing ? "pt-24" : "pt-12"}`}
     >
       <div className="flex w-full flex-col items-center gap-8 lg:flex-row lg:items-center lg:justify-around">
         <div className="max-h-24 max-w-40 transition-all duration-300 hover:scale-105 sm:max-w-44 lg:max-w-48">
@@ -49,7 +49,7 @@ const Footer: FunctionComponent<FooterProps> = ({
               rel="noreferrer"
               title="LinkedIn"
             >
-              <RiLinkedinBoxFill color="text" size={28} />
+              <RiLinkedinBoxFill size={28} />
             </Link>
             <Link
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
@@ -58,7 +58,7 @@ const Footer: FunctionComponent<FooterProps> = ({
               rel="noreferrer"
               title="Facebook"
             >
-              <RiFacebookCircleFill color="text" size={28} />
+              <RiFacebookCircleFill size={28} />
             </Link>
             <Link
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
@@ -67,7 +67,7 @@ const Footer: FunctionComponent<FooterProps> = ({
               rel="noreferrer"
               title="Instagram"
             >
-              <RiInstagramLine color="accent" size={28} />
+              <RiInstagramLine size={28} />
             </Link>
             <Link
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
@@ -76,7 +76,7 @@ const Footer: FunctionComponent<FooterProps> = ({
               rel="noreferrer"
               title="Twitter"
             >
-              <RiTwitterXFill color="text" size={28} />
+              <RiTwitterXFill size={28} />
             </Link>
             <Link
               href="https://linktr.ee/nei_isep"
@@ -97,7 +97,7 @@ const Footer: FunctionComponent<FooterProps> = ({
                 title="Política de Privacidade"
                 className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
               >
-                <MdOutlinePrivacyTip color="text" size={28} />
+                <MdOutlinePrivacyTip size={28} />
               </Link>
             </div>
           )}
