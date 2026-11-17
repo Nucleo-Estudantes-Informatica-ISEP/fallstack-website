@@ -13,8 +13,10 @@ import {
 } from "react-icons/ri";
 
 import InstallButton from "@/components/InstallButton";
+import { Language } from "@/domain/i18n/translations";
 
 interface FooterProps {
+  language?: Language;
   neiLogoSrc: StaticImageData;
   landing?: boolean;
 }
@@ -22,6 +24,7 @@ interface FooterProps {
 const Footer: FunctionComponent<FooterProps> = ({
   neiLogoSrc,
   landing = false,
+  language = Language.PT,
 }) => {
   const currentYear = new Date().getFullYear();
   const NEI_WEBSITE_URL = "https://nei-isep.org";
@@ -36,7 +39,11 @@ const Footer: FunctionComponent<FooterProps> = ({
             <Image
               className="mx-auto block h-auto max-w-full drop-shadow-xl transition-all duration-300 hover:drop-shadow-2xl"
               src={neiLogoSrc}
-              alt="Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)"
+              alt={
+                language === Language.EN
+                  ? "White logo of the ISEP Computer Engineering Students Association (NEI)"
+                  : "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)"
+              }
             />
           </a>
         </div>
@@ -83,18 +90,27 @@ const Footer: FunctionComponent<FooterProps> = ({
               target="_blank"
               rel="noreferrer"
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
-              title="Linktree do NEI"
+              title={
+                language === Language.EN ? "NEI Linktree" : "Linktree do NEI"
+              }
             >
               <FaLink size={28} />
             </Link>
           </div>
           {!landing && (
             <div className="flex flex-wrap items-center justify-center gap-2">
-              <InstallButton className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110" />
+              <InstallButton
+                language={language}
+                className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
+              />
 
               <Link
                 href="/privacy-policy"
-                title="Política de Privacidade"
+                title={
+                  language === Language.EN
+                    ? "Privacy Policy"
+                    : "Política de Privacidade"
+                }
                 className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
               >
                 <MdOutlinePrivacyTip size={28} />

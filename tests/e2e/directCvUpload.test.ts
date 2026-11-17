@@ -435,7 +435,14 @@ test.skipIf(!enabled)(
     expect((await finish(post.uploadId)).status).toBe(409);
     const { cleanupCvQuarantine } =
       await import("@/application/services/cvQuarantineCleanupService");
-    const future = new Date(Date.now() + 86_400_001);
+    const { Contents } = await client.send(
+      new ListObjectsV2Command({ Bucket: bucket, Prefix: post.fields.key })
+    );
+    const uploaded = Contents?.find((object) => object.Key === post.fields.key);
+    expect(uploaded?.LastModified).toBeInstanceOf(Date);
+    // Use the listing's storage timestamp, including its sub-second precision,
+    // so the host and MinIO clocks need not agree on the 24-hour boundary.
+    const future = new Date(uploaded!.LastModified!.getTime() + 86_400_001);
     expect(await cleanupCvQuarantine(future, false)).toBeGreaterThan(0);
     expect(await cleanupCvQuarantine(future, true)).toBeGreaterThan(0);
     await expect(

@@ -63,4 +63,9 @@ test("signed-in students get their dashboard instead of an empty hero", () => {
     "/student/AB12"
   );
   expect(screen.queryByRole("link", { name: /register/i })).toBeNull();
+  expect(
+    screen.getByText(
+      "The event bringing together technology companies is back for its eighth edition at ISEP."
+    )
+  ).toBeInTheDocument();
 });

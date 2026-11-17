@@ -6,8 +6,10 @@ import { motion } from "framer-motion";
 import Company, { CompanyProps } from "@/components/Companies/Company";
 import type { CompanyRankDto } from "@/application/dto/companyDto";
 import { rankGradientStyle } from "@/domain/company/services/rank-styling";
+import { Language } from "@/domain/i18n/translations";
 
 interface CompaniesContainerProps {
+  language?: Language;
   rank: CompanyRankDto;
   companies: CompanyProps[];
 }
@@ -15,11 +17,14 @@ interface CompaniesContainerProps {
 const CompaniesContainer: FunctionComponent<CompaniesContainerProps> = ({
   rank,
   companies,
+  language = Language.PT,
 }) => {
   return (
     <motion.div className="flex w-full flex-col items-center justify-center border-b border-secondary py-8 md:py-12 lg:py-16">
       <h2 className="z-0 mx-2 mb-8 text-center text-3xl md:text-4xl lg:mb-4">
-        <span className="text-secondary">Parceiros</span>{" "}
+        <span className="text-secondary">
+          {language === Language.EN ? "Partners" : "Parceiros"}
+        </span>{" "}
         <span
           className="bg-clip-text text-transparent"
           style={rank.style ? rankGradientStyle(rank.style) : undefined}

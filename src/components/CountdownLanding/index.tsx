@@ -124,7 +124,7 @@ const CountdownLanding: FunctionComponent<CountdownLandingProps> = ({
         </p>
       </section>
       {children}
-      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} landing />
+      <Footer neiLogoSrc={NeiLogoSimplifiedWhite} language={language} landing />
     </HeroContainer>
   );
 };

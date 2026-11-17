@@ -26,54 +26,54 @@ implementation PR needs an ADR.
 
 ## Index
 
-| ADR                                                              | Decision                                         | Status               |
-| ---------------------------------------------------------------- | ------------------------------------------------ | -------------------- |
-| [0001](0001-track-editions-in-one-repository.md)                 | Track editions in one repository                 | Accepted             |
-| [0002](0002-use-prisma-migrate-for-schema-changes.md)            | Use Prisma Migrate for schema changes            | Accepted             |
-| [0003](0003-use-direct-zitadel-sessions.md)                      | Use direct ZITADEL sessions                      | Accepted             |
-| [0004](0004-share-http-boundaries.md)                            | Share HTTP boundaries                            | Accepted             |
-| [0005](0005-separate-domain-services-and-repositories.md)        | Separate domain, services, and repositories      | Accepted             |
-| [0006](0006-store-editable-event-content-in-database.md)         | Store editable event content in the database     | Accepted             |
-| [0007](0007-run-csp-in-report-only-mode.md)                      | Run CSP in report-only mode                      | Superseded           |
-| [0008](0008-enforce-content-security-policy.md)                  | Enforce Content Security Policy in production    | Accepted             |
-| [0010](0010-expire-and-revoke-wallet-passes.md)                  | Expire and revoke Wallet passes                  | Accepted             |
-| [0011](0011-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions | Accepted             |
-| [0012](0012-cache-and-optimize-public-assets.md)                 | Cache and optimize public assets                 | Accepted             |
-| [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                       | Accepted             |
-| [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee    | Accepted             |
-| [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment            | Superseded           |
-| [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                 | Accepted             |
-| [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs            | Accepted             |
-| [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS           | Accepted             |
-| [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps          | Accepted             |
-| [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank               | Accepted             |
-| [0021](0021-standalone-redis-per-environment.md)                 | Standalone Redis per environment                 | Accepted             |
-| [0022](0022-six-character-student-codes.md)                      | Issue six-character student codes                | Accepted             |
-| [0023](0023-upload-company-mp4-videos.md)                        | Upload company MP4 videos                        | Accepted             |
-| [0024](0024-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness       | Accepted             |
-| [0025](0025-share-upload-rate-limits.md)                         | Share upload rate limits across web copies       | Accepted             |
-| [0026](0026-bound-upload-memory-streaming-transport.md)          | Bound upload memory with streaming multipart     | Accepted             |
-| [0027](0027-readiness-checks-and-graceful-shutdown.md)           | Readiness checks and graceful shutdown           | Accepted             |
-| [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                   | Superseded (in part) |
-| [0029](0029-rehearse-restores-away-from-production.md)           | Rehearse restores away from production           | Accepted             |
-| [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now         | Superseded           |
-| [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                  | Accepted             |
-| [0032](0032-opt-in-single-connection-deletion.md)                | Opt in to single-connection account deletion     | Accepted             |
-| [0033](0033-share-2026-background-artwork.md)                    | Share 2026 background artwork                    | Accepted             |
-| [0034](0034-limit-pwa-install-guidance.md)                       | Limit PWA install guidance                       | Accepted             |
-| [0035](0035-gate-fixable-image-vulnerabilities.md)               | Gate fixable image vulnerabilities               | Accepted             |
-| [0036](0036-sanitize-svg-logo-pipeline.md)                       | Sanitize SVG only in the logo pipeline           | Accepted             |
-| [0037](0037-use-split-layout-for-login-and-signup.md)            | Use the split layout for login and signup        | Accepted             |
-| [0038](0038-cache-public-html-by-language.md)                    | Cache public HTML by language                    | Accepted             |
-| [0039](0039-record-session-attendance.md)                        | Record session attendance                        | Accepted             |
-| [0040](0040-use-uniform-partner-logo-bounds.md)                  | Use uniform partner logo bounds                  | Accepted             |
-| [0041](0041-direct-private-cv-uploads.md)                        | Upload private CVs directly to MinIO             | Accepted             |
-| [0042](0042-restrict-tokenless-student-previews.md)              | Restrict tokenless student previews              | Accepted             |
-| [0043](0043-independent-operational-modes.md)                    | Independent operational deployment modes         | Accepted             |
-| [0044](0044-issue-offline-downloadable-student-passes.md)        | Issue offline downloadable student passes        | Accepted             |
-| [0045](0045-bound-limiter-recovery-and-stream-private-cvs.md)    | Bound limiter recovery and stream private CVs    | Accepted             |
-| [0046](0046-resume-private-cv-uploads-in-checksummed-parts.md)   | Resume private CV uploads in checksummed parts   | Accepted             |
-
-| [0047](0047-daily-attendance-periods.md) | Daily attendance periods and twelve-hour scanner authorization | Accepted |
-
-| [0048](0048-independent-student-contact-email.md) | Independent student contact email and admin onboarding | Accepted |
+| ADR                                                              | Decision                                                       | Status               |
+| ---------------------------------------------------------------- | -------------------------------------------------------------- | -------------------- |
+| [0001](0001-track-editions-in-one-repository.md)                 | Track editions in one repository                               | Accepted             |
+| [0002](0002-use-prisma-migrate-for-schema-changes.md)            | Use Prisma Migrate for schema changes                          | Accepted             |
+| [0003](0003-use-direct-zitadel-sessions.md)                      | Use direct ZITADEL sessions                                    | Accepted             |
+| [0004](0004-share-http-boundaries.md)                            | Share HTTP boundaries                                          | Accepted             |
+| [0005](0005-separate-domain-services-and-repositories.md)        | Separate domain, services, and repositories                    | Accepted             |
+| [0006](0006-store-editable-event-content-in-database.md)         | Store editable event content in the database                   | Accepted             |
+| [0007](0007-run-csp-in-report-only-mode.md)                      | Run CSP in report-only mode                                    | Superseded           |
+| [0008](0008-enforce-content-security-policy.md)                  | Enforce Content Security Policy in production                  | Accepted             |
+| [0010](0010-expire-and-revoke-wallet-passes.md)                  | Expire and revoke Wallet passes                                | Accepted             |
+| [0011](0011-reconcile-minio-retention-with-durable-deletions.md) | Reconcile MinIO retention with durable deletions               | Accepted             |
+| [0012](0012-cache-and-optimize-public-assets.md)                 | Cache and optimize public assets                               | Accepted             |
+| [0013](0013-cache-public-homepage-data.md)                       | Cache public homepage data                                     | Accepted             |
+| [0014](0014-bound-student-token-verification.md)                 | Bound student-token verification per employee                  | Accepted             |
+| [0015](0015-private-redis-per-environment.md)                    | Private Redis per Coolify environment                          | Superseded           |
+| [0016](0016-collect-private-capacity-metrics.md)                 | Collect private capacity metrics                               | Accepted             |
+| [0017](0017-scale-web-with-singleton-release-jobs.md)            | Scale web with singleton release jobs                          | Accepted             |
+| [0018](0018-back-up-fallstack-data-outside-the-vps.md)           | Back up Fallstack data outside the VPS                         | Accepted             |
+| [0019](0019-bound-build-work-and-verify-source-maps.md)          | Bound build work and verify source maps                        | Accepted             |
+| [0020](0020-feature-companies-by-rank.md)                        | Feature homepage companies by rank                             | Accepted             |
+| [0021](0021-standalone-redis-per-environment.md)                 | Standalone Redis per environment                               | Accepted             |
+| [0022](0022-six-character-student-codes.md)                      | Issue six-character student codes                              | Accepted             |
+| [0023](0023-upload-company-mp4-videos.md)                        | Upload company MP4 videos                                      | Accepted             |
+| [0024](0024-separate-liveness-and-dependency-readiness.md)       | Separate liveness and dependency readiness                     | Accepted             |
+| [0025](0025-share-upload-rate-limits.md)                         | Share upload rate limits across web copies                     | Accepted             |
+| [0026](0026-bound-upload-memory-streaming-transport.md)          | Bound upload memory with streaming multipart                   | Accepted             |
+| [0027](0027-readiness-checks-and-graceful-shutdown.md)           | Readiness checks and graceful shutdown                         | Accepted             |
+| [0028](0028-bound-runtime-postgres-pools.md)                     | Bound runtime PostgreSQL pools                                 | Superseded (in part) |
+| [0029](0029-rehearse-restores-away-from-production.md)           | Rehearse restores away from production                         | Accepted             |
+| [0030](0030-store-signup-consent-as-booleans.md)                 | Store signup consent as booleans for now                       | Superseded           |
+| [0031](0031-record-versioned-signup-consent.md)                  | Record versioned signup consent                                | Accepted             |
+| [0032](0032-opt-in-single-connection-deletion.md)                | Opt in to single-connection account deletion                   | Accepted             |
+| [0033](0033-share-2026-background-artwork.md)                    | Share 2026 background artwork                                  | Accepted             |
+| [0034](0034-limit-pwa-install-guidance.md)                       | Limit PWA install guidance                                     | Accepted             |
+| [0035](0035-gate-fixable-image-vulnerabilities.md)               | Gate fixable image vulnerabilities                             | Accepted             |
+| [0036](0036-sanitize-svg-logo-pipeline.md)                       | Sanitize SVG only in the logo pipeline                         | Accepted             |
+| [0037](0037-use-split-layout-for-login-and-signup.md)            | Use the split layout for login and signup                      | Accepted             |
+| [0038](0038-cache-public-html-by-language.md)                    | Cache public HTML by language                                  | Accepted             |
+| [0039](0039-record-session-attendance.md)                        | Record session attendance                                      | Accepted             |
+| [0040](0040-use-uniform-partner-logo-bounds.md)                  | Use uniform partner logo bounds                                | Accepted             |
+| [0041](0041-direct-private-cv-uploads.md)                        | Upload private CVs directly to MinIO                           | Accepted             |
+| [0042](0042-restrict-tokenless-student-previews.md)              | Restrict tokenless student previews                            | Accepted             |
+| [0043](0043-independent-operational-modes.md)                    | Independent operational deployment modes                       | Accepted             |
+| [0044](0044-issue-offline-downloadable-student-passes.md)        | Issue offline downloadable student passes                      | Accepted             |
+| [0045](0045-bound-limiter-recovery-and-stream-private-cvs.md)    | Bound limiter recovery and stream private CVs                  | Accepted             |
+| [0046](0046-resume-private-cv-uploads-in-checksummed-parts.md)   | Resume private CV uploads in checksummed parts                 | Accepted             |
+| [0047](0047-daily-attendance-periods.md)                         | Daily attendance periods and twelve-hour scanner authorization | Accepted             |
+| [0048](0048-independent-student-contact-email.md)                | Independent student contact email and admin onboarding         | Accepted             |
+| [0049](0049-full-event-page-language.md)                         | Keep the full event homepage in Portuguese                     | Superseded           |
+| [0050](0050-serve-full-event-homepage-in-both-languages.md)      | Serve the full event homepage in both languages                | Accepted             |

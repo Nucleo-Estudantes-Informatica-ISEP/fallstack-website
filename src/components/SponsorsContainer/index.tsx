@@ -4,15 +4,20 @@ import React from "react";
 import { motion } from "framer-motion";
 
 import Sponsor, { SponsorProps } from "@/components/Sponsor";
+import { Language } from "@/domain/i18n/translations";
 
 interface SponsorsContainerProps {
+  language?: Language;
   sponsors: SponsorProps[];
 }
-const SponsorsContainer: React.FC<SponsorsContainerProps> = ({ sponsors }) => {
+const SponsorsContainer: React.FC<SponsorsContainerProps> = ({
+  sponsors,
+  language = Language.PT,
+}) => {
   return (
     <motion.div className="flex w-full flex-col items-center justify-center py-12">
       <h2 className="z-0 mx-2 mb-8 text-center text-3xl text-secondary md:text-4xl lg:mb-4">
-        Agradecimentos
+        {language === Language.EN ? "Acknowledgements" : "Agradecimentos"}
       </h2>
       <section className={`w-full rounded-3xl px-4`}>
         <div className="mx-auto flex w-full flex-wrap items-center justify-center gap-4 sm:gap-6 md:w-5/6 md:gap-8">
