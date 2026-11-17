@@ -39,9 +39,8 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 
       if (error) setError(null);
 
-      const uploaded = await uploadCv(file);
+      const uploaded = await uploadCv(file, setError);
       if (!uploaded) {
-        setError("Ocorreu um erro ao dar upload.");
         return setLoading(false);
       }
 

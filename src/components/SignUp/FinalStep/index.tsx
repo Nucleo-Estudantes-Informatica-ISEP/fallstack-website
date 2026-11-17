@@ -82,9 +82,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return null;
       }
 
-      const uploaded = await uploadAvatar(image);
+      const uploaded = await uploadAvatar(image, (message) =>
+        toast.error(t(message))
+      );
       if (!uploaded) {
-        toast.error(t("Não foi possível dar upload à imagem."));
         return null;
       }
       avatarId = uploaded.id;
@@ -136,9 +137,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       let cvId: string | undefined;
       if (data.cv) {
-        const uploaded = await uploadCv(data.cv.file);
+        const uploaded = await uploadCv(data.cv.file, (message) =>
+          toast.error(t(message))
+        );
         if (!uploaded) {
-          toast.error(t("Não foi possível dar upload ao CV."));
         } else {
           cvId = uploaded.id;
         }

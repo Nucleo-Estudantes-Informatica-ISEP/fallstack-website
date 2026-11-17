@@ -116,7 +116,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
     mutateSave(async () => {
       if (cvRef.current?.files?.length) {
         const cvFile = cvRef.current.files[0]!;
-        const uploaded = await uploadCv(cvFile);
+        const uploaded = await uploadCv(cvFile, (message) =>
+          toast.error(t(message))
+        );
         if (uploaded) {
           try {
             await httpClient.post(`/students/${student.code}/cv`, {

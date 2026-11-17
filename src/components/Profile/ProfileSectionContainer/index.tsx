@@ -126,15 +126,17 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     setIsAvatarLoading(true);
     try {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      const uploaded = image && (await uploadAvatar(image));
+      const uploaded =
+        image &&
+        (await uploadAvatar(image, (message) => toast.error(t(message))));
       if (!uploaded) {
-        toast.error(t("Não foi possível carregar a imagem."));
+        if (!image) toast.error(t("Não foi possível preparar a imagem."));
         return;
       }
       setProfile((previous) => ({ ...previous, avatar: uploaded.url }));
       setIsAvatarModalVisible(false);
     } catch {
-      toast.error(t("Não foi possível carregar a imagem."));
+      toast.error(t("Não foi possível preparar a imagem. Tenta novamente."));
     } finally {
       setIsAvatarLoading(false);
     }

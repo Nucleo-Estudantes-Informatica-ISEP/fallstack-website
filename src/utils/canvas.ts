@@ -102,7 +102,7 @@ export async function getCroppedImg(
 
   // As a blob
   return new Promise((resolve) => {
-    croppedCanvas.toBlob((file) => resolve(file));
+    croppedCanvas.toBlob((file) => resolve(file), "image/jpeg", 0.82);
   });
 }
 
