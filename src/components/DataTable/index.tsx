@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { Language } from "@/domain/i18n/translations";
+
 export interface DataTableColumn<T> {
   key: string;
   header: string;
@@ -27,6 +29,7 @@ interface DataTableProps<T> {
   /** Current search term, read from the entity page's searchParams. */
   searchValue?: string;
   searchPlaceholder?: string;
+  language?: Language;
 }
 
 function buildQuery(
@@ -53,7 +56,9 @@ function DataTable<T>({
   sort,
   searchValue,
   searchPlaceholder = "Pesquisar...",
+  language = Language.PT,
 }: DataTableProps<T>) {
+  const isEnglish = language === Language.EN;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const colSpan = columns.length + (renderActions ? 1 : 0);
 
@@ -96,7 +101,7 @@ function DataTable<T>({
           type="submit"
           className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
         >
-          Pesquisar
+          {isEnglish ? "Search" : "Pesquisar"}
         </button>
       </form>
 
@@ -159,7 +164,9 @@ function DataTable<T>({
 
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          {totalCount} resultado{totalCount === 1 ? "" : "s"} · página {page} de{" "}
+          {totalCount} {isEnglish ? "result" : "resultado"}
+          {totalCount === 1 ? "" : isEnglish ? "s" : "s"} ·{" "}
+          {isEnglish ? "page" : "página"} {page} {isEnglish ? "of" : "de"}{" "}
           {totalPages}
         </span>
         <div className="flex gap-2">
@@ -171,7 +178,7 @@ function DataTable<T>({
               page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-gray-100"
             }`}
           >
-            Anterior
+            {isEnglish ? "Previous" : "Anterior"}
           </Link>
           <Link
             href={pageHref(Math.min(totalPages, page + 1))}
@@ -183,7 +190,7 @@ function DataTable<T>({
                 : "hover:bg-gray-100"
             }`}
           >
-            Seguinte
+            {isEnglish ? "Next" : "Seguinte"}
           </Link>
         </div>
       </div>
