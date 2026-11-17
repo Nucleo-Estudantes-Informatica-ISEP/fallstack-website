@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { FiEdit2 } from "react-icons/fi";
 
@@ -11,6 +12,7 @@ import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminEmployeeDto } from "@/application/dto/employeeDto";
 import { listEmployeesForAdmin } from "@/application/services/employeeService";
+import { Language, resolveLanguage } from "@/domain/i18n/translations";
 
 const PAGE_SIZE = 20;
 
@@ -29,6 +31,8 @@ const columns: DataTableColumn<EmployeeRow>[] = [
 const EmployeesAdminPage = async ({
   searchParams,
 }: EmployeesAdminPageProps) => {
+  const language = resolveLanguage((await headers()).get("accept-language"));
+  const isEnglish = language === Language.EN;
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listEmployeesForAdmin({
     page,
@@ -41,12 +45,12 @@ const EmployeesAdminPage = async ({
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Recrutadores">
+      <AdminPageHeader title={isEnglish ? "Recruiters" : "Recrutadores"}>
         <Link
           href="/employees/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar recrutador
+          {isEnglish ? "Add recruiter" : "Adicionar recrutador"}
         </Link>
       </AdminPageHeader>
 
@@ -60,19 +64,22 @@ const EmployeesAdminPage = async ({
         basePath="/employees"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome..."
+        searchPlaceholder={
+          isEnglish ? "Search by name..." : "Pesquisar por nome..."
+        }
+        language={language}
         renderActions={(employee) => (
           <div className="flex items-center gap-3">
             <Link
               href={`/employees/${employee.id}/edit`}
-              aria-label={`Editar ${employee.name}`}
+              aria-label={`${isEnglish ? "Edit" : "Editar"} ${employee.name}`}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />
             </Link>
             <AdminToggleButton
               checked={employee.active}
-              label={`Ativar/desativar ${employee.name}`}
+              label={`${isEnglish ? "Enable/disable" : "Ativar/desativar"} ${employee.name}`}
               patchUrl={`/admin/employees/${employee.id}`}
               field="active"
             />
