@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { Email } from "@/types/Email";
 import config from "@/config";
 import { serverEnv } from "@/config/env.server";
+import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { defineHandler } from "@/lib/http/server";
 import { signUpEmployee } from "@/application/services/authApplicationService";
 import { employeeSignUpSchema } from "@/schemas/employeeSignUpSchema";
@@ -39,7 +40,7 @@ export const POST = defineHandler({
       secure: serverEnv.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 8 * 60 * 60,
+      maxAge: APP_SESSION_TTL_SECONDS,
     });
     return response;
   },

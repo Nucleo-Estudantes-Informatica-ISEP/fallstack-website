@@ -44,7 +44,7 @@ export function resolveStoredAdminRole(
   return configuredRole ?? "SUPER_ADMIN";
 }
 
-// Scanner page access is role-only; the five-minute attendance bound is
+// Scanner page access is role-only; the twelve-hour attendance bound is
 // enforced by the check-in and count endpoints ("staff" policy).
 export function canAccessAttendanceScanner(
   session: Pick<AuthPolicySession, "adminRole" | "neiMember"> | null
@@ -71,4 +71,14 @@ export function passesAuthPolicy(
   if (policy === "admin") return Boolean(session.adminRole);
   if (policy === "superadmin") return session.adminRole === "SUPER_ADMIN";
   return false;
+}
+
+// Admin-only identities can onboard without losing their independent admin grant.
+export function canCreateStudentProfile(
+  session: Pick<AuthPolicySession, "role" | "adminRole">
+): boolean {
+  return (
+    session.role === "STUDENT" ||
+    (Boolean(session.adminRole) && session.role === null)
+  );
 }

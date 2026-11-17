@@ -21,6 +21,6 @@ test.each([
     expect(response.status).toBe(307);
     expect(response.headers.get("Location")).toBe(location);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    expect(response.headers.get("Vary")).toBe("Accept-Language");
+    expect(response.headers.get("Vary")).toBe("Accept-Language, Cookie");
   }
 );

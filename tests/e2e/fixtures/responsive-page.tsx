@@ -70,10 +70,7 @@ export default function Fixture() {
         />
       ) : view === "signup" ? (
         <AuthPageLayout>
-          <StudentSignUp
-            interests={[]}
-            institutionalEmail="1234567@isep.ipp.pt"
-          />
+          <StudentSignUp interests={[]} />
         </AuthPageLayout>
       ) : (
         <ProfileSectionContainer

@@ -41,7 +41,11 @@ import {
   type AdminStudentQuery,
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
-import { updateUserActive, upsertUser } from "../repositories/userRepository";
+import {
+  setUserRole,
+  updateUserActive,
+  upsertUser,
+} from "../repositories/userRepository";
 import { completeAction } from "./actionService";
 import {
   createSupabaseAuthUserAsAdmin,
@@ -78,12 +82,14 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
 
   return withTransaction(async (tx) => {
     if (cv) await consumeCvUpload(userId, cv, tx);
+    await setUserRole(userId, "STUDENT", tx);
     const student = await createStudent(
       {
         userId,
         code,
         name: body.name,
         course: body.course,
+        institutionalEmail: body.institutionalEmail,
         privacyPolicyAccepted: body.privacyPolicyAccepted,
         termsAccepted: body.termsAccepted,
         privacyPolicyVersion: body.privacyPolicyVersion,
@@ -270,7 +276,7 @@ export async function getStudentsForGiveaway() {
   const students = await findStudentsForGiveaway();
   return students
     .map((student) => ({
-      user: { email: student.user.email },
+      user: { email: student.institutionalEmail ?? student.user.email },
       id: student.id,
       code: student.code,
       name: student.name,

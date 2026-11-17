@@ -9,8 +9,16 @@ import {
 } from "@/security/instanceId";
 
 export function middleware(request: NextRequest) {
+  const requestHeaders = new Headers(request.headers);
+  const language = request.cookies.get("fallstack-language")?.value;
+  if (language === "pt" || language === "en") {
+    requestHeaders.set("accept-language", language);
+  }
+
   if (!needsCsp(request.nextUrl.pathname, request.headers)) {
-    const passThrough = NextResponse.next();
+    const passThrough = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
     passThrough.headers.set(INSTANCE_ID_HEADER, instanceId);
     return passThrough;
   }
@@ -19,7 +27,6 @@ export function middleware(request: NextRequest) {
   const isDev = process.env.NODE_ENV === "development";
   const csp = buildCsp({ nonce, isDev });
 
-  const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 

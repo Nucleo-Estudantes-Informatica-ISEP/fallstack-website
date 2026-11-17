@@ -102,6 +102,9 @@ function companyOrderBy(sort: string | undefined, order: "asc" | "desc") {
 export const countCompaniesForAdmin = (search?: string) =>
   prisma.company.count({ where: companyWhere(search) });
 
+export const countActiveCompanies = () =>
+  prisma.company.count({ where: { active: true } });
+
 const adminListSelect = {
   id: true,
   name: true,

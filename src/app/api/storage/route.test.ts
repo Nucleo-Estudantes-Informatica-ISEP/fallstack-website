@@ -95,6 +95,15 @@ describe.each([
     expect(uploadFile).not.toHaveBeenCalled();
   });
 
+  test("admin-only accounts can upload before student onboarding", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      ...student!,
+      role: null,
+      adminRole: "ADMIN",
+    } as never);
+    expect((await send()).status).toBe(201);
+  });
+
   test("accepts student account before profile exists", async () => {
     const response = await send();
     expect(response.status).toBe(201);

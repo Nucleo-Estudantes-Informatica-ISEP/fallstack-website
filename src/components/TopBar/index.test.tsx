@@ -227,3 +227,19 @@ test("anonymous English navigation also declares its language", () => {
     "/login"
   );
 });
+
+test.each([null, { code: "ABC123", name: "Admin" }])(
+  "admins can reach their own student profile: %j",
+  (student) => {
+    vi.mocked(usePathname).mockReturnValue("/overview");
+    session.user = {
+      role: student ? "STUDENT" : null,
+      adminRole: "ADMIN",
+      student,
+    };
+    render(<TopBar />);
+    expect(
+      screen.getByRole("link", { name: "O meu perfil de estudante" })
+    ).toHaveAttribute("href", student ? "/student/ABC123" : "/signup");
+  }
+);

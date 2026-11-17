@@ -147,7 +147,7 @@ test("shows the duplicate card with the name", async () => {
   scan();
   await flush();
   expect(screen.getByText("Joao Costa")).toBeTruthy();
-  expect(screen.getByText("Já tinha check-in nesta sessão")).toBeTruthy();
+  expect(screen.getByText("Já tinha check-in neste período")).toBeTruthy();
 });
 
 test("shows the invalid pass card", async () => {
@@ -168,7 +168,7 @@ test("shows the outside-session card with the session times", async () => {
   await flush();
   scan();
   await flush();
-  expect(screen.getByText("Fora do horário desta sessão")).toBeTruthy();
+  expect(screen.getByText("Fora do horário deste período")).toBeTruthy();
   expect(screen.getByText("10:00 – 11:00")).toBeTruthy();
 });
 
@@ -254,7 +254,7 @@ test("normalises a lowercase typed code", async () => {
 test("switching session updates the URL", async () => {
   renderScanner();
   await flush();
-  fireEvent.click(screen.getByRole("button", { name: "Trocar sessão" }));
+  fireEvent.click(screen.getByRole("button", { name: "Trocar período" }));
   fireEvent.click(screen.getByRole("button", { name: /Workshop Git/ }));
   await flush();
   expect(mocks.replace).toHaveBeenCalledWith("/attendance/scan?session=ws");
@@ -270,7 +270,7 @@ function deferred<T>() {
 }
 
 const switchTo = (title: RegExp) => {
-  fireEvent.click(screen.getByRole("button", { name: "Trocar sessão" }));
+  fireEvent.click(screen.getByRole("button", { name: "Trocar período" }));
   fireEvent.click(screen.getByRole("button", { name: title }));
 };
 
@@ -334,7 +334,7 @@ test("discards a count that resolves after a session switch", async () => {
 test("shows the empty state without sessions", async () => {
   renderScanner({ sessions: [] });
   await flush();
-  expect(screen.getByText("Não há sessões hoje.")).toBeTruthy();
+  expect(screen.getByText("Não há períodos de presenças hoje.")).toBeTruthy();
   expect(screen.queryByText("mock-camera")).toBeNull();
   expect(screen.queryByPlaceholderText("Código (ex: AB12)")).toBeNull();
 });

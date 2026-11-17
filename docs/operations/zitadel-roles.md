@@ -53,7 +53,7 @@ deployed and verified. See ZITADEL's [reserved scopes](https://zitadel.com/docs/
 
 Reload the project settings and confirm the checkbox remains off. Then use
 fresh application logins; an existing signed app cookie retains its old role
-claims for up to eight hours.
+claims for up to twelve hours.
 
 - **NEI admin:** sign out of Fallstack and sign in with an account assigned the
   NEI `admin` role. Confirm `/overview` opens and `/api/auth/session` returns a

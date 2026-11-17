@@ -36,3 +36,13 @@ test("profile readback preserves independent course, year and LinkedIn", () => {
     linkedin: "https://linkedin.com/in/student",
   });
 });
+
+test("profile contact email is independent of the AuthNEI email", () => {
+  expect(
+    toStudentDto({ ...student, institutionalEmail: "1234567@isep.ipp.pt" }).user
+      .email
+  ).toBe("1234567@isep.ipp.pt");
+  expect(
+    toStudentDto({ ...student, institutionalEmail: null }).user.email
+  ).toBe(student.user.email);
+});

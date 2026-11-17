@@ -4,12 +4,13 @@ import { serverEnv } from "@/config/env.server";
 import { defineHandler } from "@/lib/http/server";
 import { toStudentSummaryDto } from "@/application/dto/studentDto";
 import { createStudentProfile } from "@/application/services/studentService";
+import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 import { postStudentSchema } from "@/schemas/postStudentSchema";
 
 export const POST = defineHandler({
   auth: "session",
   schema: postStudentSchema,
-  authorize: (session) => session.role === "STUDENT",
+  authorize: canCreateStudentProfile,
   handler: async ({ session, body }) => {
     if (serverEnv.EVENT_MODE === "offseason") {
       return NextResponse.json(

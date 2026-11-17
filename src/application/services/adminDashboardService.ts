@@ -5,7 +5,7 @@ import {
   findActionCompletionTimestampsSince,
   findRecentActionCompletions,
 } from "../repositories/actionRepository";
-import { countCompaniesForAdmin } from "../repositories/companyRepository";
+import { countActiveCompanies } from "../repositories/companyRepository";
 import { countEmployeesForAdmin } from "../repositories/employeeRepository";
 import {
   countAllSavedStudents,
@@ -106,7 +106,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     saveTimestamps,
   ] = await Promise.all([
     countStudents(),
-    countCompaniesForAdmin(),
+    countActiveCompanies(),
     countEmployeesForAdmin(),
     countActionCompletions(),
     countAllSavedStudents(),

@@ -5,12 +5,8 @@ import { attendanceExportRow } from "./attendanceExport";
 const row = {
   checkedInAt: new Date("2026-11-17T10:05:00Z"),
   student: { name: "Student", user: { email: "1234567@isep.ipp.pt" } },
-  session: {
-    day: 1,
-    startTime: "10:00",
-    endTime: "11:00",
-    activity: { PT: "Palestra" },
-  },
+  day: 1,
+  period: "MORNING" as const,
 };
 test("exports one check-in with institutional number and session validity", () => {
   expect(
@@ -20,9 +16,9 @@ test("exports one check-in with institutional number and session validity", () =
     Email: "1234567@isep.ipp.pt",
     "Student number": "1234567",
     Date: "2026-11-17",
-    Session: "Palestra",
+    Period: "Manhã",
     "Check-in time": "2026-11-17T10:05:00.000Z",
-    "Valid until": "2026-11-17T11:00:00.000Z",
+    "Valid until": "2026-11-17T12:00:00.000Z",
   });
 });
 test("does not invent student numbers for staff", () => {
@@ -39,4 +35,17 @@ test("does not invent student numbers for staff", () => {
 });
 test("rejects invalid session days", () => {
   expect(() => attendanceExportRow(row, [], "2026-11-17T08:30:00Z")).toThrow();
+});
+
+test("exports the edited contact independently from the login identity", () => {
+  const exported = attendanceExportRow(
+    {
+      ...row,
+      student: { ...row.student, institutionalEmail: "7654321@isep.ipp.pt" },
+    },
+    [17, 18],
+    "2026-11-17T08:30:00Z"
+  );
+  expect(exported.Email).toBe("7654321@isep.ipp.pt");
+  expect(exported["Student number"]).toBe("7654321");
 });

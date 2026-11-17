@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { LiaUser } from "react-icons/lia";
 
+import useLanguage from "@/hooks/useLanguage";
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -31,8 +33,11 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
-  const isEnglish = pathname?.startsWith("/event/en");
+  const isEnglish = useLanguage() === "en";
   const language = isEnglish ? Language.EN : Language.PT;
+  const studentProfileLabel = isEnglish
+    ? "My student profile"
+    : "O meu perfil de estudante";
   const scannerLabel = isEnglish
     ? "Attendance scanner"
     : "Scanner de presenças";
@@ -105,6 +110,20 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
                     <BsQrCodeScan aria-hidden="true" />
                   </Link>
                 )}
+              {session.user.adminRole && session.user.role !== "EMPLOYEE" && (
+                <Link
+                  href={
+                    session.user.student
+                      ? `/student/${session.user.student.code}`
+                      : "/signup"
+                  }
+                  aria-label={studentProfileLabel}
+                  title={studentProfileLabel}
+                  className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-2xl text-white transition-colors hover:text-primary"
+                >
+                  <LiaUser aria-hidden="true" />
+                </Link>
+              )}
               <UserButton user={session.user} language={language} />
               <LogoutButton language={language} />
             </>

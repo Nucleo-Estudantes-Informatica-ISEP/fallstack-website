@@ -14,7 +14,7 @@ vi.mock("@/lib/http/client", () => ({
 
 const signUpData: StudentSignUpData = {
   name: "Jane Doe",
-  email: "jane@isep.ipp.pt",
+  email: "1234567@isep.ipp.pt",
   password: "password123",
   bio: "Bio",
   interests: [],

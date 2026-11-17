@@ -52,13 +52,17 @@ export const toAdminScanDto = (scan: {
   id: string;
   studentId: string;
   createdAt: Date | string;
-  student: { name: string; user: { email: string } };
+  student: {
+    name: string;
+    institutionalEmail?: string | null;
+    user: { email: string };
+  };
 }): AdminScanDto => ({
   id: scan.id,
   studentId: scan.studentId,
   createdAt: new Date(scan.createdAt).toISOString(),
   student: {
     name: scan.student.name,
-    user: { email: scan.student.user.email },
+    user: { email: scan.student.institutionalEmail ?? scan.student.user.email },
   },
 });
