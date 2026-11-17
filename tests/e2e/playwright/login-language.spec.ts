@@ -96,3 +96,82 @@ test("full homepage switches to English and back to Portuguese", async ({
   await page.evaluate(() => document.fonts.ready);
   await page.context().unrouteAll({ behavior: "wait" });
 });
+
+for (const account of [
+  {
+    name: "student",
+    user: {
+      role: "STUDENT",
+      adminRole: null,
+      student: { code: "AB12", name: "Ana" },
+    },
+    profileLabel: "My profile",
+    portugueseLabel: "O meu perfil",
+    href: "/student/AB12",
+    scanner: false,
+  },
+  {
+    name: "admin",
+    user: { role: null, adminRole: "ADMIN", student: null },
+    profileLabel: "Admin area",
+    portugueseLabel: "Área de administração",
+    href: "/overview",
+    scanner: true,
+  },
+  {
+    name: "staff",
+    user: { role: null, adminRole: null, student: null, neiMember: true },
+    profileLabel: "Attendance scanner",
+    portugueseLabel: "Scanner de presenças",
+    href: "/attendance/scan",
+    scanner: true,
+  },
+]) {
+  test(`signed-in English navigation is accessible for ${account.name}`, async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.SHOWCASE_FULL_WEBSITE !== "true" ||
+        process.env.EVENT_MODE === "offseason",
+      "Requires the active full event website"
+    );
+    // Exercise the real public page with a synthetic browser session response;
+    // no privileged cookie or protected endpoint is needed for navigation labels.
+    await page.route("**/api/auth/session", (route) =>
+      route.fulfill({ json: account.user })
+    );
+    await page.goto("/event/en", { waitUntil: "domcontentloaded" });
+    const navigation = page.getByRole("navigation");
+    await expect(navigation).toHaveAttribute("lang", "en");
+    await expect(
+      navigation.getByRole("link", { name: account.profileLabel, exact: true })
+    ).toHaveAttribute("href", account.href);
+    await expect(
+      navigation.getByRole("button", { name: "Sign out", exact: true })
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole("link", { name: "Attendance scanner", exact: true })
+    ).toHaveCount(account.scanner ? 1 : 0);
+
+    await navigation
+      .getByRole("button", { name: "Selecionar idioma / Select language" })
+      .click();
+    await page.getByRole("menuitem", { name: "Português PT" }).click();
+    await expect(page).toHaveURL(/\/event\/pt$/);
+    await expect(navigation).toHaveAttribute("lang", "pt");
+    await expect(
+      navigation.getByRole("link", {
+        name: account.portugueseLabel,
+        exact: true,
+      })
+    ).toHaveAttribute("href", account.href);
+    await expect(
+      navigation.getByRole("button", { name: "Terminar sessão", exact: true })
+    ).toBeVisible();
+    await expect(
+      navigation.getByRole("button", { name: "Sign out", exact: true })
+    ).toHaveCount(0);
+    await page.evaluate(() => document.fonts.ready);
+    await page.context().unrouteAll({ behavior: "wait" });
+  });
+}

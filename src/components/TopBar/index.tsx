@@ -12,6 +12,7 @@ import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 import { resolveAccountDestination } from "@/domain/auth/accountDestination";
 import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
+import { Language } from "@/domain/i18n/translations";
 
 import { BsQrCodeScan } from "react-icons/bs";
 
@@ -31,6 +32,10 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const session = useSession();
   const pathname = usePathname();
   const isEnglish = pathname?.startsWith("/event/en");
+  const language = isEnglish ? Language.EN : Language.PT;
+  const scannerLabel = isEnglish
+    ? "Attendance scanner"
+    : "Scanner de presenças";
   // Hide certain TopBar elements on auth pages (those inside the (auth) group)
   const isAuthPage = Boolean(
     pathname &&
@@ -39,7 +44,7 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 
   return (
-    <nav className="fixed z-40 h-16 w-full">
+    <nav lang={language.toLowerCase()} className="fixed z-40 h-16 w-full">
       {solid ? (
         <div className="absolute top-0 left-0 flex h-16 w-full items-center justify-between bg-background" />
       ) : (
@@ -93,15 +98,15 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
                 resolveAccountDestination(session.user).kind !== "staff" && (
                   <Link
                     href="/attendance/scan"
-                    aria-label="Scanner de presenças"
-                    title="Scanner de presenças"
+                    aria-label={scannerLabel}
+                    title={scannerLabel}
                     className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-xl text-white transition-colors hover:text-primary"
                   >
                     <BsQrCodeScan aria-hidden="true" />
                   </Link>
                 )}
-              <UserButton user={session.user} />
-              <LogoutButton />
+              <UserButton user={session.user} language={language} />
+              <LogoutButton language={language} />
             </>
           )}
         </div>
