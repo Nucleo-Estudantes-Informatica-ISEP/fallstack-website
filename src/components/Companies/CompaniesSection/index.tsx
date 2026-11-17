@@ -6,6 +6,7 @@ import CompaniesContainer from "@/components/Companies/CompaniesContainer";
 import { CompanyProps } from "@/components/Companies/Company";
 import type { CompanyRankDto } from "@/application/dto/companyDto";
 import type { HomepageDto } from "@/application/dto/homepageDto";
+import { Language } from "@/domain/i18n/translations";
 
 function toCompanyProps(
   company: HomepageDto["companies"][number]
@@ -40,16 +41,23 @@ function groupByRank(companies: HomepageDto["companies"]): RankGroup[] {
 }
 
 interface CompaniesSectionProps {
+  language?: Language;
   companies: HomepageDto["companies"];
 }
 
 const CompaniesSection: FunctionComponent<CompaniesSectionProps> = ({
   companies,
+  language = Language.PT,
 }) => {
   return (
     <section className="flex flex-col items-center text-center">
       {groupByRank(companies).map(({ rank, companies }) => (
-        <CompaniesContainer key={rank.id} rank={rank} companies={companies} />
+        <CompaniesContainer
+          key={rank.id}
+          rank={rank}
+          companies={companies}
+          language={language}
+        />
       ))}
     </section>
   );

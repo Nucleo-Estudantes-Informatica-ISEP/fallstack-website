@@ -21,12 +21,18 @@ const HomePage: FunctionComponent<HomePageProps> = ({ language, sections }) => {
 
   return (
     <HeroContainer>
-      <GenericContainer>
-        <Hero contentRef={contentRef} language={language} />
-        <Content contentRef={contentRef} sections={sections} />
-        <HeadsUp />
-        <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
-      </GenericContainer>
+      <div lang={language.toLowerCase()}>
+        <GenericContainer>
+          <Hero contentRef={contentRef} language={language} />
+          <Content
+            contentRef={contentRef}
+            sections={sections}
+            language={language}
+          />
+          <HeadsUp language={language} />
+          <Footer neiLogoSrc={NeiLogoSimplifiedWhite} language={language} />
+        </GenericContainer>
+      </div>
     </HeroContainer>
   );
 };

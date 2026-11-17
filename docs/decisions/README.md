@@ -73,3 +73,6 @@ implementation PR needs an ADR.
 | [0044](0044-issue-offline-downloadable-student-passes.md)        | Issue offline downloadable student passes        | Accepted             |
 | [0045](0045-bound-limiter-recovery-and-stream-private-cvs.md)    | Bound limiter recovery and stream private CVs    | Accepted             |
 | [0046](0046-resume-private-cv-uploads-in-checksummed-parts.md)   | Resume private CV uploads in checksummed parts   | Accepted             |
+
+[Full event homepage language](0045-full-event-page-language.md) records the
+2026-11-17 amendment enabling the complete English event homepage.

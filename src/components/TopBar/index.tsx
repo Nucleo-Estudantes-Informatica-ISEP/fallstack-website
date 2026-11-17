@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { BsQrCodeScan } from "react-icons/bs";
 
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
@@ -13,6 +12,8 @@ import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 import { resolveAccountDestination } from "@/domain/auth/accountDestination";
 import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
+
+import { BsQrCodeScan } from "react-icons/bs";
 
 interface TopBarProps {
   // The scroll-linked fade (transparent at the top, solidifying as you
@@ -29,6 +30,7 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
+  const isEnglish = pathname?.startsWith("/event/en");
   // Hide certain TopBar elements on auth pages (those inside the (auth) group)
   const isAuthPage = Boolean(
     pathname &&
@@ -74,7 +76,13 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
           ) : !session.user ? (
             <Link
               href={isAuthPage ? "/" : "/login"}
-              aria-label={isAuthPage ? "Página inicial" : "Iniciar sessão"}
+              aria-label={
+                isAuthPage
+                  ? "Página inicial"
+                  : isEnglish
+                    ? "Sign in"
+                    : "Iniciar sessão"
+              }
               className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md fill-white text-2xl transition-colors hover:text-primary"
             >
               <LogIn />
