@@ -6,9 +6,11 @@ import {
 } from "@/domain/student/signupPolicy";
 import { STUDENT_YEAR } from "@/domain/student/year";
 
+import { institutionalEmailSchema } from "./institutionalEmailSchema";
 import { linkedinSchema } from "./linkedinSchema";
 
 export const postStudentSchema = z.object({
+  institutionalEmail: institutionalEmailSchema,
   name: z.string().trim().min(1).max(100).optional(),
   course: z.string().trim().min(1).max(100),
   privacyPolicyAccepted: z.literal(true),

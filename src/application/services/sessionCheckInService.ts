@@ -5,21 +5,19 @@ import { HttpError } from "@/types/HttpError";
 import logger from "@/lib/logger";
 import { verifyJwt } from "@/application/services/authService";
 import {
-  eventDayIndex,
-  getSessionWindow,
-  isWithinSession,
-} from "@/domain/session/sessionRules";
+  attendancePeriodsForDay,
+  findAttendancePeriod,
+} from "@/domain/session/attendancePeriods";
+import { eventDayIndex, isWithinSession } from "@/domain/session/sessionRules";
 import {
   isStudentCode,
   normalizeStudentCode,
 } from "@/domain/student/studentCode";
 import { branding } from "@/edition/branding";
 
-import { findAllScheduleEvents } from "../repositories/scheduleRepository";
 import {
   countSessionCheckIns,
   createSessionCheckIn,
-  findScheduleEventForCheckIn,
   findStudentForCheckIn,
   isSessionCheckInUniqueError,
 } from "../repositories/sessionCheckInRepository";
@@ -59,16 +57,16 @@ export async function recordSessionCheckIn(
   input: CredentialInput,
   now = new Date()
 ) {
-  const session = await findScheduleEventForCheckIn(sessionId);
-  if (!session) throw new HttpError("Session not found.", 404);
+  const session = findAttendancePeriod(sessionId);
+  if (!session) throw new HttpError("Attendance period not found.", 404);
 
-  const window = getSessionWindow(
-    session,
-    branding.event.days,
-    branding.event.startsAt
-  );
-  if (!window || !isWithinSession(now, window))
-    throw new HttpError("Check-in is not available outside this session.", 400);
+  if (
+    !isWithinSession(now, {
+      start: new Date(session.start),
+      end: new Date(session.end),
+    })
+  )
+    throw new HttpError("Check-in is not available outside this period.", 400);
 
   const rawCode = resolveCode(input);
   const code = normalizeStudentCode(rawCode);
@@ -85,7 +83,8 @@ export async function recordSessionCheckIn(
 
   try {
     const checkIn = await createSessionCheckIn({
-      sessionId,
+      day: session.day,
+      period: session.period,
       studentId: student.id,
       scannedById,
     });
@@ -93,7 +92,7 @@ export async function recordSessionCheckIn(
   } catch (error) {
     if (isSessionCheckInUniqueError(error))
       throw new HttpError(
-        "This student has already checked in for this session.",
+        "This student has already checked in for this period.",
         409,
         { student: { name: student.name } }
       );
@@ -102,33 +101,16 @@ export async function recordSessionCheckIn(
 }
 
 export async function getSessionCheckInCount(sessionId: string) {
-  const session = await findScheduleEventForCheckIn(sessionId);
-  if (!session) throw new HttpError("Session not found.", 404);
-  return countSessionCheckIns(sessionId);
+  const session = findAttendancePeriod(sessionId);
+  if (!session) throw new HttpError("Attendance period not found.", 404);
+  return countSessionCheckIns(session);
 }
 
-/** Schedule entries of today's event day (Europe/Lisbon), in schedule order. */
+/** Exactly two attendance periods per event day, independent of activities. */
 export async function getTodaysAttendanceSessions(
   now = new Date()
 ): Promise<AttendanceSessionDto[]> {
-  const { days, startsAt, scheduleDayTitles } = branding.event;
+  const { days, startsAt } = branding.event;
   const day = eventDayIndex(now, days, startsAt);
-  if (day === null) return [];
-  const events = await findAllScheduleEvents();
-  return events.flatMap((event) => {
-    if (event.day !== day) return [];
-    const window = getSessionWindow(event, days, startsAt);
-    if (!window) return [];
-    return [
-      {
-        id: event.id,
-        title: event.activity.PT,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        start: window.start.toISOString(),
-        end: window.end.toISOString(),
-        dayTitle: scheduleDayTitles[day - 1] ?? "",
-      },
-    ];
-  });
+  return day === null ? [] : attendancePeriodsForDay(day);
 }

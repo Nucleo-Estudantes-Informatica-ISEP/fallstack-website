@@ -11,16 +11,11 @@ import type { InterestDto } from "@/application/dto/interestDto";
 
 interface StudentSignUpProps {
   interests: InterestDto[];
-  institutionalEmail: string;
   /** Verified display name from AuthNEI, when the identity has one. */
   authName?: string;
 }
 
-const StudentSignUp = ({
-  interests,
-  institutionalEmail,
-  authName,
-}: StudentSignUpProps) => {
+const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
   const stepRef = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
@@ -53,7 +48,6 @@ const StudentSignUp = ({
   const steps = [
     <AccountDetailsStep
       key="account"
-      institutionalEmail={institutionalEmail}
       needsName={!authName}
       {...{ currentStep, setCurrentStep, data, setData }}
     />,

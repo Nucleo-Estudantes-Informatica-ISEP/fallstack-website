@@ -7,12 +7,12 @@ export interface OfflinePassPayload {
   qrSvgElement: SVGSVGElement; // SVG oculto renderizado com value={student.code}
 }
 
-export async function downloadOfflinePass({
+export async function generateOfflinePass({
   studentName,
   studentEmail,
   permanentCode,
   qrSvgElement,
-}: OfflinePassPayload): Promise<void> {
+}: OfflinePassPayload): Promise<File> {
   const width = 1000;
   const height = 1500;
 
@@ -126,14 +126,27 @@ export async function downloadOfflinePass({
   );
   ctx.fillText("e o passe da Google Wallet é revogado.", width / 2, 1439);
 
-  // 9. Descarregar PNG
-  const pngUrl = canvas.toDataURL("image/png", 1.0);
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((result) => {
+      if (result) resolve(result);
+      else reject(new Error("Não foi possível gerar a imagem do passe."));
+    }, "image/png");
+  });
+  return new File([blob], getPassFilename(studentName, permanentCode), {
+    type: "image/png",
+  });
+}
+
+export function downloadOfflinePass(file: File): void {
+  const url = URL.createObjectURL(file);
   const link = document.createElement("a");
-  link.download = getPassFilename(studentName, permanentCode);
-  link.href = pngUrl;
+  link.download = file.name;
+  link.href = url;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
+  // Allow the browser to consume the download before releasing the URL.
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 export function getPassFilename(

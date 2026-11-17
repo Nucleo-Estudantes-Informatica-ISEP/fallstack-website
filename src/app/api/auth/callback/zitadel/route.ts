@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import config from "@/config";
 import { serverEnv } from "@/config/env.server";
+import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { reportError } from "@/lib/logger";
 import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
@@ -59,7 +60,7 @@ export async function GET(request: NextRequest) {
       secure: serverEnv.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 8 * 60 * 60,
+      maxAge: APP_SESSION_TTL_SECONDS,
     });
     clearOidcCookies(response);
     return response;

@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { test } from "vitest";
+import { expect, test } from "vitest";
 
 import {
   AuthPolicySession,
   canAccessAttendanceScanner,
+  canCreateStudentProfile,
   passesAuthPolicy,
   resolveAdminRole,
   resolveStoredAdminRole,
@@ -207,7 +208,7 @@ test.each([
   assert.equal(canAccessAttendanceScanner(session as never), expected);
 });
 
-test("scanner access ignores the five-minute attendance bound", () => {
+test("scanner access ignores the twelve-hour attendance bound", () => {
   assert.equal(
     canAccessAttendanceScanner({
       adminRole: null,
@@ -216,4 +217,14 @@ test("scanner access ignores the five-minute attendance bound", () => {
     } as never),
     true
   );
+});
+
+test("student onboarding permits admin-only identities but never employee admins", () => {
+  expect(canCreateStudentProfile({ role: null, adminRole: "ADMIN" })).toBe(
+    true
+  );
+  expect(
+    canCreateStudentProfile({ role: "EMPLOYEE", adminRole: "ADMIN" })
+  ).toBe(false);
+  expect(canCreateStudentProfile({ role: null, adminRole: null })).toBe(false);
 });

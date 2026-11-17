@@ -57,3 +57,14 @@ Students can reliably identify themselves at booths and sessions without interne
 access. Because the permanent code is static, possession of the downloaded image
 provides attendee identification equivalent to a physical badge. Remote
 revocation is enforced server-side upon code verification.
+
+### Saving from installed PWAs
+
+Generate a PNG `File` before offering native file sharing when
+`navigator.canShare({ files })` supports it. A second tap on **Guardar Passe**
+opens the share sheet with fresh user activation; generating the image inside
+the share gesture can exceed WebKit's activation window. Users then choose
+Save Image or Save to Files. Cancelling preserves the prepared pass for retry.
+Browsers without file sharing keep an anchor download using an object URL.
+The prepared file stays in component memory and is cleared when student data
+changes. This does not make authenticated pages available offline.

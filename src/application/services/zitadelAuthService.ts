@@ -1,3 +1,5 @@
+import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
+
 import "server-only";
 
 import { createHash, createPublicKey, randomBytes } from "crypto";
@@ -8,7 +10,6 @@ import { serverEnv } from "@/config/env.server";
 
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
-const APP_SESSION_TTL_SECONDS = 8 * 60 * 60;
 const OIDC_STATE_TTL_SECONDS = 10 * 60;
 
 export const oidcCookieNames = {

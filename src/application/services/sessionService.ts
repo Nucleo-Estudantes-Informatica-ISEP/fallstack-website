@@ -1,3 +1,5 @@
+import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
+
 import "server-only";
 
 import { cache } from "react";
@@ -35,7 +37,7 @@ const getServerSession = cache(async () => {
       attendanceExpiresAt:
         typeof claims.iat === "number"
           ? Math.min(
-              (claims.iat + 300) * 1000,
+              (claims.iat + APP_SESSION_TTL_SECONDS) * 1000,
               claims.attendanceExpiresAt ?? Infinity
             )
           : 0,

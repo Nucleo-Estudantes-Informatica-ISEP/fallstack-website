@@ -7,7 +7,10 @@ import { FiDownload } from "react-icons/fi";
 import { httpClient } from "@/lib/http/client";
 import { Clipboard } from "@/components/ui/Icons";
 import GoogleWalletButton from "@/components/GoogleWalletButton";
-import { downloadOfflinePass } from "@/components/PassSection/generateOfflinePass";
+import {
+  downloadOfflinePass,
+  generateOfflinePass,
+} from "@/components/PassSection/generateOfflinePass";
 import StyledPassCard from "@/components/PassSection/StyledPassCard";
 import type { StudentDto } from "@/application/dto/studentDto";
 
@@ -24,6 +27,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   const [copied, setCopied] = useState<boolean>(false);
   const [downloading, setDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [preparedPass, setPreparedPass] = useState<File | null>(null);
   const permanentQrRef = useRef<SVGSVGElement | null>(null);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,6 +70,10 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
     []
   );
 
+  useEffect(() => {
+    setPreparedPass(null);
+  }, [student.name, student.code, student.user?.email]);
+
   const handleDownloadOfflinePass = async () => {
     setDownloadError(null);
     if (!student.code || !permanentQrRef.current) {
@@ -74,13 +82,27 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
     }
     try {
       setDownloading(true);
-      await downloadOfflinePass({
+      if (preparedPass) {
+        // Sharing needs a fresh user gesture, after asynchronous PNG generation.
+        await navigator.share({ files: [preparedPass] });
+        return;
+      }
+      const file = await generateOfflinePass({
         studentName: student.name,
         studentEmail: student.user?.email,
         permanentCode: student.code,
         qrSvgElement: permanentQrRef.current,
       });
-    } catch {
+      if (
+        typeof navigator.share === "function" &&
+        navigator.canShare?.({ files: [file] })
+      ) {
+        setPreparedPass(file);
+      } else {
+        downloadOfflinePass(file);
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       setDownloadError(DOWNLOAD_ERROR_MESSAGE);
     } finally {
       setDownloading(false);
@@ -175,8 +197,16 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
                 <FiDownload className="size-4" aria-hidden="true" />
                 {downloading
                   ? "A gerar passe..."
-                  : "Descarregar Passe (Offline)"}
+                  : preparedPass
+                    ? "Guardar Passe (Offline)"
+                    : "Descarregar Passe (Offline)"}
               </button>
+            )}
+            {preparedPass && (
+              <p role="status" className="text-sm text-ui-muted">
+                Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou
+                Guardar em Ficheiros.
+              </p>
             )}
             <GoogleWalletButton />
           </div>

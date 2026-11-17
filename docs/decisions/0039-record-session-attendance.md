@@ -1,6 +1,6 @@
 # 0039: Record session attendance
 
-Status: Accepted
+Status: Superseded for new attendance and session lifetime by [0047](0047-daily-attendance-periods.md); historical activity records remain preserved.
 Date: 2026-11-13
 Source: [Issue 469](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/469)
 

@@ -37,12 +37,13 @@ interface StudentSummaryEntity {
 }
 
 type StudentEntity = StudentSummaryEntity & {
+  institutionalEmail?: string | null;
   user: { email: string };
 };
 
 export const toStudentDto = (student: StudentEntity): StudentDto => ({
   ...toStudentSummaryDto(student),
-  user: { email: student.user.email },
+  user: { email: student.institutionalEmail ?? student.user.email },
 });
 
 export const toStudentSummaryDto = (

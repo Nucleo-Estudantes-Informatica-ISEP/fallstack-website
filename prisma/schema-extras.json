@@ -1,6 +1,7 @@
 {
   "indexes": ["StorageDeletion_kind_lower_key_idx"],
   "constraints": [
+    "AttendanceCheckIn_day_check",
     "StorageDeletion_kind_check",
     "CvUpload_size_check",
     "CvUpload_status_check"

@@ -1,4 +1,4 @@
-import { getSessionWindow } from "./sessionRules";
+import { attendancePeriodsForDay } from "./attendancePeriods";
 
 function dateAtEventOffset(date: Date, startsAt: string) {
   const match = startsAt.match(/([+-])(\d{2}):?(\d{2})$/);
@@ -11,34 +11,33 @@ function dateAtEventOffset(date: Date, startsAt: string) {
 export function attendanceExportRow(
   checkIn: {
     checkedInAt: Date;
-    student: { name: string; user: { email: string } };
-    session: {
-      day: number;
-      startTime: string;
-      endTime: string;
-      activity: unknown;
+    student: {
+      name: string;
+      institutionalEmail?: string | null;
+      user: { email: string };
     };
+    day: number;
+    period: "MORNING" | "AFTERNOON";
   },
   days: readonly number[],
   startsAt: string
 ) {
-  const window = getSessionWindow(checkIn.session, days, startsAt);
-  if (!window) throw new Error("Invalid attendance session window");
-  const activity = checkIn.session.activity;
-  const title =
-    activity && typeof activity === "object" && "PT" in activity
-      ? String(activity.PT)
-      : "";
-  const email = checkIn.student.user.email;
-  // Student numbers are verified institutional email local parts; staff have none.
+  const period = attendancePeriodsForDay(checkIn.day).find(
+    (item) => item.period === checkIn.period
+  );
+  if (!period || !days[checkIn.day - 1])
+    throw new Error("Invalid attendance period");
+  const email =
+    checkIn.student.institutionalEmail ?? checkIn.student.user.email;
+  // Student numbers come from the profile contact email, not the AuthNEI identity.
   const number = email.match(/^(\d{7})@isep\.ipp\.pt$/i)?.[1] ?? "";
   return {
     Name: checkIn.student.name,
     Email: email,
     "Student number": number,
-    Date: dateAtEventOffset(window.start, startsAt),
-    Session: title,
+    Date: dateAtEventOffset(new Date(period.start), startsAt),
+    Period: period.title,
     "Check-in time": checkIn.checkedInAt.toISOString(),
-    "Valid until": window.end.toISOString(),
+    "Valid until": period.end,
   };
 }

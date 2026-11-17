@@ -15,7 +15,7 @@ import {
   updateStudentProfile,
 } from "../repositories/studentRepository";
 import { withTransaction } from "../repositories/transaction";
-import { updateUserActive } from "../repositories/userRepository";
+import { setUserRole, updateUserActive } from "../repositories/userRepository";
 import { completeAction } from "./actionService";
 import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
 import {
@@ -51,6 +51,7 @@ vi.mock("../repositories/studentRepository", () => ({
 vi.mock("../repositories/transaction", () => ({ withTransaction: vi.fn() }));
 vi.mock("../repositories/userRepository", () => ({
   updateUserActive: vi.fn(),
+  setUserRole: vi.fn(),
   deleteUser: vi.fn(),
   upsertUser: vi.fn(),
 }));
@@ -82,6 +83,7 @@ beforeEach(() => {
 test("completes the LinkedIn action during signup when a LinkedIn URL is provided", async () => {
   await createStudentProfile("u1", {
     name: "Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
     course: "Engenharia Informática",
     privacyPolicyAccepted: true,
     termsAccepted: true,
@@ -102,6 +104,7 @@ test("completes the LinkedIn action during signup when a LinkedIn URL is provide
 test("does not complete the LinkedIn action during signup without a LinkedIn URL", async () => {
   await createStudentProfile("u1", {
     name: "Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
     course: "Engenharia Informática",
     privacyPolicyAccepted: true,
     termsAccepted: true,
@@ -197,6 +200,7 @@ test("signup persists consent versions and a server-generated acceptance time", 
   const before = Date.now();
   await createStudentProfile("u1", {
     name: "Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
     year: "3º Ano Licenciatura",
     course: "Engenharia Informática",
     interests: [],
@@ -222,6 +226,7 @@ test("createStudentProfile consumes CV upload and marks action complete when cvI
   vi.mocked(consumeCvUpload).mockResolvedValue(true);
   await createStudentProfile("u1", {
     name: "Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
     year: "3º Ano Licenciatura",
     course: "Engenharia Informática",
     interests: [],
@@ -252,6 +257,7 @@ test("createStudentProfile rolls back transaction when createStudent fails", asy
   await expect(
     createStudentProfile("u1", {
       name: "Student",
+      institutionalEmail: "1234567@isep.ipp.pt",
       year: "3º Ano Licenciatura",
       course: "Engenharia Informática",
       interests: [],
@@ -290,12 +296,12 @@ test("setStudentCv propagates 409 when consumeCvUpload throws superseded error",
     new HttpError("CV upload superseded", 409)
   );
 
-  await expect(
-    setStudentCv("ABC123", "candidate-cv-id")
-  ).rejects.toMatchObject({
-    status: 409,
-    message: "CV upload superseded",
-  });
+  await expect(setStudentCv("ABC123", "candidate-cv-id")).rejects.toMatchObject(
+    {
+      status: 409,
+      message: "CV upload superseded",
+    }
+  );
 
   expect(updateStudentCv).not.toHaveBeenCalled();
   expect(completeAction).not.toHaveBeenCalled();
@@ -320,3 +326,24 @@ test("setStudentCv updates student CV and completes action when consumeCvUpload 
   );
 });
 
+test("onboarding assigns the student role and contact in the profile transaction", async () => {
+  await createStudentProfile("admin-id", {
+    name: "Admin Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
+    course: "LEI",
+    year: "1º Ano Licenciatura",
+    interests: [],
+    privacyPolicyAccepted: true,
+    termsAccepted: true,
+    privacyPolicyVersion: "2026-10-31",
+    termsVersion: "2026-11-11",
+  });
+  expect(setUserRole).toHaveBeenCalledWith("admin-id", "STUDENT", tx);
+  expect(createStudent).toHaveBeenCalledWith(
+    expect.objectContaining({
+      userId: "admin-id",
+      institutionalEmail: "1234567@isep.ipp.pt",
+    }),
+    tx
+  );
+});

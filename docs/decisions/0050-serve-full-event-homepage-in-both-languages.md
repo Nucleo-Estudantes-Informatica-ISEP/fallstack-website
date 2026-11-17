@@ -1,8 +1,8 @@
-# 0049: Serve the full event homepage in both languages
+# 0050: Serve the full event homepage in both languages
 
 Status: Accepted
 Date: 2026-11-17
-Supersedes: [ADR 0048](0048-full-event-page-language.md)
+Supersedes: [ADR 0049](0049-full-event-page-language.md)
 
 ## Context
 
