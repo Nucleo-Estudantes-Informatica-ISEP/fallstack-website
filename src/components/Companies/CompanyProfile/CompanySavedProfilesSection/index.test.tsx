@@ -132,7 +132,7 @@ test.each([
   }
 );
 
-test("continues to save a signed QR token without exchanging it", async () => {
+test("exchanges a signed live QR before saving and opening the preview", async () => {
   scan.value = "existing-jwt";
   render(<CompanySavedProfilesSection history={[]} />);
 
@@ -140,10 +140,13 @@ test("continues to save a signed QR token without exchanging it", async () => {
 
   await waitFor(() =>
     expect(postMock).toHaveBeenCalledWith("/saved", {
-      token: "existing-jwt",
+      token: "signed-preview-token",
     })
   );
-  expect(getTokenMock).not.toHaveBeenCalled();
+  expect(getTokenMock).toHaveBeenCalledWith({ token: "existing-jwt" });
+  expect(pushMock).toHaveBeenCalledWith(
+    "/student/signed-preview-token/preview"
+  );
 });
 
 test("rejects an unknown Wallet code without saving it as a JWT", async () => {
@@ -259,7 +262,11 @@ test("a failure followed by a different valid scan processes successfully", asyn
   getTokenMock.mockResolvedValueOnce("signed-preview-token-cd34");
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
 
-  await waitFor(() => expect(pushMock).toHaveBeenCalledWith("/student/signed-preview-token-cd34/preview"));
+  await waitFor(() =>
+    expect(pushMock).toHaveBeenCalledWith(
+      "/student/signed-preview-token-cd34/preview"
+    )
+  );
   expect(getTokenMock).toHaveBeenCalledTimes(2);
   expect(messageArea()).toBeEmptyDOMElement();
 });
@@ -397,7 +404,11 @@ test.each(["ABC", "ABCDEFG", "AB!2"])(
   async (code) => {
     render(<CompanySavedProfilesSection history={[]} />);
     typeCode(code);
-    await waitFor(() => expect(messageArea()).toHaveTextContent("O código introduzido é inválido."));
+    await waitFor(() =>
+      expect(messageArea()).toHaveTextContent(
+        "O código introduzido é inválido."
+      )
+    );
     expect(getTokenMock).not.toHaveBeenCalled();
     expect(postMock).not.toHaveBeenCalled();
   }
@@ -539,4 +550,23 @@ test("a failed CV export shows a Portuguese message and re-enables the button", 
     )
   );
   expect(screen.getByRole("button", { name: "Download CVs" })).toBeEnabled();
+});
+
+test("rejects an expired signed QR without saving a profile", async () => {
+  scan.value = "expired-attendance-token";
+  getTokenMock.mockResolvedValue(null);
+  render(<CompanySavedProfilesSection history={[]} />);
+  fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
+  await waitFor(() =>
+    expect(getTokenMock).toHaveBeenCalledWith({
+      token: "expired-attendance-token",
+    })
+  );
+  await waitFor(() =>
+    expect(messageArea()).toHaveTextContent(
+      "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+    )
+  );
+  expect(postMock).not.toHaveBeenCalled();
+  expect(pushMock).not.toHaveBeenCalled();
 });

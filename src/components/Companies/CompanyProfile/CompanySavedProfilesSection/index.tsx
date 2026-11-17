@@ -197,11 +197,15 @@ const CompanySavedProfilesSection = ({
 
       const token = isStudentCode(data)
         ? await getStudentPreviewToken(normalizeStudentCode(data))
-        : data;
+        : await getStudentPreviewToken({ token: data });
 
       if (!token) {
         lastFailedScanRef.current = data;
-        showScanError("O código de estudante deste passe é inválido.");
+        showScanError(
+          isStudentCode(data)
+            ? "O código de estudante deste passe é inválido."
+            : "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+        );
         setProcessing(false);
         return;
       }
