@@ -40,6 +40,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   const router = useRouter();
 
   const courseRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const githubRef = useRef<HTMLInputElement>(null);
   const linkedinRef = useRef<HTMLInputElement>(null);
@@ -59,6 +60,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
   const handleSave = () => {
     const course = courseRef.current?.value.trim() ?? "";
+    const name = nameRef.current?.value.trim() ?? "";
+    if (!name) {
+      toast.error("Por favor, indica o teu nome.");
+      return;
+    }
     const courseChanged = course !== (student.course ?? "");
     if (courseChanged && !course) {
       toast.error("Por favor, indica o teu curso.");
@@ -116,6 +122,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       }
 
       await httpClient.patch(`/students/${student.code}`, {
+        name,
         bio: profile.bio ? profile.bio : undefined,
         github: githubRef.current?.value,
         linkedin: linkedinRef.current?.value,
@@ -151,9 +158,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           name="name"
           id="profile-name"
           label="Nome"
-          value={student.name}
-          readOnly
-          hint="Nome definido no registo."
+          defaultValue={student.name}
+          inputRef={nameRef}
+          maxLength={100}
         />
 
         {/* CURSO */}

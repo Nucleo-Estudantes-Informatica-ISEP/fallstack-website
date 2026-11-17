@@ -112,6 +112,7 @@ export const createStudent = (
 export const updateStudentProfile = (
   code: string,
   data: {
+    name?: string;
     bio?: string;
     linkedin?: string;
     github?: string;
@@ -122,7 +123,7 @@ export const updateStudentProfile = (
 ) =>
   db.student.update({
     where: { code },
-    data: { ...data, bio: data.bio?.trim() },
+    data: { ...data, name: data.name?.trim(), bio: data.bio?.trim() },
   });
 
 export const updateStudentMedia = (
