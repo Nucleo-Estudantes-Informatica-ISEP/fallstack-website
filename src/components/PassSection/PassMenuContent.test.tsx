@@ -32,6 +32,17 @@ const lastCardProps = () => vi.mocked(StyledPassCard).mock.lastCall?.[0];
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.spyOn(offlinePassModule, "downloadOfflinePass").mockImplementation(
+    () => {}
+  );
+  Object.defineProperty(navigator, "share", {
+    value: undefined,
+    configurable: true,
+  });
+  Object.defineProperty(navigator, "canShare", {
+    value: undefined,
+    configurable: true,
+  });
   Object.defineProperty(navigator, "clipboard", {
     value: { writeText },
     configurable: true,
@@ -199,8 +210,8 @@ test("a six-character code and a 60-character name keep the card props and wrap"
 test("handles successful offline pass download", async () => {
   vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
   const downloadSpy = vi
-    .spyOn(offlinePassModule, "downloadOfflinePass")
-    .mockResolvedValue();
+    .spyOn(offlinePassModule, "generateOfflinePass")
+    .mockResolvedValue(new File(["png"], "pass.png", { type: "image/png" }));
 
   render(<PassMenuContent student={student} />);
   await waitFor(() => expect(lastCardProps()?.loading).toBe(false));
@@ -227,9 +238,11 @@ test("handles successful offline pass download", async () => {
 test("displays error alert when offline pass download fails and allows retry", async () => {
   vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
   const downloadSpy = vi
-    .spyOn(offlinePassModule, "downloadOfflinePass")
+    .spyOn(offlinePassModule, "generateOfflinePass")
     .mockRejectedValueOnce(new Error("Canvas failure"))
-    .mockResolvedValueOnce();
+    .mockResolvedValueOnce(
+      new File(["png"], "pass.png", { type: "image/png" })
+    );
 
   render(<PassMenuContent student={student} />);
   await waitFor(() => expect(lastCardProps()?.loading).toBe(false));
@@ -257,4 +270,97 @@ test("displays error alert when offline pass download fails and allows retry", a
   });
 
   expect(downloadButton).toBeEnabled();
+});
+
+test("prepares the PNG before opening the share sheet on a fresh tap", async () => {
+  vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
+  const file = new File(["png"], "pass.png", { type: "image/png" });
+  const generate = vi
+    .spyOn(offlinePassModule, "generateOfflinePass")
+    .mockResolvedValue(file);
+  const share = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(navigator, "share", {
+    value: share,
+    configurable: true,
+  });
+  Object.defineProperty(navigator, "canShare", {
+    value: vi.fn().mockReturnValue(true),
+    configurable: true,
+  });
+  render(<PassMenuContent student={student} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Descarregar Passe (Offline)" })
+  );
+  const save = await screen.findByRole("button", {
+    name: "Guardar Passe (Offline)",
+  });
+  expect(share).not.toHaveBeenCalled();
+  expect(offlinePassModule.downloadOfflinePass).not.toHaveBeenCalled();
+  fireEvent.click(save);
+  expect(share).toHaveBeenCalledWith({ files: [file] });
+  await waitFor(() => expect(save).toBeEnabled());
+  expect(generate).toHaveBeenCalledOnce();
+
+  share.mockRejectedValueOnce(new DOMException("Cancelled", "AbortError"));
+  fireEvent.click(save);
+  await waitFor(() => expect(save).toBeEnabled());
+  expect(screen.queryByRole("alert")).toBeNull();
+
+  share.mockRejectedValueOnce(new Error("Share failed"));
+  fireEvent.click(save);
+  expect(await screen.findByRole("alert")).toBeVisible();
+  fireEvent.click(save);
+  await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+});
+
+test("downloads when file sharing is unsupported", async () => {
+  vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
+  const file = new File(["png"], "pass.png", { type: "image/png" });
+  vi.spyOn(offlinePassModule, "generateOfflinePass").mockResolvedValue(file);
+  const share = vi.fn();
+  Object.defineProperty(navigator, "share", {
+    value: share,
+    configurable: true,
+  });
+  Object.defineProperty(navigator, "canShare", {
+    value: () => false,
+    configurable: true,
+  });
+  render(<PassMenuContent student={student} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Descarregar Passe (Offline)" })
+  );
+  await waitFor(() =>
+    expect(offlinePassModule.downloadOfflinePass).toHaveBeenCalledWith(file)
+  );
+  expect(share).not.toHaveBeenCalled();
+});
+
+test("clears the prepared pass when student identity changes", async () => {
+  vi.mocked(httpClient.get).mockResolvedValue({ data: "signed-token" });
+  vi.spyOn(offlinePassModule, "generateOfflinePass").mockResolvedValue(
+    new File(["png"], "pass.png", { type: "image/png" })
+  );
+  const share = vi.fn();
+  Object.defineProperty(navigator, "share", {
+    value: share,
+    configurable: true,
+  });
+  Object.defineProperty(navigator, "canShare", {
+    value: () => true,
+    configurable: true,
+  });
+  const { rerender } = render(<PassMenuContent student={student} />);
+  fireEvent.click(
+    screen.getByRole("button", { name: "Descarregar Passe (Offline)" })
+  );
+  await screen.findByRole("button", { name: "Guardar Passe (Offline)" });
+  rerender(<PassMenuContent student={{ ...student, code: "ABCDEF" }} />);
+  expect(
+    screen.getByRole("button", { name: "Descarregar Passe (Offline)" })
+  ).toBeEnabled();
+  expect(
+    screen.queryByRole("button", { name: "Guardar Passe (Offline)" })
+  ).toBeNull();
+  expect(share).not.toHaveBeenCalled();
 });
