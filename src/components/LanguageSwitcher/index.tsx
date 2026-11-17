@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import useLanguage from "@/hooks/useLanguage";
 import { ChevronDown, Globe } from "@/components/ui/Icons";
 
 const languages = [
@@ -16,8 +17,7 @@ export default function LanguageSwitcher() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname() || "";
 
-  const isEnglish = pathname.startsWith("/event/en");
-  const currentLang = isEnglish ? "en" : "pt";
+  const currentLang = useLanguage();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -78,7 +78,7 @@ export default function LanguageSwitcher() {
         <div
           role="menu"
           aria-orientation="vertical"
-          className="absolute right-0 top-full z-50 mt-1 min-w-[150px] rounded-lg border border-ui-border bg-ui-surface p-1.5 shadow-2xl backdrop-blur-md"
+          className="absolute top-full right-0 z-50 mt-1 min-w-[150px] rounded-lg border border-ui-border bg-ui-surface p-1.5 shadow-2xl backdrop-blur-md"
         >
           {languages.map((lang) => {
             const isActive = currentLang === lang.code;
@@ -87,7 +87,10 @@ export default function LanguageSwitcher() {
                 key={lang.code}
                 href={getTargetHref(lang.code)}
                 role="menuitem"
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  document.cookie = `fallstack-language=${lang.code}; Path=/; Max-Age=31536000; SameSite=Lax`;
+                  setIsOpen(false);
+                }}
                 className={`ui-focus flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                   isActive
                     ? "bg-primary/15 font-semibold text-primary"
@@ -95,7 +98,7 @@ export default function LanguageSwitcher() {
                 }`}
               >
                 <span>{lang.label}</span>
-                <span className="text-xs text-muted">{lang.short}</span>
+                <span className="text-muted text-xs">{lang.short}</span>
               </Link>
             );
           })}

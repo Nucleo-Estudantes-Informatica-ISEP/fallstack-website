@@ -1,6 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
 import { usePathname } from "next/navigation";
-import { describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import LanguageSwitcher from "./index";
 
@@ -9,6 +9,25 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("LanguageSwitcher", () => {
+  beforeEach(() => {
+    document.cookie = "fallstack-language=; Path=/; Max-Age=0";
+  });
+
+  it("saves English and restores it after navigating away", () => {
+    vi.mocked(usePathname).mockReturnValue("/event/pt");
+    const { rerender } = render(<LanguageSwitcher />);
+    fireEvent.click(screen.getByRole("button", { name: /selecionar idioma/i }));
+    const link = screen.getByRole("menuitem", { name: /english/i });
+    link.addEventListener("click", (event) => event.preventDefault());
+    fireEvent.click(link);
+    expect(document.cookie).toContain("fallstack-language=en");
+    vi.mocked(usePathname).mockReturnValue("/login");
+    rerender(<LanguageSwitcher />);
+    expect(
+      screen.getByRole("button", { name: /selecionar idioma/i })
+    ).toHaveTextContent("EN");
+  });
+
   it("renders trigger button with current language PT when on homepage or /event/pt", () => {
     vi.mocked(usePathname).mockReturnValue("/event/pt");
     render(<LanguageSwitcher />);

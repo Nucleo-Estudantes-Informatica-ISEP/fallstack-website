@@ -28,6 +28,13 @@ event homepage.
 ## Consequences
 
 Visitors can switch between Portuguese and English and retain their selection
-when reloading the event route. Shared controls default to Portuguese outside
-an explicitly English page. New public copy and accessible labels need coverage
-in both languages. Database translations remain editable by administrators.
+when reloading the event route. The language menu saves an explicit selection
+in a host-only, year-long
+`fallstack-language` cookie with `Path=/` and `SameSite=Lax`. Middleware uses
+validated `pt`/`en` preferences as the request language; explicit route and query
+languages still take precedence. The root redirect remains private and varies
+on both cookies and browser language. Shared navigation reads the saved choice
+outside event routes. Clearing cookies restores browser-language negotiation;
+pages without translations keep their existing copy. New public copy and
+accessible labels need coverage in both languages. Database translations remain
+editable by administrators.

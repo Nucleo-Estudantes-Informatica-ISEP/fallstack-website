@@ -12,7 +12,7 @@ export function GET(request: NextRequest) {
     headers: {
       Location: `/event/${language.toLowerCase()}`,
       "Cache-Control": "private, no-store",
-      Vary: "Accept-Language",
+      Vary: "Accept-Language, Cookie",
     },
   });
 }
