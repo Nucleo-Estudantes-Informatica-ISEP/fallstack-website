@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { isStagingEnvironment } from "@/lib/seo";
 import { buildCsp } from "@/security/csp";
 import {
   INSTANCE_ID_HEADER,
@@ -9,6 +10,11 @@ import {
 } from "@/security/instanceId";
 
 export function middleware(request: NextRequest) {
+  const isStaging = isStagingEnvironment({
+    headers: request.headers,
+    hostname: request.nextUrl.hostname,
+  });
+
   const requestHeaders = new Headers(request.headers);
   const language = request.cookies.get("fallstack-language")?.value;
   if (language === "pt" || language === "en") {
@@ -20,6 +26,12 @@ export function middleware(request: NextRequest) {
       request: { headers: requestHeaders },
     });
     passThrough.headers.set(INSTANCE_ID_HEADER, instanceId);
+    if (isStaging) {
+      passThrough.headers.set(
+        "X-Robots-Tag",
+        "noindex, nofollow, noarchive"
+      );
+    }
     return passThrough;
   }
 
@@ -37,6 +49,12 @@ export function middleware(request: NextRequest) {
   });
   response.headers.set("Content-Security-Policy", csp);
   response.headers.set(INSTANCE_ID_HEADER, instanceId);
+  if (isStaging) {
+    response.headers.set(
+      "X-Robots-Tag",
+      "noindex, nofollow, noarchive"
+    );
+  }
 
   return response;
 }

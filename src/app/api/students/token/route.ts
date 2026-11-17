@@ -50,7 +50,7 @@ export const POST = defineHandler({
 
       let token: string | null;
       try {
-        token = await jwtStudent(body.code);
+        token = await jwtStudent("code" in body ? body.code : body);
       } catch (error) {
         reservation.release();
         throw error;

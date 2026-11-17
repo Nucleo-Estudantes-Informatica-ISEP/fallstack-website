@@ -94,7 +94,15 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      await saveAndOpenStudent(data);
+      const token = await getStudentPreviewToken({ token: data });
+      if (!token) {
+        toast.error(
+          "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+        );
+        setProcessing(false);
+        return;
+      }
+      await saveAndOpenStudent(token);
     } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");
