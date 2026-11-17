@@ -1,5 +1,15 @@
+import type { Metadata } from "next";
+
 import SessionAuthLayout from "@/components/SessionAuthLayout";
 import Topbar from "@/components/TopBar";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+    noarchive: true,
+  },
+};
 
 export const dynamic = "force-dynamic";
 

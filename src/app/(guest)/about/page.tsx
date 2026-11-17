@@ -1,7 +1,16 @@
+import type { Metadata } from "next";
 import React from "react";
 import Link from "next/link";
 
 import { branding } from "@/edition/branding";
+import { createPublicPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicPageMetadata({
+  title: "Sobre o Fallstack | NEI-ISEP",
+  description:
+    "Conhece a equipa organizadora do Fallstack 2026, o Núcleo de Estudantes de Informática do ISEP (NEI-ISEP), contactos de suporte e repositório oficial.",
+  path: "/about",
+});
 
 const linkClass =
   "ui-focus break-words text-primary underline underline-offset-4";

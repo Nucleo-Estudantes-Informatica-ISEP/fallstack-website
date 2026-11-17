@@ -1,6 +1,15 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { TERMS_VERSION } from "@/domain/student/signupPolicy";
+import { createPublicPageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = createPublicPageMetadata({
+  title: "Termos de Utilização | Fallstack 2026",
+  description:
+    "Termos de utilização da plataforma Fallstack 2026 para estudantes e participantes no evento.",
+  path: "/terms",
+});
 
 export default function TermsPage() {
   return (
