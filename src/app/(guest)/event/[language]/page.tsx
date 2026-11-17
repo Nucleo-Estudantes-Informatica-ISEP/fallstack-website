@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 import { serverEnv } from "@/config/env.server";
 import type { HomepageSections } from "@/components/Content";
@@ -35,8 +35,6 @@ export default async function EventPage({
     return <OffseasonLanding language={language} />;
   }
   if (serverEnv.SHOWCASE_FULL_WEBSITE) {
-    // The full event page has Portuguese editorial copy only.
-    if (slug !== "pt") redirect("/event/pt");
     const [schedule, companies, sponsors, faqs] = await Promise.all([
       getPublicSchedule(language),
       getPublicCompanyRoster(language),
@@ -44,10 +42,28 @@ export default async function EventPage({
       getPublicFaqs(language),
     ]);
     const sections: HomepageSections = {
-      schedule: <HomepageSection section="schedule" data={schedule} />,
-      companies: <HomepageSection section="companies" data={companies} />,
-      sponsors: <HomepageSection section="sponsors" data={sponsors} />,
-      faqs: <HomepageSection section="faqs" data={faqs} />,
+      schedule: (
+        <HomepageSection
+          language={language}
+          section="schedule"
+          data={schedule}
+        />
+      ),
+      companies: (
+        <HomepageSection
+          language={language}
+          section="companies"
+          data={companies}
+        />
+      ),
+      sponsors: (
+        <HomepageSection
+          language={language}
+          section="sponsors"
+          data={sponsors}
+        />
+      ),
+      faqs: <HomepageSection language={language} section="faqs" data={faqs} />,
     };
     return <HomePage language={language} sections={sections} />;
   }

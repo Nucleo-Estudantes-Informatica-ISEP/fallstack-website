@@ -4,8 +4,10 @@ import { FunctionComponent } from "react";
 
 import Schedule, { type ScheduleDay } from "@/components/Schedule";
 import type { ScheduleEventDto } from "@/application/dto/scheduleDto";
+import { Language } from "@/domain/i18n/translations";
 
 interface ScheduleSectionProps {
+  language?: Language;
   firstDayTitle: string;
   secondDayTitle: string;
   events: readonly ScheduleEventDto[];
@@ -35,9 +37,11 @@ const ScheduleSection: FunctionComponent<ScheduleSectionProps> = ({
   firstDayTitle,
   secondDayTitle,
   events,
+  language = Language.PT,
 }) => {
   return (
     <Schedule
+      language={language}
       firstDayTitle={firstDayTitle}
       secondDayTitle={secondDayTitle}
       scheduleEvents={groupByDay(events)}

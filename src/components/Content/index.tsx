@@ -4,6 +4,7 @@ import HeadingText from "@/components/ui/HeadingText";
 import InfoText from "@/components/InfoText";
 import PassSection from "@/components/PassSection";
 import type { HomepageDto } from "@/application/dto/homepageDto";
+import { Language } from "@/domain/i18n/translations";
 import { edition } from "@/edition";
 
 export type HomepageSections = Record<keyof HomepageDto, ReactNode>;
@@ -11,9 +12,15 @@ export type HomepageSections = Record<keyof HomepageDto, ReactNode>;
 interface ContentProps {
   contentRef: React.RefObject<HTMLDivElement>;
   sections: HomepageSections;
+  language?: Language;
 }
 
-const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
+const Content: React.FC<ContentProps> = ({
+  contentRef,
+  sections,
+  language = Language.PT,
+}) => {
+  const isEnglish = language === Language.EN;
   const { branding } = edition;
 
   return (
@@ -21,7 +28,15 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
       <section className="artwork-clean artwork-readable w-full bg-cover bg-center bg-no-repeat py-12">
         <InfoText
           days={branding.event.days}
-          month={branding.event.month}
+          language={language}
+          month={
+            isEnglish
+              ? new Intl.DateTimeFormat("en-GB", {
+                  month: "long",
+                  timeZone: "Europe/Lisbon",
+                }).format(new Date(branding.event.startsAt))
+              : branding.event.month
+          }
           year={branding.year}
           beginningTime={branding.event.beginningTime}
           endTime={branding.event.endTime}
@@ -38,13 +53,17 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
         <section className="flex w-full flex-col items-center">
           <HeadingText
             className="font-normal! lg:text-4xl!"
-            text="Jantar Empresarial"
+            text={isEnglish ? "Business Dinner" : "Jantar Empresarial"}
           />
           <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-            O Jantar Empresarial está confirmado para o FallStack 2026.
+            {isEnglish
+              ? "The Business Dinner is confirmed for FallStack 2026."
+              : "O Jantar Empresarial está confirmado para o FallStack 2026."}
           </p>
           <p className="mt-2 w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-            Mais informações em breve.
+            {isEnglish
+              ? "More information coming soon."
+              : "Mais informações em breve."}
           </p>
         </section>
         <section className="flex w-full flex-col items-center">
@@ -53,14 +72,15 @@ const Content: React.FC<ContentProps> = ({ contentRef, sections }) => {
             text="Speed Interviews"
           />
           <p className="w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-            As Speed Interviews estão de volta, proporcionando um ponto de
-            contacto direto entre empresas e estudantes finalistas.
+            {isEnglish
+              ? "Speed Interviews are back, connecting companies directly with final-year students."
+              : "As Speed Interviews estão de volta, proporcionando um ponto de contacto direto entre empresas e estudantes finalistas."}
           </p>
         </section>
       </div>
 
       <section className="w-full bg-background px-0!">
-        <PassSection />
+        <PassSection language={language} />
       </section>
 
       <section className="w-full bg-background px-0!">

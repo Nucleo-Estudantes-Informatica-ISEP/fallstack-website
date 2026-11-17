@@ -9,6 +9,7 @@ import FaqSection from "@/components/Faq/FaqSection";
 import ScheduleSection from "@/components/ScheduleSection";
 import SponsorsSection from "@/components/SponsorsSection";
 import type { HomepageDto } from "@/application/dto/homepageDto";
+import { Language } from "@/domain/i18n/translations";
 
 import Content from ".";
 
@@ -167,4 +168,34 @@ test("homepage sections follow the design order", () => {
 test("empty acknowledgements do not leave an orphan heading", () => {
   render(<SponsorsSection sponsors={[]} />);
   expect(screen.queryByText("Agradecimentos")).not.toBeInTheDocument();
+});
+
+test("English editorial content replaces Portuguese headings, dates and descriptions", () => {
+  render(
+    <Content
+      contentRef={createRef<HTMLDivElement>()}
+      sections={sections(data)}
+      language={Language.EN}
+    />
+  );
+  expect(
+    screen.getByRole("link", { name: "Getting here" })
+  ).toBeInTheDocument();
+  expect(screen.getByText("17 and 18 November 2026")).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Business Dinner" })
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText("The Business Dinner is confirmed for FallStack 2026.")
+  ).toBeInTheDocument();
+  expect(screen.getByText("More information coming soon.")).toBeInTheDocument();
+  expect(
+    screen.getByText(
+      "Speed Interviews are back, connecting companies directly with final-year students."
+    )
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "FallStack Pass" })
+  ).toBeInTheDocument();
+  expect(screen.queryByText("Jantar Empresarial")).not.toBeInTheDocument();
 });

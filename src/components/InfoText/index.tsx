@@ -5,8 +5,10 @@ import { motion } from "framer-motion";
 import { QuestionCircle } from "@/components/ui/Icons";
 import PrimaryLinkButton from "@/components/ui/PrimaryLinkButton";
 import EventInfos from "@/components/EventInfos";
+import { Language } from "@/domain/i18n/translations";
 
 interface InfoTextProps {
+  language?: Language;
   days: number[];
   month: string;
   year: number;
@@ -15,6 +17,7 @@ interface InfoTextProps {
 }
 
 const InfoText: React.FC<InfoTextProps> = ({
+  language = Language.PT,
   days,
   month,
   year,
@@ -35,6 +38,7 @@ const InfoText: React.FC<InfoTextProps> = ({
       className="flex flex-col items-center gap-6 text-center text-base sm:text-lg md:px-8 lg:flex-row lg:items-center lg:justify-between lg:text-left lg:text-xl"
     >
       <EventInfos
+        language={language}
         days={days}
         month={month}
         year={year}
@@ -49,7 +53,8 @@ const InfoText: React.FC<InfoTextProps> = ({
         rel="noopener noreferrer"
         className="w-full max-w-xs justify-center gap-2 px-4! py-3! text-base font-semibold sm:text-lg lg:mt-0 lg:w-auto lg:self-center"
       >
-        <QuestionCircle /> Como chegar?
+        <QuestionCircle />{" "}
+        {language === Language.EN ? "Getting here" : "Como chegar?"}
       </PrimaryLinkButton>
     </motion.section>
   );

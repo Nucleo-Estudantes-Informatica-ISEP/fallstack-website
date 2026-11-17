@@ -113,19 +113,22 @@ test.each([
   expect(html).not.toContain("Offseason landing");
 });
 
-test("showcase renders the full website in the resolved language", async () => {
+test.each([
+  ["pt", "PT"],
+  ["en", "EN"],
+])("showcase renders the full website in %s", async (slug, language) => {
   config.SHOWCASE_FULL_WEBSITE = true;
 
   const page = await Page({
-    params: Promise.resolve({ language: "pt" }),
+    params: Promise.resolve({ language: slug }),
   });
 
   const html = renderToStaticMarkup(page);
 
-  expect(html).toContain("Full website PT");
+  expect(html).toContain(`Full website ${language}`);
 
   for (const section of ["schedule", "companies", "faqs"]) {
-    expect(html).toContain(`${section} PT`);
+    expect(html).toContain(`${section} ${language}`);
   }
 
   expect(html).toContain("sponsors public");
@@ -172,11 +175,4 @@ test.each([
   expect(html).not.toContain("Full website");
   expect(html).not.toContain("Countdown");
   expect(getPublicCompanyRoster).not.toHaveBeenCalled();
-});
-
-test("full event page uses Portuguese consistently for English browser requests", async () => {
-  config.SHOWCASE_FULL_WEBSITE = true;
-  await expect(
-    Page({ params: Promise.resolve({ language: "en" }) })
-  ).rejects.toThrow("Redirect: /event/pt");
 });

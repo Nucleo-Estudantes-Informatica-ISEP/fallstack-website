@@ -213,3 +213,13 @@ test("existing employees are routed to the dashboard instead of the company-code
     screen.getByRole("link", { name: "Ir para o dashboard da empresa" })
   ).toHaveAttribute("href", "/dashboard");
 });
+
+test("employee signup is a text link without primary-button styling", () => {
+  render(<LoginCard />);
+  const link = screen.getByRole("link", {
+    name: "Tens um código de empresa? Regista-te como colaborador",
+  });
+  expect(link).toHaveAttribute("href", "/signup/employee");
+  expect(link).toHaveClass("text-gray-300", "underline");
+  expect(link).not.toHaveClass("bg-white", "px-10", "py-4");
+});
