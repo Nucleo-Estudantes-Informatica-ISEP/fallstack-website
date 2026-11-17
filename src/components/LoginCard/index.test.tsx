@@ -51,7 +51,7 @@ test("uses AuthNEI as the single login method", () => {
     screen.queryByLabelText("A tua palavra-passe")
   ).not.toBeInTheDocument();
   expect(
-    screen.getByRole("button", {
+    screen.getByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
   ).toBeInTheDocument();
@@ -82,22 +82,14 @@ test("sends password recovery to AuthNEI instead of a local reset flow", () => {
   ).not.toBeInTheDocument();
 });
 
-test("employee onboarding requires AuthNEI first when logged out", () => {
+test("employee registration links to the employee signup flow", () => {
   render(<LoginCard />);
 
-  fireEvent.click(
-    screen.getByRole("button", {
+  expect(
+    screen.getByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
-  );
-
-  expect(
-    screen.getByRole("heading", { name: "Registo de Colaborador" })
-  ).toBeInTheDocument();
-  expect(screen.getByText("Continuar com AuthNEI")).toHaveAttribute(
-    "data-next",
-    "/login?modal=employee"
-  );
+  ).toHaveAttribute("href", "/signup/employee");
 });
 
 test("authenticated users can redeem a company code", () => {
@@ -150,7 +142,7 @@ test("offseason hides student and employee registration links", () => {
   ).not.toBeInTheDocument();
 
   expect(
-    screen.queryByRole("button", {
+    screen.queryByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
   ).not.toBeInTheDocument();

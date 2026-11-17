@@ -128,13 +128,12 @@ const LoginCard: React.FC<LoginCardProps> = ({
               >
                 Criar uma conta
               </PrimaryLinkButton>
-              <button
-                type="button"
-                onClick={() => setRegisteringEmployee(true)}
+              <PrimaryLinkButton
+                href="/signup/employee"
                 className="mt-6 min-h-11 w-full text-center text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 Tens um código de empresa? Regista-te como colaborador
-              </button>
+              </PrimaryLinkButton>
             </>
           )}
         </>
