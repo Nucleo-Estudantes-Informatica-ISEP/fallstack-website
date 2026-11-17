@@ -122,7 +122,9 @@ describe("SEO - Public Page Metadata", () => {
     expect(meta.openGraph?.url).toBe("https://fallstack.nei-isep.org/about");
     expect(meta.openGraph?.locale).toBe("pt_PT");
     expect(meta.openGraph?.alternateLocale).toEqual(["en_US"]);
-    expect(meta.twitter?.card).toBe("summary_large_image");
+    expect((meta.twitter as { card?: string } | undefined)?.card).toBe(
+      "summary_large_image"
+    );
     expect(meta.openGraph?.images).toEqual([DEFAULT_OG_IMAGE]);
   });
 

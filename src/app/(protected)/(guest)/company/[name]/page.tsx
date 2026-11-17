@@ -32,13 +32,15 @@ export async function generateMetadata(
     }
 
     const title = `${company.name} | Fallstack 2026`;
+    const snippet = company.profile?.bodyText
+      ? company.profile.bodyText.slice(0, 155).trim()
+      : "";
     const description =
-      company.profile.descriptionPT ||
-      company.profile.descriptionEN ||
+      snippet ||
       `${company.name} presente na 9ª edição do Fallstack 2026 no ISEP.`;
 
-    const images = company.profile.banner
-      ? [{ url: company.profile.banner, alt: `${company.name} Banner` }]
+    const images = company.avatar
+      ? [{ url: company.avatar, alt: `${company.name} Logo` }]
       : undefined;
 
     return createPublicPageMetadata({
