@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { PrismaClient } from "@prisma/client";
@@ -17,44 +18,66 @@ test("FAQ migration repairs copied translations, preserves custom English and Po
     ),
     "utf8"
   );
+  const marker = `faq-test-${randomUUID()}: `;
   const rollback = new Error("rollback FAQ fixtures");
   await expect(
     prisma.$transaction(async (tx) => {
-      await tx.faqEntry.deleteMany();
+      const minimum = await tx.faqEntry.aggregate({ _min: { order: true } });
+      const order = Math.min(minimum._min.order ?? 0, 0) - 4;
       const copied = await tx.faqEntry.create({
         data: {
-          order: 0,
+          order,
           question: {
-            PT: "Como me inscrevo no evento?",
-            EN: "Como me inscrevo no evento?",
+            PT: marker + "Como me inscrevo no evento?",
+            EN: marker + "Como me inscrevo no evento?",
           },
           answer: { PT: "Resposta original", EN: "Resposta original" },
         },
       });
       const edited = await tx.faqEntry.create({
         data: {
-          order: 1,
+          order: order + 1,
           question: {
-            PT: "O meu CV vai ser enviado para as empresas?",
-            EN: "Custom English question",
+            PT: marker + "O meu CV vai ser enviado para as empresas?",
+            EN: marker + "Custom English question",
           },
           answer: { PT: "Resposta editada", EN: "Custom English answer" },
         },
       });
       const missing = await tx.faqEntry.create({
         data: {
-          order: 2,
-          question: { PT: "Existe algum custo associado ao evento?" },
+          order: order + 2,
+          question: { PT: marker + "Existe algum custo associado ao evento?" },
           answer: { PT: "Gratuito" },
         },
       });
-      await tx.$executeRawUnsafe(sql);
+      const absences = await tx.faqEntry.create({
+        data: {
+          order: order + 3,
+          question: {
+            PT: marker + "As faltas são justificadas durante o evento?",
+            EN: marker + "As faltas são justificadas durante o evento?",
+          },
+          answer: { PT: "Resposta original", EN: "Resposta original" },
+        },
+      });
+      // Run the migration only against this transaction's marker fixtures.
+      const fixtureIds = [copied, edited, missing, absences].map(
+        ({ id }) => id
+      );
+      const fixtureSql = sql
+        .replace(/\('([^']+)', '([^']+)',/g, `('${marker}$1', '${marker}$2',`)
+        .replace(
+          'WHERE faq."question"',
+          `WHERE faq."id" IN (${fixtureIds.map((id) => `'${id}'::uuid`).join(",")}) AND faq."question"`
+        );
+      await tx.$executeRawUnsafe(fixtureSql);
       const repaired = await tx.faqEntry.findUniqueOrThrow({
         where: { id: copied.id },
       });
       expect(repaired.question).toEqual({
-        PT: "Como me inscrevo no evento?",
-        EN: "How do I register for the event?",
+        PT: marker + "Como me inscrevo no evento?",
+        EN: marker + "How do I register for the event?",
       });
       expect(repaired.answer).toMatchObject({
         PT: "Resposta original",
@@ -66,8 +89,20 @@ test("FAQ migration repairs copied translations, preserves custom English and Po
       expect(
         (await tx.faqEntry.findUniqueOrThrow({ where: { id: missing.id } }))
           .question
-      ).toMatchObject({ EN: "Is there a cost to attend?" });
-      await tx.$executeRawUnsafe(sql);
+      ).toMatchObject({ EN: marker + "Is there a cost to attend?" });
+      expect(
+        await tx.faqEntry.findUniqueOrThrow({ where: { id: absences.id } })
+      ).toMatchObject({
+        question: {
+          PT: marker + "As faltas são justificadas durante o evento?",
+          EN: marker + "Are absences excused during the event?",
+        },
+        answer: {
+          PT: "Resposta original",
+          EN: expect.stringContaining("third-year Computer Engineering"),
+        },
+      });
+      await tx.$executeRawUnsafe(fixtureSql);
       expect(
         await tx.faqEntry.findUniqueOrThrow({ where: { id: copied.id } })
       ).toEqual(repaired);
