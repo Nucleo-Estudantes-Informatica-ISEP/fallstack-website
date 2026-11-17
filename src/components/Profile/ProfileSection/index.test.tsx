@@ -64,13 +64,12 @@ test("labels biography, shows one live counter and exposes interest selection", 
   expect(interest).toHaveAttribute("aria-pressed", "true");
 });
 
-test("shows locked fields as read-only with short explanatory hints and readable labels", () => {
+test("shows editable and locked fields with readable labels", () => {
   render(<Profile />);
 
   const nameInput = screen.getByLabelText("Nome");
-  expect(nameInput).toHaveAttribute("readonly");
+  expect(nameInput).not.toHaveAttribute("readonly");
   expect(nameInput).toHaveValue("Student Example");
-  expect(nameInput).toHaveAccessibleDescription("Nome definido no registo.");
 
   const yearInput = screen.getByLabelText("Ano");
   expect(yearInput).toHaveAttribute("readonly");
@@ -117,6 +116,7 @@ test("Guardar still saves the profile through the same request", async () => {
 
   await waitFor(() =>
     expect(httpClient.patch).toHaveBeenCalledWith("/students/123", {
+      name: "Student Example",
       bio: "Nova bio",
       github: "",
       linkedin: "",
@@ -136,6 +136,20 @@ test("saves edited institutional email with the profile", async () => {
     expect(httpClient.patch).toHaveBeenCalledWith(
       "/students/123",
       expect.objectContaining({ institutionalEmail: "1234568@isep.ipp.pt" })
+    )
+  );
+});
+
+test("saves an edited name with the profile", async () => {
+  render(<Profile />);
+  fireEvent.change(screen.getByLabelText("Nome"), {
+    target: { value: "  New Name  " },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() =>
+    expect(httpClient.patch).toHaveBeenCalledWith(
+      "/students/123",
+      expect.objectContaining({ name: "New Name" })
     )
   );
 });

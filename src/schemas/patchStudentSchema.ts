@@ -5,6 +5,7 @@ import { linkedinOrEmptySchema } from "./linkedinSchema";
 
 export const patchStudentSchema = z
   .object({
+    name: z.string().trim().min(1).max(100),
     course: z.string().trim().min(1).max(100),
     institutionalEmail: institutionalEmailSchema,
     bio: z.string().max(1000),
