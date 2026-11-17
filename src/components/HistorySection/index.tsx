@@ -3,6 +3,7 @@
 import { useId } from "react";
 import Link from "next/link";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -16,6 +17,8 @@ const headerCell =
 const bodyCell = "px-2 py-3 align-top md:py-4 md:text-center";
 
 const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
+  const t = useUiText();
+
   const captionId = useId();
 
   return (
@@ -28,7 +31,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
     >
       <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm text-white md:text-base">
         <caption id={captionId} className="sr-only">
-          Histórico de scans
+          {t("Histórico de scans")}
         </caption>
         <colgroup>
           <col className="w-1/2" />
@@ -38,13 +41,13 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
         <thead>
           <tr>
             <th scope="col" className={headerCell}>
-              Nome
+              {t("Nome")}
             </th>
             <th scope="col" className={`${headerCell} border-l md:border-l-0`}>
-              Data
+              {t("Data")}
             </th>
             <th scope="col" className={`${headerCell} border-l md:border-l-0`}>
-              Ação
+              {t("Ação")}
             </th>
           </tr>
         </thead>
@@ -52,7 +55,7 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
           {!historyData.length ? (
             <tr>
               <td colSpan={3} className="px-2 py-4 text-center">
-                Os teus scans aparecerão aqui!
+                {t("Os teus scans aparecerão aqui!")}
               </td>
             </tr>
           ) : (
@@ -77,7 +80,9 @@ const HistorySection = ({ historyData, isCompany }: HistorySectionProps) => {
                     {formatDateDDStrMonthHourMin(item.createdAt)}
                   </time>
                 </td>
-                <td className={`${bodyCell} font-bold text-primary`}>SALVO</td>
+                <td className={`${bodyCell} font-bold text-primary`}>
+                  {t("SALVO")}
+                </td>
               </tr>
             ))
           )}

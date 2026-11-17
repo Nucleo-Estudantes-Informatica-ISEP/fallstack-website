@@ -1,5 +1,6 @@
 "use client";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import slugifyId from "@/utils/slugifyId";
 
 export type SelectOption = string | { value: string; label: string };
@@ -26,6 +27,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
   defaultValue,
   ...rest
 }) => {
+  const t = useUiText();
   const resolvedId = id || slugifyId(name) || undefined;
 
   return (
@@ -37,14 +39,14 @@ const InputSelect: React.FC<InputSelectProps> = ({
           }`}
           htmlFor={resolvedId}
         >
-          {name}
+          {t(name)}
         </label>
       )}
 
       <div className="relative flex w-full items-center">
         <select
           {...rest}
-          name={name}
+          name={t(name)}
           id={resolvedId}
           disabled={disabled}
           defaultValue={defaultValue ?? (placeholder ? "" : undefined)}
@@ -53,7 +55,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
         >
           {placeholder && (
             <option value="" disabled className="bg-background text-gray-400">
-              {placeholder}
+              {t(placeholder)}
             </option>
           )}
 
@@ -67,7 +69,7 @@ const InputSelect: React.FC<InputSelectProps> = ({
                 value={value}
                 className="bg-neutral-900 text-white"
               >
-                {label}
+                {t(label)}
               </option>
             );
           })}

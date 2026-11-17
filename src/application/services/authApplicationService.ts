@@ -89,6 +89,15 @@ export async function completeZitadelSignIn(input: {
     isGlobalAdmin: input.identity.isGlobalAdmin,
   });
 
+  if (
+    user.active === false ||
+    (!input.identity.isGlobalAdmin &&
+      user.role === "EMPLOYEE" &&
+      user.employee?.company.active === false)
+  ) {
+    return "/login?error=account-inactive";
+  }
+
   if (user.role === "EMPLOYEE" && user.employee && !input.identity.isEmployee) {
     await assignEmployeeRole(input.identity.sub);
     input.identity.isEmployee = true;

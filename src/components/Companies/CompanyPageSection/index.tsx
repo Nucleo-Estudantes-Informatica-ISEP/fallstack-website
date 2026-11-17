@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import {
   Facebook,
   Globe,
@@ -21,6 +22,8 @@ interface CompanyPageSectionProps {
 }
 
 const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
+  const t = useUiText();
+
   const profile = company.profile;
   if (!profile) return null;
 
@@ -33,7 +36,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
           href="/"
           className="ui-focus text-sm text-white/70 hover:text-white"
         >
-          ← Voltar
+          {t("← Voltar")}
         </Link>
         <div className="mt-4 mb-12 flex size-full flex-col items-center">
           <div className="flex flex-col items-center justify-center pt-8">
@@ -44,7 +47,7 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
                   width={320}
                   height={320}
                   src={company.avatar}
-                  alt={`Logótipo de ${company.name}`}
+                  alt={t("Logótipo de {value}", { value: company.name })}
                   className="size-full object-contain"
                 />
               </div>
@@ -133,7 +136,9 @@ const CompanyPageSection: React.FC<CompanyPageSectionProps> = ({ company }) => {
           />
           {company.website && (
             <section className="mt-10">
-              <h2 className="mb-4 font-title text-3xl sm:text-4xl">Contacto</h2>
+              <h2 className="mb-4 font-title text-3xl sm:text-4xl">
+                {t("Contacto")}
+              </h2>
               <a
                 href={company.website}
                 target="_blank"

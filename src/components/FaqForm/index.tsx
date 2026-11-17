@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminFaqDto } from "@/application/dto/faqDto";
 
@@ -12,6 +13,8 @@ interface FaqFormProps {
 }
 
 const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -23,10 +26,10 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
     try {
       if (faq) {
         await httpClient.patch(`/admin/faqs/${faq.id}`, payload);
-        toast.success("Pergunta atualizada.");
+        toast.success(t("Pergunta atualizada."));
       } else {
         await httpClient.post("/admin/faqs", payload);
-        toast.success("Pergunta criada.");
+        toast.success(t("Pergunta criada."));
       }
       router.push("/faqs");
       router.refresh();
@@ -34,42 +37,43 @@ const FaqForm: React.FC<FaqFormProps> = ({ faq }) => {
       toast.error(
         error instanceof HttpClientError
           ? error.message
-          : "Não foi possível guardar a pergunta."
+          : t("Não foi possível guardar a pergunta.")
       );
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/faqs"
       id={faq?.id}
       sections={[
         {
           kind: "fields",
-          title: "Detalhes",
+          title: t("Detalhes"),
           fields: [
             {
               kind: "text",
               name: "questionPT",
-              label: "Pergunta (PT)",
+              label: t("Pergunta (PT)"),
               required: true,
             },
             {
               kind: "textarea",
               name: "answerPT",
-              label: "Resposta (PT)",
+              label: t("Resposta (PT)"),
               required: true,
               rows: 6,
             },
             {
               kind: "text",
               name: "questionEN",
-              label: "Pergunta (EN)",
+              label: t("Pergunta (EN)"),
               required: true,
             },
             {
               kind: "textarea",
               name: "answerEN",
-              label: "Resposta (EN)",
+              label: t("Resposta (EN)"),
               required: true,
               rows: 6,
             },

@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 
 import { ProfileData } from "@/types/ProfileData";
 import config from "@/config";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import { resizeMinWidthImage } from "@/utils/canvas";
 import { readFile } from "@/utils/files";
 
@@ -25,6 +27,8 @@ const UserImage: React.FC<UserImageProps> = ({
   onChange,
   className,
 }) => {
+  const t = useUiText();
+
   const animation = {
     variants: {
       initial: { opacity: 0 },
@@ -99,7 +103,7 @@ const UserImage: React.FC<UserImageProps> = ({
         />
         <motion.input
           onChange={handleChange}
-          aria-label="Alterar foto de perfil"
+          aria-label={t("Alterar foto de perfil")}
           accept="image/*"
           type="file"
           className="absolute top-0 left-0 z-10 size-full rounded-full opacity-0"
@@ -112,7 +116,10 @@ const UserImage: React.FC<UserImageProps> = ({
             className="absolute top-0 left-0 flex size-full flex-col items-center justify-center rounded-full"
           >
             <p className="text-2xl text-white">+</p>
-            <p className="text-sm text-white">Adicionar</p>
+            <p className="text-sm text-white">
+              {" "}
+              <UiText text="Adicionar" />{" "}
+            </p>
           </motion.div>
         )}
       </div>

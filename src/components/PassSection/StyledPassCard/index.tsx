@@ -3,7 +3,9 @@
 import React, { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Modal from "@/components/ui/Modal";
+import UiText from "@/components/ui/UiText";
 import { branding } from "@/edition/branding";
 
 interface StyledPassCardProps {
@@ -25,6 +27,8 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
   enlargeOnClick = true,
   code,
 }) => {
+  const t = useUiText();
+
   const [isEnlarged, setIsEnlarged] = useState(false);
   return (
     <div className="flex w-full max-w-87 flex-col items-center gap-4 rounded-2xl bg-linear-to-br from-[#0D2800] via-[#1F6000] to-[#005F56] p-5 text-white">
@@ -33,7 +37,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
         {code && (
           <p
             className="mt-2 font-mono text-2xl font-bold"
-            aria-label="Código do participante"
+            aria-label={t("Código do participante")}
           >
             {code}
           </p>
@@ -42,20 +46,23 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       <button
         type="button"
         disabled={!enlargeOnClick || loading || !qrValue}
-        aria-label="Ver QR code em tamanho grande"
+        aria-label={t("Ver QR code em tamanho grande")}
         onClick={() => setIsEnlarged(true)}
         className="flex aspect-square w-full max-w-[217px] items-center justify-center rounded-lg bg-white p-2 text-gray-600 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white disabled:cursor-default"
       >
         {loading ? (
           <span
             role="status"
-            aria-label="A carregar QR"
+            aria-label={t("A carregar QR")}
             className="size-24 animate-spin rounded-full border-4 border-green-700 border-r-transparent"
           />
         ) : qrValue ? (
           <QRCodeSVG className="h-auto w-full" value={qrValue} size={209} />
         ) : (
-          <span>Sem QR</span>
+          <span>
+            {" "}
+            <UiText text="Sem QR" />{" "}
+          </span>
         )}
       </button>
       {showRightName && (
@@ -63,7 +70,7 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
       )}
       <p className="text-sm text-white">{hashtag}</p>
       <Modal
-        aria-label="QR Code ampliado"
+        aria-label={t("QR Code ampliado")}
         className="max-w-sm bg-background! text-white!"
         isVisible={isEnlarged && !!qrValue}
         setIsVisible={setIsEnlarged}
@@ -73,9 +80,9 @@ const StyledPassCard: React.FC<StyledPassCardProps> = ({
             type="button"
             onClick={() => setIsEnlarged(false)}
             className="min-h-11 rounded border px-4 text-white focus-visible:outline-2 focus-visible:outline-primary"
-            aria-label="Fechar QR grande"
+            aria-label={t("Fechar QR grande")}
           >
-            Fechar
+            {t("Fechar")}
           </button>
           {qrValue && (
             <div className="w-full rounded-xl bg-white p-4">

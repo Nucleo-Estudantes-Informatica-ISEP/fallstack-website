@@ -5,6 +5,8 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 
 import { HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import {
   getGoogleWalletAvailability,
   getGoogleWalletSaveUrl,
@@ -20,6 +22,8 @@ function isIOSDevice() {
 }
 
 const GoogleWalletButton = () => {
+  const t = useUiText();
+
   const [isAvailable, setIsAvailable] = React.useState(false);
   const [isSupportedDevice, setIsSupportedDevice] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -47,10 +51,10 @@ const GoogleWalletButton = () => {
     } catch (error) {
       toast.error(
         error instanceof HttpClientError && error.status >= 500
-          ? WALLET_ERROR
+          ? t(WALLET_ERROR)
           : error instanceof Error
             ? error.message
-            : WALLET_ERROR
+            : t(WALLET_ERROR)
       );
     } finally {
       setIsLoading(false);
@@ -64,7 +68,7 @@ const GoogleWalletButton = () => {
       type="button"
       onClick={handleClick}
       disabled={isLoading}
-      aria-label="Adicionar à Carteira da Google"
+      aria-label={t("Adicionar à Carteira da Google")}
       aria-busy={isLoading}
       className="mt-4 p-2 transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
     >
@@ -75,7 +79,12 @@ const GoogleWalletButton = () => {
         height={55}
         unoptimized
       />
-      {isLoading && <span className="sr-only">A preparar passe...</span>}
+      {isLoading && (
+        <span className="sr-only">
+          {" "}
+          <UiText text="A preparar passe..." />{" "}
+        </span>
+      )}
     </button>
   );
 };

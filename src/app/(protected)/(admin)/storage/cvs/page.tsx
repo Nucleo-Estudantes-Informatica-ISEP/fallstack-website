@@ -4,9 +4,14 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import UiText from "@/components/ui/UiText";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { listStorageObjects } from "@/application/services/storageAdminService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 import { formatFileSize } from "@/utils/files";
 
 const PAGE_SIZE = 20;
@@ -40,13 +45,16 @@ const columns: DataTableColumn<StorageRow>[] = [
         rel="noopener noreferrer"
         className="text-primary hover:underline"
       >
-        Abrir
+        <UiText text="Abrir" />
       </a>
     ),
   },
 ];
 
 const CvsAdminPage = async ({ searchParams }: CvsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listStorageObjects(
     "cv",
@@ -57,14 +65,14 @@ const CvsAdminPage = async ({ searchParams }: CvsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <h1 className="text-2xl font-bold text-gray-800">Ficheiros</h1>
+      <h1 className="text-2xl font-bold text-gray-800">{t("Ficheiros")}</h1>
 
       <div className="flex gap-2">
         <Link
           href="/storage"
           className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
         >
-          Avatares
+          {t("Avatares")}
         </Link>
         <Link
           href="/storage/cvs"
@@ -75,6 +83,7 @@ const CvsAdminPage = async ({ searchParams }: CvsAdminPageProps) => {
       </div>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={items}
         rowKey={(file) => file.name}
@@ -83,7 +92,7 @@ const CvsAdminPage = async ({ searchParams }: CvsAdminPageProps) => {
         totalCount={totalCount}
         basePath="/storage/cvs"
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome de ficheiro..."
+        searchPlaceholder={t("Pesquisar por nome de ficheiro...")}
         renderActions={(file) => (
           <AdminDeleteButton
             deleteUrl={`/admin/storage/cv/${encodeURIComponent(file.name)}`}

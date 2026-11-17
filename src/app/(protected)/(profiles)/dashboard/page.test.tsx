@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import type { ReactElement } from "react";
-import { afterAll, beforeAll, beforeEach, test, vi } from "vitest";
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({
@@ -105,10 +105,12 @@ function findByType(
   return findByType(element.props.children, type);
 }
 
-test("no session gets the 404 page", async () => {
+test("no session redirects to sign in", async () => {
   await asSession(null);
 
-  assert.equal(isBlocked(await render()), true);
+  await expect(render()).rejects.toMatchObject({
+    digest: expect.stringContaining("/login"),
+  });
 });
 
 test("a student session gets the 404 page", async () => {

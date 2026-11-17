@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useZxing } from "react-zxing";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+
 type DecodedQrResult = { getText(): string };
 
 interface QRCodeScannerProps {
@@ -17,6 +19,8 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({
   handleScan,
   onMessage,
 }) => {
+  const t = useUiText();
+
   const [loading, setLoading] = useState(true);
   const handlingResult = useRef(false);
   const reportedCameraError = useRef(false);
@@ -62,9 +66,11 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({
       // stream continues to work. Keep the scanner available in that case.
       reportedCameraError.current = true;
       report(
-        "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
+        t(
+          "Não foi possível aceder à câmara. Confirma permissão e tenta novamente."
+        )
       );
-    }, [report]),
+    }, [report, t]),
   });
 
   return (
@@ -73,7 +79,7 @@ const QRCodeScanner: React.FC<QRCodeScannerProps> = ({
         <div className="absolute top-0 left-0 flex size-full items-center justify-center bg-black/50">
           <div className="flex flex-col items-center">
             <div className="size-12 animate-spin rounded-full border-y-2 border-r-2 border-blue-500"></div>
-            <p className="mt-2 text-white">A ligar a tua câmara...</p>
+            <p className="mt-2 text-white">{t("A ligar a tua câmara...")}</p>
           </div>
         </div>
       )}

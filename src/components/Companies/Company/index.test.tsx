@@ -33,8 +33,9 @@ test("uploaded logos ignore company size and class overrides", () => {
   expect(logo).not.toHaveAttribute("width");
   expect(logo).not.toHaveAttribute("height");
   expect(logo).not.toHaveClass("w-screen", "scale-200");
-  expect(logo.closest("a")).toHaveClass("max-w-40");
-  expect(logo.closest("a")?.parentElement).not.toHaveClass("h-screen");
+  expect(logo.parentElement).toHaveClass("max-w-40");
+  expect(logo.closest("a")).toBeNull();
+  expect(logo.parentElement?.parentElement).not.toHaveClass("h-screen");
 });
 
 test("long names stay within logo-less cells", () => {

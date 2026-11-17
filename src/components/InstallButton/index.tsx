@@ -4,6 +4,7 @@ import { LabelHTMLAttributes, useContext } from "react";
 
 import useIsMobile from "@/hooks/useIsMobile";
 import InstallableContext from "@/contexts/InstallableContext";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { InstallPwaDesktop, InstallPwaMobile } from "@/components/ui/Icons";
 import { Language } from "@/domain/i18n/translations";
 
@@ -16,6 +17,8 @@ const InstallButton: React.FC<InstallButtonProps> = ({
   className,
   language = Language.PT,
 }) => {
+  const t = useUiText();
+
   const { isInstallable, handleConfirm } = useContext(InstallableContext);
 
   const isMobile = useIsMobile();
@@ -25,7 +28,7 @@ const InstallButton: React.FC<InstallButtonProps> = ({
       <button
         onClick={handleConfirm}
         aria-label={
-          language === Language.EN ? "Install app" : "Instalar aplicação"
+          language === Language.EN ? "Install app" : t("Instalar aplicação")
         }
         className={className}
       >

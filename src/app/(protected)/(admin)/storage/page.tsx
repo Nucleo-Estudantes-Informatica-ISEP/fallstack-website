@@ -5,9 +5,14 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import UiText from "@/components/ui/UiText";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { listStorageObjects } from "@/application/services/storageAdminService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 import { formatFileSize } from "@/utils/files";
 
 const PAGE_SIZE = 20;
@@ -54,13 +59,16 @@ const columns: DataTableColumn<StorageRow>[] = [
         rel="noopener noreferrer"
         className="text-primary hover:underline"
       >
-        Abrir
+        <UiText text="Abrir" />
       </a>
     ),
   },
 ];
 
 const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listStorageObjects(
     "avatar",
@@ -71,14 +79,14 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <h1 className="text-2xl font-bold text-gray-800">Ficheiros</h1>
+      <h1 className="text-2xl font-bold text-gray-800">{t("Ficheiros")}</h1>
 
       <div className="flex gap-2">
         <Link
           href="/storage"
           className="rounded-md bg-primary px-3 py-1 text-white"
         >
-          Avatares
+          {t("Avatares")}
         </Link>
         <Link
           href="/storage/cvs"
@@ -89,6 +97,7 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
       </div>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={items}
         rowKey={(file) => file.name}
@@ -97,7 +106,7 @@ const AvatarsAdminPage = async ({ searchParams }: AvatarsAdminPageProps) => {
         totalCount={totalCount}
         basePath="/storage"
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome de ficheiro..."
+        searchPlaceholder={t("Pesquisar por nome de ficheiro...")}
         renderActions={(file) => (
           <AdminDeleteButton
             deleteUrl={`/admin/storage/avatar/${encodeURIComponent(file.name)}`}

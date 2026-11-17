@@ -5,7 +5,9 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { Email, Github, Linkedin, OpenCv } from "@/components/ui/Icons";
+import UiText from "@/components/ui/UiText";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
 
@@ -29,6 +31,8 @@ const linkPill =
 const CompanyViewProfileSectionContainer: React.FC<
   CompanyViewProfileSectionContainerProps
 > = ({ student, interests }) => {
+  const t = useUiText();
+
   const orderedInterests = useMemo(
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
@@ -44,7 +48,7 @@ const CompanyViewProfileSectionContainer: React.FC<
       );
       window.open(url, "_blank");
     } catch {
-      toast.error("Não foi possível abrir o CV. Tenta novamente.", {
+      toast.error(t("Não foi possível abrir o CV. Tenta novamente."), {
         toastId: "view-cv-failed",
       });
     }
@@ -88,7 +92,9 @@ const CompanyViewProfileSectionContainer: React.FC<
               href={student.github}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`GitHub de ${student.name} (abre num novo separador)`}
+              aria-label={t("GitHub de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Github className="size-5" aria-hidden />
@@ -100,7 +106,9 @@ const CompanyViewProfileSectionContainer: React.FC<
               href={student.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`LinkedIn de ${student.name} (abre num novo separador)`}
+              aria-label={t("LinkedIn de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Linkedin className="size-5" aria-hidden />
@@ -117,7 +125,7 @@ const CompanyViewProfileSectionContainer: React.FC<
             className={`${panel} min-w-0 lg:col-span-2`}
           >
             <h2 id="view-info" className={panelTitle}>
-              Informações pessoais
+              {t("Informações pessoais")}
             </h2>
             <p className="mt-2 text-2xl font-bold wrap-break-word text-white">
               {student.name}
@@ -158,7 +166,8 @@ const CompanyViewProfileSectionContainer: React.FC<
                       Curriculum
                     </span>
                     <span className="wrap-break-word">
-                      Abrir o CV de {student.name}
+                      {" "}
+                      <UiText text="Abrir o CV de" /> {student.name}
                     </span>
                   </span>
                 </button>
@@ -171,11 +180,11 @@ const CompanyViewProfileSectionContainer: React.FC<
             className={`${panel} min-w-0`}
           >
             <h2 id="view-interests" className={panelTitle}>
-              Interesses
+              {t("Interesses")}
             </h2>
             {orderedInterests.length === 0 ? (
               <p className="mt-4 text-sm text-gray-300">
-                Este estudante ainda não indicou interesses.
+                {t("Este estudante ainda não indicou interesses.")}
               </p>
             ) : (
               <ul className="mt-4 flex flex-wrap gap-3">
@@ -195,7 +204,7 @@ const CompanyViewProfileSectionContainer: React.FC<
         {student.bio && (
           <section aria-labelledby="view-bio" className={panel}>
             <h2 id="view-bio" className={panelTitle}>
-              Sobre
+              {t("Sobre")}
             </h2>
             <p className="mt-3 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-100">
               {student.bio}
@@ -207,7 +216,7 @@ const CompanyViewProfileSectionContainer: React.FC<
           href="/dashboard"
           className="self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
-          Voltar ao painel
+          {t("Voltar ao painel")}
         </Link>
       </div>
     </div>

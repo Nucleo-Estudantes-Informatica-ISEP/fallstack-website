@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import { getStudentPreviewToken } from "@/client/api/studentToken";
 import {
@@ -17,6 +19,8 @@ interface ScanTabProps {
 }
 
 const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
+  const t = useUiText();
+
   const [processing, setProcessing] = React.useState<boolean>(false);
   const router = useRouter();
 
@@ -47,7 +51,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
       await httpClient.post("/saved", { token });
     } catch (error) {
       if (error instanceof HttpClientError && error.status === 409) {
-        toast.warning("Este estudante já foi guardado anteriormente.");
+        toast.warning(t("Este estudante já foi guardado anteriormente."));
       } else {
         toast.error(
           error instanceof Error ? error.message : "Erro ao guardar perfil"
@@ -67,7 +71,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
     const token = await getStudentPreviewToken(code);
 
     if (!token) {
-      toast.error("O código de estudante deste passe é inválido.");
+      toast.error(t("O código de estudante deste passe é inválido."));
       setProcessing(false);
       return;
     }
@@ -97,7 +101,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
       const token = await getStudentPreviewToken({ token: data });
       if (!token) {
         toast.error(
-          "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+          t("Passe inválido ou expirado. Atualiza o QR Code e tenta novamente.")
         );
         setProcessing(false);
         return;
@@ -118,7 +122,8 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
             role="status"
           >
             <span className="absolute! -m-px! size-px overflow-hidden! border-0! p-0! whitespace-nowrap! [clip:rect(0,0,0,0)]!">
-              A processar...
+              {" "}
+              <UiText text="A processar..." />{" "}
             </span>
           </div>
         ) : (

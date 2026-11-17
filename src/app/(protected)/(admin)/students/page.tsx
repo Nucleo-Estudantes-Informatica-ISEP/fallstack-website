@@ -5,12 +5,17 @@ import {
   parseAdminListParams,
   type AdminListSearchParams,
 } from "@/lib/adminListParams";
+import UiText from "@/components/ui/UiText";
 import AdminDeleteButton from "@/components/AdminDeleteButton";
 import AdminPageHeader from "@/components/AdminPageHeader";
 import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminStudentDto } from "@/application/dto/studentDto";
 import { listStudentsForAdmin } from "@/application/services/studentService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -23,11 +28,19 @@ type StudentRow = ReturnType<typeof toAdminStudentDto>;
 const columns: DataTableColumn<StudentRow>[] = [
   { key: "name", header: "Nome", render: (s) => s.name, sortable: true },
   { key: "code", header: "Código", render: (s) => s.code, sortable: true },
-  { key: "year", header: "Ano", render: (s) => s.year, sortable: true },
+  {
+    key: "year",
+    header: "Ano",
+    render: (s) => <UiText text={s.year} />,
+    sortable: true,
+  },
   { key: "email", header: "Email", render: (s) => s.user.email },
 ];
 
 const StudentsAdminPage = async ({ searchParams }: StudentsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listStudentsForAdmin({
     page,
@@ -40,16 +53,17 @@ const StudentsAdminPage = async ({ searchParams }: StudentsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Estudantes">
+      <AdminPageHeader title={t("Estudantes")}>
         <Link
           href="/students/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar estudante
+          {t("Adicionar estudante")}
         </Link>
       </AdminPageHeader>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={students}
         rowKey={(student) => student.id}
@@ -59,19 +73,19 @@ const StudentsAdminPage = async ({ searchParams }: StudentsAdminPageProps) => {
         basePath="/students"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome ou código..."
+        searchPlaceholder={t("Pesquisar por nome ou código...")}
         renderActions={(student) => (
           <div className="flex items-center gap-3">
             <Link
               href={`/students/${student.id}/edit`}
-              aria-label={`Editar ${student.name}`}
+              aria-label={t("Editar {value}", { value: student.name })}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />
             </Link>
             <AdminToggleButton
               checked={student.active}
-              label={`Ativar/desativar ${student.name}`}
+              label={t("Ativar/desativar {value}", { value: student.name })}
               patchUrl={`/admin/students/${student.id}`}
               field="active"
             />

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { FiChevronDown } from "react-icons/fi";
 
 import type { AttendanceSessionDto } from "@/types/AttendanceSession";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import {
   credentialFromScan,
@@ -55,6 +56,8 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
   staffName,
   initialSessionId,
 }) => {
+  const t = useUiText();
+
   const router = useRouter();
   const windows = useMemo(
     () =>
@@ -173,13 +176,13 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
   return (
     <section className="mx-auto flex min-h-screen w-full max-w-md flex-col gap-4 bg-gray-50 px-4 py-6 text-gray-900">
       <header className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">Presenças</h1>
+        <h1 className="text-xl font-bold text-gray-900">{t("Presenças")}</h1>
         <span className="text-sm text-gray-700">{staffName}</span>
       </header>
 
       {!selected ? (
         <p className="rounded-xl border border-gray-300 bg-white p-4 text-gray-900">
-          Não há períodos de presenças hoje.
+          {t("Não há períodos de presenças hoje.")}
         </p>
       ) : (
         <>
@@ -190,12 +193,12 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
                 <span
                   className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${statusClass[status]}`}
                 >
-                  {statusLabel[status]}
+                  {t(statusLabel[status])}
                 </span>
               );
             })()}
             <p className="mt-1 text-lg font-bold text-gray-900">
-              {selected.session.title}
+              {t(selected.session.title)}
             </p>
             <p className="text-sm text-gray-700">
               {`${selected.session.dayTitle} · ${selected.session.startTime} – ${selected.session.endTime}`}
@@ -214,7 +217,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
               aria-expanded={showList}
               className="ml-auto flex items-center gap-1 text-sm font-medium text-gray-900 underline"
             >
-              Trocar período
+              {t("Trocar período")}
               <FiChevronDown className="size-4" aria-hidden />
             </button>
             {showList && (
@@ -230,7 +233,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
                           : "border-gray-300 bg-white"
                       }`}
                     >
-                      {`${item.session.startTime}–${item.session.endTime} · ${item.session.title} · ${statusLabel[sessionStatus(item, now)]}`}
+                      {`${item.session.startTime}–${item.session.endTime} · ${t(item.session.title)} · ${t(statusLabel[sessionStatus(item, now)])}`}
                     </button>
                   </li>
                 ))}
@@ -262,8 +265,8 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
                 <input
                   value={typedCode}
                   onChange={(event) => setTypedCode(event.target.value)}
-                  placeholder="Código (ex: AB12)"
-                  aria-label="Código do estudante"
+                  placeholder={t("Código (ex: AB12)")}
+                  aria-label={t("Código do estudante")}
                   autoCapitalize="characters"
                   autoComplete="off"
                   className="min-w-0 flex-1 rounded-lg border border-gray-400 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500"
@@ -272,7 +275,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
                   type="submit"
                   className="rounded-lg bg-ui-highlight px-4 py-2 font-bold text-gray-900"
                 >
-                  Registar
+                  {t("Registar")}
                 </button>
               </form>
             </>

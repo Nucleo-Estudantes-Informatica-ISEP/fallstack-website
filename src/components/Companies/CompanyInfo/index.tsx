@@ -2,6 +2,8 @@
 
 import React from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import CompanyDescription from "@/components/Companies/CompanyDescription";
 import FactSection from "@/components/Companies/FactSection";
 import { Fact } from "@/domain/company/companyProfileContent";
@@ -25,6 +27,8 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
   facts,
   showsPromoVideo,
 }) => {
+  const t = useUiText();
+
   const paragraphs = bodyText
     .split(/\n{2,}/)
     .map((paragraph) => paragraph.trim())
@@ -35,7 +39,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
       {paragraphs.length > 0 && (
         <CompanyDescription>
           <h2 className="mb-4 text-left font-title text-3xl text-white sm:text-4xl">
-            Sobre
+            {t("Sobre")}
           </h2>
           <div className="space-y-4 text-left text-base leading-relaxed text-white md:text-lg">
             {paragraphs.map((paragraph, index) => (
@@ -53,7 +57,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
           return (
             <div className="mt-10 flex flex-col space-y-2 leading-8 lg:text-lg">
               <h2 className="mb-4 w-full text-left font-title text-3xl text-white sm:text-4xl">
-                {videoTitle || "Vídeo"}
+                {videoTitle || t("Vídeo")}
               </h2>
               <div className="flex w-full items-center justify-center">
                 {uploadedVideo ? (
@@ -62,16 +66,16 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
                     playsInline
                     preload="metadata"
                     src={videoHref}
-                    aria-label={videoTitle || "Vídeo promocional"}
+                    aria-label={videoTitle || t("Vídeo promocional")}
                     className="my-2.5 aspect-video w-full max-w-full rounded-lg"
                   >
-                    O teu navegador não suporta vídeo MP4.
+                    {t("O teu navegador não suporta vídeo MP4.")}
                   </video>
                 ) : (
                   <iframe
                     className="my-2.5 aspect-video w-full max-w-full rounded-lg"
                     src={embedUrl ?? undefined}
-                    title={videoTitle || "Vídeo promocional"}
+                    title={videoTitle || t("Vídeo promocional")}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                   ></iframe>
@@ -82,7 +86,7 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
         })()}
       <div>
         <h2 className="mt-8 mb-4 text-left font-title text-3xl text-white sm:text-4xl">
-          Interesses
+          {t("Interesses")}
         </h2>
         {interests !== undefined && interests.length > 0 ? (
           <div className="flex w-full flex-wrap gap-4">
@@ -98,7 +102,8 @@ const CompanyInfo: React.FC<CompanyInfoProps> = ({
         ) : (
           <div className="flex w-full flex-wrap gap-4">
             <div className="relative py-1 text-white">
-              Sem interesses definidos...
+              {" "}
+              <UiText text="Sem interesses definidos..." />{" "}
             </div>
           </div>
         )}

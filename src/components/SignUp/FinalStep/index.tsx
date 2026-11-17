@@ -17,10 +17,12 @@ import { toast } from "react-toastify";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import useSession from "@/hooks/useSession";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import FileInput from "@/components/ui/FileInput";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import PrivacyPolicyModal from "@/components/ui/PrivacyPolicyModal/page";
+import UiText from "@/components/ui/UiText";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import { createStudentProfile } from "@/client/api/auth";
 import getSession from "@/client/api/session";
@@ -40,6 +42,8 @@ interface FinalStepProps {
 }
 
 const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
+  const t = useUiText();
+
   const session = useSession();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -74,13 +78,13 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
     if (imageSrc && croppedAreaPixels) {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
       if (!image) {
-        toast.error("Não foi possível preparar a imagem.");
+        toast.error(t("Não foi possível preparar a imagem."));
         return null;
       }
 
       const uploaded = await uploadAvatar(image);
       if (!uploaded) {
-        toast.error("Não foi possível dar upload à imagem.");
+        toast.error(t("Não foi possível dar upload à imagem."));
         return null;
       }
       avatarId = uploaded.id;
@@ -91,10 +95,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
   const handleSubmit = async () => {
     try {
       if (!privacyRef.current?.checked) {
-        return setError("Tens de aceitar a política de privacidade.");
+        return setError(t("Tens de aceitar a política de privacidade."));
       }
       if (!termsRef.current?.checked) {
-        return setError("Tens de aceitar os termos de utilização.");
+        return setError(t("Tens de aceitar os termos de utilização."));
       }
 
       const linkedin = data.linkedin?.trim();
@@ -109,7 +113,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       const existingSession = await getSession();
 
       if (!existingSession) {
-        toast.error("A tua sessão expirou. Por favor, tenta novamente.");
+        toast.error(t("A tua sessão expirou. Por favor, tenta novamente."));
         router.push("/signup");
         return setLoading(false);
       }
@@ -124,7 +128,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       // The active account may have changed in another tab.
       if (!canCreateStudentProfile(existingSession)) {
-        toast.error("Já tens sessão iniciada como outro tipo de conta.");
+        toast.error(t("Já tens sessão iniciada como outro tipo de conta."));
         return setLoading(false);
       }
 
@@ -134,7 +138,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       if (data.cv) {
         const uploaded = await uploadCv(data.cv.file);
         if (!uploaded) {
-          toast.error("Não foi possível dar upload ao CV.");
+          toast.error(t("Não foi possível dar upload ao CV."));
         } else {
           cvId = uploaded.id;
         }
@@ -169,7 +173,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
   return (
     <div className="flex w-full flex-col">
-      <h1 className="signup-heading">Criar uma conta</h1>
+      <h1 className="signup-heading">{t("Criar uma conta")}</h1>
 
       <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4 lg:[--field-icon-inset:19px] lg:[--field-icon-padding:65px]">
         <FileInput
@@ -195,7 +199,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
             className="field-label text-left text-gray-100"
             htmlFor="avatar"
           >
-            Insere uma imagem para foto de perfil. (Opcional)
+            {" "}
+            <UiText text="Insere uma imagem para foto de perfil. (Opcional)" />{" "}
           </label>
           <AvatarCropper
             {...{ imageSrc, setImageSrc, setCroppedAreaPixels }}
@@ -249,7 +254,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         <input
           type="checkbox"
           id="privacy"
-          aria-label="Aceito a política de privacidade"
+          aria-label={t("Aceito a política de privacidade")}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "signup-privacy-error" : undefined}
           className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
@@ -257,7 +262,10 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           onChange={() => setError(null)}
         />
         <span>
-          <label htmlFor="privacy">Aceito a</label>{" "}
+          <label htmlFor="privacy">
+            {" "}
+            <UiText text="Aceito a" />{" "}
+          </label>{" "}
           <button
             type="button"
             onClick={() => setIsModalVisible(true)}
@@ -273,7 +281,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         <input
           type="checkbox"
           id="terms"
-          aria-label="Aceito os termos de utilização"
+          aria-label={t("Aceito os termos de utilização")}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? "signup-privacy-error" : undefined}
           className="grid size-6 shrink-0 cursor-pointer field-focus-target appearance-none place-content-center border-2 border-white after:hidden after:h-2.5 after:w-1.5 after:rotate-45 after:border-r-2 after:border-b-2 after:border-background checked:bg-white checked:after:block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary forced-colors:appearance-auto forced-colors:after:hidden"
@@ -281,14 +289,17 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
           onChange={() => setError(null)}
         />
         <span>
-          <label htmlFor="terms">Aceito os</label>{" "}
+          <label htmlFor="terms">
+            {" "}
+            <UiText text="Aceito os" />{" "}
+          </label>{" "}
           <Link
             href="/terms"
             target="_blank"
             rel="noopener noreferrer"
             className="rounded-sm text-orange-400 underline hover:text-orange-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
           >
-            termos de utilização
+            {t("termos de utilização")}
           </Link>
           .
         </span>
@@ -322,7 +333,8 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         variant="form"
         className="mt-8 h-12 w-full font-semibold lg:mt-9 lg:h-16 lg:text-xl"
       >
-        Concluir
+        {" "}
+        <UiText text="Concluir" />{" "}
       </PrimaryButton>
     </div>
   );

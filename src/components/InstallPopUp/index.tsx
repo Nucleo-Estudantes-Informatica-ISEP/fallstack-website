@@ -7,9 +7,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import config from "@/config";
 import useIsMobile from "@/hooks/useIsMobile";
 import InstallableContext from "@/contexts/InstallableContext";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import UiText from "@/components/ui/UiText";
 
 const CookieConsent: React.FC = () => {
+  const t = useUiText();
   const isMobile = useIsMobile();
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
@@ -50,7 +53,7 @@ const CookieConsent: React.FC = () => {
         >
           <div>
             <p className="font-medium">
-              ✨ Adiciona o Fallstack ao teu ecrã inicial!
+              {t("✨ Adiciona o Fallstack ao teu ecrã inicial!")}
             </p>
             {installInstructions && <p>{installInstructions}</p>}
           </div>
@@ -59,7 +62,7 @@ const CookieConsent: React.FC = () => {
               onClick={handleHideForever}
               className="cursor-pointer hover:underline"
             >
-              Não mostrar mais
+              {t("Não mostrar mais")}
             </a>
             {isInstallable && (
               <PrimaryButton
@@ -67,7 +70,8 @@ const CookieConsent: React.FC = () => {
                 className="font-bold max-md:w-full"
                 tabIndex={2}
               >
-                Adicionar
+                {" "}
+                <UiText text="Adicionar" />{" "}
               </PrimaryButton>
             )}
           </div>

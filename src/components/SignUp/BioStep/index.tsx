@@ -3,6 +3,7 @@
 import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 
@@ -19,11 +20,13 @@ const BioStep: FunctionComponent<BioStepProps> = ({
   data,
   setData,
 }) => {
+  const t = useUiText();
+
   const LIMIT = 255;
 
   return (
     <div className="flex w-full flex-col">
-      <h1 className="signup-heading">Criar uma conta</h1>
+      <h1 className="signup-heading">{t("Criar uma conta")}</h1>
 
       <UserBioTextArea
         name="Conta-nos mais sobre ti. (Opcional)"
@@ -41,7 +44,7 @@ const BioStep: FunctionComponent<BioStepProps> = ({
         variant="form"
         className="mt-8 h-12 w-full font-semibold lg:mt-10 lg:h-16 lg:text-xl"
       >
-        Seguinte
+        {t("Seguinte")}
       </PrimaryButton>
     </div>
   );

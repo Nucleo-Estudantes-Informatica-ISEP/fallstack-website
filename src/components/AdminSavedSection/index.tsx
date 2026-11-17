@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { CompanyDto } from "@/application/dto/companyDto";
 
 interface AdminSavedSectionProps {
@@ -12,6 +13,8 @@ interface AdminSavedSectionProps {
 }
 
 const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
+  const t = useUiText();
+
   const [studentEmailNumber, setStudentEmailNumber] = useState("");
   const [selectedCompany, setSelectedCompany] = useState("");
   const { mutate, isPending } = useMutation();
@@ -31,13 +34,15 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
 
   return (
     <div className="flex flex-col items-center justify-center gap-8 rounded-3xl bg-gray-100 p-8 shadow-lg">
-      <h2 className="text-2xl font-bold text-gray-800">Save Student</h2>
+      <h2 className="text-2xl font-bold text-gray-800">
+        {t("Guardar estudante")}
+      </h2>
       <form
         onSubmit={handleSubmit}
         className="flex w-full max-w-md flex-col gap-4"
       >
         <label className="flex flex-col gap-2">
-          <span className="text-gray-700">Select Company:</span>
+          <span className="text-gray-700">{t("Empresa:")}</span>
           <select
             value={selectedCompany}
             onChange={(e) => setSelectedCompany(e.target.value)}
@@ -45,7 +50,7 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
             className="rounded-md border border-gray-300 p-2 text-black"
           >
             <option value="" disabled>
-              Select a company
+              {t("Seleciona uma empresa")}
             </option>
             {companies.map((company) => (
               <option
@@ -59,7 +64,9 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
           </select>
         </label>
         <label className="flex flex-col gap-2">
-          <span className="text-gray-700">Student Email/Number:</span>
+          <span className="text-gray-700">
+            {t("Email/número do estudante:")}
+          </span>
           <input
             type="text"
             value={studentEmailNumber}
@@ -73,7 +80,7 @@ const AdminSavedSection: React.FC<AdminSavedSectionProps> = ({ companies }) => {
           disabled={isPending}
           className="rounded-md bg-primary p-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "A guardar..." : "Save Student"}
+          {isPending ? t("A guardar...") : t("Guardar estudante")}
         </button>
       </form>
     </div>

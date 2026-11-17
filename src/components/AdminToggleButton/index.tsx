@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 
 interface AdminToggleButtonProps {
   checked: boolean;
@@ -20,6 +21,8 @@ const AdminToggleButton: React.FC<AdminToggleButtonProps> = ({
   field,
   label,
 }) => {
+  const t = useUiText();
+
   const router = useRouter();
   const [isPending, setIsPending] = useState(false);
 
@@ -29,7 +32,7 @@ const AdminToggleButton: React.FC<AdminToggleButtonProps> = ({
       await httpClient.patch(patchUrl, { [field]: !checked });
       router.refresh();
     } catch {
-      toast.error("Não foi possível atualizar.");
+      toast.error(t("Não foi possível atualizar."));
     } finally {
       setIsPending(false);
     }

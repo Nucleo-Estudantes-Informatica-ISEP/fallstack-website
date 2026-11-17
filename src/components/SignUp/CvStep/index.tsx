@@ -1,5 +1,3 @@
-// deprecated
-
 "use client";
 
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
@@ -9,7 +7,10 @@ import { FaFilePdf } from "react-icons/fa";
 import { StudentSignUpData } from "@/types/StudentSignUpData";
 import FileInput from "@/components/ui/FileInput";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import UiText from "@/components/ui/UiText";
 import { uploadCv } from "@/client/api/upload";
+
+// deprecated
 
 interface CvStepProps {
   currentStep: number;
@@ -59,11 +60,12 @@ const CvStep: FunctionComponent<CvStepProps> = ({
     <div className="flex w-full flex-col items-center">
       <div className="flex w-[90%] flex-col">
         <p className="mb-8 font-sans text-[45px] font-semibold text-white">
-          Adiciona o teu CV
+          {" "}
+          <UiText text="Adiciona o teu CV" />{" "}
         </p>
 
         <p className="mb-4 font-sans text-sm font-normal text-white">
-          Faz upload do teu currículo em formato PDF. (Opcional)
+          <UiText text="Faz upload do teu currículo em formato PDF. (Opcional)" />
         </p>
 
         <FileInput
@@ -97,7 +99,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
           onClick={handleNext}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >
-          Seguinte
+          <UiText text="Seguinte" />
         </PrimaryButton>
       </div>
     </div>

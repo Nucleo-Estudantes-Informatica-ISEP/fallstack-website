@@ -8,6 +8,7 @@ import { LiaUser } from "react-icons/lia";
 
 import useLanguage from "@/hooks/useLanguage";
 import useSession from "@/hooks/useSession";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { LogIn } from "@/components/ui/Icons";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
@@ -30,17 +31,23 @@ interface TopBarProps {
 }
 
 const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
+  const t = useUiText();
+
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
   const isEnglish = useLanguage() === "en";
   const language = isEnglish ? Language.EN : Language.PT;
-  const studentProfileLabel = isEnglish
-    ? "My student profile"
-    : "O meu perfil de estudante";
+  const studentProfileLabel = session.user?.student
+    ? isEnglish
+      ? "My student profile"
+      : "O meu perfil de estudante"
+    : isEnglish
+      ? "Create student profile"
+      : "Criar perfil de estudante";
   const scannerLabel = isEnglish
     ? "Attendance scanner"
-    : "Scanner de presenças";
+    : t("Scanner de presenças");
   // Hide certain TopBar elements on auth pages (those inside the (auth) group)
   const isAuthPage = Boolean(
     pathname &&
@@ -88,10 +95,10 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
               href={isAuthPage ? "/" : "/login"}
               aria-label={
                 isAuthPage
-                  ? "Página inicial"
+                  ? t("Página inicial")
                   : isEnglish
                     ? "Sign in"
-                    : "Iniciar sessão"
+                    : t("Iniciar sessão")
               }
               className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md fill-white text-2xl transition-colors hover:text-primary"
             >

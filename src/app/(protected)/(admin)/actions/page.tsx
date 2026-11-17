@@ -10,6 +10,10 @@ import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminActionDto } from "@/application/dto/actionDto";
 import { listActionsForAdmin } from "@/application/services/actionService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -31,6 +35,9 @@ const columns: DataTableColumn<ActionRow>[] = [
 ];
 
 const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listActionsForAdmin({
     page,
@@ -43,16 +50,17 @@ const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Ações">
+      <AdminPageHeader title={t("Ações")}>
         <Link
           href="/actions/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar ação
+          {t("Adicionar ação")}
         </Link>
       </AdminPageHeader>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={actions}
         rowKey={(action) => action.id}
@@ -62,12 +70,12 @@ const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
         basePath="/actions"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome..."
+        searchPlaceholder={t("Pesquisar por nome...")}
         renderActions={(action) => (
           <div className="flex items-center gap-4">
             <Link
               href={`/actions/${action.id}/edit`}
-              aria-label={`Editar ${action.name}`}
+              aria-label={t("Editar {value}", { value: action.name })}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />
@@ -82,16 +90,16 @@ const ActionsAdminPage = async ({ searchParams }: ActionsAdminPageProps) => {
               <span className="text-xs text-gray-500">Live</span>
               <AdminToggleButton
                 checked={action.isLive}
-                label={`Ativar/desativar ${action.name}`}
+                label={t("Ativar/desativar {value}", { value: action.name })}
                 patchUrl={`/admin/actions/${action.id}`}
                 field="isLive"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Visível</span>
+              <span className="text-xs text-gray-500">{t("Visível")}</span>
               <AdminToggleButton
                 checked={action.isVisible}
-                label={`Mostrar/ocultar ${action.name}`}
+                label={t("Mostrar/ocultar {value}", { value: action.name })}
                 patchUrl={`/admin/actions/${action.id}`}
                 field="isVisible"
               />

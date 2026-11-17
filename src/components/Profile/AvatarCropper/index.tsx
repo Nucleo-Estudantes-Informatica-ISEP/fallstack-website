@@ -10,6 +10,7 @@ import {
 import Cropper, { Area, Point } from "react-easy-crop";
 import { MdOutlineCloudUpload as UploadIcon } from "react-icons/md";
 
+import UiText from "@/components/ui/UiText";
 import { resizeMinWidthImage } from "@/utils/canvas";
 import { readFile } from "@/utils/files";
 
@@ -92,7 +93,10 @@ const AvatarCropper: FunctionComponent<AvatarCropperProps> = ({
         >
           {uploadIcon}
         </span>
-        <span className="min-w-0 truncate">Insere uma imagem</span>
+        <span className="min-w-0 truncate">
+          {" "}
+          <UiText text="Insere uma imagem" />{" "}
+        </span>
       </label>
     </div>
   );

@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { ProfileData } from "@/types/ProfileData";
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import ImportCvSection from "@/components/Profile/ImportCvSection";
@@ -36,6 +37,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   setActiveTab,
   availableInterests,
 }) => {
+  const t = useUiText();
+
   const LIMIT = 255;
   const router = useRouter();
 
@@ -71,12 +74,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       return;
     }
     if (profile.bio && profile.bio?.length > LIMIT) {
-      toast.error(`A tua bio não pode ter mais de ${LIMIT} caracteres!`);
+      toast.error(
+        t("A tua bio não pode ter mais de {value} caracteres!", {
+          value: LIMIT,
+        })
+      );
       return;
     }
 
     if (!isIsepEmail(emailRef.current?.value ?? "")) {
-      toast.error("Insere um email institucional válido.");
+      toast.error(t("Insere um email institucional válido."));
       return;
     }
 
@@ -96,7 +103,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         /^(https:\/\/github\.com\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
       )
     ) {
-      toast.error("O teu Github não segue o formato correto!");
+      toast.error(t("O teu Github não segue o formato correto!"));
       return;
     }
 
@@ -141,7 +148,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         }
       }
 
-      toast.success("Perfil atualizado com sucesso!");
+      toast.success(t("Perfil atualizado com sucesso!"));
       setActiveTab("Perfil");
       router.refresh();
     });
@@ -150,14 +157,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   return (
     <section className="student-profile-form w-full">
       <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
-        Informações pessoais
+        {t("Informações pessoais")}
       </h2>
       <div className="flex flex-col gap-y-4">
         {/* NOME */}
         <Input
           name="name"
           id="profile-name"
-          label="Nome"
+          label={t("Nome")}
           defaultValue={student.name}
           inputRef={nameRef}
           maxLength={100}
@@ -167,33 +174,33 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         <Input
           name="course"
           id="profile-course"
-          label="Curso"
+          label={t("Curso")}
           defaultValue={student.course ?? ""}
           inputRef={courseRef}
           maxLength={100}
-          placeholder="Ex.: Engenharia Informática"
+          placeholder={t("Ex.: Engenharia Informática")}
         />
 
         {/* ANO */}
         <Input
           name="year"
           id="profile-year"
-          label="Ano"
-          value={student.year}
+          label={t("Ano")}
+          value={t(student.year)}
           readOnly
-          hint="Definido no registo."
+          hint={t("Definido no registo.")}
         />
 
         {/* EMAIL */}
         <Input
           name="email"
           id="profile-email"
-          label="Email institucional"
+          label={t("Email institucional")}
           type="email"
           inputRef={emailRef}
           defaultValue={student.user.email}
           maxLength={254}
-          hint="Email do ISEP para o teu perfil."
+          hint={t("Email do ISEP para o teu perfil.")}
         />
 
         {/* LINKEDIN */}
@@ -219,15 +226,15 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
         {/* CV - Importar CV */}
         <ImportCvSection
           inputRef={cvRef}
-          text={student.cv ? "Alterar CV" : "Importar CV"}
+          text={student.cv ? "Alterar CV" : t("Importar CV")}
         />
 
         {/* BIOGRAFIA */}
         <UserBioTextArea
           id="profile-bio"
-          name="Biografia"
+          name={t("Biografia")}
           rows={5}
-          placeholder="Escreve algo sobre ti..."
+          placeholder={t("Escreve algo sobre ti...")}
           setValue={handleUserBioChange}
           value={profile.bio ? profile.bio : ""}
           limit={LIMIT}
@@ -236,7 +243,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
         {/* INTERESSES */}
         <fieldset className="min-w-0">
-          <legend className="field-label text-gray-100">Interesses</legend>
+          <legend className="field-label text-gray-100">
+            {t("Interesses")}
+          </legend>
           <InterestSelector
             alignStart
             availableInterests={availableInterests}
@@ -252,7 +261,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
           variant="form"
           className="mt-3 h-12 w-full field-focus-target text-base font-medium text-white"
         >
-          Guardar
+          {t("Guardar")}
         </PrimaryButton>
       </div>
     </section>

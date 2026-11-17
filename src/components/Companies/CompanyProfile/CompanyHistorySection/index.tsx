@@ -5,6 +5,8 @@ import Link from "next/link";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -15,6 +17,8 @@ const outlineButton =
   "inline-flex min-h-9 items-center justify-center rounded-full border border-ui-border px-4 text-sm text-ui-text transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ui-focus disabled:cursor-not-allowed disabled:opacity-60";
 
 const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
+  const t = useUiText();
+
   const [editing, setEditing] = useState(false);
   const [savedComment, setSavedComment] = useState(item.comment ?? "");
   const [comment, setComment] = useState(item.comment ?? "");
@@ -61,7 +65,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
     } catch {
       // Keep the editor open with the typed text so nothing is lost.
       saveFailed.current = true;
-      toast.error("Não foi possível atualizar o comentário.", {
+      toast.error(t("Não foi possível atualizar o comentário."), {
         toastId: `comment-failed-${item.studentId}`,
       });
     } finally {
@@ -86,7 +90,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
         </Link>
       </div>
       <div className="text-sm text-ui-muted sm:pt-1 sm:text-base">
-        <span className="sr-only">Guardado em </span>
+        <span className="sr-only">{t("Guardado em")}</span>
         <time dateTime={item.createdAt}>
           {formatDateDDStrMonthHourMin(item.createdAt)}
         </time>
@@ -95,7 +99,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
         {editing ? (
           <div className="flex flex-col gap-2">
             <label htmlFor={fieldId} className="sr-only">
-              Comentário sobre {name}
+              {t("Comentário sobre {value}", { value: name })}
             </label>
             <textarea
               ref={fieldRef}
@@ -122,7 +126,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
                 aria-busy={loading}
                 className="ui-action min-h-9 text-sm"
               >
-                {loading ? "A guardar..." : "Guardar"}
+                {loading ? t("A guardar...") : t("Guardar")}
               </button>
               {savedComment && (
                 <button
@@ -131,7 +135,8 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
                   disabled={loading}
                   className={`${outlineButton} border-ui-error text-ui-error hover:border-ui-error`}
                 >
-                  Remover
+                  {" "}
+                  <UiText text="Remover" />{" "}
                 </button>
               )}
               <button
@@ -140,7 +145,7 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
                 disabled={loading}
                 className={outlineButton}
               >
-                Cancelar
+                {t("Cancelar")}
               </button>
             </div>
           </div>
@@ -148,17 +153,22 @@ const SavedStudentRow = ({ item }: { item: SavedStudentDto }) => {
           <div className="flex flex-col items-start gap-2">
             <p className="text-sm wrap-anywhere whitespace-pre-wrap text-white/90">
               {savedComment || (
-                <span className="text-ui-muted italic">Sem comentário</span>
+                <span className="text-ui-muted italic">
+                  {t("Sem comentário")}
+                </span>
               )}
             </p>
             <button
               ref={editButtonRef}
               type="button"
               onClick={() => setEditing(true)}
-              aria-label={`${savedComment ? "Editar" : "Adicionar"} comentário sobre ${name}`}
+              aria-label={t("{action} comentário sobre {name}", {
+                action: t(savedComment ? "Editar" : "Adicionar"),
+                name,
+              })}
               className={outlineButton}
             >
-              {savedComment ? "Editar" : "Adicionar comentário"}
+              {savedComment ? t("Editar") : t("Adicionar comentário")}
             </button>
           </div>
         )}
@@ -174,10 +184,14 @@ const CompanySavesSection = ({
 }: {
   historyData: SavedStudentDto[];
 }) => {
+  const t = useUiText();
+
   if (!historyData.length) {
     return (
       <p className="w-full border-t-2 py-6 text-center text-white/70">
-        Ainda não há perfis guardados. Os estudantes que guardar aparecem aqui.
+        {t(
+          "Ainda não há perfis guardados. Os estudantes que guardar aparecem aqui."
+        )}
       </p>
     );
   }
@@ -196,11 +210,11 @@ const CompanySavesSection = ({
           aria-hidden="true"
           className="sticky top-0 z-10 hidden border-b-2 bg-background pb-2 font-bold text-white/70 sm:grid sm:grid-cols-[2fr_1fr_2fr] sm:gap-4"
         >
-          <span>Nome</span>
-          <span>Data</span>
-          <span>Comentário</span>
+          <span>{t("Nome")}</span>
+          <span>{t("Data")}</span>
+          <span>{t("Comentário")}</span>
         </div>
-        <ul aria-label="Histórico de scans">
+        <ul aria-label={t("Histórico de scans")}>
           {historyData.map((item) => (
             <SavedStudentRow
               key={`${item.studentId}-${item.createdAt}`}

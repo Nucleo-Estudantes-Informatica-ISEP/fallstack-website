@@ -11,6 +11,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
@@ -27,12 +28,15 @@ const YearStep: FunctionComponent<YearStepProps> = ({
   data,
   setData,
 }) => {
+  const t = useUiText();
+
   const [error, setError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLSelectElement>(null);
 
   const handleNext = () => {
-    if (!inputRef.current?.value) return setError("Este campo é obrigatório.");
+    if (!inputRef.current?.value)
+      return setError(t("Este campo é obrigatório."));
 
     setData({ ...data, year: inputRef.current.value });
     setCurrentStep(currentStep + 1);
@@ -64,7 +68,7 @@ const YearStep: FunctionComponent<YearStepProps> = ({
 
         <InputSelect
           name="Insere o teu ano."
-          placeholder="Insere o ano"
+          placeholder={t("Insere o ano")}
           center
           inputRef={inputRef}
           onKeyUp={handleKeyUp}
@@ -93,7 +97,7 @@ const YearStep: FunctionComponent<YearStepProps> = ({
           onClick={handleNext}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >
-          Seguinte
+          {t("Seguinte")}
         </PrimaryButton>
       </div>
     </div>

@@ -1,8 +1,10 @@
 "use client";
 
 import { useId, useState } from "react";
+import Link from "next/link";
 import { toast } from "react-toastify";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import LogoThumbnail from "@/components/ui/LogoThumbnail";
 import {
   uploadAdminImage,
@@ -87,6 +89,7 @@ interface AdminFormProps {
   defaultValues?: Record<string, AdminFormValue>;
   onSubmit: (values: Record<string, AdminFormValue>) => Promise<void> | void;
   submitLabels?: { create: string; edit: string };
+  cancelHref?: string;
 }
 
 const inputClassName =
@@ -98,6 +101,8 @@ interface FormFieldProps {
 }
 
 const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
+  const t = useUiText();
+
   if (field.kind === "checkbox") {
     return (
       <label className="flex items-center gap-2 text-sm text-gray-700">
@@ -106,7 +111,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
           name={field.name}
           defaultChecked={Boolean(defaultValue)}
         />
-        {field.label}
+        {t(field.label)}
       </label>
     );
   }
@@ -114,7 +119,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
   if (field.kind === "select") {
     return (
       <label className="flex flex-col gap-1 text-sm text-gray-700">
-        {field.label}
+        {t(field.label)}
         <select
           name={field.name}
           defaultValue={defaultValue !== undefined ? String(defaultValue) : ""}
@@ -123,7 +128,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
         >
           {field.options.map((option) => (
             <option key={option.value} value={option.value}>
-              {option.label}
+              {t(option.label)}
             </option>
           ))}
         </select>
@@ -137,7 +142,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
       : [];
     return (
       <fieldset className="flex flex-col gap-1 text-sm text-gray-700">
-        <legend>{field.label}</legend>
+        <legend>{t(field.label)}</legend>
         <div className="flex max-h-48 flex-col gap-1 overflow-y-auto rounded-md border border-gray-300 p-2">
           {field.options.map((option) => (
             <label key={option.value} className="flex items-center gap-2">
@@ -147,7 +152,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
                 value={option.value}
                 defaultChecked={selected.includes(option.value)}
               />
-              {option.label}
+              {t(option.label)}
             </label>
           ))}
         </div>
@@ -158,9 +163,9 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
   if (field.kind === "video")
     return (
       <fieldset className="flex flex-col gap-2 text-sm text-gray-700">
-        <legend>{field.label}</legend>
+        <legend>{t(field.label)}</legend>
         <label>
-          URL do YouTube ou vídeo carregado
+          {t("URL do YouTube ou vídeo carregado")}
           <input
             type="text"
             name={field.name}
@@ -169,7 +174,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
           />
         </label>
         <label>
-          Carregar MP4 (até 256 MiB; substitui o URL ao guardar)
+          {t("Carregar MP4 (até 256 MiB; substitui o URL ao guardar)")}
           <input
             type="file"
             name={`${field.name}File`}
@@ -177,8 +182,9 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
           />
         </label>
         <p>
-          Vídeos MP4 com H.264/AAC. Usa Guardar para carregar e associar o
-          vídeo.
+          {t(
+            "Vídeos MP4 com H.264/AAC. Usa Guardar para carregar e associar o vídeo."
+          )}
         </p>
       </fieldset>
     );
@@ -186,7 +192,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
   if (field.kind === "textarea") {
     return (
       <label className="flex flex-col gap-1 text-sm text-gray-700">
-        {field.label}
+        {t(field.label)}
         <textarea
           name={field.name}
           defaultValue={defaultValue !== undefined ? String(defaultValue) : ""}
@@ -200,7 +206,7 @@ const FormField: React.FC<FormFieldProps> = ({ field, defaultValue }) => {
 
   return (
     <label className="flex flex-col gap-1 text-sm text-gray-700">
-      {field.label}
+      {t(field.label)}
       <input
         type={field.kind}
         name={field.name}
@@ -223,6 +229,8 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
   uploadKind,
   onUploaded,
 }) => {
+  const t = useUiText();
+
   const [isUploading, setIsUploading] = useState(false);
   const inputId = useId();
 
@@ -233,7 +241,7 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
     try {
       const result = await uploadAdminImage(file, uploadKind);
       if (!result) {
-        toast.error("Não foi possível enviar a imagem.");
+        toast.error(t("Não foi possível enviar a imagem."));
         return;
       }
       onUploaded(result.url);
@@ -249,14 +257,14 @@ const AdminFormImageField: React.FC<AdminFormImageFieldProps> = ({
         <LogoThumbnail src={currentUrl} size={64} />
       ) : (
         <div className="flex size-16 items-center justify-center rounded-full bg-gray-100 text-center text-xs text-gray-400">
-          Sem imagem
+          {t("Sem imagem")}
         </div>
       )}
       <label
         htmlFor={inputId}
         className="cursor-pointer rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100"
       >
-        {isUploading ? "A enviar..." : "Escolher imagem"}
+        {isUploading ? t("A enviar...") : t("Escolher imagem")}
       </label>
       <input
         id={inputId}
@@ -284,7 +292,10 @@ const AdminForm: React.FC<AdminFormProps> = ({
   defaultValues = {},
   onSubmit,
   submitLabels = { create: "Criar", edit: "Guardar" },
+  cancelHref = "/overview",
 }) => {
+  const t = useUiText();
+
   const [isPending, setIsPending] = useState(false);
   const [imageValues, setImageValues] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
@@ -319,7 +330,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
         const confirm = String(formData.get(`${section.name}-confirm`) ?? "");
         if (password || confirm) {
           if (password !== confirm) {
-            toast.error("As palavras-passe não coincidem.");
+            toast.error(t("As palavras-passe não coincidem."));
             return;
           }
           values[section.name] = password;
@@ -336,7 +347,9 @@ const AdminForm: React.FC<AdminFormProps> = ({
           const file = formData.get(`${field.name}File`);
           if (file instanceof File && file.size) {
             if (!String(values.bodyText ?? "").trim())
-              throw new Error("Preenche o perfil antes de carregar um vídeo.");
+              throw new Error(
+                t("Preenche o perfil antes de carregar um vídeo.")
+              );
             values[field.name] = (await uploadAdminVideo(file)).url;
           }
         }
@@ -346,7 +359,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Não foi possível carregar o vídeo."
+          : t("Não foi possível carregar o vídeo.")
       );
     } finally {
       setIsPending(false);
@@ -364,7 +377,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           className="flex flex-col gap-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
         >
           <h3 className="text-sm font-semibold tracking-wide text-gray-500 uppercase">
-            {section.title}
+            {t(section.title)}
           </h3>
 
           {section.kind === "fields" &&
@@ -389,7 +402,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
           {section.kind === "password" && (
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1 text-sm text-gray-700">
-                Nova palavra-passe
+                {t("Nova palavra-passe")}
                 <input
                   type="password"
                   name={`${section.name}-new`}
@@ -398,7 +411,7 @@ const AdminForm: React.FC<AdminFormProps> = ({
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm text-gray-700">
-                Confirmar palavra-passe
+                {t("Confirmar palavra-passe")}
                 <input
                   type="password"
                   name={`${section.name}-confirm`}
@@ -407,23 +420,29 @@ const AdminForm: React.FC<AdminFormProps> = ({
                 />
               </label>
               <p className="text-xs text-gray-400">
-                Deixe em branco para manter a palavra-passe atual.
+                {t("Deixe em branco para manter a palavra-passe atual.")}
               </p>
             </div>
           )}
         </div>
       ))}
 
+      <Link
+        href={cancelHref}
+        className="ui-focus inline-flex min-h-11 items-center underline"
+      >
+        {t("Cancelar")}
+      </Link>
       <button
         type="submit"
         disabled={isPending}
         className="rounded-md bg-primary p-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending
-          ? "A guardar..."
+          ? t("A guardar...")
           : id
-            ? submitLabels.edit
-            : submitLabels.create}
+            ? t(submitLabels.edit)
+            : t(submitLabels.create)}
       </button>
     </form>
   );

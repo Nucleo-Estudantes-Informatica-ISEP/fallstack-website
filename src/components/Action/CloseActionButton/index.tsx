@@ -2,6 +2,7 @@
 
 import { httpClient } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface CloseActionButtonProps {
@@ -15,8 +16,10 @@ const CloseActionButton: React.FC<CloseActionButtonProps> = ({
   id,
   action,
 }) => {
+  const t = useUiText();
+
   const { mutate, isPending } = useMutation(
-    "Não foi possível atualizar o estado da ação."
+    t("Não foi possível atualizar o estado da ação.")
   );
 
   const handleToggleIsActionLive = () =>
@@ -33,7 +36,7 @@ const CloseActionButton: React.FC<CloseActionButtonProps> = ({
         action.isLive ? "bg-red-500" : "bg-green-500"
       }`}
     >
-      {action.isLive ? "Fechar" : "Abrir"} ação
+      {action.isLive ? t("Fechar") : t("Abrir")} {t("ação")}
     </PrimaryButton>
   );
 };

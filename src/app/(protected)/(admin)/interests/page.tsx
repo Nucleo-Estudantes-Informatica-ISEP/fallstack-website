@@ -10,6 +10,10 @@ import AdminPageHeader from "@/components/AdminPageHeader";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminInterestDto } from "@/application/dto/interestDto";
 import { listInterestsForAdmin } from "@/application/services/interestService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -31,6 +35,9 @@ const columns: DataTableColumn<InterestRow>[] = [
 const InterestsAdminPage = async ({
   searchParams,
 }: InterestsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listInterestsForAdmin({
     page,
@@ -43,17 +50,25 @@ const InterestsAdminPage = async ({
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Interesses">
+      <AdminPageHeader title={t("Interesses")}>
         <Link
           href="/interests/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar interesse
+          {t("Adicionar interesse")}
         </Link>
       </AdminPageHeader>
 
       <DataTable
-        columns={columns}
+        language={language}
+        columns={columns.map((column) =>
+          column.key === "name"
+            ? {
+                ...column,
+                render: (interest: InterestRow) => interest.name[language],
+              }
+            : column
+        )}
         rows={interests}
         rowKey={(interest) => interest.id}
         page={page}
@@ -62,12 +77,12 @@ const InterestsAdminPage = async ({
         basePath="/interests"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome..."
+        searchPlaceholder={t("Pesquisar por nome...")}
         renderActions={(interest) => (
           <div className="flex items-center gap-3">
             <Link
               href={`/interests/${interest.id}/edit`}
-              aria-label={`Editar ${interest.name.PT}`}
+              aria-label={t("Editar {value}", { value: interest.name.PT })}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />

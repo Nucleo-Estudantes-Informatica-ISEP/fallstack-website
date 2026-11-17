@@ -2,6 +2,7 @@ import Image, { getImageProps } from "next/image";
 import Link from "next/link";
 
 import { AuthContextProvider } from "@/contexts/AuthContext";
+import UiText from "@/components/ui/UiText";
 
 interface AuthPageLayoutProps {
   children: React.ReactNode;
@@ -43,7 +44,7 @@ const AuthPageLayout: React.FC<AuthPageLayoutProps> = ({ children }) => {
               href="/"
               className="inline-flex min-h-11 items-center self-start text-sm text-gray-300 underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
-              Página inicial
+              <UiText text="Página inicial" />
             </Link>
             <div className="flex flex-1 items-start justify-center pt-4 lg:items-center lg:py-12">
               {children}

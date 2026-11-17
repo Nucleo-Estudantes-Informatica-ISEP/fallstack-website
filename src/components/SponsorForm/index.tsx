@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminSponsorDto } from "@/application/dto/sponsorDto";
 
@@ -12,6 +13,8 @@ interface SponsorFormProps {
 }
 
 const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -26,37 +29,38 @@ const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor }) => {
     try {
       if (sponsor) {
         await httpClient.patch(`/admin/sponsors/${sponsor.id}`, payload);
-        toast.success("Patrocinador atualizado.");
+        toast.success(t("Patrocinador atualizado."));
       } else {
         await httpClient.post("/admin/sponsors", payload);
-        toast.success("Patrocinador criado.");
+        toast.success(t("Patrocinador criado."));
       }
       router.push("/sponsors");
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar o patrocinador.");
+      toast.error(t("Não foi possível guardar o patrocinador."));
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/sponsors"
       id={sponsor?.id}
       sections={[
         {
           kind: "image",
-          title: "Logótipo",
+          title: t("Logótipo"),
           name: "logo",
           uploadKind: "logo",
           currentUrl: sponsor?.logo ?? undefined,
         },
         {
           kind: "fields",
-          title: "Detalhes",
+          title: t("Detalhes"),
           fields: [
-            { kind: "text", name: "name", label: "Nome", required: true },
+            { kind: "text", name: "name", label: t("Nome"), required: true },
             { kind: "text", name: "website", label: "Website" },
-            { kind: "number", name: "order", label: "Ordem" },
-            { kind: "checkbox", name: "active", label: "Ativo" },
+            { kind: "number", name: "order", label: t("Ordem") },
+            { kind: "checkbox", name: "active", label: t("Ativo") },
           ],
         },
       ]}
