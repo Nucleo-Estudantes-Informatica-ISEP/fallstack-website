@@ -9,7 +9,7 @@ describe("About page", () => {
   it("keeps the NEI link", () => {
     render(<About />);
     const link = screen.getByRole("link", { name: "NEI-ISEP" });
-    expect(link.getAttribute("href")).toBe("https://nei.isep.ipp.pt/");
+    expect(link.getAttribute("href")).toBe("https://www.nei-isep.org");
   });
 
   it("keeps the repository link", () => {
