@@ -10,6 +10,7 @@ import { toInterestDto } from "@/application/dto/interestDto";
 import { getCompanyRanks } from "@/application/services/companyRankService";
 import { getCompanyWithContent } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
+import { getUiText } from "@/application/services/uiLanguageService";
 import {
   parseFacts,
   parseSocialLinks,
@@ -51,6 +52,8 @@ function toContentValue(
 }
 
 const EditCompanyPage = async ({ params }: EditCompanyPageProps) => {
+  const t = await getUiText();
+
   const { id } = await params;
   const [company, ranks, interests] = await Promise.all([
     getCompanyWithContent(id),
@@ -61,7 +64,9 @@ const EditCompanyPage = async ({ params }: EditCompanyPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <h1 className="text-2xl font-bold text-gray-800">Editar empresa</h1>
+      <h1 className="text-2xl font-bold text-gray-800">
+        {t("Editar empresa")}
+      </h1>
       <CompanyForm
         company={toAdminCompanyDto(company)}
         ranks={ranks.map((rank) => ({ id: rank.id, name: rank.name }))}
@@ -74,7 +79,7 @@ const EditCompanyPage = async ({ params }: EditCompanyPageProps) => {
         }
       />
       <h2 className="text-xl font-bold text-gray-800">
-        Conteúdo da página interna
+        {t("Conteúdo da página interna")}
       </h2>
       <CompanyContentForm
         content={toContentValue(id, company)}

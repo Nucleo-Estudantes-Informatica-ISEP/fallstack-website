@@ -3,6 +3,7 @@
 import React from "react";
 
 import { Email } from "@/components/ui/Icons";
+import UiText from "@/components/ui/UiText";
 
 interface ContactSectionProps {
   email: string;
@@ -12,7 +13,10 @@ const ContactSection: React.FC<ContactSectionProps> = ({ email }) => {
   return (
     <div className="my-4 flex flex-col space-y-2 px-12 text-black">
       <div className="flex">
-        <h3 className="text-left text-xl font-bold text-gray-600">Contactos</h3>
+        <h3 className="text-left text-xl font-bold text-gray-600">
+          {" "}
+          <UiText text="Contactos" />{" "}
+        </h3>
       </div>
       <div className="flex items-center">
         <Email className="size-5"></Email>

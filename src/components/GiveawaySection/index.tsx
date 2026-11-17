@@ -3,6 +3,7 @@
 import { FunctionComponent, useState } from "react";
 import { toast } from "react-toastify";
 
+import UiText from "@/components/ui/UiText";
 import ConfettiEffect from "@/components/ConfettiEffect";
 import { pickGiveawayWinner } from "@/app/(protected)/(admin)/giveaway/actions";
 
@@ -78,7 +79,8 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
   return (
     <div className="flex flex-col items-center justify-center gap-16 rounded-3xl bg-white p-8">
       <h1 className="text-4xl font-bold text-black">
-        Inscritos - {students.length}
+        {" "}
+        <UiText text="Inscritos -" /> {students.length}
       </h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-10">
         {Array.from({ length: numRows }, (_, rowIndex) => {
@@ -104,7 +106,8 @@ const GiveawaySection: FunctionComponent<GiveawaySectionProps> = ({
         disabled={isRandomizing}
         className="rounded-xl bg-[#D9D9D9] px-8 py-4 text-lg font-semibold text-black transition-colors duration-200 ease-in-out hover:bg-[#BFBFBF] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#D9D9D9]"
       >
-        Selecionar vencedor 🎉
+        {" "}
+        <UiText text="Selecionar vencedor 🎉" />{" "}
       </button>
       <ConfettiEffect visible={isConfettiVisible} />
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Language } from "@/domain/i18n/translations";
+import { uiText } from "@/domain/i18n/ui";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -58,6 +59,7 @@ function DataTable<T>({
   searchPlaceholder = "Pesquisar...",
   language = Language.PT,
 }: DataTableProps<T>) {
+  const t = (text: string) => uiText(language, text);
   const isEnglish = language === Language.EN;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const colSpan = columns.length + (renderActions ? 1 : 0);
@@ -94,7 +96,7 @@ function DataTable<T>({
           type="search"
           name="q"
           defaultValue={searchValue}
-          placeholder={searchPlaceholder}
+          placeholder={t(searchPlaceholder)}
           className="w-full max-w-xs rounded-md border border-gray-300 p-2 text-black"
         />
         <button
@@ -116,7 +118,7 @@ function DataTable<T>({
                       href={sortHref(column.key)}
                       className="flex items-center gap-1 hover:underline"
                     >
-                      {column.header}
+                      {t(column.header)}
                       {sort?.key === column.key && (
                         <span aria-hidden="true">
                           {sort.order === "asc" ? "▲" : "▼"}
@@ -124,11 +126,13 @@ function DataTable<T>({
                       )}
                     </Link>
                   ) : (
-                    column.header
+                    t(column.header)
                   )}
                 </th>
               ))}
-              {renderActions && <th className="px-6 py-3 text-left">Ações</th>}
+              {renderActions && (
+                <th className="px-6 py-3 text-left">{t("Ações")}</th>
+              )}
             </tr>
           </thead>
           <tbody className="text-base text-gray-600">
@@ -138,7 +142,7 @@ function DataTable<T>({
                   colSpan={colSpan}
                   className="px-6 py-8 text-center text-gray-400"
                 >
-                  {emptyLabel}
+                  {t(emptyLabel)}
                 </td>
               </tr>
             ) : (

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminScheduleEventDto } from "@/application/dto/scheduleDto";
 
@@ -12,6 +13,8 @@ interface ScheduleFormProps {
 }
 
 const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -25,10 +28,10 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
     try {
       if (event) {
         await httpClient.patch(`/admin/schedule/${event.id}`, payload);
-        toast.success("Atividade atualizada.");
+        toast.success(t("Atividade atualizada."));
       } else {
         await httpClient.post("/admin/schedule", payload);
-        toast.success("Atividade criada.");
+        toast.success(t("Atividade criada."));
       }
       router.push("/schedule");
       router.refresh();
@@ -36,42 +39,43 @@ const ScheduleForm: React.FC<ScheduleFormProps> = ({ event }) => {
       toast.error(
         error instanceof HttpClientError
           ? error.message
-          : "Não foi possível guardar a atividade."
+          : t("Não foi possível guardar a atividade.")
       );
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/schedule"
       id={event?.id}
       sections={[
         {
           kind: "fields",
-          title: "Detalhes",
+          title: t("Detalhes"),
           fields: [
-            { kind: "number", name: "day", label: "Dia", required: true },
+            { kind: "number", name: "day", label: t("Dia"), required: true },
             {
               kind: "time",
               name: "startTime",
-              label: "Início",
+              label: t("Início"),
               required: true,
             },
             {
               kind: "time",
               name: "endTime",
-              label: "Fim",
+              label: t("Fim"),
               required: true,
             },
             {
               kind: "text",
               name: "activityPT",
-              label: "Atividade (PT)",
+              label: t("Atividade (PT)"),
               required: true,
             },
             {
               kind: "text",
               name: "activityEN",
-              label: "Atividade (EN)",
+              label: t("Atividade (EN)"),
               required: true,
             },
           ],

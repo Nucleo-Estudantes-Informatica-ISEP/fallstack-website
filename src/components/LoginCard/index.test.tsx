@@ -223,3 +223,17 @@ test("employee signup is a text link without primary-button styling", () => {
   expect(link).toHaveClass("text-gray-300", "underline");
   expect(link).not.toHaveClass("bg-white", "px-10", "py-4");
 });
+
+test("inactive account explains the blocked state and offers account switching without starting sign-in again", () => {
+  render(<LoginCard inactive />);
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "A tua conta ou empresa está inativa."
+  );
+  expect(
+    screen.getByRole("button", { name: "Usar outra conta" })
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "support@nei-isep.org" })
+  ).toHaveAttribute("href", "mailto:support@nei-isep.org");
+  expect(screen.queryByText("Continuar com AuthNEI")).not.toBeInTheDocument();
+});

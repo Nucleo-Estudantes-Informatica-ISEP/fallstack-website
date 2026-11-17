@@ -4,6 +4,9 @@ import React from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { FiClipboard, FiRefreshCw } from "react-icons/fi";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
+
 interface QRCodeCardProps {
   name: string;
   subtitle?: string;
@@ -25,6 +28,8 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
   isCopied,
   onRefresh,
 }) => {
+  const t = useUiText();
+
   return (
     <div className="relative mx-auto w-full max-w-md overflow-hidden rounded-2xl border border-[#2A2A2A] bg-[#121212] shadow-xl">
       <div className="bg-linear-to-br from-[#ED8326] to-[#FFB347] p-6 text-white">
@@ -51,7 +56,8 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
             <QRCodeSVG value={qrValue} size={180} />
           ) : (
             <div className="flex size-44 items-center justify-center text-xs text-gray-500">
-              Sem QR Code
+              {" "}
+              <UiText text="Sem QR Code" />{" "}
             </div>
           )}
         </div>
@@ -62,7 +68,9 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
           >
             <FiClipboard className="size-4" />
             <span className="font-mono">{code}</span>
-            {isCopied && <span className="ml-1 text-green-400">Copiado!</span>}
+            {isCopied && (
+              <span className="ml-1 text-green-400">{t("Copiado!")}</span>
+            )}
           </button>
         )}
         {onRefresh && (
@@ -70,12 +78,14 @@ const QRCodeCard: React.FC<QRCodeCardProps> = ({
             onClick={onRefresh}
             className="mt-4 flex items-center gap-2 rounded-md bg-ui-highlight px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110"
           >
-            <FiRefreshCw className="size-4" />
-            Atualizar QR Code
+            <FiRefreshCw className="size-4" />{" "}
+            <UiText text="Atualizar QR Code" />{" "}
           </button>
         )}
         <p className="mt-6 w-full text-center text-xs text-gray-400">
-          Mostra este passe às empresas para que possam guardar o teu perfil.
+          {t(
+            "Mostra este passe às empresas para que possam guardar o teu perfil."
+          )}
         </p>
       </div>
     </div>

@@ -11,6 +11,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
@@ -27,6 +28,8 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
   data,
   setData,
 }) => {
+  const t = useUiText();
+
   const [error, setError] = useState<string | null>(null);
 
   const inputRefPassword = useRef<HTMLInputElement>(null);
@@ -34,12 +37,12 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
 
   const handleNext = () => {
     if (!inputRefPassword.current?.value)
-      return setError("Este campo é obrigatório.");
+      return setError(t("Este campo é obrigatório."));
     if (!inputRefPasswordRepeat.current?.value)
-      return setError("Este campo é obrigatório.");
+      return setError(t("Este campo é obrigatório."));
 
     if (inputRefPassword.current.value !== inputRefPasswordRepeat.current.value)
-      return setError("As passwords não coincidem.");
+      return setError(t("As passwords não coincidem."));
 
     const passwordRegex = new RegExp(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/);
 
@@ -49,7 +52,9 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
       return setError("A password deve conter pelo menos 8 caracteres.");
     if (!password.match(passwordRegex))
       return setError(
-        "A password deve conter pelo menos 1 letra maiúscula, 1 letra minúscula e 1 número."
+        t(
+          "A password deve conter pelo menos 1 letra maiúscula, 1 letra minúscula e 1 número."
+        )
       );
 
     setData({ ...data, password: inputRefPassword.current.value });
@@ -114,7 +119,7 @@ const PasswordStep: FunctionComponent<PasswordStepProps> = ({
           onClick={handleNext}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >
-          Seguinte
+          {t("Seguinte")}
         </PrimaryButton>
       </div>
     </div>

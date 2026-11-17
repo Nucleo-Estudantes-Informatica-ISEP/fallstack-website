@@ -2,6 +2,8 @@
 
 import { Ref, useId } from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+
 interface UserBioTextAreaProps {
   ref?: Ref<HTMLTextAreaElement>;
   rows?: number;
@@ -33,6 +35,8 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
   autoFocus,
   counterClassName = "mt-1 text-left text-sm",
 }) => {
+  const t = useUiText();
+
   const generatedId = useId();
   const fieldId = id ?? generatedId;
   return (
@@ -42,18 +46,18 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
           className="field-label text-left text-gray-100"
           htmlFor={fieldId}
         >
-          {name}
+          {t(name)}
         </label>
       )}
 
       <textarea
         id={fieldId}
-        name={name}
+        name={t(name)}
         ref={ref}
         disabled={disabled}
         rows={rows}
         autoFocus={autoFocus}
-        placeholder={placeholder}
+        placeholder={t(placeholder)}
         value={value}
         aria-describedby={`${fieldId}-count`}
         maxLength={limit}
@@ -71,7 +75,7 @@ const UserBioTextArea: React.FC<UserBioTextAreaProps> = ({
               : "text-gray-400"
         }`}
       >
-        {value.length} / {limit} caracteres
+        {value.length} / {limit} {t("caracteres")}
       </p>
     </div>
   );

@@ -36,3 +36,8 @@ test("renders the schedule reorder link in the admin page header", async () => {
     screen.getByRole("link", { name: "Adicionar atividade" })
   ).toHaveAttribute("href", "/schedule/new");
 });
+
+vi.mock("@/application/services/uiLanguageService", () => ({
+  getUiLanguage: async () => "PT",
+  getUiText: async () => (text: string) => text,
+}));

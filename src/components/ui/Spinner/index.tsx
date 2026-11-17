@@ -3,6 +3,8 @@
 import { FunctionComponent } from "react";
 import { CgSpinner } from "react-icons/cg";
 
+import UiText from "@/components/ui/UiText";
+
 interface SpinnerProps {
   className?: string;
 }
@@ -14,7 +16,10 @@ const Spinner: FunctionComponent<SpinnerProps> = ({ className }) => {
         aria-hidden="true"
         className={`flex flex-1 animate-spin justify-center text-xl ${className ?? ""}`}
       />
-      <span className="sr-only">A carregar…</span>
+      <span className="sr-only">
+        {" "}
+        <UiText text="A carregar…" />{" "}
+      </span>
     </span>
   );
 };

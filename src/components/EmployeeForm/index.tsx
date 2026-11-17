@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, {
   type AdminFormSection,
   type AdminFormValue,
@@ -19,6 +20,8 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
   employee,
   companyOptions,
 }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -30,7 +33,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           companyId: values.companyId,
         };
         await httpClient.patch(`/admin/employees/${employee.id}`, payload);
-        toast.success("Recrutador atualizado.");
+        toast.success(t("Recrutador atualizado."));
       } else {
         await httpClient.post("/admin/employees", {
           email: values.email,
@@ -38,19 +41,19 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
           companyId: values.companyId,
           linkedin: values.linkedin || undefined,
         });
-        toast.success("Recrutador criado.");
+        toast.success(t("Recrutador criado."));
       }
       router.push("/employees");
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar o recrutador.");
+      toast.error(t("Não foi possível guardar o recrutador."));
     }
   };
 
   const sections: AdminFormSection[] = [
     {
       kind: "fields",
-      title: "Detalhes",
+      title: t("Detalhes"),
       fields: [
         ...(!employee
           ? ([
@@ -62,11 +65,11 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
               },
             ] as const)
           : []),
-        { kind: "text", name: "name", label: "Nome", required: true },
+        { kind: "text", name: "name", label: t("Nome"), required: true },
         {
           kind: "select",
           name: "companyId",
-          label: "Empresa",
+          label: t("Empresa"),
           options: companyOptions,
           required: true,
         },
@@ -77,6 +80,7 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
 
   return (
     <AdminForm
+      cancelHref="/employees"
       id={employee?.id}
       sections={sections}
       defaultValues={

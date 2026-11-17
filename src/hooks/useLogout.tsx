@@ -4,11 +4,13 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
 
 import useSession from "./useSession";
 
 export function useLogout() {
+  const t = useUiText();
   const session = useSession();
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -26,7 +28,7 @@ export function useLogout() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Não foi possível terminar a sessão."
+          : t("Não foi possível terminar a sessão.")
       );
       setIsLoggingOut(false);
     }

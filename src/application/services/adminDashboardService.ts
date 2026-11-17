@@ -1,5 +1,8 @@
 import "server-only";
 
+import { Language } from "@/domain/i18n/translations";
+import { uiText } from "@/domain/i18n/ui";
+
 import {
   countActionCompletions,
   findActionCompletionTimestampsSince,
@@ -87,7 +90,11 @@ function bucketByDay(timestamps: Date[], days: number) {
   return buckets;
 }
 
-export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
+export async function getAdminDashboardSummary(
+  language: Language = Language.PT
+): Promise<AdminDashboardSummary> {
+  const t = (text: string, values: Record<string, string>) =>
+    uiText(language, text, values);
   const since = new Date(
     startOfUTCDay(new Date()) - (WEEKLY_DAYS - 1) * MS_PER_DAY
   );
@@ -122,17 +129,23 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     [
       ...recentStudents.map((student) => ({
         type: "signup" as const,
-        label: `${student.name} juntou-se à Fallstack`,
+        label: t("{name} juntou-se à Fallstack", { name: student.name }),
         timestamp: student.createdAt,
       })),
       ...recentCompletions.map((completion) => ({
         type: "scan" as const,
-        label: `${completion.student.name} completou "${completion.action.name}"`,
+        label: t('{name} completou "{action}"', {
+          name: completion.student.name,
+          action: uiText(language, completion.action.name),
+        }),
         timestamp: completion.completedAt,
       })),
       ...recentSaves.map((saved) => ({
         type: "save" as const,
-        label: `${saved.company.name} guardou ${saved.student.name}`,
+        label: t("{company} guardou {name}", {
+          company: saved.company.name,
+          name: saved.student.name,
+        }),
         timestamp: saved.createdAt,
       })),
     ]

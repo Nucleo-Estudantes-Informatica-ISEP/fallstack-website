@@ -2,6 +2,7 @@
 
 import { FiCheck } from "react-icons/fi";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { InterestDto } from "@/application/dto/interestDto";
 
 interface InterestSelectorProps {
@@ -19,6 +20,8 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   scrollable = false,
   alignStart = false,
 }) => {
+  const t = useUiText();
+
   const toggleInterest = (interestId: string) => {
     if (selectedInterestIds.includes(interestId)) {
       setSelectedInterestIds(
@@ -32,7 +35,7 @@ const InterestSelector: React.FC<InterestSelectorProps> = ({
   if (!availableInterests.length) {
     return (
       <div className="my-4 flex w-full items-center justify-center text-sm text-gray-400">
-        Não foi possível carregar interesses.
+        {t("Não foi possível carregar interesses.")}
       </div>
     );
   }

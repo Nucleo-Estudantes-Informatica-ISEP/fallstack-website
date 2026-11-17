@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   FiAlertTriangle,
@@ -7,6 +9,8 @@ import {
   FiXCircle,
 } from "react-icons/fi";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import type { CheckInOutcome } from "@/client/api/attendance";
 
 interface ResultCardProps {
@@ -32,14 +36,20 @@ function checkInTime(iso: string) {
   });
 }
 
-function content(outcome: CheckInOutcome, session: ResultCardProps["session"]) {
+function content(
+  outcome: CheckInOutcome,
+  session: ResultCardProps["session"],
+  t: ReturnType<typeof useUiText>
+) {
   switch (outcome.kind) {
     case "recorded":
       return {
         tone: tone.green,
         Icon: FiCheckCircle,
         title: outcome.name,
-        detail: `Check-in registado · ${checkInTime(outcome.checkedInAt)}`,
+        detail: t("Check-in registado · {value}", {
+          value: checkInTime(outcome.checkedInAt),
+        }),
       };
     case "duplicate":
       return {
@@ -73,7 +83,9 @@ function content(outcome: CheckInOutcome, session: ResultCardProps["session"]) {
       return {
         tone: tone.red,
         Icon: FiClock,
-        title: `Demasiadas leituras, espera ${outcome.retryAfterSeconds} s`,
+        title: t("Demasiadas leituras, espera {value} s", {
+          value: outcome.retryAfterSeconds,
+        }),
         detail: null,
       };
     case "unavailable":
@@ -98,7 +110,8 @@ const ResultCard: React.FC<ResultCardProps> = ({
   session,
   loginHref,
 }) => {
-  const { tone: toneClass, Icon, title, detail } = content(outcome, session);
+  const t = useUiText();
+  const { tone: toneClass, Icon, title, detail } = content(outcome, session, t);
   return (
     <div
       role="status"
@@ -106,15 +119,16 @@ const ResultCard: React.FC<ResultCardProps> = ({
     >
       <Icon className="mt-0.5 size-5 shrink-0 text-gray-900" aria-hidden />
       <div className="min-w-0">
-        <p className="font-semibold text-gray-900">{title}</p>
-        {detail && <p className="text-sm text-gray-700">{detail}</p>}
+        <p className="font-semibold text-gray-900">{t(title)}</p>
+        {detail && <p className="text-sm text-gray-700">{t(detail)}</p>}
         {outcome.kind === "unauthorized" && (
           <Link
             href={loginHref}
             prefetch={false}
             className="mt-2 inline-block rounded-lg bg-ui-highlight px-3 py-2 text-sm font-bold text-gray-900"
           >
-            Entrar de novo com AuthNEI
+            {" "}
+            <UiText text="Entrar de novo com AuthNEI" />{" "}
           </Link>
         )}
       </div>

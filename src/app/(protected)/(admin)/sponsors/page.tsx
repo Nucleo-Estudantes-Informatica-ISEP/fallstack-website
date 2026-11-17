@@ -11,6 +11,10 @@ import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminSponsorDto } from "@/application/dto/sponsorDto";
 import { listSponsorsForAdmin } from "@/application/services/sponsorService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -32,6 +36,9 @@ const columns: DataTableColumn<SponsorRow>[] = [
 ];
 
 const SponsorsAdminPage = async ({ searchParams }: SponsorsAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listSponsorsForAdmin({
     page,
@@ -44,16 +51,17 @@ const SponsorsAdminPage = async ({ searchParams }: SponsorsAdminPageProps) => {
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Patrocinadores">
+      <AdminPageHeader title={t("Patrocinadores")}>
         <Link
           href="/sponsors/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar patrocinador
+          {t("Adicionar patrocinador")}
         </Link>
       </AdminPageHeader>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={sponsors}
         rowKey={(sponsor) => sponsor.id}
@@ -63,19 +71,19 @@ const SponsorsAdminPage = async ({ searchParams }: SponsorsAdminPageProps) => {
         basePath="/sponsors"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome..."
+        searchPlaceholder={t("Pesquisar por nome...")}
         renderActions={(sponsor) => (
           <div className="flex items-center gap-3">
             <Link
               href={`/sponsors/${sponsor.id}/edit`}
-              aria-label={`Editar ${sponsor.name}`}
+              aria-label={t("Editar {value}", { value: sponsor.name })}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />
             </Link>
             <AdminToggleButton
               checked={sponsor.active}
-              label={`Ativar/desativar ${sponsor.name}`}
+              label={t("Ativar/desativar {value}", { value: sponsor.name })}
               patchUrl={`/admin/sponsors/${sponsor.id}`}
               field="active"
             />

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, {
   type AdminFormSection,
   type AdminFormValue,
@@ -23,6 +24,8 @@ const YEAR_OPTIONS = Object.entries(STUDENT_YEAR).map(([value, label]) => ({
 }));
 
 const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -37,7 +40,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
         };
         if (values.avatar) payload.avatar = values.avatar;
         await httpClient.patch(`/admin/students/${student.id}`, payload);
-        toast.success("Estudante atualizado.");
+        toast.success(t("Estudante atualizado."));
       } else {
         await httpClient.post("/admin/students", {
           email: values.email,
@@ -46,12 +49,12 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
           year: values.year,
           bio: values.bio || undefined,
         });
-        toast.success("Estudante criado.");
+        toast.success(t("Estudante criado."));
       }
       router.push("/students");
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar o estudante.");
+      toast.error(t("Não foi possível guardar o estudante."));
     }
   };
 
@@ -69,7 +72,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
       : []),
     {
       kind: "fields",
-      title: "Detalhes",
+      title: t("Detalhes"),
       fields: [
         ...(!student
           ? ([
@@ -79,14 +82,19 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
                 label: "Email",
                 required: true,
               },
-              { kind: "text", name: "code", label: "Código", required: true },
+              {
+                kind: "text",
+                name: "code",
+                label: t("Código"),
+                required: true,
+              },
             ] as const)
           : []),
-        { kind: "text", name: "name", label: "Nome", required: true },
+        { kind: "text", name: "name", label: t("Nome"), required: true },
         {
           kind: "select",
           name: "year",
-          label: "Ano",
+          label: t("Ano"),
           options: YEAR_OPTIONS,
           required: true,
         },
@@ -105,6 +113,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
 
   return (
     <AdminForm
+      cancelHref="/students"
       id={student?.id}
       sections={sections}
       defaultValues={

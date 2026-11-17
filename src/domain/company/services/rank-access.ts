@@ -7,11 +7,11 @@ export function companyProfileHref(
   name: string,
   websiteUrl: string | undefined,
   hasContent: boolean
-): string {
+): string | undefined {
   // The internal page 404s without profile content (see
   // company/[name]/page.tsx), so a rank with hasInternalPage but no
   // CompanyProfile falls back to linking out like any other rank.
   return hasInternalPage && hasContent
     ? `/company/${encodeURIComponent(name)}`
-    : websiteUrl || "/";
+    : websiteUrl || undefined;
 }

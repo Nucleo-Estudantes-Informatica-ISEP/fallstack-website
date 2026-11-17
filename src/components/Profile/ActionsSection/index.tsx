@@ -2,6 +2,7 @@
 
 import { FiCheck } from "react-icons/fi";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { StudentActionDto } from "@/application/dto/actionDto";
 
 interface ActionsSectionProps {
@@ -9,11 +10,13 @@ interface ActionsSectionProps {
 }
 
 const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
+  const t = useUiText();
+
   if (!actions.length)
     return (
       <div className="flex min-h-32 items-center justify-center">
         <p className="text-center text-lg text-ui-muted">
-          Não há desafios disponíveis...
+          {t("Não há desafios disponíveis...")}
         </p>
       </div>
     );
@@ -30,7 +33,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
           >
             <div className="min-w-0 flex-1 wrap-break-word">
               <p className="font-semibold text-white">
-                {isMasked ? action.altText : action.name}
+                {t(isMasked ? action.altText! : action.name)}
               </p>
               {isMasked ? (
                 <p className="text-sm text-ui-muted">
@@ -41,16 +44,18 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
                       .join(" ")}
                   </span>
                   <span className="sr-only">
-                    Descrição revelada quando concluíres o desafio.
+                    {t("Descrição revelada quando concluíres o desafio.")}
                   </span>
                 </p>
               ) : (
-                <p className="text-sm text-ui-muted">{action.description}</p>
+                <p className="text-sm text-ui-muted">{t(action.description)}</p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-xs text-ui-muted md:text-sm">
-                {action.points === 1 ? "1 ponto" : `${action.points} pontos`}
+                {action.points === 1
+                  ? t("1 ponto")
+                  : t("{value} pontos", { value: action.points })}
               </span>
               <span
                 className={`flex size-7.5 items-center justify-center border-3 ${action.done ? "border-ui-highlight" : "border-ui-muted"}`}
@@ -62,7 +67,7 @@ const ActionsSection: React.FC<ActionsSectionProps> = ({ actions }) => {
                   />
                 )}
                 <span className="sr-only">
-                  {action.done ? "Concluído" : "Por concluir"}
+                  {action.done ? t("Concluído") : t("Por concluir")}
                 </span>
               </span>
             </div>

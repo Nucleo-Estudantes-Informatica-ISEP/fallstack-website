@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { clientEnv } from "@/config/env.client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 
 interface AdminNavItem {
   label: string;
@@ -59,6 +60,8 @@ const baseSections: AdminNavSection[] = [
 ];
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
+  const t = useUiText();
+
   const pathname = usePathname();
   const logsUrl = clientEnv.NEXT_PUBLIC_LOGS_DASHBOARD_URL;
 
@@ -181,8 +184,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
         type="button"
         aria-label={
           isMobileMenuOpen
-            ? "Fechar menu de administração"
-            : "Abrir menu de administração"
+            ? t("Fechar menu de administração")
+            : t("Abrir menu de administração")
         }
         aria-expanded={isMobileMenuOpen}
         aria-controls="admin-mobile-navigation"
@@ -214,7 +217,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isSuperAdmin }) => {
           isMobileMenuOpen ? "block" : "hidden"
         }`}
       >
-        <nav aria-label="Admin móvel">{navigation}</nav>
+        <nav aria-label={t("Admin móvel")}>{navigation}</nav>
       </div>
 
       {/* Menu desktop */}

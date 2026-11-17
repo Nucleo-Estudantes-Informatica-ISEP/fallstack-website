@@ -4,16 +4,22 @@ import AdminActivityFeed from "@/components/AdminActivityFeed";
 import AdminStatTile from "@/components/AdminStatTile";
 import AdminWeeklyActivityChart from "@/components/AdminWeeklyActivityChart";
 import { getAdminDashboardSummary } from "@/application/services/adminDashboardService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const OverviewPage = async () => {
-  const summary = await getAdminDashboardSummary();
+  const t = await getUiText();
+
+  const summary = await getAdminDashboardSummary(await getUiLanguage());
 
   const tiles = [
-    { label: "Estudantes", value: summary.studentCount },
-    { label: "Empresas", value: summary.companyCount },
-    { label: "Recrutadores", value: summary.employeeCount },
-    { label: "Ações completadas", value: summary.actionCompletionCount },
-    { label: "Estudantes guardados", value: summary.savedStudentCount },
+    { label: t("Estudantes"), value: summary.studentCount },
+    { label: t("Empresas"), value: summary.companyCount },
+    { label: t("Recrutadores"), value: summary.employeeCount },
+    { label: t("Ações completadas"), value: summary.actionCompletionCount },
+    { label: t("Estudantes guardados"), value: summary.savedStudentCount },
   ];
 
   return (
@@ -24,7 +30,7 @@ const OverviewPage = async () => {
           href="/attendance/scan"
           className="ui-focus inline-flex min-h-11 items-center justify-center rounded-md bg-ui-action px-4 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90"
         >
-          Scanner de presenças
+          {t("Scanner de presenças")}
         </Link>
       </div>
 

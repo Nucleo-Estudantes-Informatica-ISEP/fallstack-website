@@ -14,19 +14,25 @@ test("companyProfileHref - routing rules", () => {
     "/company/Company%20B"
   );
 
-  // ...but falls back to its website (or root) without content, since the
+  // ...but falls back to its website (or no link) without content, since the
   // internal page 404s with nothing to show
   assert.equal(
     companyProfileHref(true, "Company A", "http://external.com", false),
     "http://external.com"
   );
-  assert.equal(companyProfileHref(true, "Company B", undefined, false), "/");
+  assert.equal(
+    companyProfileHref(true, "Company B", undefined, false),
+    undefined
+  );
 
   // Ranks without an internal page always redirect to their website (or
-  // root if none provided), regardless of content
+  // no link if none provided), regardless of content
   assert.equal(
     companyProfileHref(false, "Company C", "http://external.com", true),
     "http://external.com"
   );
-  assert.equal(companyProfileHref(false, "Company D", undefined, false), "/");
+  assert.equal(
+    companyProfileHref(false, "Company D", undefined, false),
+    undefined
+  );
 });

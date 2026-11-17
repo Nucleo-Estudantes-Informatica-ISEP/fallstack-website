@@ -10,6 +10,7 @@ import {
 import { motion } from "framer-motion";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { isIsepEmail } from "@/utils/isepEmail";
@@ -27,17 +28,20 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
   data,
   setData,
 }) => {
+  const t = useUiText();
+
   const [error, setError] = useState<string | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleNext = () => {
-    if (!inputRef.current?.value) return setError("Este campo é obrigatório.");
+    if (!inputRef.current?.value)
+      return setError(t("Este campo é obrigatório."));
 
     const email = inputRef.current.value;
 
     if (!isIsepEmail(email))
-      return setError("Insere um email institucional válido.");
+      return setError(t("Insere um email institucional válido."));
 
     setData({ ...data, email: inputRef.current.value });
     setCurrentStep(currentStep + 1);
@@ -90,7 +94,7 @@ const EmailStep: FunctionComponent<EmailStepProps> = ({
           onClick={handleNext}
           className="mt-4 mb-5 h-14 w-full font-bold"
         >
-          Seguinte
+          {t("Seguinte")}
         </PrimaryButton>
       </div>
     </div>

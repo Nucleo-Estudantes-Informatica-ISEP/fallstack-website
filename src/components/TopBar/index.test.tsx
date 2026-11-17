@@ -239,7 +239,11 @@ test.each([null, { code: "ABC123", name: "Admin" }])(
     };
     render(<TopBar />);
     expect(
-      screen.getByRole("link", { name: "O meu perfil de estudante" })
+      screen.getByRole("link", {
+        name: student
+          ? "O meu perfil de estudante"
+          : "Criar perfil de estudante",
+      })
     ).toHaveAttribute("href", student ? "/student/ABC123" : "/signup");
   }
 );

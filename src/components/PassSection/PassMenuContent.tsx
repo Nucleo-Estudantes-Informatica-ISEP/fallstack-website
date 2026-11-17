@@ -5,7 +5,9 @@ import { QRCodeSVG } from "qrcode.react";
 import { FiDownload } from "react-icons/fi";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { Clipboard } from "@/components/ui/Icons";
+import UiText from "@/components/ui/UiText";
 import GoogleWalletButton from "@/components/GoogleWalletButton";
 import {
   downloadOfflinePass,
@@ -22,6 +24,8 @@ const DOWNLOAD_ERROR_MESSAGE =
   "Não foi possível gerar o passe offline. Tenta novamente antes de ficares sem internet.";
 
 const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
+  const t = useUiText();
+
   const [qrToken, setQrToken] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
@@ -116,12 +120,12 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
   return (
     <section className="flex w-full flex-col">
       <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
-        Passe do FallStack
+        {t("Passe do FallStack")}
       </h2>
       <p className="mb-8 text-center text-sm text-white md:text-base lg:text-left">
-        Passa o teu passe na entrada para as palestras, junto a um elemento do
-        staff para ficares registado para os vários giveaways que o NEI irá
-        fazer!
+        {t(
+          "Passa o teu passe na entrada para as palestras, junto a um elemento do staff para ficares registado para os vários giveaways que o NEI irá fazer!"
+        )}
       </p>
       <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-start">
         <div className="flex w-full max-w-87 shrink-0 flex-col items-center gap-3">
@@ -134,14 +138,15 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
           {failed && (
             <>
               <p className="text-center text-sm text-white">
-                Não foi possível carregar o QR Code.
+                {t("Não foi possível carregar o QR Code.")}
               </p>
               <button
                 type="button"
                 onClick={fetchToken}
                 className={secondaryButton}
               >
-                Tentar novamente
+                {" "}
+                <UiText text="Tentar novamente" />{" "}
               </button>
             </>
           )}
@@ -162,7 +167,7 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
           {student.code && (
             <>
               <p className="text-sm text-ui-muted md:text-base">
-                O teu passe tem o código:
+                {t("O teu passe tem o código:")}
               </p>
               <div className="mt-2 flex max-w-full flex-wrap items-center justify-center gap-3 lg:justify-start">
                 <p className="min-w-0 font-mono text-3xl font-bold tracking-wider wrap-anywhere text-white">
@@ -171,18 +176,23 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
                 <button
                   type="button"
                   onClick={handleCopy}
-                  aria-label={`Copiar o código ${student.code}`}
+                  aria-label={t("Copiar o código {value}", {
+                    value: student.code,
+                  })}
                   className={secondaryButton}
                 >
                   <Clipboard className="size-4" aria-hidden="true" />
-                  <span>Copiar</span>
+                  <span>
+                    {" "}
+                    <UiText text="Copiar" />{" "}
+                  </span>
                 </button>
               </div>
               <p
                 role="status"
                 className="mt-1 min-h-5 text-sm text-ui-highlight"
               >
-                {copied ? "Copiado!" : ""}
+                {copied ? t("Copiado!") : ""}
               </p>
             </>
           )}
@@ -199,20 +209,20 @@ const PassMenuContent: React.FC<PassMenuContentProps> = ({ student }) => {
                   ? "A gerar passe..."
                   : preparedPass
                     ? "Guardar Passe (Offline)"
-                    : "Descarregar Passe (Offline)"}
+                    : t("Descarregar Passe (Offline)")}
               </button>
             )}
             {preparedPass && (
               <p role="status" className="text-sm text-ui-muted">
-                Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou
-                Guardar em Ficheiros.
+                {" "}
+                <UiText text="Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou Guardar em Ficheiros." />{" "}
               </p>
             )}
             <GoogleWalletButton />
           </div>
           {downloadError && (
             <p role="alert" className="mt-3 text-sm text-red-400">
-              {downloadError}
+              {t(downloadError)}
             </p>
           )}
         </div>

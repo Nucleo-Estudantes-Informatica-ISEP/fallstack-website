@@ -12,6 +12,7 @@ import AdminToggleButton from "@/components/AdminToggleButton";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminEmployeeDto } from "@/application/dto/employeeDto";
 import { listEmployeesForAdmin } from "@/application/services/employeeService";
+import { getUiText } from "@/application/services/uiLanguageService";
 import { Language, resolveLanguage } from "@/domain/i18n/translations";
 
 const PAGE_SIZE = 20;
@@ -31,6 +32,8 @@ const columns: DataTableColumn<EmployeeRow>[] = [
 const EmployeesAdminPage = async ({
   searchParams,
 }: EmployeesAdminPageProps) => {
+  const t = await getUiText();
+
   const language = resolveLanguage((await headers()).get("accept-language"));
   const isEnglish = language === Language.EN;
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
@@ -45,12 +48,12 @@ const EmployeesAdminPage = async ({
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title={isEnglish ? "Recruiters" : "Recrutadores"}>
+      <AdminPageHeader title={isEnglish ? "Recruiters" : t("Recrutadores")}>
         <Link
           href="/employees/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          {isEnglish ? "Add recruiter" : "Adicionar recrutador"}
+          {isEnglish ? "Add recruiter" : t("Adicionar recrutador")}
         </Link>
       </AdminPageHeader>
 
@@ -65,7 +68,7 @@ const EmployeesAdminPage = async ({
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
         searchPlaceholder={
-          isEnglish ? "Search by name..." : "Pesquisar por nome..."
+          isEnglish ? "Search by name..." : t("Pesquisar por nome...")
         }
         language={language}
         renderActions={(employee) => (

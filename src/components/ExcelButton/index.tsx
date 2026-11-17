@@ -3,6 +3,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Spinner from "@/components/ui/Spinner";
 import type { AdminScanDto } from "@/application/dto/historyDto";
 
@@ -26,6 +27,7 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
   format = "xlsx",
   ...rest
 }) => {
+  const t = useUiText();
   const handleDownload = async () => {
     if (isLoading) return;
     setIsLoading(true);
@@ -86,9 +88,9 @@ const ExcelButton: React.FC<ExcelButtonProps> = ({
       {isLoading ? (
         <Spinner />
       ) : format === "csv" ? (
-        "Export to CSV"
+        t("Exportar para CSV")
       ) : (
-        "Export to Excel"
+        t("Exportar para Excel")
       )}
     </button>
   );

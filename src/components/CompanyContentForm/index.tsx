@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import { FACT_ICON_NAMES, isFactIconName } from "@/domain/company/factIcons";
 
@@ -48,6 +49,8 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
   content,
   interestOptions,
 }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -79,35 +82,37 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
           interestsPayload
         ),
       ]);
-      toast.success("Conteúdo da empresa atualizado.");
+      toast.success(t("Conteúdo da empresa atualizado."));
       router.refresh();
     } catch (error) {
       toast.error(
         error instanceof HttpClientError
           ? error.message
-          : "Não foi possível guardar o conteúdo da empresa."
+          : t("Não foi possível guardar o conteúdo da empresa.")
       );
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/companies"
       id={content.companyId}
-      submitLabels={{ create: "Guardar", edit: "Guardar" }}
+      submitLabels={{ create: t("Guardar"), edit: t("Guardar") }}
       sections={[
         {
           kind: "fields",
-          title: "Perfil (página interna)",
+          title: t("Perfil (página interna)"),
           fields: [
             {
               kind: "textarea",
               name: "bodyText",
-              label:
-                "Sobre a empresa (deixe um parágrafo em branco entre parágrafos). Vazio = sem página interna.",
+              label: t(
+                "Sobre a empresa (deixe um parágrafo em branco entre parágrafos). Vazio = sem página interna."
+              ),
               rows: 10,
             },
-            { kind: "text", name: "videoTitle", label: "Título do vídeo" },
-            { kind: "video", name: "videoHref", label: "Vídeo promocional" },
+            { kind: "text", name: "videoTitle", label: t("Título do vídeo") },
+            { kind: "video", name: "videoHref", label: t("Vídeo promocional") },
             { kind: "text", name: "socialTwitter", label: "Twitter" },
             { kind: "text", name: "socialFacebook", label: "Facebook" },
             { kind: "text", name: "socialInstagram", label: "Instagram" },
@@ -116,19 +121,22 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
             {
               kind: "textarea",
               name: "facts",
-              label: `Factos - uma linha por facto, formato "Ícone|Descrição". Ícones disponíveis: ${FACT_ICON_NAMES.join(", ")}.`,
+              label: t(
+                'Factos - uma linha por facto, formato "Ícone|Descrição". Ícones disponíveis: {value}.',
+                { value: FACT_ICON_NAMES.join(", ") }
+              ),
               rows: 6,
             },
           ],
         },
         {
           kind: "fields",
-          title: "Interesses",
+          title: t("Interesses"),
           fields: [
             {
               kind: "multiSelect",
               name: "interestIds",
-              label: "Interesses",
+              label: t("Interesses"),
               options: interestOptions.map((interest) => ({
                 label: interest.name,
                 value: interest.id,

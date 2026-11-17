@@ -1,7 +1,10 @@
 import { getSavedStudentCountsByCompany } from "@/application/services/savedStudentService";
 import { getStudentCount } from "@/application/services/studentService";
+import { getUiText } from "@/application/services/uiLanguageService";
 
 const StatisticsPage = async () => {
+  const t = await getUiText();
+
   const [studentCount, savedByCompany] = await Promise.all([
     getStudentCount(),
     getSavedStudentCountsByCompany(),
@@ -9,26 +12,26 @@ const StatisticsPage = async () => {
 
   return (
     <section className="flex flex-col gap-8 p-8">
-      <h1 className="text-2xl font-bold text-gray-800">Estatísticas</h1>
+      <h1 className="text-2xl font-bold text-gray-800">{t("Estatísticas")}</h1>
 
       <div className="w-fit rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-        <p className="text-sm text-gray-500">Estudantes inscritos</p>
+        <p className="text-sm text-gray-500">{t("Estudantes inscritos")}</p>
         <p className="text-4xl font-bold text-gray-800">{studentCount}</p>
       </div>
 
       <div className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-gray-800">
-          Estudantes guardados por empresa
+          {t("Estudantes guardados por empresa")}
         </h2>
         {savedByCompany.length === 0 ? (
-          <p className="text-gray-500">Ainda não há dados.</p>
+          <p className="text-gray-500">{t("Ainda não há dados.")}</p>
         ) : (
           <div className="overflow-x-auto rounded-lg bg-white shadow-md">
             <table className="min-w-full table-auto border-collapse">
               <thead className="bg-gray-200 text-sm text-gray-700 uppercase">
                 <tr>
-                  <th className="px-6 py-3 text-left">Empresa</th>
-                  <th className="px-6 py-3 text-left">Guardados</th>
+                  <th className="px-6 py-3 text-left">{t("Empresa")}</th>
+                  <th className="px-6 py-3 text-left">{t("Guardados")}</th>
                 </tr>
               </thead>
               <tbody className="text-base text-gray-600">

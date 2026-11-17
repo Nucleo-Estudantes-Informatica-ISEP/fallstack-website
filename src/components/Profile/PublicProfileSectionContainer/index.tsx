@@ -4,7 +4,9 @@ import { useMemo } from "react";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { Email, Github, Linkedin, OpenCv } from "@/components/ui/Icons";
+import UiText from "@/components/ui/UiText";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
 
@@ -28,6 +30,8 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
   student,
   interests,
 }) => {
+  const t = useUiText();
+
   const orderedInterests = useMemo(
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
@@ -43,7 +47,7 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
       );
       window.open(url, "_blank");
     } catch {
-      toast.error("Não foi possível abrir o CV. Tenta novamente.", {
+      toast.error(t("Não foi possível abrir o CV. Tenta novamente."), {
         toastId: "public-cv-failed",
       });
     }
@@ -87,7 +91,9 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
               href={student.github}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`GitHub de ${student.name} (abre num novo separador)`}
+              aria-label={t("GitHub de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Github className="size-5" aria-hidden />
@@ -99,7 +105,9 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
               href={student.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`LinkedIn de ${student.name} (abre num novo separador)`}
+              aria-label={t("LinkedIn de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Linkedin className="size-5" aria-hidden />
@@ -116,7 +124,7 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
             className={`${panel} min-w-0 lg:col-span-2`}
           >
             <h2 id="public-info" className={panelTitle}>
-              Informações pessoais
+              {t("Informações pessoais")}
             </h2>
             <p className="mt-2 text-2xl font-bold wrap-break-word text-white">
               {student.name}
@@ -157,7 +165,8 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
                       Curriculum
                     </span>
                     <span className="wrap-break-word">
-                      Abrir o CV de {student.name}
+                      {" "}
+                      <UiText text="Abrir o CV de" /> {student.name}
                     </span>
                   </span>
                 </button>
@@ -170,11 +179,11 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
             className={`${panel} min-w-0`}
           >
             <h2 id="public-interests" className={panelTitle}>
-              Interesses
+              {t("Interesses")}
             </h2>
             {orderedInterests.length === 0 ? (
               <p className="mt-4 text-sm text-gray-300">
-                Este estudante ainda não indicou interesses.
+                {t("Este estudante ainda não indicou interesses.")}
               </p>
             ) : (
               <ul className="mt-4 flex flex-wrap gap-3">
@@ -194,7 +203,7 @@ const ProfileSectionContainer: React.FC<PublicProfileSectionContainerProps> = ({
         {student.bio && (
           <section aria-labelledby="public-bio" className={panel}>
             <h2 id="public-bio" className={panelTitle}>
-              Sobre
+              {t("Sobre")}
             </h2>
             <p className="mt-3 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-100">
               {student.bio}

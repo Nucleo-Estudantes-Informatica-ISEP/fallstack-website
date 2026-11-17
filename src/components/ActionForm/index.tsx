@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminActionDto } from "@/application/dto/actionDto";
 
@@ -15,6 +16,8 @@ interface ActionFormProps {
 const NO_COMPANY = "";
 
 const ActionForm: React.FC<ActionFormProps> = ({ action, companies }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -30,47 +33,48 @@ const ActionForm: React.FC<ActionFormProps> = ({ action, companies }) => {
     try {
       if (action) {
         await httpClient.patch(`/admin/actions/${action.id}`, payload);
-        toast.success("Ação atualizada.");
+        toast.success(t("Ação atualizada."));
       } else {
         await httpClient.post("/admin/actions", payload);
-        toast.success("Ação criada.");
+        toast.success(t("Ação criada."));
       }
       router.push("/actions");
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar a ação.");
+      toast.error(t("Não foi possível guardar a ação."));
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/actions"
       id={action?.id}
       sections={[
         {
           kind: "fields",
-          title: "Detalhes",
+          title: t("Detalhes"),
           fields: [
-            { kind: "text", name: "name", label: "Nome", required: true },
+            { kind: "text", name: "name", label: t("Nome"), required: true },
             {
               kind: "text",
               name: "description",
-              label: "Descrição",
+              label: t("Descrição"),
               required: true,
             },
             {
               kind: "number",
               name: "points",
-              label: "Pontos",
+              label: t("Pontos"),
               required: true,
             },
-            { kind: "text", name: "altText", label: "Texto alternativo" },
-            { kind: "checkbox", name: "isVisible", label: "Visível" },
+            { kind: "text", name: "altText", label: t("Texto alternativo") },
+            { kind: "checkbox", name: "isVisible", label: t("Visível") },
             {
               kind: "select",
               name: "companyId",
-              label: "Ação de banca (empresa)",
+              label: t("Ação de banca (empresa)"),
               options: [
-                { label: "Nenhuma - ação geral", value: NO_COMPANY },
+                { label: t("Nenhuma - ação geral"), value: NO_COMPANY },
                 ...companies.map((company) => ({
                   label: company.name,
                   value: company.id,

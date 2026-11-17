@@ -21,7 +21,14 @@ const getServerSession = cache(async () => {
     if (!claims) return null;
 
     const appUser = await findUserSessionByZitadelUserId(claims.sub);
-    if (!appUser || !appUser.active) return null;
+    if (
+      !appUser ||
+      !appUser.active ||
+      (!claims.admin &&
+        appUser.role === "EMPLOYEE" &&
+        appUser.employee?.company.active === false)
+    )
+      return null;
 
     // ZITADEL grant gates admin access; local tier only narrows that grant.
     // Missing tier defaults existing global admins to Super Admin.
@@ -55,3 +62,17 @@ const getServerSession = cache(async () => {
 });
 
 export default getServerSession;
+
+// A blocked account may sign out, but never receives an application session.
+export const isCurrentAccountInactive = cache(async () => {
+  const token = (await cookies()).get(config.cookies.auth.name)?.value;
+  const claims = token ? verifyAppSession(token) : null;
+  if (!claims) return false;
+  const user = await findUserSessionByZitadelUserId(claims.sub);
+  return (
+    user?.active === false ||
+    (!claims.admin &&
+      user?.role === "EMPLOYEE" &&
+      user.employee?.company.active === false)
+  );
+});

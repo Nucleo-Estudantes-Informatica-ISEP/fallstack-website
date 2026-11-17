@@ -4,6 +4,7 @@ import React from "react";
 
 import { useDisableBodyScroll } from "@/hooks/disableBackgroundMoving";
 import useIsMobile from "@/hooks/useIsMobile";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import QRCodeTab from "@/components/QRCode/QRCodeTab";
 import CompanyTab from "@/components/QRCode/QRCodeTab/CompanyTab";
 import ProfileTab from "@/components/QRCode/QRCodeTab/ProfileTab";
@@ -22,10 +23,12 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
   setHidden,
   user,
 }) => {
+  const t = useUiText();
+
   // disable body scroll
   useDisableBodyScroll({ modalIsHidden: hidden });
 
-  const tabTitles = ["Perfil", "Scan"];
+  const tabTitles = [t("Perfil"), "Scan"];
   const tabs = [
     <ProfileTab key={""} user={user} />,
     <ScanTab key={""} setHidden={setHidden} />,
@@ -38,7 +41,8 @@ const QRCodeModal: React.FC<QRCodeModalProps> = ({
       Dá <span className="text-primary">scan</span> a um QRCODE
     </>,
     <>
-      Introduza o <span className="text-primary">código</span> do estudante
+      Introduza o <span className="text-primary">{t("código")}</span> do
+      estudante
     </>,
   ];
 

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AccountDetailsStep from "@/components/SignUp/AccountDetailsStep";
 import BioStep from "@/components/SignUp/BioStep";
 import FinalStep from "@/components/SignUp/FinalStep";
@@ -16,6 +17,8 @@ interface StudentSignUpProps {
 }
 
 const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
+  const t = useUiText();
+
   const stepRef = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
@@ -67,7 +70,7 @@ const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
     <section
       ref={stepRef}
       tabIndex={-1}
-      aria-label="Registo de estudante"
+      aria-label={t("Registo de estudante")}
       className="student-signup-form relative mx-auto w-full max-w-[567px] field-focus-target outline-none"
     >
       {steps[currentStep]}
@@ -77,7 +80,7 @@ const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
           onClick={() => setCurrentStep(currentStep - 1)}
           className="mt-2 flex min-h-11 items-center rounded-sm text-sm text-gray-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary lg:absolute lg:top-full"
         >
-          Voltar
+          {t("Voltar")}
         </button>
       )}
     </section>
