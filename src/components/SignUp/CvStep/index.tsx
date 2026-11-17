@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { FaFilePdf } from "react-icons/fa";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import FileInput from "@/components/ui/FileInput";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import UiText from "@/components/ui/UiText";
@@ -27,6 +28,7 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const t = useUiText();
 
   const handleNext = () => {
     setCurrentStep(currentStep + 1);
@@ -39,9 +41,8 @@ const CvStep: FunctionComponent<CvStepProps> = ({
 
       if (error) setError(null);
 
-      const uploaded = await uploadCv(file);
+      const uploaded = await uploadCv(file, (message) => setError(t(message)));
       if (!uploaded) {
-        setError("Ocorreu um erro ao dar upload.");
         return setLoading(false);
       }
 

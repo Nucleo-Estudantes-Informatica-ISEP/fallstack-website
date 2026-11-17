@@ -84,6 +84,10 @@ export async function getCroppedImg(
   croppedCanvas.width = pixelCrop.width;
   croppedCanvas.height = pixelCrop.height;
 
+  // JPEG has no alpha channel; use a stable background for transparent PNGs.
+  croppedCtx.fillStyle = "#fff";
+  croppedCtx.fillRect(0, 0, pixelCrop.width, pixelCrop.height);
+
   // Draw the cropped image onto the new canvas
   croppedCtx.drawImage(
     canvas,
@@ -102,7 +106,7 @@ export async function getCroppedImg(
 
   // As a blob
   return new Promise((resolve) => {
-    croppedCanvas.toBlob((file) => resolve(file));
+    croppedCanvas.toBlob((file) => resolve(file), "image/jpeg", 0.82);
   });
 }
 
