@@ -345,6 +345,22 @@ export const uiEnglish: Record<string, string> = {
   "Alterar foto de perfil": "Change profile photo",
   "+ Adicionar": "+ Add",
   "Não foi possível carregar a imagem.": "Could not load the image.",
+  "A imagem não corresponde ao formato declarado.":
+    "The image does not match its declared format.",
+  "A imagem continua demasiado pesada após a compressão. Escolhe uma imagem mais pequena.":
+    "The image is still too large after compression. Choose a smaller image.",
+  "O servidor rejeitou a imagem. Tenta novamente ou escolhe outra imagem.":
+    "The server rejected the image. Try again or choose another image.",
+  "O CV é demasiado grande. O tamanho máximo é 10 MB.":
+    "The CV is too large. The maximum size is 10 MB.",
+  "O CV tem de ser um ficheiro PDF.": "The CV must be a PDF file.",
+  "O ficheiro não é um PDF válido.": "The file is not a valid PDF.",
+  "O CV excede o tamanho máximo aceite pelo servidor.":
+    "The CV exceeds the server's maximum accepted size.",
+  "Não foi possível carregar o CV. Verifica a ligação e tenta novamente.":
+    "Could not upload the CV. Check your connection and try again.",
+  "Não foi possível preparar a imagem. Tenta novamente.":
+    "Could not prepare the image. Try again.",
   "O teu CV foi removido após o período de retenção. Envia um novo em Informações pessoais.":
     "Your CV was removed after the retention period. Upload a new one under Personal information.",
   "Ver QR code em tamanho grande": "Enlarge QR code",
