@@ -44,3 +44,13 @@ test.each([401, 403, 429, 500])(
     );
   }
 );
+
+test("exchanges a scanned signed pass through the authenticated endpoint", async () => {
+  vi.mocked(httpClient.post).mockResolvedValue({ token: "preview" });
+  expect(await getStudentPreviewToken({ token: "signed-pass" })).toBe(
+    "preview"
+  );
+  expect(httpClient.post).toHaveBeenCalledWith("/students/token", {
+    token: "signed-pass",
+  });
+});

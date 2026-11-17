@@ -506,3 +506,19 @@ test("a pending lookup does not block another employee", async () => {
     assert.equal((await first).status, 200);
   }
 });
+
+test("forwards a signed live pass for server-side validation", async () => {
+  const getServerSession = (
+    await import("@/application/services/sessionService")
+  ).default;
+  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
+  const { jwtStudent } =
+    await import("@/application/services/studentTokenService");
+  vi.mocked(jwtStudent).mockResolvedValue("preview");
+  const response = await post({ token: "signed-live-pass" });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { token: "preview" });
+  assert.deepEqual(vi.mocked(jwtStudent).mock.calls, [
+    [{ token: "signed-live-pass" }],
+  ]);
+});
