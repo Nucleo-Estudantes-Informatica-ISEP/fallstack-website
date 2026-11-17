@@ -13,7 +13,7 @@ const About: React.FC = () => {
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl sm:text-4xl">Made By</h1>
           <p className="text-lg">
-            <Link href="https://nei.isep.ipp.pt/" className={linkClass}>
+            <Link href="https://www.nei-isep.org" className={linkClass}>
               NEI-ISEP
             </Link>
           </p>
