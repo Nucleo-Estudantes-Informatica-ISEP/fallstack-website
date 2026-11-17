@@ -1,0 +1,6 @@
+[
+  { "method": "GET", "target": "bucket listing", "status": 503 },
+  { "method": "DELETE", "target": "unsigned deletion", "status": 503 },
+  { "method": "PUT", "target": "foreign bucket", "status": 503 },
+  { "method": "PUT", "target": "distribution object", "status": 503 }
+]

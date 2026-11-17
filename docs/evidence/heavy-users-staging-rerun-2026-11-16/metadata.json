@@ -1,0 +1,44 @@
+{
+  "sourceRevision": "cc5731c794d4e22203375be44ef7afac8b694ae9",
+  "deployedStagingRevision": "9371efdd8bec4e6ee59e49ecaf3afd3ea5442ae4",
+  "testDate": "2026-11-16",
+  "dateWindowDuringRun": [16, 17, 18],
+  "stagingReplicas": 3,
+  "generator": "MacBook Air, official k6 v2.4.0 Darwin/arm64, fast Wi-Fi, public HTTPS/Cloudflare path",
+  "k6": "v2.4.0 dd9395906d",
+  "vusMax": 200,
+  "httpRequests": 17172,
+  "iterations": 4257,
+  "checks": {
+    "passes": 17181,
+    "fails": 1026,
+    "thresholds": {
+      "rate>0.99": true
+    },
+    "value": 0.9436480474542758
+  },
+  "httpReqFailed": {
+    "passes": 1029,
+    "fails": 16143,
+    "thresholds": {
+      "rate<0.01": true
+    },
+    "value": 0.05992313067784766
+  },
+  "failedThresholds": [
+    ["http_req_duration{name:dashboard_page}", "p(95)<750"],
+    ["http_req_failed", "rate<0.01"],
+    ["http_req_duration{name:cv_authorize}", "p(95)<750"],
+    ["http_req_duration{name:qr_pass}", "p(95)<750"],
+    ["checks", "rate>0.99"],
+    ["http_req_duration{name:dashboard_history}", "p(95)<750"],
+    ["http_req_duration{name:cv_attach}", "p(95)<750"],
+    ["http_req_duration{name:checkin}", "p(95)<750"]
+  ],
+  "storage": "MinIO via Cloudflare proxy; S3_PUBLIC_ENDPOINT preserved in dev/prod",
+  "minioMemoryLimitBytes": 10737418240,
+  "diskAvailableAfterCleanupBytes": 32685404160,
+  "josimarTest": "tests/load/heavy-users.test.ts: 64 passed, 1 file, exit 0",
+  "minioMemoryLimit": "10 GiB",
+  "diskAvailableAfterDockerCleanupBytes": 32685404160
+}

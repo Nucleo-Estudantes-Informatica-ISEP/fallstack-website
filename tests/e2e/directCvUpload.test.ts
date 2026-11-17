@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextRequest } from "next/server";
 import {
   DeleteObjectsCommand,
@@ -409,9 +409,7 @@ test.skipIf(!enabled)(
     );
     await Promise.all(posts.map((p) => transfer(p)));
     const done = await Promise.all(
-      posts.map((p, i) =>
-        service.finalizeCvUpload(users[i].id, p.uploadId)
-      )
+      posts.map((p, i) => service.finalizeCvUpload(users[i].id, p.uploadId))
     );
     expect(new Set(done.map((r) => r.id)).size).toBe(3);
     expect(
@@ -681,8 +679,9 @@ test.skipIf(!enabled)(
     // Intercept promoteCvObject to simulate attempt A outliving its lease before finishCvValidation
     const originalPromote = storage.promoteCvObject;
     let attemptBClaimed = false;
-    const promoteSpy = vi.spyOn(storage, "promoteCvObject").mockImplementation(
-      async (...args) => {
+    const promoteSpy = vi
+      .spyOn(storage, "promoteCvObject")
+      .mockImplementation(async (...args) => {
         const result = await originalPromote(...args);
         if (!attemptBClaimed) {
           attemptBClaimed = true;
@@ -701,8 +700,7 @@ test.skipIf(!enabled)(
           );
         }
         return result;
-      }
-    );
+      });
 
     try {
       // Attempt A runs finalizeCvUpload - will fail finishCvValidation with 409 and run catch block
@@ -731,3 +729,98 @@ test.skipIf(!enabled)(
   }
 );
 
+test.skipIf(!enabled)(
+  "multipart real-size and exactly 10 MiB survive part replay and retain private byte-identical downloads",
+  async () => {
+    for (const size of [184320, 10485760]) {
+      const fresh = await fixtures.student();
+      const bytes = syntheticPdf(size);
+      const t = await service.initiateCvMultipartUpload(fresh.id, {
+        filename: "cv.pdf",
+        contentType: "application/pdf",
+        size,
+      });
+      for (
+        let offset = 0, number = 1;
+        offset < size;
+        offset += t.partSize, number++
+      ) {
+        const part = bytes.subarray(
+          offset,
+          Math.min(offset + t.partSize, size)
+        );
+        const checksum = createHash("sha256").update(part).digest("base64");
+        const signed = await service.signCvUploadPart(
+          fresh.id,
+          t.uploadId,
+          number,
+          checksum
+        );
+        // A lost part response may be retried without resending earlier parts.
+        for (let attempt = 0; attempt < (number === 1 ? 2 : 1); attempt++) {
+          const response = await fetch(signed.url, {
+            method: "PUT",
+            headers: signed.headers,
+            body: part,
+            redirect: "error",
+          });
+          expect(response.status, await response.text()).toBe(200);
+        }
+        const tampered = await fetch(signed.url, {
+          method: "PUT",
+          headers: signed.headers,
+          body: part.subarray(1),
+          redirect: "error",
+        });
+        expect(tampered.status).toBeGreaterThanOrEqual(400);
+        const corrupted = Buffer.from(part);
+        corrupted[0] ^= 1;
+        const mismatch = await fetch(signed.url, {
+          method: "PUT",
+          headers: signed.headers,
+          body: corrupted,
+          redirect: "error",
+        });
+        expect(mismatch.status).toBeGreaterThanOrEqual(400);
+      }
+      await expect(
+        service.signCvUploadPart(other.id, t.uploadId, 1, "a".repeat(43) + "=")
+      ).rejects.toMatchObject({ status: 404 });
+      const result = await service.finalizeCvUpload(fresh.id, t.uploadId);
+      expect(await service.finalizeCvUpload(fresh.id, t.uploadId)).toEqual(
+        result
+      );
+      const stored = await storage.getObjectStream(
+        "cv",
+        storage.cvKey(result.id)
+      );
+      expect(stored).not.toBeNull();
+      const received = Buffer.from(
+        await new Response(stored!.body).arrayBuffer()
+      );
+      expect(received.length).toBe(size);
+      expect(createHash("sha256").update(received).digest("hex")).toBe(
+        createHash("sha256").update(bytes).digest("hex")
+      );
+    }
+  }
+);
+
+test.skipIf(!enabled)(
+  "cancelled multipart cannot sign, complete or retain parts",
+  async () => {
+    const t = await service.initiateCvMultipartUpload(owner.id, {
+      filename: "cv.pdf",
+      size: pdf.length,
+      contentType: "application/pdf",
+    });
+    await service.cancelCvUpload(owner.id, t.uploadId);
+    await service.cancelCvUpload(owner.id, t.uploadId);
+    await expect(
+      service.signCvUploadPart(owner.id, t.uploadId, 1, "a".repeat(43) + "=")
+    ).rejects.toMatchObject({ status: 409 });
+    await expect(
+      service.finalizeCvUpload(owner.id, t.uploadId)
+    ).rejects.toMatchObject({ status: 409 });
+  }
+);

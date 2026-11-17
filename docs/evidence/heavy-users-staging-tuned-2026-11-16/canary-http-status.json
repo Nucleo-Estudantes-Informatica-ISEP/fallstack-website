@@ -1,0 +1,74 @@
+[
+  {
+    "endpoint": "action_qr",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 1
+  },
+  {
+    "endpoint": "action_scan",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 1
+  },
+  {
+    "endpoint": "checkin",
+    "status": "201",
+    "transportErrorCode": "",
+    "count": 9
+  },
+  {
+    "endpoint": "cv_attach",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_authorize",
+    "status": "201",
+    "transportErrorCode": "",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_direct_transfer",
+    "status": "204",
+    "transportErrorCode": "",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_download",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 13
+  },
+  {
+    "endpoint": "cv_finalize",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 3
+  },
+  {
+    "endpoint": "cv_lookup",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 13
+  },
+  {
+    "endpoint": "dashboard_history",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 5
+  },
+  {
+    "endpoint": "dashboard_page",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 5
+  },
+  {
+    "endpoint": "qr_pass",
+    "status": "200",
+    "transportErrorCode": "",
+    "count": 3
+  }
+]

@@ -1,0 +1,375 @@
+{
+  "root_group": {
+    "path": "",
+    "id": "d41d8cd98f00b204e9800998ecf8427e",
+    "groups": {},
+    "checks": {
+      "student QR pass returns a token": {
+        "passes": 3,
+        "fails": 0,
+        "name": "student QR pass returns a token",
+        "path": "::student QR pass returns a token",
+        "id": "a8f1c8f39e822b3610ee188f1efa1a22"
+      },
+      "action QR returns a code": {
+        "id": "7d4b398690f8e97e0680c9e1fb424b23",
+        "passes": 1,
+        "fails": 0,
+        "name": "action QR returns a code",
+        "path": "::action QR returns a code"
+      },
+      "CV upload authorized for the staging storage origin": {
+        "name": "CV upload authorized for the staging storage origin",
+        "path": "::CV upload authorized for the staging storage origin",
+        "id": "b8bdaf73568b8f15e10382d1d15bceba",
+        "passes": 3,
+        "fails": 0
+      },
+      "dashboard returns HTML": {
+        "id": "11f08e3d5ac39cad821ad3dd50f90fd8",
+        "passes": 3,
+        "fails": 0,
+        "name": "dashboard returns HTML",
+        "path": "::dashboard returns HTML"
+      },
+      "dashboard history returns a list": {
+        "passes": 3,
+        "fails": 0,
+        "name": "dashboard history returns a list",
+        "path": "::dashboard history returns a list",
+        "id": "4fa1b9e0f0265d0c723290362aaf08b8"
+      },
+      "dashboard company has saved students to download": {
+        "path": "::dashboard company has saved students to download",
+        "id": "e71f481c81b3bee0f12bbf1004e555e5",
+        "passes": 3,
+        "fails": 0,
+        "name": "dashboard company has saved students to download"
+      },
+      "CV lookup returns a file URL": {
+        "id": "1235b33ed63abf7cb1c37f21c2e38cc4",
+        "passes": 9,
+        "fails": 0,
+        "name": "CV lookup returns a file URL",
+        "path": "::CV lookup returns a file URL"
+      },
+      "storage accepts the signed CV transfer": {
+        "name": "storage accepts the signed CV transfer",
+        "path": "::storage accepts the signed CV transfer",
+        "id": "a758914e6f4ea6d69648739a776be218",
+        "passes": 3,
+        "fails": 0
+      },
+      "CV upload finalized with a file id": {
+        "name": "CV upload finalized with a file id",
+        "path": "::CV upload finalized with a file id",
+        "id": "1252e562d1caf20bd6f3fb259040814a",
+        "passes": 3,
+        "fails": 0
+      },
+      "CV attaches to the student": {
+        "name": "CV attaches to the student",
+        "path": "::CV attaches to the student",
+        "id": "077d79a2809705f676bb62efe2d3ac9b",
+        "passes": 3,
+        "fails": 0
+      },
+      "CV download returns a PDF": {
+        "id": "cc962adc789568a8a99c5f24f81c7c1b",
+        "passes": 9,
+        "fails": 0,
+        "name": "CV download returns a PDF",
+        "path": "::CV download returns a PDF"
+      },
+      "student downloads the CV just uploaded": {
+        "path": "::student downloads the CV just uploaded",
+        "id": "63c8ff3f03ccb80c442f0a4d103b1514",
+        "passes": 3,
+        "fails": 0,
+        "name": "student downloads the CV just uploaded"
+      },
+      "check-in returns 201": {
+        "name": "check-in returns 201",
+        "path": "::check-in returns 201",
+        "id": "fd8209c45f7c657773f639d5c686ca48",
+        "passes": 4,
+        "fails": 0
+      }
+    },
+    "name": ""
+  },
+  "metrics": {
+    "data_received": {
+      "count": 52274370,
+      "rate": 1066742.0649657114
+    },
+    "data_sent": {
+      "count": 15044395,
+      "rate": 307004.9239897071
+    },
+    "cv_download_duration": {
+      "max": 7356.957,
+      "p(90)": 5773.5626,
+      "p(95)": 6565.2598,
+      "p(99)": 7198.617560000001,
+      "avg": 3467.813111111111,
+      "min": 696.806,
+      "med": 3586.146
+    },
+    "checkin_duplicate_409": {
+      "count": 12,
+      "rate": 0.24487917844994664
+    },
+    "cv_upload_accepted{size:real}": {
+      "count": 2,
+      "rate": 0.04081319640832444,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_duration{name:dashboard_history}": {
+      "med": 86.712,
+      "max": 88.626,
+      "p(90)": 88.2432,
+      "p(95)": 88.4346,
+      "p(99)": 88.58772,
+      "avg": 85.08800000000001,
+      "min": 79.926,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    },
+    "checks": {
+      "passes": 50,
+      "fails": 0,
+      "thresholds": {
+        "rate>0.99": false
+      },
+      "value": 1
+    },
+    "iteration_duration": {
+      "avg": 5591.14914759091,
+      "min": 2999.688834,
+      "med": 3000.468104,
+      "max": 15000.740791,
+      "p(90)": 14500.089016300002,
+      "p(95)": 15000.247783,
+      "p(99)": 15000.63960607
+    },
+    "cv_upload_duration": {
+      "min": 2135,
+      "med": 3310,
+      "max": 4970,
+      "p(90)": 4638,
+      "p(95)": 4804,
+      "p(99)": 4936.8,
+      "avg": 3471.6666666666665
+    },
+    "http_req_duration": {
+      "med": 132.318,
+      "max": 7356.957,
+      "p(90)": 3150.550800000001,
+      "p(95)": 4917.531799999999,
+      "p(99)": 6248.580919999999,
+      "avg": 817.227964912281,
+      "min": 66.222
+    },
+    "http_reqs": {
+      "count": 57,
+      "rate": 1.1631760976372465
+    },
+    "http_req_sending": {
+      "min": 0.021,
+      "med": 0.063,
+      "max": 4296.427,
+      "p(90)": 0.20480000000000004,
+      "p(95)": 277.7571999999966,
+      "p(99)": 2894.2155599999987,
+      "avg": 131.20001754385964
+    },
+    "checkin_created": {
+      "rate": 0.08162639281664888,
+      "count": 4
+    },
+    "http_req_blocked": {
+      "min": 0,
+      "med": 0,
+      "max": 168.373,
+      "p(90)": 0.001,
+      "p(95)": 138.20179999999993,
+      "p(99)": 164.15452,
+      "avg": 10.918157894736833
+    },
+    "vus_max": {
+      "max": 3,
+      "value": 3,
+      "min": 3
+    },
+    "http_req_duration{expected_response:true}": {
+      "med": 132.318,
+      "max": 7356.957,
+      "p(90)": 3150.550800000001,
+      "p(95)": 4917.531799999999,
+      "p(99)": 6248.580919999999,
+      "avg": 817.227964912281,
+      "min": 66.222
+    },
+    "http_req_waiting": {
+      "p(90)": 260.82599999999996,
+      "p(95)": 283.3249999999999,
+      "p(99)": 698.3853599999997,
+      "avg": 167.22000000000003,
+      "min": 66.168,
+      "med": 123.883,
+      "max": 1067.646
+    },
+    "cv_download_succeeded{group:qr,size:real}": {
+      "rate": 0.04081319640832444,
+      "count": 2,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "cv_download_succeeded{group:qr,size:near_limit}": {
+      "count": 1,
+      "rate": 0.02040659820416222,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_failed": {
+      "passes": 0,
+      "fails": 57,
+      "thresholds": {
+        "rate<0.01": false
+      },
+      "value": 0
+    },
+    "iterations": {
+      "rate": 0.44894516049156885,
+      "count": 22
+    },
+    "cv_upload_accepted": {
+      "count": 3,
+      "rate": 0.06121979461248666
+    },
+    "cv_download_succeeded": {
+      "count": 9,
+      "rate": 0.18365938383745997
+    },
+    "http_req_connecting": {
+      "p(95)": 30.70479999999991,
+      "p(99)": 69.41788,
+      "avg": 3.903333333333333,
+      "min": 0,
+      "med": 0,
+      "max": 71.365,
+      "p(90)": 0
+    },
+    "action_scan_already_completed_400": {
+      "count": 1,
+      "rate": 0.02040659820416222
+    },
+    "http_req_duration{name:cv_attach}": {
+      "avg": 84.30333333333333,
+      "min": 77.095,
+      "med": 80.887,
+      "max": 94.928,
+      "p(90)": 92.1198,
+      "p(95)": 93.5239,
+      "p(99)": 94.64717999999999,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    },
+    "http_req_duration{name:cv_authorize}": {
+      "avg": 103.03033333333333,
+      "min": 87.455,
+      "med": 89.05,
+      "max": 132.586,
+      "p(90)": 123.87880000000001,
+      "p(95)": 128.2324,
+      "p(99)": 131.71528,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    },
+    "vus": {
+      "min": 0,
+      "max": 3,
+      "value": 1
+    },
+    "http_req_duration{name:dashboard_page}": {
+      "avg": 258.277,
+      "min": 229.153,
+      "med": 268.515,
+      "max": 277.163,
+      "p(90)": 275.4334,
+      "p(95)": 276.2982,
+      "p(99)": 276.99004,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    },
+    "cv_upload_accepted{size:near_limit}": {
+      "count": 1,
+      "rate": 0.02040659820416222,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_duration{name:qr_pass}": {
+      "med": 179.049,
+      "max": 199.418,
+      "p(90)": 195.3442,
+      "p(95)": 197.3811,
+      "p(99)": 199.01062000000002,
+      "avg": 150.95366666666666,
+      "min": 74.394,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    },
+    "cv_download_succeeded{group:dashboard}": {
+      "count": 6,
+      "rate": 0.12243958922497332,
+      "thresholds": {
+        "count>0": false
+      }
+    },
+    "http_req_tls_handshaking": {
+      "p(99)": 103.50796,
+      "avg": 6.900403508771929,
+      "min": 0,
+      "med": 0,
+      "max": 107.279,
+      "p(90)": 0,
+      "p(95)": 90.73799999999999
+    },
+    "cv_upload_near_limit_accepted": {
+      "count": 1,
+      "rate": 0.02040659820416222
+    },
+    "http_req_receiving": {
+      "max": 7094.769,
+      "p(90)": 1507.7896000000005,
+      "p(95)": 4673.2302,
+      "p(99)": 5981.7465999999995,
+      "avg": 518.8079473684212,
+      "min": 0.028,
+      "med": 0.041
+    },
+    "http_req_duration{name:checkin}": {
+      "p(99)": 256.1395,
+      "avg": 135.55562500000002,
+      "min": 78.539,
+      "med": 110.2625,
+      "max": 260.053,
+      "p(90)": 225.7165,
+      "p(95)": 240.48549999999997,
+      "thresholds": {
+        "p(95)<750": false
+      }
+    }
+  }
+}

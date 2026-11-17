@@ -35,7 +35,9 @@ export async function GET(request: NextRequest) {
     !expectedNonce ||
     !verifier
   ) {
-    const response = NextResponse.redirect(appUrl("/auth/auth-code-error"));
+    const response = NextResponse.redirect(
+      appUrl("/login?error=auth-code-error")
+    );
     clearOidcCookies(response);
     return response;
   }
@@ -67,7 +69,9 @@ export async function GET(request: NextRequest) {
       { operation: "zitadel_oidc_callback" },
       "Failed to complete direct AuthNEI sign-in"
     );
-    const response = NextResponse.redirect(appUrl("/auth/auth-code-error"));
+    const response = NextResponse.redirect(
+      appUrl("/login?error=auth-code-error")
+    );
     clearOidcCookies(response);
     return response;
   }

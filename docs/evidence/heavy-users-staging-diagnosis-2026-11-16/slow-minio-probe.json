@@ -1,0 +1,12 @@
+{
+  "startedAt": "2026-11-16T19:59:58.693Z",
+  "endedAt": "2026-11-16T20:01:19.006Z",
+  "mode": "internal MinIO; bypass proxy and Cloudflare",
+  "bytes": 10485760,
+  "rateBytesPerSecond": 131072,
+  "result": {
+    "status": 204,
+    "sentBytes": 10487402,
+    "ms": 80313
+  }
+}

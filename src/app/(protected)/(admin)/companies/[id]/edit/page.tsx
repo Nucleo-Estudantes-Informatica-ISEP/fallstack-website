@@ -4,6 +4,7 @@ import CompanyContentForm, {
   type CompanyContentValue,
 } from "@/components/CompanyContentForm";
 import CompanyForm from "@/components/CompanyForm";
+import CompanyInviteCodeCard from "@/components/CompanyInviteCodeCard";
 import type { AdminCompanyDto } from "@/application/dto/companyDto";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { getCompanyRanks } from "@/application/services/companyRankService";
@@ -64,6 +65,13 @@ const EditCompanyPage = async ({ params }: EditCompanyPageProps) => {
       <CompanyForm
         company={toAdminCompanyDto(company)}
         ranks={ranks.map((rank) => ({ id: rank.id, name: rank.name }))}
+      />
+      <CompanyInviteCodeCard
+        companyId={id}
+        hasInviteCode={Boolean(company.employeeInviteCodeHash)}
+        initialUpdatedAt={
+          company.employeeInviteCodeUpdatedAt?.toISOString() ?? null
+        }
       />
       <h2 className="text-xl font-bold text-gray-800">
         Conteúdo da página interna

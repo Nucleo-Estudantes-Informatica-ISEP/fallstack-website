@@ -1,0 +1,11 @@
+[Unit]
+Description=Scoped Fallstack image and idle build-cache retention
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /opt/fallstack-maintenance/maintain.py --config /etc/fallstack/maintenance.json --apply
+TimeoutStartSec=15min
+Nice=15
+IOSchedulingClass=idle

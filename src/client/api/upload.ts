@@ -37,28 +37,60 @@ export async function uploadCv(file: File) {
   try {
     const ticket = await httpClient.post<{
       uploadId: string;
-      url: string;
-      fields: Record<string, string>;
-    }>("/storage/cv", {
+      partSize: number;
+    }>("/storage/cv/multipart", {
       filename: file.name,
       contentType: file.type,
       size: file.size,
     });
     uploadId = ticket.uploadId;
-    const form = new FormData();
-    for (const [key, value] of Object.entries(ticket.fields))
-      form.append(key, value);
-    form.append("file", file); // S3 POST requires the file part last.
-    // External, signed transfer: never send application cookies or API headers.
-    const response = await fetch(ticket.url, {
-      method: "POST",
-      body: form,
-      credentials: "omit",
-      redirect: "error",
-      signal: AbortSignal.timeout(120_000),
-    });
-    if (!response.ok)
-      throw new HttpClientError("CV transfer failed", response.status);
+    if (ticket.partSize !== 5 * 1024 * 1024)
+      throw new Error("Invalid upload part size");
+    // One part at a time; retries never resend already accepted parts.
+    for (
+      let offset = 0, partNumber = 1;
+      offset < file.size;
+      offset += ticket.partSize, partNumber++
+    ) {
+      const part = file.slice(offset, offset + ticket.partSize);
+      const hash = new Uint8Array(
+        await crypto.subtle.digest("SHA-256", await part.arrayBuffer())
+      );
+      const checksum = btoa(String.fromCharCode(...hash));
+      for (let attempt = 0; ; attempt++) {
+        try {
+          const signed = await httpClient.post<{
+            url: string;
+            headers: Record<string, string>;
+          }>("/storage/cv/multipart/parts", { uploadId, partNumber, checksum });
+          const response = await fetch(signed.url, {
+            method: "PUT",
+            body: part,
+            headers: signed.headers,
+            credentials: "omit",
+            redirect: "error",
+            signal: AbortSignal.timeout(55000),
+          });
+          if (!response.ok)
+            throw new HttpClientError(
+              "CV part transfer failed",
+              response.status
+            );
+          break;
+        } catch (error) {
+          if (
+            attempt === 2 ||
+            (error instanceof HttpClientError &&
+              error.status < 500 &&
+              error.status !== 429)
+          )
+            throw error;
+          await new Promise((resolve) =>
+            setTimeout(resolve, 500 * 2 ** attempt)
+          );
+        }
+      }
+    }
     transferred = true;
     // Retry only finalization. Never silently send bytes through Next.js.
     for (let attempt = 0; ; attempt++) {

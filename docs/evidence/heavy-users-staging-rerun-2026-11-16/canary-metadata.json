@@ -1,0 +1,69 @@
+{
+  "start": "2026-11-16T13:49:46.655356+00:00",
+  "source": "cc5731c794d4e22203375be44ef7afac8b694ae9",
+  "generator": "external MacBook Air arm64, 8 GiB RAM, k6 v2.4.0; staging public HTTPS",
+  "configuration": {
+    "E2E_BASE_URL": "https://staging.example.invalid",
+    "STAGING_BASE_URL": "https://staging.example.invalid",
+    "CONFIRM_NON_PRODUCTION": "yes",
+    "E2E_ALLOW_UPLOADS": "yes",
+    "CV_STORAGE_ORIGIN": "https://storage-staging.example.invalid",
+    "CHECKIN_SESSION_ID": "3816dfd4-5181-43f4-a744-a828605b68d0",
+    "ACTION_ID": "ce238a06-875c-4934-9e1b-a4ae41aa6a81",
+    "DASHBOARD_USERS": "1",
+    "QR_USERS": "1",
+    "CHECKIN_USERS": "1",
+    "RAMP_SECONDS": "3",
+    "HOLD_SECONDS": "15"
+  },
+  "dateWindow": "16-18 November; existing session dates preserved",
+  "exitCode": 0,
+  "end": "2026-11-16T13:50:41.747080+00:00",
+  "generatorSamples": [
+    {
+      "at": "2026-11-16T13:49:46.661717+00:00",
+      "rssKiB_cpuPercent": "32   0.0"
+    },
+    {
+      "at": "2026-11-16T13:49:51.672355+00:00",
+      "rssKiB_cpuPercent": "48336   0.6"
+    },
+    {
+      "at": "2026-11-16T13:49:56.682382+00:00",
+      "rssKiB_cpuPercent": "91728   2.2"
+    },
+    {
+      "at": "2026-11-16T13:50:01.696177+00:00",
+      "rssKiB_cpuPercent": "63680   0.9"
+    },
+    {
+      "at": "2026-11-16T13:50:06.702199+00:00",
+      "rssKiB_cpuPercent": "87824   2.4"
+    },
+    {
+      "at": "2026-11-16T13:50:11.708651+00:00",
+      "rssKiB_cpuPercent": "62464   1.5"
+    },
+    {
+      "at": "2026-11-16T13:50:16.715028+00:00",
+      "rssKiB_cpuPercent": "98960   0.6"
+    },
+    {
+      "at": "2026-11-16T13:50:21.720077+00:00",
+      "rssKiB_cpuPercent": "118000   1.4"
+    },
+    {
+      "at": "2026-11-16T13:50:26.726369+00:00",
+      "rssKiB_cpuPercent": "101984   0.9"
+    },
+    {
+      "at": "2026-11-16T13:50:31.737689+00:00",
+      "rssKiB_cpuPercent": "93456   1.5"
+    },
+    {
+      "at": "2026-11-16T13:50:36.743492+00:00",
+      "rssKiB_cpuPercent": "84896   0.0"
+    }
+  ],
+  "remoteSamples": []
+}

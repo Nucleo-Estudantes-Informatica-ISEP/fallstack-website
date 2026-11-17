@@ -4,12 +4,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { BsQrCodeScan } from "react-icons/bs";
 
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
+import { resolveAccountDestination } from "@/domain/auth/accountDestination";
+import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
 
 interface TopBarProps {
   // The scroll-linked fade (transparent at the top, solidifying as you
@@ -34,12 +37,12 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const opacity = useTransform(() => scrollYProgress.get() * 2.2);
 
   return (
-    <nav className={`fixed z-40 h-16 w-full overflow-hidden`}>
+    <nav className="fixed z-40 h-16 w-full">
       {solid ? (
-        <div className="absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background" />
+        <div className="absolute top-0 left-0 flex h-16 w-full items-center justify-between bg-background" />
       ) : (
         <motion.div
-          className={`absolute top-0 left-0 flex h-16 w-screen items-center justify-between bg-background`}
+          className="absolute top-0 left-0 flex h-16 w-full items-center justify-between bg-background"
           style={{
             opacity,
           }}
@@ -78,6 +81,17 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
             </Link>
           ) : (
             <>
+              {canAccessAttendanceScanner(session.user) &&
+                resolveAccountDestination(session.user).kind !== "staff" && (
+                  <Link
+                    href="/attendance/scan"
+                    aria-label="Scanner de presenças"
+                    title="Scanner de presenças"
+                    className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-xl text-white transition-colors hover:text-primary"
+                  >
+                    <BsQrCodeScan aria-hidden="true" />
+                  </Link>
+                )}
               <UserButton user={session.user} />
               <LogoutButton />
             </>

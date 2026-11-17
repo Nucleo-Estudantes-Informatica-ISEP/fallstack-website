@@ -1,0 +1,32 @@
+{
+  "replicas": [
+    {
+      "replica": 1,
+      "imageId": "sha256:9092b1c3af7cbee984ebb0820180cd264952e95eebfad60b0a72eac6414d44a5",
+      "imageRevision": "diagnostic-783afa3f",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "s3PublicConfigured": true
+    },
+    {
+      "replica": 2,
+      "imageId": "sha256:9092b1c3af7cbee984ebb0820180cd264952e95eebfad60b0a72eac6414d44a5",
+      "imageRevision": "diagnostic-783afa3f",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "s3PublicConfigured": true
+    },
+    {
+      "replica": 3,
+      "imageId": "sha256:9092b1c3af7cbee984ebb0820180cd264952e95eebfad60b0a72eac6414d44a5",
+      "imageRevision": "diagnostic-783afa3f",
+      "health": "healthy",
+      "restarts": 0,
+      "oom": false,
+      "s3PublicConfigured": true
+    }
+  ],
+  "disk": ["102915489792", "84898172928", "18000539648", "83%"]
+}

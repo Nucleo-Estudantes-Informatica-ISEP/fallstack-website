@@ -51,7 +51,7 @@ test("uses AuthNEI as the single login method", () => {
     screen.queryByLabelText("A tua palavra-passe")
   ).not.toBeInTheDocument();
   expect(
-    screen.getByRole("button", {
+    screen.getByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
   ).toBeInTheDocument();
@@ -82,22 +82,14 @@ test("sends password recovery to AuthNEI instead of a local reset flow", () => {
   ).not.toBeInTheDocument();
 });
 
-test("employee onboarding requires AuthNEI first when logged out", () => {
+test("employee registration links to the employee signup flow", () => {
   render(<LoginCard />);
 
-  fireEvent.click(
-    screen.getByRole("button", {
+  expect(
+    screen.getByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
-  );
-
-  expect(
-    screen.getByRole("heading", { name: "Registo de Colaborador" })
-  ).toBeInTheDocument();
-  expect(screen.getByText("Continuar com AuthNEI")).toHaveAttribute(
-    "data-next",
-    "/login?modal=employee"
-  );
+  ).toHaveAttribute("href", "/signup/employee");
 });
 
 test("authenticated users can redeem a company code", () => {
@@ -150,7 +142,7 @@ test("offseason hides student and employee registration links", () => {
   ).not.toBeInTheDocument();
 
   expect(
-    screen.queryByRole("button", {
+    screen.queryByRole("link", {
       name: "Tens um código de empresa? Regista-te como colaborador",
     })
   ).not.toBeInTheDocument();
@@ -197,4 +189,27 @@ test("offseason employee closure allows returning to the login page", () => {
   ).toBeInTheDocument();
 
   expect(screen.getByText("Continuar com AuthNEI")).toBeInTheDocument();
+});
+
+test("shows an error alert when auth callback fails", () => {
+  render(<LoginCard authError />);
+
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Não foi possível concluir o início de sessão com o AuthNEI"
+  );
+});
+
+test("existing employees are routed to the dashboard instead of the company-code form", () => {
+  sessionState.user = {
+    role: "EMPLOYEE",
+    adminRole: null,
+    student: null,
+  };
+
+  render(<LoginCard initialView="employee" />);
+
+  expect(screen.queryByText("Completar associação")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Ir para o dashboard da empresa" })
+  ).toHaveAttribute("href", "/dashboard");
 });

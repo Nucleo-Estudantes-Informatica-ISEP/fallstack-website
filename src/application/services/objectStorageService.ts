@@ -3,20 +3,27 @@ import "server-only";
 import { createReadStream } from "node:fs";
 import { type Readable } from "node:stream";
 import {
+  AbortMultipartUploadCommand,
+  CompleteMultipartUploadCommand,
   CopyObjectCommand,
+  CreateMultipartUploadCommand,
   DeleteObjectCommand,
   GetBucketVersioningCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListMultipartUploadsCommand,
   ListObjectsV2Command,
+  ListPartsCommand,
   PutObjectCommand,
   S3Client,
+  UploadPartCommand,
   type ListObjectsV2CommandOutput,
 } from "@aws-sdk/client-s3";
 
 import { HttpError } from "@/types/HttpError";
 import { storageEnv } from "@/config/env.storage";
 import { videoKey } from "@/domain/company/companyVideo";
+import { cvPartSize } from "@/domain/cvMultipart";
 
 export type StorageBucket = "avatar" | "logo" | "cv";
 
@@ -34,12 +41,10 @@ function storageClient() {
 }
 
 let signingClient: S3Client;
-export async function presignCvPost(key: string, size: number) {
+function publicStorageClient() {
   if (!storageEnv.S3_PUBLIC_ENDPOINT)
     throw new HttpError("Direct CV uploads are not configured", 503);
-  // Do not load the POST signer for unrelated media/public-data requests.
-  const { createPresignedPost } = await import("@aws-sdk/s3-presigned-post");
-  signingClient ??= new S3Client({
+  return (signingClient ??= new S3Client({
     endpoint: storageEnv.S3_PUBLIC_ENDPOINT,
     region: "us-east-1",
     forcePathStyle: true,
@@ -47,10 +52,18 @@ export async function presignCvPost(key: string, size: number) {
       accessKeyId: storageEnv.S3_ACCESS_KEY_ID,
       secretAccessKey: storageEnv.S3_SECRET_ACCESS_KEY,
     },
-  });
+  }));
+}
+
+export async function presignCvPost(key: string, size: number) {
+  if (!storageEnv.S3_PUBLIC_ENDPOINT)
+    throw new HttpError("Direct CV uploads are not configured", 503);
+  // Do not load the POST signer for unrelated media/public-data requests.
+  const { createPresignedPost } = await import("@aws-sdk/s3-presigned-post");
+  const publicClient = publicStorageClient();
   // Exact size is stricter than just the global ceiling. The file part MUST
   // be last. No ACL, arbitrary key, content type or success redirect allowed.
-  return createPresignedPost(signingClient, {
+  return createPresignedPost(publicClient, {
     Bucket: bucket("cv"),
     Key: key,
     Expires: storageEnv.CV_UPLOAD_TTL_SECONDS,
@@ -235,6 +248,29 @@ export async function getObject(kind: StorageBucket, key: string) {
   }
 }
 
+/** Stream large objects so CV downloads do not buffer a 10 MiB PDF per request. */
+export async function getObjectStream(
+  kind: StorageBucket,
+  key: string,
+  signal?: AbortSignal
+) {
+  try {
+    const response = await storageClient().send(
+      new GetObjectCommand({ Bucket: bucket(kind), Key: key }),
+      { abortSignal: signal }
+    );
+    if (!response.Body) return null;
+    return {
+      body: response.Body.transformToWebStream(),
+      contentType: response.ContentType ?? "application/octet-stream",
+      contentLength: response.ContentLength,
+    };
+  } catch (error) {
+    if (isMissingObject(error)) return null;
+    throw error;
+  }
+}
+
 export async function listObjects(
   kind: StorageBucket,
   prefix: string,
@@ -314,4 +350,158 @@ export async function getVideoObject(
     if (isMissingObject(error)) return null;
     throw error;
   }
+}
+
+export async function beginCvMultipart(key: string) {
+  publicStorageClient();
+  const result = await storageClient().send(
+    new CreateMultipartUploadCommand({
+      Bucket: bucket("cv"),
+      Key: key,
+      ContentType: "application/pdf",
+      ChecksumAlgorithm: "SHA256",
+    }),
+    { abortSignal: AbortSignal.timeout(5000) }
+  );
+  if (!result.UploadId) throw new Error("Storage did not create an upload");
+  return result.UploadId;
+}
+
+export async function presignCvPart(
+  key: string,
+  multipartId: string,
+  partNumber: number,
+  size: number,
+  checksum: string,
+  expiresIn: number
+) {
+  const { getSignedUrl } = await import("@aws-sdk/s3-request-presigner");
+  const url = await getSignedUrl(
+    publicStorageClient(),
+    new UploadPartCommand({
+      Bucket: bucket("cv"),
+      Key: key,
+      UploadId: multipartId,
+      PartNumber: partNumber,
+      ContentLength: size,
+      ChecksumSHA256: checksum,
+    }),
+    {
+      expiresIn,
+      signableHeaders: new Set(["content-length"]),
+      unhoistableHeaders: new Set(["x-amz-checksum-sha256"]),
+    }
+  );
+  return { url, headers: { "x-amz-checksum-sha256": checksum } };
+}
+
+export async function completeCvMultipart(
+  key: string,
+  multipartId: string,
+  size: number,
+  signal: AbortSignal
+) {
+  try {
+    const listed = await storageClient().send(
+      new ListPartsCommand({
+        Bucket: bucket("cv"),
+        Key: key,
+        UploadId: multipartId,
+        MaxParts: 3,
+      }),
+      { abortSignal: signal }
+    );
+    const parts = listed.Parts ?? [];
+    if (
+      listed.IsTruncated ||
+      parts.length !== Math.ceil(size / (5 * 1024 * 1024)) ||
+      parts.some(
+        (part, index) =>
+          part.PartNumber !== index + 1 ||
+          part.Size !== cvPartSize(size, index + 1) ||
+          !part.ETag ||
+          !part.ChecksumSHA256
+      )
+    )
+      throw new HttpError("Invalid or incomplete upload parts", 409);
+    await storageClient().send(
+      new CompleteMultipartUploadCommand({
+        Bucket: bucket("cv"),
+        Key: key,
+        UploadId: multipartId,
+        MultipartUpload: {
+          Parts: parts.map(({ PartNumber, ETag, ChecksumSHA256 }) => ({
+            PartNumber,
+            ETag,
+            ChecksumSHA256,
+          })),
+        },
+      }),
+      { abortSignal: signal }
+    );
+  } catch (error) {
+    // A lost completion response is safe to retry: validate the completed object below.
+    if (!(error instanceof Error) || error.name !== "NoSuchUpload") throw error;
+    const head = await headCvObject(key, signal);
+    if (head.ContentLength !== size || head.ContentType !== "application/pdf")
+      throw new HttpError("Invalid uploaded file size or type", 400);
+  }
+}
+
+export async function abortCvMultipart(
+  key: string,
+  multipartId: string,
+  signal?: AbortSignal
+) {
+  try {
+    await storageClient().send(
+      new AbortMultipartUploadCommand({
+        Bucket: bucket("cv"),
+        Key: key,
+        UploadId: multipartId,
+      }),
+      { abortSignal: signal ?? AbortSignal.timeout(5000) }
+    );
+  } catch (error) {
+    if (!(error instanceof Error) || error.name !== "NoSuchUpload") throw error;
+  }
+}
+
+export async function expiredCvMultipart(now: Date, signal?: AbortSignal) {
+  const uploads: { key: string; multipartId: string }[] = [];
+  let KeyMarker: string | undefined, UploadIdMarker: string | undefined;
+  do {
+    const result = await storageClient().send(
+      new ListMultipartUploadsCommand({
+        Bucket: bucket("cv"),
+        Prefix: "quarantine/cv/",
+        KeyMarker,
+        UploadIdMarker,
+      }),
+      { abortSignal: signal }
+    );
+    for (const upload of result.Uploads ?? []) {
+      if (
+        upload.Key &&
+        /^quarantine\/cv\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(
+          upload.Key
+        ) &&
+        upload.UploadId &&
+        upload.Initiated &&
+        upload.Initiated.getTime() < now.getTime() - 86400000
+      )
+        uploads.push({ key: upload.Key, multipartId: upload.UploadId });
+    }
+    if (!result.IsTruncated) break;
+    if (
+      !result.NextKeyMarker ||
+      !result.NextUploadIdMarker ||
+      (KeyMarker === result.NextKeyMarker &&
+        UploadIdMarker === result.NextUploadIdMarker)
+    )
+      throw new Error("Incomplete multipart listing");
+    KeyMarker = result.NextKeyMarker;
+    UploadIdMarker = result.NextUploadIdMarker;
+  } while (true);
+  return uploads;
 }

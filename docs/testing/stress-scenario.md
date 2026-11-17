@@ -139,6 +139,10 @@ error, so a failure never turns into a burst against the per-account limits.
 Afterwards, remove the synthetic uploads and accounts through the supported
 storage clean-up and admin procedures.
 
+The [16 November 2026 staging run](../evidence/heavy-users-staging-2026-11-16.md)
+reached 200 users and failed the performance/error limits; its raw summaries,
+configuration and cleanup/restoration checks are retained with the report.
+
 ## Task01-F multi-copy runner
 
 Run `pnpm test:load:capacity` from the repository root against isolated staging.
