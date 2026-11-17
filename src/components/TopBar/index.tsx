@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { LiaUser } from "react-icons/lia";
 
+import useLanguage from "@/hooks/useLanguage";
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -32,7 +33,7 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
   const { scrollYProgress } = useScroll();
   const session = useSession();
   const pathname = usePathname();
-  const isEnglish = pathname?.startsWith("/event/en");
+  const isEnglish = useLanguage() === "en";
   const language = isEnglish ? Language.EN : Language.PT;
   const studentProfileLabel = isEnglish
     ? "My student profile"
