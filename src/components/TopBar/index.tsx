@@ -103,7 +103,7 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
                   }
                   aria-label="O meu perfil de estudante"
                   title="O meu perfil de estudante"
-                  className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-2xl text-white"
+                  className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-2xl text-white transition-colors hover:text-primary"
                 >
                   <LiaUser aria-hidden="true" />
                 </Link>
