@@ -1,9 +1,10 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, test, vi } from "vitest";
 
 import { branding } from "@/edition/branding";
 
 import {
   downloadOfflinePass,
+  generateOfflinePass,
   getPassFilename,
   loadImage,
   svgToImage,
@@ -161,7 +162,7 @@ describe("loadImage and svgToImage", () => {
   });
 });
 
-describe("downloadOfflinePass", () => {
+describe("generateOfflinePass", () => {
   const originalImage = globalThis.Image;
   const originalCreateElement = document.createElement.bind(document);
 
@@ -184,7 +185,7 @@ describe("downloadOfflinePass", () => {
 
     const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     await expect(
-      downloadOfflinePass({
+      generateOfflinePass({
         studentName: "Test Student",
         permanentCode: "ABCDEF",
         qrSvgElement: svgEl,
@@ -222,7 +223,7 @@ describe("downloadOfflinePass", () => {
 
     const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     await expect(
-      downloadOfflinePass({
+      generateOfflinePass({
         studentName: "Test Student",
         permanentCode: "ABCDEF",
         qrSvgElement: svgEl,
@@ -232,7 +233,7 @@ describe("downloadOfflinePass", () => {
     );
   });
 
-  it("successfully renders canvas and triggers file download", async () => {
+  it("renders a PNG file without initiating a download", async () => {
     class MockSuccessImage {
       crossOrigin = "";
       src = "";
@@ -284,9 +285,9 @@ describe("downloadOfflinePass", () => {
           vi.spyOn(canvas, "getContext").mockReturnValue(
             mockCtx as unknown as CanvasRenderingContext2D
           );
-          vi.spyOn(canvas, "toDataURL").mockReturnValue(
-            "data:image/png;base64,mockpng"
-          );
+          vi.spyOn(canvas, "toBlob").mockImplementation((callback) => {
+            callback(new Blob(["png"], { type: "image/png" }));
+          });
         } else if (tagName === "a") {
           createdLink = el as HTMLAnchorElement;
           vi.spyOn(createdLink, "click").mockImplementation(clickSpy);
@@ -299,21 +300,43 @@ describe("downloadOfflinePass", () => {
     const removeChildSpy = vi.spyOn(document.body, "removeChild");
 
     const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    await downloadOfflinePass({
+    const file = await generateOfflinePass({
       studentName: "Daniel Silva",
       studentEmail: "daniel@example.com",
       permanentCode: "ABCDEF",
       qrSvgElement: svgEl,
     });
 
-    const link = createdLink as HTMLAnchorElement | null;
-    expect(link).not.toBeNull();
-    expect(link?.download).toBe(
+    expect(file.name).toBe(
       `passe-${branding.name.toLowerCase()}-${branding.year}-daniel-silva.png`
     );
-    expect(link?.href).toBe("data:image/png;base64,mockpng");
-    expect(clickSpy).toHaveBeenCalledTimes(1);
-    expect(appendChildSpy).toHaveBeenCalledWith(link);
-    expect(removeChildSpy).toHaveBeenCalledWith(link);
+    expect(file.type).toBe("image/png");
+    expect(file.size).toBe(3);
+    expect(createdLink).toBeNull();
+    expect(clickSpy).not.toHaveBeenCalled();
+    expect(appendChildSpy).not.toHaveBeenCalled();
+    expect(removeChildSpy).not.toHaveBeenCalled();
   });
+});
+
+test("download fallback releases its object URL after the browser consumes it", () => {
+  vi.useFakeTimers();
+  const file = new File(["png"], "pass.png", { type: "image/png" });
+  const create = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:pass");
+  const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+  const click = vi
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(function (this: HTMLAnchorElement) {
+      expect(this.download).toBe("pass.png");
+      expect(this.href).toBe("blob:pass");
+      expect(this.isConnected).toBe(true);
+    });
+  downloadOfflinePass(file);
+  expect(create).toHaveBeenCalledWith(file);
+  expect(click).toHaveBeenCalledOnce();
+  expect(revoke).not.toHaveBeenCalled();
+  vi.runAllTimers();
+  expect(revoke).toHaveBeenCalledWith("blob:pass");
+  vi.useRealTimers();
+  vi.restoreAllMocks();
 });
