@@ -89,7 +89,21 @@ export async function completeZitadelSignIn(input: {
     isGlobalAdmin: input.identity.isGlobalAdmin,
   });
 
-  if (input.fallback !== "/") return input.fallback;
+  if (user.role === "EMPLOYEE" && user.employee && !input.identity.isEmployee) {
+    await assignEmployeeRole(input.identity.sub);
+    input.identity.isEmployee = true;
+  }
+
+  if (input.fallback !== "/") {
+    if (
+      user.role === "EMPLOYEE" &&
+      user.employee &&
+      (input.fallback === "/login" || input.fallback.startsWith("/login?"))
+    ) {
+      return "/dashboard";
+    }
+    return input.fallback;
+  }
   if (input.identity.isGlobalAdmin) return "/overview";
   if (user.role === "EMPLOYEE" && user.employee) return "/dashboard";
   if (user.role === "EMPLOYEE") return "/login?modal=employee";

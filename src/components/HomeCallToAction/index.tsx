@@ -7,6 +7,7 @@ import {
   resolveAccountDestination,
   type AccountDestination,
 } from "@/domain/auth/accountDestination";
+import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
 import { Language } from "@/domain/i18n/translations";
 
 type LinkedDestination = Exclude<AccountDestination, { href: null }>;
@@ -74,6 +75,9 @@ const HomeCallToAction: React.FC<HomeCallToActionProps> = ({ language }) => {
   const destination = resolveAccountDestination(user);
   if (destination.href === null) return null;
 
+  const showScannerShortcut =
+    destination.kind !== "staff" && canAccessAttendanceScanner(user);
+
   return (
     <div className={rootClassName}>
       <Link href={destination.href} className={primaryClassName}>
@@ -85,6 +89,14 @@ const HomeCallToAction: React.FC<HomeCallToActionProps> = ({ language }) => {
           className="ui-focus inline-flex min-h-11 items-center rounded-md px-2 text-sm text-white underline underline-offset-4 drop-shadow-md hover:text-white/80"
         >
           {signInLabel[language]}
+        </Link>
+      )}
+      {showScannerShortcut && (
+        <Link
+          href="/attendance/scan"
+          className="ui-focus inline-flex min-h-11 items-center rounded-md px-2 text-sm text-white underline underline-offset-4 drop-shadow-md hover:text-white/80"
+        >
+          {labels.staff[language]}
         </Link>
       )}
     </div>

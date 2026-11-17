@@ -150,6 +150,26 @@ test("routes a returning employee to the dashboard", async () => {
       fallback: "/",
     })
   ).resolves.toBe("/dashboard");
+  expect(assignEmployeeRole).not.toHaveBeenCalled();
+});
+
+test("assigns the ZITADEL employee role and routes a backoffice-created employee directly to the dashboard", async () => {
+  vi.mocked(provisionZitadelUser).mockResolvedValue({
+    id: "app-user-1",
+    role: "EMPLOYEE",
+    student: null,
+    employee: { id: "app-user-1", company: {} },
+  } as never);
+  const currentIdentity = { ...identity, isEmployee: false };
+
+  await expect(
+    completeZitadelSignIn({
+      identity: currentIdentity,
+      fallback: "/login?modal=employee",
+    })
+  ).resolves.toBe("/dashboard");
+  expect(assignEmployeeRole).toHaveBeenCalledWith(identity.sub);
+  expect(currentIdentity.isEmployee).toBe(true);
 });
 
 test("maps the NEI Global admin grant to the admin backoffice", async () => {
