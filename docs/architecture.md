@@ -80,6 +80,12 @@ freshness. It prevents stale QR use but has no nonce or one-time-consumption
 check: a captured code can be reused during its valid window by another
 student. A student's duplicate completion of the same action is rejected.
 
+The employee-only `/api/students/token` endpoint also exchanges valid signed
+`attendance` QRs for fifteen-minute `student-pass` tokens. It verifies HS256,
+expiry, purpose and the current student record before minting; saving and profile
+preview routes continue to require `student-pass`. Permanent-code passes use the
+same existing employee lookup. Expired or tampered QRs cannot be exchanged.
+
 Employee preview authorization, including the tokenless fallback and its
 company-level saved-student check, is recorded in [ADR 0042](decisions/0042-restrict-tokenless-student-previews.md).
 

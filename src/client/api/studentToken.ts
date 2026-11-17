@@ -2,11 +2,13 @@ import "client-only";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 
-export async function getStudentPreviewToken(code: string) {
+export async function getStudentPreviewToken(
+  input: string | { token: string }
+) {
   try {
     const { token } = await httpClient.post<{ token: string }>(
       "/students/token",
-      { code }
+      typeof input === "string" ? { code: input } : input
     );
     return token;
   } catch (error) {
