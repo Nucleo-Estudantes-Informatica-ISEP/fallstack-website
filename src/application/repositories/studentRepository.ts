@@ -116,6 +116,7 @@ export const updateStudentProfile = (
     linkedin?: string;
     github?: string;
     institutionalEmail?: string;
+    course?: string;
   },
   db: DbClient = prisma
 ) =>

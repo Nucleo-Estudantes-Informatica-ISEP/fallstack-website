@@ -106,3 +106,11 @@ test("clearing LinkedIn with an empty string is accepted on update", () => {
     true
   );
 });
+
+test("profile course edits require a non-empty bounded course", () => {
+  expect(patchStudentSchema.parse({ course: "  LEI  " })).toEqual({
+    course: "LEI",
+  });
+  for (const course of ["", "  ", "a".repeat(101)])
+    expect(patchStudentSchema.safeParse({ course }).success).toBe(false);
+});

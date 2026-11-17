@@ -139,3 +139,17 @@ test("saves edited institutional email with the profile", async () => {
     )
   );
 });
+
+test("saves an edited course in the profile request", async () => {
+  render(<Profile />);
+  const course = screen.getByLabelText("Curso");
+  expect(course).not.toHaveAttribute("readonly");
+  fireEvent.change(course, { target: { value: "  Engenharia Informática  " } });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() =>
+    expect(httpClient.patch).toHaveBeenCalledWith(
+      "/students/123",
+      expect.objectContaining({ course: "Engenharia Informática" })
+    )
+  );
+});
