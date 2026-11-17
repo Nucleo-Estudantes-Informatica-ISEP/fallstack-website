@@ -90,7 +90,9 @@ const Footer: FunctionComponent<FooterProps> = ({
               target="_blank"
               rel="noreferrer"
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
-              title="Linktree do NEI"
+              title={
+                language === Language.EN ? "NEI Linktree" : "Linktree do NEI"
+              }
             >
               <FaLink size={28} />
             </Link>

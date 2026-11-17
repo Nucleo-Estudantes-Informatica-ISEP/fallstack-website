@@ -4,6 +4,7 @@ import NeiLogo from "~/public/assets/images/logo-white.png";
 import { expect, test, vi } from "vitest";
 
 import InstallableContext from "@/contexts/InstallableContext";
+import CountdownLanding from "@/components/CountdownLanding";
 import Footer from "@/components/Footer";
 import { Language } from "@/domain/i18n/translations";
 
@@ -55,3 +56,29 @@ test.each([
   fireEvent.click(button);
   expect(handleConfirm).toHaveBeenCalledOnce();
 });
+
+test.each([
+  [Language.PT, "Linktree do NEI"],
+  [Language.EN, "NEI Linktree"],
+])("%s footer translates the Linktree accessible name", (language, label) => {
+  renderFooter({ neiLogoSrc: NeiLogo, language });
+  const link = screen.getByRole("link", { name: label });
+  expect(link).toHaveAttribute("title", label);
+  expect(link).toHaveAttribute("href", "https://linktr.ee/nei_isep");
+  expect(link).toHaveAttribute("target", "_blank");
+  expect(link).toHaveAttribute("rel", "noreferrer");
+});
+
+test.each([
+  [Language.PT, "Linktree do NEI"],
+  [Language.EN, "NEI Linktree"],
+])(
+  "%s countdown homepage forwards its language to the real footer",
+  (language, label) => {
+    render(<CountdownLanding language={language} />);
+    expect(screen.getByRole("link", { name: label })).toHaveAttribute(
+      "href",
+      "https://linktr.ee/nei_isep"
+    );
+  }
+);
