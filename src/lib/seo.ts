@@ -99,12 +99,16 @@ export function isStagingEnvironment(
     return true;
   }
 
-  const baseUrl = env.NEXT_PUBLIC_BASE_URL || env.SERVICE_URL_WEB || "";
-  if (
-    baseUrl.includes("staging.fallstack.nei-isep.org") ||
-    /https?:\/\/[a-z0-9.-]*staging[a-z0-9.-]*/i.test(baseUrl)
-  ) {
-    return true;
+  const baseUrl = env.NEXT_PUBLIC_BASE_URL || env.SERVICE_URL_WEB;
+  if (baseUrl) {
+    try {
+      const parsedUrl = new URL(baseUrl);
+      if (isStagingHostname(parsedUrl.hostname)) {
+        return true;
+      }
+    } catch {
+      // Ignore invalid URL strings
+    }
   }
 
   return false;
