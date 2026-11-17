@@ -5,7 +5,7 @@ import {
   findActionCompletionTimestampsSince,
   findRecentActionCompletions,
 } from "../repositories/actionRepository";
-import { countCompaniesForAdmin } from "../repositories/companyRepository";
+import { countActiveCompanies } from "../repositories/companyRepository";
 import { countEmployeesForAdmin } from "../repositories/employeeRepository";
 import {
   countAllSavedStudents,
@@ -26,7 +26,7 @@ vi.mock("../repositories/actionRepository", () => ({
   findRecentActionCompletions: vi.fn(),
 }));
 vi.mock("../repositories/companyRepository", () => ({
-  countCompaniesForAdmin: vi.fn(),
+  countActiveCompanies: vi.fn(),
 }));
 vi.mock("../repositories/employeeRepository", () => ({
   countEmployeesForAdmin: vi.fn(),
@@ -45,7 +45,7 @@ vi.mock("../repositories/studentRepository", () => ({
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(countStudents).mockResolvedValue(10);
-  vi.mocked(countCompaniesForAdmin).mockResolvedValue(3);
+  vi.mocked(countActiveCompanies).mockResolvedValue(3);
   vi.mocked(countEmployeesForAdmin).mockResolvedValue(5);
   vi.mocked(countActionCompletions).mockResolvedValue(20);
   vi.mocked(countAllSavedStudents).mockResolvedValue(7);
