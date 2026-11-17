@@ -1,6 +1,8 @@
 import { cookies } from "next/headers";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { passesAuthPolicy } from "@/domain/auth/authPolicy";
+
 import { findUserSessionByZitadelUserId } from "../repositories/userRepository";
 import getServerSession from "./sessionService";
 import { verifyAppSession } from "./zitadelAuthService";
@@ -161,7 +163,7 @@ test("rejects deactivated local accounts", async () => {
   expect(await getServerSession()).toBeNull();
 });
 
-test.each([undefined, 1100000, 0, 1500000])(
+test.each([undefined, 1100000, 0, 45000000])(
   "preserves membership and bounds attendance deadline %s",
   async (attendanceExpiresAt) => {
     vi.mocked(verifyAppSession).mockReturnValue({
@@ -184,7 +186,40 @@ test.each([undefined, 1100000, 0, 1500000])(
     const session = await getServerSession();
     expect(session?.neiMember).toBe(true);
     expect(session?.attendanceExpiresAt).toBe(
-      Math.min(1300000, attendanceExpiresAt ?? Infinity)
+      Math.min(44200000, attendanceExpiresAt ?? Infinity)
     );
+  }
+);
+
+test.each([
+  ["2026-11-17T09:06:00Z", true],
+  ["2026-11-17T20:59:59Z", true],
+  ["2026-11-17T21:00:00Z", false],
+])(
+  "attendance authorization at %s respects the 12-hour deadline",
+  async (time, allowed) => {
+    vi.mocked(verifyAppSession).mockReturnValue({
+      sub: "member-sub",
+      email: "member@example.org",
+      employee: false,
+      admin: false,
+      neiMember: true,
+      iat: Date.parse("2026-11-17T09:00:00Z") / 1000,
+    });
+    vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+      id: "member",
+      active: true,
+      role: null,
+      adminRole: null,
+      student: null,
+      employee: null,
+    } as never);
+    const session = await getServerSession();
+    const spy = vi.spyOn(Date, "now").mockReturnValue(Date.parse(time));
+    try {
+      expect(passesAuthPolicy("staff", session)).toBe(allowed);
+    } finally {
+      spy.mockRestore();
+    }
   }
 );

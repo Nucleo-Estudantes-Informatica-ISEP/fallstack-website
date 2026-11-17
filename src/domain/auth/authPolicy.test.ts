@@ -207,7 +207,7 @@ test.each([
   assert.equal(canAccessAttendanceScanner(session as never), expected);
 });
 
-test("scanner access ignores the five-minute attendance bound", () => {
+test("scanner access ignores the twelve-hour attendance bound", () => {
   assert.equal(
     canAccessAttendanceScanner({
       adminRole: null,

@@ -26,7 +26,7 @@ export type CheckInCountResult =
 
 // Exact message from sessionCheckInService; every other 400 is a bad credential.
 const OUTSIDE_SESSION_MESSAGE =
-  "Check-in is not available outside this session.";
+  "Check-in is not available outside this period.";
 const DEFAULT_RETRY_AFTER_SECONDS = 5;
 
 const checkInsPath = (sessionId: string) =>

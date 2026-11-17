@@ -1,10 +1,11 @@
+import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { branding } from "@/edition/branding";
 
 const config = {
   cookies: {
     auth: {
       name: branding.storage.authCookie,
-      maxAge: 8 * 60 * 60,
+      maxAge: APP_SESSION_TTL_SECONDS,
     },
   },
 

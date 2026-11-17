@@ -139,7 +139,7 @@ test.each([
   expect(mapIdentityRoles(claims, "employee", "global")).toEqual(expected);
 });
 
-test("keeps NEI member app sessions valid for eight hours", () => {
+test("keeps NEI member app sessions valid for twelve hours", () => {
   vi.useFakeTimers();
   const token = signAppSession({
     sub: "member",
@@ -153,7 +153,7 @@ test("keeps NEI member app sessions valid for eight hours", () => {
   expect(verifyAppSession(token)?.neiMember).toBe(true);
   vi.advanceTimersByTime(1000);
   expect(verifyAppSession(token)?.neiMember).toBe(true);
-  vi.advanceTimersByTime((28800 - 300) * 1000);
+  vi.advanceTimersByTime((43200 - 300) * 1000);
   expect(verifyAppSession(token)).toBeNull();
 });
 

@@ -34,7 +34,7 @@ test("day selection loads the requested day", () => {
     screen.getByRole("button", { name: "xlsx: First" })
   ).toBeInTheDocument();
   fireEvent.change(screen.getByRole("combobox"), { target: { value: "1" } });
-  expect(location.href).toBe("/admin/attendance?day=2");
+  expect(location.href).toBe("/attendance?day=2");
   Object.defineProperty(window, "location", {
     configurable: true,
     value: originalLocation,
