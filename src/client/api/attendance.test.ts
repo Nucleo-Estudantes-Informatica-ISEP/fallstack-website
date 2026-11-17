@@ -42,20 +42,16 @@ test.each([
   [
     "a duplicate",
     {
-      fail: error(
-        "This student has already checked in for this session.",
-        409,
-        {
-          error: "x",
-          student: { name: "Joao Costa" },
-        }
-      ),
+      fail: error("This student has already checked in for this period.", 409, {
+        error: "x",
+        student: { name: "Joao Costa" },
+      }),
     },
     { kind: "duplicate", name: "Joao Costa" },
   ],
   [
     "a scan outside the session",
-    { fail: error("Check-in is not available outside this session.", 400) },
+    { fail: error("Check-in is not available outside this period.", 400) },
     { kind: "outside-session" },
   ],
   [
@@ -70,7 +66,7 @@ test.each([
   ],
   [
     "an unknown session",
-    { fail: error("Session not found.", 404) },
+    { fail: error("Attendance period not found.", 404) },
     { kind: "session-not-found" },
   ],
   [

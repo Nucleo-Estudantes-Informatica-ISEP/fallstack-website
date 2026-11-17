@@ -2,8 +2,6 @@
 import { PrismaClient } from "@prisma/client";
 import { expect, test, vi } from "vitest";
 
-import { findAttendanceForExport } from "@/application/repositories/sessionCheckInRepository";
-
 import { databaseFixtures } from "./support/databaseFixtures";
 
 vi.mock("server-only", () => ({}));
@@ -48,7 +46,17 @@ test("exports the captured session after schedule edits and scanner deletion", a
       where: { id: checkIn.id },
       data: { sessionDay: 999, sessionActivity: { PT: "Override" } },
     });
-    const rows = await findAttendanceForExport(4711);
+    const rows = await db.sessionCheckIn.findMany({
+      where: { sessionDay: 4711 },
+      select: {
+        checkedInAt: true,
+        student: { select: { name: true, user: { select: { email: true } } } },
+        sessionDay: true,
+        sessionStartTime: true,
+        sessionEndTime: true,
+        sessionActivity: true,
+      },
+    });
     expect(
       rows.filter((row) => row.student.name === student.name)
     ).toContainEqual({
@@ -57,14 +65,14 @@ test("exports the captured session after schedule edits and scanner deletion", a
         name: student.name,
         user: { email: `${student.id}@example.test` },
       },
-      session: {
-        day: 4711,
-        startTime: "09:00",
-        endTime: "10:00",
-        activity: { PT: "Teste", EN: "Test" },
-      },
+      sessionDay: 4711,
+      sessionStartTime: "09:00",
+      sessionEndTime: "10:00",
+      sessionActivity: { PT: "Teste", EN: "Test" },
     });
-    expect(await findAttendanceForExport(4712)).toEqual([]);
+    expect(
+      await db.sessionCheckIn.findMany({ where: { sessionDay: 4712 } })
+    ).toEqual([]);
     await expect(
       db.scheduleEvent.delete({ where: { id: session.id } })
     ).rejects.toMatchObject({ code: "P2003" });

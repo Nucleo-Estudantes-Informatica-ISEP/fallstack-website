@@ -71,7 +71,8 @@ for procedure and rationale.
 - The attendance scanner page `/attendance/scan` is role-gated with
   `canAccessAttendanceScanner` (admin or the AuthNEI `nei-member` grant) and
   returns 403 to everyone else. Its check-in and count endpoints use the
-  `staff` policy, which adds the five-minute attendance bound from ADR 0039.
+  `staff` policy with the twelve-hour attendance bound from ADR 0047. New
+  check-ins are per day and morning/afternoon period, independent of activities.
 - Keep unit tests next to code. Put performance measurements under
   `tests/performance/`, and integration and smoke tests under `tests/e2e/`.
   Vitest auto-discovers `*.test.ts` and `*.test.tsx`.

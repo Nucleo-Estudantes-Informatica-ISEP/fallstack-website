@@ -179,7 +179,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
 
       {!selected ? (
         <p className="rounded-xl border border-gray-300 bg-white p-4 text-gray-900">
-          Não há sessões hoje.
+          Não há períodos de presenças hoje.
         </p>
       ) : (
         <>
@@ -214,7 +214,7 @@ const AttendanceScanner: React.FC<AttendanceScannerProps> = ({
               aria-expanded={showList}
               className="ml-auto flex items-center gap-1 text-sm font-medium text-gray-900 underline"
             >
-              Trocar sessão
+              Trocar período
               <FiChevronDown className="size-4" aria-hidden />
             </button>
             {showList && (

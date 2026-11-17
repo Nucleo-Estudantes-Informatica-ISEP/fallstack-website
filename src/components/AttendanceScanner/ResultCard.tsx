@@ -46,7 +46,7 @@ function content(outcome: CheckInOutcome, session: ResultCardProps["session"]) {
         tone: tone.amber,
         Icon: FiAlertTriangle,
         title: outcome.name,
-        detail: "Já tinha check-in nesta sessão",
+        detail: "Já tinha check-in neste período",
       };
     case "invalid-credential":
       return {
@@ -59,15 +59,15 @@ function content(outcome: CheckInOutcome, session: ResultCardProps["session"]) {
       return {
         tone: tone.red,
         Icon: FiClock,
-        title: "Fora do horário desta sessão",
+        title: "Fora do horário deste período",
         detail: `${session.startTime} – ${session.endTime}`,
       };
     case "session-not-found":
       return {
         tone: tone.red,
         Icon: FiXCircle,
-        title: "Sessão não encontrada",
-        detail: "Escolhe outra sessão",
+        title: "Período não encontrado",
+        detail: "Escolhe outro período",
       };
     case "rate-limited":
       return {
@@ -88,7 +88,7 @@ function content(outcome: CheckInOutcome, session: ResultCardProps["session"]) {
         tone: tone.blue,
         Icon: FiLock,
         title: "A tua autorização expirou (não é problema do estudante).",
-        detail: "A leitura está em pausa. A sessão escolhida fica guardada.",
+        detail: "A leitura está em pausa. O período escolhido fica guardada.",
       };
   }
 }

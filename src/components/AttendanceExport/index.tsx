@@ -7,7 +7,7 @@ const headers = [
   "Email",
   "Student number",
   "Date",
-  "Session",
+  "Period",
   "Check-in time",
   "Valid until",
 ];
@@ -29,7 +29,7 @@ export default function AttendanceExport({
         <select
           value={day - 1}
           onChange={(e) => {
-            window.location.href = `/admin/attendance?day=${Number(e.target.value) + 1}`;
+            window.location.href = `/attendance?day=${Number(e.target.value) + 1}`;
           }}
           className="min-h-11 border p-2"
         >

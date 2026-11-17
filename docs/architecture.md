@@ -65,7 +65,9 @@ The legacy multipart transport remains for avatars/logos only.
 Login uses AuthNEI/ZITADEL OIDC. The app signs its own session cookie, and
 `getServerSession()` resolves the matching application `User` and profile.
 PostgreSQL and MinIO store application data; neither creates login sessions.
-Password recovery stays with the identity provider.
+Password recovery stays with the identity provider. New session cookies and JWTs
+last twelve hours; attendance rights are bounded by the original signed issuance
+time and any earlier preserved deadline (ADR 0047).
 The exported bcrypt helpers (`hashPassword`, `comparePassword`, and
 `validatePassword`) in `authService.ts` have no callers; there is no app-side
 password login.

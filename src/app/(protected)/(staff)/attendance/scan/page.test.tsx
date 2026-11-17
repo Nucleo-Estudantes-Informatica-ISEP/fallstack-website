@@ -84,7 +84,7 @@ test("redirects an anonymous visitor to AuthNEI login", async () => {
   );
 });
 
-test("renders for an NEI member after the five-minute bound", async () => {
+test("renders for an NEI member after the twelve-hour bound", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     email: "coord@nei-isep.org",
     authName: "Coordenador",

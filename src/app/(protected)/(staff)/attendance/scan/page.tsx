@@ -12,7 +12,7 @@ export default async function AttendanceScanPage({
 }) {
   const session = await getServerSession();
   if (!session) redirect("/api/auth/login?next=%2Fattendance%2Fscan");
-  // Role only: the five-minute attendance bound is enforced by the API so a
+  // Role only: the twelve-hour attendance bound is enforced by the API so a
   // member past it can still reach the "sign in again" prompt.
   if (!canAccessAttendanceScanner(session)) forbidden();
 

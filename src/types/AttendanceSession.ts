@@ -1,4 +1,4 @@
-/** A schedule entry offered as a check-in session on the scanner page. */
+/** A morning or afternoon period offered on the scanner page. */
 export type AttendanceSessionDto = {
   id: string;
   title: string;
