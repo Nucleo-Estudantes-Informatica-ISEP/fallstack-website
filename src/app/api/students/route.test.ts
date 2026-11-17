@@ -38,6 +38,7 @@ const session = {
 };
 
 const fields = {
+  institutionalEmail: "1234567@isep.ipp.pt",
   year: "1º Ano Licenciatura",
   course: "Engenharia Informática",
   interests: [],
@@ -127,6 +128,7 @@ test("an existing student cannot create another profile", async () => {
 });
 
 test.each([
+  "institutionalEmail",
   "course",
   "privacyPolicyAccepted",
   "termsAccepted",
@@ -175,4 +177,21 @@ test("rejects new student registrations during offseason", async () => {
     error: "As inscrições estão encerradas.",
   });
   expect(createStudentProfile).not.toHaveBeenCalled();
+});
+
+test("admin-only accounts can create their own student profile", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({
+    ...session,
+    role: null,
+    adminRole: "ADMIN",
+  } as never);
+  expect((await post(fields)).status).toBe(201);
+});
+test("employees cannot create a student profile even when admin", async () => {
+  vi.mocked(getServerSession).mockResolvedValue({
+    ...session,
+    role: "EMPLOYEE",
+    adminRole: "ADMIN",
+  } as never);
+  expect((await post(fields)).status).toBe(403);
 });

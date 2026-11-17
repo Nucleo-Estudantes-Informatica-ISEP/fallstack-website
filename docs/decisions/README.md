@@ -75,3 +75,5 @@ implementation PR needs an ADR.
 | [0046](0046-resume-private-cv-uploads-in-checksummed-parts.md)   | Resume private CV uploads in checksummed parts   | Accepted             |
 
 | [0047](0047-daily-attendance-periods.md) | Daily attendance periods and twelve-hour scanner authorization | Accepted |
+
+| [0048](0048-independent-student-contact-email.md) | Independent student contact email and admin onboarding | Accepted |

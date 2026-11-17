@@ -20,7 +20,7 @@ const student: StudentDto = {
   name: "Student Example",
   year: "3º Ano Licenciatura",
   course: null,
-  user: { email: "student@example.test" },
+  user: { email: "1234567@isep.ipp.pt" },
   bio: "Hello",
   cv: null,
   cvPurgedAt: null,
@@ -77,11 +77,11 @@ test("shows locked fields as read-only with short explanatory hints and readable
   expect(yearInput).toHaveValue("3º Ano Licenciatura");
   expect(yearInput).toHaveAccessibleDescription("Definido no registo.");
 
-  const emailInput = screen.getByLabelText("Email");
-  expect(emailInput).toHaveAttribute("readonly");
-  expect(emailInput).toHaveValue("student@example.test");
+  const emailInput = screen.getByLabelText("Email institucional");
+  expect(emailInput).not.toHaveAttribute("readonly");
+  expect(emailInput).toHaveValue("1234567@isep.ipp.pt");
   expect(emailInput).toHaveAccessibleDescription(
-    "Associado à tua conta institucional."
+    "Email do ISEP para o teu perfil."
   );
 
   // Editable fields have readable labels
@@ -121,6 +121,21 @@ test("Guardar still saves the profile through the same request", async () => {
       github: "",
       linkedin: "",
       interests: ["react"],
+      institutionalEmail: "1234567@isep.ipp.pt",
     })
+  );
+});
+
+test("saves edited institutional email with the profile", async () => {
+  render(<Profile />);
+  fireEvent.change(screen.getByLabelText("Email institucional"), {
+    target: { value: "1234568@isep.ipp.pt" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+  await waitFor(() =>
+    expect(httpClient.patch).toHaveBeenCalledWith(
+      "/students/123",
+      expect.objectContaining({ institutionalEmail: "1234568@isep.ipp.pt" })
+    )
   );
 });

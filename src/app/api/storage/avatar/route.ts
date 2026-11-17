@@ -6,11 +6,12 @@ import {
   checkUploadRateLimit,
   uploadFile,
 } from "@/application/services/uploadService";
+import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 
 // Multipart upload: defineHandler's schema parses JSON only.
 export const POST = defineHandler({
   auth: "session",
-  authorize: (session) => session.role === "STUDENT",
+  authorize: canCreateStudentProfile,
   handler: async ({ req, session }) => {
     const blocked = rateLimitResponse(
       await checkUploadRateLimit("avatar", session!.id)

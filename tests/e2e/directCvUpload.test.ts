@@ -474,6 +474,7 @@ test.skipIf(!enabled)(
       const { createStudentProfile } =
         await import("@/application/services/studentService");
       await createStudentProfile(user.id, {
+        institutionalEmail: "1234567@isep.ipp.pt",
         name: "Synthetic signup",
         year: "1º Ano Licenciatura",
         course: "Test",

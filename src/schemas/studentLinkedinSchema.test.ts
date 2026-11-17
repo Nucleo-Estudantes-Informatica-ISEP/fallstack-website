@@ -7,6 +7,7 @@ import { postStudentSchema } from "./postStudentSchema";
 test("student creation accepts an absolute LinkedIn URL and rejects relative URLs", () => {
   const validProfile = {
     name: "Student",
+    institutionalEmail: "1234567@isep.ipp.pt",
     course: "Engenharia Informática",
     privacyPolicyAccepted: true,
     termsAccepted: true,
@@ -54,6 +55,7 @@ test.each([
   expect(
     postStudentSchema.safeParse({
       name: "Student",
+      institutionalEmail: "1234567@isep.ipp.pt",
       course: "Engenharia Informática",
       privacyPolicyAccepted: true,
       termsAccepted: true,
@@ -79,6 +81,7 @@ test.each([
   expect(
     postStudentSchema.safeParse({
       name: "Student",
+      institutionalEmail: "1234567@isep.ipp.pt",
       course: "Engenharia Informática",
       privacyPolicyAccepted: true,
       termsAccepted: true,

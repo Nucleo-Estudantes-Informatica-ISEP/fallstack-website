@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { BsQrCodeScan } from "react-icons/bs";
+import { LiaUser } from "react-icons/lia";
 
 import useSession from "@/hooks/useSession";
 import { LogIn } from "@/components/ui/Icons";
@@ -13,6 +13,8 @@ import LogoutButton from "@/components/LogoutButton";
 import UserButton from "@/components/Profile/UserButton";
 import { resolveAccountDestination } from "@/domain/auth/accountDestination";
 import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
+
+import { BsQrCodeScan } from "react-icons/bs";
 
 interface TopBarProps {
   // The scroll-linked fade (transparent at the top, solidifying as you
@@ -92,6 +94,20 @@ const TopBar: React.FC<TopBarProps> = ({ solid = false }) => {
                     <BsQrCodeScan aria-hidden="true" />
                   </Link>
                 )}
+              {session.user.adminRole && session.user.role !== "EMPLOYEE" && (
+                <Link
+                  href={
+                    session.user.student
+                      ? `/student/${session.user.student.code}`
+                      : "/signup"
+                  }
+                  aria-label="O meu perfil de estudante"
+                  title="O meu perfil de estudante"
+                  className="ui-focus z-20 flex min-h-11 min-w-11 items-center justify-center rounded-md text-2xl text-white"
+                >
+                  <LiaUser aria-hidden="true" />
+                </Link>
+              )}
               <UserButton user={session.user} />
               <LogoutButton />
             </>

@@ -44,6 +44,7 @@ test("signup and profile update schemas apply the same rule", () => {
   const signup = (linkedin: string) =>
     postStudentSchema.safeParse({
       name: "Student",
+      institutionalEmail: "1234567@isep.ipp.pt",
       course: "Engenharia Informática",
       privacyPolicyAccepted: true,
       termsAccepted: true,

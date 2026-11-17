@@ -72,3 +72,13 @@ export function passesAuthPolicy(
   if (policy === "superadmin") return session.adminRole === "SUPER_ADMIN";
   return false;
 }
+
+// Admin-only identities can onboard without losing their independent admin grant.
+export function canCreateStudentProfile(
+  session: Pick<AuthPolicySession, "role" | "adminRole">
+): boolean {
+  return (
+    session.role === "STUDENT" ||
+    (Boolean(session.adminRole) && session.role === null)
+  );
+}

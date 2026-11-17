@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+import { institutionalEmailSchema } from "./institutionalEmailSchema";
 import { linkedinOrEmptySchema } from "./linkedinSchema";
 
 export const patchStudentSchema = z
   .object({
+    institutionalEmail: institutionalEmailSchema,
     bio: z.string().max(1000),
     linkedin: linkedinOrEmptySchema,
     github: z.string().max(2048),
