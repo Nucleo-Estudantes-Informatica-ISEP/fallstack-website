@@ -92,3 +92,13 @@ test("only the links the student added are shown", () => {
   ).toHaveAttribute("rel", "noopener noreferrer");
   expect(screen.queryByRole("link", { name: /LinkedIn/ })).toBeNull();
 });
+
+test("return link precedes the saved student profile", () => {
+  renderView();
+  expect(
+    screen
+      .getByRole("link", { name: "Voltar ao painel" })
+      .compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
+      Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
+});
