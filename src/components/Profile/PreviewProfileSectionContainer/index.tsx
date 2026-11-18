@@ -99,6 +99,14 @@ const PreviewProfileSectionContainer: React.FC<
       <div
         className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${container}`}
       >
+        {isCompanyView && (
+          <Link
+            href="/dashboard"
+            className="mb-6 self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {t("Voltar ao painel")}
+          </Link>
+        )}
         <div className="relative mb-6 flex items-center justify-center">
           <UserImage imageSrc={student.avatar} className="size-32 lg:size-52" />
         </div>
@@ -261,15 +269,6 @@ const PreviewProfileSectionContainer: React.FC<
               {student.bio}
             </p>
           </section>
-        )}
-
-        {isCompanyView && (
-          <Link
-            href="/dashboard"
-            className="self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            {t("Voltar ao painel")}
-          </Link>
         )}
       </div>
     </div>

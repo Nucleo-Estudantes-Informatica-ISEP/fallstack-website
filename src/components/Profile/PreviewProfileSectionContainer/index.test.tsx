@@ -300,3 +300,19 @@ test("other save failures show one Portuguese message", async () => {
     expect.anything()
   );
 });
+
+test.each([false, true])(
+  "return link precedes scanned profile when saved=%s",
+  (isSavedStudent) => {
+    renderPreview({
+      isSavedStudent,
+      student: { ...FULL, bio: "Long bio ".repeat(500) },
+    });
+    const link = screen.getByRole("link", { name: "Voltar ao painel" });
+    expect(link).toHaveAttribute("href", "/dashboard");
+    expect(
+      link.compareDocumentPosition(screen.getByRole("heading", { level: 1 })) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy();
+  }
+);

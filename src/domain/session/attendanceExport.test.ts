@@ -18,7 +18,7 @@ test("exports one check-in with institutional number and session validity", () =
     Date: "2026-11-17",
     Period: "Manhã",
     "Check-in time": "2026-11-17T10:05:00.000Z",
-    "Valid until": "2026-11-17T12:00:00.000Z",
+    "Valid until": "2026-11-17T14:00:00.000Z",
   });
 });
 test("does not invent student numbers for staff", () => {

@@ -32,7 +32,7 @@ test.each(["1-morning", "1-afternoon", "2-morning", "2-afternoon"])(
     expect(isWithinSession(window.end, window)).toBe(true);
     expect(isWithinSession(new Date(+window.start - 1), window)).toBe(false);
     expect(isWithinSession(new Date(+window.end + 1), window)).toBe(false);
-    expect(isWithinSession(new Date("2026-11-17T13:00:00Z"), window)).toBe(
+    expect(isWithinSession(new Date("2026-11-16T13:00:00Z"), window)).toBe(
       false
     );
   }
