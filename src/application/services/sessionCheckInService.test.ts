@@ -116,8 +116,8 @@ test("maps a concurrent duplicate check-in to a clear conflict", async () => {
 });
 
 test.each([
-  ["before", new Date("2026-11-17T09:29:59.999Z")],
-  ["after", new Date("2026-11-17T12:00:00.001Z")],
+  ["before", new Date("2026-11-17T08:59:59.999Z")],
+  ["after", new Date("2026-11-17T14:00:00.001Z")],
 ])("rejects a check-in %s the session", async (_label, outsideTime) => {
   await expect(
     recordSessionCheckIn("1-morning", "staff-1", { code: "AB12" }, outsideTime)
