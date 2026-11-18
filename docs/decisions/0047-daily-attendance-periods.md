@@ -7,7 +7,7 @@ Supersedes: [0039](0039-record-session-attendance.md) for new check-ins and staf
 ## Decision
 
 Attendance is independent of the activity schedule. Each event day has exactly
-one morning period (09:30–12:00) and one afternoon period (14:00–18:00),
+one morning period (09:00–12:00) and one afternoon period (14:00–18:00),
 Europe/Lisbon. Boundaries are inclusive; lunch, overnight and non-event dates
 reject scans. Each student can check in once per day and period, enforced by a
 PostgreSQL unique constraint across all three production web instances.
