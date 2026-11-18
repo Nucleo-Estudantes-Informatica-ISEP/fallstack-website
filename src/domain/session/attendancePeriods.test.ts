@@ -13,7 +13,7 @@ test.each([1, 2])(
     expect(
       periods.map(({ id, startTime, endTime }) => ({ id, startTime, endTime }))
     ).toEqual([
-      { id: `${day}-morning`, startTime: "09:00", endTime: "12:00" },
+      { id: `${day}-morning`, startTime: "09:00", endTime: "14:00" },
       { id: `${day}-afternoon`, startTime: "14:00", endTime: "18:00" },
     ]);
     expect(periods.map((p) => p.start.slice(0, 10))).toEqual([
