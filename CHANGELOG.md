@@ -14,8 +14,9 @@ Existing `vX.Y.Z` maintenance tags retain their published history.
 The verified event-day production commit is
 [`034e317f7a66f1a252c02fe43a816bbd48294dba`](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/commit/034e317f7a66f1a252c02fe43a816bbd48294dba)
 (`v2.10.10`). See the [release evidence](docs/evidence/2026-edition-release.md)
-for deployment verification and the outstanding correction to the prematurely
-published July `2026-edition` tag and Release.
+for deployment verification. The `2026-edition` tag and matching Release now
+preserve that event-day revision; the prematurely published July baseline is
+retained as `2026-pre-event-july`.
 
 ### Added
 
