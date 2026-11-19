@@ -2,7 +2,63 @@
 
 All notable per-edition changes to this project are documented here, in the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
-This project ships once a year — one edition per Fallstack event — so entries are written by hand at each edition's cutover rather than generated from commit history. See `AGENTS.md`'s "Editions & releases" section for the tagging/versioning convention.
+This project ships once a year — one edition per Fallstack event — so entries are written by hand at each edition's cutover rather than generated from commit history. See the [release workflow](docs/agents/contribution.md#releases) for the tagging/versioning convention.
+
+## [1.0.0] - 2026-11-18 - Fallstack 2026 event edition
+
+Edition versioning starts at `1.0.0`. This entry summarizes changes since
+`2025-edition`, including the production hotfixes from 17–18 November. The July
+entries below describe earlier preparation milestones, not the event-day freeze.
+Existing `vX.Y.Z` maintenance tags retain their published history.
+
+The verified event-day production commit is
+[`034e317f7a66f1a252c02fe43a816bbd48294dba`](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/commit/034e317f7a66f1a252c02fe43a816bbd48294dba)
+(`v2.10.10`). See the [release evidence](docs/evidence/2026-edition-release.md)
+for deployment verification and the outstanding correction to the prematurely
+published July `2026-edition` tag and Release.
+
+### Added
+
+- Full admin backoffice for students, employees, companies, sponsors, actions,
+  interests, storage, FAQ and schedule, with role tiers and an overview dashboard.
+- Database-managed event content, company ranks and booth actions, replacing
+  edition-specific hardcoded rosters and content.
+- AuthNEI student sign-in, company employee invitations, student onboarding and
+  profile editing, including institutional email, course and name.
+- Student event passes, offline pass export, company QR scanning and saved-student
+  profiles, CV uploads and exports, and daily morning/afternoon attendance with a
+  staff scanner and an attendance table.
+- Portuguese/English interfaces and the redesigned 2026 event homepage,
+  programme, navigation and mobile student/company dashboards.
+- Prisma migrations, typed application services and repositories, validated
+  environment configuration, automated tests, CI, structured logging, monitoring,
+  rate limiting, storage cleanup and deployment modes.
+
+### Changed
+
+- Consolidated yearly editions into one repository with edition source archives.
+- Centralized HTTP validation and authorization, tightened account activation and
+  student/company data ownership, and adopted database constraints and transactions.
+- Hardened authentication, password resets, upload validation, private CV access,
+  security headers and production Content Security Policy.
+- Improved accessibility, mobile layouts, PWA support and error/loading feedback.
+
+### Fixed — event-day changes (17–18 November)
+
+- Staff scanner authorization and twelve-hour attendance access (#625); morning
+  check-in starts at 09:00 and remains available until 14:00 (#645, #646).
+- iOS installed-PWA pass saving through native sharing (#628).
+- Active-company totals in the admin overview (#634).
+- Language selection persists across navigation (#636); localized employee admin
+  labels (#642), FAQ translations and shared interface copy, and inactive-account
+  recovery (#643).
+- Live student QR exchange works in company scans and dashboard scanning (#638,
+  #640).
+- Production canonical/indexing configuration prevents staging indexing (#639).
+- Profile image compression, preserved avatar backgrounds and actionable,
+  translated upload errors (#644).
+- Student profile return link appears above profile details for scanner users
+  (#647).
 
 ## [1.1.0] - 2026-07-28 - 2026 edition maintenance
 
