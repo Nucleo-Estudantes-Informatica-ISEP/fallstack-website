@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 
-import AttendanceExport from ".";
+import AttendanceExport, { formatAttendanceTime } from ".";
 
 vi.mock("@/components/ExcelButton", () => ({
   default: ({
@@ -60,10 +60,15 @@ test("shows all attendance fields in the selected day's table", () => {
   );
   const table = screen.getByRole("table", { name: "Presenças — 17 November" });
   expect(within(table).getAllByRole("columnheader")).toHaveLength(7);
-  for (const value of Object.values(row))
+  for (const [key, rawValue] of Object.entries(row)) {
+    const value =
+      key === "Check-in time" || key === "Valid until"
+        ? formatAttendanceTime(rawValue)
+        : rawValue;
     expect(
       within(table).getByRole("cell", { name: value })
     ).toBeInTheDocument();
+  }
   rerender(
     <AttendanceExport
       rows={[{ ...row, Name: "Bruno" }]}
@@ -87,4 +92,20 @@ test("explains when the selected day has no attendance", () => {
   expect(
     screen.getByText("0 registos de presença. Horas em UTC.")
   ).toBeInTheDocument();
+});
+
+test("attendance table formats timestamps for humans without changing export rows", () => {
+  const rows = [
+    {
+      Name: "Test",
+      "Check-in time": "2026-11-17T09:43:01.629Z",
+      "Valid until": "2026-11-17T12:00:00.000Z",
+    },
+  ];
+  render(<AttendanceExport rows={rows} day={1} days={["17 de Novembro"]} />);
+  expect(
+    screen.getByRole("cell", { name: "17/11/2026, 09:43:01" })
+  ).toBeInTheDocument();
+  expect(rows[0]["Check-in time"]).toBe("2026-11-17T09:43:01.629Z");
+  expect(formatAttendanceTime("unknown")).toBe("unknown");
 });

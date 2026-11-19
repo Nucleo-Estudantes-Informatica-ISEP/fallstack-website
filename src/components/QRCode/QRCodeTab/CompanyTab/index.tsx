@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import useIsMobile from "@/hooks/useIsMobile";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
 import { getStudentPreviewToken } from "@/client/api/studentToken";
 import {
@@ -22,6 +23,8 @@ interface CompanyTabProps {
 }
 
 const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
+  const t = useUiText();
+
   const isMobile = useIsMobile();
   const router = useRouter();
 
@@ -35,7 +38,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
   const handleClick = () =>
     mutate(async () => {
       if (!inputRef.current?.value) {
-        toast.error("Sem código inserido.");
+        toast.error(t("Sem código inserido."));
         return;
       }
 
@@ -43,14 +46,14 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
       // The field no longer caps the length, so check it here: the server
       // would answer 400 and the user would only see a generic error.
       if (!isStudentCode(code)) {
-        toast.error("O código introduzido é inválido.");
+        toast.error(t("O código introduzido é inválido."));
         return;
       }
 
       const token = await getStudentPreviewToken(code);
 
       if (!token) {
-        toast.error("O código introduzido é inválido.");
+        toast.error(t("O código introduzido é inválido."));
         return;
       }
 
@@ -58,7 +61,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         await httpClient.post("/saved", { token });
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
-          toast.warning("Este estudante já foi guardado anteriormente.");
+          toast.warning(t("Este estudante já foi guardado anteriormente."));
           return;
         }
         throw error;
@@ -80,7 +83,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
             <BsFillClipboardFill size={20} className="fill-black" />
             <input
               type="text"
-              name="Insere o código do estudante."
+              name={t("Insere o código do estudante.")}
               className="z-10 ml-2 bg-slate-100 p-2 text-center text-xl font-bold text-black uppercase"
               ref={inputRef}
               onKeyUp={handleKeyUp}
@@ -95,7 +98,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
           disabled={isPending}
           className="mt-4 rounded-xl bg-primary px-4 py-2 text-lg font-bold text-white hover:opacity-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isPending ? "A processar..." : "Ir para o perfil"}
+          {isPending ? t("A processar...") : t("Ir para o perfil")}
         </motion.button>
       </div>
     </div>

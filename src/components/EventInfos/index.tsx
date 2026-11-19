@@ -21,8 +21,6 @@ const EventInfos: FunctionComponent<EventInfosProps> = ({
   days,
   month,
   year,
-  beginningTime,
-  endTime,
 }) => {
   return (
     <section className="flex flex-col items-center gap-2 text-base sm:text-lg lg:my-0 lg:items-start lg:px-16 lg:text-2xl">
@@ -34,7 +32,14 @@ const EventInfos: FunctionComponent<EventInfosProps> = ({
             : `${days.join(" e ")} de ${month} ${year}`
         }
       />
-      <InfoBit icon={<Watch />} info={`${beginningTime}-${endTime}`} />
+      <InfoBit
+        icon={<Watch />}
+        info={
+          language === Language.EN
+            ? "See programme for session times"
+            : "Consulta os horários no programa"
+        }
+      />
       <InfoBit
         icon={<Pin className="size-[30px]" />}
         info={branding.event.venue}

@@ -7,6 +7,7 @@ import { FiChevronRight, FiFileText, FiLogOut } from "react-icons/fi";
 import type { Stats } from "@/types/Stats";
 import { httpClient } from "@/lib/http/client";
 import { useLogout } from "@/hooks/useLogout";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import CompanyImage from "@/components/Companies/CompanyProfile/CompanyImage";
 import CompanySavedProfilesSection from "@/components/Companies/CompanyProfile/CompanySavedProfilesSection";
 import CompanyStatsSection from "@/components/Companies/CompanyProfile/CompanyStatsSection";
@@ -60,6 +61,8 @@ const CompanyProfileSectionContainer: React.FC<
   interestIds,
   availableInterests,
 }) => {
+  const t = useUiText();
+
   const { handleLogout, ConfirmDialog } = useLogout();
   const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -171,7 +174,7 @@ const CompanyProfileSectionContainer: React.FC<
       >
         <div className="flex items-center gap-3">
           <item.icon className="size-5" aria-hidden />
-          <span>{item.label}</span>
+          <span>{t(item.label)}</span>
         </div>
         <FiChevronRight className="size-4" aria-hidden />
       </button>
@@ -179,14 +182,15 @@ const CompanyProfileSectionContainer: React.FC<
   };
 
   const selectedLabel =
-    sidebarItems.find((item) => item.key === selectedMenu)?.label ?? "Sumário";
+    sidebarItems.find((item) => item.key === selectedMenu)?.label ??
+    t("Sumário");
 
   const horizontalPadding = "mx-auto w-full max-w-[77.5rem] px-4 sm:px-8";
 
   const pagination = (
     <div className="flex flex-col items-center gap-2 pb-6 text-white">
       {historyError && (
-        <p role="alert">Não foi possível carregar mais perfis.</p>
+        <p role="alert">{t("Não foi possível carregar mais perfis.")}</p>
       )}
       {hasMore && (
         <button
@@ -197,7 +201,7 @@ const CompanyProfileSectionContainer: React.FC<
           aria-busy={loadingHistory}
           className="ui-action field-focus-target text-sm"
         >
-          {loadingHistory ? "A carregar..." : "Carregar mais"}
+          {loadingHistory ? "A carregar..." : t("Carregar mais")}
         </button>
       )}
     </div>
@@ -276,20 +280,23 @@ const CompanyProfileSectionContainer: React.FC<
           className="min-w-0 flex-1 field-focus-target lg:order-2"
         >
           <p className="mb-1 rounded-full border border-primary bg-background px-6 py-3 text-sm lg:hidden">
-            {selectedLabel}
+            {t(selectedLabel)}
           </p>
           <div
             ref={contentRef}
             tabIndex={-1}
             role="region"
-            aria-label={selectedLabel}
+            aria-label={t(selectedLabel)}
             className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
           >
             {renderContent()}
           </div>
         </div>
         <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
-          <nav aria-label="Painel da empresa" className="flex flex-col gap-1">
+          <nav
+            aria-label={t("Painel da empresa")}
+            className="flex flex-col gap-1"
+          >
             {sidebarItems.map(renderButton)}
             {secondaryItems.map(renderButton)}
           </nav>

@@ -2,6 +2,7 @@
 
 import React from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import slugifyId from "@/utils/slugifyId";
 
 export interface InputProps extends Omit<
@@ -37,6 +38,7 @@ const Input: React.FC<InputProps> = ({
   "aria-describedby": ariaDescribedBy,
   ...rest
 }) => {
+  const t = useUiText();
   const resolvedId = id || slugifyId(name) || undefined;
   const hintId = hint && resolvedId ? `${resolvedId}-hint` : undefined;
   const combinedAriaDescribedBy =
@@ -53,7 +55,7 @@ const Input: React.FC<InputProps> = ({
           } ${labelClassName}`}
           htmlFor={resolvedId}
         >
-          {displayLabel}
+          {typeof displayLabel === "string" ? t(displayLabel) : displayLabel}
         </label>
       )}
 
@@ -73,7 +75,7 @@ const Input: React.FC<InputProps> = ({
           name={name}
           disabled={disabled}
           id={resolvedId}
-          placeholder={placeholder}
+          placeholder={placeholder ? t(placeholder) : undefined}
           defaultValue={defaultValue ?? undefined}
           ref={inputRef}
           aria-describedby={combinedAriaDescribedBy}
@@ -85,7 +87,7 @@ const Input: React.FC<InputProps> = ({
 
       {hint && (
         <p id={hintId} className="mt-1.5 text-sm text-gray-400">
-          {hint}
+          {typeof hint === "string" ? t(hint) : hint}
         </p>
       )}
     </div>

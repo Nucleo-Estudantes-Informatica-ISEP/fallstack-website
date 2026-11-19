@@ -3,7 +3,7 @@ import { branding } from "@/edition/branding";
 import { getSessionWindow } from "./sessionRules";
 
 const periods = [
-  { period: "MORNING", title: "Manhã", startTime: "09:30", endTime: "12:00" },
+  { period: "MORNING", title: "Manhã", startTime: "09:00", endTime: "14:00" },
   { period: "AFTERNOON", title: "Tarde", startTime: "14:00", endTime: "18:00" },
 ] as const;
 

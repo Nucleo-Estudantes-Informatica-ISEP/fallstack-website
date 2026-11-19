@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { signUpEmployee } from "@/client/api/auth";
@@ -14,6 +15,8 @@ interface EmployeeSignUpFormProps {
 const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
   onSuccess,
 }) => {
+  const t = useUiText();
+
   const [form, setForm] = useState({
     name: "",
     linkedin: "",
@@ -37,7 +40,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
       return;
     }
 
-    toast.success("Conta associada à empresa com sucesso.");
+    toast.success(t("Conta associada à empresa com sucesso."));
     onSuccess?.();
   };
 
@@ -50,7 +53,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
       <div className="w-full">
         <Input
-          name="Nome"
+          name={t("Nome")}
           placeholder="João Silva"
           value={form.name}
           onChange={onChange("name")}
@@ -67,7 +70,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
       </div>
       <div className="w-full">
         <Input
-          name="Código da Empresa"
+          name={t("Código da Empresa")}
           placeholder="fs_emp_..."
           value={form.companyCode}
           onChange={onChange("companyCode")}
@@ -76,7 +79,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
         />
         {!codeValid && form.companyCode.length > 0 && (
           <p className="mt-1 text-xs font-semibold text-red-500">
-            Código de empresa inválido.
+            {t("Código de empresa inválido.")}
           </p>
         )}
       </div>
@@ -87,7 +90,7 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
         variant="form"
         className="mt-2 h-12 w-full font-semibold lg:h-16 lg:text-xl"
       >
-        Associar à empresa
+        {t("Associar à empresa")}
       </PrimaryButton>
     </form>
   );

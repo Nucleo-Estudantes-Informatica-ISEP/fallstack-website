@@ -223,3 +223,32 @@ test.each([
     }
   }
 );
+
+test("an employee of an inactive company receives no application session", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "blocked",
+    employee: true,
+    admin: false,
+  } as never);
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    active: true,
+    role: "EMPLOYEE",
+    employee: { company: { active: false } },
+  } as never);
+  expect(await getServerSession()).toBeNull();
+});
+
+test("an inactive company does not remove an active global admin's management access", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "admin-employee",
+    employee: true,
+    admin: true,
+  } as never);
+  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
+    active: true,
+    role: "EMPLOYEE",
+    adminRole: "ADMIN",
+    employee: { company: { active: false } },
+  } as never);
+  expect((await getServerSession())?.adminRole).toBe("ADMIN");
+});

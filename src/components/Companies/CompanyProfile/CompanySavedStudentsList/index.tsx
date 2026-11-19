@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
 import { formatDateDDStrMonthHourMin } from "@/utils/date";
 
@@ -17,10 +18,14 @@ interface CompanySavedStudentsListProps {
 const CompanySavedStudentsList: React.FC<CompanySavedStudentsListProps> = ({
   savedStudents,
 }) => {
+  const t = useUiText();
+
   if (!savedStudents.length) {
     return (
       <p className="mt-12 mb-8 w-full py-3 text-center text-white/70">
-        Ainda não há perfis guardados. Os estudantes que guardar aparecem aqui.
+        {t(
+          "Ainda não há perfis guardados. Os estudantes que guardar aparecem aqui."
+        )}
       </p>
     );
   }
@@ -31,17 +36,17 @@ const CompanySavedStudentsList: React.FC<CompanySavedStudentsListProps> = ({
       style={{ scrollbarGutter: "stable" }}
     >
       <table className="w-full table-fixed border-collapse text-center">
-        <caption className="sr-only">Perfis guardados</caption>
+        <caption className="sr-only">{t("Perfis guardados")}</caption>
         <thead className="sticky top-0 bg-background">
           <tr className="border-b-2 font-bold text-white/70">
             <th scope="col" className="w-auto px-1 py-3 sm:w-1/2">
-              Nome
+              {t("Nome")}
             </th>
             <th scope="col" className="w-24 px-1 py-3 sm:w-1/4">
-              Data
+              {t("Data")}
             </th>
             <th scope="col" className="hidden w-1/4 px-1 py-3 sm:table-cell">
-              Ação
+              {t("Ação")}
             </th>
           </tr>
         </thead>
@@ -66,7 +71,7 @@ const CompanySavedStudentsList: React.FC<CompanySavedStudentsListProps> = ({
                 </time>
               </td>
               <td className="hidden px-1 py-4 font-bold sm:table-cell">
-                <span className="text-primary">SALVO</span>
+                <span className="text-primary">{t("SALVO")}</span>
               </td>
             </tr>
           ))}

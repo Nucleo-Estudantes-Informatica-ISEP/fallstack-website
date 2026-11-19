@@ -4,6 +4,8 @@ import { FunctionComponent } from "react";
 import Image, { StaticImageData } from "next/image";
 import { motion } from "framer-motion";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+
 interface ActivityProps {
   logo: StaticImageData;
   title: string;
@@ -20,6 +22,8 @@ const Activity: FunctionComponent<ActivityProps> = ({
   location = "Auditório Magno (Edifício A) do ISEP",
   children,
 }) => {
+  const t = useUiText();
+
   return (
     <motion.section
       initial={{
@@ -37,7 +41,8 @@ const Activity: FunctionComponent<ActivityProps> = ({
     >
       <div className="flex flex-col space-y-5">
         <h5 className="w-full text-center text-4xl font-bold md:text-left md:text-5xl lg:col-span-2">
-          Dia {day} - {title}
+          {t("Dia")}
+          {day} - {title}
         </h5>
         <p className="mt-5 text-2xl">{location}</p>
       </div>

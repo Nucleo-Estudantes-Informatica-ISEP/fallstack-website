@@ -13,7 +13,7 @@ test.each([1, 2])(
     expect(
       periods.map(({ id, startTime, endTime }) => ({ id, startTime, endTime }))
     ).toEqual([
-      { id: `${day}-morning`, startTime: "09:30", endTime: "12:00" },
+      { id: `${day}-morning`, startTime: "09:00", endTime: "14:00" },
       { id: `${day}-afternoon`, startTime: "14:00", endTime: "18:00" },
     ]);
     expect(periods.map((p) => p.start.slice(0, 10))).toEqual([
@@ -32,7 +32,7 @@ test.each(["1-morning", "1-afternoon", "2-morning", "2-afternoon"])(
     expect(isWithinSession(window.end, window)).toBe(true);
     expect(isWithinSession(new Date(+window.start - 1), window)).toBe(false);
     expect(isWithinSession(new Date(+window.end + 1), window)).toBe(false);
-    expect(isWithinSession(new Date("2026-11-17T13:00:00Z"), window)).toBe(
+    expect(isWithinSession(new Date("2026-11-16T13:00:00Z"), window)).toBe(
       false
     );
   }

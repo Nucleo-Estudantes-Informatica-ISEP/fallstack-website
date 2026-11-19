@@ -12,6 +12,7 @@ import {
   RiTwitterXFill,
 } from "react-icons/ri";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import InstallButton from "@/components/InstallButton";
 import { Language } from "@/domain/i18n/translations";
 
@@ -26,6 +27,8 @@ const Footer: FunctionComponent<FooterProps> = ({
   landing = false,
   language = Language.PT,
 }) => {
+  const t = useUiText();
+
   const currentYear = new Date().getFullYear();
   const NEI_WEBSITE_URL = "https://nei-isep.org";
 
@@ -42,7 +45,9 @@ const Footer: FunctionComponent<FooterProps> = ({
               alt={
                 language === Language.EN
                   ? "White logo of the ISEP Computer Engineering Students Association (NEI)"
-                  : "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)"
+                  : t(
+                      "Logo branco do Núcleo de Estudantes de Informática do ISEP (NEI)"
+                    )
               }
             />
           </a>
@@ -91,7 +96,7 @@ const Footer: FunctionComponent<FooterProps> = ({
               rel="noreferrer"
               className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110 hover:drop-shadow-2xl"
               title={
-                language === Language.EN ? "NEI Linktree" : "Linktree do NEI"
+                language === Language.EN ? "NEI Linktree" : t("Linktree do NEI")
               }
             >
               <FaLink size={28} />
@@ -109,7 +114,7 @@ const Footer: FunctionComponent<FooterProps> = ({
                 title={
                   language === Language.EN
                     ? "Privacy Policy"
-                    : "Política de Privacidade"
+                    : t("Política de Privacidade")
                 }
                 className="flex min-h-11 min-w-11 items-center justify-center text-xl drop-shadow-xl transition-all duration-300 hover:scale-110"
               >

@@ -7,6 +7,7 @@ import StudentSignUp from "@/components/StudentSignUp";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { getInterests } from "@/application/services/interestService";
 import getServerSession from "@/application/services/sessionService";
+import { getUiText } from "@/application/services/uiLanguageService";
 import { canCreateStudentProfile } from "@/domain/auth/authPolicy";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
@@ -19,6 +20,8 @@ interface SignUpPageProps {
 }
 
 const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
+  const t = await getUiText();
+
   const session = await getServerSession();
 
   // Students who already have a profile retain access during offseason.
@@ -31,12 +34,13 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
     return (
       <main className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center px-6 text-center">
         <h1 className="mb-4 text-3xl font-bold text-white">
-          Inscrições encerradas
+          {t("Inscrições encerradas")}
         </h1>
 
         <p className="text-gray-300">
-          As inscrições para esta edição do Fallstack terminaram. Voltamos em
-          breve com novidades.
+          {t(
+            "As inscrições para esta edição do Fallstack terminaram. Voltamos em breve com novidades."
+          )}
         </p>
       </main>
     );
@@ -46,7 +50,7 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   if (!session) {
     return (
       <section className="student-signup-form mx-auto w-full max-w-[567px]">
-        <h1 className="signup-heading">Criar uma conta</h1>
+        <h1 className="signup-heading">{t("Criar uma conta")}</h1>
 
         <p className="mb-6 text-base leading-relaxed text-gray-300">
           Continua com o AuthNEI para depois completares o teu perfil no

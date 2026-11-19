@@ -125,3 +125,8 @@ test("shows signup form to students without a profile in active mode", async () 
   expect(html).not.toContain("Inscrições encerradas");
   expect(getInterests).toHaveBeenCalledOnce();
 });
+
+vi.mock("@/application/services/uiLanguageService", () => ({
+  getUiLanguage: async () => "PT",
+  getUiText: async () => (text: string) => text,
+}));

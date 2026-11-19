@@ -193,3 +193,13 @@ test("uploads selected MP4 before saving and associates the returned URL", async
     vi.stubGlobal("FormData", original);
   }
 });
+
+test("cancel returns to the caller's list without submitting", () => {
+  const onSubmit = vi.fn();
+  render(<AdminForm cancelHref="/faqs" sections={[]} onSubmit={onSubmit} />);
+  expect(screen.getByRole("link", { name: "Cancelar" })).toHaveAttribute(
+    "href",
+    "/faqs"
+  );
+  expect(onSubmit).not.toHaveBeenCalled();
+});

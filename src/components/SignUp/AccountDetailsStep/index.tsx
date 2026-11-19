@@ -11,6 +11,7 @@ import { StudentSignUpData } from "@/types/StudentSignUpData";
 import Input from "@/components/ui/Input";
 import InputSelect from "@/components/ui/InputSelect";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import UiText from "@/components/ui/UiText";
 import { STUDENT_YEAR } from "@/domain/student/year";
 import { isIsepEmail } from "@/utils/isepEmail";
 
@@ -64,7 +65,9 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
 
   return (
     <div className="flex w-full flex-col">
-      <h1 className="signup-heading">Criar uma conta</h1>
+      <h1 className="signup-heading">
+        <UiText text="Criar uma conta" />
+      </h1>
 
       <div className="flex flex-col gap-y-4 text-left">
         {needsName && (
@@ -147,7 +150,7 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
         variant="form"
         className="mt-8 h-12 w-full font-semibold lg:h-16 lg:text-xl"
       >
-        Seguinte
+        <UiText text="Seguinte" />
       </PrimaryButton>
     </div>
   );

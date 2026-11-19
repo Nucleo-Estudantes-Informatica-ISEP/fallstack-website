@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 
 import { serverEnv } from "@/config/env.server";
 import LoginCard from "@/components/LoginCard";
-import getServerSession from "@/application/services/sessionService";
+import getServerSession, {
+  isCurrentAccountInactive,
+} from "@/application/services/sessionService";
 
 interface LoginPageProps {
   // Only "employee" is meaningful here (the /signup/employee redirect and
@@ -23,6 +25,7 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
       initialView={modal === "employee" ? "employee" : undefined}
       offseason={serverEnv.EVENT_MODE === "offseason"}
       authError={error === "auth-code-error"}
+      inactive={await isCurrentAccountInactive()}
     />
   );
 };

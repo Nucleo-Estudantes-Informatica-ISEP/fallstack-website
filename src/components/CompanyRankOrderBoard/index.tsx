@@ -19,6 +19,7 @@ import {
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 
 import { CSS } from "@dnd-kit/utilities";
 
@@ -51,6 +52,8 @@ const SortableRankRow: React.FC<{ rank: RankRow }> = ({ rank }) => {
 const CompanyRankOrderBoard: React.FC<CompanyRankOrderBoardProps> = ({
   ranks,
 }) => {
+  const t = useUiText();
+
   const router = useRouter();
   const [rows, setRows] = useState<RankRow[]>(ranks);
   const [isSaving, setIsSaving] = useState(false);
@@ -73,10 +76,10 @@ const CompanyRankOrderBoard: React.FC<CompanyRankOrderBoardProps> = ({
     setIsSaving(true);
     try {
       await httpClient.patch("/admin/company-ranks/order", { updates });
-      toast.success("Ordem guardada.");
+      toast.success(t("Ordem guardada."));
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar a ordem.");
+      toast.error(t("Não foi possível guardar a ordem."));
     } finally {
       setIsSaving(false);
     }
@@ -90,7 +93,7 @@ const CompanyRankOrderBoard: React.FC<CompanyRankOrderBoardProps> = ({
         disabled={isSaving}
         className="w-fit self-end rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSaving ? "A guardar..." : "Guardar"}
+        {isSaving ? t("A guardar...") : t("Guardar")}
       </button>
 
       <DndContext

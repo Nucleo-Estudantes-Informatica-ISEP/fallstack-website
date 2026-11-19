@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import QRCodeModal from "@/components/QRCode/QRCodeModal";
 import type { SessionDto } from "@/application/dto/sessionDto";
 
@@ -12,6 +13,7 @@ interface QRCodeButtonProps {
 }
 
 const QRCodeButton: React.FC<QRCodeButtonProps> = ({ user }) => {
+  const t = useUiText();
   const [isHidden, setIsHidden] = useState(true);
 
   return (
@@ -19,7 +21,7 @@ const QRCodeButton: React.FC<QRCodeButtonProps> = ({ user }) => {
       <button
         type="button"
         onClick={() => setIsHidden(false)}
-        aria-label="Ver QR code"
+        aria-label={t("Ver QR code")}
         className="flex size-6 items-center justify-center fill-white p-0.5 text-2xl transition-colors hover:text-primary"
       >
         <BsQrCodeScan size={20} />

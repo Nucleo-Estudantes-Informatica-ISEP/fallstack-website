@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 
 interface AuthNeiButtonProps {
@@ -13,6 +14,8 @@ const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
   next = "/",
   className,
 }) => {
+  const t = useUiText();
+
   const [loading, setLoading] = useState(false);
 
   const handleClick = () => {
@@ -29,7 +32,7 @@ const AuthNeiButton: React.FC<AuthNeiButtonProps> = ({
       variant="form"
       className={`h-12 w-full font-semibold lg:h-16 lg:text-xl ${className ?? ""}`}
     >
-      Continuar com AuthNEI
+      {t("Continuar com AuthNEI")}
     </PrimaryButton>
   );
 };

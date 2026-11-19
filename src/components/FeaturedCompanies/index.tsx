@@ -38,30 +38,41 @@ export default function FeaturedCompanies({
             company.website ?? undefined,
             company.hasContent
           );
+          const logo = (
+            <>
+              {company.avatar ? (
+                <Image
+                  unoptimized={company.avatar.startsWith("/api/media/logo/")}
+                  src={company.avatar}
+                  alt={company.name}
+                  width={120}
+                  height={48}
+                  className="h-12 w-30 object-contain"
+                />
+              ) : (
+                company.name
+              )}
+            </>
+          );
+          const className =
+            "flex size-full items-center justify-center rounded-md text-center text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
           return (
             <li
               key={company.id}
               className="flex h-16 w-32 items-center justify-center"
             >
-              <Link
-                href={href}
-                target={href.startsWith("/") ? "_self" : "_blank"}
-                rel="noreferrer"
-                className="flex size-full items-center justify-center rounded-md text-center text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-              >
-                {company.avatar ? (
-                  <Image
-                    unoptimized={company.avatar.startsWith("/api/media/logo/")}
-                    src={company.avatar}
-                    alt={company.name}
-                    width={120}
-                    height={48}
-                    className="h-12 w-30 object-contain"
-                  />
-                ) : (
-                  company.name
-                )}
-              </Link>
+              {href ? (
+                <Link
+                  href={href}
+                  target={href.startsWith("/") ? "_self" : "_blank"}
+                  rel="noreferrer"
+                  className={className}
+                >
+                  {logo}
+                </Link>
+              ) : (
+                <div className={className}>{logo}</div>
+              )}
             </li>
           );
         })}

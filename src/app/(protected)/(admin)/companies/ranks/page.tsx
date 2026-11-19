@@ -10,6 +10,10 @@ import AdminPageHeader from "@/components/AdminPageHeader";
 import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import type { AdminCompanyRankDto } from "@/application/dto/companyRankDto";
 import { listCompanyRanksForAdmin } from "@/application/services/companyRankService";
+import {
+  getUiLanguage,
+  getUiText,
+} from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -40,6 +44,9 @@ const columns: DataTableColumn<AdminCompanyRankDto>[] = [
 const CompanyRanksAdminPage = async ({
   searchParams,
 }: CompanyRanksAdminPageProps) => {
+  const language = await getUiLanguage();
+  const t = await getUiText();
+
   const { page, sort, order, q } = await parseAdminListParams(searchParams);
   const { items, totalCount } = await listCompanyRanksForAdmin({
     page,
@@ -51,22 +58,23 @@ const CompanyRanksAdminPage = async ({
 
   return (
     <section className="flex flex-col gap-6 p-8">
-      <AdminPageHeader title="Ranks de empresas">
+      <AdminPageHeader title={t("Ranks de empresas")}>
         <Link
           href="/companies/ranks/order"
           className="ui-focus inline-flex min-h-11 items-center rounded-md border border-gray-300 px-4 py-2 whitespace-nowrap hover:bg-gray-100"
         >
-          Ordenar
+          {t("Ordenar")}
         </Link>
         <Link
           href="/companies/ranks/new"
           className="ui-focus inline-flex min-h-11 items-center rounded-md bg-primary px-4 py-2 whitespace-nowrap text-white hover:bg-primary/90"
         >
-          Adicionar rank
+          {t("Adicionar rank")}
         </Link>
       </AdminPageHeader>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={items}
         rowKey={(rank) => rank.id}
@@ -76,12 +84,12 @@ const CompanyRanksAdminPage = async ({
         basePath="/companies/ranks"
         sort={sort ? { key: sort, order } : undefined}
         searchValue={q}
-        searchPlaceholder="Pesquisar por nome..."
+        searchPlaceholder={t("Pesquisar por nome...")}
         renderActions={(rank) => (
           <div className="flex items-center gap-3">
             <Link
               href={`/companies/ranks/${rank.id}/edit`}
-              aria-label={`Editar ${rank.name}`}
+              aria-label={t("Editar {value}", { value: rank.name })}
               className="hover:text-primary"
             >
               <FiEdit2 size={16} />

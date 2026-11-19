@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import CompanyProfileSectionContainer from "@/components/Companies/CompanyProfile/CompanyProfileSectionContainer";
 import Custom404 from "@/app/not-found";
@@ -20,7 +21,8 @@ interface DashboardProps {
 
 const Dashboard = async ({ searchParams }: DashboardProps) => {
   const session = await getServerSession();
-  if (!session || !session.employee?.company) return Custom404();
+  if (!session) redirect("/login");
+  if (!session.employee?.company) return Custom404();
   const { lang } = await searchParams;
   const language = resolveRequestLanguage(
     lang,

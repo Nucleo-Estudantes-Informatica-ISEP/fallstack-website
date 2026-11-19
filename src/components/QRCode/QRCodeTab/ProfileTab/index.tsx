@@ -5,6 +5,7 @@ import { motion, useAnimation } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import GoogleWalletButton from "@/components/GoogleWalletButton";
 import type { SessionDto } from "@/application/dto/sessionDto";
 
@@ -19,6 +20,8 @@ const QR_CODE_REFRESH_INTERVAL_MS = 25 * 60 * 1000;
 const QR_CODE_RETRY_INTERVAL_MS = 30 * 1000;
 
 const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
+  const t = useUiText();
+
   const [qrcode, setQrcode] = useState<string | null>(null);
 
   const controls = useAnimation();
@@ -107,12 +110,12 @@ const ProfileTab: React.FC<PerfilTabProps> = ({ user }) => {
             </div>
           </motion.div>
           {isCopied && (
-            <p className="mt-2 font-bold text-green-500">Copiado!</p>
+            <p className="mt-2 font-bold text-green-500">{t("Copiado!")}</p>
           )}
           <GoogleWalletButton />
           <p className="mt-6 text-sm text-black sm:mr-6 md:mr-4 md:text-sm lg:mr-0 lg:text-base">
-            Partilha o teu <b>código</b> com as empresas de forma a poderem{" "}
-            <b>guardar</b> o teu perfil!
+            Partilha o teu <b>{t("código")}</b> com as empresas de forma a
+            poderem <b>guardar</b> o teu perfil!
           </p>
         </div>
       </div>

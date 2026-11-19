@@ -3,6 +3,7 @@
 import React, { useId } from "react";
 
 import useTabWidth from "@/hooks/useTabWidth";
+import { useUiText } from "@/contexts/UiLanguageContext";
 
 interface ModalTabsProps {
   activeTabIndex: number;
@@ -19,6 +20,8 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
   hasLinksSection,
   hasVideoSection,
 }) => {
+  const t = useUiText();
+
   const [tabWidth] = useTabWidth(
     hasDetailsSection,
     hasLinksSection,
@@ -28,9 +31,9 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
   const tabsId = useId();
 
   const tabs = [
-    { index: 0, title: "Detalhes", visible: hasDetailsSection },
+    { index: 0, title: t("Detalhes"), visible: hasDetailsSection },
     { index: 1, title: "Links", visible: hasLinksSection },
-    { index: 2, title: "Vídeo", visible: hasVideoSection },
+    { index: 2, title: t("Vídeo"), visible: hasVideoSection },
   ].filter((tab) => tab.visible);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -101,7 +104,7 @@ const ModalTabs: React.FC<ModalTabsProps> = ({
               : "hover:bg-modal-hover-accent font-normal text-black"
           }`}
         >
-          {title}
+          {t(title)}
         </button>
       ))}
     </div>

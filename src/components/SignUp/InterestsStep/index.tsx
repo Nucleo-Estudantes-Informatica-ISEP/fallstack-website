@@ -3,7 +3,9 @@
 import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 import { StudentSignUpData } from "@/types/StudentSignUpData";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import UiText from "@/components/ui/UiText";
 import InterestSelector from "@/components/Profile/InterestSelector";
 import type { InterestDto } from "@/application/dto/interestDto";
 
@@ -22,13 +24,16 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
   setData,
   availableInterests,
 }) => {
+  const t = useUiText();
+
   return (
     <div className="flex w-full flex-col">
-      <h1 className="signup-heading">Criar uma conta</h1>
+      <h1 className="signup-heading">{t("Criar uma conta")}</h1>
 
       <fieldset className="min-w-0">
         <legend className="mb-3 field-text text-white">
-          Escolhe os teus interesses. (Opcional)
+          {" "}
+          <UiText text="Escolhe os teus interesses. (Opcional)" />{" "}
         </legend>
         <InterestSelector
           availableInterests={availableInterests}
@@ -45,7 +50,7 @@ const InterestsStep: FunctionComponent<InterestsStepProps> = ({
         variant="form"
         className="mt-8 h-12 w-full font-semibold lg:mt-14 lg:h-16 lg:text-xl"
       >
-        Seguinte
+        {t("Seguinte")}
       </PrimaryButton>
     </div>
   );

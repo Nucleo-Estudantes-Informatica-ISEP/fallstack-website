@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, {
   type AdminFormSection,
   type AdminFormValue,
@@ -20,6 +21,8 @@ const roleOptions = [
 ];
 
 const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -30,26 +33,26 @@ const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
           adminRole: values.adminRole,
         };
         await httpClient.patch(`/admin/admins/${admin.id}`, payload);
-        toast.success("Admin atualizado.");
+        toast.success(t("Admin atualizado."));
       } else {
         await httpClient.post("/admin/admins", {
           email: values.email,
           name: values.name,
           adminRole: values.adminRole,
         });
-        toast.success("Admin criado.");
+        toast.success(t("Admin criado."));
       }
       router.push("/admins");
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar o admin.");
+      toast.error(t("Não foi possível guardar o admin."));
     }
   };
 
   const sections: AdminFormSection[] = [
     {
       kind: "fields",
-      title: "Detalhes",
+      title: t("Detalhes"),
       fields: [
         ...(!admin
           ? ([
@@ -61,11 +64,11 @@ const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
               },
             ] as const)
           : []),
-        { kind: "text", name: "name", label: "Nome", required: true },
+        { kind: "text", name: "name", label: t("Nome"), required: true },
         {
           kind: "select",
           name: "adminRole",
-          label: "Tipo",
+          label: t("Tipo"),
           options: roleOptions,
           required: true,
         },
@@ -75,6 +78,7 @@ const AdminAccountForm: React.FC<AdminAccountFormProps> = ({ admin }) => {
 
   return (
     <AdminForm
+      cancelHref="/admins"
       id={admin?.id}
       sections={sections}
       defaultValues={

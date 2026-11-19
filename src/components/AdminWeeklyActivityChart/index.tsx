@@ -1,3 +1,7 @@
+"use client";
+
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import type { DailyActivity } from "@/application/services/adminDashboardService";
 
 interface AdminWeeklyActivityChartProps {
@@ -47,6 +51,7 @@ export function roundedTopBarPath(
 const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
   data,
 }) => {
+  const t = useUiText();
   const max = Math.max(1, ...data.flatMap((d) => SERIES.map((s) => d[s.key])));
   // data.length - 1 goes negative for an empty array, producing an invalid
   // (negative-width) viewBox - Math.max(1, ...) keeps the SVG well-formed
@@ -61,7 +66,7 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
     <div className="w-full rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-800">
-          Atividade dos últimos 7 dias
+          <UiText text="Atividade dos últimos 7 dias" />
         </h2>
         <ul className="flex items-center gap-4 text-sm text-gray-600">
           {SERIES.map((series) => (
@@ -70,7 +75,7 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
                 className="inline-block size-2.5 rounded-full"
                 style={{ backgroundColor: series.color }}
               />
-              {series.label}
+              <UiText text={series.label} />
             </li>
           ))}
         </ul>
@@ -90,7 +95,9 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
         style={{ aspectRatio: `${totalWidth} / ${totalHeight}` }}
         className="h-auto w-full"
         role="img"
-        aria-label="Gráfico de barras com inscrições, scans e estudantes guardados por dia, nos últimos 7 dias"
+        aria-label={t(
+          "Gráfico de barras com inscrições, scans e estudantes guardados por dia, nos últimos 7 dias"
+        )}
       >
         <line
           x1={0}
@@ -121,7 +128,7 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
                 className="fill-gray-500"
                 fontSize={9}
               >
-                {weekday}
+                <UiText text={weekday} />
               </text>
             </g>
           );
@@ -130,18 +137,20 @@ const AdminWeeklyActivityChart: React.FC<AdminWeeklyActivityChartProps> = ({
 
       <details className="mt-4 text-sm text-gray-600">
         <summary className="cursor-pointer select-none">
-          Ver como tabela
+          <UiText text="Ver como tabela" />
         </summary>
         <table className="mt-2 w-full border-collapse text-left">
           <caption className="sr-only">
-            Atividade diária dos últimos 7 dias, em números
+            <UiText text="Atividade diária dos últimos 7 dias, em números" />
           </caption>
           <thead className="text-xs tracking-wider text-gray-400 uppercase">
             <tr>
-              <th className="py-1 pr-4">Dia</th>
+              <th className="py-1 pr-4">
+                <UiText text="Dia" />
+              </th>
               {SERIES.map((series) => (
                 <th key={series.key} className="py-1 pr-4">
-                  {series.label}
+                  <UiText text={series.label} />
                 </th>
               ))}
             </tr>

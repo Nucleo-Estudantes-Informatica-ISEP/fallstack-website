@@ -24,6 +24,8 @@ import { MdDragIndicator } from "react-icons/md";
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import { findInvalidScheduleRowIds } from "@/domain/schedule/scheduleValidation";
 import { branding } from "@/edition/branding";
 
@@ -87,44 +89,47 @@ const ScheduleRowCard: React.FC<{
   invalid?: boolean;
   dragHandleProps?: React.HTMLAttributes<HTMLElement>;
   onTimeChange?: (field: "startTime" | "endTime", value: string) => void;
-}> = ({ row, invalid, dragHandleProps, onTimeChange }) => (
-  <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-white p-2 shadow-sm">
-    {dragHandleProps && (
-      <span
-        {...dragHandleProps}
-        className="shrink-0 cursor-grab touch-none text-gray-400 active:cursor-grabbing"
-        aria-label="Arrastar para reordenar"
-      >
-        <MdDragIndicator size={18} />
+}> = ({ row, invalid, dragHandleProps, onTimeChange }) => {
+  const t = useUiText();
+  return (
+    <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-white p-2 shadow-sm">
+      {dragHandleProps && (
+        <span
+          {...dragHandleProps}
+          className="shrink-0 cursor-grab touch-none text-gray-400 active:cursor-grabbing"
+          aria-label={t("Arrastar para reordenar")}
+        >
+          <MdDragIndicator size={18} />
+        </span>
+      )}
+      {onTimeChange ? (
+        <>
+          <input
+            type="time"
+            value={row.startTime}
+            onChange={(e) => onTimeChange("startTime", e.target.value)}
+            className={timeInputClassName(invalid)}
+          />
+          <span className="text-xs text-gray-400">–</span>
+          <input
+            type="time"
+            value={row.endTime}
+            onChange={(e) => onTimeChange("endTime", e.target.value)}
+            className={timeInputClassName(invalid)}
+          />
+        </>
+      ) : (
+        <>
+          <span className={timeInputClassName(invalid)}>{row.startTime}</span>
+          <span className="text-xs text-gray-400">–{row.endTime}</span>
+        </>
+      )}
+      <span className="truncate text-sm font-medium text-gray-800">
+        {row.activity}
       </span>
-    )}
-    {onTimeChange ? (
-      <>
-        <input
-          type="time"
-          value={row.startTime}
-          onChange={(e) => onTimeChange("startTime", e.target.value)}
-          className={timeInputClassName(invalid)}
-        />
-        <span className="text-xs text-gray-400">–</span>
-        <input
-          type="time"
-          value={row.endTime}
-          onChange={(e) => onTimeChange("endTime", e.target.value)}
-          className={timeInputClassName(invalid)}
-        />
-      </>
-    ) : (
-      <>
-        <span className={timeInputClassName(invalid)}>{row.startTime}</span>
-        <span className="text-xs text-gray-400">–{row.endTime}</span>
-      </>
-    )}
-    <span className="truncate text-sm font-medium text-gray-800">
-      {row.activity}
-    </span>
-  </div>
-);
+    </div>
+  );
+};
 
 const SortableRow: React.FC<{
   row: ScheduleRow;
@@ -188,6 +193,8 @@ const DayLane: React.FC<{
 };
 
 const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
+  const t = useUiText();
+
   const router = useRouter();
   const [board, setBoard] = useState<Board>(() => groupByDay(events));
   const [activeRow, setActiveRow] = useState<ScheduleRow | null>(null);
@@ -287,10 +294,10 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
     setIsSaving(true);
     try {
       await httpClient.patch("/admin/schedule/order", { updates });
-      toast.success("Ordem guardada.");
+      toast.success(t("Ordem guardada."));
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar a ordem.");
+      toast.error(t("Não foi possível guardar a ordem."));
     } finally {
       setIsSaving(false);
     }
@@ -301,7 +308,8 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
       <div className="flex items-center justify-end gap-3 self-end">
         {invalidIds.size > 0 && (
           <span className="text-sm font-medium text-red-600">
-            Alguns horários ficam sobrepostos com esta ordem.
+            {" "}
+            <UiText text="Alguns horários ficam sobrepostos com esta ordem." />{" "}
           </span>
         )}
         <button
@@ -310,7 +318,7 @@ const ScheduleBoard: React.FC<ScheduleBoardProps> = ({ events }) => {
           disabled={isSaving || invalidIds.size > 0}
           className="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isSaving ? "A guardar..." : "Guardar"}
+          {isSaving ? t("A guardar...") : t("Guardar")}
         </button>
       </div>
 

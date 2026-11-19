@@ -61,9 +61,14 @@ const Content: React.FC<ContentProps> = ({
               : "O Jantar Empresarial está confirmado para o FallStack 2026."}
           </p>
           <p className="mt-2 w-full max-w-2xl text-lg leading-relaxed text-balance sm:text-xl">
-            {isEnglish
-              ? "More information coming soon."
-              : "Mais informações em breve."}
+            <a
+              href="mailto:support@nei-isep.org"
+              className="ui-focus underline"
+            >
+              {isEnglish
+                ? "Contact the organisers for details and how to participate."
+                : "Contacta a organização para saberes os detalhes e como participar."}
+            </a>
           </p>
         </section>
         <section className="flex w-full flex-col items-center">
@@ -76,6 +81,14 @@ const Content: React.FC<ContentProps> = ({
               ? "Speed Interviews are back, connecting companies directly with final-year students."
               : "As Speed Interviews estão de volta, proporcionando um ponto de contacto direto entre empresas e estudantes finalistas."}
           </p>
+          <a
+            href="mailto:support@nei-isep.org"
+            className="ui-focus mt-2 inline-flex min-h-11 items-center underline"
+          >
+            {isEnglish
+              ? "Contact the organisers for details and how to participate."
+              : "Contacta a organização para saberes os detalhes e como participar."}
+          </a>
         </section>
       </div>
 

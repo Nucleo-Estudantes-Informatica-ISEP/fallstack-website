@@ -19,6 +19,7 @@ import {
 import { toast } from "react-toastify";
 
 import { httpClient } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 
 import { CSS } from "@dnd-kit/utilities";
 
@@ -49,6 +50,8 @@ const SortableFaqRow: React.FC<{ faq: FaqRow }> = ({ faq }) => {
 };
 
 const FaqBoard: React.FC<FaqBoardProps> = ({ faqs }) => {
+  const t = useUiText();
+
   const router = useRouter();
   const [rows, setRows] = useState<FaqRow[]>(faqs);
   const [isSaving, setIsSaving] = useState(false);
@@ -71,10 +74,10 @@ const FaqBoard: React.FC<FaqBoardProps> = ({ faqs }) => {
     setIsSaving(true);
     try {
       await httpClient.patch("/admin/faqs/order", { updates });
-      toast.success("Ordem guardada.");
+      toast.success(t("Ordem guardada."));
       router.refresh();
     } catch {
-      toast.error("Não foi possível guardar a ordem.");
+      toast.error(t("Não foi possível guardar a ordem."));
     } finally {
       setIsSaving(false);
     }
@@ -88,7 +91,7 @@ const FaqBoard: React.FC<FaqBoardProps> = ({ faqs }) => {
         disabled={isSaving}
         className="w-fit self-end rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {isSaving ? "A guardar..." : "Guardar"}
+        {isSaving ? t("A guardar...") : t("Guardar")}
       </button>
 
       <DndContext

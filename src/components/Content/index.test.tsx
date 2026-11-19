@@ -156,7 +156,10 @@ test("homepage sections follow the design order", () => {
   ].map((text) => html.indexOf(text));
   expect(order.every((index) => index >= 0)).toBe(true);
   expect([...order].sort((a, b) => a - b)).toEqual(order);
-  expect(html).toContain("Mais informações em breve.");
+  expect(html).toContain(
+    "Contacta a organização para saberes os detalhes e como participar."
+  );
+  expect(html).not.toContain("Mais informações em breve.");
   expect(html).toContain(
     "As Speed Interviews estão de volta, proporcionando um ponto de contacto direto entre empresas e estudantes finalistas."
   );
@@ -188,7 +191,17 @@ test("English editorial content replaces Portuguese headings, dates and descript
   expect(
     screen.getByText("The Business Dinner is confirmed for FallStack 2026.")
   ).toBeInTheDocument();
-  expect(screen.getByText("More information coming soon.")).toBeInTheDocument();
+  expect(
+    screen.getAllByRole("link", {
+      name: "Contact the organisers for details and how to participate.",
+    })
+  ).toHaveLength(2);
+  expect(
+    screen.queryByText("More information coming soon.")
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByText("See programme for session times")
+  ).toBeInTheDocument();
   expect(
     screen.getByText(
       "Speed Interviews are back, connecting companies directly with final-year students."

@@ -13,6 +13,7 @@ import DataTable, { type DataTableColumn } from "@/components/DataTable";
 import { toAdminAccountDto } from "@/application/dto/adminAccountDto";
 import { listAdminsForAdmin } from "@/application/services/adminAccountService";
 import getServerSession from "@/application/services/sessionService";
+import { getUiLanguage } from "@/application/services/uiLanguageService";
 
 const PAGE_SIZE = 20;
 
@@ -33,6 +34,7 @@ const columns: DataTableColumn<AdminRow>[] = [
 ];
 
 const AdminsPage = async ({ searchParams }: AdminsPageProps) => {
+  const language = await getUiLanguage();
   const session = await getServerSession();
   if (!session || session.adminRole !== "SUPER_ADMIN") notFound();
 
@@ -58,6 +60,7 @@ const AdminsPage = async ({ searchParams }: AdminsPageProps) => {
       </AdminPageHeader>
 
       <DataTable
+        language={language}
         columns={columns}
         rows={admins}
         rowKey={(admin) => admin.id}

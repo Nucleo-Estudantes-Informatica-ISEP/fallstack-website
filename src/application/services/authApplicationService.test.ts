@@ -314,3 +314,24 @@ test("account deletion enters shared admission before taking a DB lock", async (
   expect(withLockedUser).not.toHaveBeenCalled();
   expect(deleteUser).not.toHaveBeenCalled();
 });
+
+test.each([
+  { active: false, employee: null },
+  { active: true, employee: { company: { active: false } } },
+])(
+  "inactive accounts cannot escape the recovery page via a saved destination",
+  async (state) => {
+    vi.mocked(provisionZitadelUser).mockResolvedValue({
+      id: "inactive",
+      role: "EMPLOYEE",
+      ...state,
+    } as never);
+    await expect(
+      completeZitadelSignIn({
+        identity: { ...identity, isEmployee: true },
+        fallback: "/student/OTHER/preview",
+      })
+    ).resolves.toBe("/login?error=account-inactive");
+    expect(assignEmployeeRole).not.toHaveBeenCalled();
+  }
+);

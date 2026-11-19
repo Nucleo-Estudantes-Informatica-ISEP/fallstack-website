@@ -1,5 +1,7 @@
 "use client";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+
 interface InterestsSectionProps {
   userInterests: string[];
 }
@@ -7,6 +9,8 @@ interface InterestsSectionProps {
 const InterestsSection: React.FC<InterestsSectionProps> = ({
   userInterests,
 }) => {
+  const t = useUiText();
+
   let orderedInterests = userInterests;
   if (userInterests.length > 0) {
     orderedInterests = userInterests.sort((a, b) => {
@@ -20,12 +24,12 @@ const InterestsSection: React.FC<InterestsSectionProps> = ({
     <section className="my-4 flex flex-wrap space-y-5 px-12">
       <div className="flex flex-col">
         <h3 className="text-left text-xl font-bold text-gray-600">
-          Interesses
+          {t("Interesses")}
         </h3>
         <div className="mt-2 flex w-full flex-wrap items-center gap-x-6 gap-y-3">
           {orderedInterests.length === 0 ? (
             <p className="text-center text-lg text-gray-500">
-              Ainda não definiste os teus interesses...
+              {t("Ainda não definiste os teus interesses...")}
             </p>
           ) : (
             <>

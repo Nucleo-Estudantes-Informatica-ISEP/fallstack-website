@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
-import { branding } from "@/edition/branding";
 import { createPublicPageMetadata } from "@/lib/seo";
+import UiText from "@/components/ui/UiText";
+import { branding } from "@/edition/branding";
 
 export const metadata: Metadata = createPublicPageMetadata({
   title: "Sobre o Fallstack | NEI-ISEP",
@@ -39,10 +40,11 @@ const About: React.FC = () => {
 
         <div className="flex flex-col gap-2">
           <h2 className="text-2xl sm:text-3xl">
-            Precisas de ajuda? Contacta-nos!
+            <UiText text="Precisas de ajuda? Contacta-nos!" />
           </h2>
           <p className="text-lg">
-            Envia-nos um email para{" "}
+            {" "}
+            <UiText text="Envia-nos um email para" />{" "}
             <Link href="mailto:support@nei-isep.org" className={linkClass}>
               support@nei-isep.org
             </Link>

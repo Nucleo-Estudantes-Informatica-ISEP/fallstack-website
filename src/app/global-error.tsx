@@ -2,6 +2,9 @@
 
 import { useEffect } from "react";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
+
 import * as Sentry from "@sentry/nextjs";
 
 import "./globals.css";
@@ -13,6 +16,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const t = useUiText();
+
   useEffect(() => {
     Sentry.captureException(error);
   }, [error]);
@@ -28,15 +33,16 @@ export default function GlobalError({
             Algo correu mal.
           </h1>
           <p className="text-2xl font-normal">
-            Tenta novamente ou volta à página inicial.
+            {t("Tenta novamente ou volta à página inicial.")}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
             <button type="button" onClick={() => reset()} className="ui-action">
-              Tentar novamente
+              {" "}
+              <UiText text="Tentar novamente" />{" "}
             </button>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/" className="ui-action no-underline">
-              Página inicial
+              {t("Página inicial")}
             </a>
           </div>
         </main>

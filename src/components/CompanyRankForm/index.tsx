@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import AdminForm, { type AdminFormValue } from "@/components/AdminForm";
 import type { AdminCompanyRankDto } from "@/application/dto/companyRankDto";
 
@@ -12,6 +13,8 @@ interface CompanyRankFormProps {
 }
 
 const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
+  const t = useUiText();
+
   const router = useRouter();
 
   const handleSubmit = async (values: Record<string, AdminFormValue>) => {
@@ -32,10 +35,10 @@ const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
     try {
       if (rank) {
         await httpClient.patch(`/admin/company-ranks/${rank.id}`, payload);
-        toast.success("Rank atualizado.");
+        toast.success(t("Rank atualizado."));
       } else {
         await httpClient.post("/admin/company-ranks", payload);
-        toast.success("Rank criado.");
+        toast.success(t("Rank criado."));
       }
       router.push("/companies/ranks");
       router.refresh();
@@ -43,65 +46,68 @@ const CompanyRankForm: React.FC<CompanyRankFormProps> = ({ rank }) => {
       toast.error(
         error instanceof HttpClientError
           ? error.message
-          : "Não foi possível guardar o rank."
+          : t("Não foi possível guardar o rank.")
       );
     }
   };
 
   return (
     <AdminForm
+      cancelHref="/companies/ranks"
       id={rank?.id}
       sections={[
         {
           kind: "fields",
-          title: "Detalhes",
+          title: t("Detalhes"),
           fields: [
-            { kind: "text", name: "name", label: "Nome", required: true },
-            { kind: "number", name: "order", label: "Ordem" },
+            { kind: "text", name: "name", label: t("Nome"), required: true },
+            { kind: "number", name: "order", label: t("Ordem") },
           ],
         },
         {
           kind: "fields",
-          title: "Estilo (gradiente do título)",
+          title: t("Estilo (gradiente do título)"),
           fields: [
             {
               kind: "text",
               name: "gradientFromColor",
-              label: "Cor inicial (ex: #000999)",
+              label: t("Cor inicial (ex: #000999)"),
               required: true,
             },
             {
               kind: "text",
               name: "gradientFromStop",
-              label: "Paragem inicial (ex: 13%)",
+              label: t("Paragem inicial (ex: 13%)"),
               required: true,
             },
             {
               kind: "text",
               name: "gradientToColor",
-              label: "Cor final (ex: #3284FF)",
+              label: t("Cor final (ex: #3284FF)"),
               required: true,
             },
             {
               kind: "text",
               name: "gradientToStop",
-              label: "Paragem final (ex: 89%)",
+              label: t("Paragem final (ex: 89%)"),
               required: true,
             },
             {
               kind: "checkbox",
               name: "isFeatured",
-              label: "Destaque (empresas abaixo do banner da página inicial)",
+              label: t(
+                "Destaque (empresas abaixo do banner da página inicial)"
+              ),
             },
             {
               kind: "checkbox",
               name: "hasInternalPage",
-              label: "Tem página interna (/company/[nome])",
+              label: t("Tem página interna (/company/[nome])"),
             },
             {
               kind: "checkbox",
               name: "showsPromoVideo",
-              label: "Mostra vídeo promocional na página interna",
+              label: t("Mostra vídeo promocional na página interna"),
             },
           ],
         },

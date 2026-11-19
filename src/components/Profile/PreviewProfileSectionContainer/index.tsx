@@ -6,7 +6,9 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import { Email, Github, Linkedin, OpenCv } from "@/components/ui/Icons";
+import UiText from "@/components/ui/UiText";
 import UserImage from "@/components/Profile/UserImage";
 import type { StudentDto } from "@/application/dto/studentDto";
 
@@ -31,6 +33,8 @@ const linkPill =
 const PreviewProfileSectionContainer: React.FC<
   PreviewProfileSectionContainerProps
 > = ({ student, interests, token, isCompanyView, isSavedStudent }) => {
+  const t = useUiText();
+
   const orderedInterests = useMemo(
     () => [...interests].sort((a, b) => a.localeCompare(b)),
     [interests]
@@ -62,10 +66,10 @@ const PreviewProfileSectionContainer: React.FC<
           (error.status === 409 ||
             (error.status === 400 && error.message === "Student already saved"))
         ) {
-          toast.warning("Perfil já salvo!", { toastId: "preview-saved" });
+          toast.warning(t("Perfil já salvo!"), { toastId: "preview-saved" });
           return;
         }
-        toast.error("Não foi possível guardar o perfil. Tenta novamente.", {
+        toast.error(t("Não foi possível guardar o perfil. Tenta novamente."), {
           toastId: "preview-save-failed",
         });
         return;
@@ -84,7 +88,7 @@ const PreviewProfileSectionContainer: React.FC<
       );
       window.open(url, "_blank");
     } catch {
-      toast.error("Não foi possível abrir o CV. Tenta novamente.", {
+      toast.error(t("Não foi possível abrir o CV. Tenta novamente."), {
         toastId: "preview-cv-failed",
       });
     }
@@ -95,6 +99,14 @@ const PreviewProfileSectionContainer: React.FC<
       <div
         className={`flex flex-col items-center pt-20 pb-10 lg:pb-16 ${container}`}
       >
+        {isCompanyView && (
+          <Link
+            href="/dashboard"
+            className="mb-6 self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+          >
+            {t("Voltar ao painel")}
+          </Link>
+        )}
         <div className="relative mb-6 flex items-center justify-center">
           <UserImage imageSrc={student.avatar} className="size-32 lg:size-52" />
         </div>
@@ -128,7 +140,9 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.github}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`GitHub de ${student.name} (abre num novo separador)`}
+              aria-label={t("GitHub de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Github className="size-5" aria-hidden />
@@ -140,7 +154,9 @@ const PreviewProfileSectionContainer: React.FC<
               href={student.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label={`LinkedIn de ${student.name} (abre num novo separador)`}
+              aria-label={t("LinkedIn de {value} (abre num novo separador)", {
+                value: student.name,
+              })}
               className={linkPill}
             >
               <Linkedin className="size-5" aria-hidden />
@@ -155,7 +171,7 @@ const PreviewProfileSectionContainer: React.FC<
               aria-busy={isPending}
               className="ui-action rounded-full"
             >
-              {isPending ? "A guardar..." : "+ Salvar perfil"}
+              {isPending ? t("A guardar...") : "+ Salvar perfil"}
             </button>
           )}
         </div>
@@ -168,7 +184,7 @@ const PreviewProfileSectionContainer: React.FC<
             className={`${panel} min-w-0 lg:col-span-2`}
           >
             <h2 id="preview-info" className={panelTitle}>
-              Informações pessoais
+              {t("Informações pessoais")}
             </h2>
             <p className="mt-2 text-2xl font-bold wrap-break-word text-white">
               {student.name}
@@ -209,7 +225,8 @@ const PreviewProfileSectionContainer: React.FC<
                       Curriculum
                     </span>
                     <span className="wrap-break-word">
-                      Abrir o CV de {student.name}
+                      {" "}
+                      <UiText text="Abrir o CV de" /> {student.name}
                     </span>
                   </span>
                 </button>
@@ -222,11 +239,11 @@ const PreviewProfileSectionContainer: React.FC<
             className={`${panel} min-w-0`}
           >
             <h2 id="preview-interests" className={panelTitle}>
-              Interesses
+              {t("Interesses")}
             </h2>
             {orderedInterests.length === 0 ? (
               <p className="mt-4 text-sm text-gray-300">
-                Este estudante ainda não indicou interesses.
+                {t("Este estudante ainda não indicou interesses.")}
               </p>
             ) : (
               <ul className="mt-4 flex flex-wrap gap-3">
@@ -246,21 +263,12 @@ const PreviewProfileSectionContainer: React.FC<
         {student.bio && (
           <section aria-labelledby="preview-bio" className={panel}>
             <h2 id="preview-bio" className={panelTitle}>
-              Sobre
+              {t("Sobre")}
             </h2>
             <p className="mt-3 text-base leading-relaxed wrap-break-word whitespace-pre-wrap text-gray-100">
               {student.bio}
             </p>
           </section>
-        )}
-
-        {isCompanyView && (
-          <Link
-            href="/dashboard"
-            className="self-start rounded-full border border-secondary bg-black/50 px-6 py-2 text-white transition-colors hover:border-white/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            Voltar ao painel
-          </Link>
         )}
       </div>
     </div>

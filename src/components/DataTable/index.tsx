@@ -1,5 +1,8 @@
 import Link from "next/link";
 
+import { Language } from "@/domain/i18n/translations";
+import { uiText } from "@/domain/i18n/ui";
+
 export interface DataTableColumn<T> {
   key: string;
   header: string;
@@ -27,6 +30,7 @@ interface DataTableProps<T> {
   /** Current search term, read from the entity page's searchParams. */
   searchValue?: string;
   searchPlaceholder?: string;
+  language?: Language;
 }
 
 function buildQuery(
@@ -53,7 +57,10 @@ function DataTable<T>({
   sort,
   searchValue,
   searchPlaceholder = "Pesquisar...",
+  language = Language.PT,
 }: DataTableProps<T>) {
+  const t = (text: string) => uiText(language, text);
+  const isEnglish = language === Language.EN;
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const colSpan = columns.length + (renderActions ? 1 : 0);
 
@@ -89,14 +96,14 @@ function DataTable<T>({
           type="search"
           name="q"
           defaultValue={searchValue}
-          placeholder={searchPlaceholder}
+          placeholder={t(searchPlaceholder)}
           className="w-full max-w-xs rounded-md border border-gray-300 p-2 text-black"
         />
         <button
           type="submit"
           className="rounded-md border border-gray-300 px-3 py-1 hover:bg-gray-100"
         >
-          Pesquisar
+          {isEnglish ? "Search" : "Pesquisar"}
         </button>
       </form>
 
@@ -111,7 +118,7 @@ function DataTable<T>({
                       href={sortHref(column.key)}
                       className="flex items-center gap-1 hover:underline"
                     >
-                      {column.header}
+                      {t(column.header)}
                       {sort?.key === column.key && (
                         <span aria-hidden="true">
                           {sort.order === "asc" ? "▲" : "▼"}
@@ -119,11 +126,13 @@ function DataTable<T>({
                       )}
                     </Link>
                   ) : (
-                    column.header
+                    t(column.header)
                   )}
                 </th>
               ))}
-              {renderActions && <th className="px-6 py-3 text-left">Ações</th>}
+              {renderActions && (
+                <th className="px-6 py-3 text-left">{t("Ações")}</th>
+              )}
             </tr>
           </thead>
           <tbody className="text-base text-gray-600">
@@ -133,7 +142,7 @@ function DataTable<T>({
                   colSpan={colSpan}
                   className="px-6 py-8 text-center text-gray-400"
                 >
-                  {emptyLabel}
+                  {t(emptyLabel)}
                 </td>
               </tr>
             ) : (
@@ -159,7 +168,9 @@ function DataTable<T>({
 
       <div className="flex items-center justify-between text-sm text-gray-600">
         <span>
-          {totalCount} resultado{totalCount === 1 ? "" : "s"} · página {page} de{" "}
+          {totalCount} {isEnglish ? "result" : "resultado"}
+          {totalCount === 1 ? "" : isEnglish ? "s" : "s"} ·{" "}
+          {isEnglish ? "page" : "página"} {page} {isEnglish ? "of" : "de"}{" "}
           {totalPages}
         </span>
         <div className="flex gap-2">
@@ -171,7 +182,7 @@ function DataTable<T>({
               page <= 1 ? "pointer-events-none opacity-40" : "hover:bg-gray-100"
             }`}
           >
-            Anterior
+            {isEnglish ? "Previous" : "Anterior"}
           </Link>
           <Link
             href={pageHref(Math.min(totalPages, page + 1))}
@@ -183,7 +194,7 @@ function DataTable<T>({
                 : "hover:bg-gray-100"
             }`}
           >
-            Seguinte
+            {isEnglish ? "Next" : "Seguinte"}
           </Link>
         </div>
       </div>

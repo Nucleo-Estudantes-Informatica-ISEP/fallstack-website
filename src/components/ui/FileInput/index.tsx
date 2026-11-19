@@ -6,6 +6,7 @@ import {
   MdOutlineCloudUpload as UploadIcon,
 } from "react-icons/md";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import slugifyId from "@/utils/slugifyId";
 
 interface FileInputProps extends Omit<
@@ -37,6 +38,7 @@ const FileInput: React.FC<FileInputProps> = ({
   id,
   ...rest
 }) => {
+  const t = useUiText();
   const resolvedId = id || slugifyId(name) || undefined;
 
   return (
@@ -46,7 +48,7 @@ const FileInput: React.FC<FileInputProps> = ({
           className="field-label text-left text-gray-100"
           htmlFor={resolvedId}
         >
-          {name}
+          {t(name)}
         </label>
       )}
 
@@ -58,11 +60,11 @@ const FileInput: React.FC<FileInputProps> = ({
         <input
           {...rest}
           type="file"
-          name={name}
+          name={t(name)}
           id={resolvedId}
           accept={accept}
           disabled={disabled}
-          aria-label={name}
+          aria-label={t(name)}
           className="peer sr-only field-focus-target"
         />
 
@@ -80,7 +82,7 @@ const FileInput: React.FC<FileInputProps> = ({
             {file ? icon : emptyIcon}
           </span>
 
-          <span className="truncate">{file ? file.name : placeholder}</span>
+          <span className="truncate">{file ? file.name : t(placeholder)}</span>
         </label>
 
         {file && (
@@ -91,7 +93,7 @@ const FileInput: React.FC<FileInputProps> = ({
               onClick={() => {
                 window.open(file.preview, "_blank", "noopener,noreferrer");
               }}
-              aria-label={`Pré-visualizar ${file.name}`}
+              aria-label={t("Pré-visualizar {value}", { value: file.name })}
               className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <PreviewIcon aria-hidden="true" />
@@ -113,7 +115,7 @@ const FileInput: React.FC<FileInputProps> = ({
 
                 onClear();
               }}
-              aria-label={`Remover ${file.name}`}
+              aria-label={t("Remover {value}", { value: file.name })}
               className="ui-focus grid size-11 shrink-0 place-items-center rounded-md hover:bg-red-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               <TrashIcon aria-hidden="true" />

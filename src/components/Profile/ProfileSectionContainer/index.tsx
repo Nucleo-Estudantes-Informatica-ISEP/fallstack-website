@@ -17,8 +17,10 @@ import { ProfileData } from "@/types/ProfileData";
 import type { Stats } from "@/types/Stats";
 import { useLogout } from "@/hooks/useLogout";
 import useSession from "@/hooks/useSession";
+import { useUiText } from "@/contexts/UiLanguageContext";
 import Modal from "@/components/ui/Modal";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import UiText from "@/components/ui/UiText";
 import PassMenuContent from "@/components/PassSection/PassMenuContent";
 import AvatarCropper from "@/components/Profile/AvatarCropper";
 import UserImage from "@/components/Profile/UserImage";
@@ -67,6 +69,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
   availableInterests,
   canRecordAttendance = false,
 }) => {
+  const t = useUiText();
+
   const sectionRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const previousMenu = useRef<MenuKey>("sumario");
@@ -122,37 +126,44 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
     setIsAvatarLoading(true);
     try {
       const image = await getCroppedImg(imageSrc, croppedAreaPixels);
-      const uploaded = image && (await uploadAvatar(image));
+      const uploaded =
+        image &&
+        (await uploadAvatar(image, (message) => toast.error(t(message))));
       if (!uploaded) {
-        toast.error("Não foi possível carregar a imagem.");
+        if (!image) toast.error(t("Não foi possível preparar a imagem."));
         return;
       }
       setProfile((previous) => ({ ...previous, avatar: uploaded.url }));
       setIsAvatarModalVisible(false);
     } catch {
-      toast.error("Não foi possível carregar a imagem.");
+      toast.error(t("Não foi possível preparar a imagem. Tenta novamente."));
     } finally {
       setIsAvatarLoading(false);
     }
   };
 
   const sidebarItems: SidebarItem[] = [
-    { key: "sumario", label: "Sumário", icon: FiFileText, tabValue: "Sumário" },
+    {
+      key: "sumario",
+      label: t("Sumário"),
+      icon: FiFileText,
+      tabValue: "Sumário",
+    },
     // show Passe only if current session user is the profile student
     ...(session.user?.student?.code
       ? ([
-          { key: "passe", label: "Passe do FallStack", icon: FiGrid },
+          { key: "passe", label: t("Passe do FallStack"), icon: FiGrid },
         ] as SidebarItem[])
       : []),
     {
       key: "desafios",
-      label: "Desafios",
+      label: t("Desafios"),
       icon: FiMapPin,
       tabValue: "Desafios",
     },
     {
       key: "info",
-      label: "Informações pessoais",
+      label: t("Informações pessoais"),
       icon: FiUser,
       tabValue: "Perfil",
     },
@@ -225,7 +236,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
         return (
           <>
             <h2 className="mb-5 text-center font-sans text-2xl font-semibold text-white lg:text-left lg:text-[1.75rem]">
-              Desafios
+              {t("Desafios")}
             </h2>
             <ActionsSection actions={actions} />
           </>
@@ -275,8 +286,9 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           <div className="mt-4 mb-6 flex items-center gap-3 border border-ui-highlight bg-ui-highlight/10 px-4 py-3 text-sm text-white">
             <FiAlertTriangle className="size-5 shrink-0 text-ui-highlight" />
             <span>
-              O teu CV foi removido após o período de retenção. Envia um novo em
-              Informações pessoais.
+              {t(
+                "O teu CV foi removido após o período de retenção. Envia um novo em Informações pessoais."
+              )}
             </span>
           </div>
         )}
@@ -326,7 +338,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
             role="region"
             aria-label={
               sidebarItems.find((item) => item.key === selectedMenu)?.label ??
-              "Perfil"
+              t("Perfil")
             }
             className="min-w-0 border border-secondary bg-background p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary sm:p-6 xl:p-11"
           >
@@ -334,7 +346,7 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           </div>
         </div>
         <div className="w-full shrink-0 lg:order-1 lg:w-64 xl:w-88.5">
-          <nav aria-label="Perfil" className="flex flex-col gap-1">
+          <nav aria-label={t("Perfil")} className="flex flex-col gap-1">
             {sidebarItems.map(renderButton)}
             {secondaryItems.map(renderButton)}
           </nav>
@@ -350,7 +362,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           id="avatar-modal-title"
           className="font-sans text-2xl text-white lg:text-[1.75rem]"
         >
-          Altera o teu avatar
+          {" "}
+          <UiText text="Altera o teu avatar" />{" "}
         </h2>
         <AvatarCropper {...{ imageSrc, setImageSrc, setCroppedAreaPixels }} />
         <PrimaryButton
@@ -358,7 +371,8 @@ const ProfileSectionContainer: React.FC<ProfileSectionContainerProps> = ({
           loading={isAvatarLoading}
           disabled={!croppedAreaPixels}
         >
-          Confirmar
+          {" "}
+          <UiText text="Confirmar" />{" "}
         </PrimaryButton>
       </Modal>
       {ConfirmDialog}

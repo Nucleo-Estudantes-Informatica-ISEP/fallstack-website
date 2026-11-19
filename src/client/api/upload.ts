@@ -4,34 +4,58 @@ import config from "@/config";
 import { matchesDeclaredType } from "@/lib/fileSignature";
 import { httpClient, HttpClientError } from "@/lib/http/client";
 
-async function upload<T>(file: Blob, endpoint: "/storage/avatar") {
+type UploadError = (message: string) => void;
+
+async function upload<T>(
+  file: Blob,
+  endpoint: "/storage/avatar",
+  onError?: UploadError
+) {
   const bytes = new Uint8Array(await file.slice(0, 8).arrayBuffer());
-  if (!matchesDeclaredType(bytes, file.type)) return null;
+  if (!matchesDeclaredType(bytes, file.type)) {
+    onError?.("A imagem não corresponde ao formato declarado.");
+    return null;
+  }
   const form = new FormData();
   form.append("file", file);
   try {
     return await httpClient.post<T>(endpoint, form);
   } catch (error) {
-    if (error instanceof HttpClientError) return null;
+    if (error instanceof HttpClientError) {
+      onError?.(
+        error.status === 413
+          ? "A imagem continua demasiado pesada após a compressão. Escolhe uma imagem mais pequena."
+          : "O servidor rejeitou a imagem. Tenta novamente ou escolhe outra imagem."
+      );
+      return null;
+    }
     throw error;
   }
 }
 
-export const uploadAvatar = (image: Blob) =>
-  upload<{ id: string; url: string }>(image, "/storage/avatar");
+export const uploadAvatar = (image: Blob, onError?: UploadError) =>
+  upload<{ id: string; url: string }>(image, "/storage/avatar", onError);
 
-export async function uploadCv(file: File) {
+export async function uploadCv(file: File, onError?: UploadError) {
+  if (!file.size || file.size > config.uploads.cv.maxSize) {
+    onError?.(
+      `O CV é demasiado grande. O tamanho máximo é ${config.uploads.cv.maxSize / (1024 * 1024)} MB.`
+    );
+    return null;
+  }
+  if (file.type !== "application/pdf" || !/\.pdf$/i.test(file.name)) {
+    onError?.("O CV tem de ser um ficheiro PDF.");
+    return null;
+  }
   if (
-    !file.size ||
-    file.size > config.uploads.cv.maxSize ||
-    file.type !== "application/pdf" ||
-    !/\.pdf$/i.test(file.name) ||
     !matchesDeclaredType(
       new Uint8Array(await file.slice(0, 8).arrayBuffer()),
       file.type
     )
-  )
+  ) {
+    onError?.("O ficheiro não é um PDF válido.");
     return null;
+  }
   let uploadId: string | undefined;
   let transferred = false;
   try {
@@ -108,9 +132,14 @@ export async function uploadCv(file: File) {
         await new Promise((resolve) => setTimeout(resolve, 500 * 2 ** attempt));
       }
     }
-  } catch {
+  } catch (error) {
     if (uploadId && !transferred)
       await httpClient.post("/storage/cv/cancel", { uploadId }).catch(() => {});
+    onError?.(
+      error instanceof HttpClientError && error.status === 413
+        ? "O CV excede o tamanho máximo aceite pelo servidor."
+        : "Não foi possível carregar o CV. Verifica a ligação e tenta novamente."
+    );
     return null;
   }
 }

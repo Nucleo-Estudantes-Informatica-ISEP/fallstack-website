@@ -6,6 +6,8 @@ import { toast } from "react-toastify";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useMutation } from "@/hooks/useMutation";
+import { useUiText } from "@/contexts/UiLanguageContext";
+import UiText from "@/components/ui/UiText";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
@@ -57,11 +59,12 @@ function isAlreadySaved(error: unknown) {
 }
 
 function MessagePanel({ message }: { message: PageMessage }) {
+  const t = useUiText();
   return (
     <p
       className={`mt-3 rounded-md border border-l-4 border-ui-border bg-ui-surface px-4 py-3 text-center text-sm text-ui-text ${MESSAGE_TONE[message.tone]}`}
     >
-      {message.text}
+      {t(message.text)}
     </p>
   );
 }
@@ -69,6 +72,8 @@ function MessagePanel({ message }: { message: PageMessage }) {
 const CompanySavedProfilesSection = ({
   history,
 }: CompanySavedProfilesSectionProps) => {
+  const t = useUiText();
+
   const [processing, setProcessing] = useState<boolean>(false);
   const [downloading, setDownloading] = useState<boolean>(false);
   const [message, setMessage] = useState<PageMessage | null>(null);
@@ -203,8 +208,10 @@ const CompanySavedProfilesSection = ({
         lastFailedScanRef.current = data;
         showScanError(
           isStudentCode(data)
-            ? "O código de estudante deste passe é inválido."
-            : "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+            ? t("O código de estudante deste passe é inválido.")
+            : t(
+                "Passe inválido ou expirado. Atualiza o QR Code e tenta novamente."
+              )
         );
         setProcessing(false);
         return;
@@ -233,7 +240,7 @@ const CompanySavedProfilesSection = ({
   const handleManualEntry = () =>
     mutateManualEntry(async () => {
       if (!inputRef.current?.value) {
-        showCodeMessage("Sem código inserido.");
+        showCodeMessage(t("Sem código inserido."));
         inputRef.current?.focus();
         return;
       }
@@ -241,7 +248,7 @@ const CompanySavedProfilesSection = ({
 
       const code = normalizeStudentCode(inputRef.current.value);
       if (!isStudentCode(code)) {
-        showCodeMessage("O código introduzido é inválido.");
+        showCodeMessage(t("O código introduzido é inválido."));
         return;
       }
       let token: string | null;
@@ -262,7 +269,7 @@ const CompanySavedProfilesSection = ({
       }
 
       if (!token) {
-        showCodeMessage("O código introduzido é inválido.");
+        showCodeMessage(t("O código introduzido é inválido."));
         return;
       }
 
@@ -289,7 +296,7 @@ const CompanySavedProfilesSection = ({
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch {
-      toast.error("Não foi possível exportar os CVs. Tenta novamente.", {
+      toast.error(t("Não foi possível exportar os CVs. Tenta novamente."), {
         toastId: EXPORT_FAILED_TOAST,
       });
     } finally {
@@ -306,9 +313,8 @@ const CompanySavedProfilesSection = ({
           Scan
         </h2>
         <p className="mb-8 text-base text-ui-muted">
-          Efetue o scan do QR Code dos alunos que visitarem o seu stand, de
-          forma a garantir o registo das interações e a participação nos
-          giveaways promovidos pelo NEI.
+          {" "}
+          <UiText text="Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a garantir o registo das interações e a participação nos giveaways promovidos pelo NEI." />{" "}
         </p>
       </div>
 
@@ -318,7 +324,7 @@ const CompanySavedProfilesSection = ({
             video for screen readers. */}
         <div
           role="group"
-          aria-label="Câmara do leitor de QR Code"
+          aria-label={t("Câmara do leitor de QR Code")}
           className="relative flex aspect-4/3 w-full max-w-2xl items-center justify-center overflow-hidden rounded-lg border border-ui-border bg-black [&_video]:size-full [&_video]:object-cover [&>div]:size-full"
         >
           {processing ? (
@@ -326,7 +332,10 @@ const CompanySavedProfilesSection = ({
               className="inline-block size-16 animate-spin rounded-full border-4 border-solid border-current border-r-transparent text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
               role="status"
             >
-              <span className="sr-only">A processar...</span>
+              <span className="sr-only">
+                {" "}
+                <UiText text="A processar..." />{" "}
+              </span>
             </div>
           ) : (
             <QRCodeScanner handleScan={handleScan} onMessage={showScanError} />
@@ -341,20 +350,20 @@ const CompanySavedProfilesSection = ({
           {message && <MessagePanel message={message} />}
         </div>
         <p className="mt-3 max-w-2xl text-center text-sm text-ui-muted">
-          Sem câmara ou sem permissão? Introduza o código abaixo.
+          {t("Sem câmara ou sem permissão? Introduza o código abaixo.")}
         </p>
       </div>
 
       <div className="mt-8 flex w-full flex-col items-center justify-center">
         <div className="w-full max-w-142">
           <label htmlFor={codeFieldId} className="mb-2 block text-sm">
-            Código do estudante
+            {t("Código do estudante")}
           </label>
           <div className="relative flex w-full items-center">
             <input
               id={codeFieldId}
               type="text"
-              placeholder="código"
+              placeholder={t("código")}
               autoComplete="off"
               autoCapitalize="characters"
               spellCheck={false}
@@ -371,12 +380,13 @@ const CompanySavedProfilesSection = ({
               aria-busy={isSubmittingManualEntry}
               className="ui-action absolute inset-y-2 right-2 min-h-0 w-28 field-focus-target"
             >
-              {isSubmittingManualEntry ? "A validar..." : "Validar"}
+              {isSubmittingManualEntry ? t("A validar...") : t("Validar")}
             </button>
           </div>
           <p id={codeHintId} className="mt-2 text-center text-sm text-ui-muted">
-            Introduza o código associado ao QR Code do aluno para que o seu
-            perfil fique registado.
+            {t(
+              "Introduza o código associado ao QR Code do aluno para que o seu perfil fique registado."
+            )}
           </p>
         </div>
       </div>
@@ -384,7 +394,7 @@ const CompanySavedProfilesSection = ({
       <div className="mt-12 w-full">
         <div className="mb-6 flex flex-col gap-3 text-white md:flex-row md:items-center md:justify-between">
           <h2 className="font-sans text-[25px] leading-none font-semibold">
-            Histórico de scans
+            {t("Histórico de scans")}
           </h2>
           <div className="flex flex-col items-start gap-1 md:items-end">
             <button
@@ -399,7 +409,8 @@ const CompanySavedProfilesSection = ({
             </button>
             {!hasSaves && (
               <p id={exportHintId} className="text-sm text-ui-muted">
-                Guarde perfis para poder exportar os CVs.
+                {" "}
+                <UiText text="Guarde perfis para poder exportar os CVs." />{" "}
               </p>
             )}
           </div>

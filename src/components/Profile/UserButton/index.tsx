@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LiaUser } from "react-icons/lia";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 
+import { useUiText } from "@/contexts/UiLanguageContext";
 import type { SessionDto } from "@/application/dto/sessionDto";
 import { resolveAccountDestination } from "@/domain/auth/accountDestination";
 import { Language } from "@/domain/i18n/translations";
@@ -17,6 +18,8 @@ const UserButton: React.FC<UserButtonProps> = ({
   user,
   language = Language.PT,
 }) => {
+  const t = useUiText();
+
   // Shares its routing with the homepage call to action, so both always lead
   // the same account to the same place. An account without a usable role
   // keeps the previous /signup fallback.
@@ -26,11 +29,11 @@ const UserButton: React.FC<UserButtonProps> = ({
   const label = user.adminRole
     ? isEnglish
       ? "Admin area"
-      : "Área de administração"
+      : t("Área de administração")
     : destination.kind === "staff"
       ? isEnglish
         ? "Attendance scanner"
-        : "Scanner de presenças"
+        : t("Scanner de presenças")
       : isEnglish
         ? "My profile"
         : "O meu perfil";
