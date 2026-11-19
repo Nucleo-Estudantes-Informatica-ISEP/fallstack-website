@@ -5,7 +5,7 @@ and `main` at `034e317f7a66f1a252c02fe43a816bbd48294dba`. A tree comparison
 showed only changelog and release evidence differences. The
 [2026 release record](../../evidence/2026-edition-release.md) identifies the
 audited `main` commit as the last recorded event-day production deployment.
-The audit fixes and local verification cover runtime revision `776f2483ec50f25797b3dec777823046f24dcd21`. The next commit adds this report and the route matrix.
+The audit fixes and local verification cover runtime revision `776f2483ec50f25797b3dec777823046f24dcd21`. Subsequent commits add this report and the route matrix.
 
 The [route and access matrix](route-matrix.md) accounts for all 75 route
 handlers, 102 explicit HTTP method exports, 56 rendered pages, one server
@@ -132,6 +132,8 @@ redirect boundaries and require access-log care.
   The production Docker workflow includes a fixable high/critical scan for the
   runner, migrator and worker. [glob advisory](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4)
   and [minimatch advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249).
+  GitHub Dependabot corroborated both runtime alerts and reported two more in
+  the development graph, one moderate and one low. Both are tracked below.
 - **Reachable compatibility.** `/auth/confirm` redirects to login and the
   public password-reset API returns 410. The existing password UI directs
   account recovery to AuthNEI. Legacy bcrypt helpers and a password service
@@ -148,10 +150,12 @@ redirect boundaries and require access-log care.
 - Fixed in the audit PR with regression coverage. Redirect validation across
   the AuthNEI return path and company membership projection at session
   resolution.
-- Filed three public follow-ups.
+- Filed five public follow-ups.
   [#651 glob](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/651),
   [#652 minimatch](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/652)
-  and [#653 local logout availability](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/653).
+  [#653 local logout availability](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/653),
+  [#654 postcss-selector-parser](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/654)
+  and [#655 serialize-javascript](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/issues/655).
 - Filed eight individual draft repository advisories with severity,
   source evidence and defensive acceptance checks. Maintainers can access the
   [private advisories list](https://github.com/Nucleo-Estudantes-Informatica-ISEP/fallstack-website/security/advisories).
