@@ -10,7 +10,7 @@ import type { RateLimitStore } from "@/domain/rateLimit";
 const script = `
 local count = redis.call('GET', KEYS[1])
 if not count then
-  redis.call('SET', KEYS[1], '1', 'PX', ARGV[1])
+  if ARGV[3] == '1' then redis.call('SET', KEYS[1], '1', 'PX', ARGV[1]) end
   return {1, 0}
 end
 local ttl = redis.call('PTTL', KEYS[1])
@@ -19,7 +19,7 @@ if not count or count < 1 or count % 1 ~= 0 or ttl < 0 then
   return redis.error_reply('INVALID_LIMITER_STATE')
 end
 if count >= tonumber(ARGV[2]) then return {0, math.max(1, ttl)} end
-redis.call('INCR', KEYS[1])
+if ARGV[3] == '1' then redis.call('INCR', KEYS[1]) end
 return {1, 0}
 `;
 
@@ -128,7 +128,11 @@ export function createRedisRateLimitStore(
             commandSent = true;
             return current.eval(script, {
               keys: [`${config.prefix}ratelimit:v1:${key}`],
-              arguments: [String(policy.windowMs), String(policy.max)],
+              arguments: [
+                String(policy.windowMs),
+                String(policy.max),
+                policy.consume === false ? "0" : "1",
+              ],
             });
           })(),
           new Promise<never>((_, reject) => {

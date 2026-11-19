@@ -11,7 +11,10 @@ import UiText from "@/components/ui/UiText";
 import CompanySavesSection from "@/components/Companies/CompanyProfile/CompanyHistorySection";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
 import type { SavedStudentDto } from "@/application/dto/historyDto";
-import { getStudentPreviewToken } from "@/client/api/studentToken";
+import {
+  getStudentPreview,
+  type StudentPreview,
+} from "@/client/api/studentToken";
 import {
   isStudentCode,
   normalizeStudentCode,
@@ -168,14 +171,17 @@ const CompanySavedProfilesSection = ({
   // server and network messages arrive in English. The caller shows the
   // message: under the code field for a typed code, under the camera for a
   // scan.
-  async function saveAndOpen(token: string): Promise<SaveResult> {
+  async function saveAndOpen({
+    code,
+    token,
+  }: StudentPreview): Promise<SaveResult> {
     try {
       await httpClient.post("/saved", { token });
     } catch (error) {
       return isAlreadySaved(error) ? "duplicate" : "failed";
     }
     router.refresh();
-    router.push(`/student/${token}/preview`);
+    router.push(`/student/${encodeURIComponent(code)}/preview`);
     return "saved";
   }
 
@@ -200,11 +206,11 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
-      const token = isStudentCode(data)
-        ? await getStudentPreviewToken(normalizeStudentCode(data))
-        : await getStudentPreviewToken({ token: data });
+      const preview = isStudentCode(data)
+        ? await getStudentPreview(normalizeStudentCode(data))
+        : await getStudentPreview({ token: data });
 
-      if (!token) {
+      if (!preview) {
         lastFailedScanRef.current = data;
         showScanError(
           isStudentCode(data)
@@ -217,7 +223,7 @@ const CompanySavedProfilesSection = ({
         return;
       }
 
-      const result = await saveAndOpen(token);
+      const result = await saveAndOpen(preview);
       if (result === "saved") {
         // Keep the spinner up until the preview opens. Bringing the camera
         // back would read the same code again, and that second save would
@@ -251,9 +257,9 @@ const CompanySavedProfilesSection = ({
         showCodeMessage(t("O código introduzido é inválido."));
         return;
       }
-      let token: string | null;
+      let preview: StudentPreview | null;
       try {
-        token = await getStudentPreviewToken(code);
+        preview = await getStudentPreview(code);
       } catch (error) {
         const status = error instanceof HttpClientError ? error.status : 0;
         if (status === 429) {
@@ -265,15 +271,15 @@ const CompanySavedProfilesSection = ({
           return;
         }
         // A malformed code gets the same message as an unknown one.
-        token = null;
+        preview = null;
       }
 
-      if (!token) {
+      if (!preview) {
         showCodeMessage(t("O código introduzido é inválido."));
         return;
       }
 
-      const result = await saveAndOpen(token);
+      const result = await saveAndOpen(preview);
       if (result === "duplicate") showCodeMessage(DUPLICATE, "warning");
       else if (result === "failed") showCodeMessage(SAVE_FAILED);
     });

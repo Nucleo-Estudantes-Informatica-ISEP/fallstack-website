@@ -23,6 +23,7 @@ vi.mock("@/application/services/zitadelAuthService", () => ({
 function post(cookieValue?: string) {
   const headers = new Headers();
   if (cookieValue) {
+    headers.set("origin", new URL(process.env.AUTH_REDIRECT_URI!).origin);
     headers.set("cookie", `${config.cookies.auth.name}=${cookieValue}`);
   }
   const request = new NextRequest("http://localhost/api/auth/logout", {
@@ -76,4 +77,17 @@ test("handles logout when no session cookie is present", async () => {
     idTokenHint: undefined,
     loginName: undefined,
   });
+});
+
+test("clears the local cookie when the provider is unavailable", async () => {
+  vi.mocked(getLogoutUrl).mockRejectedValueOnce(
+    new Error("provider unavailable")
+  );
+  const response = await post("signed-session");
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
+    logoutUrl: process.env.AUTH_POST_LOGOUT_REDIRECT_URI,
+  });
+  expect(response.headers.get("cache-control")).toBe("no-store");
+  expect(response.headers.get("set-cookie")).toMatch(/Max-Age=0|expires=/i);
 });

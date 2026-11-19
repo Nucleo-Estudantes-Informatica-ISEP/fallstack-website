@@ -9,6 +9,7 @@ import {
   createStudent,
   findStudentByCode,
   setStudentInterests,
+  updateStudentAvatar,
   updateStudentCv,
   updateStudentFields,
   updateStudentMedia,
@@ -18,9 +19,11 @@ import { withTransaction } from "../repositories/transaction";
 import { setUserRole, updateUserActive } from "../repositories/userRepository";
 import { completeAction } from "./actionService";
 import { deleteUserAccount, setAuthUserBanned } from "./authApplicationService";
+import { headObject } from "./objectStorageService";
 import {
   createStudentProfile,
   deleteStudentForAdmin,
+  setStudentAvatar,
   setStudentCv,
   updateStudent,
   updateStudentForAdmin,
@@ -43,6 +46,7 @@ vi.mock("../repositories/studentRepository", () => ({
   createStudent: vi.fn(),
   findStudentByCode: vi.fn(),
   setStudentInterests: vi.fn(),
+  updateStudentAvatar: vi.fn(),
   updateStudentCv: vi.fn(),
   updateStudentFields: vi.fn(),
   updateStudentMedia: vi.fn(),
@@ -56,6 +60,10 @@ vi.mock("../repositories/userRepository", () => ({
   upsertUser: vi.fn(),
 }));
 vi.mock("./actionService", () => ({ completeAction: vi.fn() }));
+vi.mock("./objectStorageService", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./objectStorageService")>()),
+  headObject: vi.fn(),
+}));
 vi.mock("./authApplicationService", () => ({
   createSupabaseAuthUserAsAdmin: vi.fn(),
   deleteUserAccount: vi.fn(),
@@ -346,4 +354,31 @@ test("onboarding assigns the student role and contact in the profile transaction
     }),
     tx
   );
+});
+test("associates only a caller-owned avatar and preserves the current reference", async () => {
+  const url = "/api/media/avatar/e5c7094f-6284-441e-9e84-0260d0ee6a7a";
+  vi.mocked(findStudentByCode).mockResolvedValue({
+    id: "student",
+    avatar: null,
+  } as never);
+  vi.mocked(headObject).mockResolvedValueOnce({
+    Metadata: { owner: "another-student" },
+  } as never);
+  await expect(setStudentAvatar("student", "AB12", url)).rejects.toMatchObject({
+    status: 404,
+  });
+  expect(updateStudentAvatar).not.toHaveBeenCalled();
+
+  vi.mocked(headObject).mockResolvedValueOnce({
+    Metadata: { owner: "student" },
+  } as never);
+  await setStudentAvatar("student", "AB12", url);
+  expect(updateStudentAvatar).toHaveBeenCalledExactlyOnceWith("AB12", url);
+
+  vi.mocked(findStudentByCode).mockResolvedValue({
+    id: "student",
+    avatar: url,
+  } as never);
+  await setStudentAvatar("student", "AB12", url);
+  expect(headObject).toHaveBeenCalledTimes(2);
 });

@@ -1,3 +1,5 @@
+import { safeHttpsLink } from "@/domain/outboundLink";
+
 import { FactIconName, isFactIconName } from "./factIcons";
 
 // CompanyProfile.socialLinks/facts are stored as JSON (see schema.prisma) -
@@ -21,13 +23,27 @@ const SOCIAL_LINK_KEYS = [
   "linkedin",
 ] as const;
 
+const socialHosts: Record<keyof SocialLinks, RegExp> = {
+  twitter: /^(?:(?:www|mobile)\.)?(?:twitter\.com|x\.com)$/,
+  facebook: /^(?:(?:www|m|[a-z]{2}-[a-z]{2})\.)?(?:facebook\.com|fb\.com)$/,
+  instagram: /^(?:www\.)?instagram\.com$/,
+  youtube: /^(?:(?:www|m)\.)?(?:youtube\.com|youtu\.be)$/,
+  linkedin: /^(?:(?:www|[a-z]{2})\.)?linkedin\.com$/,
+};
+
+export function safeCompanySocialLink(key: keyof SocialLinks, value: string) {
+  return safeHttpsLink(value, socialHosts[key]);
+}
+
 export function parseSocialLinks(value: unknown): SocialLinks {
   if (!value || typeof value !== "object") return {};
   const record = value as Record<string, unknown>;
   const links: SocialLinks = {};
   for (const key of SOCIAL_LINK_KEYS) {
     const link = record[key];
-    if (typeof link === "string" && link) links[key] = link;
+    if (typeof link !== "string") continue;
+    const valid = safeCompanySocialLink(key, link);
+    if (valid) links[key] = valid;
   }
   return links;
 }

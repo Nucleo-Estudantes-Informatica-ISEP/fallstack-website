@@ -37,10 +37,13 @@ export async function withMultipartFile<T>(
   if (!request.body || request.bodyUsed || request.body.locked)
     throw new HttpError("Missing file", 400);
 
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!/^multipart\/form-data(?:\s*;|$)/i.test(contentType))
+    throw new HttpError("Expected multipart/form-data", 415);
   let parser: ReturnType<typeof busboy>;
   try {
     parser = busboy({
-      headers: { "content-type": request.headers.get("content-type") ?? "" },
+      headers: { "content-type": contentType },
       limits: { files: 1, fields: 0, parts: 2, fileSize: maxSize + 1 },
     });
   } catch {

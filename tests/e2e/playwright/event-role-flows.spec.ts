@@ -69,7 +69,12 @@ test.describe("staging event flows across roles", () => {
 
       const qrResponse = await student.get("/api/qrcode");
       expect(qrResponse.status()).toBe(200);
-      const { data: token } = (await qrResponse.json()) as { data: string };
+      const { data: pass } = (await qrResponse.json()) as { data: string };
+      const exchange = await employee.post("/api/students/token", {
+        data: { token: pass },
+      });
+      expect(exchange.status()).toBe(200);
+      const { token } = (await exchange.json()) as { token: string };
 
       const firstScan = await employee.post("/api/saved", {
         data: { token, comment: marker },

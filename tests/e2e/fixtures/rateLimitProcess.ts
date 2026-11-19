@@ -12,9 +12,17 @@ const store = createRedisRateLimitStore(() => ({
 const check = createRateLimitService(store);
 const server = createServer(async (req, res) => {
   const decision = await check(
-    req.url === "/avatar" ? "upload_avatar" : "upload_cv",
+    req.url === "/avatar"
+      ? "upload_avatar"
+      : req.url?.startsWith("/student")
+        ? "student_token"
+        : "upload_cv",
     String(req.headers["x-test-subject"]),
-    { max: 5, windowMs: Number(process.env.TEST_WINDOW_MS || 60000) }
+    {
+      max: 5,
+      windowMs: Number(process.env.TEST_WINDOW_MS || 60000),
+      consume: req.url !== "/student-valid",
+    }
   );
   const response = rateLimitResponse(decision);
   res.writeHead(response?.status ?? 200, {

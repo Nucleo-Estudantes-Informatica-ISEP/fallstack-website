@@ -1,28 +1,89 @@
 import "server-only";
 
+import { finished, Readable } from "node:stream";
 import JSZip from "jszip";
 
+import { HttpError } from "@/types/HttpError";
 import { buildSavedStudentsCsv } from "@/lib/savedStudentComments";
 
 import { findCompanySavedStudentsWithCv } from "../repositories/savedStudentRepository";
-import { cvKey, getObject } from "./objectStorageService";
+import { cvKey, getObjectStream } from "./objectStorageService";
 
+const maxExportRows = 500;
+const maxExportBytes = 64 * 1024 * 1024;
+let exportInProgress = false;
+
+const exportTooLarge = () =>
+  new HttpError("CV export exceeds the archive limit", 413);
 const sanitizeFilename = (value: string) =>
   value.replace(/[^a-zA-Z0-9-_]+/g, "-").replace(/-+/g, "-");
 
-export async function createCompanyCvZip(companyId: string) {
-  const savedStudents = await findCompanySavedStudentsWithCv(companyId);
-  const studentsWithCv = savedStudents.filter(({ student }) => student.cv);
-
-  const zip = new JSZip();
-  for (const { student } of studentsWithCv) {
-    const file = await getObject("cv", cvKey(student.cv!));
-    if (!file) continue;
-    zip.file(
-      `${student.code}-${sanitizeFilename(student.name)}.pdf`,
-      Buffer.from(file.bytes)
+export async function createCompanyCvZip(
+  companyId: string,
+  requestSignal: AbortSignal
+) {
+  if (exportInProgress)
+    throw new HttpError(
+      "A CV export is already in progress. Retry shortly.",
+      429
     );
+  exportInProgress = true;
+  const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(60_000)]);
+
+  try {
+    const savedStudents = await findCompanySavedStudentsWithCv(
+      companyId,
+      maxExportRows + 1
+    );
+    if (savedStudents.length > maxExportRows) throw exportTooLarge();
+
+    const zip = new JSZip();
+    const csv = buildSavedStudentsCsv(savedStudents);
+    let available = maxExportBytes - Buffer.byteLength(csv);
+    if (available < 0) throw exportTooLarge();
+    for (const { student } of savedStudents) {
+      if (!student.cv) continue;
+      const file = await getObjectStream("cv", cvKey(student.cv), signal);
+      if (!file) continue;
+
+      const chunks: Uint8Array[] = [];
+      const reader = file.body.getReader();
+      try {
+        if (file.contentLength !== undefined && file.contentLength > available)
+          throw exportTooLarge();
+        for (;;) {
+          signal.throwIfAborted();
+          const chunk = await reader.read();
+          if (chunk.done) break;
+          available -= chunk.value.byteLength;
+          if (available < 0) throw exportTooLarge();
+          chunks.push(chunk.value);
+        }
+      } finally {
+        await reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
+      zip.file(
+        `${sanitizeFilename(student.code)}-${sanitizeFilename(student.name)}.pdf`,
+        Buffer.concat(chunks)
+      );
+    }
+    zip.file("dados.csv", csv);
+    signal.throwIfAborted();
+
+    const stream = zip.generateNodeStream({ streamFiles: true }) as Readable;
+    const abort = () => stream.destroy(new Error("CV export interrupted"));
+    signal.addEventListener("abort", abort, { once: true });
+    const clean = finished(stream, () => {
+      clean();
+      signal.removeEventListener("abort", abort);
+      exportInProgress = false;
+    });
+    return Readable.toWeb(stream, {
+      strategy: { highWaterMark: 0 },
+    }) as ReadableStream<Uint8Array>;
+  } catch (error) {
+    exportInProgress = false;
+    throw error;
   }
-  zip.file("dados.csv", buildSavedStudentsCsv(savedStudents));
-  return zip.generateAsync({ type: "uint8array" });
 }

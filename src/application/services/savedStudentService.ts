@@ -26,7 +26,6 @@ import {
   findCompanyHistory,
   findCompanyHistoryPage,
   findCompanyHistoryWithInterests,
-  findCompanySavedStudentsWithCv,
   findStudentHistory,
   isStudentSaved,
   isUniqueConstraintError,
@@ -172,8 +171,6 @@ export async function getCompanyHistoryPage(
 
 export const getCompanyHistoryWithInterests = (companyId: string) =>
   findCompanyHistoryWithInterests(companyId);
-export const getCompanySavedStudentsWithCv = (companyId: string) =>
-  findCompanySavedStudentsWithCv(companyId);
 export const getStudentHistory = (studentId: string) =>
   findStudentHistory(studentId);
 

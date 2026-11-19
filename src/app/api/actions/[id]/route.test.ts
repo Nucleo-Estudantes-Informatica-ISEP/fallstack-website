@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 import { afterAll, beforeAll, beforeEach, test, vi } from "vitest";
 
+import getServerSession from "@/application/services/sessionService";
+
 vi.mock("server-only", () => ({}));
 vi.mock("next/headers", () => ({ cookies: vi.fn() }));
 vi.mock("@/application/services/sessionService", () => ({
@@ -32,9 +34,27 @@ function request(method: string) {
   return new NextRequest("http://localhost/api/actions/x", { method });
 }
 
+test("GET requires an admin presenter before issuing a code", async () => {
+  const { GET } = await import("./route");
+  const { getActionQrCode } =
+    await import("@/application/services/actionService");
+  const context = { params: Promise.resolve({ id: "action-1" }) };
+  vi.mocked(getServerSession).mockResolvedValueOnce(null);
+  vi.mocked(getServerSession).mockResolvedValueOnce({
+    role: "STUDENT",
+    adminRole: null,
+  } as never);
+  assert.equal((await GET(request("GET"), context)).status, 401);
+  assert.equal((await GET(request("GET"), context)).status, 403);
+  assert.equal(vi.mocked(getActionQrCode).mock.calls.length, 0);
+});
+
 test("GET returns 404 when the action doesn't exist", async () => {
   const { getActionQrCode } =
     await import("@/application/services/actionService");
+  vi.mocked(getServerSession).mockResolvedValue({
+    adminRole: "ADMIN",
+  } as never);
   vi.mocked(getActionQrCode).mockResolvedValue(null);
 
   const { GET } = await import("./route");
@@ -48,6 +68,9 @@ test("GET returns 404 when the action doesn't exist", async () => {
 test("GET returns the action and its live QR token for a real action", async () => {
   const { getActionQrCode } =
     await import("@/application/services/actionService");
+  vi.mocked(getServerSession).mockResolvedValue({
+    adminRole: "ADMIN",
+  } as never);
   vi.mocked(getActionQrCode).mockResolvedValue({
     action: {
       id: "action-1",
