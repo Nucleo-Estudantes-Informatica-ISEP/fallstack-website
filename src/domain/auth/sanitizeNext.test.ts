@@ -22,5 +22,9 @@ test("defaults to / for a backslash next that would normalize to an external hos
 });
 
 test("allows a plain in-app relative path through unchanged", () => {
-  expect(sanitizeNext("/dashboard")).toBe("/dashboard");
+  expect(sanitizeNext("/dashboard?lang=en")).toBe("/dashboard?lang=en");
+});
+
+test("rejects control characters in a return path", () => {
+  expect(sanitizeNext("/dashboard\n")).toBe("/");
 });

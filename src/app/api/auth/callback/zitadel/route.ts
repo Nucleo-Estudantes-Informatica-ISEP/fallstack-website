@@ -10,6 +10,7 @@ import {
   oidcCookieNames,
   signAppSession,
 } from "@/application/services/zitadelAuthService";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 
 function appUrl(path: string) {
   return new URL(path, serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
@@ -26,7 +27,7 @@ export async function GET(request: NextRequest) {
   const expectedState = request.cookies.get(oidcCookieNames.state)?.value;
   const expectedNonce = request.cookies.get(oidcCookieNames.nonce)?.value;
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
-  const next = request.cookies.get(oidcCookieNames.next)?.value ?? "/";
+  const next = sanitizeNext(request.cookies.get(oidcCookieNames.next)?.value);
 
   if (
     !code ||
