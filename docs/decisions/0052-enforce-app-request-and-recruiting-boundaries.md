@@ -27,19 +27,22 @@ web copies and at each entry point for a sensitive operation.
   student code and use a path-scoped HTTP-only cookie for unsaved access.
   Same-company saved previews still work after the cookie expires. Company
   saves validate the same audience. A preview credential is never a URL segment.
-- Redis enforces one miss budget per employee across web copies. Requests
-  check the budget before lookup and atomically charge only misses. Successful
-  lookups consume no miss allowance. If Redis is unavailable, issuance returns 503. A miss that loses a race for the last allowance returns 429.
-- Each copy admits one company CV archive at a time. Exports allow up to
-  500 saved-student rows and 64 MiB of input, including the CSV. They return
-  413 above either limit, 429 while an archive is active, and stream the
-  bounded ZIP as private data.
+- Redis reserves one of five per-employee slots before each lookup across
+  web copies. Misses retain their slot for 60 seconds. Hits and lookup
+  errors release their own reservation. An unavailable limiter returns
+  503 before lookup. A full budget, including in-flight reservations,
+  returns 429 until a slot is released or expires.
+- Each web copy admits one CV archive per company and two archives total.
+  Each archive allows up to 500 saved-student rows and 64 MiB of input,
+  including the CSV. Exports return 413 above either size limit and 429
+  when capacity is full. The bounded ZIP streams as private data.
 - Newly uploaded student avatars carry owner metadata on the private object.
   Student writes accept the canonical media reference and require that owner.
   Stored avatar references keep rendering. Existing unbound uploads need a
   fresh upload before new attachment. Outbound links require HTTPS, and
   platform links require their expected hostname. Invalid stored links are
-  omitted until corrected.
+  omitted from display. Authorized edit forms show the stored text and
+  submit only changed links, preserving legacy values on unrelated edits.
 
 ## Operations
 
