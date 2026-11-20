@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { serverEnv } from "@/config/env.server";
@@ -22,31 +22,16 @@ export const POST = defineHandler({
     const { id, company } = session!.employee!;
     if (!id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    let decision = await checkRateLimit("student_token", id, {
+    const reservation = { id: randomUUID() };
+    const decision = await checkRateLimit("student_token", id, {
       ...invalidCodeBudget,
-      consume: false,
+      reservation,
     });
-    if (decision.status === "allowed") {
-      const preview = await jwtStudent(
-        "code" in body ? body.code : body,
-        company.id
-      );
-      if (preview) {
-        const response = NextResponse.json(preview, {
-          headers: { "Cache-Control": "private, no-store" },
-        });
-        response.cookies.set(studentPreviewCookieName, preview.token, {
-          path: `/student/${encodeURIComponent(preview.code)}/preview`,
-          maxAge: studentPreviewTtlSeconds,
-          httpOnly: true,
-          sameSite: "strict",
-          secure: serverEnv.NODE_ENV === "production",
-        });
-        return response;
-      }
-
-      decision = await checkRateLimit("student_token", id, invalidCodeBudget);
-    }
+    const release = () =>
+      checkRateLimit("student_token", id, {
+        ...invalidCodeBudget,
+        reservation: { ...reservation, release: true },
+      });
 
     const employeeRef = createHash("sha256").update(id).digest("hex");
     if (decision.status === "limited")
@@ -56,6 +41,28 @@ export const POST = defineHandler({
       );
     const blocked = rateLimitResponse(decision);
     if (blocked) return blocked;
+
+    const preview = await jwtStudent(
+      "code" in body ? body.code : body,
+      company.id
+    ).catch(async (error: unknown) => {
+      await release();
+      throw error;
+    });
+    if (preview) {
+      await release();
+      const response = NextResponse.json(preview, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+      response.cookies.set(studentPreviewCookieName, preview.token, {
+        path: `/student/${encodeURIComponent(preview.code)}/preview`,
+        maxAge: studentPreviewTtlSeconds,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: serverEnv.NODE_ENV === "production",
+      });
+      return response;
+    }
 
     logger.warn(
       { event: "student_token.invalid_code", employeeRef },

@@ -1,4 +1,5 @@
 // Test-only HTTP host: independent OS processes execute production limiter code.
+import { randomUUID } from "node:crypto";
 import { createServer } from "node:http";
 
 import { createRedisRateLimitStore } from "../../../src/application/repositories/redisRateLimitRepository";
@@ -11,19 +12,29 @@ const store = createRedisRateLimitStore(() => ({
 }));
 const check = createRateLimitService(store);
 const server = createServer(async (req, res) => {
-  const decision = await check(
-    req.url === "/avatar"
+  const student = req.url?.startsWith("/student");
+  const endpoint = student
+    ? "student_token"
+    : req.url === "/avatar"
       ? "upload_avatar"
-      : req.url?.startsWith("/student")
-        ? "student_token"
-        : "upload_cv",
-    String(req.headers["x-test-subject"]),
-    {
-      max: 5,
-      windowMs: Number(process.env.TEST_WINDOW_MS || 60000),
-      consume: req.url !== "/student-valid",
-    }
-  );
+      : "upload_cv";
+  const subject = String(req.headers["x-test-subject"]);
+  const policy = {
+    max: 5,
+    windowMs: Number(process.env.TEST_WINDOW_MS || 60000),
+  };
+  const reservation = student ? { id: randomUUID() } : undefined;
+  const decision = await check(endpoint, subject, { ...policy, reservation });
+  if (
+    reservation &&
+    req.url === "/student-valid" &&
+    decision.status === "allowed"
+  ) {
+    await check(endpoint, subject, {
+      ...policy,
+      reservation: { ...reservation, release: true },
+    });
+  }
   const response = rateLimitResponse(decision);
   res.writeHead(response?.status ?? 200, {
     "Content-Type": "application/json",

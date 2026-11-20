@@ -87,13 +87,16 @@ test.each([
     expect(response.headers.get("set-cookie")).toMatch(
       /Path=\/student\/AB12\/preview;.*HttpOnly.*SameSite=strict/i
     );
-    expect(checkRateLimit).toHaveBeenCalledExactlyOnceWith(
+    const reservation =
+      vi.mocked(checkRateLimit).mock.calls[0]?.[2].reservation;
+    expect(reservation?.id).toEqual(expect.any(String));
+    expect(checkRateLimit).toHaveBeenLastCalledWith(
       "student_token",
       "employee",
       {
         max: 5,
         windowMs: 60000,
-        consume: false,
+        reservation: { ...reservation, release: true },
       }
     );
     expect(jwtStudent).toHaveBeenCalledWith(input, "company");
@@ -105,15 +108,7 @@ test("records a miss and logs only the hashed subject", async () => {
   const response = await post({ code: "ZZ99" });
   expect(response.status).toBe(404);
   expect(await response.json()).toEqual({ error: "Student not found" });
-  expect(checkRateLimit).toHaveBeenNthCalledWith(
-    2,
-    "student_token",
-    "employee",
-    {
-      max: 5,
-      windowMs: 60000,
-    }
-  );
+  expect(checkRateLimit).toHaveBeenCalledTimes(1);
   expect(logger.warn).toHaveBeenCalledWith(
     {
       event: "student_token.invalid_code",
@@ -123,14 +118,28 @@ test("records a miss and logs only the hashed subject", async () => {
   );
 });
 
-test("does not reveal a miss that races across the last available budget slot", async () => {
+test("concurrent misses enter the lookup only after reserving a slot", async () => {
+  const slots = new Set<string>();
+  vi.mocked(checkRateLimit).mockImplementation(
+    async (_endpoint, _id, policy) => {
+      const reservation = policy.reservation;
+      if (!reservation) throw new Error("Expected a reservation before lookup");
+      if (reservation.release) slots.delete(reservation.id);
+      else if (slots.size >= policy.max)
+        return { status: "limited", retryAfterMs: 5200 };
+      else slots.add(reservation.id);
+      return { status: "allowed" };
+    }
+  );
   vi.mocked(jwtStudent).mockResolvedValue(null);
-  vi.mocked(checkRateLimit)
-    .mockResolvedValueOnce({ status: "allowed" })
-    .mockResolvedValueOnce({ status: "limited", retryAfterMs: 5200 });
-  const response = await post({ code: "ZZ99" });
-  expect(response.status).toBe(429);
-  expect(response.headers.get("retry-after")).toBe("6");
+  const responses = await Promise.all(
+    Array.from({ length: 8 }, () => post({ code: "ZZ99" }))
+  );
+  expect(jwtStudent).toHaveBeenCalledTimes(5);
+  expect(responses.filter(({ status }) => status === 404)).toHaveLength(5);
+  const limited = responses.filter(({ status }) => status === 429);
+  expect(limited).toHaveLength(3);
+  expect(limited[0]?.headers.get("retry-after")).toBe("6");
 });
 
 test("does not look up a code while Redis is unavailable or the budget is exhausted", async () => {
@@ -145,5 +154,8 @@ test("does not look up a code while Redis is unavailable or the budget is exhaus
 test("does not consume the miss budget when the lookup itself fails", async () => {
   vi.mocked(jwtStudent).mockRejectedValue(new Error("database unavailable"));
   expect((await post({ code: "AB12" })).status).toBe(500);
-  expect(checkRateLimit).toHaveBeenCalledTimes(1);
+  expect(checkRateLimit).toHaveBeenCalledTimes(2);
+  expect(
+    vi.mocked(checkRateLimit).mock.calls[1]?.[2].reservation
+  ).toMatchObject({ release: true });
 });

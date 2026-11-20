@@ -1,7 +1,7 @@
 export type RateLimitPolicy = {
   windowMs: number;
   max: number;
-  consume?: boolean;
+  reservation?: { id: string; release?: true };
 };
 export type RateLimitDecision =
   | { status: "allowed" }

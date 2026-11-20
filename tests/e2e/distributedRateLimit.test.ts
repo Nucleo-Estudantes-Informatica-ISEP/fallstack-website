@@ -87,7 +87,7 @@ afterAll(async () => {
       await admin.del([
         key(subject),
         key(subject, "upload_avatar"),
-        key(subject, "student_token"),
+        key(subject, "student_token") + ":reservations",
         key(subject, "upload_cv", "fallstack:local:"),
       ]);
     admin.destroy();
@@ -107,7 +107,9 @@ test.skipIf(!url)(
       expect(
         (await request(bases[scan % 2], subject, "student-valid")).status
       ).toBe(200);
-    expect(await admin.exists(key(subject, "student_token"))).toBe(0);
+    expect(
+      await admin.exists(key(subject, "student_token") + ":reservations")
+    ).toBe(0);
 
     const results = await Promise.all(
       Array.from({ length: 8 }, (_, i) =>
