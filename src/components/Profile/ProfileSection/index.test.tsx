@@ -29,13 +29,13 @@ const student: StudentDto = {
   avatar: null,
 };
 
-function Profile() {
+function Profile({ legacyLinks = false }: { legacyLinks?: boolean }) {
   const [profile, setProfile] = useState<ProfileData>({
     bio: student.bio,
     interests: [],
     cv: null,
-    linkedin: null,
-    github: null,
+    linkedin: legacyLinks ? "http://linkedin.com/in/legacy" : null,
+    github: legacyLinks ? "http://github.com/legacy" : null,
     avatar: null,
   });
   return (
@@ -105,8 +105,14 @@ test("has the shared section heading, not Coolvetica", () => {
   );
 });
 
-test("Guardar still saves the profile through the same request", async () => {
-  render(<Profile />);
+test("Guardar saves profile changes and preserves untouched legacy links", async () => {
+  render(<Profile legacyLinks />);
+  expect(screen.getByLabelText("LinkedIn")).toHaveValue(
+    "http://linkedin.com/in/legacy"
+  );
+  expect(screen.getByLabelText("GitHub")).toHaveValue(
+    "http://github.com/legacy"
+  );
 
   fireEvent.change(screen.getByRole("textbox", { name: "Biografia" }), {
     target: { value: "Nova bio" },
@@ -118,8 +124,6 @@ test("Guardar still saves the profile through the same request", async () => {
     expect(httpClient.patch).toHaveBeenCalledWith("/students/123", {
       name: "Student Example",
       bio: "Nova bio",
-      github: "",
-      linkedin: "",
       interests: ["react"],
       institutionalEmail: "1234567@isep.ipp.pt",
     })

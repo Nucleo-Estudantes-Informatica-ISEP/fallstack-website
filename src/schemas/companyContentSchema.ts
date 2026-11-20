@@ -16,9 +16,9 @@ const optionalLink = (key: keyof SocialLinks) =>
       (value) => value === "" || safeCompanySocialLink(key, value) !== null,
       "Use an HTTPS link for this platform"
     )
+    .nullable()
     .optional()
-    .or(z.literal(""))
-    .transform((value) => (value === "" ? undefined : value));
+    .transform((value) => (value === "" ? null : value));
 
 export const youtubeEmbedUrlSchema = z
   .string()

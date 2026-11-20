@@ -156,7 +156,11 @@ const StudentPage = async (props: ProfileProps) => {
               history instanceof HttpError ? [] : history.map(toSavedStudentDto)
             }
             actions={actions.map(toStudentActionDto)}
-            student={studentDto}
+            student={{
+              ...studentDto,
+              linkedin: student.linkedin,
+              github: student.github,
+            }}
             interestIds={studentInterests.map(({ id }) => id)}
             availableInterests={interests.map((interest) =>
               toInterestDto(interest, language)

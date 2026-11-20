@@ -35,15 +35,25 @@ export function safeCompanySocialLink(key: keyof SocialLinks, value: string) {
   return safeHttpsLink(value, socialHosts[key]);
 }
 
-export function parseSocialLinks(value: unknown): SocialLinks {
+export function readSocialLinks(value: unknown): SocialLinks {
   if (!value || typeof value !== "object") return {};
   const record = value as Record<string, unknown>;
   const links: SocialLinks = {};
   for (const key of SOCIAL_LINK_KEYS) {
     const link = record[key];
     if (typeof link !== "string") continue;
-    const valid = safeCompanySocialLink(key, link);
+    links[key] = link;
+  }
+  return links;
+}
+
+export function parseSocialLinks(value: unknown): SocialLinks {
+  const links = readSocialLinks(value);
+  for (const key of SOCIAL_LINK_KEYS) {
+    const link = links[key];
+    const valid = link && safeCompanySocialLink(key, link);
     if (valid) links[key] = valid;
+    else delete links[key];
   }
   return links;
 }
