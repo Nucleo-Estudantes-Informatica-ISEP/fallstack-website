@@ -163,6 +163,11 @@ redirect boundaries and require access-log care.
 
 ## Verification and limits
 
+The application checks below and the locked production dependency audit
+cover runtime revision `776f2483ec50f25797b3dec777823046f24dcd21`.
+The historical Gitleaks scan covers commits reachable from the audited
+`dev` revision identified above.
+
 - macOS arm64, Node 26.13.1 and pnpm 10.23.0. Disposable loopback PostgreSQL
   16, Redis 7.4.12 and MinIO on the repository's pinned release. PostgreSQL
   connectivity, all 37 migrations and Prisma validation succeeded.

@@ -25,6 +25,8 @@ test("allows a plain in-app relative path through unchanged", () => {
   expect(sanitizeNext("/dashboard?lang=en")).toBe("/dashboard?lang=en");
 });
 
-test("rejects control characters in a return path", () => {
+test("rejects newline, tab, and carriage return in a return path", () => {
   expect(sanitizeNext("/dashboard\n")).toBe("/");
+  expect(sanitizeNext("/\t/example.invalid")).toBe("/");
+  expect(sanitizeNext("/\r/example.invalid")).toBe("/");
 });
