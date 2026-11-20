@@ -171,3 +171,33 @@ test("saves an edited course in the profile request", async () => {
     )
   );
 });
+
+test.each(["https://www.github.com/student", ""])(
+  "saves a GitHub link accepted by the server schema (%j)",
+  async (github) => {
+    vi.mocked(httpClient.patch).mockClear();
+    render(<Profile legacyLinks />);
+    fireEvent.change(screen.getByLabelText("GitHub"), {
+      target: { value: github },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+    await waitFor(() =>
+      expect(httpClient.patch).toHaveBeenCalledWith(
+        "/students/123",
+        expect.objectContaining({ github })
+      )
+    );
+  }
+);
+
+test("does not submit a GitHub URL with a different hostname", () => {
+  vi.mocked(httpClient.patch).mockClear();
+  render(<Profile />);
+  fireEvent.change(screen.getByLabelText("GitHub"), {
+    target: { value: "https://example.invalid/student" },
+  });
+  fireEvent.click(screen.getByRole("button", { name: "Guardar" }));
+
+  expect(httpClient.patch).not.toHaveBeenCalled();
+});

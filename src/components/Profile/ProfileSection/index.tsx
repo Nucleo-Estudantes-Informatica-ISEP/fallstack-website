@@ -16,6 +16,7 @@ import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { uploadCv } from "@/client/api/upload";
+import { githubOrEmptySchema } from "@/schemas/githubUrlSchema";
 import {
   isValidLinkedinUrl,
   LINKEDIN_FORMAT_ERROR,
@@ -98,12 +99,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       return;
     }
 
-    // Validação Github
-    if (
-      githubChanged &&
-      github &&
-      !github.match(/^(https:\/\/github\.com\/)([A-zÀ-ú0-9ç_-]+\/?)+$/)
-    ) {
+    if (githubChanged && !githubOrEmptySchema.safeParse(github).success) {
       toast.error(t("O teu Github não segue o formato correto!"));
       return;
     }
