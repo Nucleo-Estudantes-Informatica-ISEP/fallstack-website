@@ -36,9 +36,16 @@ test("streams only the authorized company's archive and releases admission when 
     contentType: "application/pdf",
   });
   const zip = await createCompanyCvZip("company-one", signal);
-  await expect(createCompanyCvZip("company-two", signal)).rejects.toMatchObject(
+  await expect(createCompanyCvZip("company-one", signal)).rejects.toMatchObject(
     { status: 429 }
   );
+
+  vi.mocked(findCompanySavedStudentsWithCv).mockResolvedValue([]);
+  const otherZip = await createCompanyCvZip("company-two", signal);
+  await expect(
+    createCompanyCvZip("company-three", signal)
+  ).rejects.toMatchObject({ status: 429 });
+  await new Response(otherZip).arrayBuffer();
 
   const archive = await JSZip.loadAsync(await new Response(zip).arrayBuffer());
   expect(await archive.file("AB12-Audit-Student.pdf")?.async("string")).toBe(
@@ -47,16 +54,16 @@ test("streams only the authorized company's archive and releases admission when 
   expect(await archive.file("dados.csv")?.async("string")).toContain(
     "Fixture note"
   );
-  expect(findCompanySavedStudentsWithCv).toHaveBeenCalledExactlyOnceWith(
+  expect(findCompanySavedStudentsWithCv).toHaveBeenNthCalledWith(
+    1,
     "company-one",
     501
   );
 
-  vi.mocked(findCompanySavedStudentsWithCv).mockResolvedValue([]);
-  const nextZip = await createCompanyCvZip("company-two", signal);
+  const nextZip = await createCompanyCvZip("company-one", signal);
   await new Response(nextZip).arrayBuffer();
   expect(findCompanySavedStudentsWithCv).toHaveBeenLastCalledWith(
-    "company-two",
+    "company-one",
     501
   );
 });

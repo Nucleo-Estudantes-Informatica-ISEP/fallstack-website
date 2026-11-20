@@ -11,7 +11,8 @@ import { cvKey, getObjectStream } from "./objectStorageService";
 
 const maxExportRows = 500;
 const maxExportBytes = 64 * 1024 * 1024;
-let exportInProgress = false;
+const maxConcurrentExports = 2;
+const exportsInProgress = new Set<string>();
 
 const exportTooLarge = () =>
   new HttpError("CV export exceeds the archive limit", 413);
@@ -22,12 +23,15 @@ export async function createCompanyCvZip(
   companyId: string,
   requestSignal: AbortSignal
 ) {
-  if (exportInProgress)
+  if (
+    exportsInProgress.has(companyId) ||
+    exportsInProgress.size >= maxConcurrentExports
+  )
     throw new HttpError(
       "A CV export is already in progress. Retry shortly.",
       429
     );
-  exportInProgress = true;
+  exportsInProgress.add(companyId);
   const signal = AbortSignal.any([requestSignal, AbortSignal.timeout(60_000)]);
 
   try {
@@ -77,13 +81,13 @@ export async function createCompanyCvZip(
     const clean = finished(stream, () => {
       clean();
       signal.removeEventListener("abort", abort);
-      exportInProgress = false;
+      exportsInProgress.delete(companyId);
     });
     return Readable.toWeb(stream, {
       strategy: { highWaterMark: 0 },
     }) as ReadableStream<Uint8Array>;
   } catch (error) {
-    exportInProgress = false;
+    exportsInProgress.delete(companyId);
     throw error;
   }
 }
