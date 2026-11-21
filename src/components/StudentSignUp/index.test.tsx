@@ -1,67 +1,100 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import type { StudentSignUpData } from "@/types/StudentSignUpData";
 
 import StudentSignUp from ".";
-import { readStudentDraft, saveStudentDraft } from "./draft";
+import { readStudentDraft } from "./draft";
 
 vi.mock("@/components/SignUp/AccountDetailsStep", () => ({
-  default: ({ data }: { data: { email: string | null } }) => (
-    <p>{data.email ?? "Email por indicar"}</p>
+  default: ({
+    data,
+    setData,
+  }: {
+    data: StudentSignUpData;
+    setData: React.Dispatch<React.SetStateAction<StudentSignUpData>>;
+  }) => (
+    <input
+      aria-label="Contact email"
+      value={data.email ?? ""}
+      onChange={(event) => {
+        const email = event.target.value;
+        setData((previous) => ({ ...previous, email }));
+      }}
+    />
   ),
 }));
 vi.mock("@/components/SignUp/BioStep", () => ({ default: () => null }));
 vi.mock("@/components/SignUp/InterestsStep", () => ({ default: () => null }));
 vi.mock("@/components/SignUp/FinalStep", () => ({
-  default: ({ onProfileCreated }: { onProfileCreated: () => void }) => (
-    <button onClick={onProfileCreated}>Complete profile</button>
+  default: ({
+    data,
+    onProfileCreated,
+  }: {
+    data: StudentSignUpData;
+    onProfileCreated: () => void;
+  }) => (
+    <>
+      <p>{data.bio}</p>
+      <p>{data.interests.join(",")}</p>
+      <button onClick={onProfileCreated}>Complete profile</button>
+    </>
   ),
 }));
 
-beforeEach(() => {
-  const entries = new Map<string, string>();
-  vi.stubGlobal("localStorage", {
-    getItem: (key: string) => entries.get(key) ?? null,
-    setItem: (key: string, value: string) => entries.set(key, value),
-    removeItem: (key: string) => entries.delete(key),
-  });
-});
-afterEach(() => vi.unstubAllGlobals());
+const key = "fallstack:student-signup:v1:student-one";
+const interests = [{ id: "current-interest", name: "Computing" }];
 
-test("starts with an explicit contact email independent from login", () => {
-  render(<StudentSignUp accountId="student-one" interests={[]} />);
+beforeEach(() => window.localStorage.clear());
 
-  expect(screen.getByText("Email por indicar")).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Voltar" })).toBeNull();
+test("saves an explicit contact email edited in the form", () => {
+  render(<StudentSignUp accountId="student-one" interests={interests} />);
+  const email = screen.getByRole("textbox", { name: "Contact email" });
+  expect(email).toHaveValue("");
+  fireEvent.change(email, { target: { value: "student@example.test" } });
+  expect(readStudentDraft("student-one")?.answers.email).toBe(
+    "student@example.test"
+  );
 });
 
-test("restores another visit for its owner and removes the draft after completion", () => {
-  saveStudentDraft("student-one", 3, {
-    name: "Student",
-    email: "student@isep.ipp.pt",
-    bio: "Draft",
-    interests: [],
-    year: null,
-    linkedin: null,
-    password: "unused-fixture-value",
-    avatar: "blob:one",
-    cv: {
-      name: "cv.pdf",
-      file: new File(["cv"], "cv.pdf"),
-      preview: "blob:cv",
-    },
-  });
-  const otherAccount = render(
-    <StudentSignUp accountId="student-two" interests={[]} />
+test("restores the owner's step and valid answers, then clears the draft on completion", () => {
+  window.localStorage.setItem(
+    key,
+    JSON.stringify({
+      step: 3,
+      answers: {
+        name: "Student",
+        email: "student@example.test",
+        bio: "Saved introduction",
+        interests: ["current-interest", "removed-interest"],
+        year: null,
+        linkedin: null,
+      },
+    })
   );
-  expect(screen.queryByText("Complete profile")).toBeNull();
-  otherAccount.unmount();
+  const other = render(
+    <StudentSignUp accountId="student-two" interests={interests} />
+  );
+  expect(screen.getByRole("textbox", { name: "Contact email" })).toHaveValue(
+    ""
+  );
+  expect(screen.queryByText("Saved introduction")).toBeNull();
+  other.unmount();
 
-  render(<StudentSignUp accountId="student-one" interests={[]} />);
-  expect(readStudentDraft("student-one")?.answers).not.toHaveProperty("cv");
-  expect(readStudentDraft("student-one")?.answers).not.toHaveProperty("avatar");
-  expect(readStudentDraft("student-one")?.answers).not.toHaveProperty(
-    "password"
-  );
+  render(<StudentSignUp accountId="student-one" interests={interests} />);
+  expect(screen.getByText("Saved introduction")).toBeInTheDocument();
+  expect(screen.getByText("current-interest")).toBeInTheDocument();
+  expect(readStudentDraft("student-one")?.answers.interests).toEqual([
+    "current-interest",
+  ]);
   fireEvent.click(screen.getByRole("button", { name: "Complete profile" }));
   expect(readStudentDraft("student-one")).toBeUndefined();
 });
+
+test.each(["{", JSON.stringify({ step: 99, answers: {} })])(
+  "ignores invalid stored drafts",
+  (value) => {
+    window.localStorage.setItem(key, value);
+    expect(readStudentDraft("student-one")).toBeUndefined();
+  }
+);

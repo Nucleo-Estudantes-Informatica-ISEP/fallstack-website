@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { httpClient } from "@/lib/http/client";
 import { useUiText } from "@/contexts/UiLanguageContext";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import { clearStudentDraftsOnSignOut } from "@/components/StudentSignUp/draft";
 
 import useSession from "./useSession";
 
@@ -21,6 +22,7 @@ export function useLogout() {
       const { logoutUrl } = await httpClient.post<{ logoutUrl: string }>(
         "/auth/logout"
       );
+      clearStudentDraftsOnSignOut();
       session.clear();
       setIsConfirmVisible(false);
       window.location.assign(logoutUrl);

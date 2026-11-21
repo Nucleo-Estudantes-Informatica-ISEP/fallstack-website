@@ -47,10 +47,16 @@ const StudentSignUp = ({
     const draft = readStudentDraft(accountId);
     if (draft) {
       setCurrentStep(draft.step);
-      setData((previous) => ({ ...previous, ...draft.answers }));
+      setData((previous) => ({
+        ...previous,
+        ...draft.answers,
+        interests: draft.answers.interests.filter((id) =>
+          interests.some((interest) => interest.id === id)
+        ),
+      }));
     }
     setRestored(true);
-  }, [accountId]);
+  }, [accountId, interests]);
 
   useEffect(() => {
     if (restored && !completed.current)

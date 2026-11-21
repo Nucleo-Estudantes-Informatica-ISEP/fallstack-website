@@ -17,8 +17,8 @@ const draftSchema = z.object({
   answers: draftAnswers,
 });
 
-const keyFor = (accountId: string) =>
-  `fallstack:student-signup:v1:${accountId}`;
+const draftPrefix = "fallstack:student-signup:v1:";
+const keyFor = (accountId: string) => draftPrefix + accountId;
 
 export function readStudentDraft(accountId: string) {
   try {
@@ -54,5 +54,17 @@ export function clearStudentDraft(accountId: string) {
     window.localStorage.removeItem(keyFor(accountId));
   } catch {
     // Completion still succeeds when browser storage is unavailable.
+  }
+}
+
+export function clearStudentDraftsOnSignOut() {
+  try {
+    const storage = window.localStorage;
+    for (let index = storage.length - 1; index >= 0; index--) {
+      const key = storage.key(index);
+      if (key?.startsWith(draftPrefix)) storage.removeItem(key);
+    }
+  } catch {
+    // Sign-out still succeeds when browser storage is unavailable.
   }
 }
