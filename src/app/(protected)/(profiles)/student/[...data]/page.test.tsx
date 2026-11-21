@@ -66,6 +66,8 @@ const STUDENT = {
 
 beforeEach(async () => {
   vi.clearAllMocks();
+  const { cookies } = await import("next/headers");
+  vi.mocked(cookies).mockResolvedValue({ get: () => undefined } as never);
 
   const { getStudent } = await import("@/application/services/studentService");
   vi.mocked(getStudent).mockResolvedValue(STUDENT as never);
@@ -322,12 +324,16 @@ async function asEmployee({ saved }: { saved: boolean }) {
   vi.mocked(isSaved).mockResolvedValue(saved);
 }
 
-// Shaped like a real student-pass token (studentTokenService): the page only
-// accepts tokens signed for that purpose.
-async function withSignedToken(code: string | null) {
+async function withSignedToken(code: string | null, companyId = "c1") {
+  const { cookies } = await import("next/headers");
+  vi.mocked(cookies).mockResolvedValue({
+    get: () => ({ value: "signed-token" }),
+  } as never);
   const { verifyJwt } = await import("@/application/services/authService");
   vi.mocked(verifyJwt).mockReturnValue(
-    code ? ({ code, purpose: "student-pass" } as never) : null
+    code
+      ? ({ code, companyId, exp: 12345, purpose: "student-pass" } as never)
+      : null
   );
 }
 
@@ -335,7 +341,7 @@ test("an employee with a valid signed token sees the not-yet-saved preview", asy
   await asEmployee({ saved: false });
   await withSignedToken("S123");
 
-  const result = await renderPreviewFor("signed-token");
+  const result = await renderPreviewFor("S123");
 
   const preview = findByType(result, (await views()).Preview);
   assert.ok(preview, "expected the preview view");
@@ -350,7 +356,7 @@ test("an employee with a valid signed token sees the saved preview once saved", 
   await asEmployee({ saved: true });
   await withSignedToken("S123");
 
-  const result = await renderPreviewFor("signed-token");
+  const result = await renderPreviewFor("S123");
 
   const preview = findByType(result, (await views()).Preview);
   assert.ok(preview, "expected the preview view");
@@ -389,7 +395,7 @@ test("a student opening a plain-code preview of another student is blocked", asy
     student: { id: "s2", code: "S999", name: "Bea" },
     employee: null,
   } as never);
-  await withSignedToken(null);
+  await withSignedToken("S123");
 
   const result = await renderPreviewFor("S123");
 
@@ -399,10 +405,7 @@ test("a student opening a plain-code preview of another student is blocked", asy
 test("an employee opening an invalid or expired preview token is blocked", async () => {
   await asEmployee({ saved: false });
   await withSignedToken(null);
-  const { getStudent } = await import("@/application/services/studentService");
-  vi.mocked(getStudent).mockResolvedValue(null as never);
-
-  const result = await renderPreviewFor("expired.or.invalid-token");
+  const result = await renderPreviewFor("S123");
 
   assert.equal(isBlocked(result), true);
 });
@@ -467,13 +470,19 @@ test("an admin without a profile opening a plain-code preview is blocked, but st
   assert.ok(findByType(profile, (await views()).Public));
 });
 
-test("an admin without a profile with a valid signed token sees the preview", async () => {
+test("an admin without an employee role cannot use a recruiting preview credential", async () => {
   await asAdmin();
   await withSignedToken("S123");
 
-  const result = await renderPreviewFor("signed-token");
+  const result = await renderPreviewFor("S123");
 
-  const preview = findByType(result, (await views()).Preview);
-  assert.ok(preview, "expected the preview view");
-  assert.equal(preview.props.isCompanyView, false);
+  assert.equal(isBlocked(result), true);
+});
+
+test("an employee in another company cannot use a preview credential", async () => {
+  await asEmployee({ saved: false });
+  await withSignedToken("S123", "c2");
+  assert.equal(isBlocked(await renderPreviewFor("S123")), true);
+  const { getStudent } = await import("@/application/services/studentService");
+  assert.equal(vi.mocked(getStudent).mock.calls.length, 0);
 });

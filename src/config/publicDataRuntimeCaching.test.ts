@@ -2,61 +2,37 @@ import { expect, test } from "vitest";
 
 import { publicDataRuntimeCaching } from "./publicDataRuntimeCaching";
 
-test("homepage HTML/RSC and public JSON bypass Workbox cache for both languages, preserving other rules", () => {
+test.each([
+  ["/api/auth/session", "cors", false],
+  ["/api/companies/history/cv-zip", "cors", false],
+  ["/api/faqs?lang=EN", "cors", false],
+  ["/student/EXAMPLE", "navigate", false],
+  ["/dashboard?_rsc=fixture", "cors", true],
+  ["/event/en", "navigate", false],
+])("loads %s from the network", (path, mode, rsc) => {
   const [rule] = publicDataRuntimeCaching;
+  const request = { mode, headers: new Headers(rsc ? { RSC: "1" } : {}) };
   expect(rule.handler).toBe("NetworkOnly");
-  for (const path of ["faqs", "schedule", "sponsors", "companies/roster"]) {
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://example.com/api/${path}?lang=EN`),
-        sameOrigin: true,
-      })
-    ).toBe(true);
-    expect(
-      rule.urlPattern({
-        url: new URL(`https://elsewhere.com/api/${path}`),
-        sameOrigin: false,
-      })
-    ).toBe(false);
-  }
-  for (const path of [
-    "/api/companies",
-    "/api/auth/session",
-    "/api/faqs/private",
-    "/assets/image.webp",
-  ]) {
-    expect(
-      rule.urlPattern({
-        url: new URL(path, "https://example.com"),
-        sameOrigin: true,
-      })
-    ).toBe(false);
-  }
-});
-
-test("homepage navigation, language variants and RSC bypass old document caches", () => {
-  const [rule] = publicDataRuntimeCaching;
-  for (const path of ["/", "/event/pt", "/event/en"]) {
-    for (const query of ["", "?lang=EN", "?_rsc=abc"]) {
-      expect(
-        rule.urlPattern({
-          url: new URL(`${path}${query}`, "https://example.com"),
-          sameOrigin: true,
-        })
-      ).toBe(true);
-      expect(
-        rule.urlPattern({
-          url: new URL(`${path}${query}`, "https://elsewhere.com"),
-          sameOrigin: false,
-        })
-      ).toBe(false);
-    }
-  }
+  expect(
+    rule.urlPattern({
+      url: new URL(path, "https://example.com"),
+      request,
+      sameOrigin: true,
+    })
+  ).toBe(true);
+  expect(
+    rule.urlPattern({
+      url: new URL(path, "https://elsewhere.com"),
+      request,
+      sameOrigin: false,
+    })
+  ).toBe(false);
 });
 
 test("production PWA precaches a script-free document fallback without caching homepage data", async () => {
   const { readFile } = await import("node:fs/promises");
   const config = await readFile("next.config.js", "utf8");
+  expect(config).toContain("extendDefaultRuntimeCaching: false");
   expect(config).toContain('fallbacks: { document: "/offline.html" }');
   const offline = await readFile("public/offline.html", "utf8");
   expect(offline).toContain('href="/"');

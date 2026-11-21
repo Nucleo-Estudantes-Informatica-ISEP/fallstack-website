@@ -22,7 +22,10 @@ const CompanyForm: React.FC<CompanyFormProps> = ({ company, ranks }) => {
     const payload = {
       name: values.name,
       rankId: values.rankId,
-      website: values.website || null,
+      website:
+        (values.website || null) === company?.website
+          ? undefined
+          : values.website || null,
       avatar: values.avatar || null,
       order: values.order,
       active: values.active,

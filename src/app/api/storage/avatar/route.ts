@@ -17,7 +17,7 @@ export const POST = defineHandler({
       await checkUploadRateLimit("avatar", session!.id)
     );
     if (blocked) return blocked;
-    const { id, url } = await uploadFile("avatar", req);
+    const { id, url } = await uploadFile("avatar", req, session!.id);
     return NextResponse.json({ id, url }, { status: 201 });
   },
 });

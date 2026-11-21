@@ -186,18 +186,14 @@ test("cleans staging when the consumer fails", async () => {
   await expect(access(path)).rejects.toMatchObject({ code: "ENOENT" });
 });
 
-test.each(["application/json", "multipart/form-data"])(
-  "rejects unsupported/malformed content type %s",
-  async (type) => {
-    await expect(
-      withMultipartFile(
-        request([head, tail], undefined, { type }),
-        max,
-        vi.fn()
-      )
-    ).rejects.toMatchObject({ status: 400 });
-  }
-);
+test.each([
+  ["application/json", 415],
+  ["multipart/form-data", 400],
+])("rejects unsupported/malformed content type %s", async (type, status) => {
+  await expect(
+    withMultipartFile(request([head, tail], undefined, { type }), max, vi.fn())
+  ).rejects.toMatchObject({ status });
+});
 
 test("removes staging and maps a request disconnect while consuming", async () => {
   const controller = new AbortController();
