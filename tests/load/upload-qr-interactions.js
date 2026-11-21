@@ -95,6 +95,7 @@ export default function runInteractions() {
         {
           headers: {
             Cookie: students[index],
+            Origin: base,
             "Content-Type": "application/json",
           },
           tags: { name: "cv_authorize" },
@@ -122,6 +123,7 @@ export default function runInteractions() {
           {
             headers: {
               Cookie: students[index],
+              Origin: base,
               "Content-Type": "application/json",
             },
             tags: { name: "cv_finalize" },
@@ -136,18 +138,25 @@ export default function runInteractions() {
     const response = http.post(
       `${base}/api/storage/${kind}`,
       { file },
-      { headers: { Cookie: students[index] }, tags: { name: `upload_${kind}` } }
+      {
+        headers: { Cookie: students[index], Origin: base },
+        tags: { name: `upload_${kind}` },
+      }
     );
     check(response, {
       "normal upload returns 201": (res) => res.status === 201,
     });
   }
-  // Exercise employee preview issuance, rather than the public action-QR route.
+  // Exercise employee preview issuance, rather than the presenter action-QR route.
   const scan = http.post(
     `${base}/api/students/token`,
     JSON.stringify({ code: codes[index] }),
     {
-      headers: { Cookie: employees[index], "Content-Type": "application/json" },
+      headers: {
+        Cookie: employees[index],
+        Origin: base,
+        "Content-Type": "application/json",
+      },
       tags: { name: "student_preview_scan" },
     }
   );

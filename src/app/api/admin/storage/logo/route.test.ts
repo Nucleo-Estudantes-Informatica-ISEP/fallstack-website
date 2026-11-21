@@ -65,7 +65,8 @@ test("uploads valid WebP to dedicated logo bucket and prefix", async () => {
     expect.anything(),
     "image/webp",
     webp.length,
-    expect.any(AbortSignal)
+    expect.any(AbortSignal),
+    undefined
   );
 });
 

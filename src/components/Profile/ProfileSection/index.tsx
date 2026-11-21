@@ -16,6 +16,7 @@ import UserBioTextArea from "@/components/Profile/UserBioTextArea";
 import type { InterestDto } from "@/application/dto/interestDto";
 import type { StudentDto } from "@/application/dto/studentDto";
 import { uploadCv } from "@/client/api/upload";
+import { githubOrEmptySchema } from "@/schemas/githubUrlSchema";
 import {
   isValidLinkedinUrl,
   LINKEDIN_FORMAT_ERROR,
@@ -87,31 +88,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       return;
     }
 
+    const linkedin = linkedinRef.current?.value.trim() ?? "";
+    const github = githubRef.current?.value.trim() ?? "";
+    const linkedinChanged = linkedin !== (profile.linkedin ?? "").trim();
+    const githubChanged = github !== (profile.github ?? "").trim();
+
     // Validação LinkedIn
-    if (
-      linkedinRef.current?.value &&
-      !isValidLinkedinUrl(linkedinRef.current.value)
-    ) {
+    if (linkedinChanged && linkedin && !isValidLinkedinUrl(linkedin)) {
       toast.error(LINKEDIN_FORMAT_ERROR);
       return;
     }
 
-    // Validação Github
-    if (
-      githubRef.current?.value &&
-      !githubRef.current?.value?.match(
-        /^(https:\/\/github\.com\/)([A-zÀ-ú0-9ç_-]+\/?)+$/
-      )
-    ) {
+    if (githubChanged && !githubOrEmptySchema.safeParse(github).success) {
       toast.error(t("O teu Github não segue o formato correto!"));
       return;
     }
-
-    setProfile({
-      ...profile,
-      linkedin: linkedinRef.current?.value || null,
-      github: githubRef.current?.value || null,
-    });
 
     mutateSave(async () => {
       if (cvRef.current?.files?.length) {
@@ -133,12 +124,18 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
       await httpClient.patch(`/students/${student.code}`, {
         name,
         bio: profile.bio ? profile.bio : undefined,
-        github: githubRef.current?.value,
-        linkedin: linkedinRef.current?.value,
+        ...(githubChanged ? { github } : {}),
+        ...(linkedinChanged ? { linkedin } : {}),
         interests: profile.interests,
         institutionalEmail: emailRef.current?.value,
         ...(courseChanged ? { course } : {}),
       });
+
+      setProfile((previous) => ({
+        ...previous,
+        linkedin: linkedin || null,
+        github: github || null,
+      }));
 
       if (profile.avatar) {
         try {

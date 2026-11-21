@@ -8,7 +8,11 @@ export async function createStagingRequestContext(
   options: Parameters<typeof request.newContext>[0] & { baseURL: string }
 ): Promise<APIRequestContext> {
   const origin = new URL(options.baseURL).origin;
-  const context = await request.newContext({ ...options, maxRedirects: 0 });
+  const context = await request.newContext({
+    ...options,
+    maxRedirects: 0,
+    extraHTTPHeaders: { Origin: origin, ...options.extraHTTPHeaders },
+  });
   return new Proxy(context, {
     get(target, key) {
       const method = Reflect.get(target, key);

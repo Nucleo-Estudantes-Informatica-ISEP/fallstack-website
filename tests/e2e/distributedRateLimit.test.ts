@@ -87,6 +87,7 @@ afterAll(async () => {
       await admin.del([
         key(subject),
         key(subject, "upload_avatar"),
+        key(subject, "student_token") + ":reservations",
         key(subject, "upload_cv", "fallstack:local:"),
       ]);
     admin.destroy();
@@ -97,6 +98,34 @@ const request = (base: string, subject: string, endpoint = "cv") =>
     method: "POST",
     headers: { "x-test-subject": subject },
   });
+
+test.skipIf(!url)(
+  "independent web processes share the student-code miss budget",
+  async () => {
+    const subject = identity();
+    for (let scan = 0; scan < 8; scan++)
+      expect(
+        (await request(bases[scan % 2], subject, "student-valid")).status
+      ).toBe(200);
+    expect(
+      await admin.exists(key(subject, "student_token") + ":reservations")
+    ).toBe(0);
+
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, i) =>
+        request(bases[i % 2], subject, "student-miss")
+      )
+    );
+    expect(results.filter((result) => result.status === 200)).toHaveLength(5);
+    expect(results.filter((result) => result.status === 429)).toHaveLength(3);
+    for (const base of bases) {
+      expect((await request(base, subject, "student-valid")).status).toBe(429);
+      expect((await request(base, identity(), "student-valid")).status).toBe(
+        200
+      );
+    }
+  }
+);
 
 test.skipIf(!url)(
   "both processes time out during a real Redis pause and recover without granting a fresh allowance",
