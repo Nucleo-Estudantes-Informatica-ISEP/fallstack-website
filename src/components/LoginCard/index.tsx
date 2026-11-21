@@ -45,8 +45,10 @@ const LoginCard: React.FC<LoginCardProps> = ({
       const stored = sessionStorage.getItem(companyCodeKey);
       sessionStorage.removeItem(companyCodeKey);
       if (stored && !authError) {
-        const [expires, code] = stored.split(":");
+        const [expires, code, extra] = stored.split(":");
         if (
+          extra === undefined &&
+          /^\d+$/.test(expires) &&
           Number(expires) > Date.now() &&
           companyInviteCodePattern.test(code ?? "")
         ) {

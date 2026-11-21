@@ -1,7 +1,15 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import LoginPage from "@/app/(protected)/(auth)/login/page";
+
 import LoginCard from ".";
+
+vi.mock("server-only", () => ({}));
+vi.mock("@/application/services/sessionService", () => ({
+  default: async () => null,
+  isCurrentAccountInactive: async () => false,
+}));
 
 const { pushMock, replaceMock, refreshMock, fetchSessionMock, sessionState } =
   vi.hoisted(() => ({
@@ -144,26 +152,33 @@ test("restores the code for explicit confirmation and removes it from browser st
   expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
 });
 
-test("drops the queued code when authorization returns with an error", () => {
+test("drops the queued code when the real login page receives an AuthNEI error", async () => {
   sessionStorage.setItem(
     "fallstack-employee-invite",
     `${Date.now() + 60_000}:example-invite`
   );
-  render(<LoginCard authError />);
+  render(
+    await LoginPage({
+      searchParams: Promise.resolve({ error: "auth-code-error" }),
+    })
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Não foi possível concluir"
+  );
   expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
 });
 
-test("cancelling employee onboarding clears the modal URL", () => {
-  sessionState.user = {
-    role: "STUDENT",
-    adminRole: null,
-    student: null,
-  };
+test("cancelling signed-out employee onboarding clears the queued code", () => {
+  sessionStorage.setItem(
+    "fallstack-employee-invite",
+    `${Date.now() + 60_000}:example-invite`
+  );
 
   render(<LoginCard initialView="employee" />);
   fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
   expect(replaceMock).toHaveBeenCalledWith("/login");
+  expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
 });
 
 test("successful employee onboarding refreshes the session and opens dashboard", async () => {
@@ -285,4 +300,51 @@ test("inactive account explains the blocked state and offers account switching w
     screen.getByRole("link", { name: "support@nei-isep.org" })
   ).toHaveAttribute("href", "mailto:support@nei-isep.org");
   expect(screen.queryByText("Continuar com AuthNEI")).not.toBeInTheDocument();
+});
+
+test.each(["expired", "malformed"])(
+  "does not restore an %s code entry",
+  (state) => {
+    const stored =
+      state === "expired"
+        ? `${Date.now() - 1}:example-invite`
+        : `${Date.now() + 60_000}:example-invite:extra`;
+    sessionStorage.setItem("fallstack-employee-invite", stored);
+    sessionState.user = { role: "STUDENT" };
+
+    render(<LoginCard initialView="employee" />);
+    expect(
+      screen.getByRole("button", { name: "Completar associação" })
+    ).toHaveAttribute("data-initial-code", "");
+    expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
+  }
+);
+
+test("offers sign-in without a stored code when storage is blocked", () => {
+  const setItem = vi
+    .spyOn(Storage.prototype, "setItem")
+    .mockImplementation(() => {
+      throw new Error("Storage blocked");
+    });
+  try {
+    render(<LoginCard initialView="employee" />);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Código da Empresa" }),
+      {
+        target: { value: "example-invite" },
+      }
+    );
+    const submit = screen.getByRole("button", {
+      name: "Continuar com AuthNEI",
+    });
+    fireEvent.submit(submit.closest("form")!);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Não foi possível guardar o código"
+    );
+    expect(
+      document.querySelector("[data-next='/login?modal=employee']")
+    ).not.toBeNull();
+  } finally {
+    setItem.mockRestore();
+  }
 });
