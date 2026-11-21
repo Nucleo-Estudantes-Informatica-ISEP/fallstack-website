@@ -43,3 +43,9 @@ the bundled Coolvetica and Inter fonts are unchanged.
 Login and signup look consistent and share one layout component. Identity and
 recovery stay with AuthNEI, so the application stores no passwords. The
 "Continuar com AuthNEI" button restyle also applies to the `/signup` gate.
+
+Student signup saves unfinished text, selections, and the current step in the
+browser under the signed-in FallStack account. A returning student can resume
+on that browser. Completion clears the draft. The browser does not save
+passwords or uploaded files for this flow. Students select their CV and
+profile photo again after reloading.

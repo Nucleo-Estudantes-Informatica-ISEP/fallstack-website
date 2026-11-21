@@ -82,7 +82,10 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
             required
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "signup-year-error" : undefined}
-            onChange={() => setError(null)}
+            onChange={(event) => {
+              setError(null);
+              setData({ ...data, name: event.target.value });
+            }}
           />
         )}
         <Input
@@ -105,11 +108,14 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           name="Seleciona o teu ano"
           placeholder="Insere o ano"
           inputRef={yearRef}
-          defaultValue={data.year ? data.year : undefined}
+          defaultValue={data.year ?? ""}
           className="aria-invalid:border-red-400"
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "signup-year-error" : undefined}
-          onChange={() => setError(null)}
+          onChange={(event) => {
+            setError(null);
+            setData({ ...data, year: event.target.value });
+          }}
           options={yearOptions}
         />
         <Input
@@ -124,7 +130,10 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           hint="Indica o teu email do ISEP."
           aria-invalid={Boolean(error)}
           aria-describedby={error ? "signup-year-error" : undefined}
-          onChange={() => setError(null)}
+          onChange={(event) => {
+            setError(null);
+            setData({ ...data, email: event.target.value });
+          }}
         />
       </div>
 
