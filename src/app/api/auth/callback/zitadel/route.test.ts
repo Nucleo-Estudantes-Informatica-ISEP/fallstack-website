@@ -2,6 +2,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { consumeOidcRestart } from "@/application/repositories/oidcRestartRepository";
 import {
   AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
@@ -13,6 +14,9 @@ import {
 import { GET } from "./route";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/application/repositories/oidcRestartRepository", () => ({
+  consumeOidcRestart: vi.fn(),
+}));
 vi.mock("@/config/env.server", () => ({
   serverEnv: {
     AUTH_POST_LOGOUT_REDIRECT_URI: "https://fallstack.example.test/",
@@ -88,9 +92,10 @@ test("asks for verification only when the provider confirmed the matching email 
     httpOnly: true,
     sameSite: "lax",
   });
+  expect(destination.searchParams.get("next")).toBe("/signup?lang=en");
   expect(
     JSON.parse(response.cookies.get(verifyEmailCookieName)!.value).next
-  ).toBe("/signup?lang=en");
+  ).toBeUndefined();
 });
 
 test.each([false, true])(
@@ -137,4 +142,65 @@ test("recovers a long interrupted destination from the bounded restart cookie", 
   expect(
     new URL(response.headers.get("location")!).searchParams.get("next")
   ).toBe(destination);
+});
+
+test("recovers an oversized interrupted destination from shared storage", async () => {
+  const state = "c".repeat(43);
+  const destination = "/event?filter=" + "x".repeat(5000);
+  vi.mocked(consumeOidcRestart).mockResolvedValueOnce(destination);
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
+      {
+        headers: {
+          cookie: `${oidcRestartCookieName(state)}=stored:${"z".repeat(43)}`,
+        },
+      }
+    )
+  );
+  expect(consumeOidcRestart).toHaveBeenCalledWith("z".repeat(43));
+  expect(
+    new URL(response.headers.get("location")!).searchParams.get("next")
+  ).toBe(destination);
+});
+
+test("keeps a stored destination through email verification", async () => {
+  const state = "d".repeat(43);
+  const destination = "/event?filter=" + "x".repeat(5000);
+  vi.mocked(consumeOidcRestart).mockResolvedValueOnce(destination);
+  vi.mocked(completeAuthorizationCode).mockRejectedValueOnce(
+    new AuthNeiEmailVerificationRequired("fixture@example.test")
+  );
+  const cookies = [
+    `${oidcCookieNames.state}=${state}`,
+    `${oidcCookieNames.nonce}=nonce`,
+    `${oidcCookieNames.verifier}=verifier`,
+    `${oidcRestartCookieName(state)}=stored:${"z".repeat(43)}`,
+  ];
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
+      { headers: { cookie: cookies.join("; ") } }
+    )
+  );
+  expect(
+    new URL(response.headers.get("location")!).searchParams.get("next")
+  ).toBe(destination);
+  expect(
+    JSON.parse(response.cookies.get(verifyEmailCookieName)!.value)
+  ).toEqual({ loginHint: "fixture@example.test" });
+});
+
+test("does not load a destination from the OIDC state alone", async () => {
+  const state = "e".repeat(43);
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
+      { headers: { cookie: `${oidcRestartCookieName(state)}=stored` } }
+    )
+  );
+  expect(consumeOidcRestart).not.toHaveBeenCalled();
+  expect(
+    new URL(response.headers.get("location")!).searchParams.has("next")
+  ).toBe(false);
 });

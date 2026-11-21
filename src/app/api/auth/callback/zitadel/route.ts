@@ -5,6 +5,7 @@ import { serverEnv } from "@/config/env.server";
 import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { reportError } from "@/lib/logger";
 import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
+import { consumeOidcRestart } from "@/application/repositories/oidcRestartRepository";
 import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
   AuthNeiEmailVerificationRequired,
@@ -34,12 +35,19 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
   const current = Boolean(state && state === expectedState);
   const recoveryCookie = oidcRestartCookieName(state);
+  const recoveryValue =
+    recoveryCookie && request.cookies.get(recoveryCookie)?.value;
+  const token = recoveryValue?.match(/^stored:([A-Za-z0-9_-]{43})$/u)?.[1];
+  const storedDestination = token ? await consumeOidcRestart(token) : undefined;
   const appDestination = sanitizeNext(
-    current ? (request.cookies.get(oidcCookieNames.next)?.value ?? null) : null
+    current
+      ? storedDestination ||
+          request.cookies.get(oidcCookieNames.next)?.value ||
+          null
+      : null
   );
   const restartDestination = sanitizeNext(
-    (recoveryCookie && request.cookies.get(recoveryCookie)?.value) ||
-      appDestination
+    (token ? storedDestination : recoveryValue) || appDestination
   );
 
   function finish(response: NextResponse) {
@@ -95,7 +103,6 @@ export async function GET(request: NextRequest) {
           verifyEmailCookieName,
           JSON.stringify({
             loginHint: error.loginHint,
-            next: restartDestination,
           }),
           {
             httpOnly: true,

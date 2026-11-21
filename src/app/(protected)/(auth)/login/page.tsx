@@ -22,13 +22,14 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
   }
 
   const { modal, error, next } = await searchParams;
+  const destination = sanitizeNext(typeof next === "string" ? next : null);
   return (
     <LoginCard
       initialView={modal === "employee" ? "employee" : undefined}
       offseason={serverEnv.EVENT_MODE === "offseason"}
       signInFailure={parseSignInFailure(error)}
-      signInDestination={sanitizeNext(typeof next === "string" ? next : null)}
-      verifyEmailUrl="/api/auth/login?verifyEmail=1"
+      signInDestination={destination}
+      verifyEmailUrl={`/api/auth/login?verifyEmail=1&next=${encodeURIComponent(destination)}`}
       inactive={await isCurrentAccountInactive()}
     />
   );

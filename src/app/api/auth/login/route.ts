@@ -1,6 +1,8 @@
+import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverEnv } from "@/config/env.server";
+import { saveOidcRestart } from "@/application/repositories/oidcRestartRepository";
 import {
   createAuthorizationRequest,
   oidcCookieNames,
@@ -31,6 +33,11 @@ export async function GET(request: NextRequest) {
     }
   }
   const auth = await createAuthorizationRequest(next, loginHint);
+  const storedDestination = auth.next !== "/";
+  const token = storedDestination
+    ? randomBytes(32).toString("base64url")
+    : undefined;
+  if (token) await saveOidcRestart(token, auth.next);
   const response = NextResponse.redirect(auth.url);
   const cookieOptions = {
     httpOnly: true,
@@ -44,14 +51,13 @@ export async function GET(request: NextRequest) {
   response.cookies.set(oidcCookieNames.state, auth.state, cookieOptions);
   response.cookies.set(oidcCookieNames.nonce, auth.nonce, cookieOptions);
   response.cookies.set(oidcCookieNames.verifier, auth.verifier, cookieOptions);
-  response.cookies.set(oidcCookieNames.next, auth.next, cookieOptions);
+  response.cookies.set(
+    oidcCookieNames.next,
+    storedDestination ? "/" : auth.next,
+    cookieOptions
+  );
   const recoveryCookie = oidcRestartCookieName(auth.state);
-  // shortcut: destinations over 3500 encoded bytes cannot be restarted, use shared storage when longer URLs are supported.
-  if (
-    recoveryCookie &&
-    auth.next !== "/" &&
-    encodeURIComponent(auth.next).length <= 3500
-  ) {
+  if (recoveryCookie && auth.next !== "/") {
     const recoveryOptions = {
       ...cookieOptions,
       path: "/api/auth",
@@ -63,7 +69,11 @@ export async function GET(request: NextRequest) {
     for (const { name } of existingRecoveryCookies.slice(0, -3)) {
       response.cookies.set(name, "", { ...recoveryOptions, maxAge: 0 });
     }
-    response.cookies.set(recoveryCookie, auth.next, recoveryOptions);
+    response.cookies.set(
+      recoveryCookie,
+      token ? `stored:${token}` : auth.next,
+      recoveryOptions
+    );
   }
   return response;
 }
