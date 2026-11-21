@@ -4,11 +4,13 @@ import config from "@/config";
 import { serverEnv } from "@/config/env.server";
 import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { reportError } from "@/lib/logger";
+import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
 import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
   AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
   oidcCookieNames,
+  oidcRestartCookieName,
   signAppSession,
   verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
@@ -23,12 +25,6 @@ function clearOidcCookies(response: NextResponse) {
     response.cookies.delete(name);
 }
 
-function authFailure(failure: SignInFailure) {
-  const response = NextResponse.redirect(appUrl(`/login?error=${failure}`));
-  clearOidcCookies(response);
-  return response;
-}
-
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
@@ -36,15 +32,37 @@ export async function GET(request: NextRequest) {
   const expectedState = request.cookies.get(oidcCookieNames.state)?.value;
   const expectedNonce = request.cookies.get(oidcCookieNames.nonce)?.value;
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
-  const next = request.cookies.get(oidcCookieNames.next)?.value ?? "/";
+  const current = Boolean(state && state === expectedState);
+  const recoveryCookie = oidcRestartCookieName(state);
+  const appDestination = sanitizeNext(
+    current ? (request.cookies.get(oidcCookieNames.next)?.value ?? null) : null
+  );
+  const restartDestination = sanitizeNext(
+    (recoveryCookie && request.cookies.get(recoveryCookie)?.value) ||
+      appDestination
+  );
 
-  if (
-    state &&
-    (code || errorCode) &&
-    (!expectedState || state !== expectedState || !expectedNonce || !verifier)
-  )
+  function finish(response: NextResponse) {
+    if (current) clearOidcCookies(response);
+    if (recoveryCookie)
+      response.cookies.set(recoveryCookie, "", {
+        path: "/api/auth",
+        maxAge: 0,
+      });
+    return response;
+  }
+
+  function authFailure(failure: SignInFailure) {
+    const path = appUrl("/login");
+    path.searchParams.set("error", failure);
+    if (restartDestination !== "/")
+      path.searchParams.set("next", restartDestination);
+    return finish(NextResponse.redirect(path));
+  }
+
+  if (state && (code || errorCode) && (!current || !expectedNonce || !verifier))
     return authFailure("auth-expired");
-  if (!state || state !== expectedState) return authFailure("auth-code-error");
+  if (!current) return authFailure("auth-code-error");
   if (errorCode === "access_denied") return authFailure("auth-cancelled");
   if (!code || errorCode || !expectedNonce || !verifier)
     return authFailure("auth-code-error");
@@ -57,7 +75,7 @@ export async function GET(request: NextRequest) {
     });
     const destination = await completeZitadelSignIn({
       identity,
-      fallback: next,
+      fallback: appDestination,
     });
     const response = NextResponse.redirect(appUrl(destination));
 
@@ -68,8 +86,7 @@ export async function GET(request: NextRequest) {
       path: "/",
       maxAge: APP_SESSION_TTL_SECONDS,
     });
-    clearOidcCookies(response);
-    return response;
+    return finish(response);
   } catch (error) {
     if (error instanceof AuthNeiEmailVerificationRequired) {
       const response = authFailure("auth-verification-required");
@@ -78,7 +95,7 @@ export async function GET(request: NextRequest) {
           verifyEmailCookieName,
           JSON.stringify({
             loginHint: error.loginHint,
-            next,
+            next: restartDestination,
           }),
           {
             httpOnly: true,

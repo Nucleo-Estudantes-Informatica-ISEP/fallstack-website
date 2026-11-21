@@ -6,6 +6,7 @@ import {
   AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
   oidcCookieNames,
+  oidcRestartCookieName,
   verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
 
@@ -35,6 +36,7 @@ async function callbackResponse(query: string, pending = true) {
     [oidcCookieNames.state, "current-request"],
     [oidcCookieNames.nonce, "fixture-nonce"],
     [oidcCookieNames.verifier, "fixture-verifier"],
+    [oidcCookieNames.next, encodeURIComponent("/signup?lang=en")],
   ];
   return GET(
     new NextRequest(
@@ -86,4 +88,38 @@ test("asks for verification only when the provider confirmed the matching email 
     httpOnly: true,
     sameSite: "lax",
   });
+  expect(
+    JSON.parse(response.cookies.get(verifyEmailCookieName)!.value).next
+  ).toBe("/signup?lang=en");
 });
+
+test.each([false, true])(
+  "recovers only the interrupted attempt’s destination when another attempt is pending: %s",
+  async (anotherAttemptIsPending) => {
+    const state = "a".repeat(43);
+    const destination = "/event/en?section=schedule";
+    const restartCookie = oidcRestartCookieName(state)!;
+    const items = [`${restartCookie}=${encodeURIComponent(destination)}`];
+    if (anotherAttemptIsPending) {
+      items.push(
+        `${oidcCookieNames.state}=new-attempt`,
+        `${oidcCookieNames.next}=%2Fdashboard`
+      );
+    }
+    const request = new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture-code`,
+      { headers: { cookie: items.join("; ") } }
+    );
+
+    const response = await GET(request);
+    const target = new URL(response.headers.get("location")!);
+
+    expect(target.pathname).toBe("/login");
+    expect(target.searchParams.get("error")).toBe("auth-expired");
+    expect(target.searchParams.get("next")).toBe(destination);
+    expect(response.cookies.get(oidcCookieNames.state)).toBeUndefined();
+    expect(response.cookies.get(oidcCookieNames.next)).toBeUndefined();
+    expect(response.cookies.get(restartCookie)?.maxAge).toBe(0);
+    expect(completeAuthorizationCode).not.toHaveBeenCalled();
+  }
+);
