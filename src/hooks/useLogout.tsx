@@ -15,21 +15,17 @@ export function useLogout() {
   const [isConfirmVisible, setIsConfirmVisible] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const confirmLogout = async () => {
+  const confirmLogout = async (scope: "app" | "shared") => {
     setIsLoggingOut(true);
     try {
       const { logoutUrl } = await httpClient.post<{ logoutUrl: string }>(
-        "/auth/logout"
+        `/auth/logout?scope=${scope}`
       );
       session.clear();
       setIsConfirmVisible(false);
       window.location.assign(logoutUrl);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : t("Não foi possível terminar a sessão.")
-      );
+    } catch {
+      toast.error(t("Não foi possível terminar a sessão."));
       setIsLoggingOut(false);
     }
   };
@@ -41,10 +37,14 @@ export function useLogout() {
         isVisible={isConfirmVisible}
         setIsVisible={setIsConfirmVisible}
         title="Terminar sessão"
-        message="Queres mesmo sair?"
-        confirmLabel="Sair"
+        message="Outras aplicações abertas podem manter a sessão iniciada."
+        confirmLabel="Terminar sessão só nesta aplicação"
         cancelLabel="Cancelar"
-        onConfirm={confirmLogout}
+        onConfirm={() => confirmLogout("app")}
+        alternativeAction={{
+          label: "Terminar sessão nesta aplicação e no AuthNEI",
+          onClick: () => confirmLogout("shared"),
+        }}
         isConfirming={isLoggingOut}
       />
     ),

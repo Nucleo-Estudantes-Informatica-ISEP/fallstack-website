@@ -405,7 +405,11 @@ export const uiEnglish: Record<string, string> = {
   "Tens um código de empresa? Regista-te como colaborador":
     "Have a company code? Register as an employee",
   "Terminar sessão": "Sign out",
-  "Queres mesmo sair?": "Do you want to sign out?",
+  "Terminar sessão só nesta aplicação": "Sign out of this app",
+  "Terminar sessão nesta aplicação e no AuthNEI":
+    "Sign out of this app and AuthNEI",
+  "Outras aplicações abertas podem manter a sessão iniciada.":
+    "Other open apps may keep their own sessions.",
   Sair: "Sign out",
   "Página inicial": "Home",
   "Sem permissão": "Permission denied",
