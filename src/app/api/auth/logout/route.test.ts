@@ -2,7 +2,6 @@ import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import config from "@/config";
-import { serverEnv } from "@/config/env.server";
 import {
   getLogoutUrl,
   verifyAppSession,
@@ -21,14 +20,15 @@ vi.mock("@/application/services/zitadelAuthService", () => ({
   verifyAppSession: vi.fn(),
 }));
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => vi.resetAllMocks());
 
-function post(cookieValue?: string, scope?: string) {
+function post(cookieValue?: string, scope?: string, origin?: string) {
   const headers = new Headers();
   if (cookieValue) {
     headers.set("origin", new URL(process.env.AUTH_REDIRECT_URI!).origin);
     headers.set("cookie", `${config.cookies.auth.name}=${cookieValue}`);
   }
+  if (origin) headers.set("origin", origin);
   const url = new URL("http://localhost/api/auth/logout");
   if (scope) url.searchParams.set("scope", scope);
   const request = new NextRequest(url, {
@@ -88,14 +88,21 @@ test("unknown sign-out scopes leave the session untouched", async () => {
   expect(getLogoutUrl).not.toHaveBeenCalled();
 });
 
-test("shared logout leaves the cookie available for retry if AuthNEI is unavailable", async () => {
-  vi.mocked(getLogoutUrl).mockResolvedValue(
-    serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI
-  );
-  const response = await post(undefined, "shared");
+test("distinguishes older shared-logout sessions without an ID token", async () => {
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "legacy-user",
+    email: "legacy@example.test",
+    admin: false,
+    employee: false,
+  });
+  const response = await post("legacy-session", "shared");
 
-  expect(response.status).toBe(503);
+  expect(response.status).toBe(409);
+  expect(await response.json()).toMatchObject({
+    code: "SHARED_SIGN_OUT_REAUTH_REQUIRED",
+  });
   expect(response.headers.has("set-cookie")).toBe(false);
+  expect(getLogoutUrl).not.toHaveBeenCalled();
 });
 
 test("handles logout when no session cookie is present", async () => {
@@ -126,10 +133,29 @@ test("clears the local cookie when the provider is unavailable", async () => {
   expect(response.headers.get("set-cookie")).toMatch(/Max-Age=0|expires=/i);
 });
 
-
 test("shared logout keeps the cookie when issuer discovery throws", async () => {
-  vi.mocked(getLogoutUrl).mockRejectedValueOnce(new Error("provider unavailable"));
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "user",
+    email: "user@example.test",
+    idToken: "fixture-id-token",
+    admin: false,
+    employee: false,
+  });
+  vi.mocked(getLogoutUrl).mockRejectedValueOnce(
+    new Error("provider unavailable")
+  );
   const response = await post("signed-session", "shared");
   expect(response.status).toBe(503);
   expect(response.headers.has("set-cookie")).toBe(false);
+});
+
+test("rejects foreign-origin logout requests without clearing the session", async () => {
+  const response = await post(
+    "signed-session",
+    "app",
+    "https://foreign.example.test"
+  );
+  expect(response.status).toBe(403);
+  expect(response.headers.has("set-cookie")).toBe(false);
+  expect(getLogoutUrl).not.toHaveBeenCalled();
 });

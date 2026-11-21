@@ -548,6 +548,8 @@ export const uiEnglish: Record<string, string> = {
   "Estes termos não excluem direitos legalmente reconhecidos nem limitam responsabilidades que a lei não permita excluir. As alterações são publicadas com uma nova versão e data; não alteram retroativamente a aceitação registada. Para dúvidas ou reclamações, contacta a organização.":
     "These terms do not exclude legally recognised rights or limit liabilities that the law does not permit to be excluded. Changes are published with a new version and date; they do not retroactively alter recorded acceptance. For questions or complaints, contact the organisers.",
   "Não foi possível terminar a sessão.": "Could not sign out.",
+  "Termina sessão só nesta aplicação e volta a iniciar sessão para poderes terminar as duas sessões.":
+    "Sign out of this app and sign in again to enable shared sign-out.",
   "Não foi possível atualizar o estado da ação.":
     "Could not update the action status.",
   "Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a garantir o registo das interações e a participação nos giveaways promovidos pelo NEI.":

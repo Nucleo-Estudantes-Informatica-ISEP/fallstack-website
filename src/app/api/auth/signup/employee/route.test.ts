@@ -119,3 +119,10 @@ test("employee signup propagates only verified membership, expiry and sign-out h
   );
   expect(response.headers.get("set-cookie")).toContain("signed-session");
 });
+
+test("rejects employee session rotation when the signed identity is missing", async () => {
+  const response = await post(validEmployee);
+  expect(response.status).toBe(401);
+  expect(response.headers.has("set-cookie")).toBe(false);
+  expect(signUpEmployee).not.toHaveBeenCalled();
+});

@@ -25,7 +25,9 @@ export const POST = defineHandler({
 
     const currentToken = req.cookies.get(config.cookies.auth.name)?.value;
     const claims = currentToken ? verifyAppSession(currentToken) : null;
-    const identity = claims?.sub === session.zitadelUserId ? claims : null;
+    if (!claims || claims.sub !== session.zitadelUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const token = await signUpEmployee({
       userId: session.id,
       zitadelUserId: session.zitadelUserId,
@@ -33,8 +35,8 @@ export const POST = defineHandler({
       ...body,
       isNeiMember: session.neiMember,
       attendanceExpiresAt: session.attendanceExpiresAt,
-      idToken: identity?.idToken,
-      loginName: identity?.loginName,
+      idToken: claims.idToken,
+      loginName: claims.loginName,
     });
 
     const response = NextResponse.json(

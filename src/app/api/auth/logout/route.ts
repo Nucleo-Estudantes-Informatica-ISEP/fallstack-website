@@ -12,6 +12,13 @@ import {
 export const POST = defineHandler({
   auth: "none",
   handler: async ({ req }) => {
+    const origin = req.headers.get("origin");
+    if (
+      origin !== null &&
+      origin !== new URL(serverEnv.AUTH_REDIRECT_URI).origin
+    ) {
+      throw new HttpError("Forbidden", 403);
+    }
     const scope = req.nextUrl.searchParams.get("scope");
     if (scope !== null && scope !== "app" && scope !== "shared") {
       throw new HttpError("Unknown sign-out scope", 400);
@@ -21,6 +28,15 @@ export const POST = defineHandler({
     if (scope !== "app") {
       const token = req.cookies.get(config.cookies.auth.name)?.value;
       const claims = token ? verifyAppSession(token) : null;
+      if (scope === "shared" && !claims?.idToken) {
+        throw new HttpError(
+          "AuthNEI sign-out requires a refreshed session",
+          409,
+          {
+            code: "SHARED_SIGN_OUT_REAUTH_REQUIRED",
+          }
+        );
+      }
       logoutUrl = await getLogoutUrl({
         idTokenHint: claims?.idToken,
         loginName: claims?.loginName,
