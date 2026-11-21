@@ -42,7 +42,7 @@ test("restores another visit for its owner and removes the draft after completio
     interests: [],
     year: null,
     linkedin: null,
-    password: "must-not-be-saved",
+    password: "unused-fixture-value",
     avatar: "blob:one",
     cv: {
       name: "cv.pdf",
