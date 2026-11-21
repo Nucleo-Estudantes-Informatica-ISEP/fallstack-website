@@ -384,6 +384,15 @@ export const uiEnglish: Record<string, string> = {
   "Iniciar sessão": "Sign in",
   "Registo de Colaborador": "Employee registration",
   "Continuar com AuthNEI": "Continue with AuthNEI",
+  "O início de sessão foi interrompido. Podes retomá-lo quando quiseres.":
+    "Sign-in was interrupted. You can resume it when you’re ready.",
+  "Retomar início de sessão": "Resume sign-in",
+  "Este pedido de início de sessão já não está ativo. Inicia um novo pedido.":
+    "This sign-in request is no longer active. Start a new request.",
+  "Reiniciar início de sessão": "Restart sign-in",
+  "Confirma o teu endereço de email no AuthNEI antes de voltares a iniciar sessão.":
+    "Verify your email address in AuthNEI before signing in again.",
+  "Verificar email": "Verify email",
   "Não foi possível concluir o início de sessão com o AuthNEI. Tenta novamente.":
     "Could not complete AuthNEI sign-in. Try again.",
   "As inscrições de colaboradores estão encerradas.":

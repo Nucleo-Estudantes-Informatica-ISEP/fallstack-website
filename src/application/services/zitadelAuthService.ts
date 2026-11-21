@@ -62,6 +62,12 @@ export interface ZitadelIdentity {
   idToken?: string;
 }
 
+export class AuthNeiEmailVerificationRequired extends HttpError {
+  constructor() {
+    super("AuthNEI email verification required", 403);
+  }
+}
+
 export interface AppSessionClaims extends jwt.JwtPayload {
   attendanceExpiresAt?: number;
   sub: string;
@@ -319,6 +325,13 @@ export async function completeAuthorizationCode(input: {
   const name = typeof claims.name === "string" ? claims.name : undefined;
   const emailVerified = claims.email_verified === true;
 
+  if (
+    sub &&
+    sub === idTokenClaims.sub &&
+    email &&
+    claims.email_verified === false
+  )
+    throw new AuthNeiEmailVerificationRequired();
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 

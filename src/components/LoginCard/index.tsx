@@ -9,21 +9,32 @@ import { useUiText } from "@/contexts/UiLanguageContext";
 import PrimaryLinkButton from "@/components/ui/PrimaryLinkButton";
 import AuthNeiButton from "@/components/AuthNeiButton";
 import EmployeeSignUpForm from "@/components/EmployeeSignUpForm";
+import {
+  signInFailures,
+  type SignInFailure,
+} from "@/domain/auth/signInFailure";
 
 interface LoginCardProps {
   initialView?: "employee";
   offseason?: boolean;
-  authError?: boolean;
+  signInFailure?: SignInFailure;
+  verifyEmailUrl?: string;
   inactive?: boolean;
 }
 
 const LoginCard: React.FC<LoginCardProps> = ({
   initialView,
   offseason = false,
-  authError = false,
+  signInFailure,
+  verifyEmailUrl,
   inactive = false,
 }) => {
   const t = useUiText();
+  const failure = signInFailure ? signInFailures[signInFailure] : undefined;
+  const actionHref =
+    signInFailure === "auth-verification-required"
+      ? verifyEmailUrl
+      : "/api/auth/login";
 
   const { user, fetchSession } = useSession();
   const router = useRouter();
@@ -89,15 +100,21 @@ const LoginCard: React.FC<LoginCardProps> = ({
           : t("Iniciar Sessão")}
       </h1>
 
-      {authError && (
-        <p
+      {failure && (
+        <div
           role="alert"
           className="mb-6 rounded-md border border-red-500/40 bg-red-950/60 px-4 py-3 text-sm text-red-100"
         >
-          {t(
-            "Não foi possível concluir o início de sessão com o AuthNEI. Tenta novamente."
+          <p>{t(failure.message)}</p>
+          {"action" in failure && actionHref && (
+            <a
+              href={actionHref}
+              className="ui-focus mt-2 inline-block underline"
+            >
+              {t(failure.action)}
+            </a>
           )}
-        </p>
+        </div>
       )}
 
       {registeringEmployee ? (
@@ -160,7 +177,9 @@ const LoginCard: React.FC<LoginCardProps> = ({
               "Estudantes, colaboradores e administradores usam a mesma conta AuthNEI. As permissões são atribuídas automaticamente pelo NEI e pela empresa associada."
             )}
           </p>
-          <AuthNeiButton />
+          {(!failure || !("action" in failure) || !actionHref) && (
+            <AuthNeiButton />
+          )}
           <p className="mt-3 text-sm text-gray-300">
             {t(
               "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI."

@@ -192,12 +192,40 @@ test("offseason employee closure allows returning to the login page", () => {
 });
 
 test("shows an error alert when auth callback fails", () => {
-  render(<LoginCard authError />);
+  render(<LoginCard signInFailure="auth-code-error" />);
 
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Não foi possível concluir o início de sessão com o AuthNEI"
   );
 });
+
+test.each([
+  ["auth-cancelled", "Retomar início de sessão", "/api/auth/login"],
+  ["auth-expired", "Reiniciar início de sessão", "/api/auth/login"],
+  [
+    "auth-verification-required",
+    "Verificar email",
+    "https://auth.example.test/ui/console/users/me",
+  ],
+] as const)(
+  "offers the appropriate action for %s",
+  (signInFailure, action, href) => {
+    render(
+      <LoginCard
+        signInFailure={signInFailure}
+        verifyEmailUrl="https://auth.example.test/ui/console/users/me"
+      />
+    );
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: action })).toHaveAttribute(
+      "href",
+      href
+    );
+    expect(
+      screen.queryByRole("button", { name: "Continuar com AuthNEI" })
+    ).toBeNull();
+  }
+);
 
 test("existing employees are routed to the dashboard instead of the company-code form", () => {
   sessionState.user = {

@@ -6,10 +6,12 @@ import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { reportError } from "@/lib/logger";
 import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
+  AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
   oidcCookieNames,
   signAppSession,
 } from "@/application/services/zitadelAuthService";
+import type { SignInFailure } from "@/domain/auth/signInFailure";
 
 function appUrl(path: string) {
   return new URL(path, serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
@@ -20,28 +22,31 @@ function clearOidcCookies(response: NextResponse) {
     response.cookies.delete(name);
 }
 
+function authFailure(failure: SignInFailure) {
+  const response = NextResponse.redirect(appUrl(`/login?error=${failure}`));
+  clearOidcCookies(response);
+  return response;
+}
+
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
+  const errorCode = request.nextUrl.searchParams.get("error");
   const expectedState = request.cookies.get(oidcCookieNames.state)?.value;
   const expectedNonce = request.cookies.get(oidcCookieNames.nonce)?.value;
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
   const next = request.cookies.get(oidcCookieNames.next)?.value ?? "/";
 
   if (
-    !code ||
-    !state ||
-    !expectedState ||
-    state !== expectedState ||
-    !expectedNonce ||
-    !verifier
-  ) {
-    const response = NextResponse.redirect(
-      appUrl("/login?error=auth-code-error")
-    );
-    clearOidcCookies(response);
-    return response;
-  }
+    state &&
+    (code || errorCode) &&
+    (!expectedState || state !== expectedState || !expectedNonce || !verifier)
+  )
+    return authFailure("auth-expired");
+  if (!state || state !== expectedState) return authFailure("auth-code-error");
+  if (errorCode === "access_denied") return authFailure("auth-cancelled");
+  if (!code || errorCode || !expectedNonce || !verifier)
+    return authFailure("auth-code-error");
 
   try {
     const identity = await completeAuthorizationCode({
@@ -65,15 +70,13 @@ export async function GET(request: NextRequest) {
     clearOidcCookies(response);
     return response;
   } catch (error) {
+    if (error instanceof AuthNeiEmailVerificationRequired)
+      return authFailure("auth-verification-required");
     reportError(
       error,
       { operation: "zitadel_oidc_callback" },
       "Failed to complete direct AuthNEI sign-in"
     );
-    const response = NextResponse.redirect(
-      appUrl("/login?error=auth-code-error")
-    );
-    clearOidcCookies(response);
-    return response;
+    return authFailure("auth-code-error");
   }
 }
