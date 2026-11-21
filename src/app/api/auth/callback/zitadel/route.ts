@@ -4,7 +4,6 @@ import config from "@/config";
 import { serverEnv } from "@/config/env.server";
 import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { reportError } from "@/lib/logger";
-import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
 import { consumeOidcRestart } from "@/application/repositories/oidcRestartRepository";
 import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
@@ -15,6 +14,8 @@ import {
   signAppSession,
   verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
+import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 import type { SignInFailure } from "@/domain/auth/signInFailure";
 
 function appUrl(path: string) {
@@ -35,9 +36,10 @@ export async function GET(request: NextRequest) {
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
   const current = Boolean(state && state === expectedState);
   const recoveryCookie = oidcRestartCookieName(state);
-  const recoveryValue =
-    recoveryCookie && request.cookies.get(recoveryCookie)?.value;
-  const token = recoveryValue?.match(/^stored:([A-Za-z0-9_-]{43})$/u)?.[1];
+  const recoveryValue = recoveryCookie
+    ? request.cookies.get(recoveryCookie)?.value
+    : undefined;
+  const token = parseOidcRestartMarker(recoveryValue)?.token;
   const storedDestination = token ? await consumeOidcRestart(token) : undefined;
   const appDestination = sanitizeNext(
     current

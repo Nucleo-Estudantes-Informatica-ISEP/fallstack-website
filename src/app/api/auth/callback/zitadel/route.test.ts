@@ -153,7 +153,7 @@ test("recovers an oversized interrupted destination from shared storage", async 
       `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
       {
         headers: {
-          cookie: `${oidcRestartCookieName(state)}=stored:${"z".repeat(43)}`,
+          cookie: `${oidcRestartCookieName(state)}=stored:1795219200000:${"z".repeat(43)}`,
         },
       }
     )

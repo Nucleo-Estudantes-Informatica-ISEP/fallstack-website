@@ -10,6 +10,7 @@ import {
   oidcRestartCookiePrefix,
   verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
+import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
 
 export async function GET(request: NextRequest) {
   let next = request.nextUrl.searchParams.get("next");
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest) {
     cookieOptions
   );
   const recoveryCookie = oidcRestartCookieName(auth.state);
-  if (recoveryCookie && auth.next !== "/") {
+  if (recoveryCookie && token) {
     const recoveryOptions = {
       ...cookieOptions,
       path: "/api/auth",
@@ -65,13 +66,18 @@ export async function GET(request: NextRequest) {
     };
     const existingRecoveryCookies = request.cookies
       .getAll()
-      .filter(({ name }) => name.startsWith(oidcRestartCookiePrefix));
+      .filter(({ name }) => name.startsWith(oidcRestartCookiePrefix))
+      .map(({ name, value }) => ({
+        name,
+        issuedAt: parseOidcRestartMarker(value)?.issuedAt ?? 0,
+      }))
+      .sort((a, b) => a.issuedAt - b.issuedAt);
     for (const { name } of existingRecoveryCookies.slice(0, -3)) {
       response.cookies.set(name, "", { ...recoveryOptions, maxAge: 0 });
     }
     response.cookies.set(
       recoveryCookie,
-      token ? `stored:${token}` : auth.next,
+      `stored:${Date.now()}:${token}`,
       recoveryOptions
     );
   }

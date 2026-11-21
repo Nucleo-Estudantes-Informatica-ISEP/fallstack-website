@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { NextRequest } from "next/server";
-import { expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
 import { saveOidcRestart } from "@/application/repositories/oidcRestartRepository";
+import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
 
 import { GET } from "./route";
 
@@ -33,13 +34,21 @@ vi.mock("@/application/services/zitadelAuthService", () => ({
   verifyEmailCookieName: "verify-email",
 }));
 
+beforeEach(() => vi.clearAllMocks());
+
 test("retains a long destination for an interrupted authorization", async () => {
   const response = await GET(
     new NextRequest("https://fallstack.example.test/api/auth/login")
   );
-  const marker = response.cookies.get(`restart-${auth.state}`)?.value;
-  expect(marker).toMatch(/^stored:[A-Za-z0-9_-]{43}$/u);
-  expect(saveOidcRestart).toHaveBeenCalledWith(marker!.slice(7), auth.next);
+  const cookie = response.cookies.get(`restart-${auth.state}`);
+  expect(cookie).toMatchObject({
+    path: "/api/auth",
+    maxAge: 1800,
+    httpOnly: true,
+  });
+  const marker = parseOidcRestartMarker(cookie?.value);
+  expect(marker?.issuedAt).toBeGreaterThan(0);
+  expect(saveOidcRestart).toHaveBeenCalledWith(marker?.token, auth.next);
 });
 
 test("stores oversized destinations without putting them in cookies", async () => {
@@ -50,9 +59,45 @@ test("stores oversized destinations without putting them in cookies", async () =
       new NextRequest("https://fallstack.example.test/api/auth/login")
     );
     const marker = response.cookies.get(`restart-${auth.state}`)?.value;
-    expect(marker).toMatch(/^stored:[A-Za-z0-9_-]{43}$/u);
-    expect(saveOidcRestart).toHaveBeenCalledWith(marker!.slice(7), auth.next);
+    expect(saveOidcRestart).toHaveBeenCalledWith(
+      parseOidcRestartMarker(marker)?.token,
+      auth.next
+    );
     expect(response.cookies.get("next")?.value).toBe("/");
+  } finally {
+    auth.next = previous;
+  }
+});
+
+test("evicts an older restart marker even when request cookies arrive out of order", async () => {
+  const base = Date.parse("2026-11-21T00:00:00Z");
+  const cookies = [4, 1, 3, 2].map(
+    (offset) =>
+      `restart-state-${offset}=stored:${base + offset}:${"z".repeat(43)}`
+  );
+  const response = await GET(
+    new NextRequest("https://fallstack.example.test/api/auth/login", {
+      headers: { cookie: cookies.join("; ") },
+    })
+  );
+  expect(response.cookies.get("restart-state-1")).toMatchObject({
+    path: "/api/auth",
+    maxAge: 0,
+  });
+  for (const offset of [2, 3, 4]) {
+    expect(response.cookies.get(`restart-state-${offset}`)).toBeUndefined();
+  }
+});
+
+test("does not store the default destination", async () => {
+  const previous = auth.next;
+  auth.next = "/";
+  try {
+    const response = await GET(
+      new NextRequest("https://fallstack.example.test/api/auth/login")
+    );
+    expect(saveOidcRestart).not.toHaveBeenCalled();
+    expect(response.cookies.get(`restart-${auth.state}`)).toBeUndefined();
   } finally {
     auth.next = previous;
   }

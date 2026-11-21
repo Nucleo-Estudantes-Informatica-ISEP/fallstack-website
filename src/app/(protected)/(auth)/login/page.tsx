@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { serverEnv } from "@/config/env.server";
 import LoginCard from "@/components/LoginCard";
-import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 import getServerSession, {
   isCurrentAccountInactive,
 } from "@/application/services/sessionService";

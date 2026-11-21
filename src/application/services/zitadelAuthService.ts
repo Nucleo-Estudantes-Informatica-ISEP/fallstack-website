@@ -7,7 +7,7 @@ import jwt, { type Algorithm } from "jsonwebtoken";
 
 import { HttpError } from "@/types/HttpError";
 import { serverEnv } from "@/config/env.server";
-import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
