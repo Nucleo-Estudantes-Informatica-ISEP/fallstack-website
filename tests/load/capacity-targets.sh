@@ -92,7 +92,7 @@ for cell in "${cell_list[@]}"; do
     "${CAPACITY_COPIES}c-"failure-boundary)
       validate_sessions 1
       ;;
-    "${CAPACITY_COPIES}c-"failure-qr) : "${ACTION_ID:?Set ACTION_ID}" ;;
+    "${CAPACITY_COPIES}c-"failure-qr) : "${ACTION_ID:?Set ACTION_ID}" "${ACTION_PRESENTER_COOKIE:?Set ACTION_PRESENTER_COOKIE}" ;;
     *) echo "Unknown cell or mismatched CAPACITY_COPIES: $cell" >&2; exit 2 ;;
   esac
   [[ ! -e "$result_dir/$cell.json" ]] || {

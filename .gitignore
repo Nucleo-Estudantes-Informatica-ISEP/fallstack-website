@@ -48,6 +48,8 @@ next-env.d.ts
 /public/fallback-*.js.map
 /public/workbox-*.js
 /public/workbox-*.js.map
+/public/worker-*.js
+/public/worker-*.js.map
 certificates
 
 prisma/seed.prod.ts

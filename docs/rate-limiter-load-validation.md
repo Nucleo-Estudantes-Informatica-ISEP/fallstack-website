@@ -49,7 +49,7 @@ k6 run tests/load/upload-qr-interactions.js
 
 For three minutes each VU uploads one CV and avatar and obtains an employee
 preview token, then waits at least 15 seconds. This exercises the real
-`POST /api/students/token`; existing `K6_SCENARIO=qr` exercises public action-QR
+`POST /api/students/token`; existing `K6_SCENARIO=qr` exercises admin action-QR
 generation instead. Valid preview traffic must remain successful and uploads
 must return 201, without 429 or limiter 503 under normal conditions. Clean up
 test accounts/uploads using supported application/storage procedures.

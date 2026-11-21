@@ -1,16 +1,24 @@
 import { z } from "zod";
 
+import { linkedinOrEmptySchema } from "./linkedinSchema";
+
+const employeeLinkedinSchema = z
+  .string()
+  .trim()
+  .max(200)
+  .pipe(linkedinOrEmptySchema);
+
 export const createAdminEmployeeSchema = z.object({
   email: z.email(),
   name: z.string().min(1).max(100),
   companyId: z.uuid(),
-  linkedin: z.string().max(200).optional(),
+  linkedin: employeeLinkedinSchema.optional(),
 });
 
 export const updateAdminEmployeeSchema = z
   .object({
     name: z.string().min(1).max(100),
-    linkedin: z.string().max(200).nullable(),
+    linkedin: employeeLinkedinSchema.nullable(),
     companyId: z.uuid(),
     active: z.boolean(),
   })
