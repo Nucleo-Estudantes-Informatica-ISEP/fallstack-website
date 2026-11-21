@@ -10,6 +10,7 @@ import {
   completeAuthorizationCode,
   oidcCookieNames,
   signAppSession,
+  verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
 import type { SignInFailure } from "@/domain/auth/signInFailure";
 
@@ -70,8 +71,26 @@ export async function GET(request: NextRequest) {
     clearOidcCookies(response);
     return response;
   } catch (error) {
-    if (error instanceof AuthNeiEmailVerificationRequired)
-      return authFailure("auth-verification-required");
+    if (error instanceof AuthNeiEmailVerificationRequired) {
+      const response = authFailure("auth-verification-required");
+      if (error.loginHint && error.loginHint.length <= 320) {
+        response.cookies.set(
+          verifyEmailCookieName,
+          JSON.stringify({
+            loginHint: error.loginHint,
+            next,
+          }),
+          {
+            httpOnly: true,
+            secure: serverEnv.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 300,
+          }
+        );
+      }
+      return response;
+    }
     reportError(
       error,
       { operation: "zitadel_oidc_callback" },

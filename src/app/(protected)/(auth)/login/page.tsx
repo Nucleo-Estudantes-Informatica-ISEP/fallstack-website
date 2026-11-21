@@ -26,9 +26,7 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
       initialView={modal === "employee" ? "employee" : undefined}
       offseason={serverEnv.EVENT_MODE === "offseason"}
       signInFailure={parseSignInFailure(error)}
-      verifyEmailUrl={
-        new URL("/ui/console/users/me", serverEnv.AUTH_ISSUER_URL).href
-      }
+      verifyEmailUrl="/api/auth/login?verifyEmail=1"
       inactive={await isCurrentAccountInactive()}
     />
   );
