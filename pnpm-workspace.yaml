@@ -16,6 +16,7 @@ overrides:
   brace-expansion@>=4.0.0 <5.0.12: 5.0.12
   # Prisma config dependency.
   deepmerge-ts@<8.0.0: 8.0.0
+  effect@<3.22.1: 3.22.1
   # Sentry/webpack schema-utils dependency.
   fast-uri@>=3.0.0 <3.1.9: 3.1.9
   js-yaml@>=4.0.0 <4.3.1: 4.3.1
