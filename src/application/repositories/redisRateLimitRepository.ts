@@ -23,6 +23,25 @@ redis.call('INCR', KEYS[1])
 return {1, 0}
 `;
 
+// A reservation counts until it expires or that exact attempt is released.
+const reservationScript = `
+local id = ARGV[3]
+if ARGV[4] == '1' then
+  redis.call('ZREM', KEYS[1], id)
+  return {1, 0}
+end
+local time = redis.call('TIME')
+local now = time[1] * 1000 + math.floor(time[2] / 1000)
+redis.call('ZREMRANGEBYSCORE', KEYS[1], '-inf', now)
+if redis.call('ZCARD', KEYS[1]) >= tonumber(ARGV[2]) then
+  local oldest = redis.call('ZRANGE', KEYS[1], 0, 0, 'WITHSCORES')
+  return {0, tonumber(oldest[2]) - now}
+end
+redis.call('ZADD', KEYS[1], now + tonumber(ARGV[1]), id)
+redis.call('PEXPIRE', KEYS[1], ARGV[1])
+return {1, 0}
+`;
+
 export const redisLimiterTiming = {
   // A busy Node event loop can delay the timer without Redis being unhealthy.
   // Keep admission bounded, but do not turn one scheduling delay into a
@@ -126,9 +145,17 @@ export function createRedisRateLimitStore(
             if (current !== client || !current.isReady)
               throw new LimiterStoreError("redis");
             commandSent = true;
-            return current.eval(script, {
-              keys: [`${config.prefix}ratelimit:v1:${key}`],
-              arguments: [String(policy.windowMs), String(policy.max)],
+            const reservation = policy.reservation;
+            return current.eval(reservation ? reservationScript : script, {
+              keys: [
+                `${config.prefix}ratelimit:v1:${key}${reservation ? ":reservations" : ""}`,
+              ],
+              arguments: [
+                String(policy.windowMs),
+                String(policy.max),
+                reservation?.id ?? "",
+                reservation?.release ? "1" : "0",
+              ],
             });
           })(),
           new Promise<never>((_, reject) => {

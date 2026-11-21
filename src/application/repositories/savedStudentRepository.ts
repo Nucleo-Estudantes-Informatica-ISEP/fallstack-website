@@ -143,9 +143,13 @@ export const findCompanyHistoryWithInterests = (companyId: string) =>
       }))
     );
 
-export const findCompanySavedStudentsWithCv = (companyId: string) =>
+export const findCompanySavedStudentsWithCv = (
+  companyId: string,
+  take: number
+) =>
   prisma.savedStudent.findMany({
     where: { companyId },
+    take,
     include: {
       student: { select: { id: true, name: true, code: true, cv: true } },
     },

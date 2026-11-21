@@ -4,6 +4,7 @@ import { appendFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
 
+import { branding } from "../../src/edition/branding";
 import { assertStagingTarget } from "../stagingTarget";
 
 const artifacts = "test-results/readiness";
@@ -82,6 +83,7 @@ export async function runReadiness() {
 
   try {
     const config = readinessConfig(process.env);
+    let presenterCookie = "";
     for (const key of [
       "E2E_STUDENT_STORAGE_STATE",
       "E2E_EMPLOYEE_STORAGE_STATE",
@@ -96,10 +98,21 @@ export async function runReadiness() {
       }
       if (!Array.isArray(state.cookies) || !Array.isArray(state.origins))
         throw new Error(`Invalid Playwright storage state: ${key}.`);
-      for (const cookie of state.cookies)
-        if (typeof cookie.value === "string" && cookie.value)
-          secrets.push(cookie.value);
+      for (const cookie of state.cookies) {
+        if (typeof cookie.value !== "string" || !cookie.value) continue;
+        secrets.push(cookie.value);
+        if (
+          key === "E2E_ADMIN_STORAGE_STATE" &&
+          cookie.name === branding.storage.authCookie &&
+          cookie.domain === new URL(config.E2E_BASE_URL).hostname
+        )
+          presenterCookie = `${cookie.name}=${cookie.value}`;
+      }
     }
+    if (!presenterCookie)
+      throw new Error(
+        "Admin storage state must include the staging app session."
+      );
     for (const cookie of (config.STUDENT_COOKIES ?? "").split(/[;,]/)) {
       const value = cookie.slice(cookie.indexOf("=") + 1).trim();
       if (value) secrets.push(value);
@@ -173,6 +186,8 @@ export async function runReadiness() {
           ...loadEnv,
           ...config,
           K6_SCENARIO: scenario,
+          ACTION_PRESENTER_COOKIE:
+            scenario === "qr" ? presenterCookie : undefined,
           K6_PROFILE:
             boundary || config.READINESS_LOAD === "yes" ? "peak" : "smoke",
           // Fixed representative budget; ignore inherited stress overrides.

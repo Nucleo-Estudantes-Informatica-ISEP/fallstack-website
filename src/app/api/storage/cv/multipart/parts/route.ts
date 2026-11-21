@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { defineHandler } from "@/lib/http/server";
+import { defineHandler, readJsonBody } from "@/lib/http/server";
 import { rateLimitResponse } from "@/lib/rateLimit";
 import { signCvUploadPart } from "@/application/services/directCvUploadService";
 import { checkRateLimit } from "@/application/services/rateLimitService";
@@ -18,9 +18,7 @@ export const POST = defineHandler({
       })
     );
     if (blocked) return blocked;
-    const body = cvUploadPartSchema.parse(
-      await req.json().catch(() => undefined)
-    );
+    const body = cvUploadPartSchema.parse(await readJsonBody(req));
     return NextResponse.json(
       await signCvUploadPart(
         session!.id,

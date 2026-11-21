@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { httpClient } from "@/lib/http/client";
-import { getStudentPreviewToken } from "@/client/api/studentToken";
+import { getStudentPreview } from "@/client/api/studentToken";
 
 import ScanTab from ".";
 
@@ -17,7 +17,7 @@ vi.mock("@/lib/http/client", () => ({
   HttpClientError: class extends Error {},
 }));
 vi.mock("@/client/api/studentToken", () => ({
-  getStudentPreviewToken: vi.fn(),
+  getStudentPreview: vi.fn(),
 }));
 vi.mock("@/components/QRCode/QRCodeScanner", () => ({
   default: ({ handleScan }: { handleScan: (s: string) => void }) => (
@@ -28,13 +28,16 @@ vi.mock("@/components/QRCode/QRCodeScanner", () => ({
 }));
 beforeEach(() => vi.clearAllMocks());
 test("validates the live QR before saving and opening its preview", async () => {
-  vi.mocked(getStudentPreviewToken).mockResolvedValue("student-preview");
+  vi.mocked(getStudentPreview).mockResolvedValue({
+    code: "AB12",
+    token: "student-preview",
+  });
   render(<ScanTab setHidden={vi.fn()} />);
   fireEvent.click(screen.getByText("Scan test"));
   await waitFor(() =>
-    expect(push).toHaveBeenCalledWith("/student/student-preview/preview")
+    expect(push).toHaveBeenCalledWith("/student/AB12/preview")
   );
-  expect(getStudentPreviewToken).toHaveBeenCalledWith({
+  expect(getStudentPreview).toHaveBeenCalledWith({
     token: "signed-attendance-token",
   });
   expect(httpClient.post).toHaveBeenCalledWith("/saved", {
@@ -42,7 +45,7 @@ test("validates the live QR before saving and opening its preview", async () => 
   });
 });
 test("rejects an invalid or expired pass without saving or opening a profile", async () => {
-  vi.mocked(getStudentPreviewToken).mockResolvedValue(null);
+  vi.mocked(getStudentPreview).mockResolvedValue(null);
   render(<ScanTab setHidden={vi.fn()} />);
   fireEvent.click(screen.getByText("Scan test"));
   await waitFor(() => expect(toast.error).toHaveBeenCalled());

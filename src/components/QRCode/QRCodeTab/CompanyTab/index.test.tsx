@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { httpClient, HttpClientError } from "@/lib/http/client";
-import { getStudentPreviewToken } from "@/client/api/studentToken";
+import { getStudentPreview } from "@/client/api/studentToken";
 
 import CompanyTab from ".";
 
@@ -21,7 +21,7 @@ vi.mock("@/components/QRCode/QRCodeTab/ScanTab", () => ({
   default: () => <div data-testid="scanner">Scanner</div>,
 }));
 vi.mock("@/client/api/studentToken", () => ({
-  getStudentPreviewToken: vi.fn(),
+  getStudentPreview: vi.fn(),
 }));
 vi.mock("@/lib/http/client", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/http/client")>()),
@@ -66,7 +66,10 @@ test.each([
   "typing %s saves the student and opens the preview",
   async (_label, typed, expectedCode) => {
     const setHidden = vi.fn();
-    vi.mocked(getStudentPreviewToken).mockResolvedValue("preview-token");
+    vi.mocked(getStudentPreview).mockResolvedValue({
+      code: "AB12",
+      token: "preview-token",
+    });
     vi.mocked(httpClient.post).mockResolvedValue(undefined);
     render(<CompanyTab setHidden={setHidden} />);
 
@@ -74,9 +77,9 @@ test.each([
     submit();
 
     await waitFor(() =>
-      expect(mocks.push).toHaveBeenCalledWith("/student/preview-token/preview")
+      expect(mocks.push).toHaveBeenCalledWith("/student/AB12/preview")
     );
-    expect(getStudentPreviewToken).toHaveBeenCalledWith(expectedCode);
+    expect(getStudentPreview).toHaveBeenCalledWith(expectedCode);
     expect(httpClient.post).toHaveBeenCalledWith("/saved", {
       token: "preview-token",
     });
@@ -85,16 +88,17 @@ test.each([
 );
 
 test("Enter submits like the button", async () => {
-  vi.mocked(getStudentPreviewToken).mockResolvedValue("preview-token");
+  vi.mocked(getStudentPreview).mockResolvedValue({
+    code: "AB12",
+    token: "preview-token",
+  });
   vi.mocked(httpClient.post).mockResolvedValue(undefined);
   render(<CompanyTab setHidden={vi.fn()} />);
 
   fireEvent.change(codeInput(), { target: { value: "AB12CD" } });
   fireEvent.keyUp(codeInput(), { key: "Enter" });
 
-  await waitFor(() =>
-    expect(getStudentPreviewToken).toHaveBeenCalledWith("AB12CD")
-  );
+  await waitFor(() => expect(getStudentPreview).toHaveBeenCalledWith("AB12CD"));
 });
 
 test.each(["AB1", "AB12C", "AB12CD7", "AB-2CD"])(
@@ -112,13 +116,13 @@ test.each(["AB1", "AB12C", "AB12CD7", "AB-2CD"])(
         "O código introduzido é inválido."
       )
     );
-    expect(getStudentPreviewToken).not.toHaveBeenCalled();
+    expect(getStudentPreview).not.toHaveBeenCalled();
     expect(httpClient.post).not.toHaveBeenCalled();
   }
 );
 
 test("an unknown code is reported as invalid", async () => {
-  vi.mocked(getStudentPreviewToken).mockResolvedValue(null);
+  vi.mocked(getStudentPreview).mockResolvedValue(null);
   render(<CompanyTab setHidden={vi.fn()} />);
 
   fireEvent.change(codeInput(), { target: { value: "ZZ99ZZ" } });
@@ -133,7 +137,10 @@ test("an unknown code is reported as invalid", async () => {
 });
 
 test("an already saved student shows a warning and stays on the tab", async () => {
-  vi.mocked(getStudentPreviewToken).mockResolvedValue("preview-token");
+  vi.mocked(getStudentPreview).mockResolvedValue({
+    code: "AB12",
+    token: "preview-token",
+  });
   vi.mocked(httpClient.post).mockRejectedValue(
     new HttpClientError("Conflict", 409)
   );
@@ -158,5 +165,5 @@ test("an empty field asks for a code", async () => {
   await waitFor(() =>
     expect(mocks.toast.error).toHaveBeenCalledWith("Sem código inserido.")
   );
-  expect(getStudentPreviewToken).not.toHaveBeenCalled();
+  expect(getStudentPreview).not.toHaveBeenCalled();
 });
