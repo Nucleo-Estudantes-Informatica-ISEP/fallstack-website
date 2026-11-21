@@ -85,6 +85,7 @@ test("offers a localized link directly to AuthNEI help while signed out", () => 
   expect(
     screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
   ).toHaveAttribute("href", authHelpUrl);
+  expect(screen.getByRole("link", { name: "Não consegues iniciar sessão?" })).toHaveAttribute("target", "_blank");
   expect(uiText("en", "Não consegues iniciar sessão?")).toBe("Can’t sign in?");
 });
 

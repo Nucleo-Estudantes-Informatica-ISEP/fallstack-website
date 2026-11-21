@@ -20,12 +20,13 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
   }
 
   const { modal, error } = await searchParams;
+  const returnTo = new URL("/login", serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
+  if (modal === "employee") returnTo.searchParams.set("modal", "employee");
+  const helpUrl = new URL("/ui/v2/login/help", serverEnv.AUTH_ISSUER_URL);
+  helpUrl.searchParams.set("returnTo", returnTo.toString());
   return (
     <LoginCard
-      authHelpUrl={new URL(
-        "/ui/v2/login/help",
-        serverEnv.AUTH_ISSUER_URL
-      ).toString()}
+      authHelpUrl={helpUrl.toString()}
       initialView={modal === "employee" ? "employee" : undefined}
       offseason={serverEnv.EVENT_MODE === "offseason"}
       authError={error === "auth-code-error"}

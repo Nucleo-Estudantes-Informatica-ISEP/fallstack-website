@@ -165,10 +165,16 @@ const LoginCard: React.FC<LoginCardProps> = ({
           <AuthNeiButton />
           <a
             href={authHelpUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-describedby="auth-help-hint"
             className="mt-3 inline-block text-sm text-gray-300 underline"
           >
             {t("Não consegues iniciar sessão?")}
           </a>
+          <p id="auth-help-hint" className="mt-1 text-xs text-gray-300">
+            {t("A ajuda abre noutro separador. Volta aqui para continuar.")}
+          </p>
 
           {!offseason && (
             <>
