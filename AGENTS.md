@@ -104,7 +104,8 @@ requires `NODE_ENV=development`; check the target database first.
 
 ## Issue and pull request writing
 
-- Use plain, action-oriented issue titles and the [issue templates](.github/ISSUE_TEMPLATE/).
+- Use action-oriented issue titles and keep the prefix from the
+  [issue template](.github/ISSUE_TEMPLATE/): `[Type]` for tasks or `[Bug]` for bugs.
 - Use Conventional Commit titles for PRs, such as `fix(auth): restore the return path`.
   Fill in the [PR template](.github/PULL_REQUEST_TEMPLATE.md) with the validation
   actually performed and any outstanding checks.
