@@ -8,7 +8,10 @@ import { httpClient, HttpClientError } from "@/lib/http/client";
 import { useUiText } from "@/contexts/UiLanguageContext";
 import UiText from "@/components/ui/UiText";
 import QRCodeScanner from "@/components/QRCode/QRCodeScanner";
-import { getStudentPreviewToken } from "@/client/api/studentToken";
+import {
+  getStudentPreview,
+  type StudentPreview,
+} from "@/client/api/studentToken";
 import {
   isStudentCode,
   normalizeStudentCode,
@@ -46,7 +49,7 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
     setProcessing(false);
   }
 
-  async function saveAndOpenStudent(token: string) {
+  async function saveAndOpenStudent({ code, token }: StudentPreview) {
     try {
       await httpClient.post("/saved", { token });
     } catch (error) {
@@ -62,21 +65,21 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
     }
 
     setHidden(true);
-    router.push(`/student/${token}/preview`);
+    router.push(`/student/${encodeURIComponent(code)}/preview`);
     setProcessing(false);
   }
 
   async function handleStudentCodeScan(data: string) {
     const code = normalizeStudentCode(data);
-    const token = await getStudentPreviewToken(code);
+    const preview = await getStudentPreview(code);
 
-    if (!token) {
+    if (!preview) {
       toast.error(t("O código de estudante deste passe é inválido."));
       setProcessing(false);
       return;
     }
 
-    await saveAndOpenStudent(token);
+    await saveAndOpenStudent(preview);
   }
 
   const handleScan = async (data: string) => {
@@ -98,15 +101,15 @@ const ScanTab: React.FC<ScanTabProps> = ({ setHidden }) => {
         return;
       }
 
-      const token = await getStudentPreviewToken({ token: data });
-      if (!token) {
+      const preview = await getStudentPreview({ token: data });
+      if (!preview) {
         toast.error(
           t("Passe inválido ou expirado. Atualiza o QR Code e tenta novamente.")
         );
         setProcessing(false);
         return;
       }
-      await saveAndOpenStudent(token);
+      await saveAndOpenStudent(preview);
     } catch {
       setProcessing(false);
       toast.error("Ocorreu um erro a dar scan no QR Code do estudante...");

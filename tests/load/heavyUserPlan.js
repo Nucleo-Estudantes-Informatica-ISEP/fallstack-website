@@ -159,6 +159,7 @@ export function heavyUserPlan(env) {
       codes: parseList(env.QR_STUDENT_CODES),
       uploadIntervalSeconds: numberOr(env.UPLOAD_INTERVAL_SECONDS, 15),
       actionId: env.ACTION_ID || "",
+      actionPresenterCookie: env.ACTION_PRESENTER_COOKIE || "",
       storageOrigin: (env.CV_STORAGE_ORIGIN || "").replace(/\/$/, ""),
     },
     checkIn: {
@@ -215,6 +216,8 @@ export function heavyUserPlan(env) {
     );
 
   if (plan.qr.users > 0) {
+    if (plan.qr.actionId && !plan.qr.actionPresenterCookie)
+      throw new Error("ACTION_ID requires ACTION_PRESENTER_COOKIE.");
     requireDistinct("QR_STUDENT_CODES", plan.qr.codes);
     if (plan.qr.codes.length !== plan.qr.cookies.length)
       throw new Error(

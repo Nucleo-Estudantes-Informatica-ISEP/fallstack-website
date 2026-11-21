@@ -185,3 +185,31 @@ test("accepts only an existing uploaded MP4 path", async () => {
     "distribution/video/12345678-1234-1234-1234-123456789abc.mp4"
   );
 });
+
+test("preserves untouched legacy social links while applying replacements and clears", async () => {
+  vi.mocked(findCompanyProfileById).mockResolvedValue({
+    socialLinks: {
+      linkedin: "http://linkedin.com/company/legacy",
+      instagram: "https://instagram.com/old",
+      twitter: "https://x.com/old",
+    },
+  } as never);
+
+  await updateCompanyProfileForAdmin("company-1", {
+    bodyText: "Updated profile",
+    socialLinks: {
+      instagram: "https://instagram.com/new",
+      twitter: null,
+    },
+  });
+
+  expect(upsertCompanyProfile).toHaveBeenCalledWith(
+    "company-1",
+    expect.objectContaining({
+      socialLinks: {
+        linkedin: "http://linkedin.com/company/legacy",
+        instagram: "https://instagram.com/new",
+      },
+    })
+  );
+});

@@ -21,7 +21,10 @@ const SponsorForm: React.FC<SponsorFormProps> = ({ sponsor }) => {
     const payload = {
       name: values.name,
       ...(sponsor?.logo === values.logo ? {} : { logo: values.logo }),
-      website: values.website || null,
+      website:
+        (values.website || null) === sponsor?.website
+          ? undefined
+          : values.website || null,
       order: values.order,
       active: values.active,
     };
