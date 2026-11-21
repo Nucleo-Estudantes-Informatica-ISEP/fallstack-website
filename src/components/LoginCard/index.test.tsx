@@ -1,7 +1,17 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
-import LoginCard from ".";
+import { uiText } from "@/domain/i18n/ui";
+
+import LoginCardComponent from ".";
+
+const authHelpUrl = "https://auth.example.test/ui/v2/login/help";
+
+function LoginCard(
+  props: Omit<React.ComponentProps<typeof LoginCardComponent>, "authHelpUrl">
+) {
+  return <LoginCardComponent authHelpUrl={authHelpUrl} {...props} />;
+}
 
 const { pushMock, replaceMock, refreshMock, fetchSessionMock, sessionState } =
   vi.hoisted(() => ({
@@ -69,17 +79,14 @@ test("offers a create-account link to the signup page", () => {
   );
 });
 
-test("sends password recovery to AuthNEI instead of a local reset flow", () => {
+test("offers a localized link directly to AuthNEI help while signed out", () => {
   render(<LoginCard />);
 
   expect(
-    screen.getByText(
-      "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI."
-    )
-  ).toBeInTheDocument();
-  expect(
-    screen.queryByRole("link", { name: /palavra-passe/i })
-  ).not.toBeInTheDocument();
+    screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
+  ).toHaveAttribute("href", authHelpUrl);
+  expect(screen.getByRole("link", { name: "Não consegues iniciar sessão?" })).toHaveAttribute("target", "_blank");
+  expect(uiText("en", "Não consegues iniciar sessão?")).toBe("Can’t sign in?");
 });
 
 test("employee registration links to the employee signup flow", () => {
