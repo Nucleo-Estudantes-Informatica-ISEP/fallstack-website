@@ -7,6 +7,7 @@ import {
   completeAuthorizationCode,
   oidcCookieNames,
   oidcRestartCookieName,
+  verifyEmailCookieName,
 } from "@/application/services/zitadelAuthService";
 
 import { GET } from "./route";
@@ -30,13 +31,14 @@ vi.mock("@/application/services/zitadelAuthService", async (original) => ({
 
 beforeEach(() => vi.clearAllMocks());
 
-async function callback(query: string, pending = true) {
+async function callbackResponse(query: string, pending = true) {
   const cookies = [
     [oidcCookieNames.state, "current-request"],
     [oidcCookieNames.nonce, "fixture-nonce"],
     [oidcCookieNames.verifier, "fixture-verifier"],
+    [oidcCookieNames.next, encodeURIComponent("/signup?lang=en")],
   ];
-  const response = await GET(
+  return GET(
     new NextRequest(
       `https://fallstack.example.test/api/auth/callback/zitadel?${query}`,
       {
@@ -50,6 +52,10 @@ async function callback(query: string, pending = true) {
       }
     )
   );
+}
+
+async function callback(query: string, pending = true) {
+  const response = await callbackResponse(query, pending);
   return new URL(response.headers.get("location")!).searchParams.get("error");
 }
 
@@ -68,11 +74,23 @@ test("distinguishes cancelled, expired and unexpected callbacks without exposing
 
 test("asks for verification only when the provider confirmed the matching email is unverified", async () => {
   vi.mocked(completeAuthorizationCode).mockRejectedValueOnce(
-    new AuthNeiEmailVerificationRequired()
+    new AuthNeiEmailVerificationRequired("fixture@example.test")
   );
-  await expect(
-    callback("state=current-request&code=fixture-code")
-  ).resolves.toBe("auth-verification-required");
+  const response = await callbackResponse(
+    "state=current-request&code=fixture-code"
+  );
+  const destination = new URL(response.headers.get("location")!);
+  expect(destination.searchParams.get("error")).toBe(
+    "auth-verification-required"
+  );
+  expect(destination.searchParams.has("loginHint")).toBe(false);
+  expect(response.cookies.get(verifyEmailCookieName)).toMatchObject({
+    httpOnly: true,
+    sameSite: "lax",
+  });
+  expect(
+    JSON.parse(response.cookies.get(verifyEmailCookieName)!.value).next
+  ).toBe("/signup?lang=en");
 });
 
 test.each([false, true])(

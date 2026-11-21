@@ -13,6 +13,8 @@ const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
 const OIDC_STATE_TTL_SECONDS = 10 * 60;
 
+export const verifyEmailCookieName = "@Fallstack:verify-email";
+
 export const oidcCookieNames = {
   state: "@Fallstack:oidc-state",
   nonce: "@Fallstack:oidc-nonce",
@@ -72,7 +74,7 @@ export interface ZitadelIdentity {
 }
 
 export class AuthNeiEmailVerificationRequired extends HttpError {
-  constructor() {
+  constructor(readonly loginHint?: string) {
     super("AuthNEI email verification required", 403);
   }
 }
@@ -235,7 +237,10 @@ async function verifyIdToken(idToken: string, expectedNonce: string) {
   return claims;
 }
 
-export async function createAuthorizationRequest(next?: string | null) {
+export async function createAuthorizationRequest(
+  next?: string | null,
+  loginHint?: string
+) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
   const state = randomToken();
@@ -251,6 +256,7 @@ export async function createAuthorizationRequest(next?: string | null) {
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
+  if (loginHint) url.searchParams.set("login_hint", loginHint);
 
   return {
     url: url.toString(),
@@ -333,9 +339,9 @@ export async function completeAuthorizationCode(input: {
     sub &&
     sub === idTokenClaims.sub &&
     email &&
-    claims.email_verified === false
+    (claims.email_verified === false || claims.email_verified === undefined)
   )
-    throw new AuthNeiEmailVerificationRequired();
+    throw new AuthNeiEmailVerificationRequired(loginName || email);
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 

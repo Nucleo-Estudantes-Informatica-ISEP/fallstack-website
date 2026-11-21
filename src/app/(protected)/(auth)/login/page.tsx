@@ -28,9 +28,7 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
       offseason={serverEnv.EVENT_MODE === "offseason"}
       signInFailure={parseSignInFailure(error)}
       signInDestination={sanitizeNext(typeof next === "string" ? next : null)}
-      verifyEmailUrl={
-        new URL("/ui/console/users/me", serverEnv.AUTH_ISSUER_URL).href
-      }
+      verifyEmailUrl="/api/auth/login?verifyEmail=1"
       inactive={await isCurrentAccountInactive()}
     />
   );
