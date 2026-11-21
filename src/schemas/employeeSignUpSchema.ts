@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const companyInviteCodePattern = /^[A-Za-z0-9_-]{8,80}$/u;
+
 export const employeeSignUpSchema = z.object({
   name: z.string().trim().min(2, "Name is too short").max(100),
   linkedin: z
@@ -13,7 +15,7 @@ export const employeeSignUpSchema = z.object({
   companyCode: z
     .string()
     .trim()
-    .regex(/^[A-Za-z0-9_-]{8,80}$/u, "Invalid company code"),
+    .regex(companyInviteCodePattern, "Invalid company code"),
 });
 
 export type EmployeeSignUpInput = z.infer<typeof employeeSignUpSchema>;
