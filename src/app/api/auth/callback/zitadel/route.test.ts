@@ -123,3 +123,18 @@ test.each([false, true])(
     expect(completeAuthorizationCode).not.toHaveBeenCalled();
   }
 );
+
+test("recovers a long interrupted destination from the bounded restart cookie", async () => {
+  const state = "b".repeat(43);
+  const destination = "/event?filter=" + "x".repeat(1800);
+  const cookie = oidcRestartCookieName(state)!;
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
+      { headers: { cookie: `${cookie}=${encodeURIComponent(destination)}` } }
+    )
+  );
+  expect(
+    new URL(response.headers.get("location")!).searchParams.get("next")
+  ).toBe(destination);
+});

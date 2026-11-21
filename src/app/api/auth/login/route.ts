@@ -46,10 +46,11 @@ export async function GET(request: NextRequest) {
   response.cookies.set(oidcCookieNames.verifier, auth.verifier, cookieOptions);
   response.cookies.set(oidcCookieNames.next, auth.next, cookieOptions);
   const recoveryCookie = oidcRestartCookieName(auth.state);
+  // shortcut: destinations over 3500 encoded bytes cannot be restarted, use shared storage when longer URLs are supported.
   if (
     recoveryCookie &&
     auth.next !== "/" &&
-    encodeURIComponent(auth.next).length <= 1024
+    encodeURIComponent(auth.next).length <= 3500
   ) {
     const recoveryOptions = {
       ...cookieOptions,
