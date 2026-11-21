@@ -5,6 +5,7 @@ import LoginCard from "@/components/LoginCard";
 import getServerSession, {
   isCurrentAccountInactive,
 } from "@/application/services/sessionService";
+import { parseSignInFailure } from "@/domain/auth/signInFailure";
 
 interface LoginPageProps {
   // Only "employee" is meaningful here (the /signup/employee redirect and
@@ -24,7 +25,8 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
     <LoginCard
       initialView={modal === "employee" ? "employee" : undefined}
       offseason={serverEnv.EVENT_MODE === "offseason"}
-      authError={error === "auth-code-error"}
+      signInFailure={parseSignInFailure(error)}
+      verifyEmailUrl="/api/auth/login?verifyEmail=1"
       inactive={await isCurrentAccountInactive()}
     />
   );
