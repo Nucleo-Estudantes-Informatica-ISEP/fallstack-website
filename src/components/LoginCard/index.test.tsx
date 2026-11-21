@@ -32,14 +32,23 @@ vi.mock("@/components/AuthNeiButton", () => ({
   ),
 }));
 vi.mock("@/components/EmployeeSignUpForm", () => ({
-  default: ({ onSuccess }: { onSuccess?: () => void }) => (
-    <button onClick={onSuccess}>Completar associação</button>
+  default: ({
+    onSuccess,
+    initialCode,
+  }: {
+    onSuccess?: () => void;
+    initialCode?: string;
+  }) => (
+    <button onClick={onSuccess} data-initial-code={initialCode}>
+      Completar associação
+    </button>
   ),
 }));
 
 beforeEach(() => {
   vi.clearAllMocks();
   sessionState.user = null;
+  sessionStorage.clear();
 });
 
 test("uses AuthNEI as the single login method", () => {
@@ -102,6 +111,46 @@ test("authenticated users can redeem a company code", () => {
   render(<LoginCard initialView="employee" />);
 
   expect(screen.getByText("Completar associação")).toBeInTheDocument();
+});
+
+test("asks for a valid company code before signed-out users can continue", () => {
+  render(<LoginCard initialView="employee" />);
+  const code = screen.getByRole("textbox", { name: "Código da Empresa" });
+  const continueButton = screen.getByRole("button", {
+    name: "Continuar com AuthNEI",
+  });
+
+  expect(continueButton).toBeDisabled();
+  fireEvent.change(code, { target: { value: "bad!" } });
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Código de empresa inválido."
+  );
+  expect(continueButton).toBeDisabled();
+  fireEvent.change(code, { target: { value: "example-invite" } });
+  expect(continueButton).toBeEnabled();
+});
+
+test("restores the code for explicit confirmation and removes it from browser storage", () => {
+  sessionStorage.setItem(
+    "fallstack-employee-invite",
+    `${Date.now() + 60_000}:example-invite`
+  );
+  sessionState.user = { role: "STUDENT" };
+  render(<LoginCard initialView="employee" />);
+
+  expect(
+    screen.getByRole("button", { name: "Completar associação" })
+  ).toHaveAttribute("data-initial-code", "example-invite");
+  expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
+});
+
+test("drops the queued code when authorization returns with an error", () => {
+  sessionStorage.setItem(
+    "fallstack-employee-invite",
+    `${Date.now() + 60_000}:example-invite`
+  );
+  render(<LoginCard authError />);
+  expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
 });
 
 test("cancelling employee onboarding clears the modal URL", () => {
