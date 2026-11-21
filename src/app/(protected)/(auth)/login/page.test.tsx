@@ -6,7 +6,8 @@ import LoginPage from "./page";
 vi.mock("@/config/env.server", () => ({
   serverEnv: {
     AUTH_ISSUER_URL: "https://auth.nei-isep.org",
-    AUTH_POST_LOGOUT_REDIRECT_URI: "https://fallstack.nei-isep.org/",
+    AUTH_REDIRECT_URI: "https://fallstack.nei-isep.org/api/auth/callback/zitadel",
+    AUTH_POST_LOGOUT_REDIRECT_URI: "https://logout.example.test/signed-out",
     EVENT_MODE: "active",
   },
 }));
