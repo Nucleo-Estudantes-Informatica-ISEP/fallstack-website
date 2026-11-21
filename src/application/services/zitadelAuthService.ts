@@ -7,6 +7,7 @@ import jwt, { type Algorithm } from "jsonwebtoken";
 
 import { HttpError } from "@/types/HttpError";
 import { serverEnv } from "@/config/env.server";
+import { sanitizeNext } from "@/app/auth/callback/sanitizeNext";
 
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
@@ -18,6 +19,14 @@ export const oidcCookieNames = {
   verifier: "@Fallstack:oidc-verifier",
   next: "@Fallstack:oidc-next",
 } as const;
+
+export const oidcRestartCookiePrefix = "@Fallstack:oidc-restart-";
+
+export function oidcRestartCookieName(state: string | null) {
+  return state && /^[A-Za-z0-9_-]{43}$/u.test(state)
+    ? oidcRestartCookiePrefix + state
+    : null;
+}
 
 interface OidcDiscovery {
   issuer: string;
@@ -161,11 +170,6 @@ export function mapIdentityRoles(
   };
 }
 
-function safeNext(value: string | null | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
-}
-
 async function verifyIdToken(idToken: string, expectedNonce: string) {
   const discovery = await getDiscovery();
   const decoded = jwt.decode(idToken, { complete: true });
@@ -253,7 +257,7 @@ export async function createAuthorizationRequest(next?: string | null) {
     state,
     nonce,
     verifier,
-    next: safeNext(next),
+    next: sanitizeNext(next ?? null),
     maxAge: OIDC_STATE_TTL_SECONDS,
   };
 }

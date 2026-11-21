@@ -265,3 +265,18 @@ test("inactive account explains the blocked state and offers account switching w
   ).toHaveAttribute("href", "mailto:support@nei-isep.org");
   expect(screen.queryByText("Continuar com AuthNEI")).not.toBeInTheDocument();
 });
+
+test("interrupted sign-in starts a fresh request for the original destination", () => {
+  render(
+    <LoginCard
+      signInFailure="auth-expired"
+      signInDestination="/event/en?section=schedule"
+    />
+  );
+  expect(
+    screen.getByRole("link", { name: "Reiniciar início de sessão" })
+  ).toHaveAttribute(
+    "href",
+    "/api/auth/login?next=%2Fevent%2Fen%3Fsection%3Dschedule"
+  );
+});

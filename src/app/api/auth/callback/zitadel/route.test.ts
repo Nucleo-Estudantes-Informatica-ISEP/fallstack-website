@@ -6,6 +6,7 @@ import {
   AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
   oidcCookieNames,
+  oidcRestartCookieName,
 } from "@/application/services/zitadelAuthService";
 
 import { GET } from "./route";
@@ -73,3 +74,34 @@ test("asks for verification only when the provider confirmed the matching email 
     callback("state=current-request&code=fixture-code")
   ).resolves.toBe("auth-verification-required");
 });
+
+test.each([false, true])(
+  "recovers only the interrupted attempt’s destination when another attempt is pending: %s",
+  async (anotherAttemptIsPending) => {
+    const state = "a".repeat(43);
+    const destination = "/event/en?section=schedule";
+    const restartCookie = oidcRestartCookieName(state)!;
+    const items = [`${restartCookie}=${encodeURIComponent(destination)}`];
+    if (anotherAttemptIsPending) {
+      items.push(
+        `${oidcCookieNames.state}=new-attempt`,
+        `${oidcCookieNames.next}=%2Fdashboard`
+      );
+    }
+    const request = new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture-code`,
+      { headers: { cookie: items.join("; ") } }
+    );
+
+    const response = await GET(request);
+    const target = new URL(response.headers.get("location")!);
+
+    expect(target.pathname).toBe("/login");
+    expect(target.searchParams.get("error")).toBe("auth-expired");
+    expect(target.searchParams.get("next")).toBe(destination);
+    expect(response.cookies.get(oidcCookieNames.state)).toBeUndefined();
+    expect(response.cookies.get(oidcCookieNames.next)).toBeUndefined();
+    expect(response.cookies.get(restartCookie)?.maxAge).toBe(0);
+    expect(completeAuthorizationCode).not.toHaveBeenCalled();
+  }
+);

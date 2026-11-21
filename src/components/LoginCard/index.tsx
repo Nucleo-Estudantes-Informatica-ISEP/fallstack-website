@@ -18,6 +18,7 @@ interface LoginCardProps {
   initialView?: "employee";
   offseason?: boolean;
   signInFailure?: SignInFailure;
+  signInDestination?: string;
   verifyEmailUrl?: string;
   inactive?: boolean;
 }
@@ -26,6 +27,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
   initialView,
   offseason = false,
   signInFailure,
+  signInDestination = "/",
   verifyEmailUrl,
   inactive = false,
 }) => {
@@ -34,7 +36,9 @@ const LoginCard: React.FC<LoginCardProps> = ({
   const actionHref =
     signInFailure === "auth-verification-required"
       ? verifyEmailUrl
-      : "/api/auth/login";
+      : signInDestination === "/"
+        ? "/api/auth/login"
+        : `/api/auth/login?next=${encodeURIComponent(signInDestination)}`;
 
   const { user, fetchSession } = useSession();
   const router = useRouter();
@@ -178,7 +182,7 @@ const LoginCard: React.FC<LoginCardProps> = ({
             )}
           </p>
           {(!failure || !("action" in failure) || !actionHref) && (
-            <AuthNeiButton />
+            <AuthNeiButton next={signInDestination} />
           )}
           <p className="mt-3 text-sm text-gray-300">
             {t(
