@@ -11,6 +11,7 @@ import AuthNeiButton from "@/components/AuthNeiButton";
 import EmployeeSignUpForm from "@/components/EmployeeSignUpForm";
 
 interface LoginCardProps {
+  authHelpUrl: string;
   initialView?: "employee";
   offseason?: boolean;
   authError?: boolean;
@@ -19,6 +20,7 @@ interface LoginCardProps {
 
 const LoginCard: React.FC<LoginCardProps> = ({
   initialView,
+  authHelpUrl,
   offseason = false,
   authError = false,
   inactive = false,
@@ -161,11 +163,12 @@ const LoginCard: React.FC<LoginCardProps> = ({
             )}
           </p>
           <AuthNeiButton />
-          <p className="mt-3 text-sm text-gray-300">
-            {t(
-              "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI."
-            )}
-          </p>
+          <a
+            href={authHelpUrl}
+            className="mt-3 inline-block text-sm text-gray-300 underline"
+          >
+            {t("Não consegues iniciar sessão?")}
+          </a>
 
           {!offseason && (
             <>

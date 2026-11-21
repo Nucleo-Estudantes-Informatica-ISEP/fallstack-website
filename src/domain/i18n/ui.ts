@@ -398,8 +398,7 @@ export const uiEnglish: Record<string, string> = {
     "First sign in with AuthNEI, then return here to link your account using the employee invitation code.",
   "Estudantes, colaboradores e administradores usam a mesma conta AuthNEI. As permissões são atribuídas automaticamente pelo NEI e pela empresa associada.":
     "Students, employees and administrators use the same AuthNEI account. NEI and the associated company assign permissions automatically.",
-  "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI.":
-    "Forgot your password? Reset it through AuthNEI.",
+  "Não consegues iniciar sessão?": "Can’t sign in?",
   "Ainda não tens uma conta?": "Do not have an account yet?",
   "Criar uma conta": "Create an account",
   "Tens um código de empresa? Regista-te como colaborador":
