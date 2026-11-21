@@ -41,5 +41,5 @@ the bundled Coolvetica and Inter fonts are unchanged.
 ## Consequences
 
 Login and signup look consistent and share one layout component. Identity and
-recovery stay with AuthNEI, so the application stores no passwords. The
-"Continuar com AuthNEI" button restyle also applies to the `/signup` gate.
+recovery stay with AuthNEI, so the application stores no passwords. The original `/signup` confirmation screen was superseded by
+[ADR 0052](0052-use-direct-authnei-registration.md).
