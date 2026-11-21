@@ -11,6 +11,7 @@ import { POST } from "./route";
 const mockEnv = vi.hoisted(() => ({
   EVENT_MODE: "active" as "active" | "offseason",
   NODE_ENV: "test",
+  AUTH_REDIRECT_URI: "http://localhost/api/auth/callback/zitadel",
 }));
 
 vi.mock("server-only", () => ({}));
@@ -95,6 +96,7 @@ test("employee signup propagates only verified membership, expiry and sign-out h
       method: "POST",
       headers: {
         "content-type": "application/json",
+        origin: "http://localhost",
         cookie: `${config.cookies.auth.name}=existing-app-session`,
       },
       body: JSON.stringify({

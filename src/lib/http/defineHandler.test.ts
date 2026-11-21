@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 import { z } from "zod";
 
+import config from "@/config";
 import getServerSession from "@/application/services/sessionService";
 
 import { defineHandler, type Session } from "./server";
@@ -117,10 +118,45 @@ test("ownership denial and JSON validation retain their status codes", async () 
       await invalid(
         new NextRequest("http://localhost/api/example", {
           method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: "{}",
         }),
         { params: Promise.resolve({}) }
       )
     ).status
   ).toBe(400);
+});
+
+test("permits cookie-authenticated JSON mutations from the configured origin", async () => {
+  vi.mocked(getServerSession).mockResolvedValue(session);
+  const origin = new URL(process.env.AUTH_REDIRECT_URI!).origin;
+  const handler = vi.fn(() => new Response());
+  const route = defineHandler({
+    schema: z.object({ name: z.string() }),
+    handler,
+  });
+  const mutate = (
+    requestOrigin?: string,
+    contentType = "application/json; charset=utf-8"
+  ) =>
+    route(
+      new NextRequest(origin + "/api/example", {
+        method: "POST",
+        headers: {
+          Cookie: `${config.cookies.auth.name}=session`,
+          "Content-Type": contentType,
+          ...(requestOrigin ? { Origin: requestOrigin } : {}),
+        },
+        body: JSON.stringify({ name: "Fixture" }),
+      }),
+      { params: Promise.resolve({}) }
+    );
+
+  expect((await mutate()).status).toBe(403);
+  expect((await mutate("https://other.example.invalid")).status).toBe(403);
+  expect((await mutate("null")).status).toBe(403);
+  expect((await mutate(origin, "text/plain")).status).toBe(415);
+  expect(handler).not.toHaveBeenCalled();
+  expect((await mutate(origin)).status).toBe(200);
+  expect(handler).toHaveBeenCalledOnce();
 });

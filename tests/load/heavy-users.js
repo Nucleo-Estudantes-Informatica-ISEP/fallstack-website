@@ -78,7 +78,7 @@ export const options = {
 };
 
 function cookieHeaders(cookie, extra = {}) {
-  return { headers: { Cookie: cookie, ...extra } };
+  return { headers: { Cookie: cookie, Origin: baseUrl, ...extra } };
 }
 
 function json(res, path) {
@@ -200,7 +200,10 @@ export function runQr(index) {
   if (plan.qr.actionId && exec.vu.iterationInScenario === 0) {
     const action = http.get(
       `${baseUrl}/api/actions/${encodeURIComponent(plan.qr.actionId)}`,
-      { tags: { name: "action_qr", group: "qr" } }
+      {
+        ...cookieHeaders(plan.qr.actionPresenterCookie),
+        tags: { name: "action_qr", group: "qr" },
+      }
     );
     const qrCode = json(action, "qrCode");
     if (check(action, { "action QR returns a code": () => Boolean(qrCode) })) {

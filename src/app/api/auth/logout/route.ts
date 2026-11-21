@@ -24,7 +24,7 @@ export const POST = defineHandler({
       logoutUrl = await getLogoutUrl({
         idTokenHint: claims?.idToken,
         loginName: claims?.loginName,
-      });
+      }).catch(() => serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
       if (
         scope === "shared" &&
         logoutUrl === serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI
@@ -33,7 +33,10 @@ export const POST = defineHandler({
       }
     }
 
-    const response = NextResponse.json({ logoutUrl });
+    const response = NextResponse.json(
+      { logoutUrl },
+      { headers: { "Cache-Control": "no-store" } }
+    );
     response.cookies.delete(config.cookies.auth.name);
     return response;
   },

@@ -29,7 +29,10 @@ const EmployeeForm: React.FC<EmployeeFormProps> = ({
       if (employee) {
         const payload: Record<string, AdminFormValue | null | undefined> = {
           name: values.name,
-          linkedin: values.linkedin || null,
+          linkedin:
+            (values.linkedin || null) === employee?.linkedin
+              ? undefined
+              : values.linkedin || null,
           companyId: values.companyId,
         };
         await httpClient.patch(`/admin/employees/${employee.id}`, payload);

@@ -5,6 +5,8 @@ import { Prisma } from "@prisma/client";
 import { ZodError, ZodType } from "zod";
 
 import { HttpError } from "@/types/HttpError";
+import appConfig from "@/config";
+import { serverEnv } from "@/config/env.server";
 import { reportError } from "@/lib/logger";
 import getServerSession from "@/application/services/sessionService";
 import { AuthPolicy, passesAuthPolicy } from "@/domain/auth/authPolicy";
@@ -61,6 +63,13 @@ export const httpErrorResponse = (error: unknown) => {
 export type { AuthPolicy };
 export type Session = NonNullable<Awaited<ReturnType<typeof getServerSession>>>;
 
+export async function readJsonBody(req: NextRequest): Promise<unknown> {
+  const mediaType = req.headers.get("content-type")?.split(";", 1)[0];
+  if (mediaType?.trim().toLowerCase() !== "application/json")
+    throw new HttpError("Expected application/json", 415);
+  return req.json().catch(() => undefined);
+}
+
 type RouteContext<Params> = { params: Promise<Params> };
 
 type HandlerArgs<Params, Body> = {
@@ -108,6 +117,14 @@ export function defineHandler<
       if (!passesAuthPolicy(auth, session))
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+      if (
+        !["GET", "HEAD", "OPTIONS"].includes(req.method) &&
+        req.cookies.has(appConfig.cookies.auth.name) &&
+        req.headers.get("origin") !==
+          new URL(serverEnv.AUTH_REDIRECT_URI).origin
+      )
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
       const params = await routeContext.params;
 
       if (config.authorize && session) {
@@ -118,8 +135,7 @@ export function defineHandler<
 
       let body: unknown;
       if (config.schema) {
-        const json = await req.json().catch(() => undefined);
-        body = config.schema.parse(json);
+        body = config.schema.parse(await readJsonBody(req));
       }
 
       return await config.handler({

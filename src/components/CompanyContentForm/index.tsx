@@ -59,11 +59,27 @@ const CompanyContentForm: React.FC<CompanyContentFormProps> = ({
       videoTitle: values.videoTitle || null,
       videoHref: values.videoHref || null,
       socialLinks: {
-        twitter: values.socialTwitter || undefined,
-        facebook: values.socialFacebook || undefined,
-        instagram: values.socialInstagram || undefined,
-        youtube: values.socialYoutube || undefined,
-        linkedin: values.socialLinkedin || undefined,
+        twitter:
+          (values.socialTwitter || "") === (content.socialLinks.twitter ?? "")
+            ? undefined
+            : values.socialTwitter || null,
+        facebook:
+          (values.socialFacebook || "") === (content.socialLinks.facebook ?? "")
+            ? undefined
+            : values.socialFacebook || null,
+        instagram:
+          (values.socialInstagram || "") ===
+          (content.socialLinks.instagram ?? "")
+            ? undefined
+            : values.socialInstagram || null,
+        youtube:
+          (values.socialYoutube || "") === (content.socialLinks.youtube ?? "")
+            ? undefined
+            : values.socialYoutube || null,
+        linkedin:
+          (values.socialLinkedin || "") === (content.socialLinks.linkedin ?? "")
+            ? undefined
+            : values.socialLinkedin || null,
       },
       facts: parseFactsText(String(values.facts ?? "")),
     };
