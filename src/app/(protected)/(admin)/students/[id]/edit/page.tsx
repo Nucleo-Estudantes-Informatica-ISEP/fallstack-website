@@ -21,7 +21,13 @@ const EditStudentPage = async ({ params }: EditStudentPageProps) => {
       <h1 className="text-2xl font-bold text-gray-800">
         {t("Editar estudante")}
       </h1>
-      <StudentForm student={toAdminStudentDto(student)} />
+      <StudentForm
+        student={{
+          ...toAdminStudentDto(student),
+          linkedin: student.linkedin,
+          github: student.github,
+        }}
+      />
     </section>
   );
 };

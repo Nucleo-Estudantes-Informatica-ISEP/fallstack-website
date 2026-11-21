@@ -89,7 +89,7 @@ export const options = {
 function params(cookie, name) {
   return {
     headers: {
-      ...(cookie ? { Cookie: cookie } : {}),
+      ...(cookie ? { Cookie: cookie, Origin: base } : {}),
       "Content-Type": "application/json",
     },
     tags: { name },
@@ -190,15 +190,21 @@ export function operations() {
     params(target.cookie, "student_qr")
   );
   businessCheck(qr, 200, "student_qr");
+  const exchange = http.post(
+    `${base}/api/students/token`,
+    JSON.stringify({ token: json(qr, "data") }),
+    params(fixture.employeeCookie, "preview_credential")
+  );
+  businessCheck(exchange, 200, "preview_credential");
   const scan = http.post(
     `${base}/api/saved`,
-    JSON.stringify({ token: json(qr, "data") }),
+    JSON.stringify({ token: json(exchange, "token") }),
     params(fixture.employeeCookie, "stand_scan")
   );
   businessCheck(scan, 201, "stand_scan");
   const action = http.get(
     `${base}/api/actions/${fixtures.actionId}`,
-    params(target.cookie, "action_qr")
+    params(fixtures.actionPresenterCookie, "action_qr")
   );
   businessCheck(action, 200, "action_qr");
   const token = (json(action, "qrCode") || "").replace(/^action-/, "");

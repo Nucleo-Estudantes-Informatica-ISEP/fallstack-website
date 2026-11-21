@@ -1,4 +1,8 @@
-export type RateLimitPolicy = { windowMs: number; max: number };
+export type RateLimitPolicy = {
+  windowMs: number;
+  max: number;
+  reservation?: { id: string; release?: true };
+};
 export type RateLimitDecision =
   | { status: "allowed" }
   | { status: "limited"; retryAfterMs: number }

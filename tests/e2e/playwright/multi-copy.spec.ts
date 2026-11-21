@@ -111,8 +111,13 @@ test.describe("requests behave the same on every web copy", () => {
 
       const qr = await student.get("/api/qrcode");
       expect(qr.status()).toBe(200);
-      const issuedOn = copyOf(qr);
-      const { data: token } = (await qr.json()) as { data: string };
+      const { data: pass } = (await qr.json()) as { data: string };
+      const exchange = await employee.post("/api/students/token", {
+        data: { token: pass },
+      });
+      expect(exchange.status()).toBe(200);
+      const { token } = (await exchange.json()) as { token: string };
+      const issuedOn = copyOf(exchange);
 
       // The first scan changes state, so it cannot be repeated until it lands
       // on another copy. Probe with an invalid token (400, no state change)

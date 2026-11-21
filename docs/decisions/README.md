@@ -78,3 +78,4 @@ implementation PR needs an ADR.
 | [0049](0049-full-event-page-language.md)                         | Keep the full event homepage in Portuguese                     | Superseded           |
 | [0050](0050-serve-full-event-homepage-in-both-languages.md)      | Serve the full event homepage in both languages                | Accepted             |
 | [0051](0051-consistent-interface-language.md)                    | Consistent interface language across account roles             | Accepted             |
+| [0052](0052-enforce-app-request-and-recruiting-boundaries.md)    | Enforce application request and recruiting boundaries          | Accepted             |

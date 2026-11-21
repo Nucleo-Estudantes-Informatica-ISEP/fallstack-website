@@ -33,7 +33,11 @@ export const checkUploadRateLimit = (
   );
 
 /** Owns staging, validation, storage and cleanup as one request lifecycle. */
-export async function uploadFile(kind: StorageBucket, request: Request) {
+export async function uploadFile(
+  kind: StorageBucket,
+  request: Request,
+  ownerId?: string
+) {
   return withMultipartFile(
     request,
     config.uploads[kind].maxSize,
@@ -67,7 +71,15 @@ export async function uploadFile(kind: StorageBucket, request: Request) {
             : cvKey(id);
       const body = createReadStream(file.path);
       try {
-        await putObjectStream(kind, key, body, file.type, file.size, signal);
+        await putObjectStream(
+          kind,
+          key,
+          body,
+          file.type,
+          file.size,
+          signal,
+          ownerId ? { owner: ownerId } : undefined
+        );
         signal.throwIfAborted();
       } catch (error) {
         body.destroy();

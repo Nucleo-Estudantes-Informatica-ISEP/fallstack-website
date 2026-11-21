@@ -78,11 +78,29 @@ test.each([
       expect.anything(),
       type,
       bytes.length,
-      expect.any(AbortSignal)
+      expect.any(AbortSignal),
+      undefined
     );
     expect(deleteObject).not.toHaveBeenCalled();
   }
 );
+
+test("stores the student avatar owner as private object metadata", async () => {
+  const avatar = await uploadFile(
+    "avatar",
+    request(PNG, "image/png"),
+    "student-owner"
+  );
+  expect(putObjectStream).toHaveBeenCalledWith(
+    "avatar",
+    `distribution/avatar/${avatar.id}`,
+    expect.anything(),
+    "image/png",
+    PNG.length,
+    expect.any(AbortSignal),
+    { owner: "student-owner" }
+  );
+});
 
 test.each(["cv", "avatar"] as const)(
   "accepts an exact-limit %s without whole-body parsing",

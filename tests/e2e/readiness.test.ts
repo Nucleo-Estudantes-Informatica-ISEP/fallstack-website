@@ -31,6 +31,11 @@ const config = {
   ACTION_ID: "synthetic-action",
 };
 const previousExitCode = process.exitCode;
+const presenter = {
+  name: "@Fallstack26:auth",
+  value: "admin-fixture",
+  domain: "staging.example.org",
+};
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -56,7 +61,10 @@ beforeEach(() => {
             expected: process.env.READINESS_MUTATIONS === "yes" ? 6 : 4,
           },
         })
-      : JSON.stringify({ cookies: [], origins: [] })
+      : JSON.stringify({
+          cookies: String(path) === "admin.json" ? [presenter] : [],
+          origins: [],
+        })
   );
   vi.mocked(spawn).mockImplementation(() => {
     const child = Object.assign(new EventEmitter(), {
@@ -197,7 +205,10 @@ test("skipped required coverage fails Playwright layer before load", async () =>
   vi.mocked(readFile).mockImplementation(async (path) =>
     String(path).endsWith("playwright.json")
       ? JSON.stringify({ stats: { skipped: 1, expected: 3 } })
-      : JSON.stringify({ cookies: [], origins: [] })
+      : JSON.stringify({
+          cookies: String(path) === "admin.json" ? [presenter] : [],
+          origins: [],
+        })
   );
   await runReadiness();
   expect(spawn).toHaveBeenCalledTimes(1);
@@ -235,7 +246,10 @@ test("published text evidence redacts role sessions and load cookies", async () 
         message: "role-secret",
       });
     if (String(path).endsWith(".log")) return "role-secret load-secret";
-    return JSON.stringify({ cookies: [{ value: "role-secret" }], origins: [] });
+    return JSON.stringify({
+      cookies: [{ ...presenter, value: "role-secret" }],
+      origins: [],
+    });
   });
   await runReadiness();
   expect(writeFile).toHaveBeenCalledWith(

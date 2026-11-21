@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { linkedinOrEmptySchema } from "./linkedinSchema";
+
 export const companyInviteCodePattern = /^[A-Za-z0-9_-]{8,80}$/u;
 
 export const employeeSignUpSchema = z.object({
@@ -7,10 +9,8 @@ export const employeeSignUpSchema = z.object({
   linkedin: z
     .string()
     .trim()
-    .url("Invalid LinkedIn URL")
-    .max(2048)
+    .pipe(linkedinOrEmptySchema)
     .optional()
-    .or(z.literal(""))
     .transform((value) => (value === "" ? undefined : value)),
   companyCode: z
     .string()

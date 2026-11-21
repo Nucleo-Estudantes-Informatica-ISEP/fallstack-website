@@ -3,6 +3,7 @@ import "server-only";
 import { Prisma } from "@prisma/client";
 
 import { HttpError } from "@/types/HttpError";
+import { readSocialLinks } from "@/domain/company/companyProfileContent";
 import { companyVideoId, videoKey } from "@/domain/company/companyVideo";
 import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
 import { Language } from "@/domain/i18n/translations";
@@ -131,7 +132,7 @@ export async function updateCompanyProfileForAdmin(
     bodyText: string;
     videoTitle?: string | null;
     videoHref?: string | null;
-    socialLinks?: Record<string, string | undefined>;
+    socialLinks?: Record<string, string | null | undefined>;
     facts?: { iconName: string; description: string; className?: string }[];
   }
 ) {
@@ -170,11 +171,14 @@ export async function updateCompanyProfileForAdmin(
     }
   }
 
-  const socialLinks = input.socialLinks
-    ? Object.fromEntries(
-        Object.entries(input.socialLinks).filter(([, value]) => value)
-      )
-    : undefined;
+  const socialUpdates = Object.entries(input.socialLinks ?? {});
+  const socialLinks: Record<string, string> = {
+    ...readSocialLinks(existingProfile?.socialLinks),
+  };
+  for (const [key, value] of socialUpdates) {
+    if (value === null) delete socialLinks[key];
+    else if (value !== undefined) socialLinks[key] = value;
+  }
 
   await afterPublicDataWrite(
     "companies",
@@ -182,10 +186,13 @@ export async function updateCompanyProfileForAdmin(
       bodyText: input.bodyText,
       videoTitle: input.videoTitle ?? null,
       videoHref,
-      socialLinks:
-        socialLinks && Object.keys(socialLinks).length > 0
-          ? socialLinks
-          : Prisma.JsonNull,
+      ...(socialUpdates.length > 0
+        ? {
+            socialLinks: Object.keys(socialLinks).length
+              ? socialLinks
+              : Prisma.JsonNull,
+          }
+        : {}),
       facts:
         input.facts && input.facts.length > 0 ? input.facts : Prisma.JsonNull,
     })

@@ -686,7 +686,10 @@ describe("heavy-users k6 script", () => {
   });
 
   test("ACTION_ID adds a fresh action QR scan by the student", () => {
-    const script = loadScript(actionRoute(), { ACTION_ID: "action-1" });
+    const script = loadScript(actionRoute(), {
+      ACTION_ID: "action-1",
+      ACTION_PRESENTER_COOKIE: "presenter-fixture",
+    });
     script.runQr(0);
     const scan = script.requests.find(
       (r: Request) => r.params.tags?.name === "action_scan"
@@ -710,7 +713,10 @@ describe("heavy-users k6 script", () => {
   });
 
   test("each student scans the action once, on the first iteration", () => {
-    const script = loadScript(actionRoute(), { ACTION_ID: "action-1" });
+    const script = loadScript(actionRoute(), {
+      ACTION_ID: "action-1",
+      ACTION_PRESENTER_COOKIE: "presenter-fixture",
+    });
     for (let iteration = 0; iteration < 5; iteration++) {
       script.vu.iterationInScenario = iteration;
       script.runQr(0);
@@ -730,6 +736,7 @@ describe("heavy-users k6 script", () => {
   test("a rerun finding the action already completed is counted, not failed", () => {
     const script = loadScript(actionRoute({ completed: ["student-0"] }), {
       ACTION_ID: "action-1",
+      ACTION_PRESENTER_COOKIE: "presenter-fixture",
     });
     script.runQr(0);
     expect(script.counters.action_scan_already_completed_400).toBe(1);
@@ -741,6 +748,7 @@ describe("heavy-users k6 script", () => {
   test("any other 400 from the action scan fails its check", () => {
     const script = loadScript(actionRoute({ scanError: "QR Code expirado." }), {
       ACTION_ID: "action-1",
+      ACTION_PRESENTER_COOKIE: "presenter-fixture",
     });
     script.runQr(0);
     expect(script.counters.action_scan_already_completed_400).toBeUndefined();
