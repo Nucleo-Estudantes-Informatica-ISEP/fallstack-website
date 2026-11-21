@@ -70,7 +70,7 @@ export default function Fixture() {
         />
       ) : view === "signup" ? (
         <AuthPageLayout>
-          <StudentSignUp interests={[]} />
+          <StudentSignUp accountId="responsive-fixture" interests={[]} />
         </AuthPageLayout>
       ) : (
         <ProfileSectionContainer
