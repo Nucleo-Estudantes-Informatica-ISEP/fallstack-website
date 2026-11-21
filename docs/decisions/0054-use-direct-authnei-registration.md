@@ -1,4 +1,4 @@
-# 0052: Open AuthNEI registration directly
+# 0054: Open AuthNEI registration directly
 
 Status: Accepted
 Date: 2026-11-21
