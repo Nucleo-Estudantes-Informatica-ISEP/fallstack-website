@@ -207,7 +207,8 @@ export async function putObjectStream(
   body: Readable,
   contentType: string,
   contentLength: number,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  metadata?: Record<string, string>
 ) {
   await storageClient().send(
     new PutObjectCommand({
@@ -216,21 +217,25 @@ export async function putObjectStream(
       Body: body,
       ContentType: contentType,
       ContentLength: contentLength,
+      Metadata: metadata,
     }),
     { abortSignal: signal }
   );
 }
 
-export async function objectExists(kind: StorageBucket, key: string) {
+export async function headObject(kind: StorageBucket, key: string) {
   try {
-    await storageClient().send(
+    return await storageClient().send(
       new HeadObjectCommand({ Bucket: bucket(kind), Key: key })
     );
-    return true;
   } catch (error) {
-    if (isMissingObject(error)) return false;
+    if (isMissingObject(error)) return null;
     throw error;
   }
+}
+
+export async function objectExists(kind: StorageBucket, key: string) {
+  return (await headObject(kind, key)) !== null;
 }
 
 export async function getObject(kind: StorageBucket, key: string) {

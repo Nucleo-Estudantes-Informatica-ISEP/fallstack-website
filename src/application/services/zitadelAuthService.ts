@@ -96,29 +96,34 @@ function randomToken(size = 32) {
 async function getDiscovery(): Promise<OidcDiscovery> {
   discoveryPromise ??= fetch(
     `${serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")}/.well-known/openid-configuration`,
-    { cache: "force-cache" }
-  ).then(async (response) => {
-    if (!response.ok)
-      throw new HttpError("Unable to load AuthNEI configuration", 502);
+    { cache: "force-cache", signal: AbortSignal.timeout(5000) }
+  )
+    .then(async (response) => {
+      if (!response.ok)
+        throw new HttpError("Unable to load AuthNEI configuration", 502);
 
-    const body = (await response.json()) as Partial<OidcDiscovery>;
-    if (
-      !body.issuer ||
-      !body.authorization_endpoint ||
-      !body.token_endpoint ||
-      !body.userinfo_endpoint ||
-      !body.jwks_uri
-    )
-      throw new HttpError("Invalid AuthNEI configuration", 502);
+      const body = (await response.json()) as Partial<OidcDiscovery>;
+      if (
+        !body.issuer ||
+        !body.authorization_endpoint ||
+        !body.token_endpoint ||
+        !body.userinfo_endpoint ||
+        !body.jwks_uri
+      )
+        throw new HttpError("Invalid AuthNEI configuration", 502);
 
-    if (
-      body.issuer.replace(/\/$/u, "") !==
-      serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")
-    )
-      throw new HttpError("AuthNEI issuer does not match configuration", 502);
+      if (
+        body.issuer.replace(/\/$/u, "") !==
+        serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")
+      )
+        throw new HttpError("AuthNEI issuer does not match configuration", 502);
 
-    return body as OidcDiscovery;
-  });
+      return body as OidcDiscovery;
+    })
+    .catch((error: unknown) => {
+      discoveryPromise = undefined;
+      throw error;
+    });
 
   return discoveryPromise;
 }
@@ -402,10 +407,6 @@ export interface LogoutUrlOptions {
 }
 
 export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
-  const discovery = await getDiscovery();
-  if (!discovery.end_session_endpoint)
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
-
   const idTokenHint =
     typeof hint === "object" && hint !== null
       ? hint.idTokenHint
@@ -427,6 +428,10 @@ export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
   if (!idTokenHint) {
     return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
   }
+
+  const discovery = await getDiscovery();
+  if (!discovery.end_session_endpoint)
+    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(

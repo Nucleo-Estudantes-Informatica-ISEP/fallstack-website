@@ -1,14 +1,24 @@
 import { z } from "zod";
 
+import {
+  safeCompanySocialLink,
+  type SocialLinks,
+} from "@/domain/company/companyProfileContent";
 import { FACT_ICON_NAMES } from "@/domain/company/factIcons";
 import { LOGO_WIDTH_CLASSES } from "@/domain/company/logoDisplayClasses";
 import { normalizeYouTubeEmbedUrl } from "@/domain/company/youtubeEmbed";
-import { websiteUrlSchema } from "@/schemas/websiteUrlSchema";
 
-const optionalLink = websiteUrlSchema
-  .optional()
-  .or(z.literal(""))
-  .transform((value) => (value === "" ? undefined : value));
+const optionalLink = (key: keyof SocialLinks) =>
+  z
+    .string()
+    .trim()
+    .refine(
+      (value) => value === "" || safeCompanySocialLink(key, value) !== null,
+      "Use an HTTPS link for this platform"
+    )
+    .nullable()
+    .optional()
+    .transform((value) => (value === "" ? null : value));
 
 export const youtubeEmbedUrlSchema = z
   .string()
@@ -31,11 +41,11 @@ export const youtubeEmbedUrlSchema = z
   });
 
 export const socialLinksSchema = z.object({
-  twitter: optionalLink,
-  facebook: optionalLink,
-  instagram: optionalLink,
-  youtube: optionalLink,
-  linkedin: optionalLink,
+  twitter: optionalLink("twitter"),
+  facebook: optionalLink("facebook"),
+  instagram: optionalLink("instagram"),
+  youtube: optionalLink("youtube"),
+  linkedin: optionalLink("linkedin"),
 });
 
 export const factSchema = z.object({

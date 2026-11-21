@@ -9,8 +9,10 @@ describe("websiteUrlSchema", () => {
     );
   });
 
-  it("accepts an http URL", () => {
-    expect(websiteUrlSchema.safeParse("http://example.com").success).toBe(true);
+  it("rejects an unencrypted HTTP URL", () => {
+    expect(websiteUrlSchema.safeParse("http://example.com").success).toBe(
+      false
+    );
   });
 
   it("rejects a javascript: URL", () => {

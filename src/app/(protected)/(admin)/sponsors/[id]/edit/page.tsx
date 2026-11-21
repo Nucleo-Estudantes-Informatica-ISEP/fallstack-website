@@ -21,7 +21,9 @@ const EditSponsorPage = async ({ params }: EditSponsorPageProps) => {
       <h1 className="text-2xl font-bold text-gray-800">
         {t("Editar patrocinador")}
       </h1>
-      <SponsorForm sponsor={toAdminSponsorDto(sponsor)} />
+      <SponsorForm
+        sponsor={{ ...toAdminSponsorDto(sponsor), website: sponsor.website }}
+      />
     </section>
   );
 };

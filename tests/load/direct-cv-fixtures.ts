@@ -9,6 +9,7 @@ import {
   deleteObject,
 } from "@/application/services/objectStorageService";
 import { quarantineCvKey } from "@/domain/cvUpload";
+import generateRandomCode from "@/utils/GenerateCode";
 
 import { syntheticPdf } from "../fixtures/pdf";
 
@@ -32,6 +33,7 @@ type Manifest = {
   companies: string[];
   rankId: string;
   actionId: string;
+  actionPresenterCookie: string;
   storageOrigin: string;
   uploads: { cookie: string; code: string }[];
   business: {
@@ -45,13 +47,14 @@ const manifest: Manifest = {
   companies: [],
   rankId: randomUUID(),
   actionId: randomUUID(),
+  actionPresenterCookie: "",
   storageOrigin: new URL(process.env.S3_PUBLIC_ENDPOINT!).origin,
   uploads: [],
   business: [],
 };
-function cookie(sub: string, employee = false) {
+function cookie(sub: string, employee = false, admin = false) {
   return `@Fallstack26:auth=${jwt.sign(
-    { sub, email: `${sub}@example.test`, employee, admin: false },
+    { sub, email: `${sub}@example.test`, employee, admin },
     process.env.AUTH_SECRET!,
     {
       issuer: "fallstack",
@@ -64,7 +67,7 @@ function cookie(sub: string, employee = false) {
 async function student() {
   const id = randomUUID();
   manifest.users.push(id);
-  const code = `load-${id}`;
+  const code = generateRandomCode();
   await writeFile(file, JSON.stringify(manifest));
   await db.student.create({
     data: {
@@ -131,6 +134,18 @@ async function main() {
             isVisible: false,
           },
         });
+        const presenter = randomUUID();
+        manifest.users.push(presenter);
+        await writeFile(file, JSON.stringify(manifest));
+        await db.user.create({
+          data: {
+            id: presenter,
+            zitadelUserId: presenter,
+            email: `${presenter}@example.test`,
+            adminRole: "ADMIN",
+          },
+        });
+        manifest.actionPresenterCookie = cookie(presenter, false, true);
         for (let i = 0; i < 40; i++) {
           manifest.uploads.push(await student());
           await writeFile(file, JSON.stringify(manifest));
@@ -146,6 +161,7 @@ async function main() {
               id: companyId,
               name: `Load company ${companyId}`,
               rankId: manifest.rankId,
+              active: true,
             },
           });
           await db.employee.create({
