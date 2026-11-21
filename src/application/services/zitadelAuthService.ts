@@ -225,7 +225,10 @@ async function verifyIdToken(idToken: string, expectedNonce: string) {
   return claims;
 }
 
-export async function createAuthorizationRequest(next?: string | null) {
+export async function createAuthorizationRequest(
+  next?: string | null,
+  prompt?: "create"
+) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
   const state = randomToken();
@@ -241,6 +244,7 @@ export async function createAuthorizationRequest(next?: string | null) {
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
+  if (prompt) url.searchParams.set("prompt", prompt);
 
   return {
     url: url.toString(),

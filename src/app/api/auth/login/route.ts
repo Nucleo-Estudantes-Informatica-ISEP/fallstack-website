@@ -7,8 +7,14 @@ import {
 } from "@/application/services/zitadelAuthService";
 
 export async function GET(request: NextRequest) {
+  const registration = request.nextUrl.searchParams.get("register") === "1";
+  if (registration && serverEnv.EVENT_MODE === "offseason") {
+    return NextResponse.redirect(new URL("/signup", request.url));
+  }
+
   const auth = await createAuthorizationRequest(
-    request.nextUrl.searchParams.get("next")
+    registration ? "/signup" : request.nextUrl.searchParams.get("next"),
+    registration ? "create" : undefined
   );
   const response = NextResponse.redirect(auth.url);
   const cookieOptions = {
