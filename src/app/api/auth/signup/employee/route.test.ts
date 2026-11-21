@@ -1,8 +1,10 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import config from "@/config";
 import { signUpEmployee } from "@/application/services/authApplicationService";
 import getServerSession from "@/application/services/sessionService";
+import { verifyAppSession } from "@/application/services/zitadelAuthService";
 
 import { POST } from "./route";
 
@@ -23,6 +25,10 @@ vi.mock("@/application/services/sessionService", () => ({
 
 vi.mock("@/application/services/authApplicationService", () => ({
   signUpEmployee: vi.fn(),
+}));
+
+vi.mock("@/application/services/zitadelAuthService", () => ({
+  verifyAppSession: vi.fn(),
 }));
 
 const session = {
@@ -67,7 +73,7 @@ test("rejects employee registration during offseason", async () => {
   expect(signUpEmployee).not.toHaveBeenCalled();
 });
 
-test("employee signup propagates only verified membership and attendance expiry", async () => {
+test("employee signup propagates only verified membership, expiry and sign-out hints", async () => {
   vi.mocked(getServerSession).mockResolvedValue({
     id: "employee",
     zitadelUserId: "subject",
@@ -76,10 +82,21 @@ test("employee signup propagates only verified membership and attendance expiry"
     attendanceExpiresAt: 123000,
   } as never);
   vi.mocked(signUpEmployee).mockResolvedValue("signed-session");
+  vi.mocked(verifyAppSession).mockReturnValue({
+    sub: "subject",
+    email: "employee@example.org",
+    employee: false,
+    admin: false,
+    idToken: "fixture-identity",
+    loginName: "employee@example.org",
+  });
   const response = await POST(
     new NextRequest("http://localhost/api/auth/signup/employee", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        cookie: `${config.cookies.auth.name}=existing-app-session`,
+      },
       body: JSON.stringify({
         name: "Employee",
         companyCode: "fs_emp_12345678",
@@ -91,7 +108,12 @@ test("employee signup propagates only verified membership and attendance expiry"
   );
   expect(response.status).toBe(201);
   expect(signUpEmployee).toHaveBeenCalledWith(
-    expect.objectContaining({ isNeiMember: true, attendanceExpiresAt: 123000 })
+    expect.objectContaining({
+      isNeiMember: true,
+      attendanceExpiresAt: 123000,
+      idToken: "fixture-identity",
+      loginName: "employee@example.org",
+    })
   );
   expect(response.headers.get("set-cookie")).toContain("signed-session");
 });
