@@ -80,7 +80,11 @@ const HomeCallToAction: React.FC<HomeCallToActionProps> = ({ language }) => {
 
   return (
     <div className={rootClassName}>
-      <Link href={destination.href} className={primaryClassName}>
+      <Link
+        href={destination.href}
+        prefetch={destination.kind === "guest" ? false : undefined}
+        className={primaryClassName}
+      >
         {labels[destination.kind][language]}
       </Link>
       {destination.kind === "guest" && (
