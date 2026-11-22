@@ -15,6 +15,7 @@ interface ConfirmDialogProps {
   cancelLabel: string;
   onConfirm: () => void;
   isConfirming?: boolean;
+  alternativeAction?: { label: string; onClick: () => void };
 }
 
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
@@ -26,6 +27,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelLabel,
   onConfirm,
   isConfirming,
+  alternativeAction,
 }) => {
   const t = useUiText();
   return (
@@ -42,7 +44,19 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         {t(title)}
       </h2>
       <p>{t(message)}</p>
-      <div className="flex w-full gap-4">
+      <div
+        className={`flex w-full gap-4 ${alternativeAction ? "flex-col" : ""}`}
+      >
+        {alternativeAction && (
+          <button
+            type="button"
+            onClick={alternativeAction.onClick}
+            disabled={isConfirming}
+            className="ui-focus min-h-11 rounded-md border border-ui-action px-4 py-2 font-medium text-ui-action hover:bg-ui-action/10 disabled:opacity-60"
+          >
+            {t(alternativeAction.label)}
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setIsVisible(false)}

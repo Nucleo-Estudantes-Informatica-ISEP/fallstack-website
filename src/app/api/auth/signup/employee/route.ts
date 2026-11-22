@@ -6,12 +6,13 @@ import { serverEnv } from "@/config/env.server";
 import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { defineHandler } from "@/lib/http/server";
 import { signUpEmployee } from "@/application/services/authApplicationService";
+import { verifyAppSession } from "@/application/services/zitadelAuthService";
 import { employeeSignUpSchema } from "@/schemas/employeeSignUpSchema";
 
 export const POST = defineHandler({
   auth: "session",
   schema: employeeSignUpSchema,
-  handler: async ({ body, session }) => {
+  handler: async ({ body, req, session }) => {
     if (serverEnv.EVENT_MODE === "offseason") {
       return NextResponse.json(
         { error: "As inscrições estão encerradas." },
@@ -22,6 +23,11 @@ export const POST = defineHandler({
     if (!session?.zitadelUserId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    const currentToken = req.cookies.get(config.cookies.auth.name)?.value;
+    const claims = currentToken ? verifyAppSession(currentToken) : null;
+    if (!claims || claims.sub !== session.zitadelUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const token = await signUpEmployee({
       userId: session.id,
       zitadelUserId: session.zitadelUserId,
@@ -29,6 +35,8 @@ export const POST = defineHandler({
       ...body,
       isNeiMember: session.neiMember,
       attendanceExpiresAt: session.attendanceExpiresAt,
+      idToken: claims.idToken,
+      loginName: claims.loginName,
     });
 
     const response = NextResponse.json(
