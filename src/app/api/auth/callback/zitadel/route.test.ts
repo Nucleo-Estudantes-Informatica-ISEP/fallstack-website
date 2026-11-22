@@ -70,6 +70,21 @@ test("distinguishes cancelled, expired and unexpected callbacks without exposing
   expect(completeAuthorizationCode).not.toHaveBeenCalled();
 });
 
+test("preserves the active transaction when an older callback arrives", async () => {
+  const stale = await callbackResponse("state=older-request&code=fixture-code");
+
+  expect(
+    new URL(stale.headers.get("location")!).searchParams.get("error")
+  ).toBe("auth-expired");
+  expect(stale.headers.get("set-cookie")).toBeNull();
+  expect(completeAuthorizationCode).not.toHaveBeenCalled();
+
+  const cancelled = await callbackResponse(
+    "state=current-request&error=access_denied"
+  );
+  expect(cancelled.cookies.get(oidcCookieNames.state)?.value).toBe("");
+});
+
 test("asks for verification only when the provider confirmed the matching email is unverified", async () => {
   vi.mocked(completeAuthorizationCode).mockRejectedValueOnce(
     new AuthNeiEmailVerificationRequired("fixture@example.test")

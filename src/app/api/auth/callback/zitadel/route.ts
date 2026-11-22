@@ -23,12 +23,6 @@ function clearOidcCookies(response: NextResponse) {
     response.cookies.delete(name);
 }
 
-function authFailure(failure: SignInFailure) {
-  const response = NextResponse.redirect(appUrl(`/login?error=${failure}`));
-  clearOidcCookies(response);
-  return response;
-}
-
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
   const state = request.nextUrl.searchParams.get("state");
@@ -37,14 +31,17 @@ export async function GET(request: NextRequest) {
   const expectedNonce = request.cookies.get(oidcCookieNames.nonce)?.value;
   const verifier = request.cookies.get(oidcCookieNames.verifier)?.value;
   const next = request.cookies.get(oidcCookieNames.next)?.value ?? "/";
+  const current = Boolean(state && state === expectedState);
 
-  if (
-    state &&
-    (code || errorCode) &&
-    (!expectedState || state !== expectedState || !expectedNonce || !verifier)
-  )
+  function authFailure(failure: SignInFailure) {
+    const response = NextResponse.redirect(appUrl(`/login?error=${failure}`));
+    if (current) clearOidcCookies(response);
+    return response;
+  }
+
+  if (state && (code || errorCode) && (!current || !expectedNonce || !verifier))
     return authFailure("auth-expired");
-  if (!state || state !== expectedState) return authFailure("auth-code-error");
+  if (!current) return authFailure("auth-code-error");
   if (errorCode === "access_denied") return authFailure("auth-cancelled");
   if (!code || errorCode || !expectedNonce || !verifier)
     return authFailure("auth-code-error");
