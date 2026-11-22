@@ -14,7 +14,8 @@ answers.
 Save the current step and supported text and selection fields in this browser
 under the stable local FallStack account ID. Validate saved data and retain only
 interest IDs that are currently offered. Delete the completed draft after
-profile creation and clear signup drafts on explicit sign-out.
+profile creation. Signing out keeps drafts on this browser so each account can
+resume its own signup when it returns.
 
 ## Consequences
 

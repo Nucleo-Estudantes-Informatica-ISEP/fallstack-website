@@ -56,15 +56,3 @@ export function clearStudentDraft(accountId: string) {
     // Completion still succeeds when browser storage is unavailable.
   }
 }
-
-export function clearStudentDraftsOnSignOut() {
-  try {
-    const storage = window.localStorage;
-    for (let index = storage.length - 1; index >= 0; index--) {
-      const key = storage.key(index);
-      if (key?.startsWith(draftPrefix)) storage.removeItem(key);
-    }
-  } catch {
-    // Sign-out still succeeds when browser storage is unavailable.
-  }
-}
