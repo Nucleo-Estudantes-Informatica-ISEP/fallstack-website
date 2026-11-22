@@ -12,4 +12,4 @@ Store non-root destinations in PostgreSQL against a separate random token for up
 
 ## Consequences
 
-Sign-in with a destination now requires database access. Abandoned destinations remain in the database until a later destination write performs cleanup, so their retention is not a strict 30-minute deletion guarantee. Migration must run before the updated application starts. Destinations are limited by the request and redirect URL limits of the deployment, not by cookie size.
+Sign-in with a destination requires database access. If storing it fails, the login page keeps the destination for a new attempt. If reading it during a callback fails, the callback keeps its cookies and offers a retry before redeeming the authorization code. Abandoned destinations remain in the database until a later destination write performs cleanup, so their retention is not a strict 30-minute deletion guarantee. Migration must run before the updated application starts. Destinations are limited by the request and redirect URL limits of the deployment, not by cookie size.

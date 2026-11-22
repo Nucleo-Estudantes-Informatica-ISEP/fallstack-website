@@ -102,3 +102,17 @@ test("does not store the default destination", async () => {
     auth.next = previous;
   }
 });
+
+test("lets the user retry with their destination when the store is unavailable", async () => {
+  vi.mocked(saveOidcRestart).mockRejectedValueOnce(
+    new Error("store unavailable")
+  );
+  const response = await GET(
+    new NextRequest("https://fallstack.example.test/api/auth/login")
+  );
+  const retry = new URL(response.headers.get("location")!);
+  expect(retry.pathname).toBe("/login");
+  expect(retry.searchParams.get("error")).toBe("auth-code-error");
+  expect(retry.searchParams.get("next")).toBe(auth.next);
+  expect(response.headers.get("set-cookie")).toBeNull();
+});

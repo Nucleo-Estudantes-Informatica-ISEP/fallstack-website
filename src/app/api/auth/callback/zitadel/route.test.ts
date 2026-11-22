@@ -76,6 +76,21 @@ test("distinguishes cancelled, expired and unexpected callbacks without exposing
   expect(completeAuthorizationCode).not.toHaveBeenCalled();
 });
 
+test("preserves the active transaction when an older callback arrives", async () => {
+  const stale = await callbackResponse("state=older-request&code=fixture-code");
+
+  expect(
+    new URL(stale.headers.get("location")!).searchParams.get("error")
+  ).toBe("auth-expired");
+  expect(stale.headers.get("set-cookie")).toBeNull();
+  expect(completeAuthorizationCode).not.toHaveBeenCalled();
+
+  const cancelled = await callbackResponse(
+    "state=current-request&error=access_denied"
+  );
+  expect(cancelled.cookies.get(oidcCookieNames.state)?.value).toBe("");
+});
+
 test("asks for verification only when the provider confirmed the matching email is unverified", async () => {
   vi.mocked(completeAuthorizationCode).mockRejectedValueOnce(
     new AuthNeiEmailVerificationRequired("fixture@example.test")
@@ -203,4 +218,25 @@ test("does not load a destination from the OIDC state alone", async () => {
   expect(
     new URL(response.headers.get("location")!).searchParams.has("next")
   ).toBe(false);
+});
+
+test("keeps the callback retryable when reading its destination fails", async () => {
+  const state = "a".repeat(43);
+  vi.mocked(consumeOidcRestart).mockRejectedValueOnce(
+    new Error("store unavailable")
+  );
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture-code`,
+      {
+        headers: {
+          cookie: `${oidcRestartCookieName(state)}=stored:${"z".repeat(43)}`,
+        },
+      }
+    )
+  );
+  expect(response.status).toBe(503);
+  expect(response.headers.get("set-cookie")).toBeNull();
+  expect(await response.text()).toContain("Tentar novamente");
+  expect(completeAuthorizationCode).not.toHaveBeenCalled();
 });

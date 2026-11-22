@@ -635,6 +635,8 @@ export const uiEnglish: Record<string, string> = {
   "Selecionar vencedor 🎉": "Select winner 🎉",
   "A preparar passe...": "Preparing pass...",
   "Tentar novamente": "Try again",
+  "O início de sessão está temporariamente indisponível.":
+    "Sign-in is temporarily unavailable.",
   "Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou Guardar em Ficheiros.":
     "Pass ready. Tap Save pass and choose Save image or Save to Files.",
   "Sem QR Code": "No QR code",

@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 
 import { serverEnv } from "@/config/env.server";
+import { reportError } from "@/lib/logger";
 import { saveOidcRestart } from "@/application/repositories/oidcRestartRepository";
 import {
   createAuthorizationRequest,
@@ -38,7 +39,24 @@ export async function GET(request: NextRequest) {
   const token = storedDestination
     ? randomBytes(32).toString("base64url")
     : undefined;
-  if (token) await saveOidcRestart(token, auth.next);
+  if (token) {
+    try {
+      await saveOidcRestart(token, auth.next);
+    } catch (error) {
+      reportError(
+        error,
+        { operation: "oidc_restart_save" },
+        "Could not store the sign-in destination"
+      );
+      const retry = new URL("/login", request.url);
+      retry.searchParams.set(
+        "error",
+        loginHint ? "auth-verification-required" : "auth-code-error"
+      );
+      retry.searchParams.set("next", auth.next);
+      return NextResponse.redirect(retry);
+    }
+  }
   const response = NextResponse.redirect(auth.url);
   const cookieOptions = {
     httpOnly: true,

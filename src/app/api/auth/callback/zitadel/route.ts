@@ -17,6 +17,8 @@ import {
 import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
 import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 import type { SignInFailure } from "@/domain/auth/signInFailure";
+import { resolveLanguage } from "@/domain/i18n/translations";
+import { uiText } from "@/domain/i18n/ui";
 
 function appUrl(path: string) {
   return new URL(path, serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
@@ -40,7 +42,36 @@ export async function GET(request: NextRequest) {
     ? request.cookies.get(recoveryCookie)?.value
     : undefined;
   const token = parseOidcRestartMarker(recoveryValue)?.token;
-  const storedDestination = token ? await consumeOidcRestart(token) : undefined;
+  let storedDestination: string | undefined;
+  if (token) {
+    try {
+      storedDestination = await consumeOidcRestart(token);
+    } catch (error) {
+      reportError(
+        error,
+        { operation: "oidc_restart_consume" },
+        "Could not read the sign-in destination"
+      );
+      // Leave the callback and its cookies intact so the browser can retry.
+      const language = resolveLanguage(request.headers.get("accept-language"));
+      const message = uiText(
+        language,
+        "O início de sessão está temporariamente indisponível."
+      );
+      const retry = uiText(language, "Tentar novamente");
+      return new NextResponse(
+        `<!doctype html><html lang="${language.toLowerCase()}"><meta charset="utf-8"><title>FallStack</title><p>${message}</p><a href="">${retry}</a></html>`,
+        {
+          status: 503,
+          headers: {
+            "Content-Type": "text/html; charset=utf-8",
+            "Cache-Control": "no-store",
+            "Retry-After": "5",
+          },
+        }
+      );
+    }
+  }
   const appDestination = sanitizeNext(
     current
       ? storedDestination ||
