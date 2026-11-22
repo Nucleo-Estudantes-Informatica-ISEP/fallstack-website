@@ -1,72 +1,118 @@
 // @vitest-environment node
 import { NextRequest } from "next/server";
-import { afterEach, expect, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
 
-import { oidcCookieNames } from "@/application/services/zitadelAuthService";
+import { saveOidcRestart } from "@/application/repositories/oidcRestartRepository";
+import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
 
 import { GET } from "./route";
 
-vi.mock("server-only", () => ({}));
-
-const issuer = "https://auth.example.test";
-
-const mockEnv = vi.hoisted(() => ({
-  NODE_ENV: "test",
-  AUTH_ISSUER_URL: "https://auth.example.test",
-  AUTH_CLIENT_ID: "fixture-client",
-  AUTH_REDIRECT_URI: "https://fallstack.example.test/api/auth/callback/zitadel",
-  AUTH_SCOPES: "openid email",
-  EVENT_MODE: "active",
+const auth = vi.hoisted(() => ({
+  state: "a".repeat(43),
+  next: "/event?filter=" + "x".repeat(1800),
 }));
-vi.mock("@/config/env.server", () => ({ serverEnv: mockEnv }));
+vi.mock("@/application/repositories/oidcRestartRepository", () => ({
+  saveOidcRestart: vi.fn(),
+}));
+vi.mock("@/config/env.server", () => ({ serverEnv: { NODE_ENV: "test" } }));
+vi.mock("@/application/services/zitadelAuthService", () => ({
+  createAuthorizationRequest: async () => ({
+    ...auth,
+    url: "https://auth.example.test/authorize",
+    nonce: "nonce",
+    verifier: "verifier",
+    maxAge: 600,
+  }),
+  oidcCookieNames: {
+    state: "state",
+    nonce: "nonce",
+    verifier: "verifier",
+    next: "next",
+  },
+  oidcRestartCookiePrefix: "restart-",
+  oidcRestartCookieName: (state: string) => `restart-${state}`,
+  verifyEmailCookieName: "verify-email",
+}));
 
-afterEach(() => {
-  mockEnv.EVENT_MODE = "active";
-  vi.unstubAllGlobals();
+beforeEach(() => vi.clearAllMocks());
+
+test("retains a long destination for an interrupted authorization", async () => {
+  const response = await GET(
+    new NextRequest("https://fallstack.example.test/api/auth/login")
+  );
+  const cookie = response.cookies.get(`restart-${auth.state}`);
+  expect(cookie).toMatchObject({
+    path: "/api/auth",
+    maxAge: 1800,
+    httpOnly: true,
+  });
+  const marker = parseOidcRestartMarker(cookie?.value);
+  expect(marker?.issuedAt).toBeGreaterThan(0);
+  expect(saveOidcRestart).toHaveBeenCalledWith(marker?.token, auth.next);
 });
 
-test("requests registration with PKCE and keeps the event profile as the return destination", async () => {
-  vi.stubGlobal(
-    "fetch",
-    vi.fn().mockResolvedValue(
-      Response.json({
-        issuer,
-        authorization_endpoint: issuer + "/authorize",
-        token_endpoint: issuer + "/token",
-        userinfo_endpoint: issuer + "/user",
-        jwks_uri: issuer + "/keys",
-      })
-    )
-  );
-
-  const response = await GET(
-    new NextRequest(
-      "https://fallstack.example.test/api/auth/login?register=1&next=/ignored"
-    )
-  );
-  const authorization = new URL(response.headers.get("location")!);
-  expect(authorization.origin).toBe(issuer);
-  expect(authorization.searchParams.get("prompt")).toBe("create");
-  expect(authorization.searchParams.get("code_challenge_method")).toBe("S256");
-  expect(response.cookies.get(oidcCookieNames.next)?.value).toBe("/signup");
-
-  const signIn = await GET(
-    new NextRequest(
-      "https://fallstack.example.test/api/auth/login?next=/attendance/scan"
-    )
-  );
-  const signInUrl = new URL(signIn.headers.get("location")!);
-  expect(signInUrl.searchParams.has("prompt")).toBe(false);
-  expect(signIn.cookies.get(oidcCookieNames.next)?.value).toBe(
-    "/attendance/scan"
-  );
+test("stores oversized destinations without putting them in cookies", async () => {
+  const previous = auth.next;
+  auth.next = "/event?filter=" + "x".repeat(5000);
+  try {
+    const response = await GET(
+      new NextRequest("https://fallstack.example.test/api/auth/login")
+    );
+    const marker = response.cookies.get(`restart-${auth.state}`)?.value;
+    expect(saveOidcRestart).toHaveBeenCalledWith(
+      parseOidcRestartMarker(marker)?.token,
+      auth.next
+    );
+    expect(response.cookies.get("next")?.value).toBe("/");
+  } finally {
+    auth.next = previous;
+  }
 });
 
-test("does not start event registration during the offseason", async () => {
-  mockEnv.EVENT_MODE = "offseason";
-  const response = await GET(
-    new NextRequest("https://fallstack.example.test/api/auth/login?register=1")
+test("evicts an older restart marker even when request cookies arrive out of order", async () => {
+  const base = Date.parse("2026-11-21T00:00:00Z");
+  const cookies = [4, 1, 3, 2].map(
+    (offset) =>
+      `restart-state-${offset}=stored:${base + offset}:${"z".repeat(43)}`
   );
-  expect(new URL(response.headers.get("location")!).pathname).toBe("/signup");
-  expect(response.cookies.get(oidcCookieNames.state)).toBeUndefined();
+  const response = await GET(
+    new NextRequest("https://fallstack.example.test/api/auth/login", {
+      headers: { cookie: cookies.join("; ") },
+    })
+  );
+  expect(response.cookies.get("restart-state-1")).toMatchObject({
+    path: "/api/auth",
+    maxAge: 0,
+  });
+  for (const offset of [2, 3, 4]) {
+    expect(response.cookies.get(`restart-state-${offset}`)).toBeUndefined();
+  }
+});
+
+test("does not store the default destination", async () => {
+  const previous = auth.next;
+  auth.next = "/";
+  try {
+    const response = await GET(
+      new NextRequest("https://fallstack.example.test/api/auth/login")
+    );
+    expect(saveOidcRestart).not.toHaveBeenCalled();
+    expect(response.cookies.get(`restart-${auth.state}`)).toBeUndefined();
+  } finally {
+    auth.next = previous;
+  }
+});
+
+test("lets the user retry with their destination when the store is unavailable", async () => {
+  vi.mocked(saveOidcRestart).mockRejectedValueOnce(
+    new Error("store unavailable")
+  );
+  const response = await GET(
+    new NextRequest("https://fallstack.example.test/api/auth/login")
+  );
+  const retry = new URL(response.headers.get("location")!);
+  expect(retry.pathname).toBe("/login");
+  expect(retry.searchParams.get("error")).toBe("auth-code-error");
+  expect(retry.searchParams.get("next")).toBe(auth.next);
+  expect(response.headers.get("set-cookie")).toBeNull();
 });
