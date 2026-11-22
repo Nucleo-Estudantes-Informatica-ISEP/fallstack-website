@@ -7,10 +7,13 @@ import jwt, { type Algorithm } from "jsonwebtoken";
 
 import { HttpError } from "@/types/HttpError";
 import { serverEnv } from "@/config/env.server";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
 const OIDC_STATE_TTL_SECONDS = 10 * 60;
+
+export const verifyEmailCookieName = "@Fallstack:verify-email";
 
 export const oidcCookieNames = {
   state: "@Fallstack:oidc-state",
@@ -18,6 +21,14 @@ export const oidcCookieNames = {
   verifier: "@Fallstack:oidc-verifier",
   next: "@Fallstack:oidc-next",
 } as const;
+
+export const oidcRestartCookiePrefix = "@Fallstack:oidc-restart-";
+
+export function oidcRestartCookieName(state: string | null) {
+  return state && /^[A-Za-z0-9_-]{43}$/u.test(state)
+    ? oidcRestartCookiePrefix + state
+    : null;
+}
 
 interface OidcDiscovery {
   issuer: string;
@@ -62,6 +73,12 @@ export interface ZitadelIdentity {
   idToken?: string;
 }
 
+export class AuthNeiEmailVerificationRequired extends HttpError {
+  constructor(readonly loginHint?: string) {
+    super("AuthNEI email verification required", 403);
+  }
+}
+
 export interface AppSessionClaims extends jwt.JwtPayload {
   attendanceExpiresAt?: number;
   sub: string;
@@ -88,29 +105,34 @@ function randomToken(size = 32) {
 async function getDiscovery(): Promise<OidcDiscovery> {
   discoveryPromise ??= fetch(
     `${serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")}/.well-known/openid-configuration`,
-    { cache: "force-cache" }
-  ).then(async (response) => {
-    if (!response.ok)
-      throw new HttpError("Unable to load AuthNEI configuration", 502);
+    { cache: "force-cache", signal: AbortSignal.timeout(5000) }
+  )
+    .then(async (response) => {
+      if (!response.ok)
+        throw new HttpError("Unable to load AuthNEI configuration", 502);
 
-    const body = (await response.json()) as Partial<OidcDiscovery>;
-    if (
-      !body.issuer ||
-      !body.authorization_endpoint ||
-      !body.token_endpoint ||
-      !body.userinfo_endpoint ||
-      !body.jwks_uri
-    )
-      throw new HttpError("Invalid AuthNEI configuration", 502);
+      const body = (await response.json()) as Partial<OidcDiscovery>;
+      if (
+        !body.issuer ||
+        !body.authorization_endpoint ||
+        !body.token_endpoint ||
+        !body.userinfo_endpoint ||
+        !body.jwks_uri
+      )
+        throw new HttpError("Invalid AuthNEI configuration", 502);
 
-    if (
-      body.issuer.replace(/\/$/u, "") !==
-      serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")
-    )
-      throw new HttpError("AuthNEI issuer does not match configuration", 502);
+      if (
+        body.issuer.replace(/\/$/u, "") !==
+        serverEnv.AUTH_ISSUER_URL.replace(/\/$/u, "")
+      )
+        throw new HttpError("AuthNEI issuer does not match configuration", 502);
 
-    return body as OidcDiscovery;
-  });
+      return body as OidcDiscovery;
+    })
+    .catch((error: unknown) => {
+      discoveryPromise = undefined;
+      throw error;
+    });
 
   return discoveryPromise;
 }
@@ -153,11 +175,6 @@ export function mapIdentityRoles(
     isGlobalAdmin: globalRoles.includes("admin"),
     isNeiMember: globalRoles.includes("nei-member"),
   };
-}
-
-function safeNext(value: string | null | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
 }
 
 async function verifyIdToken(idToken: string, expectedNonce: string) {
@@ -225,7 +242,11 @@ async function verifyIdToken(idToken: string, expectedNonce: string) {
   return claims;
 }
 
-export async function createAuthorizationRequest(next?: string | null) {
+export async function createAuthorizationRequest(
+  next?: string | null,
+  loginHint?: string,
+  prompt?: "create"
+) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
   const state = randomToken();
@@ -241,13 +262,15 @@ export async function createAuthorizationRequest(next?: string | null) {
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
+  if (loginHint) url.searchParams.set("login_hint", loginHint);
+  if (prompt) url.searchParams.set("prompt", prompt);
 
   return {
     url: url.toString(),
     state,
     nonce,
     verifier,
-    next: safeNext(next),
+    next: sanitizeNext(next ?? null),
     maxAge: OIDC_STATE_TTL_SECONDS,
   };
 }
@@ -319,6 +342,13 @@ export async function completeAuthorizationCode(input: {
   const name = typeof claims.name === "string" ? claims.name : undefined;
   const emailVerified = claims.email_verified === true;
 
+  if (
+    sub &&
+    sub === idTokenClaims.sub &&
+    email &&
+    (claims.email_verified === false || claims.email_verified === undefined)
+  )
+    throw new AuthNeiEmailVerificationRequired(loginName || email);
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 
@@ -383,10 +413,6 @@ export interface LogoutUrlOptions {
 }
 
 export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
-  const discovery = await getDiscovery();
-  if (!discovery.end_session_endpoint)
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
-
   const idTokenHint =
     typeof hint === "object" && hint !== null
       ? hint.idTokenHint
@@ -408,6 +434,10 @@ export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
   if (!idTokenHint) {
     return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
   }
+
+  const discovery = await getDiscovery();
+  if (!discovery.end_session_endpoint)
+    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(

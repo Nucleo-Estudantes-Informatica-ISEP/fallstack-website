@@ -123,7 +123,12 @@ describe.each([
         contentType: "application/pdf",
         size: 20,
       });
-    else expect(uploadFile).toHaveBeenCalledWith(name, expect.any(NextRequest));
+    else
+      expect(uploadFile).toHaveBeenCalledWith(
+        name,
+        expect.any(NextRequest),
+        student!.id
+      );
   });
 
   test("rejects missing file", async () => {

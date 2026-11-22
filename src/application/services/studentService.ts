@@ -58,7 +58,7 @@ import {
   cvKey,
   getObject,
   getObjectStream,
-  objectExists,
+  headObject,
   publicAvatarUrl,
 } from "./objectStorageService";
 
@@ -72,12 +72,10 @@ export async function createStudentProfile(userId: string, body: NewStudent) {
 
   // External storage I/O stays outside the transaction below —
   // no network calls while holding a DB transaction open.
-  let avatarUrl = body.avatarUrl ?? null;
-  if (!avatarUrl && body.avatar) {
-    if (!(await objectExists("avatar", avatarKey(body.avatar))))
-      throw new HttpError("Invalid avatar upload id", 400);
-    avatarUrl = publicAvatarUrl(body.avatar);
-  }
+  const avatarId = body.avatarUrl?.split("/").at(-1) ?? body.avatar;
+  const avatarUrl = avatarId
+    ? await requireOwnedAvatar(userId, avatarId)
+    : null;
   const cv = body.cvId ?? null;
 
   return withTransaction(async (tx) => {
@@ -143,8 +141,25 @@ export async function updateStudent(
   });
 }
 
-export const setStudentAvatar = (code: string, url: string) =>
-  updateStudentAvatar(code, url);
+async function requireOwnedAvatar(userId: string, id: string) {
+  const object = await headObject("avatar", avatarKey(id));
+  if (object?.Metadata?.owner !== userId)
+    throw new HttpError("Avatar upload not found", 404);
+  return publicAvatarUrl(id);
+}
+
+export async function setStudentAvatar(
+  userId: string,
+  code: string,
+  url: string
+) {
+  const student = await findStudentByCode(code);
+  if (!student || student.id !== userId)
+    throw new HttpError("Student not found", 404);
+  if (student.avatar === url) return;
+  const ownedUrl = await requireOwnedAvatar(userId, url.split("/").at(-1)!);
+  await updateStudentAvatar(code, ownedUrl);
+}
 
 export async function setStudentCv(code: string, id: string) {
   const student = await findStudentByCode(code);

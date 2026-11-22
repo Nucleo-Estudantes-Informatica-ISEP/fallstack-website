@@ -26,7 +26,10 @@ const EditEmployeePage = async ({ params }: EditEmployeePageProps) => {
         {t("Editar recrutador")}
       </h1>
       <EmployeeForm
-        employee={toAdminEmployeeDto(employee)}
+        employee={{
+          ...toAdminEmployeeDto(employee),
+          linkedin: employee.linkedin,
+        }}
         companyOptions={companies.map((c) => ({ label: c.name, value: c.id }))}
       />
     </section>

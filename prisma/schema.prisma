@@ -432,3 +432,11 @@ model WalletPass {
   objectId  String   @unique
   createdAt DateTime @default(now())
 }
+
+model OidcRestartDestination {
+  token       String   @id
+  destination String
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+}

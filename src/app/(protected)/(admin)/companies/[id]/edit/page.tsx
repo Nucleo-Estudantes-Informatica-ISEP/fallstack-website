@@ -13,7 +13,7 @@ import { getInterests } from "@/application/services/interestService";
 import { getUiText } from "@/application/services/uiLanguageService";
 import {
   parseFacts,
-  parseSocialLinks,
+  readSocialLinks,
 } from "@/domain/company/companyProfileContent";
 
 interface EditCompanyPageProps {
@@ -45,7 +45,7 @@ function toContentValue(
     bodyText: content.profile?.bodyText ?? "",
     videoTitle: content.profile?.videoTitle ?? null,
     videoHref: content.profile?.videoHref ?? null,
-    socialLinks: parseSocialLinks(content.profile?.socialLinks),
+    socialLinks: readSocialLinks(content.profile?.socialLinks),
     facts: parseFacts(content.profile?.facts),
     interestIds: content.interests.map((interest) => interest.id),
   };

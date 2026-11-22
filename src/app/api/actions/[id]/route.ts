@@ -16,15 +16,15 @@ interface ActionParams {
 }
 
 export const GET = defineHandler<ActionParams>({
-  auth: "public",
+  auth: "admin",
   handler: async ({ params }) => {
     const data = await getActionQrCode(params.id);
     if (!data)
       return NextResponse.json({ error: "Action not found" }, { status: 404 });
-    return NextResponse.json({
-      ...data,
-      action: toActionDto(data.action),
-    });
+    return NextResponse.json(
+      { ...data, action: toActionDto(data.action) },
+      { headers: { "Cache-Control": "private, no-store" } }
+    );
   },
 });
 

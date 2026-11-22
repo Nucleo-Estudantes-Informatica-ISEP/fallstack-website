@@ -384,6 +384,15 @@ export const uiEnglish: Record<string, string> = {
   "Iniciar sessão": "Sign in",
   "Registo de Colaborador": "Employee registration",
   "Continuar com AuthNEI": "Continue with AuthNEI",
+  "O início de sessão foi interrompido. Podes retomá-lo quando quiseres.":
+    "Sign-in was interrupted. You can resume it when you’re ready.",
+  "Retomar início de sessão": "Resume sign-in",
+  "Este pedido de início de sessão já não está ativo. Inicia um novo pedido.":
+    "This sign-in request is no longer active. Start a new request.",
+  "Reiniciar início de sessão": "Restart sign-in",
+  "Confirma o teu endereço de email no AuthNEI antes de voltares a iniciar sessão.":
+    "Verify your email address in AuthNEI before signing in again.",
+  "Verificar email": "Verify email",
   "Não foi possível concluir o início de sessão com o AuthNEI. Tenta novamente.":
     "Could not complete AuthNEI sign-in. Try again.",
   "As inscrições de colaboradores estão encerradas.":
@@ -394,8 +403,10 @@ export const uiEnglish: Record<string, string> = {
   "Ir para o dashboard da empresa": "Open company dashboard",
   "A tua identidade já foi confirmada pelo AuthNEI. Introduz o código fornecido pela empresa para associares esta conta à empresa.":
     "AuthNEI has verified your identity. Enter your company's invitation code to link this account.",
-  "Primeiro inicia sessão no AuthNEI. Depois regressas aqui para associares a tua conta à empresa com o código de colaborador.":
-    "First sign in with AuthNEI, then return here to link your account using the employee invitation code.",
+  "Introduz o código da empresa e inicia sessão no AuthNEI. Depois confirma a associação no FallStack.":
+    "Enter your company code and sign in with AuthNEI. Then confirm the link in FallStack.",
+  "Não foi possível guardar o código. Inicia sessão e volta ao registo de colaborador para o introduzir.":
+    "We couldn’t save your code. Sign in and return to employee registration to enter it.",
   "Estudantes, colaboradores e administradores usam a mesma conta AuthNEI. As permissões são atribuídas automaticamente pelo NEI e pela empresa associada.":
     "Students, employees and administrators use the same AuthNEI account. NEI and the associated company assign permissions automatically.",
   "Não consegues iniciar sessão?": "Can’t sign in?",
@@ -627,6 +638,8 @@ export const uiEnglish: Record<string, string> = {
   "Selecionar vencedor 🎉": "Select winner 🎉",
   "A preparar passe...": "Preparing pass...",
   "Tentar novamente": "Try again",
+  "O início de sessão está temporariamente indisponível.":
+    "Sign-in is temporarily unavailable.",
   "Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou Guardar em Ficheiros.":
     "Pass ready. Tap Save pass and choose Save image or Save to Files.",
   "Sem QR Code": "No QR code",

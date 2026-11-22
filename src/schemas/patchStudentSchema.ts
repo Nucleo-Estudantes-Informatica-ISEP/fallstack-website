@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { githubOrEmptySchema } from "./githubUrlSchema";
 import { institutionalEmailSchema } from "./institutionalEmailSchema";
 import { linkedinOrEmptySchema } from "./linkedinSchema";
 
@@ -10,7 +11,7 @@ export const patchStudentSchema = z
     institutionalEmail: institutionalEmailSchema,
     bio: z.string().max(1000),
     linkedin: linkedinOrEmptySchema,
-    github: z.string().max(2048),
+    github: githubOrEmptySchema,
     interests: z.array(z.uuid()).max(50),
   })
   .partial()

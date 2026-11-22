@@ -1,3 +1,5 @@
+import { isValidLinkedinUrl } from "@/schemas/linkedinSchema";
+
 export interface AdminEmployeeDto {
   id: string;
   name: string;
@@ -17,7 +19,10 @@ export const toAdminEmployeeDto = (employee: {
 }): AdminEmployeeDto => ({
   id: employee.id,
   name: employee.name,
-  linkedin: employee.linkedin,
+  linkedin:
+    employee.linkedin && isValidLinkedinUrl(employee.linkedin)
+      ? employee.linkedin
+      : null,
   active: employee.user.active,
   email: employee.user.email,
   companyId: employee.company.id,
