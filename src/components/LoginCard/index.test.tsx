@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { UiLanguageProvider } from "@/contexts/UiLanguageContext";
 import LoginPage from "@/app/(protected)/(auth)/login/page";
-import { uiText } from "@/domain/i18n/ui";
 
 import LoginCardComponent from ".";
 
@@ -15,6 +15,7 @@ function LoginCard(
 }
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/hooks/useLanguage", () => ({ default: () => "en" }));
 vi.mock("@/application/services/sessionService", () => ({
   default: async () => null,
   isCurrentAccountInactive: async () => false,
@@ -101,8 +102,21 @@ test("offers a localized link directly to AuthNEI help while signed out", () => 
   expect(
     screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
   ).toHaveAttribute("href", authHelpUrl);
-  expect(screen.getByRole("link", { name: "Não consegues iniciar sessão?" })).toHaveAttribute("target", "_blank");
-  expect(uiText("en", "Não consegues iniciar sessão?")).toBe("Can’t sign in?");
+  expect(
+    screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
+  ).toHaveAttribute("target", "_blank");
+});
+
+test("renders the English AuthNEI help label when the UI language is English", () => {
+  render(
+    <UiLanguageProvider>
+      <LoginCard />
+    </UiLanguageProvider>
+  );
+  expect(screen.getByRole("link", { name: "Can’t sign in?" })).toHaveAttribute(
+    "href",
+    authHelpUrl
+  );
 });
 
 test("employee registration links to the employee signup flow", () => {
