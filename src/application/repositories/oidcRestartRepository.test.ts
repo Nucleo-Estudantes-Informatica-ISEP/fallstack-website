@@ -19,7 +19,11 @@ test("stores separate attempts, consumes once, and refuses expired records", asy
   await saveOidcRestart(tokens[0], destination);
   await saveOidcRestart(tokens[1], "/other");
   await prisma.oidcRestartDestination.create({
-    data: { token: tokens[2], destination: "/expired", expiresAt: new Date(0) },
+    data: {
+      token: tokens[2],
+      destination: "/expired",
+      expiresAt: new Date(Date.now() - 1000),
+    },
   });
   expect(await consumeOidcRestart(tokens[2])).toBeUndefined();
   expect(await consumeOidcRestart(tokens[0])).toBe(destination);

@@ -21,7 +21,7 @@ export async function saveOidcRestart(token: string, destination: string) {
 export async function consumeOidcRestart(token: string) {
   const rows = await prisma.$queryRaw<Array<{ destination: string }>>`
     DELETE FROM "OidcRestartDestination"
-    WHERE "token" = ${token} AND "expiresAt" > CURRENT_TIMESTAMP
+    WHERE "token" = ${token} AND "expiresAt" > ${new Date().toISOString()}::timestamp
     RETURNING "destination"
   `;
   return rows[0]?.destination;

@@ -2,7 +2,9 @@
 import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import config from "@/config";
 import { consumeOidcRestart } from "@/application/repositories/oidcRestartRepository";
+import { completeZitadelSignIn } from "@/application/services/authApplicationService";
 import {
   AuthNeiEmailVerificationRequired,
   completeAuthorizationCode,
@@ -31,6 +33,7 @@ vi.mock("@/application/services/zitadelAuthService", async (original) => ({
     typeof import("@/application/services/zitadelAuthService")
   >()),
   completeAuthorizationCode: vi.fn(),
+  signAppSession: () => "fixture-session",
 }));
 
 beforeEach(() => vi.clearAllMocks());
@@ -119,7 +122,8 @@ test.each([false, true])(
     const state = "a".repeat(43);
     const destination = "/event/en?section=schedule";
     const restartCookie = oidcRestartCookieName(state)!;
-    const items = [`${restartCookie}=${encodeURIComponent(destination)}`];
+    vi.mocked(consumeOidcRestart).mockResolvedValueOnce(destination);
+    const items = [`${restartCookie}=stored:1795219200000:${"z".repeat(43)}`];
     if (anotherAttemptIsPending) {
       items.push(
         `${oidcCookieNames.state}=new-attempt`,
@@ -144,7 +148,7 @@ test.each([false, true])(
   }
 );
 
-test("recovers a long interrupted destination from the bounded restart cookie", async () => {
+test("ignores a raw destination in the recovery cookie", async () => {
   const state = "b".repeat(43);
   const destination = "/event?filter=" + "x".repeat(1800);
   const cookie = oidcRestartCookieName(state)!;
@@ -156,7 +160,8 @@ test("recovers a long interrupted destination from the bounded restart cookie", 
   );
   expect(
     new URL(response.headers.get("location")!).searchParams.get("next")
-  ).toBe(destination);
+  ).toBeNull();
+  expect(consumeOidcRestart).not.toHaveBeenCalled();
 });
 
 test("recovers an oversized interrupted destination from shared storage", async () => {
@@ -239,4 +244,35 @@ test("keeps the callback retryable when reading its destination fails", async ()
   expect(response.headers.get("set-cookie")).toBeNull();
   expect(await response.text()).toContain("Tentar novamente");
   expect(completeAuthorizationCode).not.toHaveBeenCalled();
+});
+
+test("clears the consumed recovery cookie after establishing the app session", async () => {
+  const state = "f".repeat(43);
+  const recoveryCookie = oidcRestartCookieName(state)!;
+  vi.mocked(consumeOidcRestart).mockResolvedValueOnce("/signup");
+  vi.mocked(completeZitadelSignIn).mockResolvedValueOnce("/signup");
+  const cookies = [
+    `${oidcCookieNames.state}=${state}`,
+    `${oidcCookieNames.nonce}=nonce`,
+    `${oidcCookieNames.verifier}=verifier`,
+    `${recoveryCookie}=stored:1795219200000:${"z".repeat(43)}`,
+  ];
+
+  const response = await GET(
+    new NextRequest(
+      `https://fallstack.example.test/api/auth/callback/zitadel?state=${state}&code=fixture`,
+      { headers: { cookie: cookies.join("; ") } }
+    )
+  );
+
+  expect(response.headers.get("location")).toBe(
+    "https://fallstack.example.test/signup"
+  );
+  expect(response.cookies.get(config.cookies.auth.name)?.value).toBe(
+    "fixture-session"
+  );
+  expect(response.cookies.get(recoveryCookie)).toMatchObject({
+    path: "/api/auth",
+    maxAge: 0,
+  });
 });

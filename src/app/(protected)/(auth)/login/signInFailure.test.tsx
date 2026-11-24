@@ -21,13 +21,16 @@ vi.mock("@/components/LoginCard", () => ({
 test("passes the email verification failure and action to the login card", async () => {
   render(
     await LoginPage({
-      searchParams: Promise.resolve({ error: "auth-verification-required" }),
+      searchParams: Promise.resolve({
+        error: "auth-verification-required",
+        next: "/signup",
+      }),
     })
   );
 
   expect(
     screen.getByRole("link", { name: "auth-verification-required" })
-  ).toHaveAttribute("href", "/api/auth/login?verifyEmail=1");
+  ).toHaveAttribute("href", "/api/auth/login?verifyEmail=1&next=%2Fsignup");
 });
 
 test("passes a neutral failure to the login card for unknown errors", async () => {

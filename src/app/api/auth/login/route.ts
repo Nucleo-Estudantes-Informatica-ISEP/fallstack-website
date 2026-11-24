@@ -35,13 +35,15 @@ export async function GET(request: NextRequest) {
     }
   }
   const auth = await createAuthorizationRequest(next, loginHint);
-  const storedDestination = auth.next !== "/";
+  // Bound the sanitized value because URL normalization can expand the input.
+  const destination = auth.next.length <= 8192 ? auth.next : "/";
+  const storedDestination = destination !== "/";
   const token = storedDestination
     ? randomBytes(32).toString("base64url")
     : undefined;
   if (token) {
     try {
-      await saveOidcRestart(token, auth.next);
+      await saveOidcRestart(token, destination);
     } catch (error) {
       reportError(
         error,
@@ -53,7 +55,7 @@ export async function GET(request: NextRequest) {
         "error",
         loginHint ? "auth-verification-required" : "auth-code-error"
       );
-      retry.searchParams.set("next", auth.next);
+      retry.searchParams.set("next", destination);
       return NextResponse.redirect(retry);
     }
   }
@@ -70,11 +72,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set(oidcCookieNames.state, auth.state, cookieOptions);
   response.cookies.set(oidcCookieNames.nonce, auth.nonce, cookieOptions);
   response.cookies.set(oidcCookieNames.verifier, auth.verifier, cookieOptions);
-  response.cookies.set(
-    oidcCookieNames.next,
-    storedDestination ? "/" : auth.next,
-    cookieOptions
-  );
+  response.cookies.set(oidcCookieNames.next, "/", cookieOptions);
   const recoveryCookie = oidcRestartCookieName(auth.state);
   if (recoveryCookie && token) {
     const recoveryOptions = {
