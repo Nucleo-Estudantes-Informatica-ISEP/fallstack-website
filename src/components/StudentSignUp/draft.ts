@@ -3,13 +3,13 @@ import { z } from "zod";
 import type { StudentSignUpData } from "@/types/StudentSignUpData";
 
 const draftAnswers = z.object({
-  name: z.string().nullable(),
-  email: z.string().nullable(),
-  bio: z.string().nullable(),
+  name: z.string().max(100).nullable(),
+  email: z.string().max(254).nullable(),
+  bio: z.string().max(1000).nullable(),
   interests: z.array(z.string()),
   year: z.string().nullable(),
-  course: z.string().optional(),
-  linkedin: z.string().nullable(),
+  course: z.string().max(100).optional(),
+  linkedin: z.string().max(2048).nullable(),
 });
 
 const draftSchema = z.object({
@@ -54,5 +54,17 @@ export function clearStudentDraft(accountId: string) {
     window.localStorage.removeItem(keyFor(accountId));
   } catch {
     // Completion still succeeds when browser storage is unavailable.
+  }
+}
+
+export function clearStudentDrafts() {
+  try {
+    const storage = window.localStorage;
+    for (let index = storage.length - 1; index >= 0; index--) {
+      const key = storage.key(index);
+      if (key?.startsWith(draftPrefix)) storage.removeItem(key);
+    }
+  } catch {
+    // Sign-out still succeeds when browser storage is unavailable.
   }
 }

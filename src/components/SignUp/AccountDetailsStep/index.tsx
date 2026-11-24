@@ -84,7 +84,8 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
             aria-describedby={error ? "signup-year-error" : undefined}
             onChange={(event) => {
               setError(null);
-              setData({ ...data, name: event.target.value });
+              const name = event.target.value;
+              setData((previous) => ({ ...previous, name }));
             }}
           />
         )}
@@ -100,7 +101,8 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           aria-describedby={error ? "signup-year-error" : undefined}
           onChange={(event) => {
             setError(null);
-            setData({ ...data, course: event.target.value });
+            const course = event.target.value;
+            setData((previous) => ({ ...previous, course }));
           }}
         />
         <InputSelect
@@ -114,7 +116,8 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           aria-describedby={error ? "signup-year-error" : undefined}
           onChange={(event) => {
             setError(null);
-            setData({ ...data, year: event.target.value });
+            const year = event.target.value;
+            setData((previous) => ({ ...previous, year }));
           }}
           options={yearOptions}
         />
@@ -132,7 +135,8 @@ const AccountDetailsStep: FunctionComponent<AccountDetailsStepProps> = ({
           aria-describedby={error ? "signup-year-error" : undefined}
           onChange={(event) => {
             setError(null);
-            setData({ ...data, email: event.target.value });
+            const email = event.target.value;
+            setData((previous) => ({ ...previous, email }));
           }}
         />
       </div>

@@ -9,6 +9,8 @@ import BioStep from "@/components/SignUp/BioStep";
 import FinalStep from "@/components/SignUp/FinalStep";
 import InterestsStep from "@/components/SignUp/InterestsStep";
 import type { InterestDto } from "@/application/dto/interestDto";
+import { STUDENT_YEAR } from "@/domain/student/year";
+import { isIsepEmail } from "@/utils/isepEmail";
 
 import { clearStudentDraft, readStudentDraft, saveStudentDraft } from "./draft";
 
@@ -29,6 +31,7 @@ const StudentSignUp = ({
   const stepRef = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
   const completed = useRef(false);
+  const restoredAccount = useRef<string>();
   const [restored, setRestored] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<StudentSignUpData>({
@@ -44,19 +47,30 @@ const StudentSignUp = ({
   });
 
   useEffect(() => {
+    if (restoredAccount.current === accountId) return;
+    restoredAccount.current = accountId;
     const draft = readStudentDraft(accountId);
     if (draft) {
-      setCurrentStep(draft.step);
+      const validYear = Object.values<string>(STUDENT_YEAR).includes(
+        draft.answers.year ?? ""
+      );
+      const accountComplete =
+        validYear &&
+        Boolean(draft.answers.course?.trim()) &&
+        Boolean(authName || draft.answers.name?.trim()) &&
+        isIsepEmail(draft.answers.email ?? "");
+      setCurrentStep(accountComplete ? draft.step : 0);
       setData((previous) => ({
         ...previous,
         ...draft.answers,
+        year: validYear ? draft.answers.year : null,
         interests: draft.answers.interests.filter((id) =>
           interests.some((interest) => interest.id === id)
         ),
       }));
     }
     setRestored(true);
-  }, [accountId, interests]);
+  }, [accountId, authName, interests]);
 
   useEffect(() => {
     if (restored && !completed.current)
