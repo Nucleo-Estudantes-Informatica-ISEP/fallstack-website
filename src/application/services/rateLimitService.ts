@@ -20,7 +20,8 @@ export type LimitedEndpoint =
   | "upload_cv_part"
   | "upload_avatar"
   | "session_check_in"
-  | "student_token";
+  | "student_token"
+  | "employee_signup";
 
 export function createRateLimitService(store: RateLimitStore) {
   return async (

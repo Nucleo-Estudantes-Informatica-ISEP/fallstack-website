@@ -41,7 +41,9 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
 
     if (res instanceof Error) {
       toast.error(
-        res instanceof HttpClientError && res.status === 404
+        res instanceof HttpClientError &&
+          res.status === 404 &&
+          res.message === "Invalid company code"
           ? t("Código de empresa inválido.")
           : res.message
       );

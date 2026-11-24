@@ -55,6 +55,35 @@ const LoginCard: React.FC<LoginCardProps> = ({
   const [codeStorageError, setCodeStorageError] = useState(false);
 
   useEffect(() => {
+    if (user) return;
+
+    function clearOnHistoryReturn() {
+      try {
+        sessionStorage.removeItem(companyCodeKey);
+      } catch {
+        // The sign-in screen remains available without storage.
+      }
+      setPendingCode("");
+    }
+
+    if (
+      (
+        performance.getEntriesByType("navigation")[0] as
+          PerformanceNavigationTiming | undefined
+      )?.type === "back_forward"
+    ) {
+      clearOnHistoryReturn();
+    }
+
+    function onPageShow(event: PageTransitionEvent) {
+      if (event.persisted) clearOnHistoryReturn();
+    }
+
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [user]);
+
+  useEffect(() => {
     if (!signInFailure && (!registeringEmployee || !user)) return;
     try {
       const stored = sessionStorage.getItem(companyCodeKey);

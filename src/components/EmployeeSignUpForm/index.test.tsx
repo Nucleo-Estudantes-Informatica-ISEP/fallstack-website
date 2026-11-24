@@ -92,17 +92,21 @@ test("shows the API error and does not complete onboarding on failure", async ()
   expect(onSuccess).not.toHaveBeenCalled();
 });
 
-test("prefills a restored code and explains a server-side invalid code response", async () => {
-  signUpEmployeeMock.mockResolvedValue(new HttpClientError("Not found", 404));
-  render(<EmployeeSignUpForm initialCode="example-invite" />);
-  expect(screen.getByLabelText("Código da Empresa")).toHaveValue(
-    "example-invite"
-  );
-  fireEvent.change(screen.getByLabelText("Nome"), {
-    target: { value: "Fixture Student" },
-  });
-  fireEvent.click(screen.getByRole("button", { name: "Associar à empresa" }));
-  await waitFor(() =>
-    expect(toastErrorMock).toHaveBeenCalledWith("Código de empresa inválido.")
-  );
-});
+test.each([
+  ["Invalid company code", "Código de empresa inválido."],
+  ["Not found", "Not found"],
+])(
+  "prefills a restored code and handles the server error %s",
+  async (message, expected) => {
+    signUpEmployeeMock.mockResolvedValue(new HttpClientError(message, 404));
+    render(<EmployeeSignUpForm initialCode="example-invite" />);
+    expect(screen.getByLabelText("Código da Empresa")).toHaveValue(
+      "example-invite"
+    );
+    fireEvent.change(screen.getByLabelText("Nome"), {
+      target: { value: "Fixture Student" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Associar à empresa" }));
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith(expected));
+  }
+);

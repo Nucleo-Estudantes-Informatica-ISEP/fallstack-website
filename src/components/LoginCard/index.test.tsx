@@ -391,3 +391,17 @@ test("interrupted sign-in starts a fresh request for the original destination", 
     "/api/auth/login?next=%2Fevent%2Fen%3Fsection%3Dschedule"
   );
 });
+
+test("clears a pending invite code when the signed-out page is restored from browser history", () => {
+  sessionStorage.setItem(
+    "fallstack-employee-invite",
+    `${Date.now() + 60_000}:example-invite`
+  );
+  render(<LoginCard initialView="employee" />);
+
+  const event = new Event("pageshow");
+  Object.defineProperty(event, "persisted", { value: true });
+  fireEvent(window, event);
+
+  expect(sessionStorage.getItem("fallstack-employee-invite")).toBeNull();
+});
