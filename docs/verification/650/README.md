@@ -5,7 +5,7 @@ and `main` at `034e317f7a66f1a252c02fe43a816bbd48294dba`. A tree comparison
 showed only changelog and release evidence differences. The
 [2026 release record](../../evidence/2026-edition-release.md) identifies the
 audited `main` commit as the last recorded event-day production deployment.
-The audit fixes and local verification cover runtime revision `776f2483ec50f25797b3dec777823046f24dcd21`. Subsequent commits add this report and the route matrix.
+The audit fixes and local verification cover runtime revision `776f2483ec50f25797b3dec777823046f24dcd21`. Subsequent commits add this report, route matrix, route-level tests and the Effect dependency update described below.
 
 The [route and access matrix](route-matrix.md) accounts for all 75 route
 handlers, 102 explicit HTTP method exports, 56 rendered pages, one server
@@ -81,6 +81,17 @@ dashboard check does not establish the permissions of today's MinIO buckets.
 | Direct CV upload                         | CSPRNG UUID ticket, session owner, constrained S3 signature and exact quarantine/part scope. Finalize validates content before a fenced publish.                                                                             | Configured signing TTL, 300 seconds by default. A valid storage signature can be used within that window; ticket ownership and state gate finalization and attachment.                                           |
 | Asset and database IDs                   | Media uses random UUIDs and fixed keys; anonymous media is intentionally public. Private CVs, student/company data and upload tickets apply role/ownership checks in addition to IDs.                                        | Public media URLs may be cached. Ordinary UUIDs and slugs have no bearer expiry and are treated as identifiers.                                                                                                  |
 
+A bare student code is accepted by the employee-only `POST /api/students/token`
+and staff-only `POST /api/sessions/[sessionId]/check-ins` endpoints. A code alone
+does not authorize a request. An employee can exchange it for a signed
+recruiting token for preview and, through `/api/saved`, save a student or record
+a company booth scan. Eligible staff can manually check in a student during an
+open attendance period. Student action QR redemption separately requires an
+authenticated student and the action QR. On the audited revision the employee
+exchange limit was five invalid lookups per employee per minute per replica.
+PR #665 replaced that per-replica counter with a shared Redis budget of five
+invalid lookups per employee per minute across replicas.
+
 CVs stay behind authenticated endpoints and private object prefixes. The
 private download stream uses an attachment and `private, no-store`. Company
 ZIP exports contain that company's saved CVs and an accompanying CSV. Media
@@ -127,13 +138,25 @@ redirect boundaries and require access-log care.
 - **Dependencies.** Frozen pnpm install and `pnpm audit --prod --json` checked
   the locked registry graph (383 production dependencies). Two moderate
   findings were reported on the Sentry bundler path. Source review identified
-  no untrusted FallStack request feeding these glob calls. The SheetJS
+  no untrusted FallStack request feeding these glob calls. The review traced
+  usage through the Sentry integration in `next.config.js` and CI/build entry
+  points and checked `src/` for direct glob and minimatch imports. The SheetJS
   dependency is a separately pinned upstream tarball with lockfile integrity.
   The production Docker workflow includes a fixable high/critical scan for the
-  runner, migrator and worker. [glob advisory](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4)
+  runner, migrator and worker. Trivy fails that CI job for fixable HIGH or
+  CRITICAL findings in the scanned images. Its scope and advisory database
+  differ from the pnpm registry audit. #665 subsequently remediated the
+  tracked glob and minimatch versions on `dev`. [glob advisory](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4)
   and [minimatch advisory](https://github.com/advisories/GHSA-g3hv-75wg-m249).
   GitHub Dependabot corroborated both runtime alerts and reported two more in
   the development graph, one moderate and one low. Both are tracked below.
+  Commit `8406c9ee` overrides `effect@<3.22.1` to `3.22.1`, updating
+  Prisma's transitive config dependency from 3.21.0 to address
+  [CVE-2026-121707](https://github.com/Effect-TS/effect/security/advisories/GHSA-7589-6fvf-x4pw).
+  This post-audit lockfile change is outside the original application checks
+  below. A follow-up `pnpm audit --prod --json` on the `8406c9ee` lockfile
+  reported the same two moderate findings and zero high or critical findings
+  across 383 production dependencies.
 - **Reachable compatibility.** `/auth/confirm` redirects to login and the
   public password-reset API returns 410. The existing password UI directs
   account recovery to AuthNEI. Legacy bcrypt helpers and a password service
