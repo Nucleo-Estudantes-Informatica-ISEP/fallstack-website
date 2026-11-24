@@ -79,9 +79,7 @@ export async function GET(request: NextRequest) {
           null
       : null
   );
-  const restartDestination = sanitizeNext(
-    (token ? storedDestination : recoveryValue) || appDestination
-  );
+  const restartDestination = sanitizeNext(storedDestination || appDestination);
 
   function finish(response: NextResponse) {
     if (current) clearOidcCookies(response);

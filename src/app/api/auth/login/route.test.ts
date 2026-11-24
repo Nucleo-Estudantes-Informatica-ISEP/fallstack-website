@@ -116,3 +116,17 @@ test("lets the user retry with their destination when the store is unavailable",
   expect(retry.searchParams.get("next")).toBe(auth.next);
   expect(response.headers.get("set-cookie")).toBeNull();
 });
+
+test("does not persist a destination beyond the restart size bound", async () => {
+  const previous = auth.next;
+  auth.next = "/" + "x".repeat(8192);
+  try {
+    const response = await GET(
+      new NextRequest("https://fallstack.example.test/api/auth/login")
+    );
+    expect(response.cookies.get("next")?.value).toBe("/");
+    expect(saveOidcRestart).not.toHaveBeenCalled();
+  } finally {
+    auth.next = previous;
+  }
+});

@@ -205,7 +205,7 @@ test.each([
   [
     "auth-verification-required",
     "Verificar email",
-    "https://auth.example.test/ui/console/users/me",
+    "/api/auth/login?verifyEmail=1",
   ],
 ] as const)(
   "offers the appropriate action for %s",
@@ -213,7 +213,7 @@ test.each([
     render(
       <LoginCard
         signInFailure={signInFailure}
-        verifyEmailUrl="https://auth.example.test/ui/console/users/me"
+        verifyEmailUrl="/api/auth/login?verifyEmail=1"
       />
     );
     expect(screen.getByRole("alert")).toBeInTheDocument();

@@ -23,7 +23,8 @@ export const signInFailures = {
 export type SignInFailure = keyof typeof signInFailures;
 
 export function parseSignInFailure(value?: string): SignInFailure | undefined {
-  return value && Object.hasOwn(signInFailures, value)
+  if (value === undefined) return undefined;
+  return Object.hasOwn(signInFailures, value)
     ? (value as SignInFailure)
-    : undefined;
+    : "auth-code-error";
 }
