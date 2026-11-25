@@ -37,16 +37,14 @@ export const POST = defineHandler({
           }
         );
       }
-      logoutUrl = await getLogoutUrl({
+      const issuerLogoutUrl = await getLogoutUrl({
         idTokenHint: claims?.idToken,
         loginName: claims?.loginName,
-      }).catch(() => serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI);
-      if (
-        scope === "shared" &&
-        logoutUrl === serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI
-      ) {
+      }).catch(() => undefined);
+      if (scope === "shared" && !issuerLogoutUrl) {
         throw new HttpError("AuthNEI sign-out unavailable", 503);
       }
+      logoutUrl = issuerLogoutUrl ?? serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
     }
 
     const response = NextResponse.json(

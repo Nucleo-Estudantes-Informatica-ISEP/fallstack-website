@@ -107,13 +107,13 @@ test("distinguishes older shared-logout sessions without an ID token", async () 
 
 test("handles logout when no session cookie is present", async () => {
   vi.mocked(verifyAppSession).mockReturnValue(null);
-  vi.mocked(getLogoutUrl).mockResolvedValue("http://localhost:3000");
+  vi.mocked(getLogoutUrl).mockResolvedValue(undefined);
 
   const response = await post();
   expect(response.status).toBe(200);
 
   const body = (await response.json()) as { logoutUrl: string };
-  expect(body.logoutUrl).toBe("http://localhost:3000");
+  expect(body.logoutUrl).toBe(process.env.AUTH_POST_LOGOUT_REDIRECT_URI);
   expect(getLogoutUrl).toHaveBeenCalledWith({
     idTokenHint: undefined,
     loginName: undefined,
