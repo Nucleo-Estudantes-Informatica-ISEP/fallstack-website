@@ -403,12 +403,15 @@ export const uiEnglish: Record<string, string> = {
   "Ir para o dashboard da empresa": "Open company dashboard",
   "A tua identidade já foi confirmada pelo AuthNEI. Introduz o código fornecido pela empresa para associares esta conta à empresa.":
     "AuthNEI has verified your identity. Enter your company's invitation code to link this account.",
-  "Primeiro inicia sessão no AuthNEI. Depois regressas aqui para associares a tua conta à empresa com o código de colaborador.":
-    "First sign in with AuthNEI, then return here to link your account using the employee invitation code.",
+  "Introduz o código da empresa e inicia sessão no AuthNEI. Depois confirma a associação no FallStack.":
+    "Enter your company code and sign in with AuthNEI. Then confirm the link in FallStack.",
+  "Não foi possível guardar o código. Inicia sessão e volta ao registo de colaborador para o introduzir.":
+    "We couldn’t save your code. Sign in and return to employee registration to enter it.",
   "Estudantes, colaboradores e administradores usam a mesma conta AuthNEI. As permissões são atribuídas automaticamente pelo NEI e pela empresa associada.":
     "Students, employees and administrators use the same AuthNEI account. NEI and the associated company assign permissions automatically.",
-  "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI.":
-    "Forgot your password? Reset it through AuthNEI.",
+  "Não consegues iniciar sessão?": "Can’t sign in?",
+  "A ajuda abre noutro separador. Volta aqui para continuar.":
+    "Help opens in another tab. Return here to continue.",
   "Ainda não tens uma conta?": "Do not have an account yet?",
   "Criar uma conta": "Create an account",
   "Tens um código de empresa? Regista-te como colaborador":

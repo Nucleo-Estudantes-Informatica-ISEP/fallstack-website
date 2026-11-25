@@ -80,5 +80,6 @@ implementation PR needs an ADR.
 | [0051](0051-consistent-interface-language.md)                    | Consistent interface language across account roles             | Accepted             |
 | [0052](0052-enforce-app-request-and-recruiting-boundaries.md)    | Enforce application request and recruiting boundaries          | Accepted             |
 | [0054](0054-use-direct-authnei-registration.md)                 | Open AuthNEI registration directly                            | Accepted             |
+| [0055](0055-collect-company-code-before-sign-in.md)              | Collect the company code before AuthNEI sign-in                | Accepted             |
 | [0057](0057-resume-authnei-email-verification.md)                | Resume AuthNEI email verification                              | Accepted             |
 | [0058](0058-store-auth-restart-destinations.md)                  | Store sign-in destinations across attempts                     | Accepted             |

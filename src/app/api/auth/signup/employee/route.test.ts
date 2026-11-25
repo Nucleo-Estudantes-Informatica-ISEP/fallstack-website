@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { beforeEach, expect, test, vi } from "vitest";
 
 import { signUpEmployee } from "@/application/services/authApplicationService";
+import { checkRateLimit } from "@/application/services/rateLimitService";
 import getServerSession from "@/application/services/sessionService";
 
 import { POST } from "./route";
@@ -23,6 +24,10 @@ vi.mock("@/application/services/sessionService", () => ({
 
 vi.mock("@/application/services/authApplicationService", () => ({
   signUpEmployee: vi.fn(),
+}));
+
+vi.mock("@/application/services/rateLimitService", () => ({
+  checkRateLimit: vi.fn(),
 }));
 
 const session = {
@@ -51,6 +56,7 @@ function post(body: unknown) {
 beforeEach(() => {
   vi.resetAllMocks();
   mockEnv.EVENT_MODE = "active";
+  vi.mocked(checkRateLimit).mockResolvedValue({ status: "allowed" });
   vi.mocked(getServerSession).mockResolvedValue(session as never);
 });
 
@@ -94,4 +100,21 @@ test("employee signup propagates only verified membership and attendance expiry"
     expect.objectContaining({ isNeiMember: true, attendanceExpiresAt: 123000 })
   );
   expect(response.headers.get("set-cookie")).toContain("signed-session");
+});
+
+test("rate limits an account before checking its company code", async () => {
+  vi.mocked(checkRateLimit).mockResolvedValue({
+    status: "limited",
+    retryAfterMs: 5000,
+  });
+
+  const response = await post(validEmployee);
+
+  expect(response.status).toBe(429);
+  expect(response.headers.get("Retry-After")).toBe("5");
+  expect(checkRateLimit).toHaveBeenCalledWith("employee_signup", session.id, {
+    max: 10,
+    windowMs: 60_000,
+  });
+  expect(signUpEmployee).not.toHaveBeenCalled();
 });

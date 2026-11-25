@@ -5,7 +5,9 @@ import config from "@/config";
 import { serverEnv } from "@/config/env.server";
 import { APP_SESSION_TTL_SECONDS } from "@/config/sessionLifetime";
 import { defineHandler } from "@/lib/http/server";
+import { rateLimitResponse } from "@/lib/rateLimit";
 import { signUpEmployee } from "@/application/services/authApplicationService";
+import { checkRateLimit } from "@/application/services/rateLimitService";
 import { employeeSignUpSchema } from "@/schemas/employeeSignUpSchema";
 
 export const POST = defineHandler({
@@ -21,6 +23,14 @@ export const POST = defineHandler({
 
     if (!session?.zitadelUserId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const blocked = rateLimitResponse(
+      await checkRateLimit("employee_signup", session.id, {
+        max: 10,
+        windowMs: 60_000,
+      })
+    );
+    if (blocked) return blocked;
 
     const token = await signUpEmployee({
       userId: session.id,

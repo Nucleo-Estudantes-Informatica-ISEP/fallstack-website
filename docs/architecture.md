@@ -62,6 +62,8 @@ The legacy multipart transport remains for avatars/logos only.
 
 ## Authentication and short-lived tokens
 
+[ADR 0055](decisions/0055-collect-company-code-before-sign-in.md) describes how the employee invite code is carried across sign-in.
+
 Login uses AuthNEI/ZITADEL OIDC. The app signs its own session cookie, and
 `getServerSession()` resolves the matching application `User` and profile.
 PostgreSQL and MinIO store application data; neither creates login sessions.
