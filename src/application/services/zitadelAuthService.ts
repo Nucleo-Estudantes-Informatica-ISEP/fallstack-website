@@ -432,12 +432,11 @@ export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
   // cannot be resolved, stranding the user. Only redirect to AuthNEI when
   // we have the ID token to guarantee direct session termination and return.
   if (!idTokenHint) {
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+    return undefined;
   }
 
   const discovery = await getDiscovery();
-  if (!discovery.end_session_endpoint)
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+  if (!discovery.end_session_endpoint) return undefined;
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(

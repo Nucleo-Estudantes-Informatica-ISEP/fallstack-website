@@ -60,6 +60,8 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
 
   return (
     <StudentSignUp
+      key={session.id}
+      accountId={session.id}
       authName={session.authName}
       interests={interests.map((interest) => toInterestDto(interest, language))}
     />

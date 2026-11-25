@@ -417,7 +417,11 @@ export const uiEnglish: Record<string, string> = {
   "Tens um código de empresa? Regista-te como colaborador":
     "Have a company code? Register as an employee",
   "Terminar sessão": "Sign out",
-  "Queres mesmo sair?": "Do you want to sign out?",
+  "Terminar sessão só nesta aplicação": "Sign out of this app",
+  "Terminar sessão nesta aplicação e no AuthNEI":
+    "Sign out of this app and AuthNEI",
+  "Outras aplicações abertas podem manter a sessão iniciada.":
+    "Other open apps may keep their own sessions.",
   Sair: "Sign out",
   "Página inicial": "Home",
   "Sem permissão": "Permission denied",
@@ -556,6 +560,8 @@ export const uiEnglish: Record<string, string> = {
   "Estes termos não excluem direitos legalmente reconhecidos nem limitam responsabilidades que a lei não permita excluir. As alterações são publicadas com uma nova versão e data; não alteram retroativamente a aceitação registada. Para dúvidas ou reclamações, contacta a organização.":
     "These terms do not exclude legally recognised rights or limit liabilities that the law does not permit to be excluded. Changes are published with a new version and date; they do not retroactively alter recorded acceptance. For questions or complaints, contact the organisers.",
   "Não foi possível terminar a sessão.": "Could not sign out.",
+  "Termina sessão só nesta aplicação e volta a iniciar sessão para poderes terminar as duas sessões.":
+    "Sign out of this app and sign in again to enable shared sign-out.",
   "Não foi possível atualizar o estado da ação.":
     "Could not update the action status.",
   "Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a garantir o registo das interações e a participação nos giveaways promovidos pelo NEI.":
@@ -657,6 +663,8 @@ export const uiEnglish: Record<string, string> = {
   "CV ficheiro": "CV file",
   "Insere o teu email institucional.": "Enter your institutional email.",
   "Insere o teu email": "Enter your email",
+  "Se voltares mais tarde, seleciona novamente o CV e a fotografia.":
+    "Select your CV and profile photo again when you return.",
   "Insere o teu CV. (Opcional)": "Upload your CV. (Optional)",
   "Insere uma imagem para foto de perfil. (Opcional)":
     "Upload a profile photo. (Optional)",

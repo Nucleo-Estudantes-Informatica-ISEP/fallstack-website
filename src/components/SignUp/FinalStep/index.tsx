@@ -35,13 +35,18 @@ import {
 import { getCroppedImg } from "@/utils/canvas";
 
 interface FinalStepProps {
+  onProfileCreated?: () => void;
   currentStep: number;
   setCurrentStep: Dispatch<SetStateAction<number>>;
   data: StudentSignUpData;
   setData: Dispatch<SetStateAction<StudentSignUpData>>;
 }
 
-const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
+const FinalStep: FunctionComponent<FinalStepProps> = ({
+  data,
+  setData,
+  onProfileCreated,
+}) => {
   const t = useUiText();
 
   const session = useSession();
@@ -121,6 +126,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
 
       if (existingSession.student) {
         // The profile was already created in an earlier attempt.
+        onProfileCreated?.();
         session.fetchSession();
         router.push("/");
         router.refresh();
@@ -164,6 +170,7 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
         return setLoading(false);
       }
 
+      onProfileCreated?.();
       session.fetchSession();
       router.push("/");
       router.refresh();
@@ -178,6 +185,9 @@ const FinalStep: FunctionComponent<FinalStepProps> = ({ data, setData }) => {
       <h1 className="signup-heading">{t("Criar uma conta")}</h1>
 
       <div className="flex flex-col gap-y-3 [--field-icon-padding:3.125rem] lg:gap-y-4 lg:[--field-icon-inset:19px] lg:[--field-icon-padding:65px]">
+        <p className="text-sm text-gray-300">
+          <UiText text="Se voltares mais tarde, seleciona novamente o CV e a fotografia." />
+        </p>
         <FileInput
           name="Insere o teu CV. (Opcional)"
           placeholder="Insere um ficheiro"
