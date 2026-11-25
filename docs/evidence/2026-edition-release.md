@@ -42,8 +42,8 @@ The corrected annotated `2026-edition` tag object is
 `61064ba01d4bcddb981707076e93b5f268a62c0d`, pointing to the verified production
 commit `034e317f7a66f1a252c02fe43a816bbd48294dba`. The matching GitHub Release
 contains the event edition changelog and explicitly identifies the corrected
-freeze and July archive. The edition version is `1.0.0`; no existing SemVer tag
-was reset or renumbered.
+freeze and July archive. The archive is separate from the published SemVer
+maintenance series.
 
 Verification after publication:
 
@@ -60,5 +60,7 @@ The later documentation commit is intentionally outside the edition tag:
 the archive preserves the source actually deployed during the event. It does
 not include this retrospective changelog or deployment evidence.
 
-The changelog update follows the normal PR into `dev` and still requires
-reviewed promotion to `main`; no runtime change or new SemVer tag is needed.
+The release promotion also carries runtime maintenance changes. GitHub’s
+`release:patch` label is expected to publish `v2.10.11` after `v2.10.10`
+when the promotion merges. The `2026-edition` archive remains at the
+event-day revision.
