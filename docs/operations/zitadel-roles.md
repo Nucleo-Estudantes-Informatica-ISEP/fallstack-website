@@ -81,3 +81,9 @@ desired post-logout destination. Register those exact values in the AuthNEI
 application's Redirect URIs and Post Logout URIs respectively. A trailing
 slash is significant. After changing deployment variables, redeploy the app;
 verify login and logout through the public hostname.
+
+Use the browser-facing scheme, hostname and port for `AUTH_REDIRECT_URI`,
+including when a reverse proxy serves a custom domain. Cookie-authenticated
+mutations compare the request origin against the configured callback origin.
+Verify the staging and production origins before promoting changes to this
+guard.

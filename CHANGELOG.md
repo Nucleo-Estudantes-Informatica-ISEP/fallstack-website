@@ -4,9 +4,20 @@ All notable per-edition changes to this project are documented here, in the [Kee
 
 This project ships once a year — one edition per Fallstack event — so entries are written by hand at each edition's cutover rather than generated from commit history. See the [release workflow](docs/agents/contribution.md#releases) for the tagging/versioning convention.
 
-## [1.0.0] - 2026-11-18 - Fallstack 2026 event edition
+## [Unreleased] - Fallstack 2026 maintenance
 
-Edition versioning starts at `1.0.0`. This entry summarizes changes since
+The next patch promotion after `v2.10.10` is expected to publish
+`v2.10.11`. The `2026-edition` archive identifies the event-day deployment.
+
+### Changed
+
+- Hardened authenticated mutations, student lookup and preview access, uploads,
+  CV exports, profile link validation, and service-worker runtime caching.
+- Updated production and development dependencies.
+
+## [2026-edition] - 2026-11-18 - Fallstack 2026 event edition
+
+This archive entry summarizes changes since
 `2025-edition`, including the production hotfixes from 17–18 November. The July
 entries below describe earlier preparation milestones, not the event-day freeze.
 Existing `vX.Y.Z` maintenance tags retain their published history.
