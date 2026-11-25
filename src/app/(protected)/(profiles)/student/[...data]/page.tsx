@@ -1,4 +1,4 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import NeiLogoSimplifiedWhite from "~/public/assets/images/logo-simplified-white.png";
 
 import { HttpError } from "@/types/HttpError";
@@ -13,7 +13,6 @@ import { toSavedStudentDto } from "@/application/dto/historyDto";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { toStudentDto } from "@/application/dto/studentDto";
 import { getStudentActions } from "@/application/services/actionService";
-import { verifyJwt } from "@/application/services/authService";
 import { getCompanies } from "@/application/services/companyService";
 import { getInterests } from "@/application/services/interestService";
 import {
@@ -24,7 +23,14 @@ import {
 } from "@/application/services/savedStudentService";
 import getServerSession from "@/application/services/sessionService";
 import { getStudent } from "@/application/services/studentService";
-import { canAccessAttendanceScanner } from "@/domain/auth/authPolicy";
+import {
+  studentCodeFromPreview,
+  studentPreviewCookieName,
+} from "@/application/services/studentTokenService";
+import {
+  canAccessAttendanceScanner,
+  passesAuthPolicy,
+} from "@/domain/auth/authPolicy";
 import { resolveRequestLanguage } from "@/domain/i18n/translations";
 
 interface ProfileProps {
@@ -49,49 +55,27 @@ const StudentPage = async (props: ProfileProps) => {
     data: [code, preview],
   } = params;
 
-  // if is preview, treat code as jwt for temp access
   const isPreview = preview === "preview";
+  const companyId = passesAuthPolicy("employee", session)
+    ? session.employee!.company.id
+    : undefined;
+  if (isPreview && !companyId) return Custom404();
 
-  let student = null;
-  let decodedPreviewCode: string | null = null;
+  if (session.student && session.student.code !== code && !isPreview)
+    return Custom404();
 
-  if (isPreview) {
-    const token = verifyJwt(code);
-    decodedPreviewCode =
-      token &&
-      typeof token === "object" &&
-      "purpose" in token &&
-      token.purpose === "student-pass" &&
-      "code" in token &&
-      typeof token.code === "string"
-        ? token.code
-        : null;
-    const targetCode = decodedPreviewCode ?? code;
-    student = await getStudent(targetCode);
-  } else {
-    student = await getStudent(code);
+  const isSavedStudent = companyId ? await isSaved(companyId, code) : false;
+  if (companyId && !isSavedStudent && !isPreview) return Custom404();
+
+  let previewToken: string | undefined;
+  if (isPreview && companyId && !isSavedStudent) {
+    previewToken = (await cookies()).get(studentPreviewCookieName)?.value;
+    if (studentCodeFromPreview(previewToken, companyId) !== code)
+      return Custom404();
   }
 
+  const student = await getStudent(code);
   if (!student) return Custom404();
-
-  // companies may access if it's their own profile
-  if (session.student && session.student.code !== student.code && !isPreview)
-    return Custom404();
-
-  const isSavedStudent = session.employee
-    ? await isSaved(session.employee.company.id, student.code)
-    : false;
-
-  // companies may access if they saved the profile
-  if (session.employee && !isSavedStudent && !isPreview) return Custom404();
-
-  // A preview without a valid signed token is the saved-students list's link
-  // back to a profile, so only an employee whose company saved the student
-  // may open one. Anyone else is blocked: another student, and on purpose an
-  // admin without an employee profile, who has the same profile at
-  // /student/<code> and cannot use the preview's employee-only save.
-  if (isPreview && !decodedPreviewCode && !(session.employee && isSavedStudent))
-    return Custom404();
 
   const studentInterests = student.interests.map(({ id, name }) => ({
     id,
@@ -111,7 +95,7 @@ const StudentPage = async (props: ProfileProps) => {
         ? Promise.resolve({ totalScans: 0, totalSaves: 0 })
         : getStudentStats(student.code, {
             studentCode: session.student?.code,
-            companyId: session.employee?.company?.id,
+            companyId,
             isAdmin: session.adminRole !== null,
             // already computed above - avoids re-deriving the same isSaved
             // lookup a second time inside the ownership check
@@ -141,8 +125,8 @@ const StudentPage = async (props: ProfileProps) => {
         <PreviewProfileSectionContainer
           student={studentDto}
           interests={localizedInterestNames}
-          token={code}
-          isCompanyView={!!session.employee}
+          token={previewToken}
+          isCompanyView={!!companyId}
           isSavedStudent={isSavedStudent}
         />
         <Footer neiLogoSrc={NeiLogoSimplifiedWhite} />
@@ -172,7 +156,11 @@ const StudentPage = async (props: ProfileProps) => {
               history instanceof HttpError ? [] : history.map(toSavedStudentDto)
             }
             actions={actions.map(toStudentActionDto)}
-            student={studentDto}
+            student={{
+              ...studentDto,
+              linkedin: student.linkedin,
+              github: student.github,
+            }}
             interestIds={studentInterests.map(({ id }) => id)}
             availableInterests={interests.map((interest) =>
               toInterestDto(interest, language)

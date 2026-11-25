@@ -1,524 +1,161 @@
-import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { NextRequest } from "next/server";
-import { afterEach, beforeEach, test, vi } from "vitest";
+import { beforeEach, expect, test, vi } from "vitest";
+
+import logger from "@/lib/logger";
+import { checkRateLimit } from "@/application/services/rateLimitService";
+import getServerSession from "@/application/services/sessionService";
+import { jwtStudent } from "@/application/services/studentTokenService";
+
+import { POST } from "./route";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/application/services/sessionService", () => ({
-  default: vi.fn(),
+vi.mock("@/application/services/sessionService", () => ({ default: vi.fn() }));
+vi.mock("@/application/services/rateLimitService", () => ({
+  checkRateLimit: vi.fn(),
 }));
 vi.mock("@/application/services/studentTokenService", () => ({
   jwtStudent: vi.fn(),
+  studentPreviewCookieName: "fallstack-student-preview",
+  studentPreviewTtlSeconds: 900,
 }));
-
 vi.mock("@/lib/logger", () => ({
   reportError: vi.fn(),
-  default: {
-    warn: vi.fn(),
-    info: vi.fn(),
-    error: vi.fn(),
-  },
+  default: { warn: vi.fn() },
 }));
 
-const employeeSession = {
-  id: "employee-1",
+const employee = {
+  id: "employee",
   role: "EMPLOYEE",
-  adminRole: null,
-  student: null,
-  employee: {
-    id: "employee-1",
-    company: { id: "company-1" },
-  },
+  employee: { id: "employee", company: { id: "company" } },
 };
 
-const studentSession = {
-  id: "student-1",
-  role: "STUDENT",
-  adminRole: null,
-  student: { id: "student-1", code: "AB12", name: "Student" },
-  employee: null,
-};
-
-function request(body: unknown) {
-  return new NextRequest("http://localhost/api/students/token", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
-
-async function post(body: unknown) {
-  const { POST } = await import("./route");
-
-  return POST(request(body), {
-    params: Promise.resolve({}),
-  });
+function post(body: unknown) {
+  return POST(
+    new NextRequest("http://localhost/api/students/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    { params: Promise.resolve({}) }
+  );
 }
 
 beforeEach(() => {
-  // The rate limiter is module-scoped, so isolate its state between tests.
-  vi.resetModules();
-  vi.clearAllMocks();
+  vi.resetAllMocks();
+  vi.mocked(getServerSession).mockResolvedValue(employee as never);
+  vi.mocked(checkRateLimit).mockResolvedValue({ status: "allowed" });
 });
 
-afterEach(() => {
-  vi.useRealTimers();
-});
-
-test("rejects a student session before minting a preview token", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(studentSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  const response = await post({ code: "AB12" });
-
-  assert.equal(response.status, 403);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
-});
-
-test("rejects an invalid code before minting a preview token", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  const response = await post({ code: "invalid" });
-
-  assert.equal(response.status, 400);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
-});
-
-test("returns 404 when an employee submits an unknown code", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  const response = await post({ code: "ZZ99" });
-
-  assert.equal(response.status, 404);
-  assert.deepEqual(await response.json(), { error: "Student not found" });
-});
-
-test("normalizes a code and mints a token for an employee", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue("preview-token");
-
-  const response = await post({ code: " ab12 " });
-
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { token: "preview-token" });
-  assert.deepEqual(vi.mocked(jwtStudent).mock.calls[0], ["AB12"]);
-});
-
-test("rate limits repeated requests with unknown student codes", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  for (let i = 0; i < 5; i++) {
-    const response = await post({ code: "ZZ99" });
-    assert.equal(response.status, 404);
+test.each([
+  null,
+  { role: "STUDENT" },
+  { ...employee, employee: { company: { id: "company" } } },
+])(
+  "declines a request without a complete employee session",
+  async (session) => {
+    vi.mocked(getServerSession).mockResolvedValue(session as never);
+    expect((await post({ code: "AB12" })).status).toBe(session ? 403 : 401);
+    expect(checkRateLimit).not.toHaveBeenCalled();
+    expect(jwtStudent).not.toHaveBeenCalled();
   }
+);
 
-  const response = await post({ code: "ZZ99" });
-
-  assert.equal(response.status, 429);
-
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
+test("rejects an invalid length before touching Redis or looking up a credential", async () => {
+  expect((await post({ code: "WRONG" })).status).toBe(400);
+  expect(checkRateLimit).not.toHaveBeenCalled();
+  expect(jwtStudent).not.toHaveBeenCalled();
 });
 
-test("rate limits a valid code when the employee is over budget", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  for (let i = 0; i < 5; i++) {
-    assert.equal((await post({ code: "ZZ99" })).status, 404);
-  }
-
-  vi.mocked(jwtStudent).mockResolvedValue("preview-token");
-
-  const response = await post({ code: "AB12" });
-
-  assert.equal(response.status, 429);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
-});
-
-test("does not rate limit valid student scans", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue("preview-token");
-
-  for (let i = 0; i < 10; i++) {
-    const response = await post({ code: "AB12" });
-
-    assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), {
+test.each([
+  [{ code: " ab12 " }, "AB12"],
+  [{ code: "ab12cd" }, "AB12CD"],
+  [{ token: "signed-pass" }, { token: "signed-pass" }],
+])(
+  "allows valid scans without consuming the miss budget",
+  async (body, input) => {
+    vi.mocked(jwtStudent).mockResolvedValue({
+      code: "AB12",
       token: "preview-token",
     });
+    const response = await post(body);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      code: "AB12",
+      token: "preview-token",
+    });
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("set-cookie")).toMatch(
+      /Path=\/student\/AB12\/preview;.*HttpOnly.*SameSite=strict/i
+    );
+    const reservation =
+      vi.mocked(checkRateLimit).mock.calls[0]?.[2].reservation;
+    expect(reservation?.id).toEqual(expect.any(String));
+    expect(checkRateLimit).toHaveBeenLastCalledWith(
+      "student_token",
+      "employee",
+      {
+        max: 5,
+        windowMs: 60000,
+        reservation: { ...reservation, release: true },
+      }
+    );
+    expect(jwtStudent).toHaveBeenCalledWith(input, "company");
   }
+);
 
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
-});
-
-test("scopes invalid-code rate limits to each employee", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
+test("records a miss and logs only the hashed subject", async () => {
   vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  for (let i = 0; i < 5; i++) {
-    assert.equal((await post({ code: "ZZ99" })).status, 404);
-  }
-
-  assert.equal((await post({ code: "ZZ99" })).status, 429);
-
-  vi.mocked(getServerSession).mockResolvedValue({
-    ...employeeSession,
-    id: "employee-2",
-    employee: {
-      ...employeeSession.employee,
-      id: "employee-2",
-    },
-  } as never);
-
-  // A different employee has an independent rate-limit counter.
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
-});
-
-test("returns 403 when the employee session has no employee ID", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue({
-    ...employeeSession,
-    employee: {
-      ...employeeSession.employee,
-      id: undefined,
-    },
-  } as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  const response = await post({ code: "AB12" });
-
-  assert.equal(response.status, 403);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 0);
-});
-
-test("resets the invalid-code limit after the window expires", async () => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-10-15T10:00:00Z"));
-
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  for (let i = 0; i < 5; i++) {
-    assert.equal((await post({ code: "ZZ99" })).status, 404);
-  }
-
-  assert.equal((await post({ code: "ZZ99" })).status, 429);
-
-  vi.advanceTimersByTime(60_001);
-
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
-});
-
-test("returns the expected Retry-After header when rate limited", async () => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-10-15T10:00:00Z"));
-
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  for (let i = 0; i < 5; i++) {
-    await post({ code: "ZZ99" });
-  }
-
   const response = await post({ code: "ZZ99" });
-
-  assert.equal(response.status, 429);
-  assert.equal(response.headers.get("Retry-After"), "60");
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
-});
-
-test("successful scans do not reset the invalid-code count", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent)
-    .mockResolvedValueOnce(null)
-    .mockResolvedValueOnce(null)
-    .mockResolvedValueOnce("preview-token")
-    .mockResolvedValueOnce(null)
-    .mockResolvedValueOnce(null)
-    .mockResolvedValueOnce(null);
-
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-
-  // A successful scan must not count as an invalid attempt.
-  assert.equal((await post({ code: "AB12" })).status, 200);
-
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-
-  // The fifth invalid attempt should still be allowed.
-  assert.equal((await post({ code: "ZZ99" })).status, 404);
-
-  // The sixth invalid attempt should be rate-limited.
-  assert.equal((await post({ code: "ZZ99" })).status, 429);
-});
-
-test("allows only the permitted number of concurrent invalid-code requests", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockResolvedValue(null);
-
-  const responses = await Promise.all(
-    Array.from({ length: 6 }, () => post({ code: "ZZ99" }))
-  );
-
-  assert.equal(
-    responses.filter((response) => response.status === 404).length,
-    5
-  );
-  assert.equal(
-    responses.filter((response) => response.status === 429).length,
-    1
-  );
-
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 5);
-});
-
-test("allows concurrent valid student scans beyond the invalid-code limit", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-
-  vi.mocked(jwtStudent).mockImplementation(
-    async () =>
-      new Promise((resolve) => {
-        setTimeout(() => resolve("preview-token"), 10);
-      })
-  );
-
-  const responses = await Promise.all(
-    Array.from({ length: 10 }, () => post({ code: "AB12" }))
-  );
-
-  assert.equal(
-    responses.filter((response) => response.status === 200).length,
-    10
-  );
-  assert.equal(
-    responses.filter((response) => response.status === 429).length,
-    0
-  );
-
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 10);
-});
-
-test("audits invalid and limited attempts without codes or tokens", async () => {
-  vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-10-21T10:00:00Z"));
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-  const logger = (await import("@/lib/logger")).default;
-  const { createLogger } =
-    await vi.importActual<typeof import("@/lib/logger")>("@/lib/logger");
-  const lines: string[] = [];
-  const auditLogger = createLogger(
-    { base: undefined, timestamp: false },
+  expect(response.status).toBe(404);
+  expect(await response.json()).toEqual({ error: "Student not found" });
+  expect(checkRateLimit).toHaveBeenCalledTimes(1);
+  expect(logger.warn).toHaveBeenCalledWith(
     {
-      write(chunk: string) {
-        lines.push(chunk);
-      },
+      event: "student_token.invalid_code",
+      employeeRef: expect.stringMatching(/^[a-f0-9]{64}$/),
+    },
+    expect.any(String)
+  );
+});
+
+test("concurrent misses enter the lookup only after reserving a slot", async () => {
+  const slots = new Set<string>();
+  vi.mocked(checkRateLimit).mockImplementation(
+    async (_endpoint, _id, policy) => {
+      const reservation = policy.reservation;
+      if (!reservation) throw new Error("Expected a reservation before lookup");
+      if (reservation.release) slots.delete(reservation.id);
+      else if (slots.size >= policy.max)
+        return { status: "limited", retryAfterMs: 5200 };
+      else slots.add(reservation.id);
+      return { status: "allowed" };
     }
   );
-  vi.mocked(logger.warn).mockImplementation((record, message) =>
-    auditLogger.warn(record, message)
-  );
-  const employeeRef = createHash("sha256").update("employee-1").digest("hex");
-  vi.mocked(jwtStudent)
-    .mockResolvedValueOnce("secret-preview-token")
-    .mockResolvedValue(null);
-
-  assert.equal((await post({ code: "AB12" })).status, 200);
-  for (let i = 0; i < 5; i++) await post({ code: "ZZ99" });
-  const limited = await post({ code: "AB12" });
-  assert.equal(limited.status, 429);
-  assert.deepEqual(await limited.json(), { error: "Too many requests" });
-  assert.deepEqual(vi.mocked(logger.warn).mock.calls, [
-    ...Array.from({ length: 5 }, () => [
-      { event: "student_token.invalid_code", employeeRef },
-      "Invalid student token code",
-    ]),
-    [
-      {
-        event: "student_token.rate_limited",
-        employeeRef,
-        retryAfterMs: 60_000,
-      },
-      "Student token requests rate limited",
-    ],
-  ]);
-  assert.equal(lines.length, 6);
-  for (const line of lines) {
-    assert.equal(JSON.parse(line).employeeRef, employeeRef);
-    assert.doesNotMatch(line, /AB12|ZZ99|secret-preview-token|employee-1/);
-  }
-});
-
-test("lookup errors release the employee gate without consuming invalid budget", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-  vi.mocked(jwtStudent)
-    .mockRejectedValueOnce(new Error("Database unavailable"))
-    .mockResolvedValue(null);
-
+  vi.mocked(jwtStudent).mockResolvedValue(null);
   const responses = await Promise.all(
-    Array.from({ length: 7 }, () => post({ code: "ZZ99" }))
+    Array.from({ length: 8 }, () => post({ code: "ZZ99" }))
   );
-  assert.deepEqual(
-    responses.map((response) => response.status),
-    [500, 404, 404, 404, 404, 404, 429]
-  );
-  assert.equal(vi.mocked(jwtStudent).mock.calls.length, 6);
-  assert.deepEqual(await responses[0].json(), {
-    error: "Something went wrong",
-  });
+  expect(jwtStudent).toHaveBeenCalledTimes(5);
+  expect(responses.filter(({ status }) => status === 404)).toHaveLength(5);
+  const limited = responses.filter(({ status }) => status === 429);
+  expect(limited).toHaveLength(3);
+  expect(limited[0]?.headers.get("retry-after")).toBe("6");
 });
 
-test("a pending lookup does not block another employee", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-  let finish!: (value: string) => void;
-  let entered!: () => void;
-  const started = new Promise<void>((resolve) => {
-    entered = resolve;
-  });
-  vi.mocked(jwtStudent)
-    .mockImplementationOnce(() => {
-      entered();
-      return new Promise((resolve) => {
-        finish = resolve;
-      });
-    })
-    .mockResolvedValue("second-token");
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-  const first = post({ code: "AB12" });
-  await started;
-  vi.mocked(getServerSession).mockResolvedValue({
-    ...employeeSession,
-    employee: { ...employeeSession.employee, id: "employee-2" },
-  } as never);
-  try {
-    assert.equal((await post({ code: "AB12" })).status, 200);
-  } finally {
-    finish("first-token");
-    assert.equal((await first).status, 200);
-  }
+test("does not look up a code while Redis is unavailable or the budget is exhausted", async () => {
+  vi.mocked(checkRateLimit)
+    .mockResolvedValueOnce({ status: "unavailable" })
+    .mockResolvedValueOnce({ status: "limited", retryAfterMs: 1000 });
+  expect((await post({ code: "AB12" })).status).toBe(503);
+  expect((await post({ code: "AB12" })).status).toBe(429);
+  expect(jwtStudent).not.toHaveBeenCalled();
 });
 
-test("forwards a signed live pass for server-side validation", async () => {
-  const getServerSession = (
-    await import("@/application/services/sessionService")
-  ).default;
-  vi.mocked(getServerSession).mockResolvedValue(employeeSession as never);
-  const { jwtStudent } =
-    await import("@/application/services/studentTokenService");
-  vi.mocked(jwtStudent).mockResolvedValue("preview");
-  const response = await post({ token: "signed-live-pass" });
-  assert.equal(response.status, 200);
-  assert.deepEqual(await response.json(), { token: "preview" });
-  assert.deepEqual(vi.mocked(jwtStudent).mock.calls, [
-    [{ token: "signed-live-pass" }],
-  ]);
+test("does not consume the miss budget when the lookup itself fails", async () => {
+  vi.mocked(jwtStudent).mockRejectedValue(new Error("database unavailable"));
+  expect((await post({ code: "AB12" })).status).toBe(500);
+  expect(checkRateLimit).toHaveBeenCalledTimes(2);
+  expect(
+    vi.mocked(checkRateLimit).mock.calls[1]?.[2].reservation
+  ).toMatchObject({ release: true });
 });

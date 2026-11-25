@@ -43,6 +43,10 @@ const nextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      {
+        source: "/student/:code/preview",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
       ...["/assets/:path*", "/icons/:path*", "/google-wallet/:path*"].map(
         (source) => ({
           source,
@@ -74,7 +78,7 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   cacheStartUrl: false,
   dynamicStartUrl: false,
   fallbacks: { document: "/offline.html" },
-  extendDefaultRuntimeCaching: true,
+  extendDefaultRuntimeCaching: false,
   workboxOptions: { runtimeCaching: publicDataRuntimeCaching },
 });
 

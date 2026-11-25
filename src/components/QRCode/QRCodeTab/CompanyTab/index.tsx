@@ -10,7 +10,7 @@ import useIsMobile from "@/hooks/useIsMobile";
 import { useMutation } from "@/hooks/useMutation";
 import { useUiText } from "@/contexts/UiLanguageContext";
 import ScanTab from "@/components/QRCode/QRCodeTab/ScanTab";
-import { getStudentPreviewToken } from "@/client/api/studentToken";
+import { getStudentPreview } from "@/client/api/studentToken";
 import {
   isStudentCode,
   normalizeStudentCode,
@@ -50,15 +50,15 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         return;
       }
 
-      const token = await getStudentPreviewToken(code);
+      const preview = await getStudentPreview(code);
 
-      if (!token) {
+      if (!preview) {
         toast.error(t("O código introduzido é inválido."));
         return;
       }
 
       try {
-        await httpClient.post("/saved", { token });
+        await httpClient.post("/saved", { token: preview.token });
       } catch (error) {
         if (error instanceof HttpClientError && error.status === 409) {
           toast.warning(t("Este estudante já foi guardado anteriormente."));
@@ -67,7 +67,7 @@ const CompanyTab: React.FC<CompanyTabProps> = ({ setHidden }) => {
         throw error;
       }
 
-      router.push(`/student/${token}/preview`);
+      router.push(`/student/${encodeURIComponent(preview.code)}/preview`);
       setHidden(true);
     });
 

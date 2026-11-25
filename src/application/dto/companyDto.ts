@@ -5,6 +5,7 @@ import {
   SocialLinks,
 } from "@/domain/company/companyProfileContent";
 import { Language, type TranslationValues } from "@/domain/i18n/translations";
+import { safeHttpsLink } from "@/domain/outboundLink";
 
 export interface CompanyRankStyleDto {
   gradientFromColor: string;
@@ -68,7 +69,7 @@ export const toAdminCompanyDto = (
   company: AdminCompanyDto
 ): AdminCompanyDto => ({
   ...toCompanyDto(company),
-  website: company.website,
+  website: safeHttpsLink(company.website),
   active: company.active,
   order: company.order,
   rank: { id: company.rank.id, name: company.rank.name },
@@ -116,7 +117,7 @@ export const toCompanyRosterDto = (
   id: company.id,
   name: company.name,
   avatar: company.avatar,
-  website: company.website,
+  website: safeHttpsLink(company.website),
   order: company.order,
   rank: toCompanyRankDto(company.rank),
   logoWidth: company.displayStyle?.logoWidth ?? null,
@@ -172,7 +173,7 @@ export const toCompanyDisplayDto = (
   id: company.id,
   name: company.name,
   avatar: company.avatar,
-  website: company.website,
+  website: safeHttpsLink(company.website),
   rank: toCompanyRankDto(company.rank),
   profile: company.profile
     ? {

@@ -1,16 +1,14 @@
-// Keep Workbox from masking the server cache's edit/expiry contract.
+// Keep application responses out of Cache Storage. Workbox still precaches
+// the static app assets and offline fallback document.
 const publicDataRuntimeCaching = [
   {
-    urlPattern: ({ url, sameOrigin }) =>
+    urlPattern: ({ url, request, sameOrigin }) =>
       sameOrigin &&
-      (url.pathname === "/" ||
-        /^\/event\/(?:pt|en)\/?$/.test(url.pathname) ||
-        /^\/api\/(?:faqs|schedule|sponsors|companies\/roster)\/?$/.test(
-          url.pathname
-        )),
+      (url.pathname.startsWith("/api/") ||
+        request.mode === "navigate" ||
+        request.headers.get("RSC") === "1"),
     handler: "NetworkOnly",
     method: "GET",
-    // next-pwa only injects its offline fallback when options exists.
     options: {},
   },
 ];
