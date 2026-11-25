@@ -14,10 +14,14 @@ import {
 import { parseOidcRestartMarker } from "@/domain/auth/oidcRestartMarker";
 
 export async function GET(request: NextRequest) {
+  const registration = request.nextUrl.searchParams.get("register") === "1";
+  if (registration && serverEnv.EVENT_MODE === "offseason") {
+    return NextResponse.redirect(new URL("/signup", request.url));
+  }
   let next = request.nextUrl.searchParams.get("next");
   let loginHint: string | undefined;
   const raw = request.cookies.get(verifyEmailCookieName)?.value;
-  if (raw && request.nextUrl.searchParams.get("verifyEmail") === "1") {
+  if (!registration && raw && request.nextUrl.searchParams.get("verifyEmail") === "1") {
     try {
       const recovery = JSON.parse(raw) as {
         loginHint?: unknown;
@@ -34,7 +38,9 @@ export async function GET(request: NextRequest) {
       // A missing or invalid recovery cookie still allows a normal sign-in.
     }
   }
-  const auth = await createAuthorizationRequest(next, loginHint);
+  const auth = registration
+    ? await createAuthorizationRequest("/signup", undefined, "create")
+    : await createAuthorizationRequest(next, loginHint);
   // Bound the sanitized value because URL normalization can expand the input.
   const destination = auth.next.length <= 8192 ? auth.next : "/";
   const storedDestination = destination !== "/";

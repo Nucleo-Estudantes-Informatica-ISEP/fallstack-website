@@ -35,10 +35,6 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
-vi.mock("@/components/AuthNeiButton", () => ({
-  default: () => <button>Continuar com AuthNEI</button>,
-}));
-
 vi.mock("@/components/StudentSignUp", () => ({
   default: () => <div>Formulário de inscrição</div>,
 }));
@@ -107,12 +103,11 @@ test("redirects registered students to their profile during offseason", async ()
   expect(getInterests).not.toHaveBeenCalled();
 });
 
-test("shows AuthNEI login to visitors in active mode", async () => {
-  const page = await renderPage();
-  const html = renderToStaticMarkup(page);
-
-  expect(html).toContain("Continuar com AuthNEI");
-  expect(html).not.toContain("Inscrições encerradas");
+test("starts AuthNEI registration directly for signed-out visitors in active mode", async () => {
+  await expect(renderPage()).rejects.toThrow(
+    "NEXT_REDIRECT:/api/auth/login?register=1"
+  );
+  expect(getInterests).not.toHaveBeenCalled();
 });
 
 test("shows signup form to students without a profile in active mode", async () => {

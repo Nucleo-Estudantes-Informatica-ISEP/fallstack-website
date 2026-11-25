@@ -244,7 +244,8 @@ async function verifyIdToken(idToken: string, expectedNonce: string) {
 
 export async function createAuthorizationRequest(
   next?: string | null,
-  loginHint?: string
+  loginHint?: string,
+  prompt?: "create"
 ) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
@@ -262,6 +263,7 @@ export async function createAuthorizationRequest(
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
   if (loginHint) url.searchParams.set("login_hint", loginHint);
+  if (prompt) url.searchParams.set("prompt", prompt);
 
   return {
     url: url.toString(),
