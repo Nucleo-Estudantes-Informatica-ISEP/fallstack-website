@@ -7,6 +7,7 @@ import jwt, { type Algorithm } from "jsonwebtoken";
 
 import { HttpError } from "@/types/HttpError";
 import { serverEnv } from "@/config/env.server";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 
 const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
@@ -160,11 +161,6 @@ export function mapIdentityRoles(
   };
 }
 
-function safeNext(value: string | null | undefined) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
-}
-
 async function verifyIdToken(idToken: string, expectedNonce: string) {
   const discovery = await getDiscovery();
   const decoded = jwt.decode(idToken, { complete: true });
@@ -252,7 +248,7 @@ export async function createAuthorizationRequest(next?: string | null) {
     state,
     nonce,
     verifier,
-    next: safeNext(next),
+    next: sanitizeNext(next),
     maxAge: OIDC_STATE_TTL_SECONDS,
   };
 }

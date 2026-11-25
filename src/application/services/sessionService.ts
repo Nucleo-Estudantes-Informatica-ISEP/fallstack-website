@@ -33,10 +33,16 @@ const getServerSession = cache(async () => {
     // ZITADEL grant gates admin access; local tier only narrows that grant.
     // Missing tier defaults existing global admins to Super Admin.
     const adminRole = resolveAdminRole(claims.admin, appUser.adminRole);
-    const employeeAllowed = claims.employee && !!appUser.employee;
+    const employee =
+      appUser.role === "EMPLOYEE" &&
+      claims.employee &&
+      appUser.employee?.company.active
+        ? appUser.employee
+        : null;
 
     return {
       ...appUser,
+      employee,
       authName:
         typeof claims.name === "string" ? claims.name.trim() : undefined,
       adminRole,
@@ -48,8 +54,7 @@ const getServerSession = cache(async () => {
               claims.attendanceExpiresAt ?? Infinity
             )
           : 0,
-      role:
-        appUser.role === "EMPLOYEE" && !employeeAllowed ? null : appUser.role,
+      role: appUser.role === "EMPLOYEE" && !employee ? null : appUser.role,
     };
   } catch (error) {
     reportError(
