@@ -3,7 +3,13 @@ import { expect, test, vi } from "vitest";
 
 import LoginPage from "./page";
 
-vi.mock("@/config/env.server", () => ({ serverEnv: { EVENT_MODE: "active" } }));
+vi.mock("@/config/env.server", () => ({
+  serverEnv: {
+    EVENT_MODE: "active",
+    AUTH_REDIRECT_URI: "https://fallstack.example.test/api/auth/callback/zitadel",
+    AUTH_ISSUER_URL: "https://auth.example.test",
+  },
+}));
 vi.mock("@/application/services/sessionService", () => ({
   default: async () => null,
   isCurrentAccountInactive: async () => false,
