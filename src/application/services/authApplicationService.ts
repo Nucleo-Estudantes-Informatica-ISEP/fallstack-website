@@ -136,6 +136,8 @@ export async function signUpEmployee(input: {
   companyCode: string;
   isNeiMember?: boolean;
   attendanceExpiresAt?: number;
+  idToken?: string;
+  loginName?: string;
 }) {
   const company = await findCompanyByInviteCodeHash(
     inviteCodeHash(input.companyCode)
@@ -181,6 +183,8 @@ export async function signUpEmployee(input: {
       isEmployee: true,
       isGlobalAdmin: false,
       isNeiMember: input.isNeiMember,
+      idToken: input.idToken,
+      loginName: input.loginName,
     },
     input.attendanceExpiresAt ?? 0
   );

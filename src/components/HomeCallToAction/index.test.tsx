@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
@@ -11,6 +12,21 @@ const session = vi.hoisted(() => ({
 }));
 
 vi.mock("@/hooks/useSession", () => ({ default: () => session.current }));
+vi.mock("next/link", () => ({
+  default: ({
+    href,
+    prefetch,
+    children,
+  }: {
+    href: string;
+    prefetch?: boolean;
+    children: ReactNode;
+  }) => (
+    <a href={href} data-prefetch={prefetch}>
+      {children}
+    </a>
+  ),
+}));
 
 const student: SessionDto = {
   role: "STUDENT",
@@ -25,9 +41,11 @@ beforeEach(() => {
 test("guests are offered registration and sign-in", () => {
   render(<HomeCallToAction language={Language.PT} />);
 
-  expect(
-    screen.getByRole("link", { name: "Quero registar-me no evento" })
-  ).toHaveAttribute("href", "/signup");
+  const registration = screen.getByRole("link", {
+    name: "Quero registar-me no evento",
+  });
+  expect(registration).toHaveAttribute("href", "/signup");
+  expect(registration).toHaveAttribute("data-prefetch", "false");
   expect(
     screen.getByRole("link", { name: "Já tens conta? Inicia sessão" })
   ).toHaveAttribute("href", "/login");

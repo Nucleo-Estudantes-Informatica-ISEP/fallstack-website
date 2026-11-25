@@ -3,28 +3,32 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 
+import { HttpClientError } from "@/lib/http/client";
 import { useUiText } from "@/contexts/UiLanguageContext";
 import Input from "@/components/ui/Input";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { signUpEmployee } from "@/client/api/auth";
+import { companyInviteCodePattern } from "@/schemas/employeeSignUpSchema";
 
 interface EmployeeSignUpFormProps {
   onSuccess?: () => void;
+  initialCode?: string;
 }
 
 const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
   onSuccess,
+  initialCode = "",
 }) => {
   const t = useUiText();
 
   const [form, setForm] = useState({
     name: "",
     linkedin: "",
-    companyCode: "",
+    companyCode: initialCode,
   });
   const [loading, setLoading] = useState(false);
 
-  const codeValid = /^[A-Za-z0-9_-]{8,80}$/u.test(form.companyCode);
+  const codeValid = companyInviteCodePattern.test(form.companyCode);
   const canSubmit = codeValid && form.name.trim().length >= 2 && !loading;
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -36,7 +40,13 @@ const EmployeeSignUpForm: React.FC<EmployeeSignUpFormProps> = ({
     setLoading(false);
 
     if (res instanceof Error) {
-      toast.error(res.message);
+      toast.error(
+        res instanceof HttpClientError &&
+          res.status === 404 &&
+          res.message === "Invalid company code"
+          ? t("Código de empresa inválido.")
+          : res.message
+      );
       return;
     }
 

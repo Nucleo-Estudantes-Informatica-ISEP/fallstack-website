@@ -15,7 +15,7 @@ export const metadata: Metadata = createPublicPageMetadata({
 export default function TermsPage() {
   return (
     <main className="mx-auto min-h-screen max-w-4xl px-6 py-12 text-white">
-      <Link href="/signup" className="underline">
+      <Link href="/signup" prefetch={false} className="underline">
         {" "}
         <UiText text="Voltar ao registo" />{" "}
       </Link>

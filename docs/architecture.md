@@ -31,8 +31,9 @@ Prisma type-only imports outside repositories are fine. Runtime calls to
 
 For JSON API routes, `src/lib/http/server.ts` provides `defineHandler`:
 session/auth policy, optional Zod body parsing, optional ownership authorization,
-handler execution, and error mapping in one place. Strategies are `public`,
-`session`, `student`, `employee`, and `admin`; `session` is the default. An
+handler execution, and error mapping in one place. The default strategy is
+`session`. Role strategies include `student`, `employee`, `staff`, and `admin`.
+Use `public` when a session may be attached and `none` to skip session lookup. An
 ownership check belongs in `authorize` after the strategy passes (and only when
 a session exists). Request
 schemas live in `src/schemas/`. New route-authored failures use
@@ -61,6 +62,8 @@ owner-bound state are described in [ADR 0041](decisions/0041-direct-private-cv-u
 The legacy multipart transport remains for avatars/logos only.
 
 ## Authentication and short-lived tokens
+
+[ADR 0055](decisions/0055-collect-company-code-before-sign-in.md) describes how the employee invite code is carried across sign-in.
 
 Login uses AuthNEI/ZITADEL OIDC. The app signs its own session cookie, and
 `getServerSession()` resolves the matching application `User` and profile.

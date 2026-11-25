@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { serverEnv } from "@/config/env.server";
-import AuthNeiButton from "@/components/AuthNeiButton";
 import StudentSignUp from "@/components/StudentSignUp";
 import { toInterestDto } from "@/application/dto/interestDto";
 import { getInterests } from "@/application/services/interestService";
@@ -47,20 +46,7 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
   }
 
   // Normal registration flow while the event is active.
-  if (!session) {
-    return (
-      <section className="student-signup-form mx-auto w-full max-w-[567px]">
-        <h1 className="signup-heading">{t("Criar uma conta")}</h1>
-
-        <p className="mb-6 text-base leading-relaxed text-gray-300">
-          Continua com o AuthNEI para depois completares o teu perfil no
-          Fallstack.
-        </p>
-
-        <AuthNeiButton next="/signup" />
-      </section>
-    );
-  }
+  if (!session) redirect("/api/auth/login?register=1");
 
   if (!canCreateStudentProfile(session)) redirect("/");
 
@@ -74,6 +60,8 @@ const SignUpPage = async ({ searchParams }: SignUpPageProps) => {
 
   return (
     <StudentSignUp
+      key={session.id}
+      accountId={session.id}
       authName={session.authName}
       interests={interests.map((interest) => toInterestDto(interest, language))}
     />

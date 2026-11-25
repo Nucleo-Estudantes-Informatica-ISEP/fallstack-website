@@ -177,9 +177,20 @@ test("Logout asks for confirmation and Cancelar keeps the session", async () => 
   fireEvent.click(within(menu()).getByRole("button", { name: "Logout" }));
 
   const dialog = screen.getByRole("dialog", { name: "Terminar sessão" });
-  expect(within(dialog).getByText("Queres mesmo sair?")).toBeInTheDocument();
   expect(
-    within(dialog).getByRole("button", { name: "Sair" })
+    within(dialog).getByText(
+      "Outras aplicações abertas podem manter a sessão iniciada."
+    )
+  ).toBeInTheDocument();
+  expect(
+    within(dialog).getByRole("button", {
+      name: "Terminar sessão só nesta aplicação",
+    })
+  ).toBeInTheDocument();
+  expect(
+    within(dialog).getByRole("button", {
+      name: "Terminar sessão nesta aplicação e no AuthNEI",
+    })
   ).toBeInTheDocument();
 
   fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));

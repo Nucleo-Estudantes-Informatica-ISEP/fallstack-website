@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { HttpClientError } from "@/lib/http/client";
+
 import EmployeeSignUpForm from ".";
 
 const { signUpEmployeeMock, toastSuccessMock, toastErrorMock } = vi.hoisted(
@@ -11,6 +13,7 @@ const { signUpEmployeeMock, toastSuccessMock, toastErrorMock } = vi.hoisted(
   })
 );
 
+vi.mock("client-only", () => ({}));
 vi.mock("react-toastify", () => ({
   toast: { success: toastSuccessMock, error: toastErrorMock },
 }));
@@ -88,3 +91,22 @@ test("shows the API error and does not complete onboarding on failure", async ()
   );
   expect(onSuccess).not.toHaveBeenCalled();
 });
+
+test.each([
+  ["Invalid company code", "Código de empresa inválido."],
+  ["Not found", "Not found"],
+])(
+  "prefills a restored code and handles the server error %s",
+  async (message, expected) => {
+    signUpEmployeeMock.mockResolvedValue(new HttpClientError(message, 404));
+    render(<EmployeeSignUpForm initialCode="example-invite" />);
+    expect(screen.getByLabelText("Código da Empresa")).toHaveValue(
+      "example-invite"
+    );
+    fireEvent.change(screen.getByLabelText("Nome"), {
+      target: { value: "Fixture Student" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Associar à empresa" }));
+    await waitFor(() => expect(toastErrorMock).toHaveBeenCalledWith(expected));
+  }
+);

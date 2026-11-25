@@ -30,3 +30,12 @@ test("rejects newline, tab, and carriage return in a return path", () => {
   expect(sanitizeNext("/\t/example.invalid")).toBe("/");
   expect(sanitizeNext("/\r/example.invalid")).toBe("/");
 });
+
+test.each(["/.//evil.com", "/%2F%2Fevil.com", "/\t/evil.com"])(
+  "falls back for ambiguous path %j",
+  (path) => expect(sanitizeNext(path)).toBe("/")
+);
+
+test("round-trips a local query and fragment", () => {
+  expect(sanitizeNext("/dashboard?x#y")).toBe("/dashboard?x#y");
+});

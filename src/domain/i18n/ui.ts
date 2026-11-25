@@ -384,6 +384,15 @@ export const uiEnglish: Record<string, string> = {
   "Iniciar sessão": "Sign in",
   "Registo de Colaborador": "Employee registration",
   "Continuar com AuthNEI": "Continue with AuthNEI",
+  "O início de sessão foi interrompido. Podes retomá-lo quando quiseres.":
+    "Sign-in was interrupted. You can resume it when you’re ready.",
+  "Retomar início de sessão": "Resume sign-in",
+  "Este pedido de início de sessão já não está ativo. Inicia um novo pedido.":
+    "This sign-in request is no longer active. Start a new request.",
+  "Reiniciar início de sessão": "Restart sign-in",
+  "Confirma o teu endereço de email no AuthNEI antes de voltares a iniciar sessão.":
+    "Verify your email address in AuthNEI before signing in again.",
+  "Verificar email": "Verify email",
   "Não foi possível concluir o início de sessão com o AuthNEI. Tenta novamente.":
     "Could not complete AuthNEI sign-in. Try again.",
   "As inscrições de colaboradores estão encerradas.":
@@ -394,18 +403,25 @@ export const uiEnglish: Record<string, string> = {
   "Ir para o dashboard da empresa": "Open company dashboard",
   "A tua identidade já foi confirmada pelo AuthNEI. Introduz o código fornecido pela empresa para associares esta conta à empresa.":
     "AuthNEI has verified your identity. Enter your company's invitation code to link this account.",
-  "Primeiro inicia sessão no AuthNEI. Depois regressas aqui para associares a tua conta à empresa com o código de colaborador.":
-    "First sign in with AuthNEI, then return here to link your account using the employee invitation code.",
+  "Introduz o código da empresa e inicia sessão no AuthNEI. Depois confirma a associação no FallStack.":
+    "Enter your company code and sign in with AuthNEI. Then confirm the link in FallStack.",
+  "Não foi possível guardar o código. Inicia sessão e volta ao registo de colaborador para o introduzir.":
+    "We couldn’t save your code. Sign in and return to employee registration to enter it.",
   "Estudantes, colaboradores e administradores usam a mesma conta AuthNEI. As permissões são atribuídas automaticamente pelo NEI e pela empresa associada.":
     "Students, employees and administrators use the same AuthNEI account. NEI and the associated company assign permissions automatically.",
-  "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI.":
-    "Forgot your password? Reset it through AuthNEI.",
+  "Não consegues iniciar sessão?": "Can’t sign in?",
+  "A ajuda abre noutro separador. Volta aqui para continuar.":
+    "Help opens in another tab. Return here to continue.",
   "Ainda não tens uma conta?": "Do not have an account yet?",
   "Criar uma conta": "Create an account",
   "Tens um código de empresa? Regista-te como colaborador":
     "Have a company code? Register as an employee",
   "Terminar sessão": "Sign out",
-  "Queres mesmo sair?": "Do you want to sign out?",
+  "Terminar sessão só nesta aplicação": "Sign out of this app",
+  "Terminar sessão nesta aplicação e no AuthNEI":
+    "Sign out of this app and AuthNEI",
+  "Outras aplicações abertas podem manter a sessão iniciada.":
+    "Other open apps may keep their own sessions.",
   Sair: "Sign out",
   "Página inicial": "Home",
   "Sem permissão": "Permission denied",
@@ -544,6 +560,8 @@ export const uiEnglish: Record<string, string> = {
   "Estes termos não excluem direitos legalmente reconhecidos nem limitam responsabilidades que a lei não permita excluir. As alterações são publicadas com uma nova versão e data; não alteram retroativamente a aceitação registada. Para dúvidas ou reclamações, contacta a organização.":
     "These terms do not exclude legally recognised rights or limit liabilities that the law does not permit to be excluded. Changes are published with a new version and date; they do not retroactively alter recorded acceptance. For questions or complaints, contact the organisers.",
   "Não foi possível terminar a sessão.": "Could not sign out.",
+  "Termina sessão só nesta aplicação e volta a iniciar sessão para poderes terminar as duas sessões.":
+    "Sign out of this app and sign in again to enable shared sign-out.",
   "Não foi possível atualizar o estado da ação.":
     "Could not update the action status.",
   "Efetue o scan do QR Code dos alunos que visitarem o seu stand, de forma a garantir o registo das interações e a participação nos giveaways promovidos pelo NEI.":
@@ -626,6 +644,8 @@ export const uiEnglish: Record<string, string> = {
   "Selecionar vencedor 🎉": "Select winner 🎉",
   "A preparar passe...": "Preparing pass...",
   "Tentar novamente": "Try again",
+  "O início de sessão está temporariamente indisponível.":
+    "Sign-in is temporarily unavailable.",
   "Passe pronto. Toca em Guardar Passe e escolhe Guardar imagem ou Guardar em Ficheiros.":
     "Pass ready. Tap Save pass and choose Save image or Save to Files.",
   "Sem QR Code": "No QR code",
@@ -643,6 +663,8 @@ export const uiEnglish: Record<string, string> = {
   "CV ficheiro": "CV file",
   "Insere o teu email institucional.": "Enter your institutional email.",
   "Insere o teu email": "Enter your email",
+  "Se voltares mais tarde, seleciona novamente o CV e a fotografia.":
+    "Select your CV and profile photo again when you return.",
   "Insere o teu CV. (Opcional)": "Upload your CV. (Optional)",
   "Insere uma imagem para foto de perfil. (Opcional)":
     "Upload a profile photo. (Optional)",

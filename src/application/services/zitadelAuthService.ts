@@ -13,12 +13,22 @@ const APP_SESSION_ISSUER = "fallstack";
 const APP_SESSION_AUDIENCE = "fallstack-web";
 const OIDC_STATE_TTL_SECONDS = 10 * 60;
 
+export const verifyEmailCookieName = "@Fallstack:verify-email";
+
 export const oidcCookieNames = {
   state: "@Fallstack:oidc-state",
   nonce: "@Fallstack:oidc-nonce",
   verifier: "@Fallstack:oidc-verifier",
   next: "@Fallstack:oidc-next",
 } as const;
+
+export const oidcRestartCookiePrefix = "@Fallstack:oidc-restart-";
+
+export function oidcRestartCookieName(state: string | null) {
+  return state && /^[A-Za-z0-9_-]{43}$/u.test(state)
+    ? oidcRestartCookiePrefix + state
+    : null;
+}
 
 interface OidcDiscovery {
   issuer: string;
@@ -61,6 +71,12 @@ export interface ZitadelIdentity {
   isGlobalAdmin: boolean;
   isNeiMember?: boolean;
   idToken?: string;
+}
+
+export class AuthNeiEmailVerificationRequired extends HttpError {
+  constructor(readonly loginHint?: string) {
+    super("AuthNEI email verification required", 403);
+  }
 }
 
 export interface AppSessionClaims extends jwt.JwtPayload {
@@ -226,7 +242,11 @@ async function verifyIdToken(idToken: string, expectedNonce: string) {
   return claims;
 }
 
-export async function createAuthorizationRequest(next?: string | null) {
+export async function createAuthorizationRequest(
+  next?: string | null,
+  loginHint?: string,
+  prompt?: "create"
+) {
   const discovery = await getDiscovery();
   const verifier = randomToken(48);
   const state = randomToken();
@@ -242,6 +262,8 @@ export async function createAuthorizationRequest(next?: string | null) {
   url.searchParams.set("nonce", nonce);
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
+  if (loginHint) url.searchParams.set("login_hint", loginHint);
+  if (prompt) url.searchParams.set("prompt", prompt);
 
   return {
     url: url.toString(),
@@ -320,6 +342,13 @@ export async function completeAuthorizationCode(input: {
   const name = typeof claims.name === "string" ? claims.name : undefined;
   const emailVerified = claims.email_verified === true;
 
+  if (
+    sub &&
+    sub === idTokenClaims.sub &&
+    email &&
+    (claims.email_verified === false || claims.email_verified === undefined)
+  )
+    throw new AuthNeiEmailVerificationRequired(loginName || email);
   if (!sub || sub !== idTokenClaims.sub || !email || !emailVerified)
     throw new HttpError("AuthNEI identity is missing a verified email", 403);
 
@@ -403,12 +432,11 @@ export async function getLogoutUrl(hint?: LogoutUrlOptions | string) {
   // cannot be resolved, stranding the user. Only redirect to AuthNEI when
   // we have the ID token to guarantee direct session termination and return.
   if (!idTokenHint) {
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+    return undefined;
   }
 
   const discovery = await getDiscovery();
-  if (!discovery.end_session_endpoint)
-    return serverEnv.AUTH_POST_LOGOUT_REDIRECT_URI;
+  if (!discovery.end_session_endpoint) return undefined;
 
   const url = new URL(discovery.end_session_endpoint);
   url.searchParams.set(
