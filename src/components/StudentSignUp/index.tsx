@@ -9,18 +9,30 @@ import BioStep from "@/components/SignUp/BioStep";
 import FinalStep from "@/components/SignUp/FinalStep";
 import InterestsStep from "@/components/SignUp/InterestsStep";
 import type { InterestDto } from "@/application/dto/interestDto";
+import { STUDENT_YEAR } from "@/domain/student/year";
+import { isIsepEmail } from "@/utils/isepEmail";
+
+import { clearStudentDraft, readStudentDraft, saveStudentDraft } from "./draft";
 
 interface StudentSignUpProps {
+  accountId: string;
   interests: InterestDto[];
   /** Verified display name from AuthNEI, when the identity has one. */
   authName?: string;
 }
 
-const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
+const StudentSignUp = ({
+  accountId,
+  interests,
+  authName,
+}: StudentSignUpProps) => {
   const t = useUiText();
 
   const stepRef = useRef<HTMLElement>(null);
   const previousStep = useRef(0);
+  const completed = useRef(false);
+  const restoredAccount = useRef<string>();
+  const [restored, setRestored] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [data, setData] = useState<StudentSignUpData>({
     name: null,
@@ -33,6 +45,42 @@ const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
     year: null,
     linkedin: null,
   });
+
+  useEffect(() => {
+    if (restoredAccount.current === accountId) return;
+    restoredAccount.current = accountId;
+    const draft = readStudentDraft(accountId);
+    if (draft) {
+      const validYear = Object.values<string>(STUDENT_YEAR).includes(
+        draft.answers.year ?? ""
+      );
+      const accountComplete =
+        validYear &&
+        Boolean(draft.answers.course?.trim()) &&
+        Boolean(authName || draft.answers.name?.trim()) &&
+        isIsepEmail(draft.answers.email ?? "");
+      setCurrentStep(accountComplete ? draft.step : 0);
+      setData((previous) => ({
+        ...previous,
+        ...draft.answers,
+        year: validYear ? draft.answers.year : null,
+        interests: draft.answers.interests.filter((id) =>
+          interests.some((interest) => interest.id === id)
+        ),
+      }));
+    }
+    setRestored(true);
+  }, [accountId, authName, interests]);
+
+  useEffect(() => {
+    if (restored && !completed.current)
+      saveStudentDraft(accountId, currentStep, data);
+  }, [accountId, currentStep, data, restored]);
+
+  function completeDraft() {
+    completed.current = true;
+    clearStudentDraft(accountId);
+  }
 
   useEffect(() => {
     if (previousStep.current === currentStep) return;
@@ -62,6 +110,7 @@ const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
     />,
     <FinalStep
       key="final"
+      onProfileCreated={completeDraft}
       {...{ currentStep, setCurrentStep, data, setData }}
     />,
   ];
@@ -73,8 +122,8 @@ const StudentSignUp = ({ interests, authName }: StudentSignUpProps) => {
       aria-label={t("Registo de estudante")}
       className="student-signup-form relative mx-auto w-full max-w-[567px] field-focus-target outline-none"
     >
-      {steps[currentStep]}
-      {currentStep > 0 && (
+      {restored && steps[currentStep]}
+      {restored && currentStep > 0 && (
         <button
           type="button"
           onClick={() => setCurrentStep(currentStep - 1)}

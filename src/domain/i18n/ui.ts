@@ -663,6 +663,8 @@ export const uiEnglish: Record<string, string> = {
   "CV ficheiro": "CV file",
   "Insere o teu email institucional.": "Enter your institutional email.",
   "Insere o teu email": "Enter your email",
+  "Se voltares mais tarde, seleciona novamente o CV e a fotografia.":
+    "Select your CV and profile photo again when you return.",
   "Insere o teu CV. (Opcional)": "Upload your CV. (Optional)",
   "Insere uma imagem para foto de perfil. (Opcional)":
     "Upload a profile photo. (Optional)",
