@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 
 import { serverEnv } from "@/config/env.server";
 import LoginCard from "@/components/LoginCard";
-import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 import getServerSession, {
   isCurrentAccountInactive,
 } from "@/application/services/sessionService";
+import { sanitizeNext } from "@/domain/auth/sanitizeNext";
 import { parseSignInFailure } from "@/domain/auth/signInFailure";
 
 interface LoginPageProps {
@@ -26,7 +26,8 @@ const LoginPage = async ({ searchParams }: LoginPageProps) => {
   const returnTo = new URL("/login", serverEnv.AUTH_REDIRECT_URI);
   if (modal === "employee") returnTo.searchParams.set("modal", "employee");
   if (destination !== "/") returnTo.searchParams.set("next", destination);
-  const helpUrl = new URL("/ui/v2/login/help", serverEnv.AUTH_ISSUER_URL);
+  const issuerBase = serverEnv.AUTH_ISSUER_URL.replace(/\/+$/u, "") + "/";
+  const helpUrl = new URL("ui/v2/login/help", issuerBase);
   helpUrl.searchParams.set("returnTo", returnTo.toString());
   return (
     <LoginCard
