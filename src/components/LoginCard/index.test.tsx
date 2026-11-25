@@ -1,11 +1,21 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 
+import { UiLanguageProvider } from "@/contexts/UiLanguageContext";
 import LoginPage from "@/app/(protected)/(auth)/login/page";
 
-import LoginCard from ".";
+import LoginCardComponent from ".";
+
+const authHelpUrl = "https://auth.example.test/ui/v2/login/help";
+
+function LoginCard(
+  props: Omit<React.ComponentProps<typeof LoginCardComponent>, "authHelpUrl">
+) {
+  return <LoginCardComponent authHelpUrl={authHelpUrl} {...props} />;
+}
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/hooks/useLanguage", () => ({ default: () => "en" }));
 vi.mock("@/application/services/sessionService", () => ({
   default: async () => null,
   isCurrentAccountInactive: async () => false,
@@ -86,17 +96,27 @@ test("offers a create-account link to the signup page", () => {
   );
 });
 
-test("sends password recovery to AuthNEI instead of a local reset flow", () => {
+test("offers a localized link directly to AuthNEI help while signed out", () => {
   render(<LoginCard />);
 
   expect(
-    screen.getByText(
-      "Esqueceste-te da palavra-passe? A recuperação é feita no próprio AuthNEI."
-    )
-  ).toBeInTheDocument();
+    screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
+  ).toHaveAttribute("href", authHelpUrl);
   expect(
-    screen.queryByRole("link", { name: /palavra-passe/i })
-  ).not.toBeInTheDocument();
+    screen.getByRole("link", { name: "Não consegues iniciar sessão?" })
+  ).toHaveAttribute("target", "_blank");
+});
+
+test("renders the English AuthNEI help label when the UI language is English", () => {
+  render(
+    <UiLanguageProvider>
+      <LoginCard />
+    </UiLanguageProvider>
+  );
+  expect(screen.getByRole("link", { name: "Can’t sign in?" })).toHaveAttribute(
+    "href",
+    authHelpUrl
+  );
 });
 
 test("employee registration links to the employee signup flow", () => {
