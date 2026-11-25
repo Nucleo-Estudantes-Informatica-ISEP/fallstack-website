@@ -270,7 +270,7 @@ export async function createAuthorizationRequest(
     state,
     nonce,
     verifier,
-    next: sanitizeNext(next ?? null),
+    next: sanitizeNext(next),
     maxAge: OIDC_STATE_TTL_SECONDS,
   };
 }
