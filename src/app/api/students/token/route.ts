@@ -1,74 +1,73 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 
+import { serverEnv } from "@/config/env.server";
 import { defineHandler } from "@/lib/http/server";
 import logger from "@/lib/logger";
-import { createRateLimiter, tooManyRequestsResponse } from "@/lib/rateLimit";
-import { jwtStudent } from "@/application/services/studentTokenService";
+import { rateLimitResponse } from "@/lib/rateLimit";
+import { checkRateLimit } from "@/application/services/rateLimitService";
+import {
+  jwtStudent,
+  studentPreviewCookieName,
+  studentPreviewTtlSeconds,
+} from "@/application/services/studentTokenService";
 import { studentTokenSchema } from "@/schemas/studentTokenSchema";
 
-const invalidCodeLimiter = createRateLimiter({
-  windowMs: 60_000,
-  max: 5,
-});
-
-// Serialize each employee so in-flight valid scans never exhaust the budget.
-const pendingLookups = new Map<string, Promise<void>>();
+const invalidCodeBudget = { windowMs: 60_000, max: 5 };
 
 export const POST = defineHandler({
   auth: "employee",
   schema: studentTokenSchema,
   handler: async ({ body, session }) => {
-    const employeeId = session?.employee?.id;
+    const { id, company } = session!.employee!;
+    if (!id) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    if (!employeeId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
-
-    const employeeRef = createHash("sha256").update(employeeId).digest("hex");
-    const previous = pendingLookups.get(employeeId);
-    let unlock!: () => void;
-    const pending = new Promise<void>((resolve) => {
-      unlock = resolve;
+    const reservation = { id: randomUUID() };
+    const decision = await checkRateLimit("student_token", id, {
+      ...invalidCodeBudget,
+      reservation,
     });
-    pendingLookups.set(employeeId, pending);
-    await previous;
+    const release = () =>
+      checkRateLimit("student_token", id, {
+        ...invalidCodeBudget,
+        reservation: { ...reservation, release: true },
+      });
 
-    try {
-      const reservation = invalidCodeLimiter.reserve(employeeId);
-      if (!reservation.allowed) {
-        logger.warn(
-          {
-            event: "student_token.rate_limited",
-            employeeRef,
-            retryAfterMs: reservation.retryAfterMs,
-          },
-          "Student token requests rate limited"
-        );
-        return tooManyRequestsResponse(reservation.retryAfterMs);
-      }
-
-      let token: string | null;
-      try {
-        token = await jwtStudent("code" in body ? body.code : body);
-      } catch (error) {
-        reservation.release();
-        throw error;
-      }
-      if (token) {
-        reservation.release();
-        return NextResponse.json({ token }, { status: 200 });
-      }
-
+    const employeeRef = createHash("sha256").update(id).digest("hex");
+    if (decision.status === "limited")
       logger.warn(
-        { event: "student_token.invalid_code", employeeRef },
-        "Invalid student token code"
+        { event: "student_token.rate_limited", employeeRef },
+        "Student token requests rate limited"
       );
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    } finally {
-      unlock();
-      if (pendingLookups.get(employeeId) === pending)
-        pendingLookups.delete(employeeId);
+    const blocked = rateLimitResponse(decision);
+    if (blocked) return blocked;
+
+    const preview = await jwtStudent(
+      "code" in body ? body.code : body,
+      company.id
+    ).catch(async (error: unknown) => {
+      await release();
+      throw error;
+    });
+    if (preview) {
+      await release();
+      const response = NextResponse.json(preview, {
+        headers: { "Cache-Control": "private, no-store" },
+      });
+      response.cookies.set(studentPreviewCookieName, preview.token, {
+        path: `/student/${encodeURIComponent(preview.code)}/preview`,
+        maxAge: studentPreviewTtlSeconds,
+        httpOnly: true,
+        sameSite: "strict",
+        secure: serverEnv.NODE_ENV === "production",
+      });
+      return response;
     }
+
+    logger.warn(
+      { event: "student_token.invalid_code", employeeRef },
+      "Invalid student token code"
+    );
+    return NextResponse.json({ error: "Student not found" }, { status: 404 });
   },
 });

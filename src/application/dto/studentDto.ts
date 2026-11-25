@@ -1,5 +1,7 @@
+import { githubHost, safeHttpsLink } from "@/domain/outboundLink";
 import { studentYearLabel } from "@/domain/student/year";
 import type { StudentYear } from "@/domain/student/year";
+import { isValidLinkedinUrl } from "@/schemas/linkedinSchema";
 
 export interface StudentDto {
   id: string;
@@ -57,8 +59,11 @@ export const toStudentSummaryDto = (
   course: student.course,
   cv: student.cv,
   cvPurgedAt: student.cvPurgedAt?.toISOString() ?? null,
-  linkedin: student.linkedin,
-  github: student.github,
+  linkedin:
+    student.linkedin && isValidLinkedinUrl(student.linkedin)
+      ? student.linkedin
+      : null,
+  github: safeHttpsLink(student.github, githubHost),
   avatar: student.avatar,
 });
 

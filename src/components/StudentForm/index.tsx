@@ -35,7 +35,10 @@ const StudentForm: React.FC<StudentFormProps> = ({ student }) => {
           name: values.name,
           bio: values.bio || null,
           year: values.year,
-          github: values.github || null,
+          github:
+            (values.github || null) === student?.github
+              ? undefined
+              : values.github || null,
           ...linkedinPatch(values.linkedin, student.linkedin),
         };
         if (values.avatar) payload.avatar = values.avatar;

@@ -122,31 +122,44 @@ test("does not trust a stale local admin tier without the NEI Global grant", asy
   expect((await getServerSession())?.adminRole).toBeNull();
 });
 
-test("does not trust a stale local employee role without the ZITADEL role", async () => {
-  vi.mocked(verifyAppSession).mockReturnValue({
-    sub: "employee-sub",
-    email: "employee@example.com",
-    employee: false,
-    admin: false,
-  });
-  vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
-    id: "app-employee",
-    zitadelUserId: "employee-sub",
-    email: "employee@example.com",
-    role: "EMPLOYEE",
-    adminRole: null,
-    active: true,
-    student: null,
-    employee: {
+test.each([false, true])(
+  "exposes company membership only with the ZITADEL employee grant (%s)",
+  async (employee) => {
+    vi.mocked(verifyAppSession).mockReturnValue({
+      sub: "employee-sub",
+      email: "employee@example.com",
+      employee,
+      admin: false,
+    });
+    vi.mocked(findUserSessionByZitadelUserId).mockResolvedValue({
       id: "app-employee",
-      name: "Employee",
-      companyId: "company-1",
-      company: { id: "company-1", name: "Company", avatar: null },
-    },
-  } as never);
+      zitadelUserId: "employee-sub",
+      email: "employee@example.com",
+      role: "EMPLOYEE",
+      adminRole: null,
+      active: true,
+      student: null,
+      employee: {
+        id: "app-employee",
+        name: "Employee",
+        companyId: "company-1",
+        company: {
+          id: "company-1",
+          name: "Company",
+          avatar: null,
+          active: true,
+        },
+      },
+    } as never);
 
-  expect((await getServerSession())?.role).toBeNull();
-});
+    const session = await getServerSession();
+    expect(session?.role).toBe(employee ? "EMPLOYEE" : null);
+    expect(session?.employee?.company.id).toBe(
+      employee ? "company-1" : undefined
+    );
+    expect(passesAuthPolicy("employee", session)).toBe(employee);
+  }
+);
 
 test("rejects deactivated local accounts", async () => {
   vi.mocked(verifyAppSession).mockReturnValue({
@@ -250,5 +263,8 @@ test("an inactive company does not remove an active global admin's management ac
     adminRole: "ADMIN",
     employee: { company: { active: false } },
   } as never);
-  expect((await getServerSession())?.adminRole).toBe("ADMIN");
+  const session = await getServerSession();
+  expect(session?.adminRole).toBe("ADMIN");
+  expect(session?.employee).toBeNull();
+  expect(passesAuthPolicy("employee", session)).toBe(false);
 });

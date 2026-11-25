@@ -102,6 +102,14 @@ lighter documentation checks.
 Do not run destructive local data commands against shared services. `pnpm wipe`
 requires `NODE_ENV=development`; check the target database first.
 
+## Issue and pull request writing
+
+- Use action-oriented issue titles and keep the prefix from the
+  [issue template](.github/ISSUE_TEMPLATE/): `[Type]` for tasks or `[Bug]` for bugs.
+- Use Conventional Commit titles for PRs, such as `fix(auth): restore the return path`.
+  Fill in the [PR template](.github/PULL_REQUEST_TEMPLATE.md) with the validation
+  actually performed and any outstanding checks.
+
 ## Pull request metadata
 
 - Whenever opening a pull request, add the applicable existing repository

@@ -15,7 +15,7 @@ environment with these variables and secrets:
 | Kind     | Name                                | Value                                                                    |
 | -------- | ----------------------------------- | ------------------------------------------------------------------------ |
 | Variable | `STAGING_BASE_URL`                  | Approved staging origin, e.g. `https://staging.example.org`              |
-| Variable | `STAGING_ACTION_ID`                 | Existing synthetic staging action ID for public QR issuance              |
+| Variable | `STAGING_ACTION_ID`                 | Existing synthetic staging action ID for admin QR issuance               |
 | Secret   | `STAGING_STUDENT_STORAGE_STATE`     | Complete Student Playwright storage-state JSON                           |
 | Secret   | `STAGING_EMPLOYEE_STORAGE_STATE`    | Complete Employee storage-state JSON                                     |
 | Secret   | `STAGING_ADMIN_STORAGE_STATE`       | Complete Admin storage-state JSON                                        |
@@ -287,6 +287,7 @@ The script refuses to run without an explicit non-production confirmation.
 CONFIRM_NON_PRODUCTION=yes \
 STAGING_BASE_URL=https://staging.example.org \
 E2E_BASE_URL=https://staging.example.org \
+# Set ACTION_PRESENTER_COOKIE privately before running this command.
 K6_PROFILE=peak K6_SCENARIO=qr ACTION_ID=<staging-action-id> \
 pnpm test:load
 ```
@@ -350,7 +351,7 @@ profile applies the staging target guard above, including direct `test:load`.
   pass/fail decisions. Keep the staging checklist open until that evidence
   exists; #411 retains the capacity decision.
 
-- `qr` — public action QR issuance; requires `ACTION_ID`.
+- `qr` — admin action QR issuance. Set `ACTION_ID` and provide an administrator cookie through the private `ACTION_PRESENTER_COOKIE` environment variable.
 - `upload-tickets` — authenticated CV uploads at a normal, ramping pace;
   requires a comma-separated `STUDENT_COOKIES` pool from distinct student
   accounts. Exact duplicate cookie entries are rejected, and the script

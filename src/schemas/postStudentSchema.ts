@@ -8,6 +8,10 @@ import { STUDENT_YEAR } from "@/domain/student/year";
 
 import { institutionalEmailSchema } from "./institutionalEmailSchema";
 import { linkedinSchema } from "./linkedinSchema";
+import {
+  studentAvatarIdSchema,
+  studentAvatarUrlSchema,
+} from "./studentAvatarSchema";
 
 export const postStudentSchema = z.object({
   institutionalEmail: institutionalEmailSchema,
@@ -21,9 +25,9 @@ export const postStudentSchema = z.object({
   linkedin: linkedinSchema.nullable().optional(),
   year: z.enum(Object.values(STUDENT_YEAR)),
   interests: z.array(z.uuid()).max(50),
-  avatar: z.uuid().optional(),
+  avatar: studentAvatarIdSchema.optional(),
   cv: z.uuid().optional(),
   // Supabase-based alternative fields
-  avatarUrl: z.url().max(2048).optional(),
+  avatarUrl: studentAvatarUrlSchema.optional(),
   cvId: z.uuid().optional(),
 });

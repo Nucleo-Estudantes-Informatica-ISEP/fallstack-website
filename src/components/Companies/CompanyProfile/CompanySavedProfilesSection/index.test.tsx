@@ -41,7 +41,7 @@ vi.mock("@/lib/http/client", () => ({
   },
 }));
 vi.mock("@/client/api/studentToken", () => ({
-  getStudentPreviewToken: getTokenMock,
+  getStudentPreview: getTokenMock,
 }));
 vi.mock("react-toastify", () => ({
   toast: {
@@ -90,7 +90,10 @@ const SAVED = [
 beforeEach(() => {
   vi.clearAllMocks();
   scan.value = "ab12";
-  getTokenMock.mockResolvedValue("signed-preview-token");
+  getTokenMock.mockResolvedValue({
+    code: "AB12",
+    token: "signed-preview-token",
+  });
   postMock.mockResolvedValue({});
 });
 
@@ -124,9 +127,7 @@ test.each([
       expect(postMock).toHaveBeenCalledWith("/saved", {
         token: "signed-preview-token",
       });
-      expect(pushMock).toHaveBeenCalledWith(
-        "/student/signed-preview-token/preview"
-      );
+      expect(pushMock).toHaveBeenCalledWith("/student/AB12/preview");
     });
     expect(toastErrorMock).not.toHaveBeenCalled();
   }
@@ -144,9 +145,7 @@ test("exchanges a signed live QR before saving and opening the preview", async (
     })
   );
   expect(getTokenMock).toHaveBeenCalledWith({ token: "existing-jwt" });
-  expect(pushMock).toHaveBeenCalledWith(
-    "/student/signed-preview-token/preview"
-  );
+  expect(pushMock).toHaveBeenCalledWith("/student/AB12/preview");
 });
 
 test("rejects an unknown Wallet code without saving it as a JWT", async () => {
@@ -244,7 +243,7 @@ test("reading the same failing code again suppresses repeated lookups", async ()
   const message = await screen.findByText(/inválido/);
 
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
-  // Suppressed: does not call getStudentPreviewToken again while the same code is in view.
+  // Suppressed: does not call getStudentPreview again while the same code is in view.
   expect(message).toBeInTheDocument();
   expect(getTokenMock).toHaveBeenCalledTimes(1);
 });
@@ -259,13 +258,14 @@ test("a failure followed by a different valid scan processes successfully", asyn
 
   // Present a different valid code to the camera
   scan.value = "cd34";
-  getTokenMock.mockResolvedValueOnce("signed-preview-token-cd34");
+  getTokenMock.mockResolvedValueOnce({
+    code: "CD34",
+    token: "signed-preview-token-cd34",
+  });
   fireEvent.click(screen.getByRole("button", { name: "Scan QR" }));
 
   await waitFor(() =>
-    expect(pushMock).toHaveBeenCalledWith(
-      "/student/signed-preview-token-cd34/preview"
-    )
+    expect(pushMock).toHaveBeenCalledWith("/student/CD34/preview")
   );
   expect(getTokenMock).toHaveBeenCalledTimes(2);
   expect(messageArea()).toBeEmptyDOMElement();
@@ -387,9 +387,7 @@ test.each([
     typeCode(typed);
 
     await waitFor(() =>
-      expect(pushMock).toHaveBeenCalledWith(
-        "/student/signed-preview-token/preview"
-      )
+      expect(pushMock).toHaveBeenCalledWith("/student/AB12/preview")
     );
     expect(getTokenMock).toHaveBeenCalledWith(code);
     expect(postMock).toHaveBeenCalledWith("/saved", {

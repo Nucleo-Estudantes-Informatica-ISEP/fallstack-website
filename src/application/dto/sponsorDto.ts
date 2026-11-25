@@ -1,3 +1,5 @@
+import { safeHttpsLink } from "@/domain/outboundLink";
+
 export interface SponsorDto {
   id: string;
   name: string;
@@ -10,7 +12,7 @@ export const toSponsorDto = (sponsor: SponsorDto): SponsorDto => ({
   id: sponsor.id,
   name: sponsor.name,
   logo: sponsor.logo,
-  website: sponsor.website,
+  website: safeHttpsLink(sponsor.website),
   order: sponsor.order,
 });
 

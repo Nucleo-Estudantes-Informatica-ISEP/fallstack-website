@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { defineHandler } from "@/lib/http/server";
-import { verifyJwt } from "@/application/services/authService";
 import {
   saveStudent,
   updateSavedStudentComment,
 } from "@/application/services/savedStudentService";
+import { studentCodeFromPreview } from "@/application/services/studentTokenService";
 import { savedCommentSchema, saveSchema } from "@/schemas/saveSchema";
-
-function studentCodeFromToken(token: string | undefined) {
-  if (!token) return undefined;
-  const decoded = verifyJwt(token) as unknown as {
-    code?: string;
-    purpose?: string;
-  } | null;
-  return decoded?.purpose === "student-pass" ? decoded.code : undefined;
-}
 
 export const PUT = defineHandler({
   auth: "employee",
@@ -35,7 +26,10 @@ export const POST = defineHandler({
   auth: "employee",
   schema: saveSchema,
   handler: async ({ session, body }) => {
-    const code = studentCodeFromToken(body.token);
+    const code = studentCodeFromPreview(
+      body.token,
+      session!.employee!.company.id
+    );
     if (!code)
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({
@@ -55,7 +49,10 @@ export const PATCH = defineHandler({
   auth: "employee",
   schema: saveSchema,
   handler: async ({ session, body }) => {
-    const code = studentCodeFromToken(body.token);
+    const code = studentCodeFromPreview(
+      body.token,
+      session!.employee!.company.id
+    );
     if (!code)
       return NextResponse.json({ error: "Invalid token" }, { status: 400 });
     await saveStudent({

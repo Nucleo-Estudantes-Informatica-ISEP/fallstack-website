@@ -48,12 +48,12 @@ test("uses the verified session id token and login name as logout hints", async 
     isGlobalAdmin: false,
   });
   const claims = verifyAppSession(token);
-  const url = new URL(
-    await getLogoutUrl({
-      idTokenHint: claims?.idToken,
-      loginName: claims?.loginName,
-    })
-  );
+  const destination = await getLogoutUrl({
+    idTokenHint: claims?.idToken,
+    loginName: claims?.loginName,
+  });
+  expect(destination).toBeDefined();
+  const url = new URL(destination ?? "");
 
   expect(url.searchParams.get("id_token_hint")).toBe("signed.id.token");
   expect(url.searchParams.get("logout_hint")).toBe("user@auth.example.org");
@@ -63,7 +63,7 @@ test("uses the verified session id token and login name as logout hints", async 
   expect(url.searchParams.get("client_id")).toBe("client");
 });
 
-test("redirects to post-logout destination directly when idToken is absent", async () => {
+test("returns no issuer logout URL when idToken is absent", async () => {
   const token = signAppSession({
     sub: "user",
     email: "user@example.org",
@@ -77,8 +77,8 @@ test("redirects to post-logout destination directly when idToken is absent", asy
     idTokenHint: claims?.idToken,
     loginName: claims?.loginName,
   });
-  expect(destination).toBe("https://app.example.org");
-  expect(await getLogoutUrl()).toBe("https://app.example.org");
+  expect(destination).toBeUndefined();
+  expect(await getLogoutUrl()).toBeUndefined();
 });
 
 test("preserves the idToken in the signed app session", () => {

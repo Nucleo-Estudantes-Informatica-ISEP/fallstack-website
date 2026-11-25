@@ -19,6 +19,7 @@ const baseUrl = assertStagingTarget(
 const profile = __ENV.K6_PROFILE || "smoke";
 const scenario = __ENV.K6_SCENARIO || "health";
 const actionId = __ENV.ACTION_ID;
+const presenterCookie = __ENV.ACTION_PRESENTER_COOKIE;
 const landingAsset = __ENV.LANDING_ASSET || "/assets/images/landing-2026.png";
 const homepagePath = __ENV.HOMEPAGE_PATH || "/event/pt";
 const vus = Number(__ENV.VUS || 50);
@@ -80,8 +81,10 @@ if (scenario === "homepage" && profile === "peak" && vus < 2)
   throw new Error(
     "Homepage peak needs at least two VUs for both visitor types."
   );
-if (scenario === "qr" && !actionId)
-  throw new Error("Set ACTION_ID for K6_SCENARIO=qr.");
+if (scenario === "qr" && (!actionId || !presenterCookie))
+  throw new Error(
+    "Set ACTION_ID and ACTION_PRESENTER_COOKIE for K6_SCENARIO=qr."
+  );
 if (
   (scenario === "upload-tickets" || scenario === "upload-tickets-boundary") &&
   studentCookies.length === 0
@@ -310,7 +313,13 @@ function uploadCv(cookie) {
       contentType: "application/pdf",
       size: 32,
     }),
-    { headers: { Cookie: cookie, "Content-Type": "application/json" } }
+    {
+      headers: {
+        Cookie: cookie,
+        Origin: baseUrl,
+        "Content-Type": "application/json",
+      },
+    }
   );
 }
 
@@ -384,7 +393,8 @@ export default function runScenario() {
 
   if (scenario === "qr") {
     const response = http.get(
-      `${baseUrl}/api/actions/${encodeURIComponent(actionId)}`
+      `${baseUrl}/api/actions/${encodeURIComponent(actionId)}`,
+      { headers: { Cookie: presenterCookie } }
     );
     check(response, {
       "QR generation returns 200": (res) => res.status === 200,

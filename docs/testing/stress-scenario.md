@@ -64,7 +64,8 @@ Each upload follows the direct upload flow from #595, as the student app does:
   Otherwise the dashboard downloads fail their check.
 - Set `CHECKIN_SESSION_ID` to a schedule session that is live for the whole run,
   and set `CHECKIN_STUDENT_CODES` to the students to check in. Optionally set
-  `ACTION_ID` to a live action so each QR student also scans its action QR
+  `ACTION_ID` to a live action and provide an administrator session in
+  `ACTION_PRESENTER_COOKIE` so each QR student also scans its action QR
   once, on their first visit. A rerun with the same accounts finds the action
   already completed; that 400 is counted in
   `action_scan_already_completed_400` instead of failing.
@@ -199,7 +200,7 @@ to stay within the five-uploads/minute budget. Preflight rejects non-finite or
 non-positive intervals and checks `ceil(200 / sessions) * (60 / interval) <= 5`
 for every selected heavy cell before the canary or any earlier cell runs.
 The runner uses Node.js (the project runtime) for the same numeric parsing as k6.
-QR needs `ACTION_ID`. Boundary
+QR needs `ACTION_ID` and an administrator session in `ACTION_PRESENTER_COOKIE`. Boundary
 probes check rate limiting; these probes do not themselves inject copy or
 dependency failures. Kill/drain/Redis fault injection and the full heavy flow
 remain outside this runner.
